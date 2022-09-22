@@ -10,6 +10,7 @@
       "node"
     ],
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "sourceMap": true,
     "strict": true /* enable all strict type-checking options */
     /* Additional Checks */

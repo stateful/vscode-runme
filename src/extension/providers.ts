@@ -1,6 +1,6 @@
-import { readFileSync } from "fs-extra";
-import * as vscode from "vscode";
-import { NotebookCellData, NotebookCellKind, NotebookData } from "vscode";
+import { readFileSync } from "node:fs";
+
+import vscode from "vscode";
 
 const fake = [
     "Using stateful/tap",
@@ -63,9 +63,9 @@ export class Kernel implements vscode.Disposable {
     }
     dispose() {}
 
-    private _executeAll(cells: vscode.NotebookCell[]): void {
+    private async _executeAll(cells: vscode.NotebookCell[]) {
         for (const cell of cells) {
-            this._doExecuteCell(cell);
+            await this._doExecuteCell(cell);
         }
     }
 
@@ -115,10 +115,11 @@ export class Kernel implements vscode.Disposable {
 
 export class Serializer implements vscode.NotebookSerializer {
     private readonly ready: Promise<void>;
-    constructor() {
+    constructor(private context: vscode.ExtensionContext) {
         const go = new globalThis.Go();
+        const wasmUri = vscode.Uri.joinPath(this.context.extensionUri, 'src', 'extension', 'wasm', 'runme.wasm');
         this.ready = WebAssembly.instantiate(
-            readFileSync(`${__dirname}/wasm/runme.wasm`),
+            readFileSync(wasmUri.path),
             go.importObject
         )
             .then((result: any) => {
@@ -139,7 +140,7 @@ export class Serializer implements vscode.NotebookSerializer {
             const snippets = globalThis.GetSnippets(md);
             const cells = snippets.reduce(
                 (
-                    acc: NotebookCellData[],
+                    acc: vscode.NotebookCellData[],
                     s: {
                         name: string;
                         content: string;
@@ -149,15 +150,15 @@ export class Serializer implements vscode.NotebookSerializer {
                     }
                 ) => {
                     acc.push(
-                        new NotebookCellData(
-                            NotebookCellKind.Markup,
+                        new vscode.NotebookCellData(
+                            vscode.NotebookCellKind.Markup,
                             s.description,
                             s.executable
                         )
                     );
                     acc.push(
-                        new NotebookCellData(
-                            NotebookCellKind.Code,
+                        new vscode.NotebookCellData(
+                            vscode.NotebookCellKind.Code,
                             s.lines.join("\n"),
                             s.executable
                         )
@@ -166,7 +167,7 @@ export class Serializer implements vscode.NotebookSerializer {
                 },
                 []
             );
-            return new NotebookData(cells);
+            return new vscode.NotebookData(cells);
         });
     }
 

@@ -8,7 +8,7 @@ import {
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
-        vscode.workspace.registerNotebookSerializer("runme", new Serializer(), {
+        vscode.workspace.registerNotebookSerializer("runme", new Serializer(context), {
             transientOutputs: true,
             transientCellMetadata: {
                 inputCollapsed: true,

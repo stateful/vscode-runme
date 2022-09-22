@@ -7,7 +7,7 @@
   "configurations": [
     {
       "name": "Run Extension",
-      "type": "pwa-extensionHost",
+      "type": "extensionHost",
       "request": "launch",
       "args": [
         "--disable-extensions",
@@ -25,13 +25,14 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
+        "--disable-extensions",
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--folder-uri=${workspaceFolder}/examples"
       ],
       "outFiles": [
         "${workspaceFolder}/out/**/*.js"
       ],
-      "debugWebviews": true,
-      // "preLaunchTask": "npm: watch"
+      "debugWebviews": true
     },
     {
       "name": "Extension Tests",
