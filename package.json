@@ -1,0 +1,81 @@
+{
+  "name": "runme",
+  "publisher": "stateful",
+  "displayName": "RUNME",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "keywords": [
+    "notebookRenderer"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onNotebook:runme"
+  ],
+  "main": "./out/extension/extension.js",
+  "contributes": {
+    "notebooks": [
+      {
+        "type": "runme",
+        "displayName": "Run your README.md",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          },
+          {
+            "filenamePattern": "*.mdi"
+          }
+        ]
+      }
+    ],
+    "notebookRenderer": [
+      {
+        "id": "vscode-runme",
+        "entrypoint": "./out/client/index.js",
+        "displayName": "Vercel",
+        "mimeTypes": [
+          "x-application/vercel-deploy"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "webpack --mode production",
+    "lint": "eslint src --ext ts",
+    "watch": "webpack --mode development --watch",
+    "pretest": "webpack --mode development && yarn run lint",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.71.0",
+    "@types/vscode-notebook-renderer": "^1.60.0",
+    "@types/webpack-env": "^1.17.0",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "@vscode/test-electron": "^2.1.5",
+    "css-loader": "^4.2.0",
+    "eslint": "^8.20.0",
+    "fork-ts-checker-webpack-plugin": "^5.0.14",
+    "glob": "^8.0.3",
+    "mocha": "^10.0.0",
+    "style-loader": "^1.2.1",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.7.4",
+    "util": "^0.12.4",
+    "vscode-notebook-error-overlay": "^1.0.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "dependencies": {
+    "fs-extra": "^10.1.0"
+  }
+}
