@@ -9,9 +9,15 @@ echo "Hello World"
 ```
 
 ```sh
-echo "Foo"
+echo "Foo 👀"
 sleep 2
-echo "Bar"
+echo "Bar 🕺"
 sleep 2
-echo "Loo"
+echo "Loo 🚀"
+```
+
+## Complexer Output
+
+```sh
+yarn add webdriverio
 ```

@@ -18,8 +18,7 @@ const makeConfig = (argv, { entry, out, target, library = 'commonjs', experiment
         vscode: 'commonjs vscode',
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.css'],
-        fallback: { "util": require.resolve("util/") }
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.css']
     },
     experiments,
     module: {
