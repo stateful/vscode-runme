@@ -3,30 +3,6 @@ import { readFileSync } from "node:fs";
 import vscode from "vscode";
 import executor from './executors';
 
-const fake = [
-    "Using stateful/tap",
-    "Using hashicorp/terraform",
-    "Using caddy",
-    "Using postgresql",
-    "Using go",
-    "Using gh",
-    "Using jq",
-    "Using stateful/tap/stateful",
-    "Using asdf",
-    "Using htop",
-    "Using nvm",
-    "Using gpg",
-    "Using mtr",
-    "Using zsh-completion",
-    "Using hashicorp/tap/terraform",
-    "Using bazelisk",
-    "Using step",
-    "Using protobuf",
-    "Using tinygo-org/tools/tinygo",
-    "Using google-cloud-sdk",
-    "Homebrew Bundle complete! 20 Brewfile dependencies now installed.",
-];
-
 // declare const WebAssembly: any;
 declare var globalThis: any;
 
