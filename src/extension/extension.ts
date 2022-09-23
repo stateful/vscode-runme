@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
+import * as vscode from "vscode"
 import {
   Kernel,
   Serializer,
   ThumbsDownProvider,
   ThumbsUpProvider,
-} from "./providers";
+} from "./providers"
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -23,8 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
       "runme",
       new ThumbsDownProvider()
     )
-  );
-  context.subscriptions.push(new Kernel());
+  )
+  context.subscriptions.push(new Kernel())
 }
 
 // This method is called when your extension is deactivated

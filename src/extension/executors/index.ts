@@ -1,3 +1,3 @@
-import { sh, bash } from './shell';
+import { sh, bash } from './shell'
 
-export default { sh, bash };
+export default { sh, bash }
