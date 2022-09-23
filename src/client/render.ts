@@ -1,14 +1,15 @@
+import type { RendererContext } from 'vscode-notebook-renderer'
+
 // We've set up this sample using CSS modules, which lets you import class
 // names into JavaScript: https://github.com/css-modules/css-modules
 // You can configure or change this in the webpack.config.js file.
 import * as style from './style.css'
-import type { RendererContext } from 'vscode-notebook-renderer'
 
 interface IRenderInfo {
-  container: HTMLElement;
-  mime: string;
-  value: any;
-  context: RendererContext<unknown>;
+  container: HTMLElement
+  mime: string
+  value: any
+  context: RendererContext<unknown>
 }
 
 // This function is called to render your contents.

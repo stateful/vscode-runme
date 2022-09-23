@@ -1,6 +1,6 @@
-import path from 'node:path';
-import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
-import type { Configuration } from "webpack";
+import path from 'node:path'
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
+import type { Configuration } from "webpack"
 
 const makeConfig = (argv, args: Partial<Configuration>): Configuration => ({
   ...args,
@@ -49,7 +49,7 @@ const makeConfig = (argv, args: Partial<Configuration>): Configuration => ({
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
   }
-});
+})
 
 export default (_: never, argv) => [
   makeConfig(argv, {
@@ -73,4 +73,4 @@ export default (_: never, argv) => [
     },
     target: 'node'
   }),
-];
+]

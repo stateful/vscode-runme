@@ -77,11 +77,11 @@ export class Serializer implements vscode.NotebookSerializer {
         (
           acc: vscode.NotebookCellData[],
           s: {
-            name: string;
-            content: string;
-            description: string;
-            executable: string;
-            lines: string[];
+            name: string
+            content: string
+            description: string
+            executable: string
+            lines: string[]
           }
         ) => {
           acc.push(

@@ -1,6 +1,6 @@
-import { render } from './render'
 import errorOverlay from 'vscode-notebook-error-overlay'
 import type { ActivationFunction } from 'vscode-notebook-renderer'
+import { render } from './render'
 
 // ----------------------------------------------------------------------------
 // This is the entrypoint to the notebook renderer's webview client-side code.

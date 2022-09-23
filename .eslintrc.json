@@ -1,22 +1,55 @@
 {
-    "root": true,
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": 6,
-        "sourceType": "module"
-    },
-    "plugins": [
-        "@typescript-eslint"
+  "root": true,
+  "extends": [
+    "plugin:import/typescript",
+    "plugin:import/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "import",
+    "unicorn"
+  ],
+  "rules": {
+    "import/order": "error",
+    "import/no-unresolved": [2, { "ignore": ["vscode"] }],
+    "unicorn/prefer-node-protocol": ["error"],
+    "@typescript-eslint/semi": ["error", "never"],
+    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/member-delimiter-style": ["error", {
+      "multiline": {
+        "delimiter": "none",
+        "requireLast": true
+      },
+      "singleline": {
+        "delimiter": "comma",
+        "requireLast": false
+      },
+      "multilineDetection": "brackets"
+    }],
+    "curly": "warn",
+    "eqeqeq": "warn",
+    "no-throw-literal": "warn",
+    "semi": [
+      "error",
+      "never"
     ],
-    "rules": {
-        "@typescript-eslint/naming-convention": "warn",
-        "curly": "warn",
-        "eqeqeq": "warn",
-        "no-throw-literal": "warn",
-        "semi": ["error", "never"],
-        "max-len": [2, 120]
-    },
-    "ignorePatterns": [
-        "**/*.d.ts"
+    "max-len": [
+      2,
+      120
     ]
+  },
+  "ignorePatterns": [
+    "**/*.d.ts"
+  ],
+  "settings": {
+    "import/resolver": {
+      "typescript": true,
+      "node": true
+    }
+  }
 }
