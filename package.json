@@ -76,6 +76,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "fs-extra": "^10.1.0"
+    "fs-extra": "^10.1.0",
+    "tmp-promise": "^3.0.3"
   }
 }

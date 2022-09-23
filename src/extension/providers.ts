@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import vscode from "vscode";
+import executor from './executors';
 
 const fake = [
     "Using stateful/tap",
@@ -48,15 +49,7 @@ export class Kernel implements vscode.Disposable {
     );
 
     constructor() {
-        this.controller.supportedLanguages = [
-            "md",
-            "markdown",
-            "sh",
-            "shell",
-            "bash",
-            "vercel",
-            "Vercel",
-        ];
+        this.controller.supportedLanguages = Object.keys(executor);
         this.controller.supportsExecutionOrder = true;
         this.controller.description = "Run your README.md";
         this.controller.executeHandler = this._executeAll.bind(this);
@@ -72,44 +65,10 @@ export class Kernel implements vscode.Disposable {
     private async _doExecuteCell(cell: vscode.NotebookCell): Promise<void> {
         const doc = await vscode.workspace.openTextDocument(cell.document.uri);
         const exec = this.controller.createNotebookCellExecution(cell);
+
         exec.start(Date.now());
-
-        switch (doc.getText()) {
-            case "brew bundle":
-                let output = [];
-
-                for (let i = 0; i < fake.length; i++) {
-                    output.push(fake[i]);
-
-                    if (i % 4 === 0) {
-                        const outCell = new vscode.NotebookCellOutput([
-                            vscode.NotebookCellOutputItem.stdout(
-                                output.join("\n")
-                            ),
-                        ]);
-                        outCell.metadata = { ran: true };
-                        await exec.replaceOutput(outCell);
-                        await new Promise((r) =>
-                            setTimeout(r, Math.random() * 500)
-                        );
-                    }
-                }
-                break;
-            default:
-                const outCell = new vscode.NotebookCellOutput([
-                    vscode.NotebookCellOutputItem.json(
-                        { site: "stateful-9apxyq02d-stateful.vercel.app" },
-                        "x-application/vercel-deploy"
-                    ),
-                ]);
-                outCell.metadata = { ran: true };
-                await new Promise((r) =>
-                    setTimeout(r, 2000 + Math.random() * 500)
-                );
-                await exec.replaceOutput(outCell);
-        }
-
-        exec.end(false);
+        const successfulCellExecution = await executor[doc.languageId as keyof typeof executor](exec, doc);
+        exec.end(successfulCellExecution);
     }
 }
 
