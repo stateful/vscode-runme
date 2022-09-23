@@ -4,8 +4,6 @@
 import * as style from './style.css';
 import type { RendererContext } from 'vscode-notebook-renderer';
 
-import { __webpack_public_path__ } from '.';
-
 interface IRenderInfo {
   container: HTMLElement;
   mime: string;

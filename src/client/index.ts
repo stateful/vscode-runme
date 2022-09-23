@@ -2,13 +2,6 @@ import { render } from './render';
 import errorOverlay from 'vscode-notebook-error-overlay';
 import type { ActivationFunction } from 'vscode-notebook-renderer';
 
-// Fix the public path so that any async import()'s work as expected.
-declare const __webpack_relative_entrypoint_to_root__: string;
-declare const scriptUrl: string;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const __webpack_public_path__ = new URL(scriptUrl.replace(/[^/]+$/, '') + __webpack_relative_entrypoint_to_root__).toString();
-
 // ----------------------------------------------------------------------------
 // This is the entrypoint to the notebook renderer's webview client-side code.
 // This contains some boilerplate that calls the `render()` function when new
