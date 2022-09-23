@@ -2,20 +2,11 @@ import { readFileSync } from "node:fs"
 
 import vscode from "vscode"
 import executor from './executors'
-
-// declare const WebAssembly: any;
-declare var globalThis: any
-
-globalThis.crypto = <any>{
-  getRandomValues: (array: any) => {
-    for (let i = 0, l = array.length; i < l; i++) {
-      array[i] = Math.floor(Math.random() * 256)
-    }
-    return array
-  },
-}
+import type { ParsedReadmeEntry } from './types'
 
 import "./wasm/wasm_exec.js"
+
+declare var globalThis: any
 
 export class Kernel implements vscode.Disposable {
   private controller = vscode.notebooks.createNotebookController(
@@ -50,60 +41,45 @@ export class Kernel implements vscode.Disposable {
 
 export class Serializer implements vscode.NotebookSerializer {
   private readonly ready: Promise<void>
+
   constructor(private context: vscode.ExtensionContext) {
     const go = new globalThis.Go()
-    const wasmUri = vscode.Uri.joinPath(this.context.extensionUri, 'src', 'extension', 'wasm', 'runme.wasm')
+    const wasmUri = vscode.Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     this.ready = WebAssembly.instantiate(
       readFileSync(wasmUri.path),
       go.importObject
+    ).then(
+      (result) => { go.run(result.instance) },
+      (err: Error) => console.error(err)
     )
-      .then((result: any) => {
-        go.run(result.instance)
-        return Promise.resolve()
-      })
-      .catch((err: Error) => {
-        console.error(err)
-      })
   }
 
-  public deserializeNotebook(
+  public async deserializeNotebook(
     content: Uint8Array,
     token: vscode.CancellationToken
-  ): Thenable<vscode.NotebookData> {
-    return this.ready.then(() => {
-      const md = content.toString()
-      const snippets = globalThis.GetSnippets(md)
-      const cells = snippets.reduce(
-        (
-          acc: vscode.NotebookCellData[],
-          s: {
-            name: string
-            content: string
-            description: string
-            executable: string
-            lines: string[]
-          }
-        ) => {
-          acc.push(
-            new vscode.NotebookCellData(
-              vscode.NotebookCellKind.Markup,
-              s.description,
-              s.executable
-            )
-          )
-          acc.push(
-            new vscode.NotebookCellData(
-              vscode.NotebookCellKind.Code,
-              s.lines.join("\n"),
-              s.executable
-            )
-          )
-          return acc
-        },
-        []
+  ): Promise<vscode.NotebookData> {
+    await this.ready
+
+    const md = content.toString()
+    const snippets: ParsedReadmeEntry[] = globalThis.GetSnippets(md)
+    const cells = snippets.reduce((acc, s) => {
+      acc.push(
+        new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          s.description,
+          s.executable
+        )
       )
-      return new vscode.NotebookData(cells)
-    })
+      acc.push(
+        new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Code,
+          s.lines.join("\n"),
+          s.executable
+        )
+      )
+      return acc
+    }, [] as vscode.NotebookCellData[])
+    return new vscode.NotebookData(cells)
   }
 
   public serializeNotebook(
