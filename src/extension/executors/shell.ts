@@ -4,6 +4,9 @@ import { spawn } from 'node:child_process'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 import { file } from 'tmp-promise'
 
+import { OUTPUT_MIME_TYPE } from '../constants'
+import type { StdoutOutput } from '../../types'
+
 async function shellExecutor(exec: NotebookCellExecution, doc: TextDocument): Promise<boolean> {
   const outputItems: string[] = []
   const scriptFile = await file()
@@ -19,7 +22,9 @@ async function shellExecutor(exec: NotebookCellExecution, doc: TextDocument): Pr
   function handleOutput(data: any) {
     outputItems.push(data.toString().trim())
     exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.stdout(outputItems.join('\n'))
+      NotebookCellOutputItem.json(<StdoutOutput>{
+        output: outputItems.join('\n')
+      }, OUTPUT_MIME_TYPE)
     ]))
   }
 

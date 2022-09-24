@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import vscode from 'vscode'
 
-import type { ParsedReadmeEntry } from './types'
+import type { ParsedReadmeEntry } from '../types'
 
 declare var globalThis: any
 

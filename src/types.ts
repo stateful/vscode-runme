@@ -5,3 +5,7 @@ export interface ParsedReadmeEntry {
   executable: string
   lines: string[]
 }
+
+export interface StdoutOutput {
+  output: string
+}
