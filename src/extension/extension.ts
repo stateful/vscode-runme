@@ -1,10 +1,7 @@
-import * as vscode from "vscode"
-import {
-  Kernel,
-  Serializer,
-  ThumbsDownProvider,
-  ThumbsUpProvider,
-} from "./providers"
+import vscode from "vscode"
+import { Serializer } from './notebook'
+import { Kernel } from "./kernel"
+import { ThumbsDownProvider, ThumbsUpProvider } from './provider/rating'
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(

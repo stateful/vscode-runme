@@ -12,12 +12,14 @@
   "plugins": [
     "@typescript-eslint",
     "import",
-    "unicorn"
+    "unicorn",
+    "unused-imports"
   ],
   "rules": {
     "import/order": "error",
     "import/no-unresolved": [2, { "ignore": ["vscode"] }],
     "unicorn/prefer-node-protocol": ["error"],
+    "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/semi": ["error", "never"],
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/member-delimiter-style": ["error", {
@@ -31,6 +33,7 @@
       },
       "multilineDetection": "brackets"
     }],
+    "no-unused-vars": "off",
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
