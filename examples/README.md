@@ -21,3 +21,9 @@ echo "Loo 🚀"
 ```sh
 yarn add webdriverio
 ```
+
+## Stdin Example
+
+```
+node ./scripts/stdin.js
+```
