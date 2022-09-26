@@ -1,3 +1,8 @@
+RunMe Examples
+==============
+
+This `README.md` contains some example for testing this extension.
+
 # Extension Example Markdown Files
 
 This markdown file contains some custom examples to test the execution within a VS Code Notebook.
@@ -19,11 +24,11 @@ echo "Loo 🚀"
 ## Complexer Output
 
 ```sh
-yarn add webdriverio
+yarn global add webdriverio
 ```
 
 ## Stdin Example
 
 ```
-node ./scripts/stdin.js
+node ./stdin.js
 ```
