@@ -26,18 +26,22 @@ export class Serializer implements vscode.NotebookSerializer {
     const md = content.toString()
     const snippets: ParsedReadmeEntry[] = globalThis.GetSnippets(md)
     const cells = snippets.reduce((acc, s) => {
+      /**
+       * code block description
+       */
+      if (s.description) {
+        acc.push(
+          new vscode.NotebookCellData(
+            vscode.NotebookCellKind.Markup,
+            s.description,
+            'markdown'
+          )
+        )
+      }
+      /**
+       * code block
+       */
       acc.push(
-        /**
-         * code block description
-         */
-        new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
-          s.description,
-          'markdown'
-        ),
-        /**
-         * code block
-         */
         new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           s.lines.join("\n"),
