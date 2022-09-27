@@ -18,6 +18,7 @@
   "rules": {
     "import/order": "error",
     "import/no-unresolved": [2, { "ignore": ["vscode"] }],
+    "import/no-named-as-default": "off",
     "unicorn/prefer-node-protocol": ["error"],
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/semi": ["error", "never"],

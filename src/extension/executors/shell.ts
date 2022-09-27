@@ -6,9 +6,8 @@ import type EventEmitter from 'node:events'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 import { file } from 'tmp-promise'
 
-import { OUTPUT_MIME_TYPE } from '../constants'
-
-import type { StdoutOutput } from '../../types'
+import { OutputType } from '../../constants'
+import type { CellOutput } from '../../types'
 
 async function shellExecutor(
   exec: NotebookCellExecution,
@@ -41,9 +40,10 @@ async function shellExecutor(
   function handleOutput(data: any) {
     outputItems.push(data.toString().trim())
     exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<StdoutOutput>{
+      NotebookCellOutputItem.json(<CellOutput>{
+        type: OutputType.shell,
         output: outputItems.join('\n')
-      }, OUTPUT_MIME_TYPE)
+      }, OutputType.shell)
     ]))
   }
 

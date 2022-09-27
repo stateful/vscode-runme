@@ -26,6 +26,8 @@ export class Serializer implements vscode.NotebookSerializer {
     const md = content.toString()
     const snippets: ParsedReadmeEntry[] = globalThis.GetSnippets(md)
     const cells = snippets.reduce((acc, s) => {
+      const lines = s.lines.join("\n")
+
       /**
        * code block description
        */
@@ -44,8 +46,8 @@ export class Serializer implements vscode.NotebookSerializer {
       acc.push(
         new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
-          s.lines.join("\n"),
-          s.executable
+          lines,
+          lines.startsWith('vercel ') ? 'vercel' : s.executable
         )
       )
       return acc

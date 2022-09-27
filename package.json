@@ -41,11 +41,19 @@
     ],
     "notebookRenderer": [
       {
-        "id": "vscode-runme",
+        "id": "runme-shell-renderer",
         "entrypoint": "./out/client.js",
-        "displayName": "runme stdout",
+        "displayName": "runme shell stdout",
         "mimeTypes": [
-          "stateful.runme/stdout"
+          "stateful.runme/shell-stdout"
+        ]
+      },
+      {
+        "id": "runme-vercel-renderer",
+        "entrypoint": "./out/client.js",
+        "displayName": "runme vercel stdout",
+        "mimeTypes": [
+          "stateful.runme/vercel-stdout"
         ]
       }
     ]
@@ -80,6 +88,8 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "@vercel/client": "^12.2.7",
+    "got": "^12.5.0",
     "lit": "^2.3.1",
     "tmp-promise": "^3.0.3"
   }

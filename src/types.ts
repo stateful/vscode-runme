@@ -6,6 +6,7 @@ export interface ParsedReadmeEntry {
   lines: string[]
 }
 
-export interface StdoutOutput {
-  output: string
+export interface CellOutput {
+  type: 'error' | 'stateful.runme/shell-stdout' | 'stateful.runme/vercel-stdout'
+  output: any
 }

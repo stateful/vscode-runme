@@ -1,6 +1,7 @@
 import type { ActivationFunction } from 'vscode-notebook-renderer'
 
-import type { StdoutOutput } from '../types'
+import { OutputType } from '../constants'
+import type { CellOutput } from '../types'
 import './components'
 
 // ----------------------------------------------------------------------------
@@ -12,8 +13,25 @@ import './components'
 
 export const activate: ActivationFunction = () => ({
   renderOutputItem(outputItem, element) {
-    const { output } = outputItem.json() as StdoutOutput
-    element.innerHTML = /*html*/`<shell-output content="${output}" />`
+    const { output, type } = outputItem.json() as CellOutput
+
+    switch (type) {
+      case OutputType.shell:
+        const shellElem = document.createElement('shell-output')
+        shellElem.setAttribute('content', JSON.stringify(output))
+        element.appendChild(shellElem)
+        break
+      case OutputType.vercel:
+        const elem = document.createElement('vercel-output')
+        elem.setAttribute('content', JSON.stringify(output))
+        element.appendChild(elem)
+        break
+      case OutputType.error:
+        element.innerHTML = /*html*/`⚠️ ${output}`
+        break
+      default: element.innerHTML = /*html*/`No renderer found!`
+    }
+
   },
   disposeOutputItem(/* outputId */) {
     // Do any teardown here. outputId is the cell output being deleted, or
