@@ -1544,7 +1544,7 @@ fs.realpath@^1.0.0:
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
-fsevents@~2.3.2:
+fsevents@*, fsevents@~2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
   integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
@@ -2374,6 +2374,13 @@ optionator@^0.9.1:
     prelude-ls "^1.2.1"
     type-check "^0.4.0"
     word-wrap "^1.2.3"
+
+os-paths@^7.2.0:
+  version "7.3.0"
+  resolved "https://registry.yarnpkg.com/os-paths/-/os-paths-7.3.0.tgz#866e783ace14bc0ce95fa812b7555b7888452b99"
+  integrity sha512-RwE14ySxx9W/wTYzT4F0jUlrhYHLBHVW38os8yN7I9IGmLOpI76NDSlTa7gwHhVnH0IoM6BFp++s5sI3x3dicw==
+  optionalDependencies:
+    fsevents "*"
 
 p-cancelable@^3.0.0:
   version "3.0.0"
@@ -3272,6 +3279,24 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
+
+xdg-app-paths@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/xdg-app-paths/-/xdg-app-paths-8.2.0.tgz#ae367d279ef594c11d52c00671b1b9bf5cb39805"
+  integrity sha512-feo6L3w1woxOOGMVSCoUplqS7Wf96zqwQX/IjjIJoBao/yHREALVuinsk2ZBvN+jEiY0VdX1sCW2jR5/KGdefg==
+  dependencies:
+    xdg-portable "^10.5.0"
+  optionalDependencies:
+    fsevents "*"
+
+xdg-portable@^10.5.0:
+  version "10.5.1"
+  resolved "https://registry.yarnpkg.com/xdg-portable/-/xdg-portable-10.5.1.tgz#17a661ff1c10fecb5316eae281bf7d4dc0775a0b"
+  integrity sha512-dKX7yn1jgKqh4GENubRidDpDoaRmwwoiEph2JAcDUD6n3/5ROy5rQo42MX8iIl0UCUhVpsoU2jth5DtdvOATvA==
+  dependencies:
+    os-paths "^7.2.0"
+  optionalDependencies:
+    fsevents "*"
 
 xtend@^4.0.0:
   version "4.0.2"

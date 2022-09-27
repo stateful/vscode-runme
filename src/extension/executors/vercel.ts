@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import got from 'got'
+import xdg from 'xdg-app-paths'
 import { createDeployment } from '@vercel/client'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
 
@@ -17,17 +18,27 @@ export async function vercel (
   doc: TextDocument
   // inputHandler: EventEmitter
 ): Promise<boolean> {
+  let token: string | null = null
   const cwd = path.dirname(doc.uri.path)
 
-  /**
-   * get Vercel token
-   */
-  const token = await window.showInputBox({
-    title: 'Vercel Access Token',
-    prompt: 'Please enter a valid access token to run a Vercel deployment.'
-  })
-
   try {
+    /**
+     * get Vercel token
+     */
+    const authFilePath = path.join(
+      `${xdg('com.vercel.cli').dataDirs()[0]}.cli`,
+      'auth.json'
+    )
+    const canRead = await fs.access(authFilePath).then(() => true, () => false)
+    if (canRead) {
+      token = JSON.parse((await fs.readFile(authFilePath, 'utf-8')).toString()).token
+    } else {
+      token = await window.showInputBox({
+        title: 'Vercel Access Token',
+        prompt: 'Please enter a valid access token to run a Vercel deployment.'
+      }) || null
+    }
+
     if (!token) {
       throw new Error('No token supplied')
     }

@@ -91,6 +91,7 @@
     "@vercel/client": "^12.2.7",
     "got": "^12.5.0",
     "lit": "^2.3.1",
-    "tmp-promise": "^3.0.3"
+    "tmp-promise": "^3.0.3",
+    "xdg-app-paths": "^8.2.0"
   }
 }
