@@ -26,13 +26,16 @@ export async function vercel (
      * get Vercel token
      */
     const authFilePath = path.join(
-      `${xdg('com.vercel.cli').dataDirs()[0]}.cli`,
-      'auth.json'
-    )
+      `${xdg('com.vercel.cli').dataDirs()[0]}.cli`, 'auth.json')
     const canRead = await fs.access(authFilePath).then(() => true, () => false)
     if (canRead) {
-      token = JSON.parse((await fs.readFile(authFilePath, 'utf-8')).toString()).token
+      token = JSON.parse(
+        (await fs.readFile(authFilePath, 'utf-8')).toString()
+      ).token
     } else {
+      /**
+       * if user is not logged in with their machine, ask for an access token
+       */
       token = await window.showInputBox({
         title: 'Vercel Access Token',
         prompt: 'Please enter a valid access token to run a Vercel deployment.'
