@@ -40,19 +40,23 @@ export class VercelOutput extends LitElement {
       return html`⚠️ Ups! Something went wrong displaying the result!`
     }
 
+    if (!this.content.payload.inspectorUrl) {
+      return html`Starting Vercel Deployment...`
+    }
+
     return html`<section>
       <img src="https://www.svgrepo.com/show/354513/vercel-icon.svg">
       <div>
         <h4>Deployment</h4>
-        <a href="${this.content.payload.inspectorUrl}">${this.content.payload.url}</a>
+        <vscode-link href="${this.content.payload.inspectorUrl}">${this.content.payload.url}</vscode-link>
         <h4>Name</h4>
-        <a href="https://${this.content.payload.name}.vercel.app">${this.content.payload.name}</a>
+        <vscode-link href="https://${this.content.payload.name}.vercel.app">${this.content.payload.name}</vscode-link>
       </div>
       <div>
         <h4>Created At</h4>
         ${(new Date(this.content.payload.createdAt)).toString()}
         <h4>Status</h4>
-        ${this.content.payload.status}
+        ${this.content.payload.status.toLowerCase()}
       </div>
     </section>`
   }
