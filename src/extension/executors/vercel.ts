@@ -1,81 +1,53 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import got from 'got'
-import xdg from 'xdg-app-paths'
-import { createDeployment } from '@vercel/client'
-import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
+import { EventEmitter } from 'node:events'
+
+import yargs from 'yargs/yargs'
+import { hideBin } from 'yargs/helpers'
+
+import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
-
-interface VercelProject {
-  id: string
-  name: string
-}
+import { bash } from './shell'
+import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (
   exec: NotebookCellExecution,
-  doc: TextDocument
-  // inputHandler: EventEmitter
+  doc: TextDocument,
+  inputHandler: EventEmitter
 ): Promise<boolean> {
-  let token: string | null = null
-  const cwd = path.dirname(doc.uri.path)
+  const command = doc.getText()
 
-  try {
-    /**
-     * get Vercel token
-     */
-    const authFilePath = path.join(
-      `${xdg('com.vercel.cli').dataDirs()[0]}.cli`, 'auth.json')
-    const canRead = await fs.access(authFilePath).then(() => true, () => false)
-    if (canRead) {
-      token = JSON.parse(
-        (await fs.readFile(authFilePath, 'utf-8')).toString()
-      ).token
-    } else {
-      /**
-       * if user is not logged in with their machine, ask for an access token
-       */
-      token = await window.showInputBox({
-        title: 'Vercel Access Token',
-        prompt: 'Please enter a valid access token to run a Vercel deployment.'
-      }) || null
-    }
-
-    if (!token) {
-      throw new Error('No token supplied')
-    }
-
-    /**
-     * get project information (e.g. name to be able to deploy)
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    const headers = { Authorization: `Bearer ${token}` }
-    const { projectId } = JSON.parse((await fs.readFile(path.join(cwd, '.vercel', 'project.json'))).toString())
-    const project = await got(`https://api.vercel.com/v9/projects/${projectId}`, { headers }).json() as VercelProject
-
-    /**
-     * deploy application
-     */
-    const clientParams = { token, path: cwd }
-    const deployParams = { name: project.name }
-    for await (const event of createDeployment(clientParams, deployParams)) {
-      exec.replaceOutput(new NotebookCellOutput([
-        NotebookCellOutputItem.json(<CellOutput>{
-          type: OutputType.vercel,
-          output: event
-        }, OutputType.vercel)
-      ]))
-    }
-  } catch (err: any) {
+  /**
+   * limit vercel commands to single lines
+   */
+  if (command.includes('\n')) {
     exec.replaceOutput(new NotebookCellOutput([
       NotebookCellOutputItem.json(<CellOutput>{
         type: 'error',
-        output: err.message
+        output: 'Currently only one-liner Vercel commands are supported'
       }, OutputType.vercel)
     ]))
     return false
   }
 
-  return true
+  const argv = yargs(hideBin(command.split(' '))).argv
+  const vercelCommand = ((await argv)._)[0] || 'deploy'
+
+  /**
+   * special commands handled by the kernel
+   */
+  if (vercelCommand === 'deploy') {
+    return deploy(exec, doc)
+  }
+  if (vercelCommand === 'login') {
+    return login(exec)
+  }
+  if (vercelCommand === 'logout') {
+    return logout(exec)
+  }
+
+  /**
+   * other commands passed to the CLI
+   */
+  return bash(exec, doc, inputHandler)
 }

@@ -79,6 +79,7 @@
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
+    "@types/yargs": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "@vscode/test-electron": "^2.1.5",
@@ -98,9 +99,12 @@
   "dependencies": {
     "@vercel/client": "^12.2.7",
     "@vscode/webview-ui-toolkit": "^1.1.0",
+    "get-port": "5.1.1",
     "got": "^12.5.0",
     "lit": "^2.3.1",
     "tmp-promise": "^3.0.3",
-    "xdg-app-paths": "^8.2.0"
+    "vercel": "^28.4.4",
+    "xdg-app-paths": "^8.2.0",
+    "yargs": "^17.5.1"
   }
 }

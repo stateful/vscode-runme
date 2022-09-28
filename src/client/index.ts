@@ -34,7 +34,6 @@ export const activate: ActivationFunction = () => ({
         break
       default: element.innerHTML = /*html*/`No renderer found!`
     }
-
   },
   disposeOutputItem(/* outputId */) {
     // Do any teardown here. outputId is the cell output being deleted, or

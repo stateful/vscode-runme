@@ -49,8 +49,26 @@ Feel free to check [our documentation](https://docs.astro.build) or jump into ou
 
 # Deployment
 
-To deploy the application, run:
+To deploy the application, first log into Vercel:
+
+```sh
+vercel login
+```
+
+then run:
 
 ```sh
 vercel --prod
+```
+
+afterwards, you can optionally log out:
+
+```sh
+vercel logout
+```
+
+or call another command:
+
+```sh
+vercel domain
 ```
