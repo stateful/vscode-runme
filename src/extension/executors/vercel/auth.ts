@@ -4,6 +4,7 @@ import fs from 'node:fs/promises'
 import got from 'got'
 import getPort from 'get-port'
 import { NotebookCellExecution, NotebookCellOutputItem, NotebookCellOutput, window, env, Uri } from 'vscode'
+import type { Argv } from 'yargs'
 
 import { getAuthToken, getConfigFilePath } from './utils'
 
@@ -15,8 +16,21 @@ const LOGIN_OPTIONS = [
   'Continue with SAML Single Sign-On'
 ]
 
-export async function login (exec: NotebookCellExecution): Promise<boolean> {
-  const method = await window.showQuickPick(LOGIN_OPTIONS)
+interface VercelCLILogin {
+  github: boolean
+  gitlab: boolean
+  bitbucket: boolean
+}
+
+export async function login (exec: NotebookCellExecution, argv: Argv<VercelCLILogin>): Promise<boolean> {
+  const args = await argv.argv
+  const method = (
+    (args.github && 'github') ||
+    (args.gitlab && 'gitlab') ||
+    (args.bitbucket && 'bitbucket') ||
+    await window.showQuickPick(LOGIN_OPTIONS)
+  )
+
 
   if (!method) {
     exec.replaceOutput(new NotebookCellOutput([
@@ -25,7 +39,7 @@ export async function login (exec: NotebookCellExecution): Promise<boolean> {
     return false
   }
 
-  if (!method.includes('GitHub')) {
+  if (!method.includes('GitHub') && method !== 'github') {
     exec.replaceOutput(new NotebookCellOutput([
       NotebookCellOutputItem.text('Login method not supported.')
     ]))
