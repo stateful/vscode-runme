@@ -55,6 +55,14 @@
         "mimeTypes": [
           "stateful.runme/vercel-stdout"
         ]
+      },
+      {
+        "id": "runme-html-renderer",
+        "entrypoint": "./out/client.js",
+        "displayName": "runme html stdout",
+        "mimeTypes": [
+          "stateful.runme/html-stdout"
+        ]
       }
     ]
   },

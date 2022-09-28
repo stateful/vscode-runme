@@ -18,13 +18,16 @@ export const activate: ActivationFunction = () => ({
     switch (type) {
       case OutputType.shell:
         const shellElem = document.createElement('shell-output')
-        shellElem.setAttribute('content', JSON.stringify(output))
+        shellElem.innerHTML = output
         element.appendChild(shellElem)
         break
       case OutputType.vercel:
         const elem = document.createElement('vercel-output')
         elem.setAttribute('content', JSON.stringify(output))
         element.appendChild(elem)
+        break
+      case OutputType.html:
+        element.innerHTML += output
         break
       case OutputType.error:
         element.innerHTML = /*html*/`⚠️ ${output}`

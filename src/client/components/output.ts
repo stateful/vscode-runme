@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement } from 'lit/decorators.js'
 
 @customElement('shell-output')
 export class ShellOutput extends LitElement {
@@ -8,12 +8,8 @@ export class ShellOutput extends LitElement {
     :host {}
   `
 
-  // Declare reactive properties
-  @property()
-  content?: string
-
   // Render the UI as a function of component state
   render() {
-    return html`<pre>${this.content}</p>`
+    return html`<pre><slot></slot></pre>`
   }
 }

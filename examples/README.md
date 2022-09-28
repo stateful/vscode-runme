@@ -32,3 +32,21 @@ yarn global add webdriverio
 ```
 node ./stdin.js
 ```
+
+## Web Component Example
+
+Examples of Webcomponents rendered within cells.
+
+```html
+<div>
+  <h1>Shell Output Component</h1>
+  <shell-output>
+    foo 😉
+    bar 👀
+  </shell-output>
+</div>
+<div>
+  <h1>Vercel Output Component</h1>
+  <vercel-output content='{"payload": { "name": "foobar", "createdAt": 1664321974484, "status": "demoing" } }' />
+</div>
+```

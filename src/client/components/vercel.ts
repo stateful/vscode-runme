@@ -40,7 +40,7 @@ export class VercelOutput extends LitElement {
       return html`⚠️ Ups! Something went wrong displaying the result!`
     }
 
-    if (!this.content.payload.inspectorUrl) {
+    if (!this.content.payload.name) {
       return html`Starting Vercel Deployment...`
     }
 
