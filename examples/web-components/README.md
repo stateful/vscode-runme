@@ -16,5 +16,6 @@ Render demo component:
 Render demo component:
 
 ```html
-tbd
+<div id="root"></div>
+<script src="/web-components/react/main.tsx" type="module"></script>
 ```
