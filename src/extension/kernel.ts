@@ -1,16 +1,19 @@
-import vscode from "vscode"
+import vscode, { ExtensionContext } from "vscode"
 import executor from './executors'
 
 import "./wasm/wasm_exec.js"
 
 export class Kernel implements vscode.Disposable {
+  #context: ExtensionContext
   private controller = vscode.notebooks.createNotebookController(
     "runme",
     "runme",
     "RUNME"
   )
 
-  constructor() {
+  constructor(context: ExtensionContext) {
+    this.#context = context
+
     this.controller.supportedLanguages = Object.keys(executor)
     this.controller.supportsExecutionOrder = false
     this.controller.description = "Run your README.md"
@@ -31,7 +34,7 @@ export class Kernel implements vscode.Disposable {
 
     exec.start(Date.now())
     const languageId = runningCell.languageId as keyof typeof executor
-    const successfulCellExecution = await executor[languageId](exec, runningCell)
+    const successfulCellExecution = await executor[languageId](this.#context, exec, runningCell)
     exec.end(successfulCellExecution)
   }
 }

@@ -3,7 +3,7 @@ import { writeFile, chmod } from 'node:fs/promises'
 
 import {
   Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, commands
+  window, TerminalOptions, commands, ExtensionContext
 } from 'vscode'
 import { file } from 'tmp-promise'
 
@@ -18,6 +18,7 @@ export function closeTerminalByScript (script: string) {
 }
 
 async function shellExecutor(
+  context: ExtensionContext,
   exec: NotebookCellExecution,
   doc: TextDocument,
 ): Promise<boolean> {
@@ -27,7 +28,7 @@ async function shellExecutor(
   await chmod(scriptFile.path, 0o775)
 
   const shellExecution = new Task(
-    { type: 'runme', name: 'RunMe Task' },
+    { type: 'runme', name: 'Runme Task' },
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
@@ -47,7 +48,7 @@ async function shellExecutor(
         closeTerminalByScript(scriptFile.path)
         resolve(0)
       } catch (err: any) {
-        console.error(`[RunMe] Failed to terminate task: ${(err as Error).message}`)
+        console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
         resolve(1)
       }
     })

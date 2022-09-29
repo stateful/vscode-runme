@@ -2,7 +2,10 @@ import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
 
-import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import {
+  TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
+  ExtensionContext
+} from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
@@ -10,6 +13,7 @@ import { bash } from './shell'
 import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (
+  context: ExtensionContext,
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
@@ -68,5 +72,5 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return bash(exec, doc)
+  return bash(context, exec, doc)
 }

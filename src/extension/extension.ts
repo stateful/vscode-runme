@@ -2,12 +2,15 @@ import vscode from "vscode"
 import { Serializer } from './notebook'
 import { Kernel } from "./kernel"
 import { ThumbsDownProvider, ThumbsUpProvider } from './provider/rating'
+import { ViteServer } from "./server"
 
-export function activate(context: vscode.ExtensionContext) {
-  const kernel = new Kernel()
+export async function activate(context: vscode.ExtensionContext) {
+  const server = await ViteServer.create(context)
+  const kernel = new Kernel(context)
 
   context.subscriptions.push(
     kernel,
+    server,
     vscode.workspace.registerNotebookSerializer("runme", new Serializer(context), {
       transientOutputs: true,
       transientCellMetadata: {

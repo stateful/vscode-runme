@@ -1,16 +1,25 @@
-import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import {
+  TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
+  ExtensionContext
+} from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
 async function htmlExecutor(
+  context: ExtensionContext,
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
+  const vitePort = context.globalState.get('viteServerPort') as number
+
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{
       type: OutputType.html,
-      output: doc.getText()
+      output: {
+        content: doc.getText(),
+        port: vitePort
+      }
     }, OutputType.html)
   ]))
   return true

@@ -93,11 +93,12 @@
   "dependencies": {
     "@vercel/client": "^12.2.7",
     "@vscode/webview-ui-toolkit": "^1.1.0",
-    "get-port": "5.1.1",
+    "get-port": "^6.1.2",
     "got": "^12.5.0",
     "lit": "^2.3.1",
     "tmp-promise": "^3.0.3",
     "vercel": "^28.4.4",
+    "vite": "^3.1.4",
     "xdg-app-paths": "^8.2.0",
     "yargs": "^17.5.1"
   }

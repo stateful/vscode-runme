@@ -22,12 +22,15 @@ export const activate: ActivationFunction = () => ({
         element.appendChild(shellElem)
         break
       case OutputType.vercel:
-        const elem = document.createElement('vercel-output')
-        elem.setAttribute('content', JSON.stringify(output))
-        element.appendChild(elem)
+        const vercelElem = document.createElement('vercel-output')
+        vercelElem.setAttribute('content', JSON.stringify(output))
+        element.appendChild(vercelElem)
         break
       case OutputType.html:
-        element.innerHTML += output
+        const viteElem = document.createElement('vite-output')
+        viteElem.setAttribute('content', output.content)
+        viteElem.setAttribute('port', output.port)
+        element.appendChild(viteElem)
         break
       case OutputType.error:
         element.innerHTML = /*html*/`⚠️ ${output}`
