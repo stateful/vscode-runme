@@ -18,13 +18,7 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "runme.enter",
-        "category": "RunMe",
-        "title": "Send input to running cell"
-      }
-    ],
+    "commands": [],
     "notebooks": [
       {
         "type": "runme",

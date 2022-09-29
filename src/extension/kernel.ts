@@ -5,7 +5,6 @@ import executor from './executors'
 import "./wasm/wasm_exec.js"
 
 export class Kernel implements vscode.Disposable {
-  private runningCell?: vscode.TextDocument
   private inputHandler = new EventEmitter()
   private controller = vscode.notebooks.createNotebookController(
     "runme",
@@ -15,13 +14,9 @@ export class Kernel implements vscode.Disposable {
 
   constructor() {
     this.controller.supportedLanguages = Object.keys(executor)
-    this.controller.supportsExecutionOrder = true
+    this.controller.supportsExecutionOrder = false
     this.controller.description = "Run your README.md"
     this.controller.executeHandler = this._executeAll.bind(this)
-  }
-
-  get runningCellCommand () {
-    return this.runningCell?.getText()
   }
 
   dispose() { }
@@ -37,14 +32,12 @@ export class Kernel implements vscode.Disposable {
   }
 
   private async _doExecuteCell(cell: vscode.NotebookCell): Promise<void> {
-    this.runningCell = await vscode.workspace.openTextDocument(cell.document.uri)
+    const runningCell = await vscode.workspace.openTextDocument(cell.document.uri)
     const exec = this.controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const successfulCellExecution = await executor[this.runningCell.languageId as keyof typeof executor](
-      exec,
-      this.runningCell
-    )
+    const languageId = runningCell.languageId as keyof typeof executor
+    const successfulCellExecution = await executor[languageId](exec, runningCell)
     exec.end(successfulCellExecution)
   }
 }

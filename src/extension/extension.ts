@@ -22,17 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.notebooks.registerNotebookCellStatusBarItemProvider(
       "runme",
       new ThumbsDownProvider()
-    ),
-    vscode.commands.registerCommand('runme.enter', () => {
-      if (!kernel.runningCellCommand) {
-        return vscode.window.showInformationMessage('No cell is waiting for input')
-      }
-
-      vscode.window.showInputBox({
-        title: 'Cell Input',
-        prompt: `Enter input for cell with command "${kernel.runningCellCommand}"`
-      }).then((input) => kernel.emitInput(input || '\n'))
-    })
+    )
   )
 }
 
