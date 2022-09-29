@@ -27,7 +27,19 @@ export class Serializer implements vscode.NotebookSerializer {
     await this.ready
 
     const md = content.toString()
-    const snippets = globalThis.GetDocument(md).document as ParsedReadmeEntry[]
+    const doc = globalThis.GetDocument(md)
+
+    if (!doc) {
+      return new vscode.NotebookData([
+        new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          '⚠️ __Error__: document could not be loaded',
+          'markdown'
+        )
+      ])
+    }
+
+    const snippets = doc.document as ParsedReadmeEntry[]
     const cells = snippets.reduce((acc, s, i) => {
       /**
        * code block description
