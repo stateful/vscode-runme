@@ -1,11 +1,9 @@
-import EventEmitter from "node:events"
 import vscode from "vscode"
 import executor from './executors'
 
 import "./wasm/wasm_exec.js"
 
 export class Kernel implements vscode.Disposable {
-  private inputHandler = new EventEmitter()
   private controller = vscode.notebooks.createNotebookController(
     "runme",
     "runme",
@@ -20,10 +18,6 @@ export class Kernel implements vscode.Disposable {
   }
 
   dispose() { }
-
-  emitInput (input: string) {
-    this.inputHandler.emit('data', input)
-  }
 
   private async _executeAll(cells: vscode.NotebookCell[]) {
     for (const cell of cells) {

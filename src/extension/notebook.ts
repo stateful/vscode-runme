@@ -5,7 +5,10 @@ import type { ParsedReadmeEntry } from '../types'
 
 declare var globalThis: any
 
+const CODE_REGEX = /```(\w+)?\n[^`]*```/g
+
 export class Serializer implements vscode.NotebookSerializer {
+  private fileContent?: string
   private readonly ready: Promise<void>
 
   constructor(private context: vscode.ExtensionContext) {
@@ -25,44 +28,71 @@ export class Serializer implements vscode.NotebookSerializer {
 
     const md = content.toString()
     const snippets: ParsedReadmeEntry[] = globalThis.GetSnippets(md)
-    const cells = snippets.reduce((acc, s) => {
+    const cells = snippets.reduce((acc, s, i) => {
       const lines = s.lines.join("\n")
 
       /**
        * code block description
        */
       if (s.description) {
-        acc.push(
-          new vscode.NotebookCellData(
-            vscode.NotebookCellKind.Markup,
-            s.description,
-            'markdown'
-          )
+        const cell = new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          s.description,
+          'markdown'
         )
+        cell.metadata = { id: i }
+        acc.push(cell)
       }
+
+      const cell = new vscode.NotebookCellData(
+        vscode.NotebookCellKind.Code,
+        lines,
+        /**
+         * with custom vercel execution
+         * lines.startsWith('vercel ') ? 'vercel' : s.executable
+         */
+        s.executable
+      )
+      cell.metadata = { id: i, source: lines }
       /**
        * code block
        */
-      acc.push(
-        new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Code,
-          lines,
-          /**
-           * with custom vercel execution
-           * lines.startsWith('vercel ') ? 'vercel' : s.executable
-           */
-          s.executable
-        )
-      )
+      acc.push(cell)
       return acc
     }, [] as vscode.NotebookCellData[])
     return new vscode.NotebookData(cells)
   }
 
-  public serializeNotebook(
-    // data: vscode.NotebookData,
+  public async serializeNotebook(
+    data: vscode.NotebookData,
     // token: vscode.CancellationToken
-  ): Thenable<Uint8Array> {
-    return Promise.resolve(new Uint8Array())
+  ): Promise<Uint8Array> {
+    const markdownFile = vscode.window.activeTextEditor?.document.fileName
+    if (!markdownFile) {
+      throw new Error('Could not detect opened markdown document')
+    }
+
+    if (!this.fileContent) {
+      this.fileContent = fs.readFileSync(markdownFile, 'utf-8').toString()
+    }
+
+    const codeExamples = this.fileContent.match(CODE_REGEX)
+
+    for (const cell of data.cells) {
+      const cellToReplace = codeExamples?.find((e) => e.includes(cell.metadata?.source))
+      if (!cell.metadata || !cell.metadata.source || !cellToReplace) {
+        continue
+      }
+
+      const exampleLines = cellToReplace.split('\n')
+      const newContent = [
+        exampleLines[0],
+        cell.value,
+        exampleLines[exampleLines.length - 1]
+      ].join('\n')
+      this.fileContent = this.fileContent.replace(cellToReplace, newContent)
+    }
+
+    return Promise.resolve(Buffer.from(this.fileContent))
   }
 }
