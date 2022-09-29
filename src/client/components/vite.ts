@@ -1,6 +1,9 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
+const ADJUSTMENT_TIMEOUT = 500 // 0.5s
+const ADJUSTMENT_INTERVAL = 10
+
 @customElement('vite-output')
 export class ViteOutput extends LitElement {
   // Define scoped styles right with your component, in plain CSS
@@ -9,7 +12,7 @@ export class ViteOutput extends LitElement {
 
     iframe {
       width: 100%;
-      border: 0
+      border: 0;
     }
   `
 
@@ -37,6 +40,12 @@ export class ViteOutput extends LitElement {
         <head>
           <title>Vite Output</title>
           <base href="http://127.0.0.1:${this.port}">
+          <style>
+            html, body {
+              padding: 0;
+              margin: 0;
+            }
+          </style>
         </head>
         <body>
           ${this.content}
@@ -44,5 +53,26 @@ export class ViteOutput extends LitElement {
       </html>
     `)
     doc.close()
+
+    /**
+     * determine needed height for iframe
+     */
+    const anchor = document.createElement('a')
+    anchor.style.display = 'block'
+    doc.body.appendChild(anchor)
+
+    const now = Date.now()
+    const i: NodeJS.Timer = setInterval(() => {
+      if ((Date.now() - now) > ADJUSTMENT_TIMEOUT) {
+        return clearInterval(i)
+      }
+
+      const rect = anchor.getBoundingClientRect()
+      if (rect.y === 0) {
+        return
+      }
+
+      iframe.height = `${rect.y}px`
+    }, ADJUSTMENT_INTERVAL)
   }
 }
