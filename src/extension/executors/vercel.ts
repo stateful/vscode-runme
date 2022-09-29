@@ -1,5 +1,3 @@
-import { EventEmitter } from 'node:events'
-
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
@@ -13,8 +11,7 @@ import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (
   exec: NotebookCellExecution,
-  doc: TextDocument,
-  inputHandler: EventEmitter
+  doc: TextDocument
 ): Promise<boolean> {
   const command = doc.getText()
 
@@ -32,6 +29,7 @@ export async function vercel (
   }
 
   const parsedArgv: Argv<any> = await yargs(hideBin(command.split(' ')))
+    .version(false)
     .option('version', { alias: 'v', type: 'boolean' })
     .option('cwd', { type: 'string' })
     .option('platform-version', { alias: 'V', type: 'string' })
@@ -70,5 +68,5 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return bash(exec, doc, inputHandler)
+  return bash(exec, doc)
 }

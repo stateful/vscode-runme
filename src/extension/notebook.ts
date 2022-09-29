@@ -47,7 +47,11 @@ export class Serializer implements vscode.NotebookSerializer {
         new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           lines,
-          lines.startsWith('vercel ') ? 'vercel' : s.executable
+          /**
+           * with custom vercel execution
+           * lines.startsWith('vercel ') ? 'vercel' : s.executable
+           */
+          s.executable
         )
       )
       return acc

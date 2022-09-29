@@ -43,8 +43,7 @@ export class Kernel implements vscode.Disposable {
     exec.start(Date.now())
     const successfulCellExecution = await executor[this.runningCell.languageId as keyof typeof executor](
       exec,
-      this.runningCell,
-      this.inputHandler
+      this.runningCell
     )
     exec.end(successfulCellExecution)
   }

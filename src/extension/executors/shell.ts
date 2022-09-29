@@ -1,72 +1,75 @@
 import path from 'node:path'
 import { writeFile, chmod } from 'node:fs/promises'
-import { spawn } from 'node:child_process'
-import type EventEmitter from 'node:events'
 
-import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import {
+  Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
+  window, TerminalOptions, commands
+} from 'vscode'
 import { file } from 'tmp-promise'
 
-import { OutputType } from '../../constants'
-import type { CellOutput } from '../../types'
+export function closeTerminalByScript (script: string) {
+  const terminal = window.terminals.find((t) => (
+    t.creationOptions as TerminalOptions).shellArgs?.includes(script))
+  if (terminal) {
+    terminal.hide()
+  }
+}
 
 async function shellExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument,
-  inputHandler: EventEmitter
 ): Promise<boolean> {
-  const outputItems: string[] = []
   const scriptFile = await file()
   await writeFile(scriptFile.path, doc.getText(), 'utf-8')
   await chmod(scriptFile.path, 0o775)
 
-  const child = spawn(scriptFile.path, {
-    cwd: path.dirname(doc.uri.path),
-    shell: true
-  })
-  console.log(`[RunMe] Started process on pid ${child.pid}`)
+  const shellExecution = new Task(
+    { type: 'runme', name: 'RunMe Task' },
+    TaskScope.Workspace,
+    'custom runme task',
+    'exec',
+    new ShellExecution(scriptFile.path, {
+      cwd: path.dirname(doc.uri.path)
+    })
+  )
+  await commands.executeCommand('workbench.action.terminal.clear')
+  const execution = await tasks.executeTask(shellExecution)
 
-  inputHandler.on('data', (input) => {
-    child.stdin.write(`${input}\n`)
-    /**
-     * the following prevents a second prompt to accept any input
-     * but not calling it causes the process to never exit
-     */
-    // child.stdin.end()
-  })
-
-  /**
-   * handle output for stdout and stderr
-   */
-  function handleOutput(data: any) {
-    outputItems.push(data.toString().trim())
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutput>{
-        type: OutputType.shell,
-        output: outputItems.join('\n')
-      }, OutputType.shell)
-    ]))
-  }
-
-  child.stdout.on('data', handleOutput)
-  child.stderr.on('data', handleOutput)
   return !Boolean(await new Promise<number>((resolve) => {
-    /**
-     * register cancellation handler
-     * ToDo(Christian): maybe better to kill with SIGINT signal but that doesn't stop the
-     * prcoess afterall
-     */
     exec.token.onCancellationRequested(() => {
-      child.stdin.destroy()
-      child.stdout.off('data', handleOutput)
-      child.stderr.off('data', handleOutput)
-
-      if (child.pid) {
-        process.kill(child.pid, 'SIGHUP')
+      try {
+        execution.terminate()
+        closeTerminalByScript(scriptFile.path)
+        resolve(0)
+      } catch (err: any) {
+        console.error(`[RunMe] Failed to terminate task: ${(err as Error).message}`)
+        resolve(1)
       }
-      resolve(child.kill('SIGHUP') ? 0 : 1)
     })
 
-    child.on('exit', resolve)
+    tasks.onDidEndTaskProcess((e) => {
+      const taskId = (e.execution as any)['_id']
+      const executionId = (execution as any)['_id']
+
+      /**
+       * ignore if
+       */
+      if (
+        /**
+         * VS Code is running a different task
+         */
+        taskId !== executionId ||
+        /**
+         * we don't have an exit code
+         */
+        typeof e.exitCode === 'undefined'
+      ) {
+        return
+      }
+
+      closeTerminalByScript(scriptFile.path)
+      return resolve(e.exitCode)
+    })
   }))
 }
 
