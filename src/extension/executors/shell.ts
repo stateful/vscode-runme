@@ -7,6 +7,8 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
+const LABEL_LIMIT = 15
+
 export function closeTerminalByScript (script: string) {
   const terminal = window.terminals.find((t) => (
     t.creationOptions as TerminalOptions).shellArgs?.includes(script))
@@ -20,13 +22,16 @@ async function shellExecutor(
   doc: TextDocument,
 ): Promise<boolean> {
   const scriptFile = await file()
-  await writeFile(scriptFile.path, doc.getText(), 'utf-8')
+  const cellText = doc.getText()
+  await writeFile(scriptFile.path, cellText, 'utf-8')
   await chmod(scriptFile.path, 0o775)
 
   const shellExecution = new Task(
     { type: 'runme', name: 'RunMe Task' },
     TaskScope.Workspace,
-    'custom runme task',
+    cellText.length > LABEL_LIMIT
+      ? `${cellText.slice(0, LABEL_LIMIT)}...`
+      : cellText,
     'exec',
     new ShellExecution(scriptFile.path, {
       cwd: path.dirname(doc.uri.path)
