@@ -1,9 +1,10 @@
 export interface ParsedReadmeEntry {
-  name: string
-  content: string
-  description: string
-  executable: string
-  lines: string[]
+  name?: string
+  content?: string
+  description?: string
+  markdown?: string
+  language?: string
+  lines?: string[]
 }
 
 export interface CellOutput {
