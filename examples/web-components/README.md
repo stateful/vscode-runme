@@ -29,6 +29,23 @@ Render demo component:
 <script type="module" src="/web-components/vue/main.ts"></script>
 ```
 
+### Individual Components
+
+Allows to render individual Svelte files.
+
+```html
+<script lang="ts">
+  let count = 0
+  const increment = () => {
+    count += 1
+  }
+</script>
+
+<button on:click={increment}>
+  count is {count}
+</button>
+```
+
 ## Svelte
 
 Render demo component:

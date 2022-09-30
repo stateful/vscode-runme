@@ -27,7 +27,8 @@ export const activate: ActivationFunction = () => ({
         element.appendChild(vercelElem)
         break
       case OutputType.html:
-        const viteElem = document.createElement('vite-output')
+        const tag = output.isSvelte ? 'svelte-component' : 'vite-output'
+        const viteElem = document.createElement(tag)
         viteElem.setAttribute('content', output.content)
         viteElem.setAttribute('port', output.port)
         element.appendChild(viteElem)

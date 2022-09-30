@@ -12,12 +12,15 @@ async function htmlExecutor(
   doc: TextDocument
 ): Promise<boolean> {
   const vitePort = context.globalState.get('viteServerPort') as number
+  const code = doc.getText()
+  const isSvelte = code.includes('on:click')
 
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{
       type: OutputType.html,
       output: {
-        content: doc.getText(),
+        isSvelte,
+        content: code,
         port: vitePort
       }
     }, OutputType.html)
