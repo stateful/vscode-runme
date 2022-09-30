@@ -51,7 +51,7 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, "src", "extension", "extension.ts"),
   },
-  externals: ['vscode', 'vercel', '@vercel/client', 'keyv', 'vite'],
+  externals: ['vscode', 'vercel', '@vercel/client', 'keyv', 'vite', 'react-refresh'],
   output: {
     path: path.resolve(__dirname, "out"),
     libraryTarget: "commonjs2",

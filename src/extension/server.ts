@@ -1,4 +1,5 @@
 import { createServer, ViteDevServer } from 'vite'
+import vue from '@vitejs/plugin-vue'
 import getPort from 'get-port'
 import vscode, { ExtensionContext } from 'vscode'
 
@@ -20,12 +21,15 @@ export class ViteServer implements vscode.Disposable {
     }
 
     await context.globalState.update('viteServerPort', port)
+    process.env.FAST_REFRESH = 'false'
     const server = await createServer({
       // any valid user config options, plus `mode` and `configFile`
       configFile: false,
       root: root,
       server: { port },
-      plugins: []
+      plugins: [
+        vue()
+      ]
     })
 
     await server.listen()

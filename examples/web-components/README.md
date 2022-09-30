@@ -19,3 +19,12 @@ Render demo component:
 <div id="root"></div>
 <script src="/web-components/react/main.tsx" type="module"></script>
 ```
+
+## Vue
+
+Render demo component:
+
+```html
+<div id="app"></div>
+<script type="module" src="/web-components/vue/main.ts"></script>
+```
