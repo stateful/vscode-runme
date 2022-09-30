@@ -82,8 +82,11 @@
     ]
   },
   "scripts": {
+    "build": "run-s build:dev",
     "build:dev": "webpack --mode development",
     "build:prod": "webpack --mode production",
+    "bundle": "vsce package --pre-release --yarn --no-git-tag-version --no-update-package-json -o \"./runme-$npm_package_version.vsix\"",
+    "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "test": "run-s test:*",
     "test:lint": "eslint src --ext ts",
     "watch": "npm run build:dev -- --watch"
