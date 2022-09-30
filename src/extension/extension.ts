@@ -5,6 +5,8 @@ import { ThumbsDownProvider, ThumbsUpProvider } from './provider/rating'
 import { ViteServer } from "./server"
 
 export async function activate(context: vscode.ExtensionContext) {
+  console.log('[Runme] Activating Extension')
+
   const server = await ViteServer.create(context)
   const kernel = new Kernel(context)
 
@@ -27,6 +29,8 @@ export async function activate(context: vscode.ExtensionContext) {
       new ThumbsDownProvider()
     )
   )
+
+  console.log('[Runme] Extension successfully activated')
 }
 
 // This method is called when your extension is deactivated

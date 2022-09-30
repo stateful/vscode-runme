@@ -96,7 +96,6 @@
     "@types/yargs": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
-    "@vscode/test-electron": "^2.1.5",
     "eslint": "^8.24.0",
     "eslint-import-resolver-typescript": "^3.5.1",
     "eslint-plugin-import": "^2.26.0",
@@ -110,7 +109,6 @@
     "typescript": "^4.8.3",
     "vsce": "^2.11.0",
     "vscode-notebook-error-overlay": "^1.0.1",
-    "vue": "^3.2.40",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   },
@@ -129,6 +127,7 @@
     "vercel": "^28.4.4",
     "vite": "^3.1.4",
     "xdg-app-paths": "^8.2.0",
-    "yargs": "^17.5.1"
+    "yargs": "^17.5.1",
+    "vue": "^3.2.40"
   }
 }
