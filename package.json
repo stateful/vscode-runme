@@ -61,12 +61,11 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
-    "compile": "webpack --mode production",
-    "lint": "eslint src --ext ts",
-    "watch": "webpack --mode development --watch",
-    "pretest": "webpack --mode development && yarn run lint",
-    "test": "node ./out/test/runTest.js"
+    "build:dev": "webpack --mode development",
+    "build:prod": "webpack --mode production",
+    "test": "run-s test:*",
+    "test:lint": "eslint src --ext ts",
+    "watch": "npm run build:dev -- --watch"
   },
   "devDependencies": {
     "@types/node": "^18.7.19",
@@ -83,12 +82,15 @@
     "eslint-plugin-unicorn": "^43.0.2",
     "eslint-plugin-unused-imports": "^2.0.0",
     "fork-ts-checker-webpack-plugin": "^7.2.13",
+    "npm-run-all": "^4.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "semver": "^7.3.7",
     "svelte": "^3.50.1",
     "ts-loader": "^9.4.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.3",
+    "vsce": "^2.11.0",
     "vscode-notebook-error-overlay": "^1.0.1",
     "vue": "^3.2.40",
     "webpack": "^5.74.0",
