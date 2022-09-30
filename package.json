@@ -1,14 +1,35 @@
 {
   "name": "runme",
-  "publisher": "stateful",
-  "displayName": "RUNME",
-  "description": "",
   "version": "0.0.1",
+  "publisher": "stateful",
+  "displayName": "Runme",
+  "description": "Run your README.md notebook style.",
+  "author": "Sebastian Tiedtke <sebastian@stateful.com>",
+  "contributors": [
+    "Christian Bromann <christian@stateful.com>"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://runme.dev",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stateful/vscode-runme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stateful/vscode-runme/issues"
+  },
+  "private": true,
   "engines": {
     "vscode": "^1.71.0"
   },
   "keywords": [
     "notebookRenderer"
+  ],
+  "badges": [
+    {
+      "url": "https://img.shields.io/badge/Marquee-Join%20our%20Community-blue?logo=discord&color=F62459",
+      "href": "https://discord.gg/BQm8zRCBUY",
+      "description": "Join us on Discord"
+    }
   ],
   "categories": [
     "Other"
