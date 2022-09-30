@@ -1,4 +1,5 @@
 import { createServer, ViteDevServer } from 'vite'
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 import vue from '@vitejs/plugin-vue'
 import getPort from 'get-port'
 import vscode, { ExtensionContext } from 'vscode'
@@ -28,7 +29,8 @@ export class ViteServer implements vscode.Disposable {
       root: root,
       server: { port },
       plugins: [
-        vue()
+        vue(),
+        svelte()
       ]
     })
 

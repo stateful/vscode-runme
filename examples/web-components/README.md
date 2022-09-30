@@ -28,3 +28,12 @@ Render demo component:
 <div id="app"></div>
 <script type="module" src="/web-components/vue/main.ts"></script>
 ```
+
+## Svelte
+
+Render demo component:
+
+```html
+<div id="app"></div>
+<script type="module" src="/web-components/svelte/main.ts"></script>
+```
