@@ -12,6 +12,7 @@ This markdown file contains some custom examples to test the execution within a 
 ```sh
 echo "Hello World"
 ```
+## More Shell
 
 ```sh
 echo "Foo 👀"
