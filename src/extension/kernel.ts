@@ -14,7 +14,7 @@ export class Kernel implements vscode.Disposable {
   constructor(context: ExtensionContext) {
     this.#context = context
 
-    this.controller.supportedLanguages = Object.keys(executor)
+    this.controller.supportedLanguages = ['text', ...Object.keys(executor)]
     this.controller.supportsExecutionOrder = false
     this.controller.description = "Run your README.md"
     this.controller.executeHandler = this._executeAll.bind(this)
@@ -33,8 +33,22 @@ export class Kernel implements vscode.Disposable {
     const exec = this.controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const languageId = runningCell.languageId as keyof typeof executor
+    const languageId = await this.detectLang(cell)
     const successfulCellExecution = await executor[languageId](this.#context, exec, runningCell)
     exec.end(successfulCellExecution)
+  }
+
+  private async detectLang(cell: vscode.NotebookCell): Promise<keyof typeof executor> {
+    const doc = await vscode.workspace.openTextDocument(cell.document.uri)
+    const text = doc.getText()
+
+    if (text.indexOf("vercel.com") > -1) {
+      return "vercelApp"
+    }
+    else if (text.indexOf("vercel") > -1) {
+      return "vercel"
+    }
+
+    return doc.languageId as keyof typeof executor
   }
 }

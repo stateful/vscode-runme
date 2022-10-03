@@ -61,7 +61,8 @@
         "displayName": "runme shell stdout",
         "mimeTypes": [
           "stateful.runme/shell-stdout"
-        ]
+        ],
+        "requiresMessaging": "optional"
       },
       {
         "id": "runme-vercel-renderer",
@@ -69,7 +70,17 @@
         "displayName": "runme vercel stdout",
         "mimeTypes": [
           "stateful.runme/vercel-stdout"
-        ]
+        ],
+        "requiresMessaging": "optional"
+      },
+      {
+        "id": "runme-vercel-app-renderer",
+        "entrypoint": "./out/client.js",
+        "displayName": "runme vercel app",
+        "mimeTypes": [
+          "stateful.runme/vercel-app"
+        ],
+        "requiresMessaging": "optional"
       },
       {
         "id": "runme-html-renderer",
@@ -77,7 +88,8 @@
         "displayName": "runme html stdout",
         "mimeTypes": [
           "stateful.runme/html-stdout"
-        ]
+        ],
+        "requiresMessaging": "optional"
       }
     ]
   },
@@ -126,11 +138,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "svelte": "^3.50.1",
+    "tangle": "^2.1.0",
     "tmp-promise": "^3.0.3",
     "vercel": "^28.4.4",
     "vite": "^3.1.4",
+    "vue": "^3.2.40",
     "xdg-app-paths": "^8.2.0",
-    "yargs": "^17.5.1",
-    "vue": "^3.2.40"
+    "yargs": "^17.5.1"
   }
 }

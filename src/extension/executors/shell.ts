@@ -3,9 +3,11 @@ import { writeFile, chmod } from 'node:fs/promises'
 
 import {
   Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, commands, ExtensionContext
+  window, TerminalOptions, commands, ExtensionContext, NotebookCellOutput, NotebookCellOutputItem
 } from 'vscode'
 import { file } from 'tmp-promise'
+import { CellOutput } from '../../types'
+import { OutputType } from '../../constants'
 
 const LABEL_LIMIT = 15
 
@@ -22,6 +24,13 @@ async function shellExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument,
 ): Promise<boolean> {
+  await exec.replaceOutput(new NotebookCellOutput([
+  NotebookCellOutputItem.json(<CellOutput>{
+    type: OutputType.shell,
+    output: "Running"
+  }, OutputType.shell)
+  ]))
+
   const scriptFile = await file()
   const cellText = doc.getText()
   await writeFile(scriptFile.path, cellText, 'utf-8')

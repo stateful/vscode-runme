@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ActivationFunction } from 'vscode-notebook-renderer'
+
+import Channel from "tangle/webviews"
 
 import { OutputType } from '../constants'
 import type { CellOutput } from '../types'
@@ -11,7 +14,7 @@ import './components'
 // rendering logic inside of the `render()` function.
 // ----------------------------------------------------------------------------
 
-export const activate: ActivationFunction = () => ({
+export const activate: ActivationFunction = (context) => ({
   renderOutputItem(outputItem, element) {
     const { output, type } = outputItem.json() as CellOutput
 
@@ -20,6 +23,17 @@ export const activate: ActivationFunction = () => ({
         const shellElem = document.createElement('shell-output')
         shellElem.innerHTML = output
         element.appendChild(shellElem)
+        break
+      case OutputType.vercelApp:
+        const vercelAppElem = document.createElement('vercel-app')
+        vercelAppElem.setAttribute('content', JSON.stringify(output))
+        vercelAppElem.addEventListener('project', (event: any) => {
+          if (event?.detail) {
+            context?.postMessage?.(event.detail)
+          }
+          return false
+        })
+        element.appendChild(vercelAppElem)
         break
       case OutputType.vercel:
         const vercelElem = document.createElement('vercel-output')

@@ -36,3 +36,21 @@ export class ThumbsDownProvider
     return item
   }
 }
+export class DeployProvider implements vscode.NotebookCellStatusBarItemProvider {
+  provideCellStatusBarItems(
+    cell: vscode.NotebookCell
+  ): vscode.NotebookCellStatusBarItem | undefined {
+    console.log(cell.outputs[0]?.metadata)
+    const deploy = <boolean>cell.outputs[0]?.metadata?.["vercelApp"]?.deploy ?? false
+    if (deploy === false) {
+      return
+    }
+    const item = new vscode.NotebookCellStatusBarItem(
+      `🎯 Redeploy`,
+      vscode.NotebookCellStatusBarAlignment.Right
+    )
+    item.command = "marquee.open"
+    item.tooltip = `Redeploy to Vercel`
+    return item
+  }
+}

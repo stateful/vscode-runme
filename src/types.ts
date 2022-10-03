@@ -8,6 +8,11 @@ export interface ParsedReadmeEntry {
 }
 
 export interface CellOutput {
-  type: 'error' | 'stateful.runme/shell-stdout' | 'stateful.runme/vercel-stdout' | 'stateful.runme/html-stdout'
+  type:
+    | 'error'
+    | 'stateful.runme/shell-stdout'
+    | 'stateful.runme/vercel-app'
+    | 'stateful.runme/vercel-stdout'
+    | 'stateful.runme/html-stdout'
   output: any
 }

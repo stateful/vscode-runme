@@ -1,17 +1,12 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import got from 'got'
-import { createDeployment } from '@vercel/client'
+// import { createDeployment } from '@vercel/client'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
 
 import { OutputType } from '../../../constants'
 import type { CellOutput } from '../../../types'
 import { getAuthToken } from './utils'
-
-interface VercelProject {
-  id: string
-  name: string
-}
 
 export async function deploy (
   exec: NotebookCellExecution,
@@ -41,21 +36,38 @@ export async function deploy (
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { Authorization: `Bearer ${token}` }
-    const { projectId } = JSON.parse((await fs.readFile(path.join(cwd, '.vercel', 'project.json'))).toString())
-    const project = await got(`https://api.vercel.com/v9/projects/${projectId}`, { headers }).json() as VercelProject
+    const projectStr = (await fs.readFile(path.join(cwd, '.vercel', 'project.json'))).toString()
+    const { projectId, orgId } = JSON.parse(projectStr)
+    // const project = (await got(
+    //   `https://api.vercel.com/v9/projects/${projectId}?teamId=${orgId}`,
+    //   { headers }
+    // ).json()) as VercelProject
+    let status = 'UNKNOWN'
+    let timeout = 4000
+    const state = ['BUILDING', 'ERROR', 'INITIALIZING', 'QUEUED', 'READY', 'CANCELED'].join(',')
 
-    /**
-     * deploy application
-     */
-    const clientParams = { token, path: cwd }
-    const deployParams = { name: project.name }
-    for await (const event of createDeployment(clientParams, deployParams)) {
-      exec.replaceOutput(new NotebookCellOutput([
-        NotebookCellOutputItem.json(<CellOutput>{
-          type: OutputType.vercel,
-          output: event
-        }, OutputType.vercel)
-      ]))
+    while (!['READY', 'ERROR', 'CANCELED'].find(s => s === status)) {
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          resolve()
+        }, timeout)
+      })
+
+      const data: any = await got(
+        `https://api.vercel.com/v6/deployments?projectId=${projectId}&teamId=${orgId}&state=${state}&limit=1`,
+        { headers }
+      ).json()
+
+      for (const deploy of data.deployments) {
+        status = deploy.state
+        exec.replaceOutput(new NotebookCellOutput([
+          NotebookCellOutputItem.json(<CellOutput>{
+            type: OutputType.vercel,
+            output: deploy
+          }, OutputType.vercel)
+        ], { vercelApp: { deploy: true } }))
+      }
+      timeout = 2000
     }
   } catch (err: any) {
     exec.replaceOutput(new NotebookCellOutput([

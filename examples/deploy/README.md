@@ -47,7 +47,7 @@ npm run preview
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
 
-# Deployment
+# Deployment using CLI
 
 To deploy the application, first log into Vercel:
 
@@ -55,9 +55,20 @@ To deploy the application, first log into Vercel:
 vercel login
 ```
 
-then run:
+Consider switching teams
 
 ```sh
+vercel teams ls
+```
+
+Switch to the stateful team
+```sh
+vercel teams switch stateful
+```
+
+then run:
+
+```vercel
 vercel --prod
 ```
 
@@ -69,6 +80,18 @@ vercel logout
 
 or call another command:
 
-```sh
+```vercel
 vercel domain
+```
+
+# Deployment using app
+
+```
+https://vercel.com/stateful
+```
+
+Perhaps deploy the examples site?
+
+```
+https://vercel.com/stateful/sourishkrout-examples
 ```

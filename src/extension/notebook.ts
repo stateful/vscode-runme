@@ -56,6 +56,7 @@ export class Serializer implements vscode.NotebookSerializer {
 
       if (s.lines) {
         const lines = s.lines.join("\n")
+        const lang = s.language || "text"
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           lines,
@@ -63,7 +64,7 @@ export class Serializer implements vscode.NotebookSerializer {
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
            */
-          s.language || "text"
+          lang
         )
         cell.metadata = { id: i, source: lines }
         /**
