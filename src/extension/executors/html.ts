@@ -3,6 +3,7 @@ import {
   ExtensionContext
 } from 'vscode'
 
+import { ViteServerProcess } from '../server'
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
@@ -11,7 +12,13 @@ async function htmlExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
-  const vitePort = context.globalState.get('viteServerPort') as number
+  const viteProcess = context.subscriptions.find(
+    (s) => s instanceof ViteServerProcess) as ViteServerProcess | undefined
+
+  if (!viteProcess) {
+    throw new Error('Vite Server process not registered to the context')
+  }
+
   const code = doc.getText()
   const isSvelte = code.includes('on:click')
 
@@ -21,7 +28,7 @@ async function htmlExecutor(
       output: {
         isSvelte,
         content: code,
-        port: vitePort
+        port: viteProcess.port
       }
     }, OutputType.html)
   ]))

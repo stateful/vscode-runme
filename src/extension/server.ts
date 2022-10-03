@@ -1,45 +1,36 @@
-import { createServer, ViteDevServer } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import vue from '@vitejs/plugin-vue'
+import path from 'node:path'
+import cp, { ChildProcess } from 'node:child_process'
 import getPort from 'get-port'
-import vscode, { ExtensionContext } from 'vscode'
+import vscode from 'vscode'
 
-export class ViteServer implements vscode.Disposable {
-  #server: ViteDevServer
-  private constructor (server: ViteDevServer) {
-    this.#server = server
+export class ViteServerProcess implements vscode.Disposable {
+  #port?: number
+  #process?: ChildProcess
+  #rootPath = vscode.workspace.workspaceFolders![0].uri.path
+
+  get port () {
+    return this.#port
   }
 
-  get port ()  {
-    return this.#server.config.server.port
-  }
-
-  static async create (context: ExtensionContext, port?: number) {
-    const root = vscode.workspace.workspaceFolders![0].uri.path
-
-    if (!port) {
-      port = await getPort()
-    }
-
-    await context.globalState.update('viteServerPort', port)
-    process.env.FAST_REFRESH = 'false'
-    const server = await createServer({
-      // any valid user config options, plus `mode` and `configFile`
-      configFile: false,
-      root: root,
-      server: { port },
-      plugins: [
-        vue(),
-        svelte()
-      ]
+  async start () {
+    const serverPath = path.join(__dirname, 'server', 'server.js')
+    this.#port = await getPort()
+    this.#process = cp.spawn('node', [serverPath, `--port=${this.#port}`, `--rootPath=${this.#rootPath}`], {
+      shell: true
     })
 
-    await server.listen()
-    console.log(`[Runme] Kernel server started successfuly on port ${port}`)
-    return new this(server)
+    this.#process.stderr?.pipe(process.stderr)
+    this.#process.stdout?.pipe(process.stdout)
+  }
+
+  stop () {
+    if (this.#process) {
+      this.#process.kill()
+      this.#process = undefined
+    }
   }
 
   dispose() {
-      this.#server.close()
+      this.stop()
   }
 }

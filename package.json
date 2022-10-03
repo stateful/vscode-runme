@@ -99,6 +99,7 @@
     "@types/yargs": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
+    "copy-webpack-plugin": "^11.0.0",
     "eslint": "^8.24.0",
     "eslint-import-resolver-typescript": "^3.5.1",
     "eslint-plugin-import": "^2.26.0",
@@ -129,8 +130,8 @@
     "tmp-promise": "^3.0.3",
     "vercel": "^28.4.4",
     "vite": "^3.1.4",
+    "vue": "^3.2.40",
     "xdg-app-paths": "^8.2.0",
-    "yargs": "^17.5.1",
-    "vue": "^3.2.40"
+    "yargs": "^17.5.1"
   }
 }
