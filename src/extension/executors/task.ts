@@ -3,10 +3,13 @@ import { writeFile, chmod } from 'node:fs/promises'
 
 import {
   Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind
+  window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind,
+  workspace
 } from 'vscode'
 import { file } from 'tmp-promise'
-import { Metadata } from '../../types'
+
+import type { Metadata } from '../../types'
+import { sh as inlineSh } from './shell'
 
 const LABEL_LIMIT = 15
 
@@ -22,8 +25,16 @@ async function taskExecutor(
   context: ExtensionContext,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  metadata: Metadata,
+  metadata: Metadata
 ): Promise<boolean> {
+  /**
+   * run shell inline if set as configuration
+   */
+  const config = workspace.getConfiguration('runme')
+  if (config.get('shell.runinline')) {
+    return inlineSh(context, exec, doc)
+  }
+
   const scriptFile = await file()
   const cellText = doc.getText()
   const splits = scriptFile.path.split('-')

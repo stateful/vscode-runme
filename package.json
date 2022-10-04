@@ -79,6 +79,19 @@
           "stateful.runme/html-stdout"
         ]
       }
+    ],
+    "configuration": [
+      {
+        "title": "Runme",
+        "properties": {
+          "runme.shell.runinline": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "Run Shell scripts inline rather than as VS Code task."
+          }
+        }
+      }
     ]
   },
   "scripts": {

@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { writeFile, chmod } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
-import type EventEmitter from 'node:events'
 
 import {
   TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
@@ -15,8 +14,7 @@ import type { CellOutput } from '../../types'
 async function shellExecutor(
   context: ExtensionContext,
   exec: NotebookCellExecution,
-  doc: TextDocument,
-  inputHandler: EventEmitter
+  doc: TextDocument
 ): Promise<boolean> {
   const outputItems: string[] = []
   const scriptFile = await file()
@@ -28,15 +26,6 @@ async function shellExecutor(
     shell: true
   })
   console.log(`[RunMe] Started process on pid ${child.pid}`)
-
-  inputHandler.on('data', (input) => {
-    child.stdin.write(`${input}\n`)
-    /**
-     * the following prevents a second prompt to accept any input
-     * but not calling it causes the process to never exit
-     */
-    // child.stdin.end()
-  })
 
   /**
    * handle output for stdout and stderr
