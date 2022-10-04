@@ -48,9 +48,11 @@ async function taskExecutor(
     focus: true,
     // why doesn't this work with Slient?
     reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
-    panel: isBackground ? TaskPanelKind.New : TaskPanelKind.Shared
+    panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
-  await commands.executeCommand('workbench.action.terminal.clear')
+  if (isBackground) {
+    await commands.executeCommand('workbench.action.terminal.clear')
+  }
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
