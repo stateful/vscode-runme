@@ -5,6 +5,11 @@ export interface ParsedReadmeEntry {
   markdown?: string
   language?: string
   lines?: string[]
+  attributes?: Metadata
+}
+
+export interface Metadata {
+  [key: string]: any
 }
 
 export interface CellOutput {
