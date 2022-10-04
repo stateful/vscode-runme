@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import fsp from 'node:fs/promises'
 import vscode from 'vscode'
 
 import type { ParsedReadmeEntry } from '../types'
@@ -33,17 +34,17 @@ export class Serializer implements vscode.NotebookSerializer {
     const doc = globalThis.GetDocument(md)
 
     if (!doc || err) {
-      return new vscode.NotebookData([
-        new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
-          '⚠️ __Error__: document could not be loaded' +
-          (err ? `\n<small>${err.message}</small>` : ''),
-          'markdown'
-        )
-      ])
+      return this.#printCell(
+        '⚠️ __Error__: document could not be loaded' +
+        (err ? `\n<small>${err.message}</small>` : '')
+      )
     }
 
-    const snippets = doc.document as ParsedReadmeEntry[]
+    const snippets = doc.document as (ParsedReadmeEntry[] | undefined)
+    if (!snippets) {
+      return this.#printCell('⚠️ __Error__: no cells found!')
+    }
+
     const cells = snippets.reduce((acc, s, i) => {
       /**
        * code block description
@@ -90,8 +91,17 @@ export class Serializer implements vscode.NotebookSerializer {
       throw new Error('Could not detect opened markdown document')
     }
 
+    const fileExist = await fsp.access(markdownFile).then(() => true, () => false)
+    if (!fileExist) {
+      return new Uint8Array()
+    }
+
+    if (!this.fileContent && fileExist) {
+      this.fileContent = (await fsp.readFile(markdownFile, 'utf-8')).toString()
+    }
+
     if (!this.fileContent) {
-      this.fileContent = fs.readFileSync(markdownFile, 'utf-8').toString()
+      return new Uint8Array()
     }
 
     const codeExamples = this.fileContent.match(CODE_REGEX)
@@ -112,5 +122,11 @@ export class Serializer implements vscode.NotebookSerializer {
     }
 
     return Promise.resolve(Buffer.from(this.fileContent))
+  }
+
+  #printCell (content: string, languageId = 'markdown') {
+    return new vscode.NotebookData([
+      new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, content, languageId)
+    ])
   }
 }
