@@ -8,7 +8,6 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
-import type { Metadata } from '../../types'
 import { sh as inlineSh } from './shell'
 
 const LABEL_LIMIT = 15
@@ -24,14 +23,13 @@ export function closeTerminalByScript (script: string) {
 async function taskExecutor(
   context: ExtensionContext,
   exec: NotebookCellExecution,
-  doc: TextDocument,
-  metadata: Metadata
+  doc: TextDocument
 ): Promise<boolean> {
   /**
    * run shell inline if set as configuration
    */
   const config = workspace.getConfiguration('runme')
-  if (config.get('shell.runinline')) {
+  if (config.get('shell.runinline') || exec.cell.metadata.attributes?.inline === 'true') {
     return inlineSh(context, exec, doc)
   }
 
@@ -53,7 +51,7 @@ async function taskExecutor(
       cwd: path.dirname(doc.uri.path)
     }),
   )
-  const isBackground = metadata?.attributes?.["background"] === "true"
+  const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
   taskExecution.isBackground = isBackground
   taskExecution.presentationOptions = {
     focus: true,
@@ -102,20 +100,17 @@ async function taskExecutor(
     })
   })
 
-  const giveItTime = new Promise<boolean>((resolve) =>
-    setTimeout(() => {
-      return resolve(true)
-    }, 2000)
-  )
+  if (isBackground) {
+    const giveItTime = new Promise<boolean>(
+      (resolve) => setTimeout(() => resolve(true), 2000))
 
-  const background = Promise.race([
-    p.then((exitCode) => {
-      return exitCode === 0
-    }),
-    giveItTime,
-  ])
+    return Promise.race([
+      p.then((exitCode) => exitCode === 0),
+      giveItTime,
+    ])
+  }
 
-  return (isBackground ? background : !Boolean(await p))
+  return !Boolean(await p)
 }
 
 export const sh = taskExecutor

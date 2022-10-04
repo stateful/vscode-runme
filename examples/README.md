@@ -1,7 +1,7 @@
 Runme Examples
 ==============
 
-This `README.md` contains some example for testing this extension.
+This `README.md` contains some examples for testing this extension.
 
 # Extension Example Markdown Files
 
@@ -14,7 +14,7 @@ echo "Hello World"
 ```
 ## More Shell
 
-```sh
+```sh { inline=true }
 echo "Foo 👀"
 sleep 2
 echo "Bar 🕺"
@@ -22,7 +22,7 @@ sleep 2
 echo "Loo 🚀"
 ```
 
-## Complexer Output
+## Complex Output
 
 ```sh
 yarn global add webdriverio
