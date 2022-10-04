@@ -14,7 +14,6 @@ import './components'
 export const activate: ActivationFunction = () => ({
   renderOutputItem(outputItem, element) {
     const { output, type } = outputItem.json() as CellOutput
-
     switch (type) {
       case OutputType.shell:
         const shellElem = document.createElement('shell-output')
@@ -32,6 +31,12 @@ export const activate: ActivationFunction = () => ({
         viteElem.setAttribute('content', output.content)
         viteElem.setAttribute('port', output.port)
         element.appendChild(viteElem)
+        break
+      case OutputType.script:
+        const scriptElem = document.createElement('script-output')
+        scriptElem.setAttribute('content', output.content)
+        scriptElem.setAttribute('port', output.port)
+        element.appendChild(scriptElem)
         break
       case OutputType.error:
         element.innerHTML = /*html*/`⚠️ ${output}`

@@ -1,6 +1,6 @@
 # Web Components
 
-With Runme you can develop web components directly in your notebook. Here are some examples from some of the popular frontend frameworks.
+With Runme you can develop web components directly in your notebook. Here are some examples from some of the popular front-end frameworks.
 
 ## Lit
 
@@ -30,8 +30,7 @@ Render demo component:
 ```
 
 ### Individual Components
-
-Allows to render individual Svelte files.
+Allows rendering individual Svelte files.
 
 ```html
 <script lang="ts">

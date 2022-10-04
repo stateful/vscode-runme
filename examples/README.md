@@ -33,3 +33,11 @@ yarn global add webdriverio
 ```
 node ./scripts/stdin.js
 ```
+
+## Script Example
+
+You can also run TypeScript or JavaScript:
+
+```js
+document.body.innerHTML += 'script attached!'
+```

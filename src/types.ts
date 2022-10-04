@@ -12,7 +12,14 @@ export interface Metadata {
   [key: string]: any
 }
 
+export type OutputTypes = (
+  'error' |
+  'stateful.runme/script-stdout' |
+  'stateful.runme/shell-stdout' |
+  'stateful.runme/vercel-stdout' |
+  'stateful.runme/html-stdout'
+)
 export interface CellOutput {
-  type: 'error' | 'stateful.runme/shell-stdout' | 'stateful.runme/vercel-stdout' | 'stateful.runme/html-stdout'
+  type: OutputTypes
   output: any
 }
