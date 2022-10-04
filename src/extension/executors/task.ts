@@ -3,9 +3,10 @@ import { writeFile, chmod } from 'node:fs/promises'
 
 import {
   Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, commands, ExtensionContext
+  window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind
 } from 'vscode'
 import { file } from 'tmp-promise'
+import { Metadata } from '../../types'
 
 const LABEL_LIMIT = 15
 
@@ -21,14 +22,17 @@ async function taskExecutor(
   context: ExtensionContext,
   exec: NotebookCellExecution,
   doc: TextDocument,
+  metadata: Metadata,
 ): Promise<boolean> {
   const scriptFile = await file()
   const cellText = doc.getText()
+  const splits = scriptFile.path.split('-')
+  const id = splits[splits.length-1]
   await writeFile(scriptFile.path, cellText, 'utf-8')
   await chmod(scriptFile.path, 0o775)
 
   const taskExecution = new Task(
-    { type: 'runme', name: 'Runme Task' },
+    { type: 'runme', name: `Runme Task (${id})` },
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
@@ -36,12 +40,20 @@ async function taskExecutor(
     'exec',
     new ShellExecution(scriptFile.path, {
       cwd: path.dirname(doc.uri.path)
-    })
+    }),
   )
+  const isBackground = metadata?.attributes?.["background"] === "true"
+  taskExecution.isBackground = isBackground
+  taskExecution.presentationOptions = {
+    focus: true,
+    // why doesn't this work with Slient?
+    reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
+    panel: isBackground ? TaskPanelKind.New : TaskPanelKind.Shared
+  }
   await commands.executeCommand('workbench.action.terminal.clear')
   const execution = await tasks.executeTask(taskExecution)
 
-  return !Boolean(await new Promise<number>((resolve) => {
+  const p = new Promise<number>((resolve) => {
     exec.token.onCancellationRequested(() => {
       try {
         execution.terminate()
@@ -68,15 +80,29 @@ async function taskExecutor(
         /**
          * we don't have an exit code
          */
-        typeof e.exitCode === 'undefined'
-      ) {
+        typeof e.exitCode === 'undefined') {
         return
       }
 
       closeTerminalByScript(scriptFile.path)
       return resolve(e.exitCode)
     })
-  }))
+  })
+
+  const giveItTime = new Promise<boolean>((resolve) =>
+    setTimeout(() => {
+      return resolve(true)
+    }, 2000)
+  )
+
+  const background = Promise.race([
+    p.then((exitCode) => {
+      return exitCode === 0
+    }),
+    giveItTime,
+  ])
+
+  return (isBackground ? background : !Boolean(await p))
 }
 
 export const sh = taskExecutor

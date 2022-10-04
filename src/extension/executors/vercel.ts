@@ -8,14 +8,15 @@ import {
 } from 'vscode'
 
 import { OutputType } from '../../constants'
-import type { CellOutput } from '../../types'
+import type { CellOutput, Metadata } from '../../types'
 import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (
   context: ExtensionContext,
   exec: NotebookCellExecution,
-  doc: TextDocument
+  doc: TextDocument,
+  metadata: Metadata
 ): Promise<boolean> {
   const command = doc.getText()
 
@@ -72,5 +73,5 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return bash(context, exec, doc)
+  return bash(context, exec, doc, metadata)
 }
