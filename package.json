@@ -84,11 +84,11 @@
       {
         "title": "Runme",
         "properties": {
-          "runme.shell.runinline": {
+          "runme.shell.interactive": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
-            "markdownDescription": "Run Shell scripts inline rather than as VS Code task."
+            "default": true,
+            "markdownDescription": "If set to `true` all shell scripts are run as interactive VS Code tasks, if set to `false` they are executed within the kernel and output is set in resulting cell."
           }
         }
       }

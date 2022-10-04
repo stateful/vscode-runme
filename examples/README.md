@@ -10,11 +10,11 @@ This markdown file contains some custom examples to test the execution within a 
 ## Shell Executions
 
 ```sh
-echo "Hello World"
+echo "Hello World!"
 ```
 ## More Shell
 
-```sh { inline=true }
+```sh { interactive=false }
 echo "Foo 👀"
 sleep 2
 echo "Bar 🕺"

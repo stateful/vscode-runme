@@ -12,9 +12,9 @@ import { sh as inlineSh } from './shell'
 
 const LABEL_LIMIT = 15
 
-export function closeTerminalByScript (script: string) {
+export function closeTerminalByScript () {
   const terminal = window.terminals.find((t) => (
-    t.creationOptions as TerminalOptions).shellArgs?.includes(script))
+    t.creationOptions as TerminalOptions).env?.RUNME_TASK)
   if (terminal) {
     terminal.hide()
   }
@@ -26,10 +26,11 @@ async function taskExecutor(
   doc: TextDocument
 ): Promise<boolean> {
   /**
-   * run shell inline if set as configuration
+   * run as non interactive shell script if set as configuration or annotated
+   * in markdown section
    */
   const config = workspace.getConfiguration('runme')
-  if (config.get('shell.runinline') || exec.cell.metadata.attributes?.inline === 'true') {
+  if (!config.get('shell.interactive') || exec.cell.metadata.attributes?.interactive === 'false') {
     return inlineSh(context, exec, doc)
   }
 
@@ -48,7 +49,9 @@ async function taskExecutor(
       : cellText,
     'exec',
     new ShellExecution(scriptFile.path, {
-      cwd: path.dirname(doc.uri.path)
+      cwd: path.dirname(doc.uri.path),
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      env: { RUNME_TASK: 'true' }
     }),
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
@@ -59,16 +62,14 @@ async function taskExecutor(
     reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
     panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
-  if (isBackground) {
-    await commands.executeCommand('workbench.action.terminal.clear')
-  }
+  await commands.executeCommand('workbench.action.terminal.clear')
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
     exec.token.onCancellationRequested(() => {
       try {
         execution.terminate()
-        closeTerminalByScript(scriptFile.path)
+        closeTerminalByScript()
         resolve(0)
       } catch (err: any) {
         console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
@@ -95,7 +96,13 @@ async function taskExecutor(
         return
       }
 
-      closeTerminalByScript(scriptFile.path)
+      /**
+       * only close terminal if execution passed
+       */
+      if (e.exitCode === 0) {
+        closeTerminalByScript()
+      }
+
       return resolve(e.exitCode)
     })
   })
