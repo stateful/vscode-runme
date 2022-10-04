@@ -9,7 +9,7 @@ import {
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
-import { bash } from './shell'
+import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (

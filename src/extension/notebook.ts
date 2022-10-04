@@ -9,7 +9,7 @@ const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 
 export class Serializer implements vscode.NotebookSerializer {
   private fileContent?: string
-  private readonly ready: Promise<void>
+  private readonly ready: Promise<Error | void>
 
   constructor(private context: vscode.ExtensionContext) {
     const go = new globalThis.Go()
@@ -19,21 +19,25 @@ export class Serializer implements vscode.NotebookSerializer {
       go.importObject
     ).then(
       (result) => { go.run(result.instance) },
-      (err: Error) => console.error(err)
+      (err: Error) => {
+        console.error(err)
+        return err
+      }
     )
   }
 
   public async deserializeNotebook(content: Uint8Array): Promise<vscode.NotebookData> {
-    await this.ready
+    const err = await this.ready
 
     const md = content.toString()
     const doc = globalThis.GetDocument(md)
 
-    if (!doc) {
+    if (!doc || err) {
       return new vscode.NotebookData([
         new vscode.NotebookCellData(
           vscode.NotebookCellKind.Markup,
-          '⚠️ __Error__: document could not be loaded',
+          '⚠️ __Error__: document could not be loaded' +
+          (err ? `\n<small>${err.message}</small>` : ''),
           'markdown'
         )
       ])
