@@ -22,6 +22,12 @@ sleep 2
 echo "Loo 🚀"
 ```
 
+## Background Task Example
+
+```sh { background=true }
+sleep 100000
+```
+
 ## Complex Output
 
 ```sh

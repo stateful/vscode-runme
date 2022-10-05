@@ -46,8 +46,6 @@ export class Serializer implements vscode.NotebookSerializer {
     }
 
     const cells = snippets.reduce((acc, s, i) => {
-      console.log(11, s.language)
-
       /**
        * code block description
        */

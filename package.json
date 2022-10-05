@@ -39,7 +39,12 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "runme.openTerminal",
+        "title": "Open Terminal for Background Task"
+      }
+    ],
     "notebooks": [
       {
         "type": "runme",

@@ -10,6 +10,7 @@ import { file } from 'tmp-promise'
 
 import { sh as inlineSh } from './shell'
 
+const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
 
 export function closeTerminalByScript () {
@@ -38,6 +39,8 @@ async function taskExecutor(
   const cellText = doc.getText()
   const splits = scriptFile.path.split('-')
   const id = splits[splits.length-1]
+  const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
+
   await writeFile(scriptFile.path, cellText, 'utf-8')
   await chmod(scriptFile.path, 0o775)
 
@@ -51,7 +54,7 @@ async function taskExecutor(
     new ShellExecution(scriptFile.path, {
       cwd: path.dirname(doc.uri.path),
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      env: { RUNME_TASK: 'true' }
+      env: { RUNME_TASK: 'true', RUNME_ID }
     }),
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
@@ -109,7 +112,12 @@ async function taskExecutor(
 
   if (isBackground) {
     const giveItTime = new Promise<boolean>(
-      (resolve) => setTimeout(() => resolve(true), 2000))
+      (resolve) => setTimeout(() => {
+        console.log('CLOSE ME')
+
+        closeTerminalByScript()
+        return resolve(true)
+      }, BACKGROUND_TASK_HIDE_TIMEOUT))
 
     return Promise.race([
       p.then((exitCode) => exitCode === 0),
