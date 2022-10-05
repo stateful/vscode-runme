@@ -8,10 +8,12 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
+import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
 import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
+const EXPORT_REGEX = /\nexport \w+=("*)(.+?)(?=(\n|"))/g
 
 export function closeTerminalByScript () {
   const terminal = window.terminals.find((t) => (
@@ -26,6 +28,24 @@ async function taskExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
+  /**
+   * find export commands
+   */
+  const exportMatches = (doc.getText().match(EXPORT_REGEX) || []).map((m) => m.trim())
+  console.log(exportMatches)
+
+  const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
+  for (const e of exportMatches) {
+    const [key, ph] = e.slice('export '.length).split('=')
+    const placeHolder = ph.startsWith('"') ? ph.slice(1) : ph
+    stateEnv[key] = await window.showInputBox({
+      title: `Set Environment Variable "${key}"`,
+      placeHolder,
+      prompt: 'Your shell script wants to set some environment variables, please enter them here.'
+    }) || ''
+  }
+  await context.globalState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
+
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
@@ -53,8 +73,14 @@ async function taskExecutor(
     'exec',
     new ShellExecution(scriptFile.path, {
       cwd: path.dirname(doc.uri.path),
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      env: { RUNME_TASK: 'true', RUNME_ID }
+      env: {
+        ...process.env,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        RUNME_TASK: 'true',
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        RUNME_ID,
+        ...stateEnv
+      }
     }),
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'

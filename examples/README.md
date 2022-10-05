@@ -47,3 +47,21 @@ You can also run TypeScript or JavaScript:
 ```js
 document.body.innerHTML += 'script attached!'
 ```
+
+## Environment Variables
+
+To do X, export an environment variable as follows:
+
+```sh
+echo "Auth token for service foo"
+export SERVICE_FOO_TOKEN=foobar
+echo "Auth token for service bar"
+export SERVICE_BAR_TOKEN="barfoo"
+```
+
+Then you have access to these:
+
+```sh { interactive=false }
+echo "SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN"
+echo "SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN"
+```

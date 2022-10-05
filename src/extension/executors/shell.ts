@@ -8,7 +8,7 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
-import { OutputType } from '../../constants'
+import { OutputType, STATE_KEY_FOR_ENV_VARS } from '../../constants'
 import type { CellOutput } from '../../types'
 
 async function shellExecutor(
@@ -21,9 +21,11 @@ async function shellExecutor(
   await writeFile(scriptFile.path, doc.getText(), 'utf-8')
   await chmod(scriptFile.path, 0o775)
 
+  const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
   const child = spawn(scriptFile.path, {
     cwd: path.dirname(doc.uri.path),
-    shell: true
+    shell: true,
+    env: { ...process.env, ...stateEnv }
   })
   console.log(`[RunMe] Started process on pid ${child.pid}`)
 

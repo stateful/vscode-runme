@@ -5,3 +5,5 @@ export enum OutputType {
   script = 'stateful.runme/script-stdout',
   error = 'error'
 }
+
+export const STATE_KEY_FOR_ENV_VARS = 'executionEnv'
