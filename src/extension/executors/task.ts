@@ -32,8 +32,6 @@ async function taskExecutor(
    * find export commands
    */
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || []).map((m) => m.trim())
-  console.log(exportMatches)
-
   const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
@@ -139,8 +137,6 @@ async function taskExecutor(
   if (isBackground) {
     const giveItTime = new Promise<boolean>(
       (resolve) => setTimeout(() => {
-        console.log('CLOSE ME')
-
         closeTerminalByScript()
         return resolve(true)
       }, BACKGROUND_TASK_HIDE_TIMEOUT))

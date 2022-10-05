@@ -20,8 +20,6 @@ async function scriptExecutor(
   }
 
   const code = doc.getText()
-  console.log('RUN ME', code)
-
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{
       type: OutputType.script,
