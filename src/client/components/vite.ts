@@ -35,6 +35,8 @@ export class ViteOutput extends LitElement {
 
     const doc = iframe.contentWindow?.document!
     doc.open()
+    console.log(this.content)
+
     doc.write(/*html*/`
       <html>
         <head>

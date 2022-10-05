@@ -62,7 +62,10 @@ const viteServerConfig: Configuration = {
       ]
     })
   ],
-  externals: ['vite', '@sveltejs/vite-plugin-svelte', 'yargs', 'yargs/helpers', '@vitejs/plugin-vue', 'get-port'],
+  externals: [
+    'vite', '@sveltejs/vite-plugin-svelte', 'yargs', 'yargs/helpers',
+    '@vitejs/plugin-vue', 'get-port', '@vitejs/plugin-react'
+  ],
   target: 'node'
 }
 
@@ -72,7 +75,7 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, 'src', 'extension', 'extension.ts'),
   },
-  externals: ['vscode', 'vercel', '@vercel/client', 'keyv', 'vite', '@sveltejs/vite-plugin-svelte'],
+  externals: ['vscode', 'vercel', '@vercel/client', 'keyv'],
   output: {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',

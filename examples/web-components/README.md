@@ -20,6 +20,14 @@ Render demo component:
 <script src="/web-components/react/main.tsx" type="module"></script>
 ```
 
+Render by importing an individual component:
+
+```tsx
+import App from '/web-components/react/App.tsx'
+const root = document.getElementById('root')
+ReactDOM.createRoot(root).render(new App())
+```
+
 ## Vue
 
 Render demo component:
