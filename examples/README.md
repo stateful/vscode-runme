@@ -77,3 +77,13 @@ verify:
 echo "SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN"
 echo "SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN"
 ```
+
+Supports changes to `$PATH`:
+
+```sh
+export PATH="~/.deno/bin:$PATH"
+deployctl deploy \
+    --project=runme-staging \
+    --import-map=import_map.json main.ts \
+    --token=$DENO_ACCESS_TOKEN
+```

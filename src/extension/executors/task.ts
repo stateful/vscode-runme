@@ -39,17 +39,19 @@ async function taskExecutor(
    * find export commands
    */
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
-    .filter((m) => m.indexOf('export PATH=') < 0)
+    .filter((m) => m.indexOf('export PATH=') <= 0)
     .map((m) => m.trim())
   const rawEnv = Object.entries(context.workspaceState.get<Record<string, string>>(STATE_KEY_FOR_ENV_VARS, {}))
   const stateEnv: Record<string, string> = Object.fromEntries(rawEnv.filter(([k]) => k !== 'PATH'))
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
-    const placeHolder = ph.startsWith('"') ? ph.slice(1) : ph
+    const hasStringValue = ph.startsWith('"')
+    const placeHolder = hasStringValue ? ph.slice(1) : ph
     stateEnv[key] = await window.showInputBox({
       title: `Set Environment Variable "${key}"`,
       placeHolder,
-      prompt: 'Your shell script wants to set some environment variables, please enter them here.'
+      prompt: 'Your shell script wants to set some environment variables, please enter them here.',
+      ...(hasStringValue ? { value: placeHolder } : {})
     }) || ''
 
     /**
@@ -62,7 +64,7 @@ async function taskExecutor(
        * the ending one. To properly cut out the line from the script we need to add
        * it back again.
        */
-      e + (ph.startsWith('"') ? '"' : ''),
+      e + (hasStringValue ? '"' : ''),
       ''
     )
   }
