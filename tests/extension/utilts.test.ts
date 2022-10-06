@@ -1,7 +1,7 @@
 import vscode from 'vscode'
 import { expect, vi, test } from 'vitest'
 
-import { isInteractiveTask, getTerminalByCell, populateEnvVar } from '../../src/extension/utils'
+import { getExecutionProperty, getTerminalByCell, populateEnvVar } from '../../src/extension/utils'
 
 vi.mock('vscode', () => ({
   default: {
@@ -20,13 +20,13 @@ vi.mock('vscode', () => ({
 test('isInteractive', () => {
   // when set to false in configutaration
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(false) } as any)
-  expect(isInteractiveTask({ metadata: {} } as any)).toBe(false)
-  expect(isInteractiveTask({ metadata: { attributes: {} } } as any)).toBe(false)
-  expect(isInteractiveTask({ metadata: { attributes: { interactive: 'true' } } } as any)).toBe(true)
+  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(false)
+  expect(getExecutionProperty('interactive', { metadata: { attributes: {} } } as any)).toBe(false)
+  expect(getExecutionProperty('interactive', { metadata: { attributes: { interactive: 'true' } } } as any)).toBe(true)
 
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(true) } as any)
-  expect(isInteractiveTask({ metadata: {} } as any)).toBe(true)
-  expect(isInteractiveTask({ metadata: { attributes: {} } } as any)).toBe(true)
+  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(true)
+  expect(getExecutionProperty('interactive', { metadata: { attributes: {} } } as any)).toBe(true)
 })
 
 test('getTerminalByCell', () => {

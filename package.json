@@ -94,6 +94,12 @@
             "scope": "machine",
             "default": true,
             "markdownDescription": "If set to `true` all shell scripts are run as interactive VS Code tasks, if set to `false` they are executed within the kernel and output is set in resulting cell."
+          },
+          "runme.shell.closeTerminalOnSuccess": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": true,
+            "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
           }
         }
       }

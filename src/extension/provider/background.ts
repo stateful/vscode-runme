@@ -1,13 +1,13 @@
 import vscode from 'vscode'
 
-import { isInteractiveTask, getTerminalByCell } from '../utils'
+import { getExecutionProperty, getTerminalByCell } from '../utils'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
      */
-    if (!isInteractiveTask(cell)) {
+    if (!getExecutionProperty('interactive', cell)) {
       return
     }
 
@@ -31,7 +31,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
     /**
      * don't show if not a background task
      */
-    if (!isBackground || !isInteractiveTask(cell)) {
+    if (!isBackground || !getExecutionProperty('interactive', cell)) {
       return
     }
 

@@ -4,14 +4,13 @@ import { writeFile, chmod } from 'node:fs/promises'
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
   window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind,
-  workspace,
   // CustomExecution,
   // Pseudoterminal,
   ShellExecution
 } from 'vscode'
 import { file } from 'tmp-promise'
 
-import { populateEnvVar } from '../utils'
+import { populateEnvVar, getExecutionProperty } from '../utils'
 import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
 
 // import { ExperimentalTerminal } from "../terminal"
@@ -21,9 +20,9 @@ const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
 const EXPORT_REGEX = /(\n*)export \w+=("*)(.+?)(?=(\n|"))/g
 
-export function closeTerminalByScript () {
+export function closeTerminalByEnvID (id: string) {
   const terminal = window.terminals.find((t) => (
-    t.creationOptions as TerminalOptions).env?.RUNME_TASK)
+    t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
   if (terminal) {
     terminal.hide()
   }
@@ -91,8 +90,8 @@ async function taskExecutor(
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
-  const config = workspace.getConfiguration('runme')
-  if (!config.get('shell.interactive') || exec.cell.metadata.attributes?.interactive === 'false') {
+  const isInteractive = getExecutionProperty('interactive', exec.cell)
+  if (!isInteractive) {
     return inlineSh(exec, scriptFile.path, cwd, env)
   }
 
@@ -110,6 +109,7 @@ async function taskExecutor(
     // })
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
+  const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
   taskExecution.isBackground = isBackground
   taskExecution.presentationOptions = {
     focus: true,
@@ -124,7 +124,7 @@ async function taskExecutor(
     exec.token.onCancellationRequested(() => {
       try {
         execution.terminate()
-        closeTerminalByScript()
+        closeTerminalByEnvID(RUNME_ID)
         resolve(0)
       } catch (err: any) {
         console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
@@ -152,10 +152,10 @@ async function taskExecutor(
       }
 
       /**
-       * only close terminal if execution passed
+       * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0) {
-        closeTerminalByScript()
+      if (e.exitCode === 0 && closeTerminalOnSuccess) {
+        closeTerminalByEnvID(RUNME_ID)
       }
 
       return resolve(e.exitCode)
@@ -165,7 +165,7 @@ async function taskExecutor(
   if (isBackground) {
     const giveItTime = new Promise<boolean>(
       (resolve) => setTimeout(() => {
-        closeTerminalByScript()
+        closeTerminalByEnvID(RUNME_ID)
         return resolve(true)
       }, BACKGROUND_TASK_HIDE_TIMEOUT))
 

@@ -7,3 +7,7 @@ export enum OutputType {
 }
 
 export const STATE_KEY_FOR_ENV_VARS = 'executionEnv'
+export const CONFIGURATION_SHELL_DEFAULTS = {
+  interactive: true,
+  closeTerminalOnSuccess: true
+} as const

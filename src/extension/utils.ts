@@ -1,15 +1,17 @@
 import vscode from 'vscode'
 
+import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
+
 const ENV_VAR_REGEXP = /(\$\w+)/g
 
-export function isInteractiveTask (cell: vscode.NotebookCell) {
-  const config = vscode.workspace.getConfiguration('runme')
-  const configSetting = config.get<boolean>('shell.interactive', true)
+export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
+  const config = vscode.workspace.getConfiguration('runme.shell')
+  const configSetting = config.get<boolean>(property, CONFIGURATION_SHELL_DEFAULTS[property])
 
   /**
    * if cell is marked as interactive (default: not set or set to 'true')
    */
-  if (cell.metadata?.attributes && cell.metadata.attributes.interactive === 'true') {
+  if (cell.metadata?.attributes && cell.metadata.attributes[property] === 'true') {
     return true
   }
 
