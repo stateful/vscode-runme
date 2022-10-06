@@ -2,14 +2,18 @@ import path from 'node:path'
 import { writeFile, chmod } from 'node:fs/promises'
 
 import {
-  Task, ShellExecution, TextDocument, NotebookCellExecution, TaskScope, tasks,
+  Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
   window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind,
-  workspace
+  workspace,
+  // CustomExecution,
+  // Pseudoterminal,
+  ShellExecution
 } from 'vscode'
 import { file } from 'tmp-promise'
 
 import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
 
+// import { ExperimentalTerminal } from "../terminal"
 import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
@@ -81,6 +85,14 @@ async function taskExecutor(
         ...stateEnv
       }
     }),
+    // experimental only
+    // new CustomExecution(async (): Promise<Pseudoterminal> => {
+    //   return new ExperimentalTerminal(scriptFile.path, {
+    //     cwd: path.dirname(doc.uri.path),
+    //     // eslint-disable-next-line @typescript-eslint/naming-convention
+    //     env: { RUNME_TASK: "true", RUNME_ID },
+    //   })
+    // })
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
   taskExecution.isBackground = isBackground
