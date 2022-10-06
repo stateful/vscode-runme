@@ -97,4 +97,4 @@ const extensionConfig: Configuration = {
   }
 }
 
-export default [extensionConfig, rendererConfig, viteServerConfig]
+export default [extensionConfig/*, rendererConfig, viteServerConfig*/]

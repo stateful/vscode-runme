@@ -26,7 +26,7 @@ on:
         type: choice
         default: "no"
         options:
-          # - "yes"
+          - "yes"
           - "no"
       publishOpenVSX:
         description: "Publish on Open VSX Registry?"

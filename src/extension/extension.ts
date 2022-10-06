@@ -10,7 +10,7 @@ import { getTerminalByCell } from './utils'
 const viteProcess = new ViteServerProcess()
 
 export async function activate (context: vscode.ExtensionContext) {
-  console.log('[Runme] Activating Extension')
+  return console.log('[Runme] Activating Extension')
   const kernel = new Kernel(context)
 
   await viteProcess.start()
