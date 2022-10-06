@@ -25,7 +25,7 @@
     "unicorn/prefer-node-protocol": ["error"],
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/semi": ["error", "never"],
-    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/member-delimiter-style": ["error", {
       "multiline": {
         "delimiter": "none",

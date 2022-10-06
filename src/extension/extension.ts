@@ -5,7 +5,7 @@ import { Kernel } from './kernel'
 import { ViteServerProcess } from './server'
 import { ShowTerminalProvider, BackgroundTaskProvider } from './provider/background'
 import { PidStatusProvider } from './provider/pid'
-import { getTerminalByCell } from './utils'
+import { getTerminalByCell, resetEnv } from './utils'
 
 const viteProcess = new ViteServerProcess()
 
@@ -33,7 +33,8 @@ export async function activate (context: vscode.ExtensionContext) {
         return vscode.window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
       }
       return terminal.show()
-    })
+    }),
+    vscode.commands.registerCommand('runme.resetEnv', resetEnv)
   )
 
   console.log('[Runme] Extension successfully activated')

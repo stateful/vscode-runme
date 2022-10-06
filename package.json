@@ -43,6 +43,11 @@
       {
         "command": "runme.openTerminal",
         "title": "Open Terminal for Background Task"
+      },
+      {
+        "command": "runme.resetEnv",
+        "category": "Runme",
+        "title": "Reset Environment Variables for current VS Code session"
       }
     ],
     "notebooks": [

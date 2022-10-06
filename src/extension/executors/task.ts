@@ -11,7 +11,7 @@ import {
 import { file } from 'tmp-promise'
 
 import { populateEnvVar, getExecutionProperty } from '../utils'
-import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
+import { ENV_STORE } from '../../constants'
 
 // import { ExperimentalTerminal } from "../terminal"
 import { sh as inlineSh } from './shell'
@@ -41,7 +41,7 @@ async function taskExecutor(
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
     .filter((m) => m.indexOf('export PATH=') <= 0)
     .map((m) => m.trim())
-  const stateEnv = context.workspaceState.get<Record<string, string>>(STATE_KEY_FOR_ENV_VARS, {})
+  const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"')
@@ -66,8 +66,12 @@ async function taskExecutor(
       e + (hasStringValue ? '"' : ''),
       ''
     )
+
+    /**
+     * persist env variable in memory
+     */
+    ENV_STORE.set(key, stateEnv[key])
   }
-  await context.workspaceState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
 
   const cwd = path.dirname(doc.uri.path)
   const scriptFile = await file()

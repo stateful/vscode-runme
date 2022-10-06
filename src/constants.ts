@@ -6,8 +6,12 @@ export enum OutputType {
   error = 'error'
 }
 
-export const STATE_KEY_FOR_ENV_VARS = 'executionEnv'
 export const CONFIGURATION_SHELL_DEFAULTS = {
   interactive: true,
   closeTerminalOnSuccess: true
 } as const
+
+export const DEFAULT_ENV = { RUNME_TASK: 'true' }
+export const ENV_STORE = new Map<string, string>(
+  Object.entries(DEFAULT_ENV)
+)

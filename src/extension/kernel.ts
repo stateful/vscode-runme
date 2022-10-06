@@ -1,6 +1,7 @@
 import vscode, { ExtensionContext } from "vscode"
 
 import executor from './executors'
+import { resetEnv } from './utils'
 
 import "./wasm/wasm_exec.js"
 
@@ -21,7 +22,9 @@ export class Kernel implements vscode.Disposable {
     this.controller.executeHandler = this._executeAll.bind(this)
   }
 
-  dispose() { }
+  dispose () {
+    resetEnv()
+  }
 
   private async _executeAll(cells: vscode.NotebookCell[]) {
     for (const cell of cells) {

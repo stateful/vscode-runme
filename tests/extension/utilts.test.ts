@@ -1,7 +1,8 @@
 import vscode from 'vscode'
 import { expect, vi, test } from 'vitest'
 
-import { getExecutionProperty, getTerminalByCell, populateEnvVar } from '../../src/extension/utils'
+import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv } from '../../src/extension/utils'
+import { ENV_STORE } from '../../src/constants'
 
 vi.mock('vscode', () => ({
   default: {
@@ -41,4 +42,12 @@ test('populateEnvVar', () => {
     'export PATH="/foo/$BAR/$LOO:$PATH:/$FOO"',
     { PATH: '/usr/bin', FOO: 'foo', BAR: 'bar' }
   )).toBe('export PATH="/foo/bar/:/usr/bin:/foo"')
+})
+
+test('resetEnv', () => {
+  resetEnv()
+  ENV_STORE.set('foo', 'bar')
+  expect(ENV_STORE).toMatchSnapshot()
+  resetEnv()
+  expect(ENV_STORE).toMatchSnapshot()
 })

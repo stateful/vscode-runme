@@ -1,0 +1,14 @@
+// Vitest Snapshot v1
+
+exports[`resetEnv 1`] = `
+Map {
+  "RUNME_TASK" => "true",
+  "foo" => "bar",
+}
+`;
+
+exports[`resetEnv 2`] = `
+Map {
+  "RUNME_TASK" => "true",
+}
+`;
