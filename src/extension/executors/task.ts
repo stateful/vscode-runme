@@ -38,8 +38,11 @@ async function taskExecutor(
   /**
    * find export commands
    */
-  const exportMatches = (exec.cell.metadata.source.match(EXPORT_REGEX) || []).map((m: string) => m.trim())
-  const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
+  const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
+    .filter((m) => m.indexOf('export PATH=') < 0)
+    .map((m) => m.trim())
+  const rawEnv = Object.entries(context.workspaceState.get<Record<string, string>>(STATE_KEY_FOR_ENV_VARS, {}))
+  const stateEnv: Record<string, string> = Object.fromEntries(rawEnv.filter(([k]) => k !== 'PATH'))
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
     const placeHolder = ph.startsWith('"') ? ph.slice(1) : ph
@@ -63,7 +66,7 @@ async function taskExecutor(
       ''
     )
   }
-  await context.globalState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
+  await context.workspaceState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
 
   /**
    * run as non interactive shell script if set as configuration or annotated
