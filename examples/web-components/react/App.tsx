@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
+
+import React, { useState } from 'react'
 
 // eslint-disable-next-line import/no-unresolved
 import './App.css'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export default function App() {
-  const [count, setCount] = useState(0)
+export default function App({ startCount }) {
+  const [count, setCount] = useState(startCount || 0)
 
   return (
     <div className="App">

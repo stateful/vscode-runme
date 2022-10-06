@@ -20,11 +20,14 @@ async function scriptExecutor(
   }
 
   const code = doc.getText()
+  const attributes: Record<string, string> = exec.cell.metadata.attributes || {}
+
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{
       type: OutputType.script,
       output: {
-        content: code,
+        code,
+        attributes,
         port: viteProcess.port
       }
     }, OutputType.html)

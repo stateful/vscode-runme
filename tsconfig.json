@@ -15,5 +15,6 @@
       "vscode"
     ]
   },
-  "include": ["src/"]
+  "include": ["src/"],
+  "exclude": ["src/server"]
 }

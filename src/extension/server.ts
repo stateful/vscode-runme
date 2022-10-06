@@ -1,5 +1,6 @@
 import path from 'node:path'
 import cp, { ChildProcess } from 'node:child_process'
+
 import getPort from 'get-port'
 import vscode from 'vscode'
 
@@ -10,6 +11,10 @@ export class ViteServerProcess implements vscode.Disposable {
 
   get port () {
     return this.#port
+  }
+
+  get rootPath () {
+    return this.#rootPath
   }
 
   async start () {

@@ -1,4 +1,5 @@
 import path from 'node:path'
+
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import WebpackCopy from 'copy-webpack-plugin'
 import type { Configuration } from 'webpack'
@@ -48,7 +49,7 @@ const rendererConfig: Configuration = {
 
 const viteServerConfig: Configuration = {
   ...rendererConfig,
-  entry: path.resolve('src', 'server', 'index.ts'),
+  entry: path.resolve(__dirname, 'src', 'server', 'index.ts'),
   output: {
     ...rendererConfig.output,
     path: path.resolve(__dirname, 'out', 'server'),
@@ -62,8 +63,24 @@ const viteServerConfig: Configuration = {
       ]
     })
   ],
-  externals: ['vite', '@sveltejs/vite-plugin-svelte', 'yargs', 'yargs/helpers', '@vitejs/plugin-vue', 'get-port'],
-  target: 'node'
+  externals: [
+    'vite', '@sveltejs/vite-plugin-svelte', 'yargs', 'yargs/helpers',
+    '@vitejs/plugin-vue', '@vitejs/plugin-react', 'get-port', 'vite-plugin-virtual-html'],
+  target: 'node',
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [{
+          loader: 'ts-loader',
+          options: {
+            configFile: 'src/server/tsconfig.json'
+          }
+        }]
+      },
+    ],
+  }
 }
 
 const extensionConfig: Configuration = {

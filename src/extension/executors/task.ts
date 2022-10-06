@@ -9,6 +9,7 @@ import {
 import { file } from 'tmp-promise'
 
 import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
+
 import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000

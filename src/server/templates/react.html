@@ -1,0 +1,33 @@
+<%
+let code = it.code
+for (const c of Object.keys(it.components)) {
+  code = code.replace(`<${c}`, `<\${${c}}`).replace(`</${c}`, `</\${${c}}`)
+}
+%><html>
+  <head>
+    <style>
+      html, body {
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+    <script src="https://unpkg.com/htm@2.2.1" crossorigin></script>
+    <script type="module">
+      import React from 'react'
+      import { createRoot } from 'react-dom/client'
+
+      <% for (const [name, src] of Object.entries(it.components)) {
+        %>import <%= name %> from '<%= src %>'
+      <% } %>
+
+      const { createElement, useState } = React
+      const html = htm.bind(createElement)
+
+      const root = createRoot(document.getElementById('root'));
+      root.render(html`<%~ code %>`);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

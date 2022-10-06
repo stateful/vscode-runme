@@ -33,10 +33,16 @@ export const activate: ActivationFunction = () => ({
         element.appendChild(viteElem)
         break
       case OutputType.script:
-        const scriptElem = document.createElement('script-output')
-        scriptElem.setAttribute('content', output.content)
-        scriptElem.setAttribute('port', output.port)
-        element.appendChild(scriptElem)
+        const iframe = document.createElement('iframe')
+        const params = new URLSearchParams({
+          code: output.code,
+          ...output.attributes
+        })
+        const iframeSrc = `http://localhost:${output.port}/react.html?${params.toString()}`
+        iframe.setAttribute('src', iframeSrc)
+        iframe.setAttribute('style', 'width: 100%; border: 0;')
+
+        element.appendChild(iframe)
         break
       case OutputType.error:
         element.innerHTML = /*html*/`⚠️ ${output}`

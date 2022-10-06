@@ -3,6 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
+
+import { cellResult } from './plugins'
 
 export class ViteServer {
   #server: ViteDevServer
@@ -27,8 +30,10 @@ export class ViteServer {
       root: yargv.rootPath,
       server: { port: yargv.port },
       plugins: [
+        cellResult(),
         vue(),
-        svelte()
+        svelte(),
+        react()
       ]
     })
 

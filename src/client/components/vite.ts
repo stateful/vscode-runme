@@ -46,6 +46,13 @@ export class ViteOutput extends LitElement {
               margin: 0;
             }
           </style>
+          <script type="module">
+            import RefreshRuntime from "/@react-refresh"
+            RefreshRuntime.injectIntoGlobalHook(window)
+            window.$RefreshReg$ = () => {}
+            window.$RefreshSig$ = () => (type) => type
+            window.__vite_plugin_react_preamble_installed__ = true
+          </script>
         </head>
         <body>
           ${this.content}

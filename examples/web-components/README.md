@@ -20,6 +20,12 @@ Render demo component:
 <script src="/web-components/react/main.tsx" type="module"></script>
 ```
 
+Render components directly:
+
+```tsx { App=/web-components/react/App.tsx css=/web-components/react/main.css }
+<App startCount=42 />
+```
+
 ## Vue
 
 Render demo component:

@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
+
 import vscode from 'vscode'
 
 import type { ParsedReadmeEntry } from '../types'

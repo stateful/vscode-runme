@@ -16,7 +16,10 @@
     "unused-imports"
   ],
   "rules": {
-    "import/order": "error",
+    "import/order": ["error", {
+      "groups": ["builtin", "external", "parent", "sibling", "index"],
+      "newlines-between": "always"
+    }],
     "import/no-unresolved": [2, { "ignore": ["vscode"] }],
     "import/no-named-as-default": "off",
     "unicorn/prefer-node-protocol": ["error"],
