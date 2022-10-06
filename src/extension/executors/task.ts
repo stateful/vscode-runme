@@ -11,6 +11,7 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
+import { populateEnvVar } from '../utils'
 import { STATE_KEY_FOR_ENV_VARS } from '../../constants'
 
 // import { ExperimentalTerminal } from "../terminal"
@@ -41,18 +42,17 @@ async function taskExecutor(
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
     .filter((m) => m.indexOf('export PATH=') <= 0)
     .map((m) => m.trim())
-  const rawEnv = Object.entries(context.workspaceState.get<Record<string, string>>(STATE_KEY_FOR_ENV_VARS, {}))
-  const stateEnv: Record<string, string> = Object.fromEntries(rawEnv.filter(([k]) => k !== 'PATH'))
+  const stateEnv = context.workspaceState.get<Record<string, string>>(STATE_KEY_FOR_ENV_VARS, {})
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"')
     const placeHolder = hasStringValue ? ph.slice(1) : ph
-    stateEnv[key] = await window.showInputBox({
+    stateEnv[key] = populateEnvVar(await window.showInputBox({
       title: `Set Environment Variable "${key}"`,
       placeHolder,
       prompt: 'Your shell script wants to set some environment variables, please enter them here.',
       ...(hasStringValue ? { value: placeHolder } : {})
-    }) || ''
+    }) || '', stateEnv)
 
     /**
      * we don't want to run these exports anymore as we already stored
@@ -70,22 +70,31 @@ async function taskExecutor(
   }
   await context.workspaceState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
 
+  const cwd = path.dirname(doc.uri.path)
+  const scriptFile = await file()
+  const splits = scriptFile.path.split('-')
+  const id = splits[splits.length-1]
+  const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
+  const env = {
+    ...process.env,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    RUNME_TASK: 'true',
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    RUNME_ID,
+    ...stateEnv
+  }
+
+  await writeFile(scriptFile.path, cellText, 'utf-8')
+  await chmod(scriptFile.path, 0o775)
+
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
   const config = workspace.getConfiguration('runme')
   if (!config.get('shell.interactive') || exec.cell.metadata.attributes?.interactive === 'false') {
-    return inlineSh(context, exec, doc)
+    return inlineSh(exec, scriptFile.path, cwd, env)
   }
-
-  const scriptFile = await file()
-  const splits = scriptFile.path.split('-')
-  const id = splits[splits.length-1]
-  const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
-
-  await writeFile(scriptFile.path, cellText, 'utf-8')
-  await chmod(scriptFile.path, 0o775)
 
   const taskExecution = new Task(
     { type: 'runme', name: `Runme Task (${id})` },
@@ -94,24 +103,10 @@ async function taskExecutor(
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
       : cellText,
     'exec',
-    new ShellExecution(scriptFile.path, {
-      cwd: path.dirname(doc.uri.path),
-      env: {
-        ...process.env,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        RUNME_TASK: 'true',
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        RUNME_ID,
-        ...stateEnv
-      }
-    }),
+    new ShellExecution(scriptFile.path, { cwd, env })
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
-    //   return new ExperimentalTerminal(scriptFile.path, {
-    //     cwd: path.dirname(doc.uri.path),
-    //     // eslint-disable-next-line @typescript-eslint/naming-convention
-    //     env: { RUNME_TASK: "true", RUNME_ID },
-    //   })
+    //   return new ExperimentalTerminal(scriptFile.path, { cwd, env })
     // })
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'

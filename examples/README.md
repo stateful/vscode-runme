@@ -80,10 +80,7 @@ echo "SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN"
 
 Supports changes to `$PATH`:
 
-```sh
-export PATH="~/.deno/bin:$PATH"
-deployctl deploy \
-    --project=runme-staging \
-    --import-map=import_map.json main.ts \
-    --token=$DENO_ACCESS_TOKEN
+```sh { interactive=false }
+export PATH="/some/path:$PATH"
+echo $PATH
 ```

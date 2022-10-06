@@ -1,32 +1,18 @@
-import path from 'node:path'
-import { writeFile, chmod } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 
-import {
-  TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
-  ExtensionContext
-} from 'vscode'
-import { file } from 'tmp-promise'
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
-import { OutputType, STATE_KEY_FOR_ENV_VARS } from '../../constants'
+import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
 async function shellExecutor(
-  context: ExtensionContext,
   exec: NotebookCellExecution,
-  doc: TextDocument
+  scriptPath: string,
+  cwd: string,
+  env: Record<string, string>
 ): Promise<boolean> {
   const outputItems: string[] = []
-  const scriptFile = await file()
-  await writeFile(scriptFile.path, doc.getText(), 'utf-8')
-  await chmod(scriptFile.path, 0o775)
-
-  const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
-  const child = spawn(scriptFile.path, {
-    cwd: path.dirname(doc.uri.path),
-    shell: true,
-    env: { ...process.env, ...stateEnv }
-  })
+  const child = spawn(scriptPath, { cwd, shell: true, env })
   console.log(`[RunMe] Started process on pid ${child.pid}`)
 
   /**
