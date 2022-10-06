@@ -107,6 +107,7 @@
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "test": "run-s test:*",
     "test:lint": "eslint src --ext ts",
+    "test:unit": "vitest",
     "watch": "npm run build:dev -- --watch"
   },
   "devDependencies": {
