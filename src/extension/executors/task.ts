@@ -18,7 +18,7 @@ import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
-const EXPORT_REGEX = /\nexport \w+=("*)(.+?)(?=(\n|"))/g
+const EXPORT_REGEX = /(\n*)export \w+=("*)(.+?)(?=(\n|"))/g
 
 export function closeTerminalByScript () {
   const terminal = window.terminals.find((t) => (
@@ -33,10 +33,12 @@ async function taskExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
+  let cellText = doc.getText()
+
   /**
    * find export commands
    */
-  const exportMatches = (doc.getText().match(EXPORT_REGEX) || []).map((m) => m.trim())
+  const exportMatches = (exec.cell.metadata.source.match(EXPORT_REGEX) || []).map((m: string) => m.trim())
   const stateEnv: Record<string, string> = context.globalState.get(STATE_KEY_FOR_ENV_VARS, {})
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
@@ -46,6 +48,20 @@ async function taskExecutor(
       placeHolder,
       prompt: 'Your shell script wants to set some environment variables, please enter them here.'
     }) || ''
+
+    /**
+     * we don't want to run these exports anymore as we already stored
+     * them in our extension state
+     */
+    cellText = cellText.replace(
+      /**
+       * In case of `export foo="bar", our match includes the preceeding '"' but not
+       * the ending one. To properly cut out the line from the script we need to add
+       * it back again.
+       */
+      e + (ph.startsWith('"') ? '"' : ''),
+      ''
+    )
   }
   await context.globalState.update(STATE_KEY_FOR_ENV_VARS, stateEnv)
 
@@ -59,7 +75,6 @@ async function taskExecutor(
   }
 
   const scriptFile = await file()
-  const cellText = doc.getText()
   const splits = scriptFile.path.split('-')
   const id = splits[splits.length-1]
   const RUNME_ID = `${doc.fileName}:${exec.cell.index}`

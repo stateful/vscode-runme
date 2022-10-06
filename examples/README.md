@@ -50,7 +50,19 @@ document.body.innerHTML += 'script attached!'
 
 ## Environment Variables
 
-To do X, export an environment variable as follows:
+Within single lines:
+
+```sh
+export DENO_ACCESS_TOKEN=<insert-token-here>
+```
+
+verify:
+
+```sh { interactive=false }
+echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"
+```
+
+Supports multiple lines where an export is just somewhere in between:
 
 ```sh
 echo "Auth token for service foo"
@@ -59,7 +71,7 @@ echo "Auth token for service bar"
 export SERVICE_BAR_TOKEN="barfoo"
 ```
 
-Then you have access to these:
+verify:
 
 ```sh { interactive=false }
 echo "SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN"

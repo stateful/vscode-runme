@@ -61,10 +61,10 @@ export class Serializer implements vscode.NotebookSerializer {
       }
 
       if (s.content) {
-        const lines = s.content.toString().trim()
+        const lines = s.content.toString()
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
-          lines,
+          lines.trim(),
           /**
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
