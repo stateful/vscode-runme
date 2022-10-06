@@ -1,11 +1,13 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+
 import got from 'got'
 import { createDeployment } from '@vercel/client'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
 
 import { OutputType } from '../../../constants'
 import type { CellOutput } from '../../../types'
+
 import { getAuthToken } from './utils'
 
 interface VercelProject {

@@ -1,4 +1,5 @@
 import { customElement } from 'lit/decorators.js'
+
 import { ViteOutput } from './vite'
 
 @customElement('svelte-component')

@@ -1,7 +1,6 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
-
 import {
   TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
   ExtensionContext
@@ -9,6 +8,7 @@ import {
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
+
 import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
 

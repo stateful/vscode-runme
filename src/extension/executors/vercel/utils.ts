@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+
 import xdg from 'xdg-app-paths'
 
 export async function getConfigFilePath () {
