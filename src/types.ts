@@ -8,6 +8,10 @@ export interface ParsedReadmeEntry {
   attributes?: Metadata
 }
 
+export interface ParsedDocument {
+  document?: ParsedReadmeEntry[]
+}
+
 export interface Metadata {
   [key: string]: any
 }

@@ -3,7 +3,7 @@ import fsp from 'node:fs/promises'
 
 import vscode from 'vscode'
 
-import type { ParsedReadmeEntry } from '../types'
+import type { ParsedDocument } from '../types'
 
 declare var globalThis: any
 
@@ -32,7 +32,7 @@ export class Serializer implements vscode.NotebookSerializer {
     const err = await this.ready
 
     const md = content.toString()
-    const doc = globalThis.GetDocument(md)
+    const doc = globalThis.GetDocument(md) as ParsedDocument
 
     if (!doc || err) {
       return this.#printCell(
@@ -41,8 +41,8 @@ export class Serializer implements vscode.NotebookSerializer {
       )
     }
 
-    const snippets = doc.document as (ParsedReadmeEntry[] | undefined)
-    if (!snippets) {
+    const snippets = doc.document ?? []
+    if (snippets.length === 0) {
       return this.#printCell('⚠️ __Error__: no cells found!')
     }
 
