@@ -10,11 +10,9 @@ import {
 } from 'vscode'
 import { file } from 'tmp-promise'
 
-// eslint-disable-next-line import/order
-import { populateEnvVar, getExecutionProperty } from '../utils'
-
 // import { ExperimentalTerminal } from "../terminal"
-import { Kernel } from '../kernel'
+import { populateEnvVar, getExecutionProperty } from '../utils'
+import { ENV_STORE } from '../constants'
 
 import { sh as inlineSh } from './shell'
 
@@ -43,7 +41,7 @@ async function taskExecutor(
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
     .filter((m) => m.indexOf('export PATH=') <= 0)
     .map((m) => m.trim())
-  const stateEnv = Object.fromEntries(Kernel.ENV_STORE)
+  const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"')
@@ -72,7 +70,7 @@ async function taskExecutor(
     /**
      * persist env variable in memory
      */
-    Kernel.ENV_STORE.set(key, stateEnv[key])
+    ENV_STORE.set(key, stateEnv[key])
   }
 
   const cwd = path.dirname(doc.uri.path)

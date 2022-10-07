@@ -1,8 +1,8 @@
 import vscode from 'vscode'
-import { expect, vi, test } from 'vitest'
+import { expect, vi, test, beforeAll, afterAll } from 'vitest'
 
 import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv } from '../../src/extension/utils'
-import { ENV_STORE } from '../../src/constants'
+import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
 vi.mock('vscode', () => ({
   default: {
@@ -17,6 +17,13 @@ vi.mock('vscode', () => ({
     }
   }
 }))
+
+const PATH = process.env.PATH
+beforeAll(() => {
+  DEFAULT_ENV.PATH = '/usr/bin'
+  ENV_STORE.delete('PATH')
+})
+afterAll(() => { process.env.PATH = PATH })
 
 test('isInteractive', () => {
   // when set to false in configutaration
@@ -45,7 +52,6 @@ test('populateEnvVar', () => {
 })
 
 test('resetEnv', () => {
-  resetEnv()
   ENV_STORE.set('foo', 'bar')
   expect(ENV_STORE).toMatchSnapshot()
   resetEnv()

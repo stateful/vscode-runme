@@ -13,15 +13,6 @@ export class Kernel implements vscode.Disposable {
     "RUNME"
   )
 
-  public static DEFAULT_ENV = {
-    RUNME_TASK: 'true',
-    PATH: process.env.PATH || ''
-  }
-
-  public static ENV_STORE: Map<string, string> = new Map<string, string>(
-      Object.entries(Kernel.DEFAULT_ENV)
-  )
-
   constructor(context: ExtensionContext) {
     this.#context = context
 

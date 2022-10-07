@@ -10,5 +10,6 @@ Map {
 exports[`resetEnv 2`] = `
 Map {
   "RUNME_TASK" => "true",
+  "PATH" => "/usr/bin",
 }
 `;

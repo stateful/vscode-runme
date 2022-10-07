@@ -2,7 +2,7 @@ import vscode from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 
-import { Kernel } from './kernel'
+import { ENV_STORE, DEFAULT_ENV } from './constants'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 
@@ -37,6 +37,6 @@ export function populateEnvVar (value: string, env = process.env) {
 }
 
 export function resetEnv () {
-  [...Kernel.ENV_STORE.keys()].forEach((key) => Kernel.ENV_STORE.delete(key))
-  Object.entries(Kernel.DEFAULT_ENV).map(([key, val]) => Kernel.ENV_STORE.set(key, val))
+  [...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
+  Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
 }

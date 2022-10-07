@@ -1,3 +1,8 @@
+/**
+ * Note: this file is used within Node.js and Browser environment.
+ * Only export cross compatible objects here.
+ */
+
 export enum OutputType {
   shell = 'stateful.runme/shell-stdout',
   vercel = 'stateful.runme/vercel-stdout',
@@ -10,11 +15,3 @@ export const CONFIGURATION_SHELL_DEFAULTS = {
   interactive: true,
   closeTerminalOnSuccess: true
 } as const
-
-export const DEFAULT_ENV = {
-  RUNME_TASK: 'true',
-  PATH: process.env.PATH || ''
-}
-export const ENV_STORE = new Map<string, string>(
-  Object.entries(DEFAULT_ENV)
-)
