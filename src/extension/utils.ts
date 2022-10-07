@@ -15,6 +15,8 @@ export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL
    */
   if (cell.metadata?.attributes && cell.metadata.attributes[property] === 'true') {
     return true
+  } else if (cell.metadata?.attributes && cell.metadata.attributes[property] === 'false') {
+    return false
   }
 
   return configSetting
