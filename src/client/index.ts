@@ -39,14 +39,9 @@ export const activate: ActivationFunction = () => ({
         break
       case OutputType.script:
         const iframe = document.createElement('iframe')
-        const params = new URLSearchParams({
-          code: output.code,
-          ...output.attributes
-        })
-        const iframeSrc = `http://localhost:${output.port}/react.html?${params.toString()}`
+        const iframeSrc = `http://localhost:${output.port}/${output.filename}`
         iframe.setAttribute('src', iframeSrc)
-        iframe.setAttribute('style', 'width: 100%; border: 0;')
-
+        iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
         element.appendChild(iframe)
         break
       case OutputType.error:

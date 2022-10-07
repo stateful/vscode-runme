@@ -1,19 +1,29 @@
+import fs from 'node:fs/promises'
 import url from 'node:url'
 import path from 'node:path'
-import fs from 'node:fs/promises'
 
 import type { Plugin } from 'vite'
-import { render } from 'eta'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-const supportedTemplates = ['react']
+const extRoot = path.resolve(__dirname, '..', '..')
 
 export function cellResult (): Plugin {
   return {
     name: 'notebookCellResult',
+    async load (scriptUrl) {
+      if (scriptUrl.startsWith('/_notebook')) {
+        const filename = path.parse(scriptUrl).base
+        const hasAccess = await fs.access(filename).then(() => true, () => false)
+        if (hasAccess) {
+          return
+        }
 
-    configureServer(server) {
+        const templatePath = path.join(extRoot, 'out', filename)
+        const scriptFile = (await fs.readFile(templatePath, 'utf-8')).toString()
+        return scriptFile
+      }
+    },
+    configureServer (server) {
       return () => {
         server.middlewares.use('/', async (req, res, next) => {
           if (!req.url) {
@@ -26,20 +36,15 @@ export function cellResult (): Plugin {
             return next()
           }
 
-          const type = path.parse(urlParsed.pathname || '').name
-          if (!supportedTemplates.includes(type)) {
+          const templatePath = path.join(extRoot, 'out', req.url.slice(1))
+          const hasAccess = await fs.access(templatePath).then(() => true, () => false)
+
+          if (!hasAccess) {
             return next()
           }
 
-          const { code, ...components } = Object.fromEntries(
-            new URLSearchParams(urlParsed.path.slice(urlParsed.path.indexOf('?')))
-          )
-          const htmlCode = render(
-            (await fs.readFile(path.join(__dirname, 'templates', `${type}.html`))).toString(),
-            { code, components }
-          ) as string
-
-          res.end(await server.transformIndexHtml(req.url, htmlCode))
+          const tpl = await fs.readFile(templatePath, 'utf-8')
+          res.end(await server.transformIndexHtml(`${req.url}`, tpl))
           next()
         })
       }

@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
+
 import {
   TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
   ExtensionContext
@@ -6,6 +9,8 @@ import {
 import { ViteServerProcess } from '../server'
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
+
+import render, { SUPPORTED_FRAMEWORKS } from './script/index'
 
 async function scriptExecutor(
   context: ExtensionContext,
@@ -22,12 +27,28 @@ async function scriptExecutor(
   const code = doc.getText()
   const attributes: Record<string, string> = exec.cell.metadata.attributes || {}
 
+  if (!SUPPORTED_FRAMEWORKS.includes(attributes.framework)) {
+    exec.replaceOutput(new NotebookCellOutput([
+      NotebookCellOutputItem.text(attributes.framework
+        ? `Framework "${attributes.framework}" not supported`
+        : 'No framework annotation set'
+      )
+    ]))
+    return false
+  }
+
+  const filename = Buffer.from(
+    `${path.basename(exec.cell.document.fileName).replace('.', '_')}_${exec.cell.index}_${Date.now()}`
+  ).toString('base64')
+  const [html, script] = render(attributes.framework as typeof SUPPORTED_FRAMEWORKS, code, filename)
+  await fs.writeFile(path.resolve(__dirname, `${filename}.html`), html)
+  await fs.writeFile(path.resolve(__dirname, `${filename}.tsx`), script)
+
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{
       type: OutputType.script,
       output: {
-        code,
-        attributes,
+        filename: `${filename}.html`,
         port: viteProcess.port
       }
     }, OutputType.html)
