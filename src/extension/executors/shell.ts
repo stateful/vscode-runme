@@ -2,7 +2,6 @@ import { spawn } from 'node:child_process'
 
 import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
-import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
 async function shellExecutor(
@@ -13,8 +12,8 @@ async function shellExecutor(
 ): Promise<boolean> {
   const outputItems: string[] = []
   const child = spawn(scriptPath, { cwd, shell: true, env })
-  console.log(`[RunMe] Started process on pid ${child.pid}`)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  console.log(`[Runme] Started process on pid ${child.pid}`)
+  // this needs more work / specification
   const contentType = exec.cell.metadata.attributes?.['output']
   /**
    * handle output for stdout and stderr
