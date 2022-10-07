@@ -21,6 +21,7 @@ export type OutputTypes = (
   'stateful.runme/script-stdout' |
   'stateful.runme/shell-stdout' |
   'stateful.runme/vercel-stdout' |
+  'stateful.runme/deno-stdout' |
   'stateful.runme/html-stdout'
 )
 export interface CellOutput {
