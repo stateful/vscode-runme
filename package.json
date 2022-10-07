@@ -90,6 +90,14 @@
         ]
       },
       {
+        "id": "runme-deno-renderer",
+        "entrypoint": "./out/client.js",
+        "displayName": "runme deno stdout",
+        "mimeTypes": [
+          "stateful.runme/deno-stdout"
+        ]
+      },
+      {
         "id": "runme-html-renderer",
         "entrypoint": "./out/client.js",
         "displayName": "runme html stdout",
@@ -173,6 +181,7 @@
     "readable-stream": "^4.2.0",
     "svelte": "^3.50.1",
     "tmp-promise": "^3.0.3",
+    "undici": "^5.11.0",
     "vercel": "^28.4.4",
     "vite": "^3.1.4",
     "vue": "^3.2.40",

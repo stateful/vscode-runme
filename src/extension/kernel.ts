@@ -37,8 +37,14 @@ export class Kernel implements vscode.Disposable {
     const exec = this.controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const languageId = runningCell.languageId as keyof typeof executor
-    const successfulCellExecution = await executor[languageId](this.#context, exec, runningCell)
+    const execKey = this.getKey(runningCell)
+    const successfulCellExecution = await executor[execKey](this.#context, exec, runningCell)
     exec.end(successfulCellExecution)
+  }
+
+  private getKey(runningCell: vscode.TextDocument) : keyof typeof executor {
+    const text = runningCell.getText()
+    if (text.indexOf('deployctl deploy') > -1) { return "deno" }
+    return runningCell.languageId as keyof typeof executor
   }
 }

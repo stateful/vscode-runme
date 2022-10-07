@@ -25,6 +25,11 @@ export const activate: ActivationFunction = () => ({
         vercelElem.setAttribute('content', JSON.stringify(output))
         element.appendChild(vercelElem)
         break
+      case OutputType.deno:
+        const denoElem = document.createElement('deno-output')
+        denoElem.setAttribute('content', JSON.stringify(output))
+        element.appendChild(denoElem)
+        break
       case OutputType.html:
         const tag = output.isSvelte ? 'svelte-component' : 'vite-output'
         const viteElem = document.createElement(tag)

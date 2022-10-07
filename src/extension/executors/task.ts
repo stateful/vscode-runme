@@ -1,9 +1,10 @@
 import path from 'node:path'
 import { writeFile, chmod } from 'node:fs/promises'
 
+
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, commands, ExtensionContext, TaskRevealKind, TaskPanelKind,
+  window, TerminalOptions, ExtensionContext, TaskRevealKind, TaskPanelKind,
   // CustomExecution,
   // Pseudoterminal,
   ShellExecution
@@ -48,6 +49,7 @@ async function taskExecutor(
     const placeHolder = hasStringValue ? ph.slice(1) : ph
     stateEnv[key] = populateEnvVar(await window.showInputBox({
       title: `Set Environment Variable "${key}"`,
+      ignoreFocusOut: true,
       placeHolder,
       prompt: 'Your shell script wants to set some environment variables, please enter them here.',
       ...(hasStringValue ? { value: placeHolder } : {})
@@ -121,7 +123,7 @@ async function taskExecutor(
     reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
     panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
-  await commands.executeCommand('workbench.action.terminal.clear')
+  // await commands.executeCommand('workbench.action.terminal.clear')
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
