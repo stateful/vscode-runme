@@ -14,18 +14,24 @@ async function shellExecutor(
   const outputItems: string[] = []
   const child = spawn(scriptPath, { cwd, shell: true, env })
   console.log(`[RunMe] Started process on pid ${child.pid}`)
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const contentType = exec.cell.metadata.attributes?.['output']
   /**
    * handle output for stdout and stderr
    */
   function handleOutput(data: any) {
     outputItems.push(data.toString().trim())
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutput>{
-        type: OutputType.shell,
+    let item = NotebookCellOutputItem.stdout(outputItems.join('\n'))
+
+    switch (contentType) {
+      case 'application/json':
+      item = NotebookCellOutputItem.json(<CellOutput>{
+        type: contentType,
         output: outputItems.join('\n')
-      }, OutputType.shell)
-    ]))
+      }, contentType)
+    }
+
+    exec.replaceOutput(new NotebookCellOutput([ item ]))
   }
 
   child.stdout.on('data', handleOutput)
