@@ -53,7 +53,7 @@ document.body.innerHTML += 'script attached!'
 Within single lines:
 
 ```sh
-export DENO_ACCESS_TOKEN=<insert-token-here>
+export DENO_ACCESS_TOKEN="<insert-token-here>"
 ```
 
 verify:
