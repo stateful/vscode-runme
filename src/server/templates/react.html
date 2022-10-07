@@ -17,7 +17,8 @@ for (const c of Object.keys(it.components)) {
       import { createRoot } from 'react-dom/client'
 
       <% for (const [name, src] of Object.entries(it.components)) {
-        %>import <%= name %> from '<%= src %>'
+        %>import * as <%= name %>Import from '<%= src.startsWith('"') || src.startsWith("'") ? src.slice(1, -1) : src %>';
+        const <%= name %> = <%= name %>Import.default || <%= name %>Import.<%= name %>;
       <% } %>
 
       const { createElement, useState } = React

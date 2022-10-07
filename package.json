@@ -132,6 +132,7 @@
   "devDependencies": {
     "@rollup/plugin-html": "^0.2.4",
     "@types/node": "^18.7.19",
+    "@types/react": "^18.0.21",
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
