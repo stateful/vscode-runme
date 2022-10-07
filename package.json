@@ -50,6 +50,14 @@
         "title": "Reset Environment Variables for current VS Code session"
       }
     ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "runme.openTerminal",
+          "when": "false"
+        }
+      ]
+    },
     "notebooks": [
       {
         "type": "runme",
