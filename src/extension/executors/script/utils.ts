@@ -24,6 +24,11 @@ export function getHTMLTemplate (htmlSection: string, codeSection = '') {
 export function parseCode (code: string) {
   const lines = code.split('\n')
   const htmlStartsAt = lines.findIndex((l) => l.trim().startsWith('<'))
+
+  if (htmlStartsAt < 0) {
+    return { scriptSection: code, htmlSection: '' }
+  }
+
   const scriptSection = lines.slice(0, htmlStartsAt - 1).join('\n')
   const htmlSection = lines.slice(htmlStartsAt).join('\n')
 
