@@ -10,15 +10,18 @@ const extRoot = path.resolve(__dirname, '..', '..')
 export function cellResult (): Plugin {
   return {
     name: 'notebookCellResult',
+    enforce: 'pre',
     async load (scriptUrl) {
       if (scriptUrl.startsWith('/_notebook')) {
         const filename = path.parse(scriptUrl).base
-        const hasAccess = await fs.access(filename).then(() => true, () => false)
-        if (hasAccess) {
+        const templatePath = path.join(extRoot, 'out', filename)
+        const hasAccess = await fs.access(templatePath).then(() => true, () => false)
+        console.log(templatePath, hasAccess)
+
+        if (!hasAccess) {
           return
         }
 
-        const templatePath = path.join(extRoot, 'out', filename)
         const scriptFile = (await fs.readFile(templatePath, 'utf-8')).toString()
         return scriptFile
       }

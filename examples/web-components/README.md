@@ -51,6 +51,31 @@ Render demo component:
 <script type="module" src="/web-components/vue/main.ts"></script>
 ```
 
+Render component inline:
+
+```tsx { framework=vue }
+import HelloWorld from '/web-components/vue/components/HelloWorld.vue'
+import '/web-components/vue/style.css'
+
+<div style="max-width: 1280px; margin: 0 auto; padding: 2rem; text-align: center;">
+  <a href="https://vitejs.dev" target="_blank">
+    <img
+      src="/web-components/vue/assets/vite.svg"
+      style="height: 6em; padding: 1.5em; will-change: filter"
+      alt="Vite logo"
+    />
+  </a>
+  <a href="https://vuejs.org/" target="_blank">
+    <img
+      src="/web-components/vue/assets/vue.svg"
+      style="height: 6em; padding: 1.5em; will-change: filter"
+      alt="Vue logo"
+    />
+  </a>
+  <HelloWorld msg="Vite + Vue" />
+</div>
+```
+
 ### Individual Components
 Allows rendering individual Svelte files.
 

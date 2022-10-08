@@ -40,9 +40,10 @@ async function scriptExecutor(
   const filename = Buffer.from(
     `${path.basename(exec.cell.document.fileName).replace('.', '_')}_${exec.cell.index}_${Date.now()}`
   ).toString('base64')
-  const [html, script] = render(attributes.framework as typeof SUPPORTED_FRAMEWORKS, code, filename)
-  await fs.writeFile(path.resolve(__dirname, `${filename}.html`), html)
-  await fs.writeFile(path.resolve(__dirname, `${filename}.tsx`), script)
+  const artifacts = render(attributes.framework as typeof SUPPORTED_FRAMEWORKS, code, filename)
+  for (const [ext, src] of Object.entries(artifacts)) {
+    await fs.writeFile(path.resolve(__dirname, `${filename}.${ext}`), src)
+  }
 
   exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(<CellOutput>{

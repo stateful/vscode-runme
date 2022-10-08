@@ -1,6 +1,7 @@
 import react from './react.tpl'
+import vue from './vue.tpl'
 
-const templates = { react } as const
+const templates = { react, vue } as const
 
 export default function render (type: keyof typeof templates, code: string, filename: string) {
   const renderer = templates[type]
