@@ -45,6 +45,10 @@
         "title": "Open Terminal for Background Task"
       },
       {
+        "command": "runme.copyCellToClipboard",
+        "title": "Copy Cell Content into Clipboard"
+      },
+      {
         "command": "runme.resetEnv",
         "category": "Runme",
         "title": "Reset Environment Variables for current VS Code session"
