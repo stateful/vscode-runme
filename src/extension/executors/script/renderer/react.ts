@@ -1,10 +1,7 @@
-import { getHTMLTemplate } from './utils'
+import { getHTMLTemplate, parseCode } from '../utils'
 
 export default function (code: string, filename: string) {
-  const lines = code.split('\n')
-  const htmlStartsAt = lines.findIndex((l) => l.trim().startsWith('<'))
-  const scriptSection = lines.slice(0, htmlStartsAt - 1).join('\n')
-  const htmlSection = lines.slice(htmlStartsAt)
+  const { scriptSection, htmlSection } = parseCode(code)
 
   const tsx = /*tsx*/`
     import React from 'react'
@@ -14,7 +11,7 @@ export default function (code: string, filename: string) {
 
     const { createElement, useState } = React
     const root = createRoot(document.getElementById('root'));
-    root.render(${htmlSection.join('\n')})
+    root.render(${htmlSection})
   `
   const html = getHTMLTemplate(/*html*/`
     <div id="root"></div>

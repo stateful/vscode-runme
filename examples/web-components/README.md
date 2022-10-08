@@ -11,6 +11,14 @@ Render demo component:
 <my-element mood="awesome"></my-element>
 ```
 
+Render components directly:
+
+```tsx
+import '/web-components/lit/example.ts'
+
+<my-element mood="awesome"></my-element>
+```
+
 ## React
 
 Render demo component:

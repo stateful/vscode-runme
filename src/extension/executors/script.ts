@@ -26,21 +26,11 @@ async function scriptExecutor(
 
   const code = doc.getText()
   const attributes: Record<string, string> = exec.cell.metadata.attributes || {}
-
-  if (!SUPPORTED_FRAMEWORKS.includes(attributes.framework)) {
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.text(attributes.framework
-        ? `Framework "${attributes.framework}" not supported`
-        : 'No framework annotation set'
-      )
-    ]))
-    return false
-  }
-
+  const framework = attributes.framework as typeof SUPPORTED_FRAMEWORKS
   const filename = Buffer.from(
     `${path.basename(exec.cell.document.fileName).replace('.', '_')}_${exec.cell.index}_${Date.now()}`
   ).toString('base64')
-  const artifacts = render(attributes.framework as typeof SUPPORTED_FRAMEWORKS, code, filename)
+  const artifacts = render(framework, code, filename)
   for (const [ext, src] of Object.entries(artifacts)) {
     await fs.writeFile(path.resolve(__dirname, `${filename}.${ext}`), src)
   }

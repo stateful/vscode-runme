@@ -1,11 +1,12 @@
-import react from './react.tpl'
-import vue from './vue.tpl'
-import svelte from './svelte.tpl'
+import react from './renderer/react'
+import vue from './renderer/vue'
+import svelte from './renderer/svelte'
+import lit from './renderer/basic'
 
-const templates = { react, vue, svelte } as const
+const templates = { react, vue, svelte, lit } as const
 
 export default function render (type: keyof typeof templates, code: string, filename: string) {
-  const renderer = templates[type]
+  const renderer = templates[type || 'lit']
 
   if (!renderer) {
     return /*html*/`No renderer found for "${type}"`
