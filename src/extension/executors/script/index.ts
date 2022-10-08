@@ -1,7 +1,8 @@
 import react from './react.tpl'
 import vue from './vue.tpl'
+import svelte from './svelte.tpl'
 
-const templates = { react, vue } as const
+const templates = { react, vue, svelte } as const
 
 export default function render (type: keyof typeof templates, code: string, filename: string) {
   const renderer = templates[type]

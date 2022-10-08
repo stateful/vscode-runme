@@ -16,7 +16,6 @@ export function cellResult (): Plugin {
         const filename = path.parse(scriptUrl).base
         const templatePath = path.join(extRoot, 'out', filename)
         const hasAccess = await fs.access(templatePath).then(() => true, () => false)
-        console.log(templatePath, hasAccess)
 
         if (!hasAccess) {
           return
