@@ -12,6 +12,10 @@ export async function deploy (
 ): Promise<boolean> {
   let token = ENV_STORE.get('DENO_ACCESS_TOKEN')
 
+  const cancel = new Promise<void>((_, reject) =>
+    exec.token.onCancellationRequested(() =>
+      reject(new Error("Canceled by user"))))
+
   try {
     if (!token) {
       token = await window.showInputBox({
@@ -52,8 +56,8 @@ export async function deploy (
 
       // keep going slower after 20 loops
       const timeout = 1000 + Math.max(0, iteration - 20) * 1000
-      await new Promise<void>(resolve => { setTimeout(() => { resolve() }, timeout) })
-
+      const wait = new Promise<void>(resolve => { setTimeout(() => { resolve() }, timeout) })
+      await Promise.race([wait, cancel])
       iteration++
     }
     if (!deployed) {
