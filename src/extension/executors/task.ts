@@ -1,5 +1,4 @@
 import path from 'node:path'
-import { writeFile, chmod } from 'node:fs/promises'
 
 
 import {
@@ -9,7 +8,6 @@ import {
   // Pseudoterminal,
   ShellExecution
 } from 'vscode'
-import { file } from 'tmp-promise'
 
 // import { ExperimentalTerminal } from "../terminal"
 import { populateEnvVar, getExecutionProperty } from '../utils'
@@ -75,9 +73,6 @@ async function taskExecutor(
   }
 
   const cwd = path.dirname(doc.uri.path)
-  const scriptFile = await file()
-  const splits = scriptFile.path.split('-')
-  const id = splits[splits.length-1]
   const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
   const env = {
     ...process.env,
@@ -88,8 +83,14 @@ async function taskExecutor(
     ...stateEnv
   }
 
-  await writeFile(scriptFile.path, cellText, 'utf-8')
-  await chmod(scriptFile.path, 0o775)
+  // TODO(sebastian): treat cells like copy & paste into terminal or each line like an individual command?
+  // const trimmed = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join(" && ")
+  // const script = `set -e -u -o pipefail; ${trimmed}`
+  const script = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join("\r\n")
+  // skip empty scripts, eg env exports
+  if (script.length === 0) {
+    return Promise.resolve(true)
+  }
 
   /**
    * run as non interactive shell script if set as configuration or annotated
@@ -97,17 +98,17 @@ async function taskExecutor(
    */
   const isInteractive = getExecutionProperty('interactive', exec.cell)
   if (!isInteractive) {
-    return inlineSh(exec, scriptFile.path, cwd, env)
+    return inlineSh(exec, script, cwd, env)
   }
 
   const taskExecution = new Task(
-    { type: 'runme', name: `Runme Task (${id})` },
+    { type: 'runme', name: `Runme Task (${RUNME_ID})` },
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
       : cellText,
     'exec',
-    new ShellExecution(scriptFile.path, { cwd, env })
+    new ShellExecution(script, { cwd, env })
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
     //   return new ExperimentalTerminal(scriptFile.path, { cwd, env })
