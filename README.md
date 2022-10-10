@@ -1,9 +1,8 @@
 # [Runme](http://runme.dev) for [Visual Studio Code](https://code.visualstudio.com/)
 
-
 This plugin enables markdown files (i.e. README.MD) to open as runnable VS Code notebooks (with the click of a `play` button). Using a superset of markdown repo maintainers can enhance the interactive runbook like experience of their markdown files without causing problems for non-runme users.
 
-![](https://staging.runme.dev/sidebyside.png?__frsh_c=ar1160xmgpn0)
+![](https://staging.runme.dev/sidebyside.png)
 
 This project is open source and the code can be found in the following repos:
 
