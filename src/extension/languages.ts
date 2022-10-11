@@ -4,6 +4,8 @@ import path from 'node:path'
 import vscode from 'vscode'
 import { ModelOperations, ModelResult } from '@vscode/vscode-languagedetection'
 
+import { LANGUAGES } from '../constants'
+
 export default class Languages {
   private readonly modulOperations: ModelOperations
 
@@ -47,8 +49,19 @@ export default class Languages {
     return this.modulOperations.runModel(snippet)
   }
 
+  public async guess(snippet: string, platform: string): Promise<string | undefined> {
+    const results = await this.modulOperations.runModel(snippet)
+    return Languages.weighted(platform, results)
+  }
+
   public static fromContext(context: vscode.ExtensionContext) {
     const basePath = context.extensionUri.path
     return new Languages(basePath)
+  }
+
+  // todo(sebastian): too naive; should really consider probabilities
+  public static weighted(platform: string, results: ModelResult[]): string | undefined {
+    const languageId = results?.[0].languageId
+    return LANGUAGES.get(results?.[0].languageId) || languageId
   }
 }

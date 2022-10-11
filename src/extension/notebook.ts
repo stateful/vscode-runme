@@ -1,3 +1,4 @@
+import os from 'node:os'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 
@@ -54,10 +55,8 @@ export class Serializer implements vscode.NotebookSerializer {
       snippets = await Promise.all(snippets.map(s => {
         const content = s.content
         if (content) {
-          return this.languages.run(content).then(l => {
-            // todo(sebastian): weigh winners
-            const winner = l[0]?.languageId
-            s.language = winner
+          return this.languages.guess(content, os.platform()).then(guessed => {
+            s.language = guessed
             return s
           })
         }
