@@ -2,10 +2,10 @@ import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 
 import vscode from 'vscode'
-import { ModelOperations } from '@vscode/vscode-languagedetection'
 
 import type { ParsedDocument } from '../types'
 
+import Languages from './languages'
 
 declare var globalThis: any
 
@@ -13,41 +13,9 @@ const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const DEFAULT_LANG_ID = 'text'
 
 export class Serializer implements vscode.NotebookSerializer {
-  private static NODE_MODEL_JSON_FUNC = (context: vscode.ExtensionContext): () => Promise<{ [key: string]: any }> => {
-    return async () => {
-      return new Promise<any>((resolve, reject) => {
-        fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'model', 'model.json').path, (err, data) => {
-          if (err) {
-            reject(err)
-            return
-          }
-          resolve(JSON.parse(data.toString()))
-        })
-      })
-    }
-  }
-
-  private static NODE_WEIGHTS_FUNC = (context: vscode.ExtensionContext): () => Promise<ArrayBuffer> => {
-    return async () => {
-      return new Promise<ArrayBuffer>((resolve, reject) => {
-        fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'model', 'group1-shard1of1.bin').path, (err, data) => {
-          if (err) {
-            reject(err)
-            return
-          }
-          resolve(data.buffer)
-        })
-      })
-    }
-  }
-
   private fileContent?: string
   private readonly ready: Promise<Error | void>
-  private readonly modulOperations = new ModelOperations({
-    minContentSize: 10,
-    modelJsonLoaderFunc: Serializer.NODE_MODEL_JSON_FUNC(this.context),
-    weightsLoaderFunc: Serializer.NODE_WEIGHTS_FUNC(this.context),
-  })
+  private readonly languages = Languages.fromContext(this.context)
 
   constructor(private context: vscode.ExtensionContext) {
     const go = new globalThis.Go()
@@ -86,7 +54,7 @@ export class Serializer implements vscode.NotebookSerializer {
       snippets = await Promise.all(snippets.map(s => {
         const content = s.content
         if (content) {
-          return this.modulOperations.runModel(content).then(l => {
+          return this.languages.run(content).then(l => {
             // todo(sebastian): weigh winners
             const winner = l[0]?.languageId
             s.language = winner
@@ -96,7 +64,7 @@ export class Serializer implements vscode.NotebookSerializer {
         return Promise.resolve(s)
       }))
     } catch (err: any) {
-      console.error(`Error classifying snippets: ${err}`)
+      console.error(`Error guessing snippet languages: ${err}`)
     }
 
     const cells = snippets.reduce((acc, s, i) => {

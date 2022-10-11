@@ -1,0 +1,123 @@
+{
+  "document": [
+    {
+      "markdown": "Runme Examples\n==============\n\nThis `README.md` contains some examples for testing this extension.\n\n# Extension Example Markdown Files\n\nThis markdown file contains some custom examples to test the execution within a VS Code Notebook.\n\n## Shell Executions"
+    },
+    {
+      "content": "echo \"Hello World!\"\n",
+      "description": "## Shell Executions",
+      "lines": [
+        "echo \"Hello World!\""
+      ]
+    },
+    {
+      "markdown": "## More Shell"
+    },
+    {
+      "content": "$ echo \"Foo 👀\"\n$ sleep 2\n$ echo \"Bar 🕺\"\n$ sleep 2\n$ echo \"Loo 🚀\"\n",
+      "description": "## More Shell",
+      "lines": [
+        "echo \"Foo 👀\"",
+        "sleep 2",
+        "echo \"Bar 🕺\"",
+        "sleep 2",
+        "echo \"Loo 🚀\""
+      ]
+    },
+    {
+      "markdown": "## Background Task Example"
+    },
+    {
+      "content": "sleep 100000\n",
+      "description": "## Background Task Example",
+      "lines": [
+        "sleep 100000"
+      ]
+    },
+    {
+      "markdown": "## Complex Output"
+    },
+    {
+      "content": "yarn global add webdriverio\n",
+      "description": "## Complex Output",
+      "lines": [
+        "yarn global add webdriverio"
+      ]
+    },
+    {
+      "markdown": "## Stdin Example"
+    },
+    {
+      "content": "$ node ./scripts/stdin.js\n",
+      "description": "## Stdin Example",
+      "lines": [
+        "node ./scripts/stdin.js"
+      ]
+    },
+    {
+      "markdown": "## Script Example\n\nYou can also run TypeScript or JavaScript:"
+    },
+    {
+      "content": "document.body.innerHTML += 'script attached!'\n",
+      "description": "You can also run TypeScript or JavaScript:",
+      "lines": [
+        "document.body.innerHTML += 'script attached!'"
+      ]
+    },
+    {
+      "markdown": "## Environment Variables\n\nWithin single lines:"
+    },
+    {
+      "content": "export DENO_ACCESS_TOKEN=\"\u003cinsert-token-here\u003e\"\n",
+      "description": "Within single lines:",
+      "lines": [
+        "export DENO_ACCESS_TOKEN=\"\u003cinsert-token-here\u003e\""
+      ]
+    },
+    {
+      "markdown": "verify:"
+    },
+    {
+      "content": "echo \"DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN\"\n",
+      "description": "verify:",
+      "lines": [
+        "echo \"DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN\""
+      ]
+    },
+    {
+      "markdown": "Supports multiple lines where an export is just somewhere in between:"
+    },
+    {
+      "content": "echo \"Auth token for service foo\"\nexport SERVICE_FOO_TOKEN=foobar\necho \"Auth token for service bar\"\nexport SERVICE_BAR_TOKEN=\"barfoo\"\n",
+      "description": "Supports multiple lines where an export is just somewhere in between:",
+      "lines": [
+        "echo \"Auth token for service foo\"",
+        "export SERVICE_FOO_TOKEN=foobar",
+        "echo \"Auth token for service bar\"",
+        "export SERVICE_BAR_TOKEN=\"barfoo\""
+      ]
+    },
+    {
+      "markdown": "verify:"
+    },
+    {
+      "content": "echo \"SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN\"\necho \"SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN\"\n",
+      "description": "verify:",
+      "lines": [
+        "echo \"SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN\"",
+        "echo \"SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN\""
+      ]
+    },
+    {
+      "markdown": "Supports changes to `$PATH`:"
+    },
+    {
+      "content": "export PATH=\"/some/path:$PATH\"\necho $PATH\n",
+      "description": "Supports changes to `$PATH`:",
+      "lines": [
+        "export PATH=\"/some/path:$PATH\"",
+        "echo $PATH"
+      ]
+    }
+  ]
+}
