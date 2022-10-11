@@ -5,19 +5,21 @@ import { hideBin } from 'yargs/helpers'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
 
+import '@babel/plugin-transform-react-jsx-development'
+
 import { cellResult } from './plugins'
 
 export class ViteServer {
   #server: ViteDevServer
-  private constructor (server: ViteDevServer) {
+  private constructor(server: ViteDevServer) {
     this.#server = server
   }
 
-  get port ()  {
+  get port() {
     return this.#server.config.server.port
   }
 
-  static async start (argv: string[]) {
+  static async start(argv: string[]) {
     const yargv = await yargs(hideBin(argv)).options({
       port: { type: 'number', required: true },
       rootPath: { type: 'string', required: true }
@@ -30,19 +32,22 @@ export class ViteServer {
       root: yargv.rootPath,
       server: { port: yargv.port },
       plugins: [
-        cellResult(),
+        cellResult({ projectRoot: yargv.rootPath }),
         vue(),
         svelte(),
-        react()
+        react({
+          fastRefresh: false
+        })
       ]
     })
 
     await server.listen()
-    console.log(`[Runme] Kernel server started successfuly on port ${yargv.port}`)
+    console.log(`[Runme] Kernel server started successfuly on port ${yargv.port}, root path: ${yargv.rootPath}`)
     return new this(server)
   }
 
   dispose() {
-      this.#server.close()
+    console.log('[Runme] shut down server')
+    this.#server.close()
   }
 }

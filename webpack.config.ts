@@ -64,10 +64,14 @@ const viteServerConfig: Configuration = {
     })
   ],
   externals: [
-    'vite', '@sveltejs/vite-plugin-svelte', 'yargs', 'yargs/helpers',
-    '@vitejs/plugin-vue', '@vitejs/plugin-react', 'get-port', 'vite-plugin-virtual-html'],
+    'vite', 'yargs', 'yargs/helpers', 'get-port',
+    '@babel/core', 'yargs-parser'
+  ],
   target: 'node',
   module: {
+    parser: {
+      javascript : { importMeta: false }
+    },
     rules: [
       {
         test: /\.ts$/,

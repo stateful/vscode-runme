@@ -7,10 +7,17 @@ import type { Plugin } from 'vite'
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const extRoot = path.resolve(__dirname, '..', '..')
 
-export function cellResult (): Plugin {
+export function cellResult (options: { projectRoot: string }): Plugin {
   return {
     name: 'notebookCellResult',
     enforce: 'pre',
+    async resolveId (id) {
+      const modulePath = path.resolve(options.projectRoot, id)
+      const hasAccess = await fs.access(modulePath).then(() => true, () => false)
+      if (hasAccess) {
+        return modulePath
+      }
+    },
     async load (scriptUrl) {
       if (scriptUrl.startsWith('/_notebook')) {
         const filename = path.parse(scriptUrl).base
