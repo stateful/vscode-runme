@@ -1,7 +1,7 @@
-import { ExtensionContext, NotebookCellExecution, TextDocument } from "vscode"
+import { ExtensionContext, NotebookCellExecution, TextDocument } from 'vscode'
 
 import { bash } from './task'
-import { deploy } from "./deno/deploy"
+import { deploy } from './deno/deploy'
 
 export async function deno (
   context: ExtensionContext,

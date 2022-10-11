@@ -1,16 +1,16 @@
-import vscode, { ExtensionContext } from "vscode"
+import vscode, { ExtensionContext } from 'vscode'
 
 import executor from './executors'
 import { resetEnv, getKey } from './utils'
 
-import "./wasm/wasm_exec.js"
+import './wasm/wasm_exec.js'
 
 export class Kernel implements vscode.Disposable {
   #context: ExtensionContext
   private controller = vscode.notebooks.createNotebookController(
-    "runme",
-    "runme",
-    "RUNME"
+    'runme',
+    'runme',
+    'RUNME'
   )
 
   constructor(context: ExtensionContext) {
@@ -18,7 +18,7 @@ export class Kernel implements vscode.Disposable {
 
     this.controller.supportedLanguages = Object.keys(executor)
     this.controller.supportsExecutionOrder = false
-    this.controller.description = "Run your README.md"
+    this.controller.description = 'Run your README.md'
     this.controller.executeHandler = this._executeAll.bind(this)
   }
 

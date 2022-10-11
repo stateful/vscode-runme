@@ -45,9 +45,9 @@ export const activate: ActivationFunction = () => ({
         element.appendChild(iframe)
         break
       case OutputType.error:
-        element.innerHTML = /*html*/`⚠️ ${output}`
+        element.innerHTML = `⚠️ ${output}`
         break
-      default: element.innerHTML = /*html*/`No renderer found!`
+      default: element.innerHTML = 'No renderer found!'
     }
   },
   disposeOutputItem(/* outputId */) {

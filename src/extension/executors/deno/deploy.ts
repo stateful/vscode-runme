@@ -14,7 +14,7 @@ export async function deploy (
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() =>
-      reject(new Error("Canceled by user"))))
+      reject(new Error('Canceled by user'))))
 
   try {
     if (!token) {

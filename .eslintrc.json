@@ -41,6 +41,7 @@
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
+    "quotes": [2, "single"],
     "semi": [
       "error",
       "never"

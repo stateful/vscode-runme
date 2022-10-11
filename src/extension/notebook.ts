@@ -69,7 +69,7 @@ export class Serializer implements vscode.NotebookSerializer {
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
            */
-          s.language || "text"
+          s.language || 'text'
         )
         const attributes = s.attributes
         cell.metadata = { id: i, source: lines, attributes }
