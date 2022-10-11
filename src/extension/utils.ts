@@ -2,6 +2,7 @@ import vscode from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 
+import executor from './executors'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -39,4 +40,12 @@ export function populateEnvVar (value: string, env = process.env) {
 export function resetEnv () {
   [...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
   Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
+}
+
+export function getKey (runningCell: vscode.TextDocument): keyof typeof executor {
+  const text = runningCell.getText()
+  if (text.indexOf('deployctl deploy') > -1) {
+    return 'deno'
+  }
+  return runningCell.languageId as keyof typeof executor
 }

@@ -1,7 +1,7 @@
 import vscode, { ExtensionContext } from "vscode"
 
 import executor from './executors'
-import { resetEnv } from './utils'
+import { resetEnv, getKey } from './utils'
 
 import "./wasm/wasm_exec.js"
 
@@ -37,14 +37,8 @@ export class Kernel implements vscode.Disposable {
     const exec = this.controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const execKey = this.getKey(runningCell)
+    const execKey = getKey(runningCell)
     const successfulCellExecution = await executor[execKey](this.#context, exec, runningCell)
     exec.end(successfulCellExecution)
-  }
-
-  private getKey(runningCell: vscode.TextDocument) : keyof typeof executor {
-    const text = runningCell.getText()
-    if (text.indexOf('deployctl deploy') > -1) { return "deno" }
-    return runningCell.languageId as keyof typeof executor
   }
 }

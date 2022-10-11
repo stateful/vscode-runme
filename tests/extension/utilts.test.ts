@@ -1,7 +1,7 @@
 import vscode from 'vscode'
 import { expect, vi, test, beforeAll, afterAll } from 'vitest'
 
-import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv } from '../../src/extension/utils'
+import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv, getKey } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
 vi.mock('vscode', () => ({
@@ -56,4 +56,15 @@ test('resetEnv', () => {
   expect(ENV_STORE).toMatchSnapshot()
   resetEnv()
   expect(ENV_STORE).toMatchSnapshot()
+})
+
+test('getKey', () => {
+  expect(getKey({
+    getText: vi.fn().mockReturnValue('foobar'),
+    languageId: 'barfoo'
+  } as any)).toBe('barfoo')
+  expect(getKey({
+    getText: vi.fn().mockReturnValue('deployctl deploy foobar'),
+    languageId: 'something else'
+  } as any)).toBe('deno')
 })
