@@ -54,7 +54,7 @@ export class Serializer implements vscode.NotebookSerializer {
     try {
       snippets = await Promise.all(snippets.map(s => {
         const content = s.content
-        if (content) {
+        if (content && s.language === undefined) {
           return this.languages.guess(content, os.platform()).then(guessed => {
             s.language = guessed
             return s
