@@ -914,6 +914,11 @@
     c8 "^7.12.0"
     vitest "0.23.4"
 
+"@vscode/vscode-languagedetection@^1.0.21":
+  version "1.0.21"
+  resolved "https://registry.yarnpkg.com/@vscode/vscode-languagedetection/-/vscode-languagedetection-1.0.21.tgz#89b48f293f6aa3341bb888c1118d16ff13b032d3"
+  integrity sha512-zSUH9HYCw5qsCtd7b31yqkpaCU6jhtkKLkvOOA8yTrIRfBSOFb8PPhgmMicD7B/m+t4PwOJXzU1XDtrM9Fd3/g==
+
 "@vscode/webview-ui-toolkit@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@vscode/webview-ui-toolkit/-/webview-ui-toolkit-1.1.0.tgz#22d16bf2edcc9db73df5fca190abe12573b612f1"

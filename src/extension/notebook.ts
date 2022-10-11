@@ -1,3 +1,4 @@
+import os from 'node:os'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 
@@ -5,13 +6,17 @@ import vscode from 'vscode'
 
 import type { ParsedDocument } from '../types'
 
+import Languages from './languages'
+
 declare var globalThis: any
 
 const CODE_REGEX = /```(\w+)?\n[^`]*```/g
+const DEFAULT_LANG_ID = 'text'
 
 export class Serializer implements vscode.NotebookSerializer {
   private fileContent?: string
   private readonly ready: Promise<Error | void>
+  private readonly languages = Languages.fromContext(this.context)
 
   constructor(private context: vscode.ExtensionContext) {
     const go = new globalThis.Go()
@@ -41,9 +46,24 @@ export class Serializer implements vscode.NotebookSerializer {
       )
     }
 
-    const snippets = doc.document ?? []
+    let snippets = doc.document ?? []
     if (snippets.length === 0) {
       return this.#printCell('⚠️ __Error__: no cells found!')
+    }
+
+    try {
+      snippets = await Promise.all(snippets.map(s => {
+        const content = s.content
+        if (content) {
+          return this.languages.guess(content, os.platform()).then(guessed => {
+            s.language = guessed
+            return s
+          })
+        }
+        return Promise.resolve(s)
+      }))
+    } catch (err: any) {
+      console.error(`Error guessing snippet languages: ${err}`)
     }
 
     const cells = snippets.reduce((acc, s, i) => {
@@ -69,7 +89,7 @@ export class Serializer implements vscode.NotebookSerializer {
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
            */
-          s.language || 'text'
+          s.language || DEFAULT_LANG_ID
         )
         const attributes = s.attributes
         cell.metadata = { id: i, source: lines, attributes }
