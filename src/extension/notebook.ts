@@ -60,8 +60,8 @@ export class Serializer implements vscode.NotebookSerializer {
         acc.push(cell)
       }
 
-      if (s.content) {
-        const lines = s.content.toString()
+      if (s.lines) {
+        const lines = s.lines.join('\n')
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           lines.trim(),
