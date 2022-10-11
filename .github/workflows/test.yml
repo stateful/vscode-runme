@@ -1,0 +1,30 @@
+name: Tests
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: 📦 Install Dependencies
+        run: yarn
+      - name: 🏗 Build Project
+        run: yarn build:dev
+      - name: 🧪 Run Tests
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: yarn test
+          options: "-screen 0 1600x1200x24"
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: screenshots
+          path: |
+            test/screenshots
+            test/logs
