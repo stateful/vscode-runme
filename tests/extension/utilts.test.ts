@@ -102,8 +102,7 @@ suite('getCmdShellSeq', () => {
   test('complex wrapped', () => {
     // eslint-disable-next-line max-len
     const cellText = 'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "\(.title) - by \(.authors[0].name), id: \(.id)"\''
-    const cmdLine = getCmdShellSeq(cellText)
-    expect(cmdLine).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
   })
 })
 
