@@ -9,7 +9,13 @@ const extRoot = path.resolve(__dirname, '..', '..')
 const EXTERNAL_DEPENDENCIES = [
   'react/jsx-dev-runtime',
   'preact/hooks',
-  '@babel/plugin-transform-react-jsx-development'
+  'react', 'react-dom/client',
+  'svelte/internal'
+]
+const SVELTE_HMR_DEPS = [
+  'runtime/hot-api-esm.js',
+  'runtime/proxy-adapter-dom.js',
+  'runtime/svelte-hooks.js'
 ]
 
 export function cellResult (options: { projectRoot: string }): Plugin {
@@ -19,6 +25,12 @@ export function cellResult (options: { projectRoot: string }): Plugin {
     async resolveId (id) {
       if (EXTERNAL_DEPENDENCIES.includes(id)) {
         return `https://esm.sh/${id}`
+      }
+
+      for (const dep of SVELTE_HMR_DEPS) {
+        if (id.endsWith(dep)) {
+          return `https://esm.sh/svelte-hmr@0.15.0/${dep}`
+        }
       }
 
       const modulePath = path.resolve(options.projectRoot, id)

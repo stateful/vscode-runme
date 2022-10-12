@@ -78,7 +78,7 @@ const viteServerConfig: Configuration = {
   externals: [
     'vite', 'yargs', 'yargs/helpers', 'get-port',
     '@babel/core', 'yargs-parser', '@vitejs/plugin-react',
-    'vite-plugin-ssr', 'tailwindcss'
+    'vite-plugin-ssr', 'tailwindcss', '@sveltejs/vite-plugin-svelte'
   ],
   target: 'node',
   module: {
@@ -106,7 +106,7 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, 'src', 'extension', 'extension.ts'),
   },
-  externals: ['vscode', 'vercel', '@vercel/client', 'keyv', 'vite', '@sveltejs/vite-plugin-svelte'],
+  externals: ['vscode', 'vercel', '@vercel/client', 'keyv'],
   output: {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',

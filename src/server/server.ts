@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
-import preact from '@preact/preset-vite'
+// import preact from '@preact/preset-vite'
 
 import { cellResult } from './plugins'
 
@@ -60,11 +60,13 @@ export class ViteServer {
       plugins: [
         cellResult({ projectRoot: yargv.rootPath }),
         vue(),
-        svelte(),
+        svelte({
+          hot: false
+        }),
         react({
           fastRefresh: false
-        }),
-        preact()
+        })
+        // preact()
       ]
     })
 
