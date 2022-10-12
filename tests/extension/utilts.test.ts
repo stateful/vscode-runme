@@ -104,7 +104,7 @@ suite('getCmdShellSeq', () => {
 
   test('linux without pipefail', () => {
     const cellText = 'ls ~/'
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText, 'linux')).toMatchSnapshot()
   })
 })
 
