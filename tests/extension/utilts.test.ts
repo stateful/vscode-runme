@@ -106,5 +106,11 @@ suite('getCmdShellSeq', () => {
     const cellText = 'ls ~/'
     expect(getCmdShellSeq(cellText, 'linux')).toMatchSnapshot()
   })
+
+  test('with comments', () => {
+    // eslint-disable-next-line max-len
+    const cellText = 'echo "Install deno via installer script"\n# macOS or Linux\ncurl -fsSL https://deno.land/x/install/install.sh | sh'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
 })
 

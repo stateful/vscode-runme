@@ -6,6 +6,7 @@ import executor from './executors'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
+const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
 export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
   const config = vscode.workspace.getConfiguration('runme.shell')
@@ -58,7 +59,10 @@ export function getCmdShellSeq(cellText: string, os: string): string {
   const trimmed = cellText
     .split('\\\n').map(l => l.trim()).join(' ')
     .split('\n').map(l => l.trim())
-    .filter(l => l !== '').join('; ')
+    .filter(l => {
+      const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
+      return l !== '' && !hasPrefix
+    }).join('; ')
 
   if (['darwin'].find(entry => entry === os)) {
     return `set -e -o pipefail; ${trimmed}`
