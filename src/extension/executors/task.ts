@@ -52,7 +52,7 @@ async function taskExecutor(
       placeHolder,
       prompt: 'Your shell script wants to set some environment variables, please enter them here.',
       ...(hasStringValue ? { value: placeHolder } : {})
-    }) || '', stateEnv)
+    }) || '', {...process.env, ...stateEnv })
 
     /**
      * we don't want to run these exports anymore as we already stored
