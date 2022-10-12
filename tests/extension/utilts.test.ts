@@ -79,27 +79,32 @@ test('getKey', () => {
 suite('getCmdShellSeq', () => {
   test('one command', () => {
     const cellText = 'deno task start'
-    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
 
   test('wrapped command', () => {
     // eslint-disable-next-line max-len
     const cellText = Buffer.from('ZGVubyBpbnN0YWxsIFwKICAgICAgLS1hbGxvdy1yZWFkIC0tYWxsb3ctd3JpdGUgXAogICAgICAtLWFsbG93LWVudiAtLWFsbG93LW5ldCAtLWFsbG93LXJ1biBcCiAgICAgIC0tbm8tY2hlY2sgXAogICAgICAtciAtZiBodHRwczovL2Rlbm8ubGFuZC94L2RlcGxveS9kZXBsb3ljdGwudHMK', 'base64').toString('utf-8')
 
-    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
 
   test('env only', () => {
     const cellText = `export DENO_INSTALL="$HOME/.deno"
       export PATH="$DENO_INSTALL/bin:$PATH"
     `
-    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
 
   test('complex wrapped', () => {
     // eslint-disable-next-line max-len
     const cellText = 'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "\(.title) - by \(.authors[0].name), id: \(.id)"\''
-    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('linux without pipefail', () => {
+    const cellText = 'ls ~/'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
 })
 

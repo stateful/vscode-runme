@@ -4,6 +4,8 @@ exports[`getCmdShellSeq > complex wrapped 1`] = `"set -e -o pipefail; curl \\"ht
 
 exports[`getCmdShellSeq > env only 1`] = `"set -e -o pipefail; export DENO_INSTALL=\\"$HOME/.deno\\"; export PATH=\\"$DENO_INSTALL/bin:$PATH\\""`;
 
+exports[`getCmdShellSeq > linux without pipefail 1`] = `"set -e; ls ~/"`;
+
 exports[`getCmdShellSeq > one command 1`] = `"set -e -o pipefail; deno task start"`;
 
 exports[`getCmdShellSeq > wrapped command 1`] = `"set -e -o pipefail; deno install --allow-read --allow-write --allow-env --allow-net --allow-run --no-check -r -f https://deno.land/x/deploy/deployctl.ts"`;

@@ -1,4 +1,3 @@
-import os from 'node:os'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 
@@ -6,6 +5,7 @@ import vscode from 'vscode'
 
 import type { ParsedDocument } from '../types'
 
+import { PLATFORM_OS } from './constants'
 import Languages from './languages'
 
 declare var globalThis: any
@@ -55,7 +55,7 @@ export class Serializer implements vscode.NotebookSerializer {
       snippets = await Promise.all(snippets.map(s => {
         const content = s.content
         if (content && s.language === undefined) {
-          return this.languages.guess(content, os.platform()).then(guessed => {
+          return this.languages.guess(content, PLATFORM_OS).then(guessed => {
             s.language = guessed
             return s
           })

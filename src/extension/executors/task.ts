@@ -10,7 +10,7 @@ import {
 
 // import { ExperimentalTerminal } from "../terminal"
 import { populateEnvVar, getExecutionProperty, getCmdShellSeq, } from '../utils'
-import { ENV_STORE } from '../constants'
+import { ENV_STORE, PLATFORM_OS } from '../constants'
 
 import { sh as inlineSh } from './shell'
 
@@ -87,7 +87,7 @@ async function taskExecutor(
     return Promise.resolve(true)
   }
 
-  const cmdLine = getCmdShellSeq(cellText)
+  const cmdLine = getCmdShellSeq(cellText, PLATFORM_OS)
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
