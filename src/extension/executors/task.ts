@@ -101,7 +101,7 @@ async function taskExecutor(
   // const trimmed = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join(" && ")
   // const script = `set -e -u -o pipefail; ${trimmed}`
   if (script.indexOf('\\\n') < 0) {
-    // looks nicer but casues issues in conjunction with backslashes
+    // looks nicer but causes issues in conjunction with backslashes
     script = script.split('\n').map(l => l.trim()).filter(l => l !== '').join('\r\n')
   }
 
