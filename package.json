@@ -174,6 +174,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "@preact/preset-vite": "^2.4.0",
     "@sveltejs/vite-plugin-svelte": "^1.0.8",
     "@vercel/client": "^12.2.7",
     "@vitejs/plugin-react": "^2.1.0",
@@ -183,10 +184,10 @@
     "get-port": "^6.1.2",
     "got": "^12.5.0",
     "lit": "^2.3.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "preact": "^10.11.1",
     "readable-stream": "^4.2.0",
     "svelte": "^3.50.1",
+    "tailwindcss": "^3.1.8",
     "tmp-promise": "^3.0.3",
     "undici": "^5.11.0",
     "vercel": "^28.4.4",

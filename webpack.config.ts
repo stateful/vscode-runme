@@ -2,7 +2,15 @@ import path from 'node:path'
 
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import WebpackCopy from 'copy-webpack-plugin'
+import { BannerPlugin } from 'webpack'
 import type { Configuration } from 'webpack'
+
+const DIRNAME_SUPPORT = /*ts*/`
+import __pathBanner from 'node:path';
+import __urlBanner from 'node:url';
+
+const __dirname = __pathBanner.dirname(__urlBanner.fileURLToPath(import.meta.url))
+`
 
 const baseConfig: Partial<Configuration> = {
   mode: process.env.NODE_ENV ? 'production' : 'development',
@@ -61,11 +69,16 @@ const viteServerConfig: Configuration = {
       patterns: [
         { from: 'src/server/package.json', to: 'package.json' },
       ]
+    }),
+    new BannerPlugin({
+      banner: DIRNAME_SUPPORT,
+      raw: true
     })
   ],
   externals: [
     'vite', 'yargs', 'yargs/helpers', 'get-port',
-    '@babel/core', 'yargs-parser'
+    '@babel/core', 'yargs-parser', '@vitejs/plugin-react',
+    'vite-plugin-ssr', 'tailwindcss'
   ],
   target: 'node',
   module: {

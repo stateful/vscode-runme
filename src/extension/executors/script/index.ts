@@ -1,9 +1,10 @@
 import react from './renderer/react'
+import preact from './renderer/preact'
 import vue from './renderer/vue'
 import svelte from './renderer/svelte'
 import lit from './renderer/basic'
 
-const templates = { react, vue, svelte, lit } as const
+const templates = { react, vue, svelte, lit, preact } as const
 
 export default function render (type: keyof typeof templates, code: string, filename: string) {
   const renderer = templates[type || 'lit']

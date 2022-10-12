@@ -6,12 +6,21 @@ import type { Plugin } from 'vite'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const extRoot = path.resolve(__dirname, '..', '..')
+const EXTERNAL_DEPENDENCIES = [
+  'react/jsx-dev-runtime',
+  'preact/hooks',
+  '@babel/plugin-transform-react-jsx-development'
+]
 
 export function cellResult (options: { projectRoot: string }): Plugin {
   return {
     name: 'notebookCellResult',
     enforce: 'pre',
     async resolveId (id) {
+      if (EXTERNAL_DEPENDENCIES.includes(id)) {
+        return `https://esm.sh/${id}`
+      }
+
       const modulePath = path.resolve(options.projectRoot, id)
       const hasAccess = await fs.access(modulePath).then(() => true, () => false)
       if (hasAccess) {

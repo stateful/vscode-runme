@@ -1,3 +1,8 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+const tw = fs.readFileSync(path.resolve(__dirname, '..', 'assets', 'tw.min.css')).toString()
+
 export function getHTMLTemplate (htmlSection: string, codeSection = '') {
   return /*html*/`
   <html>
@@ -8,6 +13,9 @@ export function getHTMLTemplate (htmlSection: string, codeSection = '') {
           padding: 0;
           margin: 0;
         }
+
+        /* tailwindcss */
+        ${tw}
       </style>
       ${codeSection
         ? /*html*/`<script type="module">${codeSection}</script>`
@@ -29,7 +37,7 @@ export function parseCode (code: string) {
     return { scriptSection: code, htmlSection: '' }
   }
 
-  const scriptSection = lines.slice(0, htmlStartsAt - 1).join('\n')
+  const scriptSection = lines.slice(0, htmlStartsAt).join('\n')
   const htmlSection = lines.slice(htmlStartsAt).join('\n')
 
   return { scriptSection, htmlSection }

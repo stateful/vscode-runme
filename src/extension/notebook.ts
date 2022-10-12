@@ -84,7 +84,12 @@ export class Serializer implements vscode.NotebookSerializer {
         const lines = s.lines.join('\n')
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
-          lines.trim(),
+          /**
+           * for JS content we want to keep indentation
+           */
+          s.language === 'js'
+            ? (s.content || '').trim()
+            : lines.trim(),
           /**
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
