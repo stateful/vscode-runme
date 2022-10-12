@@ -83,12 +83,9 @@ suite('getCmdShellSeq', () => {
   })
 
   test('wrapped command', () => {
-    const cellText = `deno install \\
-      --allow-read --allow-write \\
-      --allow-env --allow-net --allow-run \\
-      --no-check \\
-      -r -f https://deno.land/x/deploy/deployctl.ts
-    `
+    // eslint-disable-next-line max-len
+    const cellText = Buffer.from('ZGVubyBpbnN0YWxsIFwKICAgICAgLS1hbGxvdy1yZWFkIC0tYWxsb3ctd3JpdGUgXAogICAgICAtLWFsbG93LWVudiAtLWFsbG93LW5ldCAtLWFsbG93LXJ1biBcCiAgICAgIC0tbm8tY2hlY2sgXAogICAgICAtciAtZiBodHRwczovL2Rlbm8ubGFuZC94L2RlcGxveS9kZXBsb3ljdGwudHMK', 'base64').toString('utf-8')
+
     expect(getCmdShellSeq(cellText)).toMatchSnapshot()
   })
 
