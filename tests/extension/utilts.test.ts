@@ -1,7 +1,14 @@
 import vscode from 'vscode'
-import { expect, vi, test, beforeAll, afterAll } from 'vitest'
+import { expect, vi, test, beforeAll, afterAll, suite } from 'vitest'
 
-import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv, getKey } from '../../src/extension/utils'
+import {
+  getExecutionProperty,
+  getTerminalByCell,
+  populateEnvVar,
+  resetEnv,
+  getKey,
+  getCmdShellSeq,
+} from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
 vi.mock('vscode', () => ({
@@ -68,3 +75,42 @@ test('getKey', () => {
     languageId: 'something else'
   } as any)).toBe('deno')
 })
+
+suite('getCmdShellSeq', () => {
+  test('one command', () => {
+    const cellText = 'deno task start'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('wrapped command', () => {
+    // eslint-disable-next-line max-len
+    const cellText = Buffer.from('ZGVubyBpbnN0YWxsIFwKICAgICAgLS1hbGxvdy1yZWFkIC0tYWxsb3ctd3JpdGUgXAogICAgICAtLWFsbG93LWVudiAtLWFsbG93LW5ldCAtLWFsbG93LXJ1biBcCiAgICAgIC0tbm8tY2hlY2sgXAogICAgICAtciAtZiBodHRwczovL2Rlbm8ubGFuZC94L2RlcGxveS9kZXBsb3ljdGwudHMK', 'base64').toString('utf-8')
+
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('env only', () => {
+    const cellText = `export DENO_INSTALL="$HOME/.deno"
+      export PATH="$DENO_INSTALL/bin:$PATH"
+    `
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('complex wrapped', () => {
+    // eslint-disable-next-line max-len
+    const cellText = 'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "\(.title) - by \(.authors[0].name), id: \(.id)"\''
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('linux without pipefail', () => {
+    const cellText = 'ls ~/'
+    expect(getCmdShellSeq(cellText, 'linux')).toMatchSnapshot()
+  })
+
+  test('with comments', () => {
+    // eslint-disable-next-line max-len
+    const cellText = 'echo "Install deno via installer script"\n# macOS or Linux\ncurl -fsSL https://deno.land/x/install/install.sh | sh'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+})
+

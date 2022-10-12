@@ -1,6 +1,4 @@
 import path from 'node:path'
-import { writeFile, chmod } from 'node:fs/promises'
-
 
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
@@ -9,11 +7,10 @@ import {
   // Pseudoterminal,
   ShellExecution
 } from 'vscode'
-import { file } from 'tmp-promise'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { populateEnvVar, getExecutionProperty } from '../utils'
-import { ENV_STORE } from '../constants'
+import { populateEnvVar, getExecutionProperty, getCmdShellSeq, } from '../utils'
+import { ENV_STORE, PLATFORM_OS } from '../constants'
 
 import { sh as inlineSh } from './shell'
 
@@ -75,9 +72,6 @@ async function taskExecutor(
   }
 
   const cwd = path.dirname(doc.uri.path)
-  const scriptFile = await file()
-  const splits = scriptFile.path.split('-')
-  const id = splits[splits.length-1]
   const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
   const env = {
     ...process.env,
@@ -88,26 +82,29 @@ async function taskExecutor(
     ...stateEnv
   }
 
-  await writeFile(scriptFile.path, cellText, 'utf-8')
-  await chmod(scriptFile.path, 0o775)
+  // skip empty scripts, eg env exports
+  if (cellText.trim().length === 0) {
+    return Promise.resolve(true)
+  }
 
+  const cmdLine = getCmdShellSeq(cellText, PLATFORM_OS)
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
   const isInteractive = getExecutionProperty('interactive', exec.cell)
   if (!isInteractive) {
-    return inlineSh(exec, scriptFile.path, cwd, env)
+    return inlineSh(exec, cmdLine, cwd, env)
   }
 
   const taskExecution = new Task(
-    { type: 'runme', name: `Runme Task (${id})` },
+    { type: 'runme', name: `Runme Task (${RUNME_ID})` },
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
       : cellText,
     'exec',
-    new ShellExecution(scriptFile.path, { cwd, env })
+    new ShellExecution(cmdLine, { cwd, env })
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
     //   return new ExperimentalTerminal(scriptFile.path, { cwd, env })
@@ -122,7 +119,6 @@ async function taskExecutor(
     reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
     panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
-  // await commands.executeCommand('workbench.action.terminal.clear')
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {

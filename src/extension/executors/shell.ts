@@ -6,12 +6,12 @@ import type { CellOutput } from '../../types'
 
 async function shellExecutor(
   exec: NotebookCellExecution,
-  scriptPath: string,
+  script: string,
   cwd: string,
   env: Record<string, string>
 ): Promise<boolean> {
   const outputItems: string[] = []
-  const child = spawn(scriptPath, { cwd, shell: true, env })
+  const child = spawn(script, { cwd, shell: true, env })
   console.log(`[Runme] Started process on pid ${child.pid}`)
   // this needs more work / specification
   const contentType = exec.cell.metadata.attributes?.['output']
