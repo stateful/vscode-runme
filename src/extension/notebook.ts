@@ -12,6 +12,7 @@ declare var globalThis: any
 
 const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const DEFAULT_LANG_ID = 'text'
+const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
 export class Serializer implements vscode.NotebookSerializer {
   private fileContent?: string
@@ -87,7 +88,7 @@ export class Serializer implements vscode.NotebookSerializer {
           /**
            * for JS content we want to keep indentation
            */
-          s.language === 'js'
+           LANGUAGES_WITH_INDENTATION.includes(s.language || '')
             ? (s.content || '').trim()
             : lines.trim(),
           /**
