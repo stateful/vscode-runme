@@ -1,7 +1,14 @@
 import vscode from 'vscode'
-import { expect, vi, test, beforeAll, afterAll } from 'vitest'
+import { expect, vi, test, beforeAll, afterAll, suite } from 'vitest'
 
-import { getExecutionProperty, getTerminalByCell, populateEnvVar, resetEnv, getKey } from '../../src/extension/utils'
+import {
+  getExecutionProperty,
+  getTerminalByCell,
+  populateEnvVar,
+  resetEnv,
+  getKey,
+  getCmdShellSeq,
+} from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
 vi.mock('vscode', () => ({
@@ -68,3 +75,35 @@ test('getKey', () => {
     languageId: 'something else'
   } as any)).toBe('deno')
 })
+
+suite('getCmdShellSeq', () => {
+  test('one command', () => {
+    const cellText = 'deno task start'
+    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+  })
+
+  test('wrapped command', () => {
+    const cellText = `deno install \\
+      --allow-read --allow-write \\
+      --allow-env --allow-net --allow-run \\
+      --no-check \\
+      -r -f https://deno.land/x/deploy/deployctl.ts
+    `
+    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+  })
+
+  test('env only', () => {
+    const cellText = `export DENO_INSTALL="$HOME/.deno"
+      export PATH="$DENO_INSTALL/bin:$PATH"
+    `
+    expect(getCmdShellSeq(cellText)).toMatchSnapshot()
+  })
+
+  test('complex wrapped', () => {
+    // eslint-disable-next-line max-len
+    const cellText = 'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "\(.title) - by \(.authors[0].name), id: \(.id)"\''
+    const cmdLine = getCmdShellSeq(cellText)
+    expect(cmdLine).toMatchSnapshot()
+  })
+})
+

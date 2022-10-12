@@ -9,7 +9,7 @@ import {
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { populateEnvVar, getExecutionProperty } from '../utils'
+import { populateEnvVar, getExecutionProperty, getCmdShellSeq, } from '../utils'
 import { ENV_STORE } from '../constants'
 
 import { sh as inlineSh } from './shell'
@@ -87,22 +87,14 @@ async function taskExecutor(
     return Promise.resolve(true)
   }
 
-  let script = cellText
+  const cmdLine = getCmdShellSeq(cellText)
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
   const isInteractive = getExecutionProperty('interactive', exec.cell)
   if (!isInteractive) {
-    return inlineSh(exec, script, cwd, env)
-  }
-
-  // TODO(sebastian): treat cells like copy & paste into terminal or each line like an individual command?
-  // const trimmed = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join(" && ")
-  // const script = `set -e -u -o pipefail; ${trimmed}`
-  if (script.indexOf('\\\n') < 0) {
-    // looks nicer but causes issues in conjunction with backslashes
-    script = script.split('\n').map(l => l.trim()).filter(l => l !== '').join('\r\n')
+    return inlineSh(exec, cmdLine, cwd, env)
   }
 
   const taskExecution = new Task(
@@ -112,7 +104,7 @@ async function taskExecutor(
       ? `${cellText.slice(0, LABEL_LIMIT)}...`
       : cellText,
     'exec',
-    new ShellExecution(script, { cwd, env })
+    new ShellExecution(cmdLine, { cwd, env })
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
     //   return new ExperimentalTerminal(scriptFile.path, { cwd, env })

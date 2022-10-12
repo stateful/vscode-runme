@@ -49,3 +49,18 @@ export function getKey (runningCell: vscode.TextDocument): keyof typeof executor
   }
   return runningCell.languageId as keyof typeof executor
 }
+
+/**
+ * treat cells like like a series of individual commands
+ * which need to be executed in sequence
+ */
+export function getCmdShellSeq(cellText: string): string {
+  const trimmed = cellText
+    .split('\\\n').map(l => {
+      return l.trim()
+    }).join(' ')
+    .split('\n').map(l => l.trim())
+    .filter(l => l !== '').join('; ')
+
+  return `set -e -o pipefail; ${trimmed}`
+}
