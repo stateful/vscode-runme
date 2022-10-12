@@ -1,6 +1,5 @@
 import path from 'node:path'
 
-
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
   window, TerminalOptions, ExtensionContext, TaskRevealKind, TaskPanelKind,
@@ -83,15 +82,12 @@ async function taskExecutor(
     ...stateEnv
   }
 
-  // TODO(sebastian): treat cells like copy & paste into terminal or each line like an individual command?
-  // const trimmed = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join(" && ")
-  // const script = `set -e -u -o pipefail; ${trimmed}`
-  const script = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join("\r\n")
   // skip empty scripts, eg env exports
-  if (script.length === 0) {
+  if (cellText.trim().length === 0) {
     return Promise.resolve(true)
   }
 
+  let script = cellText
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
@@ -99,6 +95,14 @@ async function taskExecutor(
   const isInteractive = getExecutionProperty('interactive', exec.cell)
   if (!isInteractive) {
     return inlineSh(exec, script, cwd, env)
+  }
+
+  // TODO(sebastian): treat cells like copy & paste into terminal or each line like an individual command?
+  // const trimmed = cellText.split('\n').map(l => l.trim()).filter(l => l !== "").join(" && ")
+  // const script = `set -e -u -o pipefail; ${trimmed}`
+  if (script.indexOf('\\\n') < 0) {
+    // looks nicer but casues issues in conjunction with backslashes
+    script = script.split('\n').map(l => l.trim()).filter(l => l !== '').join('\r\n')
   }
 
   const taskExecution = new Task(
@@ -123,7 +127,6 @@ async function taskExecutor(
     reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
     panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
-  // await commands.executeCommand('workbench.action.terminal.clear')
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
