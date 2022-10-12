@@ -40,7 +40,6 @@ async function taskExecutor(
    * find export commands
    */
   const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
-    .filter((m) => m.indexOf('export PATH=') <= 0)
     .map((m) => m.trim())
   const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
