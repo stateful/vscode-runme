@@ -30,7 +30,7 @@ async function scriptExecutor(
   const filename = Buffer.from(
     `${path.basename(exec.cell.document.fileName).replace('.', '_')}_${exec.cell.index}_${Date.now()}`
   ).toString('base64')
-  const artifacts = render(framework, code, filename)
+  const artifacts = render(framework, code, filename, attributes)
   for (const [ext, src] of Object.entries(artifacts)) {
     await fs.writeFile(path.resolve(__dirname, `${filename}.${ext}`), src)
   }

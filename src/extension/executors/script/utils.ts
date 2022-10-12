@@ -3,7 +3,7 @@ import path from 'node:path'
 
 const tw = fs.readFileSync(path.resolve(__dirname, '..', 'assets', 'tw.min.css')).toString()
 
-export function getHTMLTemplate (htmlSection: string, codeSection = '') {
+export function getHTMLTemplate (htmlSection: string, codeSection = '', attributes: Record<string, string>) {
   return /*html*/`
   <html>
     <head>
@@ -14,8 +14,10 @@ export function getHTMLTemplate (htmlSection: string, codeSection = '') {
           margin: 0;
         }
 
-        /* tailwindcss */
-        ${tw}
+        ${attributes.tailwindCSS
+          ? `/* tailwindcss */\n${tw}`
+          : ''
+        }
       </style>
       ${codeSection
         ? /*html*/`<script type="module">${codeSection}</script>`

@@ -1,6 +1,6 @@
 import { parseCode, getHTMLTemplate } from '../utils'
 
-export default function (code: string, filename: string) {
+export default function (code: string, filename: string, attributes: Record<string, string>) {
   const { scriptSection, htmlSection } = parseCode(code)
 
   const svelte = /*html*/`
@@ -16,7 +16,7 @@ export default function (code: string, filename: string) {
       import App from '${__dirname}/${filename}.svelte'
       const app = new App({ target: document.getElementById('root') })
     </script>
-  `)
+  `, undefined, attributes)
 
   return { html, svelte }
 }

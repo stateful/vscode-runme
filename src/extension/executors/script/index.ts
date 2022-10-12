@@ -6,14 +6,19 @@ import lit from './renderer/basic'
 
 const templates = { react, vue, svelte, lit, preact } as const
 
-export default function render (type: keyof typeof templates, code: string, filename: string) {
+export default function render (
+  type: keyof typeof templates,
+  code: string,
+  filename: string,
+  attributes: Record<string, string>
+) {
   const renderer = templates[type || 'lit']
 
   if (!renderer) {
     return /*html*/`No renderer found for "${type}"`
   }
 
-  return renderer(code, filename)
+  return renderer(code, filename, attributes)
 }
 
 export const SUPPORTED_FRAMEWORKS = Object.keys(templates) as any as keyof typeof templates

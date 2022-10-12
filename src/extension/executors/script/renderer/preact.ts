@@ -1,6 +1,6 @@
 import { getHTMLTemplate, parseCode } from '../utils'
 
-export default function (code: string, filename: string) {
+export default function (code: string, filename: string, attributes: Record<string, string>) {
   const { scriptSection, htmlSection } = parseCode(code)
 
   const tsx = /*tsx*/`
@@ -13,7 +13,7 @@ export default function (code: string, filename: string) {
   const html = getHTMLTemplate(/*html*/`
     <div id="root"></div>
     <script type="module" src="/_notebook/${filename}.tsx"></script>
-  `)
+  `, undefined, attributes)
 
   return { html, tsx }
 }
