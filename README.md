@@ -34,7 +34,7 @@ ls -al #some executable command here
 ```
 </pre>
 
-Auto-detection for will be applied to blocks without language designators. We do however recommend to add language designators to all code blocks.
+Auto-detection for will be applied to blocks without language designators. Runme however prefers to add language designators to all code blocks.
 
 <pre>```
 echo "block without language designation"
@@ -67,19 +67,48 @@ echo $MY_PROJECT_PROMPT $MY_PROJECT_VALUE
 ```
 </pre>
 
-Please see [runme.dev's README.md](https://github.com/stateful/runme.dev/blob/main/README.md) for a reference how to apply these attributes in different use-cases.
+Please see [runme.dev's README.md](https://github.com/stateful/runme.dev/blob/main/README.md) for a reference how to apply these code block attributes in different use-cases.
 
-## Service integrations
+## Interactive Service integrations
 
-I don't know how this works, is it automatic? Do you have to be authed?
+Runme strives to break out of the terminal without losing interoperability with the CLI to document how the your repo ties together an array for external services. To showcase how this works take a look at the GIF below or run through [Runme.dev's website README](https://github.com/stateful/runme.dev/blob/main/README.md).
+
+![Deep Deno integration](https://staging.runme.dev/tabs/deno.gif)
+
+What's happening is whenever Deno's `deployctl deploy` command is executed to deploy a Deno site from within a notebook cell (just a markdown code block), Runme will render an interactive deployment status based on the `$DENO_PROJECT_NAME` and `$DENO_ACCESS_TOKEN` provided in the notebook (will prompt for values otherwise).
+
+```sh
+export DENO_INSTALL="$HOME/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+export DENO_PROJECT_NAME="your-deno-project"
+export DENO_ACCESS_TOKEN="your-deno-token"
+```
+
+```sh
+cd ../runme.dev
+deployctl deploy \
+    --project=$DENO_PROJECT_NAME \
+    --exclude=node_modules \
+    --import-map=../runme.dev/import_map.json \
+    --token=$DENO_ACCESS_TOKEN \
+    main.ts
+```
+
+Let us know what services you rely on so we can add them to Runme's roadmap.
 
 ## How it works
 
-The runme parser is written in GoLang and compiled to WASM allowing it be used to parse the AST of markdown files from within VS Code. This way the CLI experience and VS Code experience should track pretty closely as improvements are made. Within VS Code the parsed markdown is then displayed in a notebook using a custom render.
+Runme currently consists of a Markdown processor (written in Go) which is both linked in this VS Code extension (via WebAssembly) and the [runme CLI](https://github.com/stateful/runme) (Go binary) allowing for a consistent experience. The Runme VS Code extension leverages the notebook APIs to transparently provide an interactive user experience on top of static markdown.
 
-## Alpha software
+## Bleeding edge software
 
-This is alpha software that is under heavy development, we appreciate your patience and involvement as we work to make it great.
+Runme is pre-beta software that is under heavy development. Here are a few known limitations:
+
+- Notebooks are currently read-only from within the notebook UX, please edit markdown file directly
+- Only shell is currently supported on macOS & Linux, no PowerShell and Windows yet
+- Be aware of edge cases. Runme still needs to continue maturing. Let us know when you hit any snags.
+
+We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
 
 - [Join our Discord](https://discord.gg/BQm8zRCBUY)
 - [Submit an Issue](https://github.com/stateful/vscode-runme/issues)
