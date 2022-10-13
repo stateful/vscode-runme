@@ -18,7 +18,7 @@ on:
         type: choice
         default: stable
         options:
-          # - stable
+          - stable
           - edge
       publishMarketplace:
         description: "Publish on Visual Studio Marketplace?"
