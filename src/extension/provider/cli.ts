@@ -12,7 +12,7 @@ export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
     }
 
     const item = new vscode.NotebookCellStatusBarItem(
-      'Run CLI',
+      '$(notebook-execute) Run CLI',
       vscode.NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.runCliCommand'
