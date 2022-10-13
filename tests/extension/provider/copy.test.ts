@@ -17,7 +17,7 @@ test('dont show pid if cell is non interactive', async () => {
   const p = new CopyProvider()
   const item = await p.provideCellStatusBarItems()
   expect(item).toEqual({
-    label: 'Copy',
+    label: '$(clippy) Copy',
     position: 'right',
     command: 'runme.copyCellToClipboard'
   })
