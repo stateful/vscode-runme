@@ -8,6 +8,5 @@ export class CopyProvider implements vscode.NotebookCellStatusBarItemProvider {
     )
     item.command = 'runme.copyCellToClipboard'
     return item
-    return
   }
 }
