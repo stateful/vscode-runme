@@ -55,7 +55,7 @@ ls -al #some executable command here
 ```
 </pre>
 
-Environment variables which are unbound (i.e. need user input) will prompt users for input. Quoted values will be prepopulated as placeholder value whereas unquoted values will be displayed as prompt message with empty value.
+Environment variables which are exported will prompt users for input. If their values are quoted Runme will prepopulated the value as placeholder when prompting the user whereas unquoted values will be displayed as prompt message with empty value instead.
 
 <pre>
 ```sh { interactive=false }
@@ -96,17 +96,17 @@ deployctl deploy \
 
 Let us know what other services you rely on.
 
-## How it works
+## How It Works
 
 Runme currently consists of a Markdown processor (written in Go) which is both linked in this VS Code extension (via WebAssembly) and the [runme CLI](https://github.com/stateful/runme) (Go binary) allowing for a consistent experience. The Runme VS Code extension leverages the notebook APIs to transparently provide an interactive user experience on top of static markdown.
 
-## Bleeding edge software
+## Bleeding Edge Software
 
-Runme is pre-beta software that is under heavy development. Here are a few known limitations:
+Runme is alpha software that is under heavy development. Here are a few known limitations:
 
 - Notebooks are currently read-only from within the notebook UX, please edit markdown file directly
 - Only shell is currently supported on macOS & Linux, no PowerShell and Windows yet
-- Be aware of edge cases. Runme still needs to continue maturing. Let us know when you hit any snags.
+- Be aware of edge cases. Runme still needs to continue maturing. Let us know when you hit a snags. We appreciate it!
 
 We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
 
