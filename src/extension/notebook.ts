@@ -98,7 +98,8 @@ export class Serializer implements vscode.NotebookSerializer {
           s.language || DEFAULT_LANG_ID
         )
         const attributes = s.attributes
-        cell.metadata = { id: i, source: lines, attributes }
+        const cliName = s.name
+        cell.metadata = { id: i, source: lines, attributes, cliName }
         /**
          * code block
          */

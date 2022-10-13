@@ -49,6 +49,10 @@
         "title": "Copy Cell Content into Clipboard"
       },
       {
+        "command": "runme.runCliCommand",
+        "title": "Run CLI command in new terminal"
+      },
+      {
         "command": "runme.resetEnv",
         "category": "Runme",
         "title": "Reset Environment Variables for current VS Code session"

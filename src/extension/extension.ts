@@ -7,6 +7,7 @@ import { ShowTerminalProvider, BackgroundTaskProvider } from './provider/backgro
 import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
 import { getTerminalByCell, resetEnv } from './utils'
+import { CliProvider } from './provider/cli'
 
 const viteProcess = new ViteServerProcess()
 
@@ -27,6 +28,7 @@ export async function activate (context: vscode.ExtensionContext) {
     }),
     vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
     vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
+    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
     vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
     vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
     vscode.commands.registerCommand('runme.openTerminal', (cell: vscode.NotebookCell) => {
@@ -39,6 +41,16 @@ export async function activate (context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('runme.copyCellToClipboard', (cell: vscode.NotebookCell) => {
       vscode.env.clipboard.writeText(cell.document.getText())
       return vscode.window.showInformationMessage('Copied cell to clipboard!')
+    }),
+
+    vscode.commands.registerCommand('runme.runCliCommand', async (cell: vscode.NotebookCell) => {
+      if (!await CliProvider.isCliInstalled()) {
+        return vscode.window.showInformationMessage('Runme CLI not installed')
+      }
+      const cliName: string = (cell.metadata?.['cliName'] || '').trim()
+      const term = vscode.window.createTerminal(`CLI: ${cliName}`)
+      term.show(false)
+      term.sendText(`runme run ${cliName}`)
     }),
 
     vscode.commands.registerCommand('runme.resetEnv', resetEnv)
