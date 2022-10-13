@@ -94,7 +94,7 @@ deployctl deploy \
     main.ts
 ```
 
-Let us know what services you rely on so we can add them to Runme's roadmap.
+Let us know what other services you rely on.
 
 ## How it works
 
