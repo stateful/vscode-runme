@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "0.2.1-edge.0",
+  "version": "0.2.1",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "Run your README.md notebook style.",
