@@ -112,5 +112,10 @@ suite('getCmdShellSeq', () => {
     const cellText = 'echo "Install deno via installer script"\n# macOS or Linux\ncurl -fsSL https://deno.land/x/install/install.sh | sh'
     expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
+
+  test('trailing comment', () => {
+    const cellText = 'cd ..\nls / # list dir contents\ncd ..\nls /'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
 })
 

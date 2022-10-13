@@ -58,7 +58,13 @@ export function getKey (runningCell: vscode.TextDocument): keyof typeof executor
 export function getCmdShellSeq(cellText: string, os: string): string {
   const trimmed = cellText
     .split('\\\n').map(l => l.trim()).join(' ')
-    .split('\n').map(l => l.trim())
+    .split('\n').map(l => {
+      const hashPos = l.indexOf('#')
+      if (hashPos > -1) {
+        return l.substring(0, hashPos).trim()
+      }
+      return l.trim()
+    })
     .filter(l => {
       const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
       return l !== '' && !hasPrefix
