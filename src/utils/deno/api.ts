@@ -81,6 +81,11 @@ export class API {
     return json
   }
 
+  async promoteDeployment (id: string) {
+    console.log(`Promote ${id}`)
+    return true // status successfully deployed
+  }
+
   async getProject(id: string): Promise<Project | null> {
     try {
       return await this.#requestJson(`/projects/${id}`)

@@ -2,9 +2,12 @@ import { spawn } from 'node:child_process'
 
 import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
+import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
+import type { Kernel } from '../kernel'
 
 async function shellExecutor(
+  this: Kernel,
   exec: NotebookCellExecution,
   script: string,
   cwd: string,
@@ -24,7 +27,7 @@ async function shellExecutor(
 
     switch (contentType) {
       case 'application/json':
-      item = NotebookCellOutputItem.json(<CellOutput>{
+      item = NotebookCellOutputItem.json(<CellOutput<OutputType.shell>>{
         type: contentType,
         output: outputItems.join('\n')
       }, contentType)

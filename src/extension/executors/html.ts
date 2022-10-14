@@ -1,18 +1,18 @@
 import {
   TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
-  ExtensionContext
 } from 'vscode'
 
 import { ViteServerProcess } from '../server'
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
+import type { Kernel } from '../kernel'
 
 async function htmlExecutor(
-  context: ExtensionContext,
+  this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
-  const viteProcess = context.subscriptions.find(
+  const viteProcess = this.context.subscriptions.find(
     (s) => s instanceof ViteServerProcess) as ViteServerProcess | undefined
 
   if (!viteProcess) {
@@ -23,7 +23,7 @@ async function htmlExecutor(
   const isSvelte = code.includes('on:click')
 
   exec.replaceOutput(new NotebookCellOutput([
-    NotebookCellOutputItem.json(<CellOutput>{
+    NotebookCellOutputItem.json(<CellOutput<OutputType.html>>{
       type: OutputType.html,
       output: {
         isSvelte,

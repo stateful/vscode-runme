@@ -1,7 +1,9 @@
-import type { ActivationFunction } from 'vscode-notebook-renderer'
+import type { ActivationFunction, RendererContext } from 'vscode-notebook-renderer'
 
 import { OutputType } from '../constants'
 import type { CellOutput } from '../types'
+
+import { setContext } from './utils'
 import './components'
 
 // ----------------------------------------------------------------------------
@@ -11,47 +13,56 @@ import './components'
 // rendering logic inside of the `render()` function.
 // ----------------------------------------------------------------------------
 
-export const activate: ActivationFunction = () => ({
-  renderOutputItem(outputItem, element) {
-    const { output, type } = outputItem.json() as CellOutput
-    switch (type) {
-      case OutputType.shell:
-        const shellElem = document.createElement('shell-output')
-        shellElem.innerHTML = output
-        element.appendChild(shellElem)
-        break
-      case OutputType.vercel:
-        const vercelElem = document.createElement('vercel-output')
-        vercelElem.setAttribute('content', JSON.stringify(output))
-        element.appendChild(vercelElem)
-        break
-      case OutputType.deno:
-        const denoElem = document.createElement('deno-output')
-        denoElem.setAttribute('content', JSON.stringify(output))
-        element.appendChild(denoElem)
-        break
-      case OutputType.html:
-        const tag = output.isSvelte ? 'svelte-component' : 'vite-output'
-        const viteElem = document.createElement(tag)
-        viteElem.setAttribute('content', output.content)
-        viteElem.setAttribute('port', output.port)
-        element.appendChild(viteElem)
-        break
-      case OutputType.script:
-        const iframe = document.createElement('iframe')
-        const iframeSrc = `http://localhost:${output.port}/${output.filename}`
-        iframe.setAttribute('src', iframeSrc)
-        iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
-        element.appendChild(iframe)
-        break
-      case OutputType.error:
-        element.innerHTML = `⚠️ ${output}`
-        break
-      default: element.innerHTML = 'No renderer found!'
+export const activate: ActivationFunction = (context: RendererContext<void>) => {
+  setContext(context)
+  return {
+    renderOutputItem(outputItem, element) {
+      const payload: CellOutput<OutputType> = outputItem.json()
+
+      switch (payload.type) {
+        case OutputType.shell:
+          const shellElem = document.createElement('shell-output')
+          shellElem.innerHTML = payload.output as CellOutput<OutputType.shell>['output']
+          element.appendChild(shellElem)
+          break
+        case OutputType.vercel:
+          const vercelElem = document.createElement('vercel-output')
+          vercelElem.setAttribute('content', JSON.stringify(payload.output))
+          element.appendChild(vercelElem)
+          break
+        case OutputType.deno:
+          const deno = payload.output as CellOutput<OutputType.deno>['output'] || {}
+          const denoElem = document.createElement('deno-output')
+          deno.deployed && denoElem.setAttribute('deployed', deno.deployed.toString())
+          deno.project && denoElem.setAttribute('project', deno.project)
+          denoElem.setAttribute('deployments', JSON.stringify(deno.deployments))
+          element.appendChild(denoElem)
+          break
+        case OutputType.html:
+          const html = payload.output as CellOutput<OutputType.html>['output']
+          const tag = html.isSvelte ? 'svelte-component' : 'vite-payload.output'
+          const viteElem = document.createElement(tag)
+          viteElem.setAttribute('content', html.content)
+          viteElem.setAttribute('port', html.port.toString())
+          element.appendChild(viteElem)
+          break
+        case OutputType.script:
+          const script = payload.output as CellOutput<OutputType.script>['output']
+          const iframe = document.createElement('iframe')
+          const iframeSrc = `http://localhost:${script.port}/${script.filename}`
+          iframe.setAttribute('src', iframeSrc)
+          iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
+          element.appendChild(iframe)
+          break
+        case OutputType.error:
+          element.innerHTML = `⚠️ ${payload.output}`
+          break
+        default: element.innerHTML = 'No renderer found!'
+      }
+    },
+    disposeOutputItem(/* outputId */) {
+      // Do any teardown here. outputId is the cell output being deleted, or
+      // undefined if we're clearing all outputs.
     }
-  },
-  disposeOutputItem(/* outputId */) {
-    // Do any teardown here. outputId is the cell output being deleted, or
-    // undefined if we're clearing all outputs.
   }
-})
+}

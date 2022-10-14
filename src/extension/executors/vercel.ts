@@ -3,17 +3,17 @@ import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
 import {
   TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
-  ExtensionContext
 } from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
+import type { Kernel } from '../kernel'
 
 import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
 
 export async function vercel (
-  context: ExtensionContext,
+  this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
@@ -24,7 +24,7 @@ export async function vercel (
    */
   if (command.includes('\n')) {
     exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutput>{
+      NotebookCellOutputItem.json(<CellOutput<OutputType.error>>{
         type: 'error',
         output: 'Currently only one-liner Vercel commands are supported'
       }, OutputType.vercel)
@@ -72,5 +72,5 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return bash(context, exec, doc)
+  return bash.call(this, exec, doc)
 }

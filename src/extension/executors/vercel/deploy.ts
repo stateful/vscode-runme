@@ -18,7 +18,6 @@ interface VercelProject {
 export async function deploy (
   exec: NotebookCellExecution,
   doc: TextDocument,
-  // argv: any
 ): Promise<boolean> {
   let token = await getAuthToken()
   const cwd = path.dirname(doc.uri.path)
@@ -53,7 +52,7 @@ export async function deploy (
     const deployParams = { name: project.name }
     for await (const event of createDeployment(clientParams, deployParams)) {
       exec.replaceOutput(new NotebookCellOutput([
-        NotebookCellOutputItem.json(<CellOutput>{
+        NotebookCellOutputItem.json(<CellOutput<OutputType.vercel>>{
           type: OutputType.vercel,
           output: event
         }, OutputType.vercel)
@@ -61,10 +60,10 @@ export async function deploy (
     }
   } catch (err: any) {
     exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutput>{
+      NotebookCellOutputItem.json(<CellOutput<OutputType.error>>{
         type: 'error',
         output: err.message
-      }, OutputType.vercel)
+      }, OutputType.error)
     ]))
     return false
   }

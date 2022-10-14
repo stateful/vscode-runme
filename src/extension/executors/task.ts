@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, ExtensionContext, TaskRevealKind, TaskPanelKind,
+  window, TerminalOptions, TaskRevealKind, TaskPanelKind,
   // CustomExecution,
   // Pseudoterminal,
   ShellExecution
@@ -11,6 +11,7 @@ import {
 // import { ExperimentalTerminal } from "../terminal"
 import { populateEnvVar, getExecutionProperty, getCmdShellSeq, } from '../utils'
 import { ENV_STORE, PLATFORM_OS } from '../constants'
+import type { Kernel } from '../kernel'
 
 import { sh as inlineSh } from './shell'
 
@@ -27,7 +28,7 @@ export function closeTerminalByEnvID (id: string) {
 }
 
 async function taskExecutor(
-  context: ExtensionContext,
+  this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
@@ -94,7 +95,7 @@ async function taskExecutor(
    */
   const isInteractive = getExecutionProperty('interactive', exec.cell)
   if (!isInteractive) {
-    return inlineSh(exec, cmdLine, cwd, env)
+    return inlineSh.call(this, exec, cmdLine, cwd, env)
   }
 
   const taskExecution = new Task(

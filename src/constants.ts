@@ -12,6 +12,12 @@ export enum OutputType {
   error = 'error'
 }
 
+export enum DenoMessages {
+  update = 'deno:deploymentUpdate',
+  deployed = 'deno:finishedDeployment',
+  promote = 'deno:promoteDeployment'
+}
+
 export const CONFIGURATION_SHELL_DEFAULTS = {
   interactive: true,
   closeTerminalOnSuccess: true

@@ -2,23 +2,23 @@ import vscode from 'vscode'
 
 import { Serializer } from './notebook'
 import { Kernel } from './kernel'
-import { ViteServerProcess } from './server'
+// import { ViteServerProcess } from './server'
 import { ShowTerminalProvider, BackgroundTaskProvider } from './provider/background'
 import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
 import { getTerminalByCell, resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
 
-const viteProcess = new ViteServerProcess()
+// const viteProcess = new ViteServerProcess()
 
 export async function activate (context: vscode.ExtensionContext) {
   console.log('[Runme] Activating Extension')
   const kernel = new Kernel(context)
 
-  await viteProcess.start()
+  // await viteProcess.start()
   context.subscriptions.push(
     kernel,
-    viteProcess,
+    // viteProcess,
     vscode.workspace.registerNotebookSerializer('runme', new Serializer(context), {
       transientOutputs: true,
       transientCellMetadata: {
@@ -61,5 +61,5 @@ export async function activate (context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate () {
-  viteProcess.stop()
+  // viteProcess.stop()
 }

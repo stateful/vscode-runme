@@ -7,6 +7,8 @@ import getPort from 'get-port'
 import { NotebookCellExecution, NotebookCellOutputItem, NotebookCellOutput, window, env, Uri } from 'vscode'
 import type { Argv } from 'yargs'
 
+import { renderError } from '../utils'
+
 import { getAuthToken, getConfigFilePath } from './utils'
 
 const LOGIN_OPTIONS = [
@@ -23,7 +25,10 @@ interface VercelCLILogin {
   bitbucket: boolean
 }
 
-export async function login (exec: NotebookCellExecution, argv: Argv<VercelCLILogin>): Promise<boolean> {
+export async function login (
+  exec: NotebookCellExecution,
+  argv: Argv<VercelCLILogin>
+): Promise<boolean> {
   const args = await argv.argv
   const method = (
     (args.github && 'github') ||
@@ -34,16 +39,12 @@ export async function login (exec: NotebookCellExecution, argv: Argv<VercelCLILo
 
 
   if (!method) {
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.text('Please select login method.')
-    ]))
+    renderError(exec, 'Please select login method.')
     return false
   }
 
   if (!method.includes('GitHub') && method !== 'github') {
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.text('Login method not supported.')
-    ]))
+    renderError(exec, 'Login method not supported.')
     return false
   }
 
@@ -125,13 +126,9 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
     })
   } catch (err: any) {
     if (err.status === 403) {
-      exec.replaceOutput(new NotebookCellOutput([
-        NotebookCellOutputItem.text('Token is invalid so it cannot be revoked')
-      ]))
+      renderError(exec, 'Token is invalid so it cannot be revoked')
     } else if (err.status !== 200) {
-      exec.replaceOutput(new NotebookCellOutput([
-        NotebookCellOutputItem.text(`Failed revoking auth token: ${err.message}`)
-      ]))
+      renderError(exec, `Failed revoking auth token: ${err.message}`)
     }
   }
 
@@ -142,9 +139,7 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
     const configFilePath = await getConfigFilePath()
     await fs.unlink(configFilePath)
   } catch (err: any) {
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.text(`Failed during logout: ${err.message}`)
-    ]))
+    renderError(exec, `Failed during logout: ${err.message}`)
     return false
   }
 
