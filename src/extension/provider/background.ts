@@ -17,7 +17,7 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
     }
 
     const item = new vscode.NotebookCellStatusBarItem(
-      'Open Terminal',
+      '$(terminal) Open Terminal',
       vscode.NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.openTerminal'
