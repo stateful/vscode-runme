@@ -16,6 +16,10 @@ vi.mock('../../src/extension/executors/index.js', () => ({
 vi.mock('vscode', () => ({
   default: {
     notebooks: {
+      createRendererMessaging: vi.fn().mockReturnValue({
+        postMessage: vi.fn(),
+        onDidReceiveMessage: vi.fn().mockReturnValue({ dispose: vi.fn() })
+      }),
       createNotebookController: vi.fn().mockReturnValue({
         createNotebookCellExecution: vi.fn().mockReturnValue({ start: vi.fn(), end: vi.fn() })
       })
