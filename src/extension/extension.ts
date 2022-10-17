@@ -45,7 +45,12 @@ export async function activate (context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand('runme.runCliCommand', async (cell: vscode.NotebookCell) => {
       if (!await CliProvider.isCliInstalled()) {
-        return vscode.window.showInformationMessage('Runme CLI not installed')
+        return vscode.window.showInformationMessage(
+          'Runme CLI is not installed. Do you want to download it?',
+          'Download now'
+        ).then(() => vscode.env.openExternal(
+          vscode.Uri.parse('https://github.com/stateful/runme/releases')
+        ))
       }
       const cliName: string = (cell.metadata?.['cliName'] || '').trim()
       const term = vscode.window.createTerminal(`CLI: ${cliName}`)
