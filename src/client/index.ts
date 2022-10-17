@@ -54,6 +54,11 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
           element.appendChild(iframe)
           break
+        case OutputType.outputItems:
+          const outputItemElem = document.createElement('shell-output-items')
+          outputItemElem.setAttribute('content', payload.output as string)
+          element.appendChild(outputItemElem)
+          break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`
           break

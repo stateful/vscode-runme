@@ -1,11 +1,11 @@
 import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
 import { renderError } from '../utils'
-import { OutputType, DenoMessages } from '../../../constants'
+import { OutputType, ClientMessages } from '../../../constants'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
-import type { CellOutput, DenoMessage } from '../../../types'
+import type { CellOutput, ClientMessage } from '../../../types'
 
 export async function deploy (
   this: Kernel,
@@ -47,8 +47,8 @@ export async function deploy (
       }
 
       deployed = created > start
-      this.messaging.postMessage(<DenoMessage<DenoMessages.update>>{
-        type: DenoMessages.update,
+      this.messaging.postMessage(<ClientMessage<ClientMessages.update>>{
+        type: ClientMessages.update,
         output: {
           deployed,
           deployments,

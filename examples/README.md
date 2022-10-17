@@ -84,3 +84,11 @@ Supports changes to `$PATH`:
 export PATH="/some/path:$PATH"
 echo $PATH
 ```
+
+## Copy From Result Cell
+
+You can copy also results from the inline executed shell:
+
+```sh { interactive=false }
+openssl rand -base64 32
+```

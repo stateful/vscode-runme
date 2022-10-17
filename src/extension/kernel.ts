@@ -1,7 +1,7 @@
 import vscode, { ExtensionContext } from 'vscode'
 
-import type { DenoMessage } from '../types'
-import { DenoMessages } from '../constants'
+import type { ClientMessage } from '../types'
+import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
 import executor from './executors'
@@ -36,9 +36,9 @@ export class Kernel implements vscode.Disposable {
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  async #handleRendererMessage ({ message }: { message: DenoMessage<DenoMessages> }) {
-    if (message.type === DenoMessages.promote) {
-      const payload = message as DenoMessage<DenoMessages.promote>
+  async #handleRendererMessage ({ message }: { message: ClientMessage<ClientMessages> }) {
+    if (message.type === ClientMessages.promote) {
+      const payload = message as ClientMessage<ClientMessages.promote>
       const token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
@@ -46,11 +46,17 @@ export class Kernel implements vscode.Disposable {
 
       const api = API.fromToken(token)
       const deployed = await api.promoteDeployment(payload.output.id, payload.output.productionDeployment)
-      this.messaging.postMessage(<DenoMessage<DenoMessages.deployed>>{
-        type: DenoMessages.deployed,
+      this.messaging.postMessage(<ClientMessage<ClientMessages.deployed>>{
+        type: ClientMessages.deployed,
         output: deployed
       })
+    } else if (message.type === ClientMessages.infoMessage) {
+      return vscode.window.showInformationMessage(message.output as string)
+    } else if (message.type === ClientMessages.errorMessage) {
+      return vscode.window.showInformationMessage(message.output as string)
     }
+
+    console.log(`Unknown event type: ${message.type}`)
   }
 
   private async _executeAll(cells: vscode.NotebookCell[]) {

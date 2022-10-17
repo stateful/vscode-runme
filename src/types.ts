@@ -1,4 +1,4 @@
-import { OutputType, DenoMessages } from './constants'
+import { OutputType, ClientMessages } from './constants'
 
 export interface ParsedReadmeEntry {
   name?: string
@@ -46,17 +46,20 @@ interface Payload {
     type: string
     payload: any
   }
+  [OutputType.outputItems]: string
 }
 
-export interface DenoMessage <T extends DenoMessages> {
+export interface ClientMessage <T extends ClientMessages> {
   type: T
-  output: DenoMessagePayload[T]
+  output: ClientMessagePayload[T]
 }
-export interface DenoMessagePayload {
-  [DenoMessages.deployed]: boolean
-  [DenoMessages.update]: DenoPayload
-  [DenoMessages.promote]: {
+export interface ClientMessagePayload {
+  [ClientMessages.deployed]: boolean
+  [ClientMessages.update]: DenoPayload
+  [ClientMessages.promote]: {
     id: string
     productionDeployment: string
   }
+  [ClientMessages.infoMessage]: string
+  [ClientMessages.errorMessage]: string
 }

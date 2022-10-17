@@ -16,8 +16,11 @@ async function shellExecutor(
   const outputItems: string[] = []
   const child = spawn(script, { cwd, shell: true, env })
   console.log(`[Runme] Started process on pid ${child.pid}`)
-  // this needs more work / specification
+  /**
+   * this needs more work / specification
+   */
   const contentType = exec.cell.metadata.attributes?.['output']
+
   /**
    * handle output for stdout and stderr
    */
@@ -33,7 +36,16 @@ async function shellExecutor(
       }, contentType)
     }
 
-    exec.replaceOutput(new NotebookCellOutput([ item ]))
+    console.log('OITPUT TWIC')
+    exec.replaceOutput([
+      new NotebookCellOutput([ item ]),
+      new NotebookCellOutput([
+        NotebookCellOutputItem.json(<CellOutput<OutputType.outputItems>>{
+          type: OutputType.outputItems,
+          output: outputItems.join('\n')
+        }, OutputType.outputItems)
+      ])
+    ])
   }
 
   child.stdout.on('data', handleOutput)
