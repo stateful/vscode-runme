@@ -81,11 +81,6 @@ export class API {
     return json
   }
 
-  async promoteDeployment (id: string) {
-    console.log(`Promote ${id}`)
-    return true // status successfully deployed
-  }
-
   async getProject(id: string): Promise<Project | null> {
     try {
       return await this.#requestJson(`/projects/${id}`)
@@ -94,6 +89,20 @@ export class API {
         return null
       }
       throw err
+    }
+  }
+
+  async promoteDeployment (id: string, productionDeployment: string): Promise<Boolean> {
+    try {
+      await this.#requestJson(`/projects/${id}`, {
+        method: 'PATCH',
+        body: { productionDeployment }
+      }) as any
+
+      return true
+    } catch (err: any) {
+      console.log(`[Deno API Error]: couldn't promote deployment: ${err.message}`)
+      return false
     }
   }
 

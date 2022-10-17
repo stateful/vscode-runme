@@ -1,4 +1,4 @@
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
 import { renderError } from '../utils'
 import { OutputType, DenoMessages } from '../../../constants'
@@ -47,8 +47,6 @@ export async function deploy (
       }
 
       deployed = created > start
-      console.log('POST', window.activeNotebookEditor)
-
       this.messaging.postMessage(<DenoMessage<DenoMessages.update>>{
         type: DenoMessages.update,
         output: {

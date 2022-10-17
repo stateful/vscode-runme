@@ -38,13 +38,14 @@ export class Kernel implements vscode.Disposable {
 
   async #handleRendererMessage ({ message }: { message: DenoMessage<DenoMessages> }) {
     if (message.type === DenoMessages.promote) {
+      const payload = message as DenoMessage<DenoMessages.promote>
       const token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
       }
 
       const api = API.fromToken(token)
-      const deployed = await api.promoteDeployment(message.output as string)
+      const deployed = await api.promoteDeployment(payload.output.id, payload.output.productionDeployment)
       this.messaging.postMessage(<DenoMessage<DenoMessages.deployed>>{
         type: DenoMessages.deployed,
         output: deployed

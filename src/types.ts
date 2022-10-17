@@ -55,5 +55,8 @@ export interface DenoMessage <T extends DenoMessages> {
 export interface DenoMessagePayload {
   [DenoMessages.deployed]: boolean
   [DenoMessages.update]: DenoPayload
-  [DenoMessages.promote]: never
+  [DenoMessages.promote]: {
+    id: string
+    productionDeployment: string
+  }
 }

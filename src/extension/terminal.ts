@@ -31,7 +31,6 @@ export class ExperimentalTerminal implements Pseudoterminal {
   }
 
   handleInput(data: string): void {
-    console.log(Buffer.from(data, 'utf-8'))
     if (data === '\c') {
       this.closeEmitter.fire(-1)
     }

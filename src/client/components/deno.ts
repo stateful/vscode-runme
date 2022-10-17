@@ -8,6 +8,8 @@ import { Deployment } from '../../utils/deno/api_types'
 import { DenoMessages } from '../../constants'
 import type { DenoMessage } from '../../types'
 
+import './spinner'
+
 @customElement('deno-output')
 export class DenoOutput extends LitElement {
   #isPromoting = false
@@ -78,7 +80,9 @@ export class DenoOutput extends LitElement {
         <h4>Created At</h4>
         ${this.deployed ? (new Date(deployment.createdAt)).toString() : 'Pending' }
         <h4>Status</h4>
-        ${this.deployed ? 'Ready' : 'Deploying'}
+        ${this.deployed
+          ? 'Ready'
+          : html`Deploying <vscode-spinner />`}
 
         ${when(this.deployed && supportsMessaging && !this.#promoted, () => html`
           <vscode-button
@@ -88,6 +92,13 @@ export class DenoOutput extends LitElement {
           >
             🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
           </vscode-button>
+        `)}
+        ${when(this.deployed && supportsMessaging && this.#promoted, () => html`
+          <p>
+            Promoted to production: <vscode-link href="https://${deployment.domainMappings[0].domain}">
+              ${deployment.domainMappings[0].domain}
+            </vscode-link>
+          </p>
         `)}
       </div>
     </section>`
@@ -101,9 +112,12 @@ export class DenoOutput extends LitElement {
 
     this.#isPromoting= true
     this.requestUpdate()
-    ctx.postMessage({
-      type: 'deno:promoteDeployment',
-      value: deployment
+    ctx.postMessage(<DenoMessage<DenoMessages.promote>>{
+      type: DenoMessages.promote,
+      output: {
+        id: deployment.projectId,
+        productionDeployment: deployment.id
+      }
     })
   }
 
