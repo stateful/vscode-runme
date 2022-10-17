@@ -5,8 +5,8 @@ import '@vscode/webview-ui-toolkit/dist/button/index'
 
 import { getContext } from '../utils'
 import { Deployment } from '../../utils/deno/api_types'
-import { DenoMessages } from '../../constants'
-import type { DenoMessage } from '../../types'
+import { ClientMessages } from '../../constants'
+import type { ClientMessage } from '../../types'
 
 import './spinner'
 
@@ -112,8 +112,8 @@ export class DenoOutput extends LitElement {
 
     this.#isPromoting= true
     this.requestUpdate()
-    ctx.postMessage(<DenoMessage<DenoMessages.promote>>{
-      type: DenoMessages.promote,
+    ctx.postMessage(<ClientMessage<ClientMessages.promote>>{
+      type: ClientMessages.promote,
       output: {
         id: deployment.projectId,
         productionDeployment: deployment.id
@@ -129,19 +129,19 @@ export class DenoOutput extends LitElement {
       return
     }
 
-    ctx.onDidReceiveMessage((e: DenoMessage<DenoMessages>) => {
+    ctx.onDidReceiveMessage((e: ClientMessage<ClientMessages>) => {
       if (!e.type.startsWith('deno:')) {
         return
       }
 
       switch (e.type) {
-        case DenoMessages.deployed: {
-          const payload = e.output as DenoMessage<DenoMessages.deployed>['output']
+        case ClientMessages.deployed: {
+          const payload = e.output as ClientMessage<ClientMessages.deployed>['output']
           this.#promoted = payload
           break
         }
-        case DenoMessages.update: {
-          const payload = e.output as DenoMessage<DenoMessages.update>['output']
+        case ClientMessages.update: {
+          const payload = e.output as ClientMessage<ClientMessages.update>['output']
           this.deployed = Boolean(payload.deployed)
           this.project = payload.project
           this.deployments = payload.deployments

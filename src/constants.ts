@@ -9,10 +9,13 @@ export enum OutputType {
   deno = 'stateful.runme/deno-stdout',
   html = 'stateful.runme/html-stdout',
   script = 'stateful.runme/script-stdout',
+  outputItems = 'stateful.runme/output-items',
   error = 'error'
 }
 
-export enum DenoMessages {
+export enum ClientMessages {
+  infoMessage = 'common:infoMessage',
+  errorMessage = 'common:errorMessage',
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
   promote = 'deno:promoteDeployment'
