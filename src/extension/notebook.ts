@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import fsp from 'node:fs/promises'
+// import fsp from 'node:fs/promises'
 
 import vscode from 'vscode'
 
@@ -10,7 +10,7 @@ import Languages from './languages'
 
 declare var globalThis: any
 
-const CODE_REGEX = /```(\w+)?\n[^`]*```/g
+// const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const DEFAULT_LANG_ID = 'text'
 const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
@@ -111,45 +111,51 @@ export class Serializer implements vscode.NotebookSerializer {
   }
 
   public async serializeNotebook(
-    data: vscode.NotebookData,
+    // data: vscode.NotebookData,
     // token: vscode.CancellationToken
   ): Promise<Uint8Array> {
-    const markdownFile = vscode.window.activeTextEditor?.document.fileName
-    if (!markdownFile) {
-      throw new Error('Could not detect opened markdown document')
-    }
+    // eslint-disable-next-line max-len
+    throw new Error('Notebooks are currently read-only. Please edit markdown in file-mode (right click: "Open With...") instead.')
+    //
+    // Below's impl is highly experimental and will leads unpredictable results
+    // including data loss
+    //
+    // const markdownFile = vscode.window.activeTextEditor?.document.fileName
+    // if (!markdownFile) {
+    //   throw new Error('Could not detect opened markdown document')
+    // }
 
-    const fileExist = await fsp.access(markdownFile).then(() => true, () => false)
-    if (!fileExist) {
-      return new Uint8Array()
-    }
+    // const fileExist = await fsp.access(markdownFile).then(() => true, () => false)
+    // if (!fileExist) {
+    //   return new Uint8Array()
+    // }
 
-    if (!this.fileContent && fileExist) {
-      this.fileContent = (await fsp.readFile(markdownFile, 'utf-8')).toString()
-    }
+    // if (!this.fileContent && fileExist) {
+    //   this.fileContent = (await fsp.readFile(markdownFile, 'utf-8')).toString()
+    // }
 
-    if (!this.fileContent) {
-      return new Uint8Array()
-    }
+    // if (!this.fileContent) {
+    //   return new Uint8Array()
+    // }
 
-    const codeExamples = this.fileContent.match(CODE_REGEX)
+    // const codeExamples = this.fileContent.match(CODE_REGEX)
 
-    for (const cell of data.cells) {
-      const cellToReplace = codeExamples?.find((e) => e.includes(cell.metadata?.source))
-      if (!cell.metadata || !cell.metadata.source || !cellToReplace) {
-        continue
-      }
+    // for (const cell of data.cells) {
+    //   const cellToReplace = codeExamples?.find((e) => e.includes(cell.metadata?.source))
+    //   if (!cell.metadata || !cell.metadata.source || !cellToReplace) {
+    //     continue
+    //   }
 
-      const exampleLines = cellToReplace.split('\n')
-      const newContent = [
-        exampleLines[0],
-        cell.value,
-        exampleLines[exampleLines.length - 1]
-      ].join('\n')
-      this.fileContent = this.fileContent.replace(cellToReplace, newContent)
-    }
+    //   const exampleLines = cellToReplace.split('\n')
+    //   const newContent = [
+    //     exampleLines[0],
+    //     cell.value,
+    //     exampleLines[exampleLines.length - 1]
+    //   ].join('\n')
+    //   this.fileContent = this.fileContent.replace(cellToReplace, newContent)
+    // }
 
-    return Promise.resolve(Buffer.from(this.fileContent))
+    // return Promise.resolve(Buffer.from(this.fileContent))
   }
 
   #printCell (content: string, languageId = 'markdown') {
