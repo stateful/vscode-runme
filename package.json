@@ -8,6 +8,7 @@
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
   ],
+  "icon": "assets/icon.gif",
   "license": "Apache-2.0",
   "homepage": "https://runme.dev",
   "repository": {
@@ -21,7 +22,15 @@
   "engines": {
     "vscode": "^1.71.0"
   },
+  "galleryBanner": {
+    "color": "#0D003D",
+    "theme": "dark"
+  },
   "keywords": [
+    "runme",
+    "readme",
+    "README.md",
+    "onboarding",
     "notebookRenderer"
   ],
   "badges": [
@@ -32,7 +41,13 @@
     }
   ],
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Debuggers",
+    "Formatters",
+    "Visualization",
+    "Notebooks",
+    "Education",
+    "Testing"
   ],
   "activationEvents": [
     "onNotebook:runme",
