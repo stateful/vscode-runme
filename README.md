@@ -29,35 +29,30 @@ If you don't want the runme notebook, you can always right click on the .md file
 
 Code blocks with `sh` or `bash` designators will result in executable notebook cells.
 
-<pre>```sh
+```sh
 ls -al #some executable command here
 ```
-</pre>
 
 Auto-detection for will be applied to blocks without language designators. Runme however prefers to add language designators to all code blocks.
 
-<pre>```
+```
 echo "block without language designation"
 ```
-</pre>
 
 Run in the background, great for compilers/bundler with file watchers.
 
-<pre>```sh { background=true }
+```sh { background=true }
 ls -al #some executable command here
 ```
-</pre>
 
 Notebook cells will launch a task inside of the terminal panel by default to allow for user-input. However, if code blocks do not require user interactivity it is possible to run them inline.
 
-<pre>```sh { interactive=false }
+```sh { interactive=false }
 ls -al #some executable command here
 ```
-</pre>
 
 Environment variables which are exported will prompt users for input. If their values are quoted Runme will prepopulated the value as placeholder when prompting the user whereas unquoted values will be displayed as prompt message with empty value instead.
 
-<pre>
 ```sh { interactive=false }
 echo "Allows to make execution generic"
 export PATH="$HOME/your/bin:$PATH"
@@ -65,7 +60,6 @@ export MY_PROJECT_PROMPT=Enter project name
 export MY_PROJECT_VALUE="my-project-id"
 echo $MY_PROJECT_PROMPT $MY_PROJECT_VALUE
 ```
-</pre>
 
 Please see [runme.dev's README.md](https://github.com/stateful/runme.dev/blob/main/README.md) for a reference how to apply these code block attributes in different use-cases.
 
