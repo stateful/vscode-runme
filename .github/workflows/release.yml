@@ -24,17 +24,17 @@ on:
         description: "Publish on Visual Studio Marketplace?"
         required: true
         type: choice
-        default: "no"
+        default: "yes"
         options:
-          # - "yes"
+          - "yes"
           - "no"
       publishOpenVSX:
         description: "Publish on Open VSX Registry?"
         required: true
         type: choice
-        default: "no"
+        default: "yes"
         options:
-          # - "yes"
+          - "yes"
           - "no"
 
 jobs:
