@@ -5,24 +5,24 @@
  * This means that edge releases are currently not possible with the workflow
  * we have.
  */
- import fs from 'node:fs/promises'
- import path from 'node:path'
- import url from 'url';
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import url from 'url';
 
- const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
- const pkgPath = path.join(__dirname, '..', '..', 'package.json');
- const pkg = JSON.parse((await fs.readFile(pkgPath)).toString());
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const pkgPath = path.join(__dirname, '..', '..', 'package.json');
+const pkg = JSON.parse((await fs.readFile(pkgPath)).toString());
 
- const newVersion = pkg.version.split('.').slice(0, 2)
+const newVersion = pkg.version.split('.').slice(0, 2)
 
- /**
-  * VS Code Marketplace version requirements:
-  * It must be one to four numbers in the range 0 to 2147483647,
-  * with each number seperated by a period. It must contain at least one non-zero number.
-  */
- const prereleaseDate = Math.floor(Date.now() / 1000);
- newVersion.push(prereleaseDate);
- pkg.version = `${newVersion.join('.')}`;
+/**
+* VS Code Marketplace version requirements:
+* It must be one to four numbers in the range 0 to 2147483647,
+* with each number seperated by a period. It must contain at least one non-zero number.
+*/
+const prereleaseDate = Math.floor(Date.now() / 1000);
+newVersion.push(prereleaseDate);
+pkg.version = `${newVersion.join('.')}`;
 
- console.log(`Update package.json with Edge version:\n\n${JSON.stringify(pkg, null, 2)}`);
- await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2))
+console.log(`Update package.json with Edge version:\n\n${JSON.stringify(pkg, null, 2)}`);
+await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2))

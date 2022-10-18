@@ -1,9 +1,9 @@
-import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import url from 'node:url'
 import path from 'node:path'
 import zlib from 'node:zlib'
 import readline from 'node:readline'
+import tar from 'tar-fs'
 import { promisify } from 'node:util'
 import { pipeline } from 'node:stream'
 import { Octokit } from '@octokit/rest'
@@ -70,7 +70,7 @@ async function downloadWasm (token) {
   const wasmFilePath = path.resolve(targetDir, 'runme.wasm')
 
   await fsp.mkdir(targetDir, { recursive: true })
-  await streamPipeline(res.body, zlib.createGunzip(), fs.createWriteStream(wasmFilePath))
+  await streamPipeline(res.body, zlib.createGunzip(), tar.extract(targetDir))
   console.log(`✅ Successfully downloaded and unpacked WASM file to ${wasmFilePath}`)
 }
 
