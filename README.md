@@ -42,7 +42,7 @@ Auto-detection for will be applied to blocks without language designators. Runme
 Run in the background, great for compilers/bundler with file watchers.
 
     ```sh { background=true }
-    ls -al #some executable command here
+    npx tsc --watch
     ```
 
 Notebook cells will launch a task inside of the terminal panel by default to allow for user-input. However, if code blocks do not require user interactivity it is possible to run them inline.
