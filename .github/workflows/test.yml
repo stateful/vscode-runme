@@ -14,6 +14,8 @@ jobs:
           node-version: 18
       - name: 📦 Install Dependencies
         run: yarn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🏗 Build Project
         run: yarn build:dev
       - name: 🧪 Run Tests
