@@ -43,7 +43,9 @@ export class Serializer implements vscode.NotebookSerializer {
     if (!doc || err) {
       return this.#printCell(
         '⚠️ __Error__: document could not be loaded' +
-        (err ? `\n<small>${err.message}</small>` : '')
+        (err ? `\n<small>${err.message}</small>` : '') +
+        '.<p>Please report bug at https://github.com/stateful/vscode-runme/issues' +
+        ' or let us know on Discord (https://discord.gg/BQm8zRCBUY)</p>'
       )
     }
 
