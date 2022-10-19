@@ -4,7 +4,7 @@ This VS Code extension transparently opens markdown files (i.e. README.md) as ru
 
 > 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor.
 
-![Text and notebook view side-by-side](https://runme.dev/sidebyside.png)
+![Text and notebook view side-by-side](https://runme.dev/intro.gif)
 
 This project is open source licensed under APL2.0 and its code can be found in the following repos:
 
