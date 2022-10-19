@@ -3,7 +3,7 @@
   "version": "0.2.5",
   "publisher": "stateful",
   "displayName": "Runme",
-  "description": "Run your README.md notebook style.",
+  "description": "Run your README.md as a interactive notebook",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
