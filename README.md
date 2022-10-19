@@ -4,7 +4,7 @@ This VS Code extension transparently opens markdown files (i.e. README.md) as ru
 
 > 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor.
 
-![Text and notebook view side-by-side](https://staging.runme.dev/sidebyside.png)
+![Text and notebook view side-by-side](https://runme.dev/sidebyside.png)
 
 This project is open source licensed under APL2.0 and its code can be found in the following repos:
 
@@ -69,7 +69,7 @@ Please see [runme.dev's README.md](https://github.com/stateful/runme.dev/blob/ma
 
 Runme strives to break out of the terminal without losing interoperability with the CLI to document how the your repo ties together an array for external services. To showcase how this works take a look at the GIF below or run through [Runme.dev's website README](https://github.com/stateful/runme.dev/blob/main/README.md).
 
-![Deep Deno integration](https://staging.runme.dev/tabs/deno.gif)
+![Deep Deno integration](https://runme.dev/tabs/deno.gif)
 
 What's happening is whenever Deno's `deployctl deploy` command is executed to deploy a Deno site from within a notebook cell (just a markdown code block), Runme will render an interactive deployment status based on the `$DENO_PROJECT_NAME` and `$DENO_ACCESS_TOKEN` provided in the notebook (will prompt for values otherwise).
 

@@ -36,7 +36,6 @@ async function shellExecutor(
       }, contentType)
     }
 
-    console.log('OITPUT TWIC')
     exec.replaceOutput([
       new NotebookCellOutput([ item ]),
       new NotebookCellOutput([
