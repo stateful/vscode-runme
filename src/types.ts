@@ -25,7 +25,7 @@ export interface CellOutput<T extends OutputType> {
 
 interface DenoPayload {
   deployed?: boolean
-  project?: string
+  project?: any
   deployments?: any[]
 }
 

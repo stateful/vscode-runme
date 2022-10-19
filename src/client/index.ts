@@ -34,7 +34,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           const deno = payload.output as CellOutput<OutputType.deno>['output'] || {}
           const denoElem = document.createElement('deno-output')
           deno.deployed && denoElem.setAttribute('deployed', deno.deployed.toString())
-          deno.project && denoElem.setAttribute('project', deno.project)
+          deno.project && denoElem.setAttribute('project', JSON.stringify(deno.project))
           denoElem.setAttribute('deployments', JSON.stringify(deno.deployments))
           element.appendChild(denoElem)
           break
