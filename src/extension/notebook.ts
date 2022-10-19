@@ -83,6 +83,7 @@ export class Serializer implements vscode.NotebookSerializer {
 
       if (s.lines) {
         const lines = s.lines.join('\n')
+        const language = s.language === 'shell' ? 'sh' : s.language
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           /**
@@ -95,7 +96,7 @@ export class Serializer implements vscode.NotebookSerializer {
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
            */
-          s.language || DEFAULT_LANG_ID
+          language || DEFAULT_LANG_ID
         )
         const attributes = s.attributes
         const cliName = s.name
