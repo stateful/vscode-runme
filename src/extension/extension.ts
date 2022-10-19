@@ -48,7 +48,7 @@ export async function activate (context: vscode.ExtensionContext) {
         return vscode.window.showInformationMessage(
           'Runme CLI is not installed. Do you want to download it?',
           'Download now'
-        ).then(() => vscode.env.openExternal(
+        ).then((openBrowser) => openBrowser && vscode.env.openExternal(
           vscode.Uri.parse('https://github.com/stateful/runme/releases')
         ))
       }
