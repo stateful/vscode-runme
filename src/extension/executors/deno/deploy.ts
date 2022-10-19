@@ -2,7 +2,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { renderError } from '../utils'
 import { OutputType, ClientMessages } from '../../../constants'
-import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from '../../constants'
+import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
 import type { CellOutput, ClientMessage } from '../../../types'
@@ -12,6 +12,7 @@ export async function deploy (
   exec: NotebookCellExecution,
 ): Promise<boolean> {
   let token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
+  const pname = ENV_STORE.get(DENO_PROJECT_NAME_KEY)
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() =>
@@ -41,7 +42,9 @@ export async function deploy (
     let iteration = 0
     let created = start
     while (created <= start && iteration < 30) {
-      const deployments = await denoAPI.getDeployments(projects![0].id)
+      // lookup project name if not available use most recent
+      const project = projects?.find(p => p.name === pname) || projects![0]
+      const deployments = await denoAPI.getDeployments(project.id)
       if ((deployments || []).length > 0) {
         created = new Date(deployments![0].createdAt) ?? start
       }
@@ -52,7 +55,7 @@ export async function deploy (
         output: {
           deployed,
           deployments,
-          project: projects![0].name
+          project
         }
       })
 
