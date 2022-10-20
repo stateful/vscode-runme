@@ -62,7 +62,7 @@ verify:
 echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"
 ```
 
-Supports multiple lines where an export is just somewhere in between:
+Supports multiple lines where the export is just somewhere in between:
 
 ```sh
 echo "Auth token for service foo"
@@ -83,6 +83,34 @@ Supports changes to `$PATH`:
 ```sh { interactive=false }
 export PATH="/some/path:$PATH"
 echo $PATH
+```
+
+Supports piping content into an environment variable:
+
+```sh
+export LICENSE=$(cat ../LICENSE)
+```
+
+verify:
+
+```sh { interactive=false }
+echo "LICENSE: $LICENSE"
+```
+
+Support multiline exports:
+
+```
+export PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA04up8hoqzS1+
+...
+l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==
+-----END RSA PRIVATE KEY-----"
+```
+
+verify:
+
+```sh { interactive=false }
+echo "PRIVATE_KEY: $PRIVATE_KEY"
 ```
 
 ## Copy From Result Cell
