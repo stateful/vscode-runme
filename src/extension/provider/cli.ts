@@ -2,12 +2,18 @@ import { spawn } from 'node:child_process'
 
 import vscode from 'vscode'
 
+import { CLI_RUNNABLE_LANGUAGES } from '../constants'
+
 export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * only show CLI if cliName is known
      */
     if (!cell.metadata?.['cliName']) {
+      return
+    }
+
+    if (!CLI_RUNNABLE_LANGUAGES.includes(cell.document.languageId)) {
       return
     }
 

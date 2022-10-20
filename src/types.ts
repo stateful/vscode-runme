@@ -1,13 +1,34 @@
 import { OutputType, ClientMessages } from './constants'
 
 export interface ParsedReadmeEntry {
+  /**
+   * name identified by the Runme CLI, e.g. "echo-hello"
+   */
   name?: string
-  content?: string
-  description?: string
-  markdown?: string
+  /**
+   * code block as string
+   */
+  content: string
+  /**
+   * annotated code langauge by the user
+   */
   language?: string
-  lines?: string[]
+  /**
+   * code lines of block stripped from whitespaces
+   */
+  lines: string[]
+  /**
+   * custom attributes to the code block, e.g.:
+   *
+   * ```js { interactive=false }
+   * ...
+   * ```
+   */
   attributes?: Metadata
+  /**
+   * markdown content if section is not a code block
+   */
+  markdown?: string
 }
 
 export interface ParsedDocument {
