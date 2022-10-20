@@ -72,6 +72,8 @@ export function getCmdShellSeq(cellText: string, os: string): string {
 
   if (['darwin'].find(entry => entry === os)) {
     return `set -e -o pipefail; ${trimmed}`
+  } else if (os.toLocaleLowerCase().startsWith('win')) {
+    return trimmed
   }
 
   return `set -e; ${trimmed}`

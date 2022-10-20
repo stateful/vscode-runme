@@ -10,6 +10,8 @@ exports[`getCmdShellSeq > one command 1`] = `"set -e -o pipefail; deno task star
 
 exports[`getCmdShellSeq > trailing comment 1`] = `"set -e -o pipefail; cd ..; ls /; cd ..; ls /"`;
 
+exports[`getCmdShellSeq > windows without shell flags 1`] = `"ls ~/"`;
+
 exports[`getCmdShellSeq > with comments 1`] = `"set -e -o pipefail; echo \\"Install deno via installer script\\"; curl -fsSL https://deno.land/x/install/install.sh | sh"`;
 
 exports[`getCmdShellSeq > wrapped command 1`] = `"set -e -o pipefail; deno install --allow-read --allow-write --allow-env --allow-net --allow-run --no-check -r -f https://deno.land/x/deploy/deployctl.ts"`;
