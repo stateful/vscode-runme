@@ -23,7 +23,7 @@ export class Serializer implements vscode.NotebookSerializer {
     const go = new globalThis.Go()
     const wasmUri = vscode.Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     this.ready = WebAssembly.instantiate(
-      fs.readFileSync(wasmUri.path),
+      fs.readFileSync(wasmUri.fsPath),
       go.importObject
     ).then(
       (result) => { go.run(result.instance) },

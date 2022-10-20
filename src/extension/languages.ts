@@ -55,7 +55,7 @@ export default class Languages {
   }
 
   public static fromContext(context: vscode.ExtensionContext) {
-    const basePath = context.extensionUri.path
+    const basePath = context.extensionUri.fsPath
     return new Languages(basePath)
   }
 

@@ -20,7 +20,7 @@ export async function deploy (
   doc: TextDocument,
 ): Promise<boolean> {
   let token = await getAuthToken()
-  const cwd = path.dirname(doc.uri.path)
+  const cwd = path.dirname(doc.uri.fsPath)
 
   try {
     /**

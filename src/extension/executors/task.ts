@@ -72,7 +72,7 @@ async function taskExecutor(
     ENV_STORE.set(key, stateEnv[key])
   }
 
-  const cwd = path.dirname(doc.uri.path)
+  const cwd = path.dirname(doc.uri.fsPath)
   const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
   const env = {
     ...process.env,
@@ -108,7 +108,7 @@ async function taskExecutor(
     new ShellExecution(cmdLine, { cwd, env })
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
-    //   return new ExperimentalTerminal(scriptFile.path, { cwd, env })
+    //   return new ExperimentalTerminal(scriptFile.fsPath, { cwd, env })
     // })
   )
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'

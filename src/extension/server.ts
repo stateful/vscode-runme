@@ -7,7 +7,7 @@ import vscode from 'vscode'
 export class ViteServerProcess implements vscode.Disposable {
   #port?: number
   #process?: ChildProcess
-  #rootPath = vscode.workspace.workspaceFolders![0].uri.path
+  #rootPath = vscode.workspace.workspaceFolders![0].uri.fsPath
 
   get port () {
     return this.#port
