@@ -44,11 +44,8 @@
   ],
   "categories": [
     "Notebooks",
-    "Debuggers",
-    "Formatters",
     "Visualization",
-    "Education",
-    "Testing"
+    "Education"
   ],
   "activationEvents": [
     "onNotebook:runme",
