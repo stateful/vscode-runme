@@ -1,10 +1,9 @@
 import path from 'node:path'
+import cp from 'node:child_process'
 
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
   window, TerminalOptions, TaskRevealKind, TaskPanelKind,
-  // CustomExecution,
-  // Pseudoterminal,
   ShellExecution
 } from 'vscode'
 
@@ -17,7 +16,7 @@ import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
-const EXPORT_REGEX = /(\n*)export \w+=("*)(.+?)(?=(\n|"))/g
+const EXPORT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|(.+(?=\n)))/g
 
 export function closeTerminalByEnvID (id: string) {
   const terminal = window.terminals.find((t) => (
@@ -32,25 +31,61 @@ async function taskExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
+  const cwd = path.dirname(doc.uri.fsPath)
   let cellText = doc.getText()
 
   /**
    * find export commands
    */
-  const exportMatches = (doc.getText().match(EXPORT_REGEX) || [])
+  const code = doc.getText().endsWith('\n') ? doc.getText() : `${doc.getText()}\n`
+  const exportMatches = (code.match(EXPORT_REGEX) || [])
     .map((m) => m.trim())
   const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"')
     const placeHolder = hasStringValue ? ph.slice(1) : ph
-    stateEnv[key] = populateEnvVar(await window.showInputBox({
-      title: `Set Environment Variable "${key}"`,
-      ignoreFocusOut: true,
-      placeHolder,
-      prompt: 'Your shell script wants to set some environment variables, please enter them here.',
-      ...(hasStringValue ? { value: placeHolder } : {})
-    }) || '', {...process.env, ...stateEnv })
+
+    if (placeHolder.startsWith('$(') && placeHolder.endsWith(')')) {
+      /**
+       * evaluate expression
+       */
+      const expression = placeHolder.slice(2, -1)
+      const expressionProcess = cp.spawn(expression, {
+        cwd,
+        shell: true
+      })
+      const [isError, data] = await new Promise<[number, string]>((resolve) => {
+        let data = ''
+        expressionProcess.stdout.on('data', (payload) => { data += payload.toString() })
+        expressionProcess.stderr.on('data', (payload) => { data += payload.toString() })
+        expressionProcess.on('close', (code) => {
+          if (code && code > 0) {
+            return resolve([code, data])
+          }
+
+          return resolve([0, data])
+        })
+      })
+
+      if (isError) {
+        window.showErrorMessage(`Failed to evaluate expression "${expression}": ${data}`)
+        return false
+      }
+
+      stateEnv[key] = data
+    } else {
+      /**
+       * ask user for value
+       */
+      stateEnv[key] = populateEnvVar(await window.showInputBox({
+        title: `Set Environment Variable "${key}"`,
+        ignoreFocusOut: true,
+        placeHolder,
+        prompt: 'Your shell script wants to set some environment variables, please enter them here.',
+        ...(hasStringValue ? { value: placeHolder } : {})
+      }) || '', {...process.env, ...stateEnv })
+    }
 
     /**
      * we don't want to run these exports anymore as we already stored
@@ -72,7 +107,6 @@ async function taskExecutor(
     ENV_STORE.set(key, stateEnv[key])
   }
 
-  const cwd = path.dirname(doc.uri.fsPath)
   const RUNME_ID = `${doc.fileName}:${exec.cell.index}`
   const env = {
     ...process.env,
