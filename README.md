@@ -2,7 +2,7 @@
 
 This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code notebooks (with the click of a `play` button). Annotating markdown code blocks repo maintainers can enhance the interactive runbook-like experience of their markdown notebooks while they will continue to render properly in markdown viewers.
 
-> 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor.
+> 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
 
 ![Text and notebook view side-by-side](https://runme.dev/intro.gif)
 
@@ -25,7 +25,7 @@ Feel free to submit any issues you may have via the
 
 After cloning into a repo in VS Code, open any markdown file and notice that instead of opening the markdown file content, in renders a notebook where shell commands are rendered as runnable blocks.
 
-If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor.
+If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
 
 ## Elevated Notebook Experience
 
