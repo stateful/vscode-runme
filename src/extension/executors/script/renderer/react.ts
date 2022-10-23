@@ -13,10 +13,12 @@ export default function (code: string, filename: string, attributes: Record<stri
     const root = createRoot(document.getElementById('root'));
     root.render(${htmlSection})
   `
-  const html = getHTMLTemplate(/*html*/`
+
+  const htmlToInject = /*html*/`
     <div id="root"></div>
     <script type="module" src="/_notebook/${filename}.tsx"></script>
-  `, undefined, attributes)
+  `
 
+  const html = getHTMLTemplate({ htmlSection: htmlToInject, attributes, filename })
   return { html, tsx }
 }

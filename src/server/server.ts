@@ -3,11 +3,15 @@ import path from 'node:path'
 
 import { createServer, ViteDevServer, InlineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
+import { WebSocketServer } from 'ws'
+import getPort from 'get-port'
+import yargs from 'yargs'
 import vue from '@vitejs/plugin-vue'
 import react from '@vitejs/plugin-react'
 // import preact from '@preact/preset-vite'
+
+import { ServerMessages } from '../constants'
 
 import { cellResult } from './plugins'
 
@@ -24,9 +28,29 @@ export class ViteServer {
   static async getStaticConfig(port: number, rootPath: string) {
     process.env.FAST_REFRESH = 'false'
 
+    /**
+     * start WS server to communicate data between cell view and server
+     */
+    const wsPort = await getPort()
+    const wss = new WebSocketServer({ port: wsPort })
+    wss.on('connection', function connection(ws) {
+      ws.on('message', function message(data) {
+        console.log('SOWASS')
+        process.send!({ type: ServerMessages.wsEvent, message: data.toString() })
+      })
+    })
+
     const config: InlineConfig = {
       root: rootPath,
-      server: { port },
+      server: {
+        port,
+        proxy: {
+          '/ws': {
+            target: `ws://localhost:${wsPort}`,
+            ws: true
+          }
+        }
+      },
       plugins: [
         cellResult({ projectRoot: rootPath })
       ]

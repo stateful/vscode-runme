@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "rootDir": ".",
     "target": "ES2022",
     "module": "esnext",
-    "rootDir": ".",
   },
   "exclude": []
 }

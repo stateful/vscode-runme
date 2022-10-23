@@ -76,7 +76,7 @@ const viteServerConfig: Configuration = {
     })
   ],
   externals: [
-    'vite', 'yargs', 'yargs/helpers', 'get-port',
+    'vite', 'yargs', 'yargs/helpers', 'get-port', 'ws',
     '@babel/core', 'yargs-parser', '@vitejs/plugin-react',
     'vite-plugin-ssr', 'tailwindcss', '@sveltejs/vite-plugin-svelte'
   ],

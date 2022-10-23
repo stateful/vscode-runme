@@ -48,11 +48,10 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.script:
           const script = payload.output as CellOutput<OutputType.script>['output']
-          const iframe = document.createElement('iframe')
-          const iframeSrc = `http://localhost:${script.port}/${script.filename}`
-          iframe.setAttribute('src', iframeSrc)
-          iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
-          element.appendChild(iframe)
+          const scriptOutput = document.createElement('script-output')
+          scriptOutput.setAttribute('port', JSON.stringify(script.port))
+          scriptOutput.setAttribute('filename', script.filename)
+          element.appendChild(scriptOutput)
           break
         case OutputType.outputItems:
           const outputItemElem = document.createElement('shell-output-items')

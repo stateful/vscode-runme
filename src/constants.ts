@@ -19,7 +19,15 @@ export enum ClientMessages {
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
   promote = 'deno:promoteDeployment',
-  prod = 'vercel:promotePreview'
+  prod = 'vercel:promotePreview',
+  scriptLog = 'script:log',
+  scriptError = 'script:error',
+  frameHeight = 'script:frameHeight'
+}
+
+export enum ServerMessages {
+  renderFile = 'server:renderFile',
+  wsEvent = 'server:wsEvent'
 }
 
 export const CONFIGURATION_SHELL_DEFAULTS = {

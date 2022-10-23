@@ -10,13 +10,15 @@ export default function (code: string, filename: string, attributes: Record<stri
 
     ${htmlSection}
   `
-  const html = getHTMLTemplate(/*html*/`
+
+  const htmlToInject = /*html*/`
     <div id="root"></div>
     <script type="module">
       import App from '${__dirname}/${filename}.svelte'
       const app = new App({ target: document.getElementById('root') })
     </script>
-  `, undefined, attributes)
+  `
+  const html = getHTMLTemplate({ htmlSection: htmlToInject, attributes, filename })
 
   return { html, svelte }
 }

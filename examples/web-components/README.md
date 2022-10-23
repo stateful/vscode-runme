@@ -2,9 +2,7 @@
 
 With Runme you can develop web components directly in your notebook. Here are some examples from some of the popular front-end frameworks.
 
-## Basic Scripting
-
-You can attach your own elements through simple scripting:
+## Create Elements through Scripts
 
 ```js
 const elem = document.createElement('b')

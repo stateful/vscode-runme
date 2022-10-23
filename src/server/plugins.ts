@@ -4,8 +4,9 @@ import path from 'node:path'
 
 import type { Plugin } from 'vite'
 
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-const extRoot = path.resolve(__dirname, '..', '..')
+import { ServerMessages } from '../constants'
+import type { ServerMessage } from '../types'
+
 const EXTERNAL_DEPENDENCIES = [
   'react/jsx-dev-runtime',
   'preact/hooks',
@@ -18,7 +19,16 @@ const SVELTE_HMR_DEPS = [
   'runtime/svelte-hooks.js'
 ]
 
+const virtualFS = new Map<string, string>()
+
 export function cellResult (options: { projectRoot: string }): Plugin {
+  process.on('message', (message: ServerMessage<ServerMessages>) => {
+    if (message.type === ServerMessages.renderFile) {
+      const msg = message as ServerMessage<ServerMessages.renderFile>
+      virtualFS.set(`${msg.message.filename}.${msg.message.ext}`, msg.message.src)
+    }
+  })
+
   return {
     name: 'notebookCellResult',
     enforce: 'pre',
@@ -42,15 +52,8 @@ export function cellResult (options: { projectRoot: string }): Plugin {
     async load (scriptUrl) {
       if (scriptUrl.startsWith('/_notebook')) {
         const filename = path.parse(scriptUrl).base
-        const templatePath = path.join(extRoot, 'out', filename)
-        const hasAccess = await fs.access(templatePath).then(() => true, () => false)
-
-        if (!hasAccess) {
-          return
-        }
-
-        const scriptFile = (await fs.readFile(templatePath, 'utf-8')).toString()
-        return scriptFile
+        console.log(`[Runme] serve virtual file ${filename}`)
+        return virtualFS.get(filename)
       }
     },
     configureServer (server) {
@@ -66,15 +69,13 @@ export function cellResult (options: { projectRoot: string }): Plugin {
             return next()
           }
 
-          const templatePath = path.join(extRoot, 'out', req.url.slice(1))
-          const hasAccess = await fs.access(templatePath).then(() => true, () => false)
-
-          if (!hasAccess) {
+          const file = virtualFS.get(req.url.slice(1))
+          if (!file) {
             return next()
           }
 
-          const tpl = await fs.readFile(templatePath, 'utf-8')
-          res.end(await server.transformIndexHtml(`${req.url}`, tpl))
+          console.log(`[Runme] serve custom file template for ${req.url}`)
+          res.end(await server.transformIndexHtml(`${req.url}`, file))
           next()
         })
       }

@@ -1,4 +1,4 @@
-import { OutputType, ClientMessages } from './constants'
+import { OutputType, ClientMessages, ServerMessages } from './constants'
 
 export interface ParsedReadmeEntry {
   /**
@@ -87,4 +87,36 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
+  [ClientMessages.scriptLog]: LogEvent
+  [ClientMessages.scriptError]: ErrorEvent
+  [ClientMessages.frameHeight]: {
+    height: number
+    filename: string
+  }
+}
+
+interface ErrorEvent {
+  type: string
+  message: string
+  filename: string
+}
+
+interface LogEvent {
+  type: 'log' | 'info' | 'warn'
+  args: any[]
+  filename: string
+}
+
+export interface ServerMessage <T extends ServerMessages> {
+  type: T
+  message: ServerMessagePayload[T]
+}
+
+export interface ServerMessagePayload {
+  [ServerMessages.renderFile]: {
+    filename: string
+    ext: string
+    src: string
+  }
+  [ServerMessages.wsEvent]: unknown
 }

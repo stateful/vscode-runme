@@ -1,9 +1,10 @@
 import vscode, { ExtensionContext, NotebookEditor } from 'vscode'
 
-import type { ClientMessage } from '../types'
-import { ClientMessages } from '../constants'
+import type { ClientMessage, ServerMessage } from '../types'
+import { ClientMessages, ServerMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
+import { ViteServerProcess } from './server'
 import executor from './executors'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey } from './utils'
@@ -11,6 +12,7 @@ import { resetEnv, getKey } from './utils'
 import './wasm/wasm_exec.js'
 
 export class Kernel implements vscode.Disposable {
+  #server: ViteServerProcess
   #disposables: vscode.Disposable[] = []
   #controller = vscode.notebooks.createNotebookController(
     'runme',
@@ -19,7 +21,9 @@ export class Kernel implements vscode.Disposable {
   )
   protected messaging = vscode.notebooks.createRendererMessaging('runme-renderer')
 
-  constructor(protected context: ExtensionContext) {
+  constructor(protected context: ExtensionContext, server: ViteServerProcess) {
+    this.#server = server
+
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'
@@ -29,6 +33,18 @@ export class Kernel implements vscode.Disposable {
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
     )
+
+    /**
+     * append iframe log events to cell output
+     */
+    this.#server.on(ServerMessages.wsEvent, (param: any) => {
+      const message = JSON.parse(param.message.toString()) as ServerMessage<ServerMessages.wsEvent>['message']
+      this.messaging.postMessage(message)
+    })
+  }
+
+  get server () {
+    return this.#server
   }
 
   dispose () {
