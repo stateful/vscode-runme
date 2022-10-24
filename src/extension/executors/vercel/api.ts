@@ -42,15 +42,14 @@ export function listTeams (headers = {}): Promise<VercelTeams> {
   return got('https://api.vercel.com/v2/teams', { headers }).json()
 }
 export function createProject (projectName: string, headers = {}): Promise<VercelProject> {
-  console.log('CREATE', projectName)
-
   return got(
     'https://api.vercel.com/v9/projects',
     {
       headers,
       method: 'POST',
       json: {
-        name: projectName
+        name: projectName,
+        framework: null
       }
     }
   ).json()
