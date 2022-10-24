@@ -37,9 +37,14 @@ async function taskExecutor(
   /**
    * find export commands
    */
-  const code = doc.getText().endsWith('\n') ? doc.getText() : `${doc.getText()}\n`
-  const exportMatches = (code.match(EXPORT_REGEX) || [])
-    .map((m) => m.trim())
+  const lines = doc.getText().split('\n')
+  const exportMatches: string[] = []
+  for (const l of lines) {
+    const code = l.endsWith('\n') ? l : `${l}\n`
+    const exps = (code.match(EXPORT_REGEX) || [])
+      .map((m) => m.trim())
+    exportMatches.push(...exps)
+  }
   const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
     const [key, ph] = e.slice('export '.length).split('=')
