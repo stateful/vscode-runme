@@ -188,6 +188,7 @@
     "@vitejs/plugin-vue": "^3.1.0",
     "@vscode/vscode-languagedetection": "^1.0.21",
     "@vscode/webview-ui-toolkit": "^1.1.0",
+    "filenamify": "^5.1.1",
     "get-port": "^6.1.2",
     "got": "^12.5.0",
     "lit": "^2.3.1",

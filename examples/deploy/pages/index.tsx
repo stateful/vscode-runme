@@ -1,6 +1,7 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import Image from 'next/image'
+
 import styles from '../styles/Home.module.css'
 
 const Home: NextPage = () => {
@@ -42,6 +43,7 @@ const Home: NextPage = () => {
           </a>
 
           <a
+            // eslint-disable-next-line max-len
             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             className={styles.card}
           >

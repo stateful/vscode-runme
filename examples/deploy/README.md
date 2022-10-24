@@ -13,7 +13,7 @@ yarn install
 then, run the development server:
 
 ```sh
-yarn dev
+next dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

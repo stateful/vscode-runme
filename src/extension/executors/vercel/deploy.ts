@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+import sanitize from 'filenamify'
 import { createDeployment } from '@vercel/client'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
 
@@ -11,6 +12,7 @@ import { listTeams, getUser, getProject, getProjects, createProject, VercelProje
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
 import { VERCEL_DIR } from './constants'
 
+const REPLACEMENT = '-'
 const LINK_OPTIONS = [
   'Link Project to existing Vercel project',
   'Create a new Vercel Project'
@@ -73,16 +75,19 @@ export async function deploy (
         await createVercelFile(cwd, org?.id!, projectToLink.id)
         await updateGitIgnore(cwd, orgSlug!, projectToLink.name)
       } else {
+        const suggestion = cwd.split('/').pop()
         const projectName = await window.showInputBox({
           title: 'Vercel Project Name',
-          prompt: 'Enter a name for the new project!'
+          prompt: 'Enter a name for the new project!',
+          value: suggestion
         })
 
         if (!projectName) {
           throw new Error('Please enter a valid project name!')
         }
 
-        const project = await createProject(projectName, headers)
+        const sanitizedName = sanitize(projectName, { replacement: REPLACEMENT }).replace(' ', REPLACEMENT)
+        const project = await createProject(sanitizedName, headers)
         window.showInformationMessage(`Created new project ${orgSlug}/${project.name}`)
         await createVercelFile(cwd, org?.id!, project.id)
         await updateGitIgnore(cwd, orgSlug!, project.name)
