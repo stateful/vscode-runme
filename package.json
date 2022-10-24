@@ -89,6 +89,9 @@
             "filenamePattern": "*.md"
           },
           {
+            "filenamePattern": "*.mdx"
+          },
+          {
             "filenamePattern": "*.mdi"
           }
         ]
