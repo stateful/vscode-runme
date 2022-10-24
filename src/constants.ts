@@ -10,7 +10,7 @@ export enum OutputType {
   html = 'stateful.runme/html-stdout',
   script = 'stateful.runme/script-stdout',
   outputItems = 'stateful.runme/output-items',
-  error = 'error'
+  error = 'stateful.runme/error'
 }
 
 export enum ClientMessages {
