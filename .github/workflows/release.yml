@@ -122,6 +122,7 @@ jobs:
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
       - name: Publish to Open VSX Registry (Edge)
         uses: HaaLeo/publish-vscode-extension@v1
+        timeout-minutes: 20
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
         with:
           preRelease: true
@@ -129,12 +130,14 @@ jobs:
           extensionFile: ./runme-${{ env.RELEASE_VERSION }}.vsix
       - name: Publish to Open VSX Registry (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
+        timeout-minutes: 20
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./runme-${{ env.RELEASE_VERSION }}.vsix
       - name: Push Tags
+        if: always()
         run: |
           git log -1 --stat
           git push origin main --tags
@@ -142,6 +145,7 @@ jobs:
           export GIT_TAG=$(git describe --tags --abbrev=0)
           echo "GIT_TAG=$GIT_TAG" >> $GITHUB_ENV
       - name: GitHub Release
+        if: always()
         uses: ncipollo/release-action@v1
         with:
           artifacts: "./runme-*"
