@@ -18,6 +18,35 @@ const Home: NextPage = () => {
           Welcome to <a href="https://nextjs.org">Next.js!</a>
         </h1>
 
+        <h2>
+          Deployed via
+          { /* eslint-disable-next-line @next/next/no-img-element */ }
+          <img
+            src="https://runme.dev/runme-logo.svg"
+            alt="Runme play button"
+            width={50}
+            style={{
+              margin: '0 15px 0 30px',
+              position: 'relative',
+              top: 15
+            }}
+          />
+          <span style={{
+            backgroundImage: 'linear-gradient(to right, #a78bfa, #db2777)',
+            backgroundClip: 'text',
+            // @ts-expect-error
+            '-webkit-background-clip': 'text',
+            color: 'transparent',
+            fontSize: 55,
+            fontWeight: 800,
+            position: 'relative',
+            top: 7,
+            fontFamily: '\'Poppins\', sans-serif'
+          }}>
+            runme
+          </span>
+        </h2>
+
         <p className={styles.description}>
           Get started by editing{' '}
           <code className={styles.code}>pages/index.tsx</code>
