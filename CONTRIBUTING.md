@@ -56,18 +56,26 @@ To get the code base, have [git](https://git-scm.com/downloads) installed and ru
 git clone git@github.com:stateful/vscode-runme.git
 ```
 
+optionally install the GitHub CLI to streamline downloading the WASM binary:
+
+```sh
+# macOS
+brew install gh
+# other platforms: https://github.com/cli/cli#installation
+```
+
 then ensure to install all project dependencies:
 
 ```sh
 cd vscode-runme
 nvm install
-yarn install
+GITHUB_TOKEN=$(gh auth token) yarn install
 ```
 
 This should also download the Runme CLI WASM file. If an error happened follow the error instructions and re-run the download, via:
 
 ```sh
-yarn download:wasm
+GITHUB_TOKEN=$(gh auth token) yarn download:wasm
 ```
 
 ### Build Project
