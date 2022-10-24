@@ -103,8 +103,17 @@ export async function deploy (
     /**
      * deploy application
      */
-    const clientParams = { token, path: cwd }
-    const deployParams = { name: project.name }
+    const clientParams = {
+      token,
+      path: cwd,
+      rootDirectory: '.'
+    }
+    const deployParams = {
+      name: project.name,
+      projectSettings: {
+        framework: null
+      }
+    }
     for await (const event of createDeployment(clientParams, deployParams)) {
       exec.replaceOutput(new NotebookCellOutput([
         NotebookCellOutputItem.json(<CellOutput<OutputType.vercel>>{
