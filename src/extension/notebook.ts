@@ -5,8 +5,9 @@ import vscode from 'vscode'
 
 import type { ParsedDocument } from '../types'
 
-import { PLATFORM_OS } from './constants'
+import executor from './executors'
 import Languages from './languages'
+import { PLATFORM_OS } from './constants'
 
 declare var globalThis: any
 
@@ -83,7 +84,8 @@ export class Serializer implements vscode.NotebookSerializer {
         acc.push(cell)
       }
 
-      if (s.lines) {
+      const isSupported = Object.keys(executor).includes(s.language || '')
+      if (s.lines && isSupported) {
         const lines = s.lines.join('\n')
         const language = s.language === 'shell' ? 'sh' : s.language
         const cell = new vscode.NotebookCellData(
@@ -106,6 +108,14 @@ export class Serializer implements vscode.NotebookSerializer {
         /**
          * code block
          */
+        acc.push(cell)
+      } else if (s.language) {
+        const cell = new vscode.NotebookCellData(
+          vscode.NotebookCellKind.Markup,
+          `\`\`\`${s.language}\n${(s.lines || []).join('\n').trim()}\n\`\`\``,
+          'markdown'
+        )
+        cell.metadata = { id: i }
         acc.push(cell)
       }
       return acc

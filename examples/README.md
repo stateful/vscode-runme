@@ -120,3 +120,11 @@ You can copy also results from the inline executed shell:
 ```sh { interactive=false }
 openssl rand -base64 32
 ```
+
+## Non-Supported Languages
+
+These are shown as simple markdown, e.g:
+
+```py { readonly=true }
+print("Hello World")
+```
