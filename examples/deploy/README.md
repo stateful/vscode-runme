@@ -67,7 +67,20 @@ vercel projects list 2>&1 | tail -n +5
 
 Great! Let's attempt a preview deploy.
 
-Vercel will ask you to add a project if a project is not set up yet:
+Set up your project name
+
+```sh
+export PROJECT_NAME=Name of your project
+echo "Your project name is set to: $PROJECT_NAME"
+```
+
+Link your local directory to a project
+
+```sh
+vercel link . -p $PROJECT_NAME
+```
+
+then kick off a preview deploy
 
 ```sh { interactive=false }
 vercel

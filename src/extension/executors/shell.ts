@@ -28,13 +28,27 @@ async function shellExecutor(
     outputItems.push(data.toString().trim())
     let item = NotebookCellOutputItem.stdout(outputItems.join('\n'))
 
-    // hacky for now
-    if (script.trim() === 'vercel') {
+    // hacky for now, maybe inheritence is a fitting pattern
+    if (script.trim().endsWith('vercel')) {
+      const states = [
+        'Queued',
+        'Building',
+        'Completing',
+      ].reverse()
+
+      const status = (states.find((s) =>
+        outputItems.find(
+          (oi) => oi.toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
+        )
+      ) || 'pending').replaceAll('Completing', 'complete')
+      // should get this from API instead
+      const projectName = env['PROJECT_NAME']
+
       const json = <CellOutput<OutputType.vercel>>{
         type: OutputType.vercel,
-        output: { outputItems }
+        output: { outputItems, payload: { status, projectName } }
       }
-      console.log(json)
+      console.log(JSON.stringify(json))
       return exec.replaceOutput(new NotebookCellOutput([
         NotebookCellOutputItem.json(json, OutputType.vercel)
       ]))
