@@ -13,13 +13,21 @@ async function shellExecutor(
   cwd: string,
   env: Record<string, string>
 ): Promise<boolean> {
+  let postScript = script
+  let prod = false
+  if (process.env['vercelProd'] === 'true') {
+    prod = true
+    postScript = `${postScript} --prod`
+    process.env['vercelProd'] = 'false'
+  }
   const outputItems: string[] = []
-  const child = spawn(script, { cwd, shell: true, env })
+  const child = spawn(postScript, { cwd, shell: true, env })
   console.log(`[Runme] Started process on pid ${child.pid}`)
   /**
    * this needs more work / specification
    */
   const contentType = exec.cell.metadata.attributes?.['output']
+  const id = exec.cell.metadata['id']
 
   /**
    * handle output for stdout and stderr
@@ -46,7 +54,7 @@ async function shellExecutor(
 
       const json = <CellOutput<OutputType.vercel>>{
         type: OutputType.vercel,
-        output: { outputItems, payload: { status, projectName } }
+        output: { outputItems, payload: { status, projectName, id, prod } }
       }
       console.log(JSON.stringify(json))
       return exec.replaceOutput(new NotebookCellOutput([

@@ -1,4 +1,4 @@
-import vscode, { ExtensionContext } from 'vscode'
+import vscode, { ExtensionContext, NotebookEditor } from 'vscode'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -36,7 +36,8 @@ export class Kernel implements vscode.Disposable {
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  async #handleRendererMessage ({ message }: { message: ClientMessage<ClientMessages> }) {
+  // eslint-disable-next-line max-len
+  async #handleRendererMessage({ editor, message }: { editor: NotebookEditor, message: ClientMessage<ClientMessages> }) {
     if (message.type === ClientMessages.promote) {
       const payload = message as ClientMessage<ClientMessages.promote>
       const token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
@@ -50,6 +51,14 @@ export class Kernel implements vscode.Disposable {
         type: ClientMessages.deployed,
         output: deployed
       })
+    } else if (message.type === ClientMessages.prod) {
+      const payload = message as ClientMessage<ClientMessages.prod>
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const cell = editor.notebook.cellAt(payload.output.cellIndex)
+      if (cell.executionSummary?.success) {
+        process.env['vercelProd'] = 'true'
+        return this._doExecuteCell(cell)
+      }
     } else if (message.type === ClientMessages.infoMessage) {
       return vscode.window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {

@@ -61,6 +61,9 @@ export interface ClientMessagePayload {
     id: string
     productionDeployment: string
   }
+  [ClientMessages.prod]: {
+    cellIndex: number
+  }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
 }

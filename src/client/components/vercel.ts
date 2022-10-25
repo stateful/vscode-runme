@@ -2,6 +2,8 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
+import { ClientMessages } from '../../constants'
+import type { ClientMessage } from '../../types'
 import { getContext } from '../utils'
 
 @customElement('vercel-output')
@@ -53,6 +55,12 @@ export class VercelOutput extends LitElement {
     }
 
     const deployed = this.content.payload.status.toLowerCase() === 'complete'
+    const prod = this.content.payload.prod === true
+
+    if (deployed && prod) {
+      this.#promoted = true
+      this.requestUpdate()
+    }
 
     return html`<section>
       <img src="https://www.svgrepo.com/show/354512/vercel.svg">
@@ -75,19 +83,31 @@ export class VercelOutput extends LitElement {
         ${when(deployed && supportsMessaging && !this.#promoted, () => html`
           <vscode-button
             class="btnPromote"
-            @click="${() => {}}"
+            @click="${() => {this.#promote()}}"
             .disabled=${this.#isPromoting}
           >
             🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
           </vscode-button>
         `)}
         ${when(deployed && supportsMessaging && this.#promoted, () => html`
-          <p>
-            🚀 Promoted
-          </p>
+          👌 Promoted
         `)}
       </div>
     </p>
     </section>`
+  }
+
+  #promote () {
+    const ctx = getContext()
+    if (!ctx.postMessage) {
+      return
+    }
+
+    this.#isPromoting = true
+    this.requestUpdate()
+    ctx.postMessage(<ClientMessage<ClientMessages.prod>>{
+      type: ClientMessages.prod,
+      output: { cellIndex: this.content.payload.id }
+    })
   }
 }
