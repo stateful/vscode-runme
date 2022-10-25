@@ -47,10 +47,14 @@ export class VercelOutput extends LitElement {
     return html`<section>
       <img src="https://www.svgrepo.com/show/354513/vercel-icon.svg">
       <div>
-        <h4>Deployment</h4>
-        <vscode-link href="${this.content.payload.inspectorUrl}">${this.content.payload.url}</vscode-link>
-        <h4>Name</h4>
-        <vscode-link href="https://${this.content.payload.name}.vercel.app">${this.content.payload.name}</vscode-link>
+        <h4>Inspect Deployment</h4>
+        <vscode-link href="${this.content.payload.inspectorUrl}">${this.content.payload.inspectorUrl}</vscode-link>
+        <h4>Project Name</h4>
+        ${this.content.payload.name}
+        <h4>Url</h4>
+        ${this.content.payload.alias.map((url: string) => /*html*/html`
+          <vscode-link href="https://${url}">${url}</vscode-link><br />
+        `)}
       </div>
       <div>
         <h4>Created At</h4>

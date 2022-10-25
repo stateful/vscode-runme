@@ -54,13 +54,13 @@ export async function vercel (
    * special commands handled by the kernel
    */
   if (vercelCommand === 'deploy') {
-    return deploy(exec, doc)
+    return deploy.call(this, exec, doc)
   }
   if (vercelCommand === 'login') {
-    return login(exec, parsedArgv)
+    return login.call(this, exec, parsedArgv)
   }
   if (vercelCommand === 'logout') {
-    return logout(exec)
+    return logout.call(this, exec)
   }
 
   /**

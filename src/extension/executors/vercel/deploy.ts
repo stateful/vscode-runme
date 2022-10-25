@@ -2,13 +2,16 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import sanitize from 'filenamify'
-import { createDeployment } from '@vercel/client'
+import frameworkList, { Framework } from '@vercel/frameworks'
+import { createDeployment, VercelClientOptions, DeploymentOptions } from '@vercel/client'
 import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
 
+import { renderError } from '../utils'
 import { OutputType } from '../../../constants'
+import type { Kernel } from '../../kernel'
 import type { CellOutput } from '../../../types'
 
-import { listTeams, getUser, getProject, getProjects, createProject, VercelProject } from './api'
+import { listTeams, getUser, getProject, getProjects, createProject, cancelDeployment, VercelProject } from './api'
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
 import { VERCEL_DIR } from './constants'
 
@@ -19,6 +22,7 @@ const LINK_OPTIONS = [
 ]
 
 export async function deploy (
+  this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
 ): Promise<boolean> {
@@ -40,6 +44,12 @@ export async function deploy (
       throw new Error('No token supplied')
     }
 
+    const clientParams: VercelClientOptions = {
+      token,
+      path: cwd,
+      debug: false
+    }
+    const deployParams: DeploymentOptions = {}
     const headers = { Authorization: `Bearer ${token}` }
 
     /**
@@ -72,6 +82,7 @@ export async function deploy (
           (selection) => projects.find((p) => p.name === selection[0].label)
         )
 
+        deployParams.name = projectToLink.name
         await createVercelFile(cwd, org?.id!, projectToLink.id)
         await updateGitIgnore(cwd, orgSlug!, projectToLink.name)
       } else {
@@ -86,41 +97,66 @@ export async function deploy (
           throw new Error('Please enter a valid project name!')
         }
 
-        const sanitizedName = sanitize(projectName, { replacement: REPLACEMENT }).replace(' ', REPLACEMENT)
+        const sanitizedName = sanitize(projectName, { replacement: REPLACEMENT })
+          .replace(/\s/g, REPLACEMENT)
+          .toLowerCase()
         const project = await createProject(sanitizedName, headers)
+        deployParams.name = project.name
         window.showInformationMessage(`Created new project ${orgSlug}/${project.name}`)
         await createVercelFile(cwd, org?.id!, project.id)
         await updateGitIgnore(cwd, orgSlug!, project.name)
       }
-    }
 
-    /**
-     * get project information (e.g. name to be able to deploy)
-     */
-    const { projectId } = JSON.parse((await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString())
-    const project = await getProject(projectId, headers)
+      /**
+       * have user pick framework
+       */
+      const framework = await quickPick<Framework>(
+        'Which framework preset are you using?',
+        frameworkList.map((f) => f.name),
+        (selection) => frameworkList.find((f) => f.name === selection[0].label)
+      )
+      deployParams.projectSettings = {
+        framework: framework.slug
+      }
+    } else {
+      /**
+       * get project information (e.g. name to be able to deploy)
+       */
+      const { projectId } = JSON.parse((await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString())
+      const project = await getProject(projectId, headers)
+      deployParams.name = project.name
+    }
 
     /**
      * deploy application
      */
-    const clientParams = {
-      token,
-      path: cwd,
-      rootDirectory: '.'
-    }
-    const deployParams = {
-      name: project.name,
-      projectSettings: {
-        framework: null
+    console.log(`[Runme] Deploy project "${deployParams.name}"`)
+    let deploymentId: string | null = null
+    let deployCanceled = false
+    this.context.subscriptions.push(exec.token.onCancellationRequested(async () => {
+      if (!deploymentId) {
+        return
       }
-    }
+      await cancelDeployment(deploymentId, headers)
+      deployCanceled = true
+    }))
     for await (const event of createDeployment(clientParams, deployParams)) {
+      if (event.type === 'error') {
+        renderError(exec, event.payload.message)
+        return false
+      }
+
+      deploymentId = event.payload.id
       exec.replaceOutput(new NotebookCellOutput([
         NotebookCellOutputItem.json(<CellOutput<OutputType.vercel>>{
           type: OutputType.vercel,
           output: event
         }, OutputType.vercel)
       ]))
+
+      if (deployCanceled) {
+        break
+      }
     }
   } catch (err: any) {
     exec.replaceOutput(new NotebookCellOutput([

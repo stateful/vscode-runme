@@ -54,3 +54,6 @@ export function createProject (projectName: string, headers = {}): Promise<Verce
     }
   ).json()
 }
+export function cancelDeployment (id: string, headers = {}): Promise<void> {
+  return got(`https://api.vercel.com/v12/deployments/${id}/cancel`, { headers, method: 'PATCH' }).json()
+}
