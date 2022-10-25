@@ -28,6 +28,18 @@ async function shellExecutor(
     outputItems.push(data.toString().trim())
     let item = NotebookCellOutputItem.stdout(outputItems.join('\n'))
 
+    // hacky for now
+    if (script.trim() === 'vercel') {
+      const json = <CellOutput<OutputType.vercel>>{
+        type: OutputType.vercel,
+        output: { outputItems }
+      }
+      console.log(json)
+      return exec.replaceOutput(new NotebookCellOutput([
+        NotebookCellOutputItem.json(json, OutputType.vercel)
+      ]))
+    }
+
     switch (contentType) {
       case 'application/json':
       item = NotebookCellOutputItem.json(<CellOutput<OutputType.shell>>{

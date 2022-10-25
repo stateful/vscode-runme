@@ -44,7 +44,8 @@ interface Payload {
   }
   [OutputType.vercel]: {
     type: string
-    payload: any
+    payload?: any
+    outputItems: string[]
   }
   [OutputType.outputItems]: string
 }

@@ -48,9 +48,9 @@ export function getKey (runningCell: vscode.TextDocument): keyof typeof executor
   if (text.indexOf('deployctl deploy') > -1) {
     return 'deno'
   }
-  if (text.startsWith('vercel ')) {
-    return 'vercel'
-  }
+  // if (text.startsWith('vercel ')) {
+  //   return 'vercel'
+  // }
   return runningCell.languageId as keyof typeof executor
 }
 

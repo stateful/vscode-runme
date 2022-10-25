@@ -40,27 +40,22 @@ export class VercelOutput extends LitElement {
       return html`⚠️ Ups! Something went wrong displaying the result!`
     }
 
-    if (!this.content.payload.name) {
-      return html`Starting Vercel Deployment...`
+    const deployUrl = this.content.outputItems.find((item: string) => item.indexOf('vercel.app') > -1)
+    if (!deployUrl) {
+      return html`Starting Vercel Deployment`
     }
 
     return html`<section>
-      <img src="https://www.svgrepo.com/show/354513/vercel-icon.svg">
+      <img src="https://www.svgrepo.com/show/354512/vercel.svg">
       <div>
-        <h4>Inspect Deployment</h4>
-        <vscode-link href="${this.content.payload.inspectorUrl}">${this.content.payload.inspectorUrl}</vscode-link>
+        <h4>Deployment</h4>
+        <vscode-link href="${deployUrl}">${deployUrl}</vscode-link>
         <h4>Project Name</h4>
-        ${this.content.payload.name}
-        <h4>Url</h4>
-        ${this.content.payload.alias.map((url: string) => /*html*/html`
-          <vscode-link href="https://${url}">${url}</vscode-link><br />
-        `)}
+        ${deployUrl}
       </div>
       <div>
-        <h4>Created At</h4>
-        ${(new Date(this.content.payload.createdAt)).toString()}
-        <h4>Status</h4>
-        ${this.content.payload.status.toLowerCase()}
+        <h4>Output</h4>
+        ${this.content.outputItems.join('\n')}
       </div>
     </section>`
   }

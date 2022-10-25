@@ -47,10 +47,30 @@ To deploy this application, first log into Vercel:
 vercel login
 ```
 
-then run:
+select your team, let's list them first:
+
+```sh { interactive=false }
+vercel teams ls 2>/dev/null
+```
+
+then select team (skip if no change required):
 
 ```sh
-vercel --prod
+vercel team switch
+```
+
+go on to list projects:
+
+```sh { interactive=false }
+vercel projects list 2>&1 | tail -n +5
+```
+
+Great! Let's attempt a preview deploy.
+
+Vercel will ask you to add a project if a project is not set up yet:
+
+```sh { interactive=false }
+vercel
 ```
 
 afterwards, you can optionally log out:
