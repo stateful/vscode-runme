@@ -56,7 +56,7 @@ export class Kernel implements vscode.Disposable {
       return vscode.window.showInformationMessage(message.output as string)
     }
 
-    console.log(`Unknown event type: ${message.type}`)
+    console.error(`[Runme] Unknown event type: ${message.type}`)
   }
 
   private async _executeAll(cells: vscode.NotebookCell[]) {
