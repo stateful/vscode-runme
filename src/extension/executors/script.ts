@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import {
@@ -11,6 +12,8 @@ import type { CellOutput } from '../../types'
 import type { Kernel } from '../kernel'
 
 import render, { SUPPORTED_FRAMEWORKS } from './script/index'
+
+const EXTERNAL_FILES = ['svelte', 'vue']
 
 async function scriptExecutor(
   this: Kernel,
@@ -32,7 +35,13 @@ async function scriptExecutor(
   ).toString('base64')
   const artifacts = render(framework, code, filename, attributes)
   for (const [ext, src] of Object.entries(artifacts)) {
-    console.log(`[Runme] define virtual file ${filename}.${ext}`)
+    if (EXTERNAL_FILES.includes(ext)) {
+      console.log(`[Runme] store external file ${filename}.${ext}`)
+      await fs.writeFile(path.resolve(__dirname, `${filename}.${ext}`), src)
+      continue
+    }
+
+    console.log(`[Runme] define virtual file ${filename}.${ext}`, src)
     this.server.emit(ServerMessages.renderFile, {
       filename,
       ext,
