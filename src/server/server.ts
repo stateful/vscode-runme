@@ -35,7 +35,6 @@ export class ViteServer {
     const wss = new WebSocketServer({ port: wsPort })
     wss.on('connection', function connection(ws) {
       ws.on('message', function message(data) {
-        console.log('SOWASS')
         process.send!({ type: ServerMessages.wsEvent, message: data.toString() })
       })
     })
@@ -58,15 +57,15 @@ export class ViteServer {
 
     const projectViteConfigPathJS = path.resolve(rootPath, 'vite.config.js')
     const projectViteConfigPathTS = path.resolve(rootPath, 'vite.config.ts')
-    const hasViteConfig: string | false = await Promise.any([
+    const viteConfigPath: string | false = await Promise.any([
       fs.access(projectViteConfigPathJS).then(() => projectViteConfigPathJS),
       fs.access(projectViteConfigPathTS).then(() => projectViteConfigPathTS)
     ]).catch(() => false)
-    if (hasViteConfig) {
-      console.log(`[Runme] project ${hasViteConfig} found`)
-      config.configFile = hasViteConfig
+    if (viteConfigPath) {
+      console.log(`[Runme] project ${viteConfigPath} found`)
+      config.configFile = viteConfigPath
     } else {
-      console.log(`[Runme] no project ${hasViteConfig} found, using custom setup`)
+      console.log(`[Runme] no Vite project found at ${rootPath}, using custom setup`)
       config.plugins?.push(
         vue(),
         svelte({

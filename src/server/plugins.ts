@@ -50,8 +50,9 @@ export function cellResult (options: { projectRoot: string }): Plugin {
       }
     },
     async load (scriptUrl) {
-      if (scriptUrl.startsWith('/_notebook')) {
-        const filename = path.parse(scriptUrl).base
+      const parsedUrl = scriptUrl.replace(/\.\.\//g, '')
+      if (parsedUrl.startsWith('/_notebook/')) {
+        const filename = path.parse(parsedUrl).base
         console.log(`[Runme] serve virtual file ${filename}`)
         return virtualFS.get(filename)
       }
