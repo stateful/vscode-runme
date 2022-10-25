@@ -20,10 +20,7 @@ const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|(.+(?=\n)))/gi
 const EXPORT_REGEX = /(\n*)export \w+=/gi
 
 export function closeTerminalByEnvID (id: string) {
-  const terminal = window.terminals.find((t) => (
-    t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
-  console.log('CLOSE IT?', !!terminal)
-
+  const terminal = window.terminals.find((t) => (t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
   if (terminal) {
     terminal.hide()
   }
