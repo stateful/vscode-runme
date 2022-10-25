@@ -18,7 +18,8 @@ export enum ClientMessages {
   errorMessage = 'common:errorMessage',
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
-  promote = 'deno:promoteDeployment'
+  promote = 'deno:promoteDeployment',
+  prod = 'vercel:promotePreview'
 }
 
 export const CONFIGURATION_SHELL_DEFAULTS = {

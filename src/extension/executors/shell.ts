@@ -13,13 +13,21 @@ async function shellExecutor(
   cwd: string,
   env: Record<string, string>
 ): Promise<boolean> {
+  let postScript = script
+  let prod = false
+  if (process.env['vercelProd'] === 'true') {
+    prod = true
+    postScript = `${postScript} --prod`
+    process.env['vercelProd'] = 'false'
+  }
   const outputItems: string[] = []
-  const child = spawn(script, { cwd, shell: true, env })
+  const child = spawn(postScript, { cwd, shell: true, env })
   console.log(`[Runme] Started process on pid ${child.pid}`)
   /**
    * this needs more work / specification
    */
   const contentType = exec.cell.metadata.attributes?.['output']
+  const id = exec.cell.metadata['id']
 
   /**
    * handle output for stdout and stderr
@@ -27,6 +35,32 @@ async function shellExecutor(
   function handleOutput(data: any) {
     outputItems.push(data.toString().trim())
     let item = NotebookCellOutputItem.stdout(outputItems.join('\n'))
+
+    // hacky for now, maybe inheritence is a fitting pattern
+    if (script.trim().endsWith('vercel')) {
+      const states = [
+        'Queued',
+        'Building',
+        'Completing',
+      ].reverse()
+
+      const status = (states.find((s) =>
+        outputItems.find(
+          (oi) => oi.toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
+        )
+      ) || 'pending').replaceAll('Completing', 'complete')
+      // should get this from API instead
+      const projectName = env['PROJECT_NAME']
+
+      const json = <CellOutput<OutputType.vercel>>{
+        type: OutputType.vercel,
+        output: { outputItems, payload: { status, projectName, id, prod } }
+      }
+      console.log(JSON.stringify(json))
+      return exec.replaceOutput(new NotebookCellOutput([
+        NotebookCellOutputItem.json(json, OutputType.vercel)
+      ]))
+    }
 
     switch (contentType) {
       case 'application/json':

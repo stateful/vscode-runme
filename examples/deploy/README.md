@@ -67,17 +67,23 @@ vercel projects list 2>&1 | tail -n +5
 
 Great! Let's attempt a preview deploy.
 
-Vercel will ask you to add a project if a project is not set up yet:
+Set up your project name
 
-```sh { interactive=false }
-echo "Deployment pending: "
-vercel 2> /dev/null
+```sh
+export PROJECT_NAME=Name of your project
+echo "Your project name is set to: $PROJECT_NAME"
 ```
 
-if you're happy with preview, go ahead and promote to production:
+Link your local directory to a project
+
+```sh
+vercel link . -p $PROJECT_NAME
+```
+
+then kick off a preview deploy and optionally promote to prod
+
 ```sh { interactive=false }
-echo "Promoting to production: "
-vercel --prod 1> /dev/null
+vercel
 ```
 
 afterwards, you can optionally log out:
