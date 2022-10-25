@@ -37,7 +37,9 @@ async function taskExecutor(
   /**
    * find export commands
    */
-  const lines = doc.getText().split('\n')
+  const rawText = doc.getText()
+  const isSingleLine = (rawText.match(EXPORT_REGEX) || []).length <= 1
+  const lines: string[] = isSingleLine ? [rawText] : rawText.split('\n')
   const exportMatches: string[] = []
   for (const l of lines) {
     const code = l.endsWith('\n') ? l : `${l}\n`
