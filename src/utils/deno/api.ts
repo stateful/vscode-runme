@@ -101,7 +101,7 @@ export class API {
 
       return true
     } catch (err: any) {
-      console.log(`[Deno API Error]: couldn't promote deployment: ${err.message}`)
+      console.error(`[Runme]: Deno API Error - couldn't promote deployment: ${err.message}`)
       return false
     }
   }

@@ -37,7 +37,6 @@ export async function login (
     await window.showQuickPick(LOGIN_OPTIONS)
   )
 
-
   if (!method) {
     renderError(exec, 'Please select login method.')
     return false
@@ -90,6 +89,7 @@ export async function login (
     const verifyResponse = await got(`https://api.vercel.com/registration/verify?token=${token}`).json() as any
     const configFilePath = await getConfigFilePath()
     await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
+    server.close()
   } catch (err: any) {
     exec.replaceOutput(new NotebookCellOutput([
       NotebookCellOutputItem.text(err.message)

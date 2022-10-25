@@ -10,7 +10,7 @@ export enum OutputType {
   html = 'stateful.runme/html-stdout',
   script = 'stateful.runme/script-stdout',
   outputItems = 'stateful.runme/output-items',
-  error = 'error'
+  error = 'stateful.runme/error'
 }
 
 export enum ClientMessages {
@@ -18,7 +18,8 @@ export enum ClientMessages {
   errorMessage = 'common:errorMessage',
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
-  promote = 'deno:promoteDeployment'
+  promote = 'deno:promoteDeployment',
+  prod = 'vercel:promotePreview'
 }
 
 export const CONFIGURATION_SHELL_DEFAULTS = {

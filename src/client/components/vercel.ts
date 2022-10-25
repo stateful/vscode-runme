@@ -1,8 +1,16 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { when } from 'lit/directives/when.js'
+
+import { ClientMessages } from '../../constants'
+import type { ClientMessage } from '../../types'
+import { getContext } from '../utils'
 
 @customElement('vercel-output')
 export class VercelOutput extends LitElement {
+  #isPromoting = false
+  #promoted = false
+
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
     :host {
@@ -36,28 +44,70 @@ export class VercelOutput extends LitElement {
 
   // Render the UI as a function of component state
   render() {
+    const supportsMessaging = Boolean(getContext().postMessage)
     if (!this.content) {
       return html`⚠️ Ups! Something went wrong displaying the result!`
     }
 
-    if (!this.content.payload.name) {
+    const deployUrl = this.content.outputItems.find((item: string) => item.indexOf('vercel.app') > -1)
+    if (!deployUrl) {
       return html`Starting Vercel Deployment...`
     }
 
+    const deployed = this.content.payload.status.toLowerCase() === 'complete'
+    const prod = this.content.payload.prod === true
+
+    if (deployed && prod) {
+      this.#promoted = true
+      this.requestUpdate()
+    }
+
     return html`<section>
-      <img src="https://www.svgrepo.com/show/354513/vercel-icon.svg">
+      <img src="https://www.svgrepo.com/show/354512/vercel.svg">
       <div>
         <h4>Deployment</h4>
-        <vscode-link href="${this.content.payload.inspectorUrl}">${this.content.payload.url}</vscode-link>
-        <h4>Name</h4>
-        <vscode-link href="https://${this.content.payload.name}.vercel.app">${this.content.payload.name}</vscode-link>
+        <vscode-link href="${deployUrl}">${deployUrl}</vscode-link>
+        <h4>Project Name</h4>
+        ${this.content.payload.projectName}
       </div>
       <div>
-        <h4>Created At</h4>
-        ${(new Date(this.content.payload.createdAt)).toString()}
+      <p>
+        <h4>Stage</h4>
+        ${deployed
+        ? ((supportsMessaging && this.#promoted) ? 'production' : 'preview')
+          : html`pending <vscode-spinner />`}
         <h4>Status</h4>
-        ${this.content.payload.status.toLowerCase()}
+        ${when(!deployed, () => html`
+          ${this.content.payload.status.toLowerCase()}
+        `)}
+        ${when(deployed && supportsMessaging && !this.#promoted, () => html`
+          <vscode-button
+            class="btnPromote"
+            @click="${() => {this.#promote()}}"
+            .disabled=${this.#isPromoting}
+          >
+            🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
+          </vscode-button>
+        `)}
+        ${when(deployed && supportsMessaging && this.#promoted, () => html`
+          👌 Promoted
+        `)}
       </div>
+    </p>
     </section>`
+  }
+
+  #promote () {
+    const ctx = getContext()
+    if (!ctx.postMessage) {
+      return
+    }
+
+    this.#isPromoting = true
+    this.requestUpdate()
+    ctx.postMessage(<ClientMessage<ClientMessages.prod>>{
+      type: ClientMessages.prod,
+      output: { cellIndex: this.content.payload.id }
+    })
   }
 }

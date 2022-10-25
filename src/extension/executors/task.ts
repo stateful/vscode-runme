@@ -20,8 +20,7 @@ const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|(.+(?=\n)))/gi
 const EXPORT_REGEX = /(\n*)export \w+=/gi
 
 export function closeTerminalByEnvID (id: string) {
-  const terminal = window.terminals.find((t) => (
-    t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
+  const terminal = window.terminals.find((t) => (t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
   if (terminal) {
     terminal.hide()
   }
@@ -159,13 +158,13 @@ async function taskExecutor(
   taskExecution.presentationOptions = {
     focus: true,
     // why doesn't this work with Slient?
-    reveal: isBackground ? TaskRevealKind.Always : TaskRevealKind.Always,
+    reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
     panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
-    exec.token.onCancellationRequested(() => {
+    this.context.subscriptions.push(exec.token.onCancellationRequested(() => {
       try {
         execution.terminate()
         closeTerminalByEnvID(RUNME_ID)
@@ -174,7 +173,7 @@ async function taskExecutor(
         console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
         resolve(1)
       }
-    })
+    }))
 
     tasks.onDidEndTaskProcess((e) => {
       const taskId = (e.execution as any)['_id']
@@ -218,6 +217,14 @@ async function taskExecutor(
       giveItTime,
     ])
   }
+
+  /**
+   * push task as disposable to context so that it is being closed
+   * when extension terminates
+   */
+  this.context.subscriptions.push({
+    dispose: () => execution.terminate()
+  })
 
   return !Boolean(await p)
 }

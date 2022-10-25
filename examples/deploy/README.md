@@ -1,55 +1,47 @@
-# Astro Starter Kit: Minimal
+# Deploy Next.js with Runme
 
-## 🚀 Project Structure
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-Inside of your Astro project, you'll see the following folders and files:
+## Getting Started
 
-```
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+First, install all dependencies:
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-Installs dependencies:
 ```sh
-npm install
+yarn install
 ```
 
-Starts local dev server at `localhost:3000`:
+then, run the development server:
+
+```sh { background=true }
+npx next dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
 ```sh
-npm run dev
+open http://localhost:3000
 ```
 
-Build your production site to `./dist/`:
-```sh
-npm run build
-```
+You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-Preview your build locally, before deploying:
-```sh
-npm run preview
-```
+[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
 
-## 👀 Want to learn more?
+The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Learn More
 
-# Deployment
+To learn more about Next.js, take a look at the following resources:
 
-To deploy the application, first log into Vercel:
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+To deploy this application, first log into Vercel:
 
 ```sh
 vercel login
@@ -75,17 +67,23 @@ vercel projects list 2>&1 | tail -n +5
 
 Great! Let's attempt a preview deploy.
 
-Vercel will ask you to add a project if a project is not set up yet:
+Set up your project name
 
-```sh { interactive=false }
-echo "Deployment pending: "
-vercel 2> /dev/null
+```sh
+export PROJECT_NAME=Name of your project
+echo "Your project name is set to: $PROJECT_NAME"
 ```
 
-if you're happy with preview, go ahead and promote to production:
+Link your local directory to a project
+
+```sh
+vercel link . -p $PROJECT_NAME
+```
+
+then kick off a preview deploy and optionally promote to prod
+
 ```sh { interactive=false }
-echo "Promoting to production: "
-vercel --prod 1> /dev/null
+vercel
 ```
 
 afterwards, you can optionally log out:

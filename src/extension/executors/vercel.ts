@@ -1,16 +1,15 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
-import {
-  TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution,
-} from 'vscode'
+import { TextDocument, NotebookCellExecution } from 'vscode'
 
-import { OutputType } from '../../constants'
-import type { CellOutput } from '../../types'
 import type { Kernel } from '../kernel'
 
 import { bash } from './task'
+import { renderError } from './utils'
 import { deploy, login, logout } from './vercel/index'
+
+const DEFAULT_COMMAND = 'deploy'
 
 export async function vercel (
   this: Kernel,
@@ -23,12 +22,7 @@ export async function vercel (
    * limit vercel commands to single lines
    */
   if (command.includes('\n')) {
-    exec.replaceOutput(new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutput<OutputType.error>>{
-        type: 'error',
-        output: 'Currently only one-liner Vercel commands are supported'
-      }, OutputType.vercel)
-    ]))
+    renderError(exec, 'Currently only one-liner Vercel commands are supported')
     return false
   }
 
@@ -54,19 +48,19 @@ export async function vercel (
     .option('github', { type: 'boolean' })
     .option('gitlab', { type: 'boolean' })
     .option('bitbucket', { type: 'boolean' })
-  const vercelCommand = ((await parsedArgv.argv)._)[0] || 'deploy'
+  const vercelCommand = ((await parsedArgv.argv)._)[0] || DEFAULT_COMMAND
 
   /**
    * special commands handled by the kernel
    */
   if (vercelCommand === 'deploy') {
-    return deploy(exec, doc)
+    return deploy.call(this, exec, doc)
   }
   if (vercelCommand === 'login') {
-    return login(exec, parsedArgv)
+    return login.call(this, exec, parsedArgv)
   }
   if (vercelCommand === 'logout') {
-    return logout(exec)
+    return logout.call(this, exec)
   }
 
   /**
