@@ -16,7 +16,8 @@ import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
-const EXPORT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|(.+(?=\n)))/g
+const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|(.+(?=\n)))/gi
+const EXPORT_REGEX = /(\n*)export \w+=/gi
 
 export function closeTerminalByEnvID (id: string) {
   const terminal = window.terminals.find((t) => (
@@ -43,7 +44,7 @@ async function taskExecutor(
   const exportMatches: string[] = []
   for (const l of lines) {
     const code = l.endsWith('\n') ? l : `${l}\n`
-    const exps = (code.match(EXPORT_REGEX) || [])
+    const exps = (code.match(EXPORT_EXTRACT_REGEX) || [])
       .map((m) => m.trim())
     exportMatches.push(...exps)
   }
