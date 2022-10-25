@@ -10,6 +10,8 @@ interface TemplateProps {
   filename: string
 }
 
+const DEFAULT_HEIGHT = 200
+
 export function getHTMLTemplate ({ htmlSection, scriptSection, attributes, filename }: TemplateProps) {
   return /*html*/`
   <html>
@@ -73,9 +75,9 @@ export function getHTMLTemplate ({ htmlSection, scriptSection, attributes, filen
           }
         }
 
-        console.log = consoleHandler('log')
-        console.error = consoleHandler('error')
-        console.warn = consoleHandler('warn')
+        // console.log = consoleHandler('log')
+        // console.error = consoleHandler('error')
+        // console.warn = consoleHandler('warn')
 
         // Connection opened
         socket.addEventListener('open', () => {
@@ -83,18 +85,16 @@ export function getHTMLTemplate ({ htmlSection, scriptSection, attributes, filen
             socket.send(JSON.stringify(earlyMessage))
           }
 
-          const component = document.body.querySelector('*')
-          if (!component) {
-            return
-          }
-          const height = component.getBoundingClientRect().height
-          socket.send(JSON.stringify({
-            type: 'script:frameHeight',
-            output: {
-              height,
-              filename: '${filename}'
-            }
-          }))
+          const observer = new ResizeObserver((entries) => {
+            socket.send(JSON.stringify({
+              type: 'script:frameHeight',
+              output: {
+                height: document.documentElement.scrollHeight || ${DEFAULT_HEIGHT},
+                filename: '${filename}'
+              }
+            }))
+          })
+          observer.observe(document.body)
         })
       </script>
       ${scriptSection
