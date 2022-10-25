@@ -184,6 +184,7 @@
     "@preact/preset-vite": "^2.4.0",
     "@sveltejs/vite-plugin-svelte": "^1.0.8",
     "@vercel/client": "^12.2.7",
+    "@vercel/frameworks": "^1.1.8",
     "@vitejs/plugin-react": "^2.1.0",
     "@vitejs/plugin-vue": "^3.1.0",
     "@vscode/vscode-languagedetection": "^1.0.21",
