@@ -128,6 +128,16 @@
             "scope": "machine",
             "default": true,
             "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
+          },
+          "runme.shell.workingDirectory": {
+            "type": "string",
+            "scope": "machine",
+            "default": "Relative to Markdown File",
+            "enum": [
+              "Relative to Markdown File",
+              "Relative to Workspace Directory"
+            ],
+            "markdownDescription": "Used working directory for shell or task executions."
           }
         }
       }

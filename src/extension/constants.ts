@@ -8,6 +8,13 @@ export const DEFAULT_ENV = {
   RUNME_TASK: 'true',
   PATH: process.env.PATH || ''
 }
+
 export const ENV_STORE = new Map<string, string>(
   Object.entries(DEFAULT_ENV)
 )
+
+export enum CWD_SETTING_OPTIONS {
+  RelativeToMarkdown = 'Relative to Markdown File',
+  RelativeToWorkspaceDir = 'Relative to Workspace Directory'
+}
+export const DEFAULT_CWD_OPTION = CWD_SETTING_OPTIONS.RelativeToMarkdown

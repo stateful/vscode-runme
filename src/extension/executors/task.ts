@@ -1,4 +1,3 @@
-import path from 'node:path'
 import cp from 'node:child_process'
 
 import {
@@ -13,6 +12,7 @@ import { ENV_STORE, PLATFORM_OS } from '../constants'
 import type { Kernel } from '../kernel'
 
 import { sh as inlineSh } from './shell'
+import { getShellWorkingDirectory } from './utils'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
@@ -31,7 +31,7 @@ async function taskExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
-  const cwd = path.dirname(doc.uri.fsPath)
+  const cwd = getShellWorkingDirectory(exec)
   let cellText = doc.getText()
 
   /**
