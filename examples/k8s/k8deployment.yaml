@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: runme-demo
+  labels:
+    app: runme-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: runme-demo
+  template:
+    metadata:
+      labels:
+        app: runme-demo
+    spec:
+      containers:
+      - name: runme-demo
+        image: runme/demo:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: runme-demo
+  labels:
+    app: runme-demo
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 3000
+  selector:
+    app: runme-demo
