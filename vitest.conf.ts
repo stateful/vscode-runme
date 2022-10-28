@@ -9,7 +9,7 @@ export default defineConfig({
      */
     exclude: [
       'dist', '.idea', '.git', '.cache',
-      '**/node_modules/**'
+      '**/node_modules/**', './examples/**'
     ],
     coverage: {
       enabled: false,
