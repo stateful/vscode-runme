@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import vscode from 'vscode'
 
 import { Serializer } from './notebook'
@@ -55,7 +57,7 @@ export async function activate (context: vscode.ExtensionContext) {
       const cliName: string = (cell.metadata?.['cliName'] || '').trim()
       const term = vscode.window.createTerminal(`CLI: ${cliName}`)
       term.show(false)
-      term.sendText(`runme run ${cliName}`)
+      term.sendText(`runme run ${cliName} --chdir="${path.dirname(cell.document.uri.fsPath)}"`)
     }),
 
     vscode.commands.registerCommand('runme.resetEnv', resetEnv)
