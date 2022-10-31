@@ -1,7 +1,6 @@
-import fs from 'node:fs'
-// import fsp from 'node:fs/promises'
-
-import vscode from 'vscode'
+import {
+  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind
+} from 'vscode'
 
 import type { ParsedDocument } from '../types'
 
@@ -16,27 +15,30 @@ declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
-export class Serializer implements vscode.NotebookSerializer {
+export class Serializer implements NotebookSerializer {
   private fileContent?: string
   private readonly ready: Promise<Error | void>
-  private readonly languages = Languages.fromContext(this.context)
+  private readonly languages: Languages
 
-  constructor(private context: vscode.ExtensionContext) {
+  constructor(private context: ExtensionContext) {
+    this.languages = Languages.fromContext(this.context)
+    this.ready = this.#initWasm()
+  }
+
+  async #initWasm () {
     const go = new globalThis.Go()
-    const wasmUri = vscode.Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
-    this.ready = WebAssembly.instantiate(
-      fs.readFileSync(wasmUri.fsPath),
-      go.importObject
-    ).then(
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
+    const wasmFile = await workspace.fs.readFile(wasmUri)
+    return WebAssembly.instantiate(wasmFile, go.importObject).then(
       (result) => { go.run(result.instance) },
       (err: Error) => {
-        console.error(err)
+        console.error(`[Runme] failed initialising WASM file: ${err.message}`)
         return err
       }
     )
   }
 
-  public async deserializeNotebook(content: Uint8Array): Promise<vscode.NotebookData> {
+  public async deserializeNotebook(content: Uint8Array): Promise<NotebookData> {
     const err = await this.ready
 
     const md = content.toString()
@@ -76,8 +78,8 @@ export class Serializer implements vscode.NotebookSerializer {
        * code block description
        */
       if (s.markdown) {
-        const cell = new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
+        const cell = new NotebookCellData(
+          NotebookCellKind.Markup,
           s.markdown,
           'markdown'
         )
@@ -89,8 +91,8 @@ export class Serializer implements vscode.NotebookSerializer {
       if (s.lines && isSupported) {
         const lines = s.lines.join('\n')
         const language = normalizeLanguage(s.language)
-        const cell = new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Code,
+        const cell = new NotebookCellData(
+          NotebookCellKind.Code,
           /**
            * for JS content we want to keep indentation
            */
@@ -112,8 +114,8 @@ export class Serializer implements vscode.NotebookSerializer {
         acc.push(cell)
       } else if (s.language) {
         const mdContent = s.content ?? (s.lines || []).join('\n').trim()
-        const cell = new vscode.NotebookCellData(
-          vscode.NotebookCellKind.Markup,
+        const cell = new NotebookCellData(
+          NotebookCellKind.Markup,
           `\`\`\`${s.language}\n${mdContent}\n\`\`\``,
           'markdown'
         )
@@ -121,13 +123,13 @@ export class Serializer implements vscode.NotebookSerializer {
         acc.push(cell)
       }
       return acc
-    }, [] as vscode.NotebookCellData[])
-    return new vscode.NotebookData(cells)
+    }, [] as NotebookCellData[])
+    return new NotebookData(cells)
   }
 
   public async serializeNotebook(
-    // data: vscode.NotebookData,
-    // token: vscode.CancellationToken
+    // data: NotebookData,
+    // token: CancellationToken
   ): Promise<Uint8Array> {
     // eslint-disable-next-line max-len
     throw new Error('Notebooks are currently read-only. Please edit markdown in file-mode (right click: "Open With...") instead.')
@@ -135,7 +137,7 @@ export class Serializer implements vscode.NotebookSerializer {
     // Below's impl is highly experimental and will leads unpredictable results
     // including data loss
     //
-    // const markdownFile = vscode.window.activeTextEditor?.document.fileName
+    // const markdownFile = window.activeTextEditor?.document.fileName
     // if (!markdownFile) {
     //   throw new Error('Could not detect opened markdown document')
     // }
@@ -174,8 +176,8 @@ export class Serializer implements vscode.NotebookSerializer {
   }
 
   #printCell (content: string, languageId = 'markdown') {
-    return new vscode.NotebookData([
-      new vscode.NotebookCellData(vscode.NotebookCellKind.Markup, content, languageId)
+    return new NotebookData([
+      new NotebookCellData(NotebookCellKind.Markup, content, languageId)
     ])
   }
 }

@@ -1,0 +1,44 @@
+import { vi } from 'vitest'
+
+export const notebooks = {
+  createNotebookController: vi.fn().mockReturnValue({}),
+  registerNotebookCellStatusBarItemProvider: vi.fn(),
+  createRendererMessaging: vi.fn().mockReturnValue({
+    postMessage: vi.fn(),
+    onDidReceiveMessage: vi.fn()
+  })
+}
+
+export const Uri = {
+  joinPath: vi.fn().mockReturnValue('/foo/bar'),
+  parse: vi.fn()
+}
+
+export const workspace = {
+  registerNotebookSerializer: vi.fn(),
+  fs: {
+    readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file'))
+  }
+}
+
+export const terminal = {
+  show: vi.fn(),
+  sendText: vi.fn()
+}
+
+export const window = {
+  showWarningMessage: vi.fn(),
+  showInformationMessage: vi.fn(),
+  createTerminal: vi.fn().mockReturnValue(terminal)
+}
+
+export const commands = {
+  registerCommand: vi.fn()
+}
+
+export const env = {
+  clipboard: {
+    writeText: vi.fn()
+  },
+  openExternal: vi.fn()
+}
