@@ -110,9 +110,10 @@ export class Serializer implements vscode.NotebookSerializer {
          */
         acc.push(cell)
       } else if (s.language) {
+        const mdContent = s.content ?? (s.lines || []).join('\n').trim()
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Markup,
-          `\`\`\`${s.language}\n${(s.lines || []).join('\n').trim()}\n\`\`\``,
+          `\`\`\`${s.language}\n${mdContent}\n\`\`\``,
           'markdown'
         )
         cell.metadata = { id: i }
