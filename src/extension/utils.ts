@@ -81,3 +81,13 @@ export function getCmdShellSeq(cellText: string, os: string): string {
 
   return `set -e; ${trimmed}`
 }
+
+export function normalizeLanguage(l?: string) {
+  switch (l) {
+    case 'zsh':
+    case 'shell':
+      return 'sh'
+    default:
+      return l
+  }
+}

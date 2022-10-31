@@ -8,6 +8,7 @@ import type { ParsedDocument } from '../types'
 import executor from './executors'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
+import { normalizeLanguage } from './utils'
 
 declare var globalThis: any
 
@@ -87,13 +88,13 @@ export class Serializer implements vscode.NotebookSerializer {
       const isSupported = Object.keys(executor).includes(s.language || '')
       if (s.lines && isSupported) {
         const lines = s.lines.join('\n')
-        const language = s.language === 'shell' ? 'sh' : s.language
+        const language = normalizeLanguage(s.language)
         const cell = new vscode.NotebookCellData(
           vscode.NotebookCellKind.Code,
           /**
            * for JS content we want to keep indentation
            */
-           LANGUAGES_WITH_INDENTATION.includes(s.language || '')
+           LANGUAGES_WITH_INDENTATION.includes(language || '')
             ? (s.content || '').trim()
             : lines.trim(),
           /**

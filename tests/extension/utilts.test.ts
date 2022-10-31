@@ -8,6 +8,7 @@ import {
   resetEnv,
   getKey,
   getCmdShellSeq,
+  normalizeLanguage,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -124,3 +125,19 @@ suite('getCmdShellSeq', () => {
   })
 })
 
+suite('normalizeLanguage', () => {
+  test('with zsh', () => {
+    const lang = normalizeLanguage('zsh')
+    expect(lang).toBe('sh')
+  })
+
+  test('with shell', () => {
+    const lang = normalizeLanguage('shell')
+    expect(lang).toBe('sh')
+  })
+
+  test('with sh', () => {
+    const lang = normalizeLanguage('sh')
+    expect(lang).toBe('sh')
+  })
+})
