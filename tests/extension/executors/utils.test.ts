@@ -68,7 +68,7 @@ test('can handle new lines before and after', async () => {
     uri: { fsPath: __dirname }
   }}}
   const cellText = await retrieveShellCommand(exec)
-  expect(cellText).toBe('\n\n\n')
+  expect(cellText).toBe('\n')
 })
 
 test('can populate pre-existing envs', async () => {
@@ -101,4 +101,17 @@ test('returns undefined if expression fails', async () => {
   }}}
   expect(await retrieveShellCommand(exec)).toBeUndefined()
   expect(window.showErrorMessage).toBeCalledTimes(1)
+})
+
+test('supports multiline exports', async () => {
+  const exec: any = { cell: { document: {
+    getText: vi.fn().mockReturnValue('export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"'),
+    uri: { fsPath: __dirname }
+  }}}
+  vi.mocked(window.showInputBox).mockImplementation(({ value, placeHolder }: any) => value || placeHolder)
+  const cellText = await retrieveShellCommand(exec)
+  expect(cellText).toBe('')
+  expect(ENV_STORE.get('bar')).toBe('foo')
+  expect(ENV_STORE.get('foo')).toBe('some\nmultiline\nexport')
+  expect(ENV_STORE.get('foobar')).toBe('barfoo')
 })

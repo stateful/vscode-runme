@@ -8,7 +8,7 @@ import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
-const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("(.|\n)+(?="))|('.+(?='))|(.+(?=\n)))/gi
+const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
 
 export function renderError (exec: NotebookCellExecution, output: string) {
   return exec.replaceOutput(new NotebookCellOutput([
@@ -43,22 +43,14 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
   let cellText = exec.cell.document.getText()
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
   const rawText = exec.cell.document.getText()
-  const lines: string[] = rawText.split('\n').filter(Boolean)
-  const exportMatches: string[] = []
-
-  for (const l of lines) {
-    const code = `${l}\n` // attach a new line so we can match the end of the value
-    const exps = (code.match(EXPORT_EXTRACT_REGEX) || [])
-      .map((m) => m.trim())
-    exportMatches.push(...exps)
-  }
+  const exportMatches: string[] = (rawText.endsWith('\n') ? rawText : `${rawText}\n`)
+    .match(EXPORT_EXTRACT_REGEX) || []
 
   const stateEnv = Object.fromEntries(ENV_STORE)
   for (const e of exportMatches) {
-    const [key, ph] = e.slice('export '.length).split('=')
+    const [key, ph] = e.trim().slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"') || ph.startsWith('\'')
-    const quoteChar = ph[0]
-    const placeHolder = hasStringValue ? ph.slice(1) : ph
+    const placeHolder = hasStringValue ? ph.slice(1, -1) : ph
 
     if (placeHolder.startsWith('$(') && placeHolder.endsWith(')')) {
       /**
@@ -105,15 +97,7 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
      * we don't want to run these exports anymore as we already stored
      * them in our extension state
      */
-    cellText = cellText.replace(
-      /**
-       * In case of `export foo="bar", our match includes the preceeding '"' but not
-       * the ending one. To properly cut out the line from the script we need to add
-       * it back again.
-       */
-      e + (hasStringValue ? quoteChar : ''),
-      ''
-    )
+    cellText = cellText.replace(e, '')
 
     /**
      * persist env variable in memory
