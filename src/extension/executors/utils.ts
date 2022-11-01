@@ -8,6 +8,9 @@ import { OutputType } from '../../constants'
 import type { CellOutput } from '../../types'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
+/**
+ * for understanding post into https://jex.im/regulex/
+ */
 const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
 
 export function renderError (exec: NotebookCellExecution, output: string) {
