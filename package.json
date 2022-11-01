@@ -143,7 +143,7 @@
     "postinstall": "npm run download:wasm",
     "test": "run-s test:*",
     "test:lint": "eslint src --ext ts",
-    "test:unit": "vitest",
+    "test:unit": "vitest --coverage",
     "watch": "npm run build:dev -- --watch"
   },
   "devDependencies": {

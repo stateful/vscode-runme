@@ -50,10 +50,13 @@ test('runCLICommand if CLI is not installed', async () => {
 })
 
 test('runCLICommand if CLI is installed', async () => {
-  const cell: any = { metadata: { cliName: 'foobar' } }
+  const cell: any = {
+    metadata: { cliName: 'foobar' },
+    document: { uri: { fsPath: '/foo/bar' }}
+  }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
   await runCLICommand(cell)
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)
-  expect(terminal.sendText).toBeCalledWith('runme run foobar')
+  expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
 })
