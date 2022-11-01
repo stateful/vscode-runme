@@ -104,7 +104,7 @@ const extensionConfig: Configuration = {
   ...baseConfig,
   target: 'node',
   entry: {
-    extension: path.resolve(__dirname, 'src', 'extension', 'extension.ts'),
+    extension: path.resolve(__dirname, 'src', 'extension', 'index.ts'),
   },
   externals: ['vscode', 'vercel', '@vercel/client', 'keyv'],
   output: {
