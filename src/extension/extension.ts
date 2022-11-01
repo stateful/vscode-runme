@@ -1,6 +1,5 @@
-import path from 'node:path'
 
-import vscode from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
 
 import { Serializer } from './notebook'
 import { Kernel } from './kernel'
@@ -8,65 +7,35 @@ import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider } from './provider/background'
 import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
-import { getTerminalByCell, resetEnv } from './utils'
+import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { openTerminal, runCLICommand, copyCellToClipboard } from './commands'
 
-// const viteProcess = new ViteServerProcess()
+export class RunmeExtension {
+  async initialise (context: ExtensionContext) {
+    const kernel = new Kernel(context)
+    // const viteProcess = new ViteServerProcess()
+    // await viteProcess.start()
 
-export async function activate (context: vscode.ExtensionContext) {
-  console.log('[Runme] Activating Extension')
-  const kernel = new Kernel(context)
-
-  // await viteProcess.start()
-  context.subscriptions.push(
-    kernel,
-    // viteProcess,
-    vscode.workspace.registerNotebookSerializer('runme', new Serializer(context), {
-      transientOutputs: true,
-      transientCellMetadata: {
-        inputCollapsed: true,
-        outputCollapsed: true,
-      },
-    }),
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
-    vscode.notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
-    vscode.commands.registerCommand('runme.openTerminal', (cell: vscode.NotebookCell) => {
-      const terminal = getTerminalByCell(cell)
-      if (!terminal) {
-        return vscode.window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
-      }
-      return terminal.show()
-    }),
-    vscode.commands.registerCommand('runme.copyCellToClipboard', (cell: vscode.NotebookCell) => {
-      vscode.env.clipboard.writeText(cell.document.getText())
-      return vscode.window.showInformationMessage('Copied cell to clipboard!')
-    }),
-
-    vscode.commands.registerCommand('runme.runCliCommand', async (cell: vscode.NotebookCell) => {
-      if (!await CliProvider.isCliInstalled()) {
-        return vscode.window.showInformationMessage(
-          'Runme CLI is not installed. Do you want to download it?',
-          'Download now'
-        ).then((openBrowser) => openBrowser && vscode.env.openExternal(
-          vscode.Uri.parse('https://github.com/stateful/runme/releases')
-        ))
-      }
-      const cliName: string = (cell.metadata?.['cliName'] || '').trim()
-      const term = vscode.window.createTerminal(`CLI: ${cliName}`)
-      term.show(false)
-      term.sendText(`runme run ${cliName} --chdir="${path.dirname(cell.document.uri.fsPath)}"`)
-    }),
-
-    vscode.commands.registerCommand('runme.resetEnv', resetEnv)
-  )
-
-  console.log('[Runme] Extension successfully activated')
-}
-
-// This method is called when your extension is deactivated
-export function deactivate () {
-  // viteProcess.stop()
+    context.subscriptions.push(
+      kernel,
+      // viteProcess,
+      workspace.registerNotebookSerializer('runme', new Serializer(context), {
+        transientOutputs: true,
+        transientCellMetadata: {
+          inputCollapsed: true,
+          outputCollapsed: true,
+        },
+      }),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
+      commands.registerCommand('runme.resetEnv', resetEnv),
+      commands.registerCommand('runme.openTerminal', openTerminal),
+      commands.registerCommand('runme.runCliCommand', runCLICommand),
+      commands.registerCommand('runme.copyCellToClipboard', copyCellToClipboard)
+    )
+  }
 }

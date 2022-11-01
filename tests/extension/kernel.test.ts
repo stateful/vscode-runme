@@ -4,31 +4,16 @@ import { Kernel } from '../../src/extension/kernel'
 import { resetEnv } from '../../src/extension/utils'
 import executors from '../../src/extension/executors'
 
+
+vi.mock('vscode')
 vi.mock('../../src/extension/utils', () => ({
   resetEnv: vi.fn(),
   getKey: vi.fn().mockReturnValue('foobar')
 }))
-
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() }
 }))
 
-vi.mock('vscode', () => ({
-  default: {
-    notebooks: {
-      createRendererMessaging: vi.fn().mockReturnValue({
-        postMessage: vi.fn(),
-        onDidReceiveMessage: vi.fn().mockReturnValue({ dispose: vi.fn() })
-      }),
-      createNotebookController: vi.fn().mockReturnValue({
-        createNotebookCellExecution: vi.fn().mockReturnValue({ start: vi.fn(), end: vi.fn() })
-      })
-    },
-    workspace: {
-      openTextDocument: vi.fn()
-    }
-  }
-}))
 
 test('dispose', () => {
   const k = new Kernel({} as any)
