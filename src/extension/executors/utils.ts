@@ -83,9 +83,10 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
       }
 
       stateEnv[key] = data
-    } else {
+    } else if (!placeHolder.includes('\n')) {
       /**
-       * ask user for value
+       * ask user for value only if placeholder has no new line as this would be absorbed by
+       * VS Code, see https://github.com/microsoft/vscode/issues/98098
        */
       stateEnv[key] = populateEnvVar(await window.showInputBox({
         title: `Set Environment Variable "${key}"`,
@@ -94,6 +95,8 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
         prompt: 'Your shell script wants to set some environment variables, please enter them here.',
         ...(hasStringValue ? { value: placeHolder } : {})
       }) || '', {...process.env, ...stateEnv })
+    } else {
+      stateEnv[key] = populateEnvVar(placeHolder)
     }
 
     /**

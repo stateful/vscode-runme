@@ -31,7 +31,7 @@ async function taskExecutor(
 ): Promise<boolean> {
   const cwd = path.dirname(doc.uri.fsPath)
   const cellText = await retrieveShellCommand(exec)
-  if (!cellText) {
+  if (typeof cellText !== 'string') {
     return false
   }
 

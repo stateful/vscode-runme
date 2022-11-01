@@ -114,4 +114,5 @@ test('supports multiline exports', async () => {
   expect(ENV_STORE.get('bar')).toBe('foo')
   expect(ENV_STORE.get('foo')).toBe('some\nmultiline\nexport')
   expect(ENV_STORE.get('foobar')).toBe('barfoo')
+  expect(window.showInputBox).toBeCalledTimes(2)
 })
