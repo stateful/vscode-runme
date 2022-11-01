@@ -4,7 +4,6 @@ import { expect, vi, test, beforeAll, afterAll, suite } from 'vitest'
 import {
   getExecutionProperty,
   getTerminalByCell,
-  populateEnvVar,
   resetEnv,
   getKey,
   getCmdShellSeq,
@@ -50,13 +49,6 @@ test('getTerminalByCell', () => {
     .toBe(undefined)
   expect(getTerminalByCell({ document: { fileName: 'foobar' }, index: 123} as any))
     .not.toBe(undefined)
-})
-
-test('populateEnvVar', () => {
-  expect(populateEnvVar(
-    'export PATH="/foo/$BAR/$LOO:$PATH:/$FOO"',
-    { PATH: '/usr/bin', FOO: 'foo', BAR: 'bar' }
-  )).toBe('export PATH="/foo/bar/:/usr/bin:/foo"')
 })
 
 test('resetEnv', () => {
