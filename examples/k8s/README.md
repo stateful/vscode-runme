@@ -34,7 +34,8 @@ $ docker ps | grep runme/demo:latest
 Stop the container via:
 
 ```sh
-$ docker stop <container-id>
+$ export RUNME_CID=<container-id>
+$ docker stop $RUNME_CID
 ```
 
 ## Step 2: Deploy application to Kubernetes Cluster with Linkerd
@@ -58,28 +59,34 @@ linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
 ```
 
 ### Build a config file for the deployment of the image onto the cluster
+
 ```sh { interactive=false }
 kubectl create -f k8deployment.yaml --save-config
 ```
 
 ### View Kubernetes deployments to see if the app was deployed to your cluster and see status
+
 ```sh { interactive=false }
 $ kubectl get deployments
 ```
 
 ### View Kubernetes pods to verify pods/replicas are running
+
 ```sh { interactive=false }
 $ kubectl get pods
 ```
 
 ### Verify logs in pod to see if the server for React app started
+
 ```sh { interactive=false }
-$ kubectl logs POD NAME
+$ kubectl logs $(kubectl get pods -o=jsonpath='{.items[0].metadata.name}')
 ```
 
 ### Port forward service
-```sh { interactive=false }
-$ kubectl port-forward services/<service-name> 3000:3000 -n default
+
+```sh { background=true }
+$ export SERVICE_NAME="runme-demo"
+$ kubectl port-forward services/$SERVICE_NAME 3000:3000 -n default
 ```
 
 ### View your web app on the service by visiting http://EXTERNAL-IP:PORT
@@ -108,4 +115,24 @@ Start Dashboard:
 
 ```sh { background=true }
 linkerd viz dashboard --verbose
+```
+
+### Cleanup everything:
+
+```sh
+$ kubectl get -n default deploy -o yaml \
+  | linkerd uninject - \
+  | kubectl delete -f -
+```
+
+```sh
+$ kubectl delete -f k8deployment.yaml
+```
+
+```sh
+$ linkerd viz uninstall | kubectl delete -f -
+```
+
+```sh
+$ linkerd uninstall | kubectl delete -f -
 ```
