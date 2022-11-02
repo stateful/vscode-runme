@@ -117,7 +117,7 @@ Start Dashboard:
 linkerd viz dashboard --verbose
 ```
 
-Cleanup everything:
+### Cleanup everything:
 
 ```sh
 $ kubectl get -n default deploy -o yaml \
