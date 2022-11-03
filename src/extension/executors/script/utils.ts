@@ -1,9 +1,12 @@
-import fs from 'node:fs'
-import path from 'node:path'
+import { workspace, Uri } from 'vscode'
 
-const tw = fs.readFileSync(path.resolve(__dirname, '..', 'assets', 'tw.min.css')).toString()
+let tw: string
 
 export function getHTMLTemplate (htmlSection: string, codeSection = '', attributes: Record<string, string>) {
+  if (!tw) {
+    tw = workspace.fs.readFile(Uri.joinPath(Uri.parse(__dirname), '..', 'assets', 'tw.min.css')).toString()
+  }
+
   return /*html*/`
   <html>
     <head>

@@ -12,12 +12,12 @@ export default defineConfig({
       '**/node_modules/**', 'examples'
     ],
     coverage: {
-      enabled: false,
+      enabled: true,
       exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts'],
-      lines: 100,
-      functions: 100,
-      branches: 100,
-      statements: 100
+      statements: 38,
+      branches: 90,
+      functions: 33,
+      lines: 38
     }
   }
 })

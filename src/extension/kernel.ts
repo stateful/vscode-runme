@@ -1,4 +1,4 @@
-import vscode, { ExtensionContext, NotebookEditor } from 'vscode'
+import { Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor, NotebookCell } from 'vscode'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -10,14 +10,14 @@ import { resetEnv, getKey } from './utils'
 
 import './wasm/wasm_exec.js'
 
-export class Kernel implements vscode.Disposable {
-  #disposables: vscode.Disposable[] = []
-  #controller = vscode.notebooks.createNotebookController(
+export class Kernel implements Disposable {
+  #disposables: Disposable[] = []
+  #controller = notebooks.createNotebookController(
     'runme',
     'runme',
     'RUNME'
   )
-  protected messaging = vscode.notebooks.createRendererMessaging('runme-renderer')
+  protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
     this.#controller.supportedLanguages = Object.keys(executor)
@@ -60,22 +60,22 @@ export class Kernel implements vscode.Disposable {
         return this._doExecuteCell(cell)
       }
     } else if (message.type === ClientMessages.infoMessage) {
-      return vscode.window.showInformationMessage(message.output as string)
+      return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {
-      return vscode.window.showInformationMessage(message.output as string)
+      return window.showInformationMessage(message.output as string)
     }
 
     console.error(`[Runme] Unknown event type: ${message.type}`)
   }
 
-  private async _executeAll(cells: vscode.NotebookCell[]) {
+  private async _executeAll(cells: NotebookCell[]) {
     for (const cell of cells) {
       await this._doExecuteCell(cell)
     }
   }
 
-  private async _doExecuteCell(cell: vscode.NotebookCell): Promise<void> {
-    const runningCell = await vscode.workspace.openTextDocument(cell.document.uri)
+  private async _doExecuteCell(cell: NotebookCell): Promise<void> {
+    const runningCell = await workspace.openTextDocument(cell.document.uri)
     const exec = this.#controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())

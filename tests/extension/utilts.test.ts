@@ -4,10 +4,10 @@ import { expect, vi, test, beforeAll, afterAll, suite } from 'vitest'
 import {
   getExecutionProperty,
   getTerminalByCell,
-  populateEnvVar,
   resetEnv,
   getKey,
   getCmdShellSeq,
+  normalizeLanguage,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -49,13 +49,6 @@ test('getTerminalByCell', () => {
     .toBe(undefined)
   expect(getTerminalByCell({ document: { fileName: 'foobar' }, index: 123} as any))
     .not.toBe(undefined)
-})
-
-test('populateEnvVar', () => {
-  expect(populateEnvVar(
-    'export PATH="/foo/$BAR/$LOO:$PATH:/$FOO"',
-    { PATH: '/usr/bin', FOO: 'foo', BAR: 'bar' }
-  )).toBe('export PATH="/foo/bar/:/usr/bin:/foo"')
 })
 
 test('resetEnv', () => {
@@ -124,3 +117,19 @@ suite('getCmdShellSeq', () => {
   })
 })
 
+suite('normalizeLanguage', () => {
+  test('with zsh', () => {
+    const lang = normalizeLanguage('zsh')
+    expect(lang).toBe('sh')
+  })
+
+  test('with shell', () => {
+    const lang = normalizeLanguage('shell')
+    expect(lang).toBe('sh')
+  })
+
+  test('with sh', () => {
+    const lang = normalizeLanguage('sh')
+    expect(lang).toBe('sh')
+  })
+})

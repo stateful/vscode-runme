@@ -5,7 +5,6 @@ import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 import executor from './executors'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
-const ENV_VAR_REGEXP = /(\$\w+)/g
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
 export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
@@ -27,15 +26,6 @@ export function getTerminalByCell (cell: vscode.NotebookCell) {
     const taskEnv = (t.creationOptions as vscode.TerminalOptions).env || {}
     return taskEnv.RUNME_ID === `${cell.document.fileName}:${cell.index}`
   })
-}
-
-export function populateEnvVar (value: string, env = process.env) {
-  for (const m of value.match(ENV_VAR_REGEXP) || []) {
-    const envVar = m.slice(1) // slice out '$'
-    value = value.replace(m, env[envVar] || '')
-  }
-
-  return value
 }
 
 export function resetEnv () {
@@ -80,4 +70,14 @@ export function getCmdShellSeq(cellText: string, os: string): string {
   }
 
   return `set -e; ${trimmed}`
+}
+
+export function normalizeLanguage(l?: string) {
+  switch (l) {
+    case 'zsh':
+    case 'shell':
+      return 'sh'
+    default:
+      return l
+  }
 }

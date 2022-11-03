@@ -126,5 +126,5 @@ openssl rand -base64 32
 These are shown as simple markdown, e.g:
 
 ```py { readonly=true }
-print("Hello World")
+    print("Hello World")
 ```
