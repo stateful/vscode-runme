@@ -1,0 +1,26 @@
+// Vitest Snapshot v1
+
+exports[`should encourage to edit cell when none was found 1`] = `
+NotebookData {
+  "data": [
+    NotebookCellData {
+      "content": "_💡 double click on this cell to start editing..._",
+      "language": "markdown",
+      "markup": 1,
+    },
+  ],
+}
+`;
+
+exports[`should show error 1`] = `
+NotebookData {
+  "data": [
+    NotebookCellData {
+      "content": "⚠️ __Error__: document could not be loaded
+<small>ups</small>.<p>Please report bug at https://github.com/stateful/vscode-runme/issues or let us know on Discord (https://discord.gg/BQm8zRCBUY)</p>",
+      "language": "markdown",
+      "markup": 1,
+    },
+  ],
+}
+`;

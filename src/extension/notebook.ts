@@ -16,13 +16,13 @@ const DEFAULT_LANG_ID = 'text'
 const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
 export class Serializer implements NotebookSerializer {
-  private fileContent?: string
-  private readonly ready: Promise<Error | void>
-  private readonly languages: Languages
+  // private fileContent?: string
+  readonly #ready: Promise<Error | void>
+  readonly #languages: Languages
 
   constructor(private context: ExtensionContext) {
-    this.languages = Languages.fromContext(this.context)
-    this.ready = this.#initWasm()
+    this.#languages = Languages.fromContext(this.context)
+    this.#ready = this.#initWasm()
   }
 
   async #initWasm () {
@@ -39,7 +39,7 @@ export class Serializer implements NotebookSerializer {
   }
 
   public async deserializeNotebook(content: Uint8Array): Promise<NotebookData> {
-    const err = await this.ready
+    const err = await this.#ready
 
     const md = content.toString()
     const doc = globalThis.GetDocument(md) as ParsedDocument
@@ -55,14 +55,14 @@ export class Serializer implements NotebookSerializer {
 
     let snippets = doc.document ?? []
     if (snippets.length === 0) {
-      return this.#printCell('⚠️ __Error__: no cells found!')
+      return this.#printCell('_💡 double click on this cell to start editing..._')
     }
 
     try {
       snippets = await Promise.all(snippets.map(s => {
         const content = s.content
         if (content && s.language === undefined) {
-          return this.languages.guess(content, PLATFORM_OS).then(guessed => {
+          return this.#languages.guess(content, PLATFORM_OS).then(guessed => {
             s.language = guessed
             return s
           })

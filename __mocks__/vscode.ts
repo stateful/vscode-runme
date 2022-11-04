@@ -45,3 +45,16 @@ export const env = {
   },
   openExternal: vi.fn()
 }
+
+export enum NotebookCellKind {
+  Markup = 1,
+  Code = 2
+}
+
+export class NotebookCellData {
+  constructor (public markup: any, public content: string, public language: string) {}
+}
+
+export class NotebookData {
+  constructor (public data: any) {}
+}
