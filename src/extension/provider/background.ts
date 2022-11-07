@@ -46,14 +46,14 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const isBackground = cell.metadata.attributes?.['background'] === 'true'
     /**
-     * don't show if not a background task
+     * don't show if not a background task & if not command currently running
      */
-    if (!isBackground || !getExecutionProperty('interactive', cell)) {
+    if (!isBackground || !getExecutionProperty('interactive', cell) || !cell.executionSummary?.success) {
       return
     }
 
     const item = new vscode.NotebookCellStatusBarItem(
-      'Stop Background Task',
+      '$(close) Stop Background Task',
       vscode.NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.stopBackgroundTask'

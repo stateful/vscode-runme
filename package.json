@@ -73,7 +73,9 @@
       },
       {
         "command": "runme.stopBackgroundTask",
-        "category": "Runme"
+        "category": "Runme",
+        "title": "Dispose terminal session to stop background task."
+
       }
     ],
     "menus": {
