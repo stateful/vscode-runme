@@ -70,6 +70,10 @@
         "command": "runme.resetEnv",
         "category": "Runme",
         "title": "Reset Environment Variables for current VS Code session"
+      },
+      {
+        "command": "runme.stopBackgroundTask",
+        "category": "Runme"
       }
     ],
     "menus": {

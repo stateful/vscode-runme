@@ -18,6 +18,12 @@ export function copyCellToClipboard (cell: NotebookCell) {
   return window.showInformationMessage('Copied cell to clipboard!')
 }
 
+export function stopBackgroundTask (cell: NotebookCell) {
+  const terminal = getTerminalByCell(cell)
+  terminal?.dispose()
+  return window.showInformationMessage(`${terminal?.name} command terminated!`)
+}
+
 export async function runCLICommand (cell: NotebookCell) {
   if (!await CliProvider.isCliInstalled()) {
     return window.showInformationMessage(
