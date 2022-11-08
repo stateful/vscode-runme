@@ -5,7 +5,7 @@ import { Serializer } from './notebook'
 import { Kernel } from './kernel'
 // import { ViteServerProcess } from './server'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
-import { PidStatusProvider } from './provider/pid'
+// import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
@@ -28,7 +28,7 @@ export class RunmeExtension {
         },
       }),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
+      // notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
