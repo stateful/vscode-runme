@@ -83,6 +83,10 @@
         {
           "command": "runme.openTerminal",
           "when": "false"
+        },
+        {
+          "command": "runme.stopBackgroundTask",
+          "when": "false"
         }
       ]
     },

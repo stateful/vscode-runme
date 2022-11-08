@@ -5,7 +5,7 @@ import {
   terminal
 } from 'vscode'
 
-import { openTerminal, copyCellToClipboard, runCLICommand } from '../../../src/extension/commands'
+import { openTerminal, copyCellToClipboard, runCLICommand, stopBackgroundTask} from '../../../src/extension/commands'
 import { getTerminalByCell } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
@@ -33,7 +33,7 @@ test('openTerminal', () => {
 })
 
 test('copyCellToClipboard', () => {
-  const cell: any = { document: { getText: vi.fn().mockReturnValue('foobar') } }
+  const cell: any = { document: { getText: vi.fn().mockReturnValue('foobar') } }  
   copyCellToClipboard(cell)
   expect(env.clipboard.writeText).toBeCalledWith('foobar')
   expect(window.showInformationMessage).toBeCalledTimes(1)
@@ -59,4 +59,35 @@ test('runCLICommand if CLI is installed', async () => {
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)
   expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
+})
+
+// test('stopBackgroundTask', () => {
+
+//   const cell: any = { 
+//     document: { getText: vi.fn().mockReturnValue('foobar') }, 
+//     executionSummary: { success: true}
+//   }
+//   // expect(stopBackgroundTask({} as any)).toBe(undefined)
+
+//   stopBackgroundTask(cell)
+//   expect(terminal.dispose).toBeCalledTimes(1)
+//   expect(window.showInformationMessage).toBeCalledTimes(1)
+// })
+test('stopBackgroundTask', () => {
+  expect(stopBackgroundTask({} as any)).toBe(undefined)
+  expect(window.showWarningMessage).toBeCalledTimes(1)
+  
+  vi.mocked(getTerminalByCell).mockReturnValue({ dispose: vi.fn().mockReturnValue('disposed') } as any)
+  expect(stopBackgroundTask({} as any)).toBe('dispose')
+  expect(window.showInformationMessage).toBeCalledTimes(1)
+
+  // const cell: any = { 
+  //   document: { getText: vi.fn().mockReturnValue('foobar') }, 
+  //   executionSummary: { success: true}
+  // }
+  // // expect(stopBackgroundTask({} as any)).toBe(undefined)
+
+  // stopBackgroundTask(cell)
+  // expect(terminal.dispose).toBeCalledTimes(1)
+  // expect(window.showInformationMessage).toBeCalledTimes(1)
 })

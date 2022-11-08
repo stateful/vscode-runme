@@ -26,7 +26,8 @@ export const workspace = {
 
 export const terminal = {
   show: vi.fn(),
-  sendText: vi.fn()
+  sendText: vi.fn(),
+  dispose: vi.fn()
 }
 
 export const window = {

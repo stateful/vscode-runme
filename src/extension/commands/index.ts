@@ -20,11 +20,12 @@ export function copyCellToClipboard (cell: NotebookCell) {
 
 export function stopBackgroundTask (cell: NotebookCell) {
   const terminal = getTerminalByCell(cell)
-  terminal?.dispose()
-  window.onDidCloseTerminal(e => {
-    if(e.exitStatus?.reason === 4) {
-      return window.showInformationMessage(`${terminal?.name} task terminated!`)
-    }})
+  if (!terminal) {
+    return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+  }
+  terminal.dispose()
+  return window.showInformationMessage(`${terminal?.name} task terminated!`)
+
 }
 
 export async function runCLICommand (cell: NotebookCell) {
