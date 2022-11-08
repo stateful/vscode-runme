@@ -61,33 +61,14 @@ test('runCLICommand if CLI is installed', async () => {
   expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
 })
 
-// test('stopBackgroundTask', () => {
-
-//   const cell: any = { 
-//     document: { getText: vi.fn().mockReturnValue('foobar') }, 
-//     executionSummary: { success: true}
-//   }
-//   // expect(stopBackgroundTask({} as any)).toBe(undefined)
-
-//   stopBackgroundTask(cell)
-//   expect(terminal.dispose).toBeCalledTimes(1)
-//   expect(window.showInformationMessage).toBeCalledTimes(1)
-// })
-test('stopBackgroundTask', () => {
-  expect(stopBackgroundTask({} as any)).toBe(undefined)
-  expect(window.showWarningMessage).toBeCalledTimes(1)
-  
-  vi.mocked(getTerminalByCell).mockReturnValue({ dispose: vi.fn().mockReturnValue('disposed') } as any)
-  expect(stopBackgroundTask({} as any)).toBe('dispose')
+test('stopBackgroundTask if terminal exists', () => {
+  vi.mocked(getTerminalByCell).mockReturnValue({ dispose: vi.fn() } as any)
+  stopBackgroundTask({} as any)
   expect(window.showInformationMessage).toBeCalledTimes(1)
+})
 
-  // const cell: any = { 
-  //   document: { getText: vi.fn().mockReturnValue('foobar') }, 
-  //   executionSummary: { success: true}
-  // }
-  // // expect(stopBackgroundTask({} as any)).toBe(undefined)
-
-  // stopBackgroundTask(cell)
-  // expect(terminal.dispose).toBeCalledTimes(1)
-  // expect(window.showInformationMessage).toBeCalledTimes(1)
+test('stopBackgroundTask if terminal does not exist', () => {
+  vi.mocked(getTerminalByCell).mockReturnValue(undefined)
+  stopBackgroundTask({} as any)
+  expect(window.showWarningMessage).toBeCalledTimes(1)
 })
