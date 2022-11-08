@@ -107,7 +107,7 @@ export class Serializer implements NotebookSerializer {
         )
         const attributes = s.attributes
         const cliName = s.name
-        cell.metadata = { id: i, source: lines, attributes, cliName }
+        cell.metadata = { id: i, source: lines, attributes, cliName, name: s.name }
         /**
          * code block
          */

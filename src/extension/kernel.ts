@@ -1,3 +1,6 @@
+import path from 'node:path'
+import { spawn, ChildProcess } from 'node:child_process'
+
 import { Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor, NotebookCell } from 'vscode'
 
 import type { ClientMessage } from '../types'
@@ -11,6 +14,7 @@ import { resetEnv, getKey } from './utils'
 import './wasm/wasm_exec.js'
 
 export class Kernel implements Disposable {
+  protected session: ChildProcess
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
     'runme',
@@ -20,6 +24,9 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
+    this.session = spawn('node', [path.resolve(context.extension.extensionUri.fsPath, 'repl.js')], {
+      shell: true
+    })
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'

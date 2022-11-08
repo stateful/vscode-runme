@@ -13,6 +13,7 @@ import type { Kernel } from '../kernel'
 
 import { retrieveShellCommand } from './utils'
 import { sh as inlineSh } from './shell'
+import { repl } from './repl'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
@@ -29,6 +30,14 @@ async function taskExecutor(
   exec: NotebookCellExecution,
   doc: TextDocument
 ): Promise<boolean> {
+  /**
+   * POC Runme session
+   */
+  const hasCommandName = typeof exec.cell.metadata.name === 'string'
+  if (hasCommandName) {
+    return repl.call(this, exec)
+  }
+
   const cwd = path.dirname(doc.uri.fsPath)
   const cellText = await retrieveShellCommand(exec)
   if (typeof cellText !== 'string') {
@@ -58,7 +67,7 @@ async function taskExecutor(
    * in markdown section
    */
   const isInteractive = getExecutionProperty('interactive', exec.cell)
-  if (!isInteractive) {
+  if (!isInteractive || hasCommandName) {
     return inlineSh.call(this, exec, cmdLine, cwd, env)
   }
 
