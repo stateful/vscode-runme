@@ -13,7 +13,8 @@ const cmd = cp.spawn('/bin/sh')
 /**
  * Start WebSocket server for clients to connect to this "deamon"
  */
-const wss = new WebSocketServer({ port: 8080 })
+const port = process.argv.slice(2)[0]
+const wss = new WebSocketServer({ port })
 const connectedClients = new Set()
 wss.on('connection', (ws) => {
   connectedClients.add(ws)
@@ -85,9 +86,9 @@ cmd.stdout
   .pipe(process.stdout)
 cmd.stderr
   // split chunks on new lines
-  .pipe(split(/\r?\n/, line => `${line}\n`))
-  // remove custom descriptors and emit stdout event
-  .pipe(transformer)
+  // .pipe(split(/\r?\n/, line => `${line}\n`))
+  // // remove custom descriptors and emit stdout event
+  // .pipe(transformer)
   // pipe into runme stderr
   .pipe(process.stderr)
 

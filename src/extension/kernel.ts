@@ -1,7 +1,11 @@
 import path from 'node:path'
-import { spawn, ChildProcess } from 'node:child_process'
 
-import { Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor, NotebookCell } from 'vscode'
+import {
+  Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor,
+  NotebookCell, TextDocument, Task, TaskScope, ShellExecution, tasks, TaskExecution
+} from 'vscode'
+import WebSocket from 'ws'
+import getPort from 'get-port'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -14,7 +18,8 @@ import { resetEnv, getKey } from './utils'
 import './wasm/wasm_exec.js'
 
 export class Kernel implements Disposable {
-  protected session: ChildProcess
+  #files: string[] = []
+  protected deamons: Map<string, { execution: TaskExecution, ws: WebSocket }> = new Map()
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
     'runme',
@@ -24,9 +29,6 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
-    this.session = spawn('node', [path.resolve(context.extension.extensionUri.fsPath, 'repl.js')], {
-      shell: true
-    })
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'
@@ -34,13 +36,39 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'lernel' })
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
+      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      // workspace.onDidOpenTextDocument(this.#startRunmeDeamon.bind(this))
     )
   }
 
   dispose () {
     resetEnv()
     this.#disposables.forEach((d) => d.dispose())
+  }
+
+  async #startRunmeDeamon (file: TextDocument) {
+    console.log('File opened', file.uri.fsPath)
+    if (this.#files.includes(file.uri.fsPath)) {
+      return
+    }
+    this.#files.push(file.uri.fsPath)
+    const port = await getPort()
+    const replPath = path.resolve(this.context.extension.extensionUri.fsPath, 'repl.js')
+    const taskExecution = new Task(
+      { type: 'runme', name: `Runme Task (deamon on port ${port})` },
+      TaskScope.Workspace,
+      'Runme Deamon',
+      'exec',
+      new ShellExecution(`node ${replPath} ${port}`, {
+        cwd: path.dirname(file.uri.fsPath),
+        env: process.env as { [key: string]: string }
+      })
+    )
+    const execution = await tasks.executeTask(taskExecution)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    const ws = new WebSocket(`ws://localhost:${port}`)
+    this.deamons.set(file.uri.fsPath, { execution, ws })
+    console.log(`Started new Runme deamon task on port ${port} for file ${file.uri.fsPath}`)
   }
 
   // eslint-disable-next-line max-len

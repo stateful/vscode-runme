@@ -154,6 +154,7 @@
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
+    "@types/ws": "^8.5.3",
     "@types/yargs": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
