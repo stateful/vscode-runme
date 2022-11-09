@@ -124,16 +124,16 @@ describe('StopBackgroundTaskProvider', () => {
 
   it('dont show if cell was not yet executed', async () => {
     cell.metadata.attributes.background = 'true'
-    cell.executionSummary.success = true
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+    cell.executionSummary.success = false
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
     expect(getExecutionProperty).toBeCalledTimes(1)
-    expect(getExecutionProperty).toBeCalledWith('interactive', cell)
-    expect(cell.executionSummary.success).equals(true)
+    expect(cell.executionSummary.success).toBe(false)
   })
 
   it('return with button to close', async () => {
+    cell.metadata.attributes.background = 'true'
+    cell.executionSummary.success = true
     vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
     const p = new StopBackgroundTaskProvider()
     const item = await p.provideCellStatusBarItems(cell)
