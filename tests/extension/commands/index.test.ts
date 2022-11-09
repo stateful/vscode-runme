@@ -5,7 +5,7 @@ import {
   terminal
 } from 'vscode'
 
-import { openTerminal, copyCellToClipboard, runCLICommand, stopBackgroundTask} from '../../../src/extension/commands'
+import { openTerminal, copyCellToClipboard, runCLICommand, stopBackgroundTask } from '../../../src/extension/commands'
 import { getTerminalByCell } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
@@ -33,7 +33,7 @@ test('openTerminal', () => {
 })
 
 test('copyCellToClipboard', () => {
-  const cell: any = { document: { getText: vi.fn().mockReturnValue('foobar') } }  
+  const cell: any = { document: { getText: vi.fn().mockReturnValue('foobar') } }
   copyCellToClipboard(cell)
   expect(env.clipboard.writeText).toBeCalledWith('foobar')
   expect(window.showInformationMessage).toBeCalledTimes(1)

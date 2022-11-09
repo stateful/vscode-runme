@@ -5,10 +5,14 @@ import { NotebookCell, Uri, window, env } from 'vscode'
 import { CliProvider } from '../provider/cli'
 import { getTerminalByCell } from '../utils'
 
+function showWarningMessage () {
+  return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+}
+
 export function openTerminal (cell: NotebookCell) {
   const terminal = getTerminalByCell(cell)
   if (!terminal) {
-    return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+    return showWarningMessage()
   }
   return terminal.show()
 }
@@ -21,11 +25,10 @@ export function copyCellToClipboard (cell: NotebookCell) {
 export function stopBackgroundTask (cell: NotebookCell) {
   const terminal = getTerminalByCell(cell)
   if (!terminal) {
-    return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+    return showWarningMessage()
   }
   terminal.dispose()
   return window.showInformationMessage(`${terminal?.name} task terminated!`)
-
 }
 
 export async function runCLICommand (cell: NotebookCell) {

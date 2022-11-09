@@ -3,7 +3,7 @@ import vscode from 'vscode'
 import { getExecutionProperty, getTerminalByCell } from '../utils'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
-  provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
+  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
      */
@@ -12,12 +12,14 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
     }
 
     const terminal = getTerminalByCell(cell)
-    if (!Boolean(terminal)) {
+    const pid = await terminal?.processId
+    
+    if (!Boolean(terminal) || !pid) {
       return
     }
 
     const item = new vscode.NotebookCellStatusBarItem(
-      '$(terminal) Open Terminal',
+      `$(terminal) Open Terminal (PID: ${pid})`,
       vscode.NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.openTerminal'
