@@ -23,7 +23,11 @@ async function replExecutor(
 
   const outputItems: string[] = []
   function handleStdout (data: Buffer) {
-    outputItems.push(data.toString().trim())
+    const message = JSON.parse(data.toString())
+    if (message.type !== 'stdout' || message.value === '\n' || !message.value) {
+      return
+    }
+    outputItems.push(message.value.endsWith('\n') ? message.value.slice(0, -1) : message.value)
     let item = NotebookCellOutputItem.stdout(outputItems.join('\n'))
     exec.replaceOutput([
       new NotebookCellOutput([ item ]),

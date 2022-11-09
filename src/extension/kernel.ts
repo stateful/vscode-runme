@@ -2,7 +2,8 @@ import path from 'node:path'
 
 import {
   Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor,
-  NotebookCell, TextDocument, Task, TaskScope, ShellExecution, tasks, TaskExecution
+  NotebookCell, Task, TaskScope, ShellExecution, tasks, TaskExecution, NotebookDocument,
+  TaskRevealKind
 } from 'vscode'
 import WebSocket from 'ws'
 import getPort from 'get-port'
@@ -37,7 +38,8 @@ export class Kernel implements Disposable {
     this.messaging.postMessage({ from: 'lernel' })
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
-      // workspace.onDidOpenTextDocument(this.#startRunmeDeamon.bind(this))
+      workspace.onDidOpenNotebookDocument(this.#startRunmeDeamon.bind(this)),
+      workspace.onDidCloseNotebookDocument(this.#shutdownRunmeDeamon.bind(this))
     )
   }
 
@@ -46,7 +48,7 @@ export class Kernel implements Disposable {
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  async #startRunmeDeamon (file: TextDocument) {
+  async #startRunmeDeamon (file: NotebookDocument) {
     console.log('File opened', file.uri.fsPath)
     if (this.#files.includes(file.uri.fsPath)) {
       return
@@ -64,11 +66,25 @@ export class Kernel implements Disposable {
         env: process.env as { [key: string]: string }
       })
     )
+    taskExecution.presentationOptions = {
+      focus: false,
+      reveal: TaskRevealKind.Never
+    }
     const execution = await tasks.executeTask(taskExecution)
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 1500))
     const ws = new WebSocket(`ws://localhost:${port}`)
     this.deamons.set(file.uri.fsPath, { execution, ws })
     console.log(`Started new Runme deamon task on port ${port} for file ${file.uri.fsPath}`)
+  }
+
+  async #shutdownRunmeDeamon (file: NotebookDocument) {
+    const deamon = this.deamons.get(file.uri.fsPath)
+    if (!deamon) {
+      return
+    }
+    deamon.ws.close()
+    deamon.execution.terminate()
+    this.#files.splice(this.#files.indexOf(file.uri.fsPath), 1)
   }
 
   // eslint-disable-next-line max-len
