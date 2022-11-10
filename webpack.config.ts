@@ -1,16 +1,7 @@
 import path from 'node:path'
 
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
-import WebpackCopy from 'copy-webpack-plugin'
-import { BannerPlugin } from 'webpack'
 import type { Configuration } from 'webpack'
-
-const DIRNAME_SUPPORT = /*ts*/`
-import __pathBanner from 'node:path';
-import __urlBanner from 'node:url';
-
-const __dirname = __pathBanner.dirname(__urlBanner.fileURLToPath(import.meta.url))
-`
 
 const baseConfig: Partial<Configuration> = {
   mode: process.env.NODE_ENV ? 'production' : 'development',
@@ -55,51 +46,6 @@ const rendererConfig: Configuration = {
   target: 'web'
 }
 
-const viteServerConfig: Configuration = {
-  ...rendererConfig,
-  entry: path.resolve(__dirname, 'src', 'server', 'index.ts'),
-  output: {
-    ...rendererConfig.output,
-    path: path.resolve(__dirname, 'out', 'server'),
-    filename: 'server.js',
-  },
-  plugins: [
-    ...rendererConfig.plugins || [],
-    new WebpackCopy({
-      patterns: [
-        { from: 'src/server/package.json', to: 'package.json' },
-      ]
-    }),
-    new BannerPlugin({
-      banner: DIRNAME_SUPPORT,
-      raw: true
-    })
-  ],
-  externals: [
-    'vite', 'yargs', 'yargs/helpers', 'get-port',
-    '@babel/core', 'yargs-parser', '@vitejs/plugin-react',
-    'vite-plugin-ssr', 'tailwindcss', '@sveltejs/vite-plugin-svelte'
-  ],
-  target: 'node',
-  module: {
-    parser: {
-      javascript : { importMeta: false }
-    },
-    rules: [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: [{
-          loader: 'ts-loader',
-          options: {
-            configFile: 'src/server/tsconfig.json'
-          }
-        }]
-      },
-    ],
-  }
-}
-
 const extensionConfig: Configuration = {
   ...baseConfig,
   target: 'node',
@@ -114,4 +60,4 @@ const extensionConfig: Configuration = {
   }
 }
 
-export default [extensionConfig, rendererConfig, viteServerConfig]
+export default [extensionConfig, rendererConfig]

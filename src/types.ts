@@ -49,15 +49,6 @@ interface Payload {
   [OutputType.error]: string
   [OutputType.shell]: string
   [OutputType.deno]?: DenoPayload
-  [OutputType.html]: {
-    isSvelte: boolean
-    content: string
-    port: number
-  }
-  [OutputType.script]: {
-    filename: string
-    port: number
-  }
   [OutputType.vercel]: {
     type: string
     payload?: any

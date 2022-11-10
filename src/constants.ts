@@ -7,8 +7,6 @@ export enum OutputType {
   shell = 'stateful.runme/shell-stdout',
   vercel = 'stateful.runme/vercel-stdout',
   deno = 'stateful.runme/deno-stdout',
-  html = 'stateful.runme/html-stdout',
-  script = 'stateful.runme/script-stdout',
   outputItems = 'stateful.runme/output-items',
   error = 'stateful.runme/error'
 }

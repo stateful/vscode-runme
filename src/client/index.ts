@@ -38,22 +38,6 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           denoElem.setAttribute('deployments', JSON.stringify(deno.deployments))
           element.appendChild(denoElem)
           break
-        case OutputType.html:
-          const html = payload.output as CellOutput<OutputType.html>['output']
-          const tag = html.isSvelte ? 'svelte-component' : 'vite-payload.output'
-          const viteElem = document.createElement(tag)
-          viteElem.setAttribute('content', html.content)
-          viteElem.setAttribute('port', html.port.toString())
-          element.appendChild(viteElem)
-          break
-        case OutputType.script:
-          const script = payload.output as CellOutput<OutputType.script>['output']
-          const iframe = document.createElement('iframe')
-          const iframeSrc = `http://localhost:${script.port}/${script.filename}`
-          iframe.setAttribute('src', iframeSrc)
-          iframe.setAttribute('style', 'width: 100%; border: 0; height: 400px;')
-          element.appendChild(iframe)
-          break
         case OutputType.outputItems:
           const outputItemElem = document.createElement('shell-output-items')
           outputItemElem.setAttribute('content', payload.output as string)
