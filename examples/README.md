@@ -9,7 +9,7 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```sh
+```
 echo "Hello World!"
 ```
 ## More Shell
@@ -45,7 +45,10 @@ node ./scripts/stdin.js
 You can also run TypeScript or JavaScript:
 
 ```js
-document.body.innerHTML += 'script attached!'
+function attach() {
+    document.body.innerHTML += 'script attached!'
+}
+attach()
 ```
 
 ## Environment Variables
@@ -64,7 +67,7 @@ echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"
 
 Supports multiple lines where the export is just somewhere in between:
 
-```sh
+```
 echo "Auth token for service foo"
 export SERVICE_FOO_TOKEN=foobar
 echo "Auth token for service bar"
@@ -99,7 +102,7 @@ echo "LICENSE: $LICENSE"
 
 Support multiline exports:
 
-```
+```sh
 export PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA04up8hoqzS1+
 ...
@@ -126,5 +129,6 @@ openssl rand -base64 32
 These are shown as simple markdown, e.g:
 
 ```py { readonly=true }
+def hello():
     print("Hello World")
 ```
