@@ -128,3 +128,55 @@ These are shown as simple markdown, e.g:
 ```py { readonly=true }
     print("Hello World")
 ```
+
+## PyEnv
+
+Given you have `pyenv` installed, running:
+
+```sh
+python --version
+```
+
+prints `Python 3.8.12`, to update call
+
+```sh
+pyenv install 3.10.0
+```
+
+Now when calling
+
+```sh
+pyenv global 3.11-dev
+python --version
+```
+
+will print `Python 3.11.0+`
+
+## NVM
+
+Given you have `nvm` installed, expose it to the Shell session via:
+
+```sh
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+```
+
+and your current Node.js version:
+
+```sh
+node --version
+```
+
+is `v18.11.0`, when you switch to a different version:
+
+```sh
+nvm install 19
+```
+
+it should have switched there as
+
+```sh
+node --version
+```
+
+returns `v19.0.0`
