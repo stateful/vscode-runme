@@ -139,6 +139,7 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./runme-${{ env.RELEASE_VERSION }}.vsix
       - name: Push Tags
+        continue-on-error: true
         run: |
           git log -1 --stat
           git push origin main --tags
