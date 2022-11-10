@@ -2,7 +2,7 @@ import {
   NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind
 } from 'vscode'
 
-import type { ParsedDocument } from '../types'
+import type { WasmLib } from '../types'
 
 import executor from './executors'
 import Languages from './languages'
@@ -25,7 +25,7 @@ export class Serializer implements NotebookSerializer {
     this.ready = this.#initWasm()
   }
 
-  async #initWasm () {
+  async #initWasm() {
     const go = new globalThis.Go()
     const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     const wasmFile = await workspace.fs.readFile(wasmUri)
@@ -42,9 +42,12 @@ export class Serializer implements NotebookSerializer {
     const err = await this.ready
 
     const md = content.toString()
-    const doc = globalThis.GetDocument(md) as ParsedDocument
+    const { Runme } = globalThis as WasmLib.Runme
 
-    if (!doc || err) {
+    Runme.initialize(md)
+    const res = Runme.getCells() as WasmLib.Cells
+
+    if (!res || err) {
       return this.#printCell(
         '⚠️ __Error__: document could not be loaded' +
         (err ? `\n<small>${err.message}</small>` : '') +
@@ -53,51 +56,52 @@ export class Serializer implements NotebookSerializer {
       )
     }
 
-    let snippets = doc.document ?? []
-    if (snippets.length === 0) {
+    let parsedCells = res.cells ?? []
+    if (parsedCells.length === 0) {
       return this.#printCell('⚠️ __Error__: no cells found!')
     }
 
     try {
-      snippets = await Promise.all(snippets.map(s => {
-        const content = s.content
-        if (content && s.language === undefined) {
-          return this.languages.guess(content, PLATFORM_OS).then(guessed => {
-            s.language = guessed
-            return s
+      parsedCells = await Promise.all(parsedCells.map(elem => {
+        if (elem.type === 'code' && elem.source && !elem.executable) {
+          const norm = Serializer.normalize(elem.source)
+          return this.languages.guess(norm, PLATFORM_OS).then(guessed => {
+            elem.executable = guessed
+            return elem
           })
         }
-        return Promise.resolve(s)
+        return Promise.resolve(elem)
       }))
     } catch (err: any) {
       console.error(`Error guessing snippet languages: ${err}`)
     }
 
-    const cells = snippets.reduce((acc, s, i) => {
+    const cells = parsedCells.reduce((acc, elem, i) => {
       /**
        * code block description
        */
-      if (s.markdown) {
+      if (elem.type === 'markdown') {
         const cell = new NotebookCellData(
           NotebookCellKind.Markup,
-          s.markdown,
+          elem.source,
           'markdown'
         )
         cell.metadata = { id: i }
         acc.push(cell)
+        return acc
       }
 
-      const isSupported = Object.keys(executor).includes(s.language || '')
-      if (s.lines && isSupported) {
-        const lines = s.lines.join('\n')
-        const language = normalizeLanguage(s.language)
+      const isSupported = Object.keys(executor).includes(elem.executable ?? '')
+      if (elem.lines && isSupported && elem.editable) {
+        const lines = elem.lines.join('\n')
+        const language = normalizeLanguage(elem.executable)
         const cell = new NotebookCellData(
           NotebookCellKind.Code,
           /**
            * for JS content we want to keep indentation
            */
-           LANGUAGES_WITH_INDENTATION.includes(language || '')
-            ? (s.content || '').trim()
+          LANGUAGES_WITH_INDENTATION.includes(language || '')
+            ? (Serializer.normalize(elem.source || '')).trim()
             : lines.trim(),
           /**
            * with custom vercel execution
@@ -105,18 +109,17 @@ export class Serializer implements NotebookSerializer {
            */
           language || DEFAULT_LANG_ID
         )
-        const attributes = s.attributes
-        const cliName = s.name
+        const attributes = elem.attributes
+        const cliName = elem.name
         cell.metadata = { id: i, source: lines, attributes, cliName }
         /**
          * code block
          */
         acc.push(cell)
-      } else if (s.language) {
-        const mdContent = s.content ?? (s.lines || []).join('\n').trim()
+      } else if (elem.source) {
         const cell = new NotebookCellData(
           NotebookCellKind.Markup,
-          `\`\`\`${s.language}\n${mdContent}\n\`\`\``,
+          elem.source,
           'markdown'
         )
         cell.metadata = { id: i }
@@ -125,6 +128,12 @@ export class Serializer implements NotebookSerializer {
       return acc
     }, [] as NotebookCellData[])
     return new NotebookData(cells)
+  }
+
+  public static normalize(source: string): string {
+    const lines = source.split('\n')
+    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+    return normed.join('\n')
   }
 
   public async serializeNotebook(
@@ -175,7 +184,7 @@ export class Serializer implements NotebookSerializer {
     // return Promise.resolve(Buffer.from(this.fileContent))
   }
 
-  #printCell (content: string, languageId = 'markdown') {
+  #printCell(content: string, languageId = 'markdown') {
     return new NotebookData([
       new NotebookCellData(NotebookCellKind.Markup, content, languageId)
     ])
