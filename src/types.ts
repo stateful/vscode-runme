@@ -1,21 +1,37 @@
 import { OutputType, ClientMessages } from './constants'
 
-export interface ParsedReadmeEntry {
-  name?: string
-  content?: string
-  description?: string
-  markdown?: string
-  language?: string
-  lines?: string[]
-  attributes?: Metadata
-}
+export namespace WasmLib {
+  export interface Runme {
+    Runme: {
+      initialize: (source: string) => void
+      getCell: () => Cell
+      getCells: () => Cells
+      getSource: () => string
+      updateCell: (id: number, md: string) => Error | null
+      prepareScript: (lines: string[]) => string
+    }
+  }
+  export type Cell = {
+    editable: boolean
+    source: string
+    type: 'markdown'
+  } | {
+    attributes?: Attribute
+    editable: boolean
+    executable?: string
+    lines?: string[]
+    name: string
+    source: string
+    type: 'code'
+  }
 
-export interface ParsedDocument {
-  document?: ParsedReadmeEntry[]
-}
+  export interface Cells {
+    cells?: Cell[]
+  }
 
-export interface Metadata {
-  [key: string]: any
+  export interface Attribute {
+    [key: string]: any
+  }
 }
 
 export interface CellOutput<T extends OutputType> {
