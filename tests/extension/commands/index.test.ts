@@ -68,12 +68,12 @@ test('runCLICommand if CLI is installed', async () => {
   expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
 })
 
-test('open markdown as runme notebook', (file: NotebookDocument) => {
+test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
   expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: 2})
 })
 
-test('open runme notebook in text editor', (file: TextDocument) => {
+test('open Runme notebook in text editor', (file: TextDocument) => {
   openSplitViewAsMarkdownText(file)
   expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: 2})
 })
