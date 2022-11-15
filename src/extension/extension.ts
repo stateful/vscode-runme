@@ -9,7 +9,21 @@ import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
-import { openTerminal, runCLICommand, copyCellToClipboard } from './commands'
+import { 
+  openTerminal, 
+  runCLICommand, 
+  copyCellToClipboard, 
+  openAsRunmeNotebook, 
+  openSplitViewAsMarkdownText 
+} from './commands'
+
+export function activate(context: ExtensionContext) {
+  context.subscriptions.push(
+    commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
+    commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+  )
+}
+export function deactivate() {}
 
 export class RunmeExtension {
   async initialise (context: ExtensionContext) {
@@ -27,6 +41,7 @@ export class RunmeExtension {
           outputCollapsed: true,
         },
       }),
+
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new PidStatusProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
@@ -35,7 +50,9 @@ export class RunmeExtension {
       commands.registerCommand('runme.resetEnv', resetEnv),
       commands.registerCommand('runme.openTerminal', openTerminal),
       commands.registerCommand('runme.runCliCommand', runCLICommand),
-      commands.registerCommand('runme.copyCellToClipboard', copyCellToClipboard)
+      commands.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
+      commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
+      commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
     )
   }
 }
