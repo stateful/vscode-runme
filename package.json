@@ -89,7 +89,7 @@
       {
         "command": "runme.openSplitViewAsMarkdownText",
         "category": "Runme",
-        "title": "Open runme notebook as default markdown",
+        "title": "Open runme notebook as text editor",
         "icon": "$(markdown)"
       }
     ],
@@ -110,13 +110,6 @@
           "when": "resourceLangId == markdown && notebookType == runme",
           "command": "runme.openSplitViewAsMarkdownText",
           "group": "navigation"
-        }
-      ],
-      "editor/context": [
-        {
-          "command": "runme.openSplitViewAsMarkdownText",
-          "group": "navigation",
-          "when": "resourceLangId == markdown && notebookType == runme"
         }
       ]
     },
