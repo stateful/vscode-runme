@@ -8,7 +8,7 @@ vi.mock('vscode')
 test('activate extension', () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   activate(context)
-  expect(commands.registerCommand).toBeCalledTimes(8) //2 from activate and 6 from RunmeExtension class intialise
+  expect(commands.registerCommand).toBeCalledTimes(2)
 })
 
 test('initialises all providers', async () => {
@@ -17,5 +17,5 @@ test('initialises all providers', async () => {
   await ext.initialise(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(5)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(6)
+  expect(commands.registerCommand).toBeCalledTimes(8)
 })
