@@ -43,9 +43,9 @@ export function populateEnvVar (value: string, env = process.env) {
  * @returns cell text if all operation to retrieve the cell text could be executed, undefined otherwise
  */
 export async function retrieveShellCommand (exec: NotebookCellExecution) {
-  let cellText = exec.cell.document.getText()
+  let cellText = exec.cell.metadata.executeableCode
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
-  const rawText = exec.cell.document.getText()
+  const rawText = exec.cell.metadata.executeableCode
   const exportMatches: string[] = (rawText.endsWith('\n') ? rawText : `${rawText}\n`)
     .match(EXPORT_EXTRACT_REGEX) || []
 

@@ -14,10 +14,8 @@ declare var globalThis: any
 // const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const ALPHA_NUM_REGEX = /^[a-z0-9]+$/i
 const DEFAULT_LANG_ID = 'text'
-const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
 export class Serializer implements NotebookSerializer {
-  private fileContent?: string
   private readonly ready: Promise<Error | void>
   private readonly languages: Languages
 
@@ -70,7 +68,7 @@ export class Serializer implements NotebookSerializer {
           // if attributes are being used but no lang designator
           (!elem.executable || !elem.executable.match(ALPHA_NUM_REGEX))
         ) {
-          const norm = Languages.normalizeSource(elem.source)
+          const norm = Serializer.normalize(elem.source)
           return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
             elem.executable = guessed
             elem.attributes = {
@@ -108,11 +106,10 @@ export class Serializer implements NotebookSerializer {
         const cell = new NotebookCellData(
           NotebookCellKind.Code,
           /**
-           * for JS content we want to keep indentation
+           * Keep original source code block to ensure indentation
+           * and other formatting is kept as is
            */
-          LANGUAGES_WITH_INDENTATION.includes(language || '')
-            ? (Languages.normalizeSource(elem.source || '')).trim()
-            : lines.trim(),
+          Serializer.normalize(elem.source || ''),
           /**
            * with custom vercel execution
            * lines.startsWith('vercel ') ? 'vercel' : s.executable
@@ -121,7 +118,15 @@ export class Serializer implements NotebookSerializer {
         )
         const attributes = elem.attributes
         const cliName = elem.name
-        cell.metadata = { id: i, source: lines, attributes, cliName }
+        cell.metadata = {
+          id: i,
+          source: elem.source,
+          executeableCode: lines.trim(),
+          attributes,
+          cliName,
+          header: elem.source.split('\n')[0]
+        }
+
         /**
          * code block
          */
@@ -140,52 +145,38 @@ export class Serializer implements NotebookSerializer {
     return new NotebookData(cells)
   }
 
-  public async serializeNotebook(
-    // data: NotebookData,
-    // token: CancellationToken
-  ): Promise<Uint8Array> {
-    // eslint-disable-next-line max-len
-    throw new Error('Notebooks are currently read-only. Please edit markdown in file-mode (right click: "Open With...") instead.')
-    //
-    // Below's impl is highly experimental and will leads unpredictable results
-    // including data loss
-    //
-    // const markdownFile = window.activeTextEditor?.document.fileName
-    // if (!markdownFile) {
-    //   throw new Error('Could not detect opened markdown document')
-    // }
+  public static normalize(source: string): string {
+    const lines = source.split('\n')
+    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+    return normed.join('\n')
+  }
 
-    // const fileExist = await fsp.access(markdownFile).then(() => true, () => false)
-    // if (!fileExist) {
-    //   return new Uint8Array()
-    // }
+  public async serializeNotebook(data: NotebookData): Promise<Uint8Array> {
+    const newContent: string[] = []
 
-    // if (!this.fileContent && fileExist) {
-    //   this.fileContent = (await fsp.readFile(markdownFile, 'utf-8')).toString()
-    // }
+    for (const cell of data.cells) {
+      if (cell.kind === NotebookCellKind.Markup) {
+        /**
+         * for some reason the value of the markdown cell after the cell that
+         * got edited contains the code header, e.g.:
+         *
+         *     value: "### Run image locally to make sure it works\n```sh { interactive=false }"
+         *
+         * This little tweak removes that.
+         */
+        const cellContentLines = cell.value.split('\n')
+        const cellContent = cellContentLines[cellContentLines.length - 1].startsWith('```')
+          ? cellContentLines.slice(0, -1).join('\n')
+          : cell.value
 
-    // if (!this.fileContent) {
-    //   return new Uint8Array()
-    // }
+        newContent.push(`${cellContent}\n`)
+        continue
+      }
 
-    // const codeExamples = this.fileContent.match(CODE_REGEX)
+      newContent.push(`${cell.metadata?.header}\n${cell.value}\n\`\`\`\n`)
+    }
 
-    // for (const cell of data.cells) {
-    //   const cellToReplace = codeExamples?.find((e) => e.includes(cell.metadata?.source))
-    //   if (!cell.metadata || !cell.metadata.source || !cellToReplace) {
-    //     continue
-    //   }
-
-    //   const exampleLines = cellToReplace.split('\n')
-    //   const newContent = [
-    //     exampleLines[0],
-    //     cell.value,
-    //     exampleLines[exampleLines.length - 1]
-    //   ].join('\n')
-    //   this.fileContent = this.fileContent.replace(cellToReplace, newContent)
-    // }
-
-    // return Promise.resolve(Buffer.from(this.fileContent))
+    return Promise.resolve(Buffer.from(newContent.join('\n')))
   }
 
   #printCell(content: string, languageId = 'markdown') {
