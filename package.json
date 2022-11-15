@@ -80,7 +80,7 @@
       {
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
-        "title": "Open markdown as runme",
+        "title": "Open markdown as Runme",
         "icon": {
           "light": "assets/runme-logo-light.svg",
           "dark": "assets/runme-logo-dark.svg"
@@ -89,7 +89,7 @@
       {
         "command": "runme.openSplitViewAsMarkdownText",
         "category": "Runme",
-        "title": "Open runme notebook as text editor",
+        "title": "Open Runme notebook in text editor",
         "icon": "$(markdown)"
       }
     ],
@@ -97,6 +97,10 @@
       "commandPalette": [
         {
           "command": "runme.openTerminal",
+          "when": "false"
+        }, 
+        {
+          "command": "runme.openAsRunmeNotebook",
           "when": "false"
         }
       ],
@@ -107,7 +111,7 @@
           "group": "navigation"
         },
         {
-          "when": "resourceLangId == markdown && notebookType == runme",
+          "when": "notebookType == runme",
           "command": "runme.openSplitViewAsMarkdownText",
           "group": "navigation"
         }

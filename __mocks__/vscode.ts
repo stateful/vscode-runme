@@ -32,7 +32,9 @@ export const terminal = {
 export const window = {
   showWarningMessage: vi.fn(),
   showInformationMessage: vi.fn(),
-  createTerminal: vi.fn().mockReturnValue(terminal)
+  createTerminal: vi.fn().mockReturnValue(terminal),
+  showNotebookDocument: vi.fn(),
+  showTextDocument: vi.fn()
 }
 
 export const commands = {
