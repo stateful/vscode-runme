@@ -5,3 +5,4 @@ node_modules
 wasm
 .DS_Store
 coverage
+.wdio-vscode-service
