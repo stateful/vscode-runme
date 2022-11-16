@@ -2,10 +2,19 @@ import { beforeEach, expect, test, vi } from 'vitest'
 import {
   window, env,
   // @ts-expect-error mock feature
-  terminal
+  terminal,
+  NotebookDocument,
+  TextDocument,
+  ViewColumn,  
 } from 'vscode'
 
-import { openTerminal, copyCellToClipboard, runCLICommand, stopBackgroundTask } from '../../../src/extension/commands'
+import { 
+  openTerminal,
+  copyCellToClipboard, 
+  runCLICommand, 
+  openAsRunmeNotebook, 
+  openSplitViewAsMarkdownText,
+  stopBackgroundTask } from '../../../src/extension/commands'
 import { getTerminalByCell } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
@@ -59,6 +68,16 @@ test('runCLICommand if CLI is installed', async () => {
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)
   expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
+})
+
+test('open markdown as Runme notebook', (file: NotebookDocument) => {
+  openAsRunmeNotebook(file)
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside})
+})
+
+test('open Runme notebook in text editor', (file: TextDocument) => {
+  openSplitViewAsMarkdownText(file)
+  expect(window.showTextDocument).toBeCalledWith(file, {viewColumn: ViewColumn.Beside})
 })
 
 test('stopBackgroundTask if terminal exists', () => {

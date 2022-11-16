@@ -8,7 +8,22 @@ import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvide
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
-import { openTerminal, runCLICommand, copyCellToClipboard, stopBackgroundTask } from './commands'
+import { 
+  openTerminal, 
+  runCLICommand, 
+  copyCellToClipboard, 
+  openAsRunmeNotebook, 
+  openSplitViewAsMarkdownText ,
+  stopBackgroundTask
+} from './commands'
+
+export function activate(context: ExtensionContext) {
+  context.subscriptions.push(
+    commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
+    commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+  )
+}
+export function deactivate() {}
 
 export class RunmeExtension {
   async initialise (context: ExtensionContext) {
@@ -26,6 +41,7 @@ export class RunmeExtension {
           outputCollapsed: true,
         },
       }),
+
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
@@ -35,7 +51,9 @@ export class RunmeExtension {
       commands.registerCommand('runme.openTerminal', openTerminal),
       commands.registerCommand('runme.runCliCommand', runCLICommand),
       commands.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
-      commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask)
+      commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
+      commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
+      commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
     )
   }
 }

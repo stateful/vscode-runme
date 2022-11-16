@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "0.2.18",
+  "version": "0.3.0-edge.3",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "Run your README.md as an interactive notebook",
@@ -49,7 +49,8 @@
   ],
   "activationEvents": [
     "onNotebook:runme",
-    "onRenderer:runme-renderer"
+    "onRenderer:runme-renderer",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -72,10 +73,30 @@
         "title": "Reset Environment Variables for current VS Code session"
       },
       {
+        "command": "runme.resetEnv",
+        "category": "Runme",
+        "title": "Reset Environment Variables for current VS Code session"
+      },
+      {
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
 
+      },
+      {
+        "command": "runme.openAsRunmeNotebook",
+        "category": "Runme",
+        "title": "Open markdown as Runme",
+        "icon": {
+          "light": "assets/runme-logo-light.svg",
+          "dark": "assets/runme-logo-dark.svg"
+        }
+      },
+      {
+        "command": "runme.openSplitViewAsMarkdownText",
+        "category": "Runme",
+        "title": "Open Runme notebook in text editor",
+        "icon": "$(markdown)"
       }
     ],
     "menus": {
@@ -83,10 +104,30 @@
         {
           "command": "runme.openTerminal",
           "when": "false"
-        },
+        }, 
         {
           "command": "runme.stopBackgroundTask",
           "when": "false"
+        },
+        {
+          "command": "runme.openAsRunmeNotebook",
+          "when": "false"
+        },
+        {
+          "command": "runme.openSplitViewAsMarkdownText",
+          "when": "false"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "resourceLangId == markdown && !notebookType",
+          "command": "runme.openAsRunmeNotebook",
+          "group": "navigation"
+        },
+        {
+          "when": "notebookType == runme",
+          "command": "runme.openSplitViewAsMarkdownText",
+          "group": "navigation"
         }
       ]
     },
