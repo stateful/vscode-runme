@@ -49,7 +49,8 @@
   ],
   "activationEvents": [
     "onNotebook:runme",
-    "onRenderer:runme-renderer"
+    "onRenderer:runme-renderer",
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -70,6 +71,26 @@
         "command": "runme.resetEnv",
         "category": "Runme",
         "title": "Reset Environment Variables for current VS Code session"
+      },
+      {
+        "command": "runme.resetEnv",
+        "category": "Runme",
+        "title": "Reset Environment Variables for current VS Code session"
+      },
+      {
+        "command": "runme.openAsRunmeNotebook",
+        "category": "Runme",
+        "title": "Open markdown as Runme",
+        "icon": {
+          "light": "assets/runme-logo-light.svg",
+          "dark": "assets/runme-logo-dark.svg"
+        }
+      },
+      {
+        "command": "runme.openSplitViewAsMarkdownText",
+        "category": "Runme",
+        "title": "Open Runme notebook in text editor",
+        "icon": "$(markdown)"
       }
     ],
     "menus": {
@@ -77,6 +98,27 @@
         {
           "command": "runme.openTerminal",
           "when": "false"
+        }, 
+        {
+          "command": "runme.openAsRunmeNotebook",
+          "when": "false"
+        },
+        {
+          "command": "runme.openSplitViewAsMarkdownText",
+          "when": "false"
+        }
+
+      ],
+      "editor/title": [
+        {
+          "when": "resourceLangId == markdown && !notebookType",
+          "command": "runme.openAsRunmeNotebook",
+          "group": "navigation"
+        },
+        {
+          "when": "notebookType == runme",
+          "command": "runme.openSplitViewAsMarkdownText",
+          "group": "navigation"
         }
       ]
     },
