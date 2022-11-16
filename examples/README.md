@@ -31,7 +31,7 @@ sleep 100000
 ## Complex Output
 
 ```sh
-yarn global add webdriverio
+npm i -g webdriverio
 ```
 
 ## Stdin Example

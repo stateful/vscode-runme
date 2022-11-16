@@ -178,7 +178,7 @@
     "build": "run-s build:dev",
     "build:dev": "webpack --mode development",
     "build:prod": "webpack --mode production",
-    "bundle": "vsce package --pre-release --yarn --no-git-tag-version --no-update-package-json -o \"./runme-$npm_package_version.vsix\"",
+    "bundle": "vsce package --pre-release --npm --no-git-tag-version --no-update-package-json -o \"./runme-$npm_package_version.vsix\"",
     "download:wasm": "node .github/scripts/downloadWasm.js",
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "npm run download:wasm",

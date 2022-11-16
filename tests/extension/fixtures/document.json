@@ -38,10 +38,10 @@
       "markdown": "## Complex Output"
     },
     {
-      "content": "yarn global add webdriverio\n",
+      "content": "npm i -g webdriverio\n",
       "description": "## Complex Output",
       "lines": [
-        "yarn global add webdriverio"
+        "npm i -g webdriverio"
       ]
     },
     {
