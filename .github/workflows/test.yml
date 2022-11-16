@@ -13,7 +13,8 @@ jobs:
         with:
           node-version: 18
       - name: 📦 Install Dependencies
-        run: yarn
+        # use NPM here as Yarn as issues resolving WebdriverIO dependencies
+        run: npm install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🏗 Build Project
