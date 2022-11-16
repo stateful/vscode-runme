@@ -78,6 +78,12 @@
         "title": "Reset Environment Variables for current VS Code session"
       },
       {
+        "command": "runme.stopBackgroundTask",
+        "category": "Runme",
+        "title": "Dispose terminal session to stop background task."
+
+      },
+      {
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
         "title": "Open markdown as Runme",
@@ -97,6 +103,10 @@
       "commandPalette": [
         {
           "command": "runme.openTerminal",
+          "when": "false"
+        },
+        {
+          "command": "runme.stopBackgroundTask",
           "when": "false"
         },
         {
