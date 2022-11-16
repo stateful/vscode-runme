@@ -1,7 +1,11 @@
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
 import { getExecutionProperty, getTerminalByCell } from '../../../src/extension/utils'
-import { ShowTerminalProvider, BackgroundTaskProvider } from '../../../src/extension/provider/background'
+import { 
+  ShowTerminalProvider, 
+  BackgroundTaskProvider, 
+  StopBackgroundTaskProvider 
+} from '../../../src/extension/provider/background'
 
 vi.mock('vscode', () => ({
   default: {
@@ -49,7 +53,7 @@ describe('ShowTerminalProvider', () => {
     const p = new ShowTerminalProvider()
     const item = await p.provideCellStatusBarItems('cell' as any)
     expect(item).toEqual({
-      label: '$(terminal) Open Terminal',
+      label: '$(terminal) Open Terminal (PID: 123)',
       command: 'runme.openTerminal',
       position: 'right'
     })
@@ -88,6 +92,55 @@ describe('BackgroundTaskProvider', () => {
     expect(item).toEqual({
       label: 'Background Task',
       position: 'right'
+    })
+  })
+})
+
+describe('StopBackgroundTaskProvider', () => {
+  const cell: any = {
+    metadata: { attributes: { background: undefined } },
+    executionSummary: { success: undefined }
+  }
+
+  beforeEach(() => {
+    vi.mocked(getExecutionProperty).mockClear()
+    vi.mocked(getTerminalByCell).mockClear()
+  })
+
+  it('dont show bg task label if cell is non a background task', async () => {
+    const p = new StopBackgroundTaskProvider()
+    expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
+    expect(getExecutionProperty).toBeCalledTimes(0)
+  })
+
+  it('dont show bg task label if cell is non interactive', async () => {
+    cell.metadata.attributes.background = 'true'
+    vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+    const p = new StopBackgroundTaskProvider()
+    expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
+    expect(getExecutionProperty).toBeCalledTimes(1)
+    expect(getExecutionProperty).toBeCalledWith('interactive', cell)
+  })
+
+  it('dont show if cell was not yet executed', async () => {
+    cell.metadata.attributes.background = 'true'
+    cell.executionSummary.success = false
+    const p = new StopBackgroundTaskProvider()
+    expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
+    expect(getExecutionProperty).toBeCalledTimes(1)
+    expect(cell.executionSummary.success).toBe(false)
+  })
+
+  it('return with button to close', async () => {
+    cell.metadata.attributes.background = 'true'
+    cell.executionSummary.success = true
+    vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+    const p = new StopBackgroundTaskProvider()
+    const item = await p.provideCellStatusBarItems(cell)
+    expect(item).toEqual({
+      label: '$(circle-slash) Stop Task',
+      position: 'right',
+      command: 'runme.stopBackgroundTask'
     })
   })
 })

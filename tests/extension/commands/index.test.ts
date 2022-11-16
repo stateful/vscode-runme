@@ -13,7 +13,8 @@ import {
   copyCellToClipboard, 
   runCLICommand, 
   openAsRunmeNotebook, 
-  openSplitViewAsMarkdownText } from '../../../src/extension/commands'
+  openSplitViewAsMarkdownText,
+  stopBackgroundTask } from '../../../src/extension/commands'
 import { getTerminalByCell } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
@@ -77,4 +78,16 @@ test('open markdown as Runme notebook', (file: NotebookDocument) => {
 test('open Runme notebook in text editor', (file: TextDocument) => {
   openSplitViewAsMarkdownText(file)
   expect(window.showTextDocument).toBeCalledWith(file, {viewColumn: ViewColumn.Beside})
+})
+
+test('stopBackgroundTask if terminal exists', () => {
+  vi.mocked(getTerminalByCell).mockReturnValue({ dispose: vi.fn() } as any)
+  stopBackgroundTask({} as any)
+  expect(window.showInformationMessage).toBeCalledTimes(1)
+})
+
+test('stopBackgroundTask if terminal does not exist', () => {
+  vi.mocked(getTerminalByCell).mockReturnValue(undefined)
+  stopBackgroundTask({} as any)
+  expect(window.showWarningMessage).toBeCalledTimes(1)
 })

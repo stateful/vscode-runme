@@ -91,6 +91,12 @@
         "category": "Runme",
         "title": "Open Runme notebook in text editor",
         "icon": "$(markdown)"
+      },
+      {
+        "command": "runme.stopBackgroundTask",
+        "category": "Runme",
+        "title": "Dispose terminal session to stop background task."
+
       }
     ],
     "menus": {
@@ -105,6 +111,10 @@
         },
         {
           "command": "runme.openSplitViewAsMarkdownText",
+          "when": "false"
+        },
+        {
+          "command": "runme.stopBackgroundTask",
           "when": "false"
         }
       ],
