@@ -1,9 +1,5 @@
 # Change Log
 
-All notable changes to the "vscode-runme" extension will be documented in this file.
+All notable changes to the "vscode-runme" extension can be gleaned from the project's [release page](https://github.com/stateful/vscode-runme/releases).
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
--   Initial release
+If you have any questions please [join the Discord](https://discord.gg/stateful) and let us know.
