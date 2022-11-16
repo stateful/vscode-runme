@@ -41,6 +41,10 @@ export const commands = {
   registerCommand: vi.fn()
 }
 
+export enum ViewColumn  {
+  Beside = 'Beside'
+}
+
 export const env = {
   clipboard: {
     writeText: vi.fn()

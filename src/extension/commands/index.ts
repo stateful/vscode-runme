@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument } from 'vscode'
+import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn } from 'vscode'
 
 import { CliProvider } from '../provider/cli'
 import { getTerminalByCell } from '../utils'
@@ -34,12 +34,12 @@ export async function runCLICommand (cell: NotebookCell) {
 }
 export function openAsRunmeNotebook (doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
-    viewColumn: 2
+    viewColumn: ViewColumn.Beside
   })
 }
 
 export function openSplitViewAsMarkdownText (doc: TextDocument) {
   window.showTextDocument(doc, {
-    viewColumn: 2
+    viewColumn: ViewColumn.Beside
   })
 }

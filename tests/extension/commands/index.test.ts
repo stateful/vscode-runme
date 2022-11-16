@@ -4,7 +4,8 @@ import {
   // @ts-expect-error mock feature
   terminal,
   NotebookDocument,
-  TextDocument
+  TextDocument,
+  ViewColumn,  
 } from 'vscode'
 
 import { 
@@ -70,10 +71,10 @@ test('runCLICommand if CLI is installed', async () => {
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
-  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: 2})
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside})
 })
 
 test('open Runme notebook in text editor', (file: TextDocument) => {
   openSplitViewAsMarkdownText(file)
-  expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: 2})
+  expect(window.showTextDocument).toBeCalledWith(file, {viewColumn: ViewColumn.Beside})
 })
