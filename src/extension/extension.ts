@@ -3,7 +3,6 @@ import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
 
 import { Serializer } from './notebook'
 import { Kernel } from './kernel'
-// import { ViteServerProcess } from './server'
 import { ShowTerminalProvider, BackgroundTaskProvider } from './provider/background'
 import { PidStatusProvider } from './provider/pid'
 import { CopyProvider } from './provider/copy'
@@ -28,12 +27,8 @@ export function deactivate() {}
 export class RunmeExtension {
   async initialise (context: ExtensionContext) {
     const kernel = new Kernel(context)
-    // const viteProcess = new ViteServerProcess()
-    // await viteProcess.start()
-
     context.subscriptions.push(
       kernel,
-      // viteProcess,
       workspace.registerNotebookSerializer('runme', new Serializer(context), {
         transientOutputs: true,
         transientCellMetadata: {

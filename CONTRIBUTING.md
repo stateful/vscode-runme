@@ -46,7 +46,7 @@ It is always best to discuss your plans beforehand, to ensure that your contribu
 To build and work on this project you need to install:
 
 - [Node.js](https://nodejs.org/en/) (v18 or later)
-- [Yarn](https://www.npmjs.com/package/yarn) (latest)
+- [NPM](https://www.npmjs.com/package/npm) (latest)
 
 ### Check out code
 
@@ -69,13 +69,13 @@ then ensure to install all project dependencies:
 ```sh
 cd vscode-runme
 nvm install
-GITHUB_TOKEN=$(gh auth token) yarn install
+GITHUB_TOKEN=$(gh auth token) npm install
 ```
 
 This should also download the Runme CLI WASM file. If an error happened follow the error instructions and re-run the download, via:
 
 ```sh
-GITHUB_TOKEN=$(gh auth token) yarn download:wasm
+GITHUB_TOKEN=$(gh auth token) npm run download:wasm
 ```
 
 ### Build Project
@@ -83,7 +83,7 @@ GITHUB_TOKEN=$(gh auth token) yarn download:wasm
 To compile all extension files, run:
 
 ```sh
-yarn build
+npm run build
 ```
 
 ### Test Project
@@ -91,7 +91,7 @@ yarn build
 To test the project, run:
 
 ```sh
-yarn test
+npm run test
 ```
 
 ### Commit messages

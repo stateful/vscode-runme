@@ -13,16 +13,15 @@ jobs:
         with:
           node-version: 18
       - name: 📦 Install Dependencies
-        # use NPM here as Yarn as issues resolving WebdriverIO dependencies
         run: npm install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🏗 Build Project
-        run: yarn build:dev
+        run: npm run build:dev
       - name: 🧪 Run Tests
         uses: GabrielBB/xvfb-action@v1
         with:
-          run: yarn test
+          run: npm test
           options: "-screen 0 1600x1200x24"
       - uses: actions/upload-artifact@v3
         if: failure()
