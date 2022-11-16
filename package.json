@@ -102,7 +102,12 @@
         {
           "command": "runme.openAsRunmeNotebook",
           "when": "false"
+        },
+        {
+          "command": "runme.openSplitViewAsMarkdownText",
+          "when": "false"
         }
+
       ],
       "editor/title": [
         {
