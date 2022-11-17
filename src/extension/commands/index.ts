@@ -5,10 +5,14 @@ import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewCol
 import { CliProvider } from '../provider/cli'
 import { getTerminalByCell } from '../utils'
 
+function showWarningMessage () {
+  return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+}
+
 export function openTerminal (cell: NotebookCell) {
   const terminal = getTerminalByCell(cell)
   if (!terminal) {
-    return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+    return showWarningMessage()
   }
   return terminal.show()
 }
@@ -16,6 +20,15 @@ export function openTerminal (cell: NotebookCell) {
 export function copyCellToClipboard (cell: NotebookCell) {
   env.clipboard.writeText(cell.document.getText())
   return window.showInformationMessage('Copied cell to clipboard!')
+}
+
+export function stopBackgroundTask (cell: NotebookCell) {
+  const terminal = getTerminalByCell(cell)
+  if (!terminal) {
+    return showWarningMessage()
+  }
+  terminal.dispose()
+  return window.showInformationMessage(`${terminal?.name} task terminated!`)
 }
 
 export async function runCLICommand (cell: NotebookCell) {
