@@ -7,13 +7,15 @@ import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvide
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
-import { 
-  openTerminal, 
-  runCLICommand, 
-  copyCellToClipboard, 
-  openAsRunmeNotebook, 
+import {
+  openTerminal,
+  runCLICommand,
+  copyCellToClipboard,
+  openAsRunmeNotebook,
   openSplitViewAsMarkdownText ,
-  stopBackgroundTask
+  stopBackgroundTask,
+  loadEarlierVersion,
+  clearVersionHistory
 } from './commands'
 
 
@@ -42,6 +44,8 @@ export class RunmeExtension {
       commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+      commands.registerCommand('runme.loadEarlierVersion', loadEarlierVersion(context)),
+      commands.registerCommand('runme.clearVersionHistory', clearVersionHistory(context))
     )
   }
 }

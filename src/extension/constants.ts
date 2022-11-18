@@ -11,3 +11,4 @@ export const DEFAULT_ENV = {
 export const ENV_STORE = new Map<string, string>(
   Object.entries(DEFAULT_ENV)
 )
+export const STATE_VERSION_KEY = 'runme.versionedDocuments'

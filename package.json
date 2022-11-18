@@ -96,7 +96,16 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
-
+      },
+      {
+        "command": "runme.loadEarlierVersion",
+        "category": "Runme",
+        "title": "Load back earlier version of a Runme document."
+      },
+      {
+        "command": "runme.clearVersionHistory",
+        "category": "Runme",
+        "title": "Clears version history of previously stored document versions."
       }
     ],
     "menus": {

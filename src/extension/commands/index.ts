@@ -1,9 +1,16 @@
 import path from 'node:path'
 
-import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn } from 'vscode'
+import {
+  NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn, ExtensionContext,
+  QuickPickItem,
+  workspace,
+  commands
+} from 'vscode'
 
 import { CliProvider } from '../provider/cli'
 import { getTerminalByCell } from '../utils'
+import { STATE_VERSION_KEY } from '../constants'
+import type { DocumentVersionEntry } from '../types'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -55,4 +62,46 @@ export function openSplitViewAsMarkdownText (doc: TextDocument) {
   window.showTextDocument(doc, {
     viewColumn: ViewColumn.Beside
   })
+}
+
+class VersionSelection implements QuickPickItem {
+  public label: string
+  public content: string
+  constructor (version: DocumentVersionEntry) {
+    this.label = `Create at ${new Date(version.createdAt)}`
+    this.content = version.content
+  }
+}
+
+export function loadEarlierVersion (context: ExtensionContext) {
+  return async () => {
+    if (!window.activeNotebookEditor) {
+      return window.showWarningMessage('No Runme notebook currently opened')
+    }
+
+    const versionedDocuments = context.globalState.get<Record<string, DocumentVersionEntry[]>>(
+      STATE_VERSION_KEY, {}
+    )
+    const currentDocumentPath = window.activeNotebookEditor.notebook.uri.fsPath
+    const documentVersions = versionedDocuments[currentDocumentPath] || []
+
+    if (documentVersions.length === 0) {
+      return window.showInformationMessage('No older version of this document exist')
+    }
+
+    const qp = await window.showQuickPick<VersionSelection>(
+      documentVersions.map((v) => new VersionSelection(v)))
+
+    if (!qp) {
+      return
+    }
+
+    workspace.fs.writeFile(Uri.parse(currentDocumentPath), Buffer.from(qp.content))
+    await commands.executeCommand('workbench.action.closeActiveEditor')
+    return commands.executeCommand('vscode.open', Uri.parse(currentDocumentPath))
+  }
+}
+
+export function clearVersionHistory (context: ExtensionContext) {
+  return () => context.globalState.update(STATE_VERSION_KEY, {})
 }

@@ -1,13 +1,18 @@
+import crypto from 'node:crypto'
+import path from 'node:path'
+
 import {
-  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind
+  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind,
+  window
 } from 'vscode'
 
 import type { WasmLib } from '../types'
 
 import executor from './executors'
 import Languages from './languages'
-import { PLATFORM_OS } from './constants'
+import { PLATFORM_OS, STATE_VERSION_KEY } from './constants'
 import { normalizeLanguage } from './utils'
+import type { DocumentVersionEntry } from './types'
 
 declare var globalThis: any
 
@@ -166,7 +171,46 @@ export class Serializer implements NotebookSerializer {
       newContent.push(`${cell.metadata?.header}\n${cell.value}\n\`\`\`\n`)
     }
 
-    return Promise.resolve(Buffer.from(newContent.join('\n')))
+    const newMarkdownContent = newContent.join('\n')
+    const newMarkdownContentHash = crypto.createHash('sha256').update(newMarkdownContent).digest('hex')
+    const versionedDocuments = this.context.globalState.get<Record<string, DocumentVersionEntry[]>>(
+      STATE_VERSION_KEY, {}
+    )
+    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
+    if (currentDocumentPath) {
+      const documentVersions = versionedDocuments[currentDocumentPath] || []
+      /**
+       * no version has been stored so far, let's ensure we start with the original
+       */
+      if (documentVersions.length === 0) {
+        const original = await workspace.fs.readFile(Uri.parse(currentDocumentPath))
+        documentVersions.push({
+          content: original.toString(),
+          createdAt: Date.now(),
+          hash: crypto.createHash('sha256').update(original.toString()).digest('hex')
+        })
+      }
+
+      const hasSameVersion = Boolean(documentVersions.find((d) => d.hash === newMarkdownContentHash))
+      /**
+       * store a new version if non exists so far or if the current version
+       * has new/different content
+       */
+      if (!hasSameVersion) {
+        documentVersions.push({
+          hash: newMarkdownContentHash,
+          content: newMarkdownContent,
+          createdAt: Date.now()
+        })
+        versionedDocuments[currentDocumentPath] = documentVersions
+        await this.context.globalState.update(STATE_VERSION_KEY, versionedDocuments)
+        console.log(
+          `[Runme] a new version for file ${path.basename(currentDocumentPath)} with hash ${newMarkdownContentHash}`
+        )
+      }
+    }
+
+    return Promise.resolve(Buffer.from(newMarkdownContent))
   }
 
   #printCell(content: string, languageId = 'markdown') {
