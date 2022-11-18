@@ -18,6 +18,7 @@ declare var globalThis: any
 
 // const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const DEFAULT_LANG_ID = 'text'
+const MAX_VERSION_COUNT = 20
 
 export class Serializer implements NotebookSerializer {
   private readonly ready: Promise<Error | void>
@@ -202,7 +203,10 @@ export class Serializer implements NotebookSerializer {
           content: newMarkdownContent,
           createdAt: Date.now()
         })
-        versionedDocuments[currentDocumentPath] = documentVersions
+        /**
+         * only keep MAX_VERSION_COUNT amount of document versions around
+         */
+        versionedDocuments[currentDocumentPath] = documentVersions.slice(MAX_VERSION_COUNT * -1)
         await this.context.globalState.update(STATE_VERSION_KEY, versionedDocuments)
         console.log(
           `[Runme] a new version for file ${path.basename(currentDocumentPath)} with hash ${newMarkdownContentHash}`
