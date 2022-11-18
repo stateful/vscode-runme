@@ -24,10 +24,15 @@ beforeEach(() => {
 })
 
 test('should support export without quotes', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo=bar'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo=bar' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo=bar'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
@@ -37,10 +42,15 @@ test('should support export without quotes', async () => {
 })
 
 test('should populate value if quotes are used', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo="bar"'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo="bar"' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo="bar"'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
@@ -50,10 +60,15 @@ test('should populate value if quotes are used', async () => {
 })
 
 test('can support single quotes', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo=\'bar\''),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo=\'bar\'' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo=\'bar\''),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
@@ -63,19 +78,29 @@ test('can support single quotes', async () => {
 })
 
 test('can handle new lines before and after', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('\n\nexport foo=bar\n'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: '\n\nexport foo=bar\n' },
+      document: {
+        getText: vi.fn().mockReturnValue('\n\nexport foo=bar\n'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('\n')
 })
 
 test('can populate pre-existing envs', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo="foo$BARloo"'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo="foo$BARloo"' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo="foo$BARloo"'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   process.env.BAR = 'rab'
   vi.mocked(window.showInputBox).mockResolvedValue('foo$BAR')
   const cellText = await retrieveShellCommand(exec)
@@ -84,10 +109,15 @@ test('can populate pre-existing envs', async () => {
 })
 
 test('can support expressions', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo=$(echo "foo$BAR")'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo=$(echo "foo$BAR")' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo=$(echo "foo$BAR")'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   process.env.BAR = 'bar'
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
@@ -95,19 +125,31 @@ test('can support expressions', async () => {
 })
 
 test('returns undefined if expression fails', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export foo=$(FAIL)'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo=$(FAIL)' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo=$(FAIL)'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   expect(await retrieveShellCommand(exec)).toBeUndefined()
   expect(window.showErrorMessage).toBeCalledTimes(1)
 })
 
 test('supports multiline exports', async () => {
-  const exec: any = { cell: { document: {
-    getText: vi.fn().mockReturnValue('export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"'),
-    uri: { fsPath: __dirname }
-  }}}
+  const exec: any = {
+    cell: {
+      metadata: { executeableCode: 'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"' },
+      document: {
+        getText: vi.fn().mockReturnValue(
+          'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"'
+        ),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
   vi.mocked(window.showInputBox).mockImplementation(({ value, placeHolder }: any) => value || placeHolder)
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
