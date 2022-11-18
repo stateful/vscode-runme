@@ -30,7 +30,7 @@ describe('Runme VS Code Extension', () => {
     await browser.waitUntil(async () => (await workbench.getAllWebviews()).length > 0)
     const webview = (await workbench.getAllWebviews())[0]
     await webview.open()
-    expect(await $('body').getText()).toContain('Runme Examples')
+    await expect($('body')).toHaveTextContaining('Runme Examples')
     await webview.close()
   })
 
