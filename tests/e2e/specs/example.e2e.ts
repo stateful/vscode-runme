@@ -55,6 +55,6 @@ describe('Runme VS Code Extension', () => {
     const workbench = await browser.getWorkbench()
     const webview = (await workbench.getAllWebviews())[0]
     await webview.open()
-    await expect($('.output-stream')).toHaveText('Foo 👀\nBar 🕺\nLoo 🚀')
+    await expect($('.output_container').$('>>>pre')).toHaveText('Foo 👀\nBar 🕺\nLoo 🚀')
   })
 })
