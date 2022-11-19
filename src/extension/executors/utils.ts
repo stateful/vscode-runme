@@ -5,7 +5,7 @@ import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, wind
 
 import { ENV_STORE } from '../constants'
 import { OutputType } from '../../constants'
-import type { CellOutput } from '../../types'
+import type { CellOutputPayload } from '../../types'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -16,7 +16,7 @@ const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))
 export function renderError (exec: NotebookCellExecution, output: string) {
   return exec.replaceOutput(new NotebookCellOutput([
     NotebookCellOutputItem.json(
-      <CellOutput<OutputType.error>>{
+      <CellOutputPayload<OutputType.error>>{
         type: OutputType.error,
         output
       },

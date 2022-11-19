@@ -34,10 +34,16 @@ export namespace WasmLib {
   }
 }
 
-export interface CellOutput<T extends OutputType> {
+interface ICellOutput<T extends OutputType> {
   type: T
   output: Payload[T]
 }
+
+export type CellOutputPayload<T extends OutputType> = T extends any
+    ? ICellOutput<T>
+    : never
+
+export type CellOutput = CellOutputPayload<OutputType>
 
 interface DenoPayload {
   deployed?: boolean
@@ -47,14 +53,13 @@ interface DenoPayload {
 
 interface Payload {
   [OutputType.error]: string
-  [OutputType.shell]: string
   [OutputType.deno]?: DenoPayload
   [OutputType.vercel]: {
     type: string
     payload?: any
     outputItems: string[]
   }
-  [OutputType.outputItems]: string
+  [OutputType.outputItems]: OutputItemsPayload
 }
 
 export interface ClientMessage <T extends ClientMessages> {
@@ -73,4 +78,9 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
+}
+
+export interface OutputItemsPayload {
+  content: string
+  mime: string
 }

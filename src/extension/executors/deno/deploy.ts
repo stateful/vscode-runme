@@ -5,7 +5,7 @@ import { OutputType, ClientMessages } from '../../../constants'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
-import type { CellOutput, ClientMessage } from '../../../types'
+import type { CellOutputPayload, ClientMessage } from '../../../types'
 
 export async function deploy (
   this: Kernel,
@@ -28,7 +28,7 @@ export async function deploy (
      */
     exec.replaceOutput(new NotebookCellOutput([
       NotebookCellOutputItem.json(
-        <CellOutput<OutputType.deno>>{ type: OutputType.deno }, OutputType.deno)
+        <CellOutputPayload<OutputType.deno>>{ type: OutputType.deno }, OutputType.deno)
     ], { deno: { deploy: true } }))
 
     const start = new Date()

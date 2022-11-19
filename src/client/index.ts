@@ -17,21 +17,16 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
   setContext(context)
   return {
     renderOutputItem(outputItem, element) {
-      const payload: CellOutput<OutputType> = outputItem.json()
+      const payload: CellOutput = outputItem.json()
 
       switch (payload.type) {
-        case OutputType.shell:
-          const shellElem = document.createElement('shell-output')
-          shellElem.innerHTML = payload.output as CellOutput<OutputType.shell>['output']
-          element.appendChild(shellElem)
-          break
         case OutputType.vercel:
           const vercelElem = document.createElement('vercel-output')
           vercelElem.setAttribute('content', JSON.stringify(payload.output))
           element.appendChild(vercelElem)
           break
         case OutputType.deno:
-          const deno = payload.output as CellOutput<OutputType.deno>['output'] || {}
+          const deno = payload.output || {}
           const denoElem = document.createElement('deno-output')
           deno.deployed && denoElem.setAttribute('deployed', deno.deployed.toString())
           deno.project && denoElem.setAttribute('project', JSON.stringify(deno.project))
@@ -39,9 +34,27 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           element.appendChild(denoElem)
           break
         case OutputType.outputItems:
-          const outputItemElem = document.createElement('shell-output-items')
-          outputItemElem.setAttribute('content', payload.output as string)
-          element.appendChild(outputItemElem)
+          let outputItemElem: any
+
+          if (payload.output.mime.startsWith('image/')) {
+            outputItemElem = document.createElement('img') as HTMLImageElement
+            outputItemElem.src = `data:${payload.output.mime};base64, ${payload.output.content}`
+            element.appendChild(outputItemElem)
+          } else {
+            const content = decodeURIComponent(escape(window.atob(payload.output.content)))
+            /**
+             * shell output
+             */
+            const shellElem = document.createElement('shell-output')
+            shellElem.innerHTML = content
+            element.appendChild(shellElem)
+            /**
+             * output items, e.g. copy to clipboard
+             */
+            outputItemElem = document.createElement('shell-output-items')
+            outputItemElem.setAttribute('content', content)
+            element.appendChild(outputItemElem)
+          }
           break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`
