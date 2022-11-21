@@ -18,7 +18,7 @@ echo "Hello World!"
 ```sh { interactive=false }
 echo "Foo 👀"
 sleep 2
-echo "Bar!!!!! 🕺"
+echo "Bar 🕺"
 sleep 2
 echo "Loo 🚀"
 ```
