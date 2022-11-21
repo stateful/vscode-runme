@@ -11,7 +11,7 @@ import type { WasmLib } from '../types'
 import executor from './executors'
 import Languages from './languages'
 import { PLATFORM_OS, STATE_VERSION_KEY } from './constants'
-import { normalizeLanguage } from './utils'
+import { normalizeLanguage, verifyCheckedInFile } from './utils'
 import type { DocumentVersionEntry } from './types'
 
 declare var globalThis: any
@@ -148,7 +148,18 @@ export class Serializer implements NotebookSerializer {
   }
 
   public async serializeNotebook(data: NotebookData): Promise<Uint8Array> {
+    const config = workspace.getConfiguration('runme.feature')
+    const supportRunmeVersionHistory = config.get('versionHistory')
+    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
     const newContent: string[] = []
+
+    if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath)) && !supportRunmeVersionHistory) {
+      throw new Error(
+        'You are trying to update a file that is not version controlled! ' +
+        'Runme file updates is currently experimental. If you like to go ahead anyway, enable the ' +
+        '"runme.feature.versionHistory" flag in your settings.'
+      )
+    }
 
     for (const cell of data.cells) {
       if (cell.kind === NotebookCellKind.Markup) {
@@ -161,7 +172,11 @@ export class Serializer implements NotebookSerializer {
          * This little tweak removes that.
          */
         const cellContentLines = cell.value.split('\n')
-        const cellContent = cellContentLines[cellContentLines.length - 1].startsWith('```')
+        const cellContent = (
+          // markdown could have example code
+          !cellContentLines[0].startsWith('```') &&
+          cellContentLines[cellContentLines.length - 1].startsWith('```')
+        )
           ? cellContentLines.slice(0, -1).join('\n')
           : cell.value
 
@@ -177,8 +192,7 @@ export class Serializer implements NotebookSerializer {
     const versionedDocuments = this.context.globalState.get<Record<string, DocumentVersionEntry[]>>(
       STATE_VERSION_KEY, {}
     )
-    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
-    if (currentDocumentPath) {
+    if (currentDocumentPath && supportRunmeVersionHistory) {
       const documentVersions = versionedDocuments[currentDocumentPath] || []
       /**
        * no version has been stored so far, let's ensure we start with the original

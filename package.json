@@ -188,6 +188,12 @@
             "scope": "machine",
             "default": true,
             "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
+          },
+          "runme.feature.versionHistory": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, you allow Runme to do basic version control for modified notebooks."
           }
         }
       }

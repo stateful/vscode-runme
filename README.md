@@ -100,7 +100,6 @@ Runme currently consists of a Markdown processor (written in Go) which is both l
 
 Runme is alpha software that is under heavy development. Here are a few known limitations:
 
-- Notebooks are currently read-only from within the notebook UX, please edit markdown file directly
 - Only shell is currently supported on macOS & Linux, no PowerShell and Windows yet
 - Be aware of edge cases. Runme still needs to continue maturing. Let us know when you hit a snags. We appreciate it!
 
