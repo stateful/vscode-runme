@@ -105,6 +105,6 @@ export async function verifyCheckedInFile (filePath: string) {
   const isCheckedIn = await util.promisify(cp.exec)(
     `git ls-files --error-unmatch ${filePath}`,
     { cwd: workspaceFolder.uri.fsPath }
-  )
+  ).then(() => true, () => false)
   return isCheckedIn
 }
