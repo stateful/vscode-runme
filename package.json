@@ -96,7 +96,6 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
-
       }
     ],
     "menus": {
@@ -210,10 +209,10 @@
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
     "@vitest/coverage-c8": "^0.23.4",
-    "@wdio/cli": "^8.0.0-alpha.558",
-    "@wdio/local-runner": "^8.0.0-alpha.558",
-    "@wdio/mocha-framework": "^8.0.0-alpha.558",
-    "@wdio/spec-reporter": "^8.0.0-alpha.558",
+    "@wdio/cli": "^8.0.0-alpha.565",
+    "@wdio/local-runner": "^8.0.0-alpha.565",
+    "@wdio/mocha-framework": "^8.0.0-alpha.565",
+    "@wdio/spec-reporter": "^8.0.0-alpha.565",
     "c8": "^7.12.0",
     "diff-match-patch": "^1.0.5",
     "eslint": "^8.24.0",
@@ -234,6 +233,7 @@
     "vsce": "^2.11.0",
     "vscode-notebook-error-overlay": "^1.0.1",
     "wdio-vscode-service": "^4.2.0",
+    "webdriverio": "^8.0.0-alpha.565",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   },
