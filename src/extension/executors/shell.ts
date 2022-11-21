@@ -6,6 +6,8 @@ import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
 
+const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
+
 async function shellExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
@@ -60,8 +62,17 @@ async function shellExecutor(
         }
       }
       item = NotebookCellOutputItem.json(json, OutputType.vercel)
+    } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
+      item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
+        type: OutputType.outputItems,
+        output: {
+          content: Buffer.concat(outputItems).toString('base64'),
+          mime
+        }
+      }, OutputType.outputItems)
     }
-    exec.replaceOutput([new NotebookCellOutput([ item ])])
+
+    exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
   }
 
   child.stdout.on('data', handleOutput)
