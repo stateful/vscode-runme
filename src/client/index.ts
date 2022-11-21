@@ -34,27 +34,19 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           element.appendChild(denoElem)
           break
         case OutputType.outputItems:
-          let outputItemElem: any
-
-          if (payload.output.mime.startsWith('image/')) {
-            outputItemElem = document.createElement('img') as HTMLImageElement
-            outputItemElem.src = `data:${payload.output.mime};base64, ${payload.output.content}`
-            element.appendChild(outputItemElem)
-          } else {
-            const content = decodeURIComponent(escape(window.atob(payload.output.content)))
-            /**
-             * shell output
-             */
-            const shellElem = document.createElement('shell-output')
-            shellElem.innerHTML = content
-            element.appendChild(shellElem)
-            /**
-             * output items, e.g. copy to clipboard
-             */
-            outputItemElem = document.createElement('shell-output-items')
-            outputItemElem.setAttribute('content', content)
-            element.appendChild(outputItemElem)
-          }
+          const content = decodeURIComponent(escape(window.atob(payload.output.content)))
+          /**
+           * shell output
+           */
+          const shellElem = document.createElement('shell-output')
+          shellElem.innerHTML = content
+          element.appendChild(shellElem)
+          /**
+           * output items, e.g. copy to clipboard
+           */
+          const outputItemElem = document.createElement('shell-output-items')
+          outputItemElem.setAttribute('content', content)
+          element.appendChild(outputItemElem)
           break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`

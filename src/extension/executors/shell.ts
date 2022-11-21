@@ -34,13 +34,7 @@ async function shellExecutor(
    */
   function handleOutput(data: Buffer) {
     outputItems.push(data)
-    let item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
-      type: OutputType.outputItems,
-      output: {
-        content: Buffer.concat(outputItems).toString('base64'),
-        mime
-      }
-    }, OutputType.outputItems)
+    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (script.trim().endsWith('vercel')) {
@@ -65,7 +59,6 @@ async function shellExecutor(
           payload: { status, projectName, id, prod }
         }
       }
-      console.log(JSON.stringify(json))
       item = NotebookCellOutputItem.json(json, OutputType.vercel)
     }
     exec.replaceOutput([new NotebookCellOutput([ item ])])
