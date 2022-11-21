@@ -232,7 +232,7 @@
     "vitest": "^0.23.4",
     "vsce": "^2.11.0",
     "vscode-notebook-error-overlay": "^1.0.1",
-    "wdio-vscode-service": "^4.2.0",
+    "wdio-vscode-service": "^4.2.1",
     "webdriverio": "^8.0.0-alpha.565",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
