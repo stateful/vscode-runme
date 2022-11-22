@@ -1,5 +1,6 @@
 import {
-  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind
+  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind,
+  window
 } from 'vscode'
 
 import type { WasmLib } from '../types'
@@ -7,7 +8,7 @@ import type { WasmLib } from '../types'
 import executor from './executors'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { normalizeLanguage } from './utils'
+import { normalizeLanguage, verifyCheckedInFile } from './utils'
 
 declare var globalThis: any
 
@@ -143,6 +144,15 @@ export class Serializer implements NotebookSerializer {
 
   public async serializeNotebook(data: NotebookData): Promise<Uint8Array> {
     const newContent: string[] = []
+    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
+
+    if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
+      throw new Error(
+        'You are trying to update a file that is not version controlled! ' +
+        'Runme file updates is currently experimental, we don\'t want you to loose important data. ' +
+        'Please check in your file first.'
+      )
+    }
 
     for (const cell of data.cells) {
       if (cell.kind === NotebookCellKind.Markup) {
@@ -155,9 +165,11 @@ export class Serializer implements NotebookSerializer {
          * This little tweak removes that.
          */
         const cellContentLines = cell.value.split('\n')
-        const cellContent = cellContentLines[cellContentLines.length - 1].startsWith('```')
-          ? cellContentLines.slice(0, -1).join('\n')
-          : cell.value
+        const cellContent = (
+          // markdown could have example code
+          !cellContentLines[0].startsWith('```') &&
+          cellContentLines[cellContentLines.length - 1].startsWith('```')
+        )
 
         newContent.push(`${cellContent}\n`)
         continue

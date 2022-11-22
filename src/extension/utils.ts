@@ -1,4 +1,8 @@
-import vscode from 'vscode'
+import path from 'node:path'
+import util from 'node:util'
+import cp from 'node:child_process'
+
+import vscode, { FileType } from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 
@@ -80,4 +84,27 @@ export function normalizeLanguage(l?: string) {
     default:
       return l
   }
+}
+
+export async function verifyCheckedInFile (filePath: string) {
+  const fileDir = path.dirname(filePath)
+  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => ws.uri.fsPath.includes(fileDir))
+
+  if (!workspaceFolder) {
+    return false
+  }
+
+  const hasGitDirectory = await vscode.workspace.fs.stat(workspaceFolder.uri).then(
+    (stat) => stat.type === FileType.Directory,
+    () => false
+  )
+  if (!hasGitDirectory) {
+    return false
+  }
+
+  const isCheckedIn = await util.promisify(cp.exec)(
+    `git ls-files --error-unmatch ${filePath}`,
+    { cwd: workspaceFolder.uri.fsPath }
+  ).then(() => true, () => false)
+  return isCheckedIn
 }
