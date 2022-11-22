@@ -4,7 +4,6 @@
  */
 
 export enum OutputType {
-  shell = 'stateful.runme/shell-stdout',
   vercel = 'stateful.runme/vercel-stdout',
   deno = 'stateful.runme/deno-stdout',
   outputItems = 'stateful.runme/output-items',

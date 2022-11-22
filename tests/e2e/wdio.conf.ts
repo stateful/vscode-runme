@@ -1,7 +1,9 @@
+import url from 'node:url'
 import path from 'node:path'
 
 import type { Options } from '@wdio/types'
 
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 const extensionPath = path.join(__dirname, '..', '..')
 
 export const config: Options.Testrunner = {
