@@ -31,7 +31,8 @@ export class ExperimentalTerminal implements Pseudoterminal {
   }
 
   handleInput(data: string): void {
-    if (data === '\c') {
+    // console.log(`${Buffer.from(data).toString('hex')} len: ${data.length}`)
+    if (data === '\x03') {
       this.closeEmitter.fire(-1)
     }
     this.inputEmitter.fire(data === '\r' ? '\r\n' : data)
