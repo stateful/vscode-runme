@@ -3,56 +3,82 @@ import path from 'node:path'
 import { test, expect } from 'vitest'
 
 import Languages from '../../src/extension/languages'
-import { ParsedDocument, ParsedReadmeEntry } from '../../src/types'
+import { WasmLib } from '../../src/types'
 
 import fixture from './fixtures/document.json'
 
-test('document', () => {
-  expect(fixture.document).toBeTypeOf('object')
+test('cells', () => {
+  expect((fixture as WasmLib.Cells).cells).toBeTypeOf('object')
 })
 
 test('languages#run', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as ParsedDocument
+  const f = fixture as WasmLib.Cells
 
   const results = await Promise.all(
-    f.document!
-      .filter((s: ParsedReadmeEntry) => s.content) // skip pure markdown
-      .map((s: ParsedReadmeEntry) => {
-        return langs.run(s.content!).then(l => {
+    f.cells!
+      .filter((s: WasmLib.Cell) => s.type !== 'markdown') // skip pure markdown
+      .map((s: WasmLib.Cell) => {
+        return langs.run(Languages.normalizeSource(s.source)).then(l => {
           return l?.[0]?.languageId
         })
       })
   )
 
-  expect(results).toStrictEqual(['bat', 'ini', 'bat', 'bat', 'bat', 'coffee', 'ini', 'bat', 'sh', 'bat', 'sh'])
+  expect(results).toStrictEqual([
+    'bat',
+    'ini',
+    'bat',
+    'bat',
+    'bat',
+    'groovy',
+    'ini',
+    'bat',
+    'sh',
+    'bat',
+    'sh',
+    'bat',
+    'bat',
+    'dart',
+    'sh',
+    'bat',
+    'bat',
+    'csv',
+  ])
 })
 
-test('languages#weigh', async () => {
+test('languages#biased', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as ParsedDocument
+  const f = fixture as WasmLib.Cells
 
-  const weighted = await Promise.all(
-    f.document!
-      .filter((s: ParsedReadmeEntry) => s.content) // skip pure markdown
-      .map((s: ParsedReadmeEntry) => {
-        return langs.run(s.content!).then(res => {
-          return [res?.[0].languageId, Languages.weighted('darwin', res)]
+  const biased = await Promise.all(
+    f.cells!
+      .filter((s: WasmLib.Cell) => s.type !== 'markdown') // skip pure markdown
+      .map((s: WasmLib.Cell) => {
+        return langs.run(Languages.normalizeSource(s.source)).then(res => {
+          return [res?.[0].languageId, Languages.biased('darwin', res)]
         })
       })
   )
 
-  expect(weighted).toStrictEqual([
+  expect(biased).toStrictEqual([
     ['bat', 'sh'],
     ['ini', 'ini'],
     ['bat', 'sh'],
     ['bat', 'sh'],
     ['bat', 'sh'],
-    ['coffee', 'html'],
-    ['ini', 'ini'],
+    ['groovy', 'groovy'],
+    ['ini', 'sh'],
     ['bat', 'sh'],
     ['sh', 'sh'],
     ['bat', 'sh'],
-    ['sh', 'sh']
+    ['sh', 'sh'],
+    ['bat', 'sh'],
+    ['bat', 'sh'],
+    ['dart', 'sh'],
+    ['sh', 'sh'],
+    ['bat', 'sh'],
+    ['bat', 'sh'],
+    ['csv', 'sh'],
   ])
 })

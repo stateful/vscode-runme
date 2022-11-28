@@ -73,6 +73,11 @@ export default class Languages {
     return LANGUAGES.get(languageId) || languageId
   }
 
+  public static normalizeSource(source: string): string {
+    const lines = source.split('\n')
+    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+    return normed.join('\n')
+  }
 }
 
 // https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-225.php

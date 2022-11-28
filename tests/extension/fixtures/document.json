@@ -1,123 +1,370 @@
 {
-  "document": [
+  "cells": [
     {
-      "markdown": "Runme Examples\n==============\n\nThis `README.md` contains some examples for testing this extension.\n\n# Extension Example Markdown Files\n\nThis markdown file contains some custom examples to test the execution within a VS Code Notebook.\n\n## Shell Executions"
+      "editable": true,
+      "source": "Runme Examples\n==============",
+      "type": "markdown"
     },
     {
-      "content": "echo \"Hello World!\"\n",
-      "description": "## Shell Executions",
+      "editable": true,
+      "source": "This `README.md` contains some examples for testing this extension.",
+      "type": "markdown"
+    },
+    {
+      "editable": true,
+      "source": "# Extension Example Markdown Files",
+      "type": "markdown"
+    },
+    {
+      "editable": true,
+      "source": "This markdown file contains some custom examples to test the execution within a VS Code Notebook.",
+      "type": "markdown"
+    },
+    {
+      "editable": true,
+      "source": "## Shell Executions",
+      "type": "markdown"
+    },
+    {
+      "attributes": {},
+      "name": "echo-hello",
+      "editable": true,
+      "executable": "",
       "lines": [
         "echo \"Hello World!\""
-      ]
+      ],
+      "source": "```\necho \"Hello World!\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "## More Shell"
+      "editable": true,
+      "source": "## More Shell",
+      "type": "markdown"
     },
     {
-      "content": "$ echo \"Foo 👀\"\n$ sleep 2\n$ echo \"Bar 🕺\"\n$ sleep 2\n$ echo \"Loo 🚀\"\n",
-      "description": "## More Shell",
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "echo-foo",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "echo \"Foo 👀\"",
         "sleep 2",
         "echo \"Bar 🕺\"",
         "sleep 2",
         "echo \"Loo 🚀\""
-      ]
+      ],
+      "source": "```sh { interactive=false }\necho \"Foo 👀\"\nsleep 2\necho \"Bar 🕺\"\nsleep 2\necho \"Loo 🚀\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "## Background Task Example"
+      "editable": true,
+      "source": "## Background Task Example",
+      "type": "markdown"
     },
     {
-      "content": "sleep 100000\n",
-      "description": "## Background Task Example",
+      "attributes": {
+        "background": "true"
+      },
+      "name": "sleep-100000",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "sleep 100000"
-      ]
+      ],
+      "source": "```sh { background=true }\nsleep 100000\n```",
+      "type": "code"
     },
     {
-      "markdown": "## Complex Output"
+      "editable": true,
+      "source": "## Complex Output",
+      "type": "markdown"
     },
     {
-      "content": "npm i -g webdriverio\n",
-      "description": "## Complex Output",
+      "attributes": {},
+      "name": "npm-i",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "npm i -g webdriverio"
-      ]
+      ],
+      "source": "```sh\nnpm i -g webdriverio\n```",
+      "type": "code"
     },
     {
-      "markdown": "## Stdin Example"
+      "editable": true,
+      "source": "## Stdin Example",
+      "type": "markdown"
     },
     {
-      "content": "$ node ./scripts/stdin.js\n",
-      "description": "## Stdin Example",
+      "attributes": {},
+      "name": "node-scriptsstdinjs",
+      "editable": true,
+      "executable": "",
       "lines": [
         "node ./scripts/stdin.js"
-      ]
+      ],
+      "source": "```\nnode ./scripts/stdin.js\n```",
+      "type": "code"
     },
     {
-      "markdown": "## Script Example\n\nYou can also run TypeScript or JavaScript:"
+      "editable": true,
+      "source": "## Script Example",
+      "type": "markdown"
     },
     {
-      "content": "document.body.innerHTML += 'script attached!'\n",
-      "description": "You can also run TypeScript or JavaScript:",
+      "editable": true,
+      "source": "You can also run TypeScript or JavaScript:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {},
+      "name": "function-attach",
+      "editable": true,
+      "executable": "js",
       "lines": [
-        "document.body.innerHTML += 'script attached!'"
-      ]
+        "function attach() {",
+        "document.body.innerHTML += 'script attached!'",
+        "}",
+        "attach()"
+      ],
+      "source": "```js\nfunction attach() {\n    document.body.innerHTML += 'script attached!'\n}\nattach()\n```",
+      "type": "code"
     },
     {
-      "markdown": "## Environment Variables\n\nWithin single lines:"
+      "editable": true,
+      "source": "## Environment Variables",
+      "type": "markdown"
     },
     {
-      "content": "export DENO_ACCESS_TOKEN=\"\u003cinsert-token-here\u003e\"\n",
-      "description": "Within single lines:",
+      "editable": true,
+      "source": "Within single lines:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {},
+      "name": "export-denoaccesstoken",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "export DENO_ACCESS_TOKEN=\"\u003cinsert-token-here\u003e\""
-      ]
+      ],
+      "source": "```sh\nexport DENO_ACCESS_TOKEN=\"\u003cinsert-token-here\u003e\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "verify:"
+      "editable": true,
+      "source": "verify:",
+      "type": "markdown"
     },
     {
-      "content": "echo \"DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN\"\n",
-      "description": "verify:",
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "echo-denoaccesstoken",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "echo \"DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN\""
-      ]
+      ],
+      "source": "```sh { interactive=false }\necho \"DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "Supports multiple lines where an export is just somewhere in between:"
+      "editable": true,
+      "source": "Supports multiple lines where the export is just somewhere in between:",
+      "type": "markdown"
     },
     {
-      "content": "echo \"Auth token for service foo\"\nexport SERVICE_FOO_TOKEN=foobar\necho \"Auth token for service bar\"\nexport SERVICE_BAR_TOKEN=\"barfoo\"\n",
-      "description": "Supports multiple lines where an export is just somewhere in between:",
+      "attributes": {},
+      "name": "echo-auth",
+      "editable": true,
+      "executable": "",
       "lines": [
         "echo \"Auth token for service foo\"",
         "export SERVICE_FOO_TOKEN=foobar",
         "echo \"Auth token for service bar\"",
         "export SERVICE_BAR_TOKEN=\"barfoo\""
-      ]
+      ],
+      "source": "```\necho \"Auth token for service foo\"\nexport SERVICE_FOO_TOKEN=foobar\necho \"Auth token for service bar\"\nexport SERVICE_BAR_TOKEN=\"barfoo\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "verify:"
+      "editable": true,
+      "source": "verify:",
+      "type": "markdown"
     },
     {
-      "content": "echo \"SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN\"\necho \"SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN\"\n",
-      "description": "verify:",
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "echo-servicefootoken",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "echo \"SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN\"",
         "echo \"SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN\""
-      ]
+      ],
+      "source": "```sh { interactive=false }\necho \"SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN\"\necho \"SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN\"\n```",
+      "type": "code"
     },
     {
-      "markdown": "Supports changes to `$PATH`:"
+      "editable": true,
+      "source": "Supports changes to `$PATH`:",
+      "type": "markdown"
     },
     {
-      "content": "export PATH=\"/some/path:$PATH\"\necho $PATH\n",
-      "description": "Supports changes to `$PATH`:",
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "export-path",
+      "editable": true,
+      "executable": "sh",
       "lines": [
         "export PATH=\"/some/path:$PATH\"",
         "echo $PATH"
-      ]
+      ],
+      "source": "```sh { interactive=false }\nexport PATH=\"/some/path:$PATH\"\necho $PATH\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "Supports piping content into an environment variable:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {},
+      "name": "export-license",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "export LICENSE=$(cat ../LICENSE)"
+      ],
+      "source": "```sh\nexport LICENSE=$(cat ../LICENSE)\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "verify:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "echo-license",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "echo \"LICENSE: $LICENSE\""
+      ],
+      "source": "```sh { interactive=false }\necho \"LICENSE: $LICENSE\"\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "Support multiline exports:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {},
+      "name": "export-privatekey",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "export PRIVATE_KEY=\"-----BEGIN RSA PRIVATE KEY-----",
+        "MIIEpAIBAAKCAQEA04up8hoqzS1+",
+        "...",
+        "l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==",
+        "-----END RSA PRIVATE KEY-----\""
+      ],
+      "source": "```sh\nexport PRIVATE_KEY=\"-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA04up8hoqzS1+\n...\nl48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==\n-----END RSA PRIVATE KEY-----\"\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "verify:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "echo-privatekey",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "echo \"PRIVATE_KEY: $PRIVATE_KEY\""
+      ],
+      "source": "```sh { interactive=false }\necho \"PRIVATE_KEY: $PRIVATE_KEY\"\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "## Copy From Result Cell",
+      "type": "markdown"
+    },
+    {
+      "editable": true,
+      "source": "You can copy also results from the inline executed shell:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {
+        "interactive": "false"
+      },
+      "name": "openssl-rand",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "openssl rand -base64 32"
+      ],
+      "source": "```sh { interactive=false }\nopenssl rand -base64 32\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "## Non-Supported Languages",
+      "type": "markdown"
+    },
+    {
+      "editable": true,
+      "source": "These are shown as simple markdowns, e.g:",
+      "type": "markdown"
+    },
+    {
+      "attributes": {
+        "readonly": "true"
+      },
+      "name": "def-hello",
+      "editable": true,
+      "executable": "py",
+      "lines": [
+        "def hello():",
+        "print(\"Hello World\")"
+      ],
+      "source": "```py { readonly=true }\ndef hello():\n    print(\"Hello World\")\n```",
+      "type": "code"
+    },
+    {
+      "editable": true,
+      "source": "## Curl an image",
+      "type": "markdown"
+    },
+    {
+      "attributes": {
+        "interactive": "false,",
+        "mimeType": "image/png"
+      },
+      "name": "curl-httpsleverclientlogos",
+      "editable": true,
+      "executable": "sh",
+      "lines": [
+        "curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2\u003e/dev/null"
+      ],
+      "source": "```sh { interactive=false, mimeType=image/png }\ncurl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2\u003e/dev/null\n```",
+      "type": "code"
     }
   ]
 }

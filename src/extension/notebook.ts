@@ -70,7 +70,7 @@ export class Serializer implements NotebookSerializer {
           // if attributes are being used but no lang designator
           (!elem.executable || !elem.executable.match(ALPHA_NUM_REGEX))
         ) {
-          const norm = Serializer.normalize(elem.source)
+          const norm = Languages.normalizeSource(elem.source)
           return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
             elem.executable = guessed
             elem.attributes = {
@@ -111,7 +111,7 @@ export class Serializer implements NotebookSerializer {
            * for JS content we want to keep indentation
            */
           LANGUAGES_WITH_INDENTATION.includes(language || '')
-            ? (Serializer.normalize(elem.source || '')).trim()
+            ? (Languages.normalizeSource(elem.source || '')).trim()
             : lines.trim(),
           /**
            * with custom vercel execution
@@ -138,12 +138,6 @@ export class Serializer implements NotebookSerializer {
       return acc
     }, [] as NotebookCellData[])
     return new NotebookData(cells)
-  }
-
-  public static normalize(source: string): string {
-    const lines = source.split('\n')
-    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
-    return normed.join('\n')
   }
 
   public async serializeNotebook(
