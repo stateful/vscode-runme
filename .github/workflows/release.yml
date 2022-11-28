@@ -110,15 +110,15 @@ jobs:
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: |
           node .github/scripts/updateEdgeVersion.js
-          npx vsce package --pre-release --npm --no-git-tag-version --no-update-package-json -o "./runme-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
+          npx vsce package --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./runme-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
       - name: Package Extension (Stable)
-        run: npx vsce package $RELEASE_VERSION --npm --no-git-tag-version --no-update-package-json -o "./runme-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
+        run: npx vsce package $RELEASE_VERSION --no-yarn --no-git-tag-version --no-update-package-json -o "./runme-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
       - name: Publish to Visual Studio Marketplace (Edge)
-        run: npx vsce publish --packagePath "./runme-$RELEASE_VERSION.vsix" --pre-release --npm --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
+        run: npx vsce publish --packagePath "./runme-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
       - name: Publish to Visual Studio Marketplace (Stable)
-        run: npx vsce publish --packagePath "./runme-$RELEASE_VERSION.vsix" --npm --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
+        run: npx vsce publish --packagePath "./runme-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
       - name: Publish to Open VSX Registry (Edge)
         uses: HaaLeo/publish-vscode-extension@v1
