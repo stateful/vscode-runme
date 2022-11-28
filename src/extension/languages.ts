@@ -61,7 +61,7 @@ export default class Languages {
 
   // todo(sebastian): too naive; should really consider probabilities
   public static weighted(platform: string, results: ModelResult[]): string | undefined {
-    const languageId = results?.[0].languageId
+    const languageId = results[0]?.languageId
     return LANGUAGES.get(results?.[0].languageId) || languageId
   }
 }
