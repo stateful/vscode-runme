@@ -51,7 +51,7 @@ export default class Languages {
 
   public async guess(snippet: string, platform: string): Promise<string | undefined> {
     const results = await this.modulOperations.runModel(snippet)
-    return Languages.weighted(platform, results)
+    return Languages.biased(platform, results)
   }
 
   public static fromContext(context: vscode.ExtensionContext) {
@@ -59,9 +59,27 @@ export default class Languages {
     return new Languages(basePath)
   }
 
-  // todo(sebastian): too naive; should really consider probabilities
-  public static weighted(platform: string, results: ModelResult[]): string | undefined {
-    const languageId = results[0]?.languageId
-    return LANGUAGES.get(results?.[0].languageId) || languageId
+  public static biased(platform: string, results: ModelResult[]): string | undefined {
+    let top = results.slice(0, 3)
+    const pstdev = stdev(top.map(r => r.confidence), true)
+    // if it's tight at the top (< 1% variance) look for execs
+    while (pstdev < 0.01 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {
+      if (top.length <= 0) {
+        top = results
+        break
+      }
+    }
+    const languageId = top[0]?.languageId
+    return LANGUAGES.get(languageId) || languageId
   }
+
+}
+
+// https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-225.php
+const stdev = (arr: any[], usePopulation = false) => {
+  const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length
+  return Math.sqrt(
+    arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc: any, val: any) => acc + val, 0) /
+      (arr.length - (usePopulation ? 0 : 1))
+  )
 }

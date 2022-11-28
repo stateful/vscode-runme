@@ -12,6 +12,7 @@ import { normalizeLanguage } from './utils'
 declare var globalThis: any
 
 // const CODE_REGEX = /```(\w+)?\n[^`]*```/g
+const ALPHA_NUM_REGEX = /^[a-z0-9]+$/i
 const DEFAULT_LANG_ID = 'text'
 const LANGUAGES_WITH_INDENTATION = ['html', 'tsx', 'ts', 'js']
 
@@ -63,10 +64,19 @@ export class Serializer implements NotebookSerializer {
 
     try {
       parsedCells = await Promise.all(parsedCells.map(elem => {
-        if (elem.type === 'code' && elem.source && !elem.executable) {
+        if (
+          elem.type === 'code' &&
+          elem.source &&
+          // if attributes are being used but no lang designator
+          (!elem.executable || !elem.executable.match(ALPHA_NUM_REGEX))
+        ) {
           const norm = Serializer.normalize(elem.source)
-          return this.languages.guess(norm, PLATFORM_OS).then(guessed => {
+          return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
             elem.executable = guessed
+            elem.attributes = {
+              ...elem.attributes,
+              ...{ executable: guessed },
+            }
             return elem
           })
         }
