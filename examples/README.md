@@ -40,15 +40,14 @@ npm i -g webdriverio
 node ./scripts/stdin.js
 ```
 
-## Script Example
+## Formatted Code Blocks
 
-You can also run TypeScript or JavaScript:
+You can also inline TypeScript or JavaScript:
 
 ```js
 function attach() {
-    document.body.innerHTML += 'script attached!'
+    document.body.innerHTML += 'Hello world!'
 }
-attach()
 ```
 
 ## Environment Variables
