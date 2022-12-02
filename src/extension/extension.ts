@@ -1,17 +1,17 @@
 
 import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
 
-import { Serializer } from './notebook'
+import { NewSerializer } from './notebook'
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
-import { 
-  openTerminal, 
-  runCLICommand, 
-  copyCellToClipboard, 
-  openAsRunmeNotebook, 
+import {
+  openTerminal,
+  runCLICommand,
+  copyCellToClipboard,
+  openAsRunmeNotebook,
   openSplitViewAsMarkdownText ,
   stopBackgroundTask
 } from './commands'
@@ -22,7 +22,7 @@ export class RunmeExtension {
     const kernel = new Kernel(context)
     context.subscriptions.push(
       kernel,
-      workspace.registerNotebookSerializer('runme', new Serializer(context), {
+      workspace.registerNotebookSerializer('runme', new NewSerializer(context), {
         transientOutputs: true,
         transientCellMetadata: {
           inputCollapsed: true,

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind,
-  window
+  window,
+  CancellationToken
 } from 'vscode'
 
 import type { WasmLib } from '../types'
@@ -186,4 +188,104 @@ export class Serializer implements NotebookSerializer {
       new NotebookCellData(NotebookCellKind.Markup, content, languageId)
     ])
   }
+}
+
+export class NewSerializer implements NotebookSerializer {
+  private readonly ready: Promise<void>
+  private readonly languages: Languages
+
+  constructor(private context: ExtensionContext) {
+    this.languages = Languages.fromContext(this.context)
+    this.ready = this.#initWasm()
+  }
+
+  async #initWasm() {
+    const go = new globalThis.Go()
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
+    const wasmFile = await workspace.fs.readFile(wasmUri)
+    return WebAssembly.instantiate(wasmFile, go.importObject).then(
+      (result) => { go.run(result.instance) },
+      (err: Error) => {
+        console.error(`[Runme] failed initialising WASM file: ${err.message}`)
+        throw err
+      }
+    )
+  }
+
+  public async serializeNotebook(data: NotebookData, token: CancellationToken): Promise<Uint8Array> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async deserializeNotebook(content: Uint8Array, token: CancellationToken): Promise<NotebookData> {
+    let notebook: WasmLib.New.Cells
+    try {
+      await this.ready
+
+      const markdown = content.toString()
+      const { Runme } = globalThis as WasmLib.New.Serializer
+
+      notebook = await Runme.deserialize(markdown)
+
+      if (!notebook || (notebook.cells ?? []).length === 0) {
+        return this.#printCell('⚠️ __Error__: no cells found!')
+      }
+    } catch (err: any) {
+      return this.#printCell(
+        '⚠️ __Error__: document could not be loaded' +
+        (err ? `\n<small>${err.message}</small>` : '') +
+        '.<p>Please report bug at https://github.com/stateful/vscode-runme/issues' +
+        ' or let us know on Discord (https://discord.gg/BQm8zRCBUY)</p>'
+      )
+    }
+
+    try {
+      const cells = notebook.cells ?? []
+      notebook.cells = await Promise.all(cells.map(elem => {
+        if (elem.kind === NotebookCellKind.Code && elem.value && !elem.languageId) {
+          const norm = Serializer.normalize(elem.value)
+          return this.languages.guess(norm, PLATFORM_OS).then(guessed => {
+            elem.languageId = guessed
+            return elem
+          })
+        }
+        return Promise.resolve(elem)
+      }))
+    } catch (err: any) {
+      console.error(`Error guessing snippet languages: ${err}`)
+    }
+
+    const cells = NewSerializer.revive(notebook)
+    return new NotebookData(cells)
+  }
+
+  protected static revive(notebook: WasmLib.New.Cells) {
+    return notebook.cells.reduce((accu, elem, id) => {
+      let cell: NotebookCellData
+      switch (elem.kind) {
+        case NotebookCellKind.Code:
+          cell = new NotebookCellData(
+            NotebookCellKind.Code,
+            Serializer.normalize(elem.value),
+            elem.languageId || DEFAULT_LANG_ID
+          )
+          break
+        default:
+          cell = new NotebookCellData(
+            NotebookCellKind.Markup,
+            elem.value,
+            'markdown'
+          )
+      }
+      cell.metadata = {...elem.metadata, id }
+      accu.push(cell)
+      return accu
+    }, <NotebookCellData[]>[])
+  }
+
+  #printCell(content: string, languageId = 'markdown') {
+    return new NotebookData([
+      new NotebookCellData(NotebookCellKind.Markup, content, languageId)
+    ])
+  }
+
 }
