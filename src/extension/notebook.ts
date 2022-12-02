@@ -30,7 +30,7 @@ export class Serializer implements NotebookSerializer {
     return WebAssembly.instantiate(wasmFile, go.importObject).then(
       (result) => { go.run(result.instance) },
       (err: Error) => {
-        console.error(`[Runme] failed initialising WASM file: ${err.message}`)
+        console.error(`[Runme] failed initializing WASM file: ${err.message}`)
         return err
       }
     )

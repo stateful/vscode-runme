@@ -10,7 +10,7 @@ export async function activate (context: ExtensionContext) {
     await ext.initialize(context)
     console.log('[Runme] Extension successfully activated')
   } catch (err: any) {
-    console.log(`[Runme] Failed to initialise the extension ${err.message}`)
+    console.log(`[Runme] Failed to initialize the extension ${err.message}`)
   }
 }
 

@@ -41,7 +41,7 @@ export class Serializer implements NotebookSerializer {
         go.run(result.instance)
       },
       (err: Error) => {
-        console.error(`[Runme] failed initialising WASM file: ${err.message}`)
+        console.error(`[Runme] failed initializing WASM file: ${err.message}`)
         throw err
       }
     )

@@ -6,10 +6,10 @@ import { RunmeExtension } from '../../src/extension/extension'
 vi.mock('vscode')
 
 
-test('initialises all providers', async () => {
+test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
-  await ext.initialise(context)
+  await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(5)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
   expect(commands.registerCommand).toBeCalledTimes(7)
