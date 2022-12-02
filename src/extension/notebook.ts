@@ -191,12 +191,12 @@ export class Serializer implements NotebookSerializer {
 }
 
 export class NewSerializer implements NotebookSerializer {
-  private readonly ready: Promise<void>
+  private readonly wasmReady: Promise<void>
   private readonly languages: Languages
 
   constructor(private context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
-    this.ready = this.#initWasm()
+    this.wasmReady = this.#initWasm()
   }
 
   async #initWasm() {
@@ -213,16 +213,30 @@ export class NewSerializer implements NotebookSerializer {
   }
 
   public async serializeNotebook(data: NotebookData, token: CancellationToken): Promise<Uint8Array> {
-    throw new Error('Method not implemented.')
+    try {
+      await this.wasmReady
+      const { Runme } = globalThis as WasmLib.New.Serializer
+
+      const notebook = JSON.stringify(data)
+      const markdown = await Runme.serialize(notebook)
+
+      const encoder = new TextEncoder()
+      const encoded = encoder.encode(markdown)
+
+      return encoded
+    } catch (err: any) {
+      console.error(err)
+      throw err
+    }
   }
 
   public async deserializeNotebook(content: Uint8Array, token: CancellationToken): Promise<NotebookData> {
-    let notebook: WasmLib.New.Cells
+    let notebook: WasmLib.New.Notebook
     try {
-      await this.ready
+      await this.wasmReady
+      const { Runme } = globalThis as WasmLib.New.Serializer
 
       const markdown = content.toString()
-      const { Runme } = globalThis as WasmLib.New.Serializer
 
       notebook = await Runme.deserialize(markdown)
 
@@ -258,26 +272,29 @@ export class NewSerializer implements NotebookSerializer {
     return new NotebookData(cells)
   }
 
-  protected static revive(notebook: WasmLib.New.Cells) {
+  protected static revive(notebook: WasmLib.New.Notebook) {
     return notebook.cells.reduce((accu, elem, id) => {
       let cell: NotebookCellData
-      switch (elem.kind) {
-        case NotebookCellKind.Code:
-          cell = new NotebookCellData(
-            NotebookCellKind.Code,
-            Serializer.normalize(elem.value),
-            elem.languageId || DEFAULT_LANG_ID
-          )
-          break
-        default:
-          cell = new NotebookCellData(
-            NotebookCellKind.Markup,
-            elem.value,
-            'markdown'
-          )
+      const isSupported = Object.keys(executor).includes(elem.languageId ?? '')
+
+      if (elem.kind === NotebookCellKind.Code && isSupported) {
+        cell = new NotebookCellData(
+          NotebookCellKind.Code,
+          elem.value,
+          elem.languageId || DEFAULT_LANG_ID
+        )
+      } else {
+        cell = new NotebookCellData(
+          NotebookCellKind.Markup,
+          elem.value,
+          'markdown'
+        )
       }
+
+      // todo(sebastian): incomplete
       cell.metadata = {...elem.metadata, id }
       accu.push(cell)
+
       return accu
     }, <NotebookCellData[]>[])
   }

@@ -4,7 +4,7 @@ import { OutputType, ClientMessages } from './constants'
 
 export namespace WasmLib {
   export namespace New {
-    export type Cells = {
+    export type Notebook = {
       cells: Cell[]
     }
 
@@ -22,8 +22,8 @@ export namespace WasmLib {
 
     export interface Serializer {
       Runme: {
-        deserialize: (content: string) => Promise<Cells>
-        serialize: (content: Uint8Array) => void
+        deserialize: (content: string) => Promise<Notebook>
+        serialize: (content: string) => Promise<string>
       }
     }
   }
