@@ -1,7 +1,6 @@
 
 import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
 
-import { NewSerializer } from './notebook'
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
@@ -15,14 +14,15 @@ import {
   openSplitViewAsMarkdownText ,
   stopBackgroundTask
 } from './commands'
+import { Serializer } from './serializer'
 
 
 export class RunmeExtension {
-  async initialise (context: ExtensionContext) {
+  async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     context.subscriptions.push(
       kernel,
-      workspace.registerNotebookSerializer('runme', new NewSerializer(context), {
+      workspace.registerNotebookSerializer('runme', new Serializer(context), {
         transientOutputs: true,
         transientCellMetadata: {
           inputCollapsed: true,
