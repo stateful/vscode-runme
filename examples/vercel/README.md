@@ -77,7 +77,7 @@ echo "Your project name is set to: $PROJECT_NAME"
 Link your local directory to a project
 
 ```sh
-vercel link . -p $PROJECT_NAME
+vercel link -p $PROJECT_NAME
 ```
 
 then kick off a preview deploy and optionally promote to prod
