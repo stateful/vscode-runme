@@ -52,7 +52,7 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, 'src', 'extension', 'index.ts'),
   },
-  externals: ['vscode', 'vercel', '@vercel/client', 'keyv'],
+  externals: ['vscode'],
   output: {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',
