@@ -25,7 +25,7 @@ export class Kernel implements Disposable {
     this.#controller.description = 'Run your README.md'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
-    this.messaging.postMessage({ from: 'lernel' })
+    this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
     )
