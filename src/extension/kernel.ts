@@ -124,7 +124,17 @@ export class Kernel implements Disposable {
     const exec = this.#controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const execKey = getKey(runningCell)
+    let execKey = getKey(runningCell)
+
+    /**
+     * check if user is running experiment to execute shell via runme cli
+     */
+    const config = workspace.getConfiguration('runme.experiments')
+    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    if (['sh', 'bash'].includes(execKey) && hasPsuedoTerminalExperimentEnabled) {
+      execKey = 'runme'
+    }
+
     const successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
     exec.end(successfulCellExecution)
   }

@@ -188,7 +188,13 @@
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "If enabled, Runme's save restriction on non-git-tracked files will be disabled."
+            "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
+          },
+          "runme.experiments.pseudoterminal": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, your will executing code blocks natively through the Runme CLI (very experimental)."
           }
         }
       }

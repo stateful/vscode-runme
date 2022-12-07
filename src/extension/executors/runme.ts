@@ -8,7 +8,7 @@ import type { Kernel } from '../kernel'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
-async function runmeExecutor(
+export async function runme(
   this: Kernel,
   exec: NotebookCellExecution,
 ): Promise<boolean> {
@@ -55,6 +55,3 @@ async function runmeExecutor(
 
   return (await t.definition.taskPromise) === 0
 }
-
-export const sh = runmeExecutor
-export const bash = runmeExecutor
