@@ -33,7 +33,6 @@ export class RunmeExtension {
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
@@ -47,5 +46,15 @@ export class RunmeExtension {
       commands.registerCommand('runme.new', createNewRunmeNotebook),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
     )
+
+    /**
+     * check if user is running experiment to execute shell via runme cli already, then some provider
+     * are not needed anymore
+     */
+    const config = workspace.getConfiguration('runme.experiments')
+    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    if (!hasPsuedoTerminalExperimentEnabled) {
+      context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
+    }
   }
 }
