@@ -48,13 +48,14 @@ export class RunmeExtension {
     )
 
     /**
-     * check if user is running experiment to execute shell via runme cli already, then some provider
-     * are not needed anymore
+     * setup extension based on `pseudoterminal` experiment flag
      */
     const config = workspace.getConfiguration('runme.experiments')
     const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
     if (!hasPsuedoTerminalExperimentEnabled) {
       context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
+    } else {
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
     }
   }
 }
