@@ -1,4 +1,4 @@
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, tasks, TextDocument } from 'vscode'
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, tasks } from 'vscode'
 
 import { RunmeTaskProvider } from '../provider/runmeTask'
 import { OutputType } from '../../constants'
@@ -11,10 +11,7 @@ const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 async function runmeExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
-  doc: TextDocument
 ): Promise<boolean> {
-  console.log('RUN THIS');
-
   const outputItems: Buffer[] = []
   const mime = exec.cell.metadata.attributes?.mimeType || 'text/plain' as const
   const command: string = exec.cell.metadata['cliName']
@@ -30,8 +27,6 @@ async function runmeExecutor(
   )
 
   t.definition.stdoutEvent?.on('stdout', (data: string) => {
-    console.log('YOOO', data);
-
     outputItems.push(Buffer.from(data))
     let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
 
