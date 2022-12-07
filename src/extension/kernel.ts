@@ -125,6 +125,8 @@ export class Kernel implements Disposable {
 
     exec.start(Date.now())
     const execKey = getKey(runningCell)
+    console.log(execKey, executor[execKey])
+
     const successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
     exec.end(successfulCellExecution)
   }

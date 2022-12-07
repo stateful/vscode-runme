@@ -1,57 +1,47 @@
-import { writeFile, chmod } from 'node:fs/promises'
 import { spawn } from 'node:child_process'
 
-import {
-  Pseudoterminal,
-  TerminalDimensions,
-  Event,
-  EventEmitter
-} from 'vscode'
-import { file } from 'tmp-promise'
+import split2 from 'split2'
+import { Pseudoterminal, Event, EventEmitter, CancellationTokenSource, window } from 'vscode'
 
+import { RunmeTaskDefinition } from '../types'
+
+interface PromiseOptions {
+  resolve: (value: number) => void
+  reject: (reason?: any) => void
+}
 
 export class ExperimentalTerminal implements Pseudoterminal {
-  private inputEmitter = new EventEmitter<string>()
-  private outputEmitter = new EventEmitter<string>()
-  onDidWrite: Event<string> = this.outputEmitter.event
-
-  // onDidOverrideDimensions?: Event<vscode.TerminalDimensions | undefined> | undefined
+  private writeEmitter = new EventEmitter<string>()
   private closeEmitter = new EventEmitter<number>()
+  private readonly cts: CancellationTokenSource = new CancellationTokenSource()
+
+  onDidWrite: Event<string> = this.writeEmitter.event
   onDidClose?: Event<number> = this.closeEmitter.event
-
+  // onDidOverrideDimensions?: Event<vscode.TerminalDimensions | undefined> | undefined
   // onDidChangeName?: Event<string> | undefined
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  open(initialDimensions: TerminalDimensions | undefined): void {
-    this.run()
+
+  constructor (
+    private definition: RunmeTaskDefinition,
+    private promise: PromiseOptions
+  ) {}
+
+  private write(message: string, color = ''): void {
+    /**
+     * The carriage return (/r) is necessary or the pseudoterminal does
+     * not return back to the start of line
+     */
+    message = message.replace(/\r?\n/g, '\r\n')
+    this.writeEmitter.fire(`\x1b[${color}${message}\x1b[0m`)
   }
 
-  close(): void {
-    this.closeEmitter.fire(-1)
-  }
-
-  handleInput(data: string): void {
-    // console.log(`${Buffer.from(data).toString('hex')} len: ${data.length}`)
-    if (data === '\x03') {
-      this.closeEmitter.fire(-1)
-    }
-    this.inputEmitter.fire(data === '\r' ? '\r\n' : data)
-  }
-
-  constructor(readonly commandLine: string, readonly options: { cwd: string, env?: { [key: string]: string } }) { }
-
-  protected async run() {
-    const scriptFile = await file()
-    await writeFile(scriptFile.path, this.commandLine, 'utf-8')
-    await chmod(scriptFile.path, 0o775)
-
-    const child = spawn(scriptFile.path, {
-      cwd: this.options.cwd,
+  open(/*initialDimensions: TerminalDimensions | undefined*/): void {
+    this.write(`Execute Runme command "${this.definition.command}"`, '0;1m')
+    const start = Date.now()
+    // ToDo(Christian): either replace with communication protocol
+    const child = spawn('/opt/homebrew/bin/runme', ['run', this.definition.command], {
+      cwd: this.definition.cwd,
       shell: true,
-      env: {
-        ...process.env,
-        ...this.options.env
-      }
+      env: process.env
     })
 
     /**
@@ -63,18 +53,50 @@ export class ExperimentalTerminal implements Pseudoterminal {
       }
     }
 
-    this.inputEmitter.event((input: string) => {
+    this.writeEmitter.event((input: string) => {
       child.stdin.write(Buffer.from(input, 'utf-8'))
     })
-    const output = handleEmitter(this.outputEmitter)
-    child.stdout.on('data', output)
-    child.stderr.on('data', output)
-    return !Boolean(await new Promise<number>((resolve) => {
-      child.on('exit', (code) => {
-        const exitCode = code ?? -1
-        this.closeEmitter?.fire(exitCode)
-        return resolve(exitCode)
+    const output = handleEmitter(this.writeEmitter)
+    child.stdout.pipe(split2()).on('data', output)
+    child.stderr.pipe(split2()).on('data', output)
+    if (this.definition.stdoutEvent) {
+      child.stdout.pipe(split2()).on('data', (stdout) => (
+        this.definition.stdoutEvent?.emit('stdout', stdout.toString() + '\n'))
+      )
+      child.stderr.pipe(split2()).on('data', (stdout) => (
+        this.definition.stdoutEvent?.emit('stderr', stdout.toString() + '\n'))
+      )
+    }
+
+    // if (this.definition.readable && child.stdin) {
+    //   this.definition.readable.pipe(child.stdin)
+    // }
+
+    child.on('exit', (code) => {
+      const exitCode = code ?? -1
+      this.write(`\nFinished Runme command after ${Date.now() - start}ms with exit code ${code}\n\n`, '0;1m')
+      setTimeout(() => {
+        this.close(exitCode)
+        if (this.definition.taskPromise) {
+          return this.promise.resolve(exitCode)
+        }
       })
-    }))
+    })
+  }
+
+  close(code?: number): void {
+    this.closeEmitter.fire(code || 0)
+    this.cts.cancel()
+
+    if (this.definition.closeTerminalOnSuccess && code === 0) {
+      window.activeTerminal?.hide()
+    }
+  }
+
+  handleInput(data: string): void {
+    if (data === '\x03') {
+      this.closeEmitter.fire(-1)
+    }
+    this.write(data)
   }
 }

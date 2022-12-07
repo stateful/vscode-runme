@@ -1,11 +1,12 @@
 
-import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks } from 'vscode'
 
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   openTerminal,
   runCLICommand,
@@ -44,6 +45,7 @@ export class RunmeExtension {
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       commands.registerCommand('runme.new', createNewRunmeNotebook),
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
     )
   }
 }

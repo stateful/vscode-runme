@@ -217,6 +217,47 @@
           }
         ]
       }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "runme",
+        "required": [
+          "fileUri",
+          "command"
+        ],
+        "properties": {
+          "fileUri": {
+            "type": "string",
+            "description": "File Uri of the markdown file to call the command on"
+          },
+          "command": {
+            "type": "string",
+            "description": "name of the command to execute"
+          },
+          "isBackground": {
+            "type": "boolean",
+            "default": false,
+            "description": "If set to true the task is run within the background and not awaited to exit"
+          },
+          "closeTerminalOnSuccess": {
+            "type": "boolean",
+            "default": true,
+            "description": "If set to true terminal window is being closed on successful execution"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "working directory where Runme executes the task"
+          },
+          "stdoutEvent": {
+            "type": "object",
+            "description": "EventEmitter that fires on stdout/stderr events"
+          },
+          "taskPromise": {
+            "type": "object",
+            "description": "promise returning task result"
+          }
+        }
+      }
     ]
   },
   "scripts": {
@@ -236,6 +277,7 @@
   "devDependencies": {
     "@octokit/rest": "^19.0.5",
     "@types/node": "^18.11.15",
+    "@types/split2": "^3.2.1",
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
@@ -279,6 +321,7 @@
     "lit": "^2.5.0",
     "preact": "^10.11.3",
     "tmp-promise": "^3.0.3",
+    "split2": "^4.1.0",
     "undici": "^5.14.0",
     "vercel": "^28.9.0",
     "xdg-app-paths": "^8.2.0",
