@@ -28,7 +28,7 @@ async function shellExecutor(
   /**
    * this needs more work / specification
    */
-  const mime = exec.cell.metadata.attributes?.mimeType || 'text/plain' as const
+  const mime = exec.cell.metadata?.mimeType || 'text/plain' as const
   const id = exec.cell.metadata['id']
 
   /**

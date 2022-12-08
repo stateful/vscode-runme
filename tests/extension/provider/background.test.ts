@@ -1,10 +1,10 @@
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
 import { getExecutionProperty, getTerminalByCell } from '../../../src/extension/utils'
-import { 
-  ShowTerminalProvider, 
-  BackgroundTaskProvider, 
-  StopBackgroundTaskProvider 
+import {
+  ShowTerminalProvider,
+  BackgroundTaskProvider,
+  StopBackgroundTaskProvider
 } from '../../../src/extension/provider/background'
 
 vi.mock('vscode', () => ({
@@ -62,7 +62,7 @@ describe('ShowTerminalProvider', () => {
 
 describe('BackgroundTaskProvider', () => {
   const cell: any = {
-    metadata: { attributes: { background: undefined } }
+    metadata: { background: undefined }
   }
 
   beforeEach(() => {
@@ -77,7 +77,7 @@ describe('BackgroundTaskProvider', () => {
   })
 
   it('dont show bg task label if cell is non interactive', async () => {
-    cell.metadata.attributes.background = 'true'
+    cell.metadata.background = 'true'
     vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
     const p = new BackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
@@ -98,7 +98,7 @@ describe('BackgroundTaskProvider', () => {
 
 describe('StopBackgroundTaskProvider', () => {
   const cell: any = {
-    metadata: { attributes: { background: undefined } },
+    metadata: { background: undefined },
     executionSummary: { success: undefined }
   }
 
@@ -114,7 +114,7 @@ describe('StopBackgroundTaskProvider', () => {
   })
 
   it('dont show bg task label if cell is non interactive', async () => {
-    cell.metadata.attributes.background = 'true'
+    cell.metadata.background = 'true'
     vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
@@ -123,7 +123,7 @@ describe('StopBackgroundTaskProvider', () => {
   })
 
   it('dont show if cell was not yet executed', async () => {
-    cell.metadata.attributes.background = 'true'
+    cell.metadata.background = 'true'
     cell.executionSummary.success = false
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
@@ -132,7 +132,7 @@ describe('StopBackgroundTaskProvider', () => {
   })
 
   it('return with button to close', async () => {
-    cell.metadata.attributes.background = 'true'
+    cell.metadata.background = 'true'
     cell.executionSummary.success = true
     vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
     const p = new StopBackgroundTaskProvider()

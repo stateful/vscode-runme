@@ -18,8 +18,8 @@ export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL
   /**
    * if cell is marked as interactive (default: not set or set to 'true')
    */
-  if (typeof cell.metadata?.attributes?.[property] === 'string') {
-    return cell.metadata.attributes[property] === 'true'
+  if (typeof cell.metadata?.[property] === 'string') {
+    return cell.metadata[property] === 'true'
   }
 
   return configSetting

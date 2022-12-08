@@ -75,7 +75,7 @@ async function taskExecutor(
     //   return new ExperimentalTerminal(scriptFile.fsPath, { cwd, env })
     // })
   )
-  const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
+  const isBackground = exec.cell.metadata?.['background'] === 'true'
   const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
   taskExecution.isBackground = isBackground
   taskExecution.presentationOptions = {
