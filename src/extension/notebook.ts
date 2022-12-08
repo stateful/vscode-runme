@@ -1,7 +1,6 @@
 import {
   NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind,
-  window
-} from 'vscode'
+  window} from 'vscode'
 
 import type { WasmLib } from '../types'
 
@@ -13,7 +12,7 @@ import { normalizeLanguage, verifyCheckedInFile } from './utils'
 declare var globalThis: any
 
 // const CODE_REGEX = /```(\w+)?\n[^`]*```/g
-const DEFAULT_LANG_ID = 'text'
+export const DEFAULT_LANG_ID = 'text'
 
 export class Serializer implements NotebookSerializer {
   private readonly ready: Promise<Error | void>
@@ -31,7 +30,7 @@ export class Serializer implements NotebookSerializer {
     return WebAssembly.instantiate(wasmFile, go.importObject).then(
       (result) => { go.run(result.instance) },
       (err: Error) => {
-        console.error(`[Runme] failed initialising WASM file: ${err.message}`)
+        console.error(`[Runme] failed initializing WASM file: ${err.message}`)
         return err
       }
     )
@@ -187,3 +186,5 @@ export class Serializer implements NotebookSerializer {
     ])
   }
 }
+
+

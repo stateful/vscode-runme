@@ -1,24 +1,24 @@
 
 import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
 
-import { Serializer } from './notebook'
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
-import { 
-  openTerminal, 
-  runCLICommand, 
-  copyCellToClipboard, 
-  openAsRunmeNotebook, 
+import {
+  openTerminal,
+  runCLICommand,
+  copyCellToClipboard,
+  openAsRunmeNotebook,
   openSplitViewAsMarkdownText ,
   stopBackgroundTask
 } from './commands'
+import { Serializer } from './serializer'
 
 
 export class RunmeExtension {
-  async initialise (context: ExtensionContext) {
+  async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     context.subscriptions.push(
       kernel,
