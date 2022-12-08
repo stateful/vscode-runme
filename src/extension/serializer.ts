@@ -20,7 +20,7 @@ import { Serializer as OldSerializer, DEFAULT_LANG_ID } from './notebook'
 declare var globalThis: any
 
 export class Serializer implements NotebookSerializer {
-  private readonly wasmReady: Promise<void>
+  private readonly wasmReady: Promise<Error | void>
   private readonly languages: Languages
 
   constructor(private context: ExtensionContext) {
@@ -42,7 +42,7 @@ export class Serializer implements NotebookSerializer {
       },
       (err: Error) => {
         console.error(`[Runme] failed initializing WASM file: ${err.message}`)
-        throw err
+        return err
       }
     )
   }
@@ -53,7 +53,11 @@ export class Serializer implements NotebookSerializer {
   ): Promise<Uint8Array> {
     console.log(new Date(), 'serializeNotebook')
     try {
-      await this.wasmReady
+      const err = await this.wasmReady
+      if (err) {
+        throw err
+      }
+
       const { Runme } = globalThis as WasmLib.New.Serializer
 
       const notebook = JSON.stringify(data)
@@ -76,7 +80,10 @@ export class Serializer implements NotebookSerializer {
     console.log(new Date(), 'deserializeNotebook')
     let notebook: WasmLib.New.Notebook
     try {
-      await this.wasmReady
+      const err = await this.wasmReady
+      if (err) {
+        throw err
+      }
       const { Runme } = globalThis as WasmLib.New.Serializer
 
       const markdown = content.toString()
