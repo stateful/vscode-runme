@@ -47,7 +47,7 @@ async function downloadWasm (token) {
   const releases = await octokit.repos.listReleases({ owner, repo })
   const release = wasmReleaseDefined
     ? releases.data.find((r) => r.tag_name === process.env.RUNME_VERSION)
-    : releases.data[0]
+    : releases.data.filter(r => r.prerelease === false)[0]
 
   if (wasmReleaseDefined && !release) {
     throw new Error(
