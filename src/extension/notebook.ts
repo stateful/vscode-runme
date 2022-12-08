@@ -1,6 +1,6 @@
 import {
-  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind,
-  window} from 'vscode'
+  NotebookSerializer, ExtensionContext, Uri, workspace, NotebookData, NotebookCellData, NotebookCellKind, window
+} from 'vscode'
 
 import type { WasmLib } from '../types'
 
@@ -13,7 +13,7 @@ declare var globalThis: any
 
 // const CODE_REGEX = /```(\w+)?\n[^`]*```/g
 const ALPHA_NUM_REGEX = /^[a-z0-9]+$/i
-const DEFAULT_LANG_ID = 'text'
+export const DEFAULT_LANG_ID = 'text'
 
 export class Serializer implements NotebookSerializer {
   private readonly ready: Promise<Error | void>
@@ -118,14 +118,7 @@ export class Serializer implements NotebookSerializer {
         )
         const attributes = elem.attributes
         const cliName = elem.name
-        cell.metadata = {
-          id: i,
-          source: elem.source,
-          executeableCode: lines.trim(),
-          attributes,
-          cliName,
-          header: elem.source.split('\n')[0]
-        }
+        cell.metadata = { id: i, source: lines, attributes, cliName }
 
         /**
          * code block
@@ -187,7 +180,7 @@ export class Serializer implements NotebookSerializer {
       newContent.push(`${cell.metadata?.header}\n${cell.value}\n\`\`\`\n`)
     }
 
-    return Promise.resolve(Buffer.from(newContent.join('\n')))
+    throw new Error('Method implementation not ready.')
   }
 
   #printCell(content: string, languageId = 'markdown') {
