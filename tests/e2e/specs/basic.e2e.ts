@@ -27,7 +27,10 @@ describe('Runme VS Code Extension', () => {
     }
     await readmeFile.select()
 
-    await browser.waitUntil(async () => (await workbench.getAllWebviews()).length > 0)
+    await browser.waitUntil(
+      async () => (await workbench.getAllWebviews()).length > 0,
+      { timeoutMsg: 'Notebook document didn\'t load' }
+    )
     const webview = (await workbench.getAllWebviews())[0]
     await webview.open()
     await expect($('body')).toHaveTextContaining('Runme Examples')
