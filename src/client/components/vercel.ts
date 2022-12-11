@@ -116,7 +116,7 @@ export class VercelOutput extends LitElement {
     this.requestUpdate()
     ctx.postMessage(<ClientMessage<ClientMessages.prod>>{
       type: ClientMessages.prod,
-      output: { cellIndex: this.content.payload.id }
+      output: { cellIndex: this.content.payload.index }
     })
   }
 }

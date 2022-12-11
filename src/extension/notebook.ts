@@ -84,7 +84,7 @@ export class Serializer implements NotebookSerializer {
       console.error(`Error guessing snippet languages: ${err}`)
     }
 
-    const cells = parsedCells.reduce((acc, elem, i) => {
+    const cells = parsedCells.reduce((acc, elem) => {
       /**
        * code block description
        */
@@ -94,7 +94,6 @@ export class Serializer implements NotebookSerializer {
           elem.source,
           'markdown'
         )
-        cell.metadata = { id: i }
         acc.push(cell)
         return acc
       }
@@ -118,7 +117,7 @@ export class Serializer implements NotebookSerializer {
         )
         const attributes = elem.attributes
         const cliName = elem.name
-        cell.metadata = { id: i, source: lines, attributes, cliName }
+        cell.metadata = { source: lines, attributes, cliName }
 
         /**
          * code block
@@ -130,7 +129,6 @@ export class Serializer implements NotebookSerializer {
           elem.source,
           'markdown'
         )
-        cell.metadata = { id: i }
         acc.push(cell)
       }
       return acc

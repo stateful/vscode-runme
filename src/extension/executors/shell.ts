@@ -29,7 +29,7 @@ async function shellExecutor(
    * this needs more work / specification
    */
   const mime = exec.cell.metadata?.mimeType || 'text/plain' as const
-  const id = exec.cell.metadata['id']
+  const index = exec.cell.index
 
   /**
    * handle output for stdout and stderr
@@ -58,7 +58,7 @@ async function shellExecutor(
         type: OutputType.vercel,
         output: {
           outputItems: outputItems.map((oi) => oi.toString()),
-          payload: { status, projectName, id, prod }
+          payload: { status, projectName, index, prod }
         }
       }
       item = NotebookCellOutputItem.json(json, OutputType.vercel)
