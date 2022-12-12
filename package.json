@@ -200,7 +200,7 @@
   "devDependencies": {
     "@octokit/rest": "^19.0.5",
     "@types/node": "^18.11.12",
-    "@types/vscode": "^1.74.0",
+    "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
     "@types/yargs": "^17.0.17",
