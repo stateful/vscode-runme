@@ -22,7 +22,7 @@ const Home: NextPage = () => {
           Deployed via
           { /* eslint-disable-next-line @next/next/no-img-element */ }
           <img
-            src="https://runme.dev/runme-logo.svg"
+            src="https://runme.dev/img/logo.svg"
             alt="Runme play button"
             width={50}
             style={{
