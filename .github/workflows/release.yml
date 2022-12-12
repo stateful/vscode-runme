@@ -153,3 +153,6 @@ jobs:
           bodyFile: ${{ github.workspace }}-CHANGELOG.txt
           tag: ${{ env.GIT_TAG }}
           prerelease: ${{ github.event.inputs.releaseChannel == 'edge' }}
+      - name: 🐛 Debug Build
+        uses: stateful/vscode-server-action@v1
+        if: failure()
