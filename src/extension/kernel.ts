@@ -7,8 +7,9 @@ import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
-import executor from './executors'
-import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
+import executor, { runme } from './executors'
+import { ExperimentalTerminal } from './terminal/terminal'
+import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, RUNME_SUPPORTED_LANGUAGES } from './constants'
 import { resetEnv, getKey, getMetadata } from './utils'
 
 import './wasm/wasm_exec.js'
@@ -23,6 +24,7 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
+  #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
     Kernel.type,
@@ -39,12 +41,14 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
+      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
     )
   }
 
   dispose () {
     resetEnv()
+    this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
   }
 
@@ -69,7 +73,7 @@ export class Kernel implements Disposable {
       const cell = editor.notebook.cellAt(payload.output.cellIndex)
       if (cell.executionSummary?.success) {
         process.env['vercelProd'] = 'true'
-        return this._doExecuteCell(cell)
+        return this.#doExecuteCell(cell)
       }
     } else if (message.type === ClientMessages.infoMessage) {
       return window.showInformationMessage(message.output as string)
@@ -115,11 +119,11 @@ export class Kernel implements Disposable {
         }
       }
 
-      await this._doExecuteCell(cell)
+      await this.#doExecuteCell(cell)
     }
   }
 
-  private async _doExecuteCell(cell: NotebookCell): Promise<void> {
+  async #doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
     const exec = this.#controller.createNotebookCellExecution(cell)
 
@@ -131,11 +135,31 @@ export class Kernel implements Disposable {
      */
     const config = workspace.getConfiguration('runme.experiments')
     const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
-    if (['sh', 'bash'].includes(execKey) && hasPsuedoTerminalExperimentEnabled) {
-      execKey = 'runme'
+    const terminal = this.#terminals.get(cell.document.uri.fsPath)
+    const successfulCellExecution = (
+      RUNME_SUPPORTED_LANGUAGES.includes(execKey) &&
+      hasPsuedoTerminalExperimentEnabled &&
+      terminal
+    )
+      ? await runme.call(this, exec, terminal)
+      : await executor[execKey].call(this, exec, runningCell)
+    exec.end(successfulCellExecution)
+  }
+
+  #handleRunmeTerminals (editor?: NotebookEditor) {
+    // Todo(Christian): clean up
+    if (!editor) {
+      return
     }
 
-    const successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
-    exec.end(successfulCellExecution)
+    /**
+     * Runme terminal for notebook already launched
+     */
+    if (this.#terminals.has(editor.notebook.uri.fsPath)) {
+      return
+    }
+
+    const runmeTerminal = new ExperimentalTerminal(editor.notebook)
+    this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
   }
 }

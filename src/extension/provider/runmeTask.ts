@@ -2,11 +2,10 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 
 import {
-  CustomExecution, ExtensionContext, ProviderResult, Task, TaskProvider, Uri,
-  workspace, window, TaskScope, Pseudoterminal, TaskRevealKind, TaskPanelKind
+  ExtensionContext, ProviderResult, Task, TaskProvider, Uri,
+  workspace, window, TaskScope, TaskRevealKind, TaskPanelKind
 } from 'vscode'
 
-import { ExperimentalTerminal } from '../terminal'
 import { initWasm } from '../utils'
 import { WasmLib, RunmeTaskDefinition } from '../../types'
 
@@ -16,8 +15,6 @@ type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackg
 export interface RunmeTask extends Task {
   definition: Required<RunmeTaskDefinition>
 }
-
-const NOOP = () => {}
 
 export class RunmeTaskProvider implements TaskProvider {
   static id = 'runme'
@@ -56,13 +53,6 @@ export class RunmeTaskProvider implements TaskProvider {
     const isBackground = options.isBackground || false
     const stdoutEvent = options.stdoutEvent || new EventEmitter()
 
-    let resolve: (value: number) => void = NOOP
-    let reject: (reason?: any) => void = NOOP
-    const taskPromise = isBackground ? Promise.resolve(0) : new Promise<number>((res, rej) => {
-      resolve = res
-      reject = rej
-    })
-
     const definition: RunmeTaskDefinition = {
       type: 'runme',
       filePath,
@@ -70,18 +60,14 @@ export class RunmeTaskProvider implements TaskProvider {
       closeTerminalOnSuccess,
       isBackground,
       cwd,
-      stdoutEvent,
-      taskPromise
+      stdoutEvent
     }
 
     const task = new Task(
       definition,
       TaskScope.Workspace,
       command,
-      RunmeTaskProvider.id,
-      new CustomExecution(async (): Promise<Pseudoterminal> => (
-        new ExperimentalTerminal(definition, { resolve, reject })
-      ))
+      RunmeTaskProvider.id
     ) as RunmeTask
 
     task.isBackground = isBackground

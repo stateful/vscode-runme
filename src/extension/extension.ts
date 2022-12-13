@@ -52,10 +52,8 @@ export class RunmeExtension {
      */
     const config = workspace.getConfiguration('runme.experiments')
     const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
-    if (!hasPsuedoTerminalExperimentEnabled) {
-      context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
-    } else {
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
-    }
+    !hasPsuedoTerminalExperimentEnabled
+      ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
+      : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
   }
 }
