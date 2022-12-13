@@ -8,14 +8,16 @@ import {
   NotebookCellData,
   NotebookCellKind,
   CancellationToken,
+  window
 } from 'vscode'
 
 import { WasmLib } from '../types'
 
-import executor from './executors'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { Serializer as OldSerializer, DEFAULT_LANG_ID } from './notebook'
+import { verifyCheckedInFile } from './utils'
+
+const DEFAULT_LANG_ID = 'text'
 
 declare var globalThis: any
 
@@ -51,8 +53,9 @@ export class Serializer implements NotebookSerializer {
     data: NotebookData,
     token: CancellationToken
   ): Promise<Uint8Array> {
-    console.log(new Date(), 'serializeNotebook')
     try {
+      await this.verifyTracked()
+
       const err = await this.wasmReady
       if (err) {
         throw err
@@ -73,11 +76,22 @@ export class Serializer implements NotebookSerializer {
     }
   }
 
+  private async verifyTracked() {
+    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
+
+    if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
+      throw new Error(
+        'You are trying to update a file that is not version controlled! ' +
+        'Runme file updates is currently experimental, we don\'t want you to loose important data. ' +
+        'Please check in your file first.'
+      )
+    }
+  }
+
   public async deserializeNotebook(
     content: Uint8Array,
     token: CancellationToken
   ): Promise<NotebookData> {
-    console.log(new Date(), 'deserializeNotebook')
     let notebook: WasmLib.New.Notebook
     try {
       const err = await this.wasmReady
@@ -111,7 +125,7 @@ export class Serializer implements NotebookSerializer {
             elem.value &&
             !elem.languageId
           ) {
-            const norm = OldSerializer.normalize(elem.value)
+            const norm = Serializer.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               elem.languageId = guessed
               return elem
@@ -129,7 +143,7 @@ export class Serializer implements NotebookSerializer {
   }
 
   protected static revive(notebook: WasmLib.New.Notebook) {
-    return notebook.cells.reduce((accu, elem, index) => {
+    return notebook.cells.reduce((accu, elem) => {
       let cell: NotebookCellData
       // todo(sebastian): the parser will have to return unsupported as MARKUP
       const isSupported = true //Object.keys(executor).includes(elem.languageId ?? '')
@@ -149,11 +163,17 @@ export class Serializer implements NotebookSerializer {
       }
 
       // todo(sebastian): incomplete
-      cell.metadata = { ...elem.metadata, index }
+      cell.metadata = { ...elem.metadata }
       accu.push(cell)
 
       return accu
     }, <NotebookCellData[]>[])
+  }
+
+  public static normalize(source: string): string {
+    const lines = source.split('\n')
+    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+    return normed.join('\n')
   }
 
   #printCell(content: string, languageId = 'markdown') {
