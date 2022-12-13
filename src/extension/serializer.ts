@@ -82,9 +82,9 @@ export class Serializer implements NotebookSerializer {
 
     if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
       throw new Error(
-        'You are trying to update a file that is not version controlled! ' +
-        'Runme file updates is currently experimental, we don\'t want you to loose important data. ' +
-        'Please check in your file first.'
+        'You are write to a file that is not version controlled! ' +
+        'Runme\'s authoring features are in early stages and require hardening. ' +
+        'We wouldn\'t want you to loose important data. Please version track your file first.'
       )
     }
   }
