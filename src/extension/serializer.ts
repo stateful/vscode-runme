@@ -1,14 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  workspace,
+  window,
   NotebookSerializer,
   ExtensionContext,
   Uri,
-  workspace,
   NotebookData,
   NotebookCellData,
   NotebookCellKind,
   CancellationToken,
-  window
+  NotebookDocument
 } from 'vscode'
 
 import { WasmLib } from '../types'
@@ -54,7 +55,7 @@ export class Serializer implements NotebookSerializer {
     token: CancellationToken
   ): Promise<Uint8Array> {
     try {
-      await this.verifyTracked()
+      await this.checkTracked(window.activeNotebookEditor?.notebook)
 
       const err = await this.wasmReady
       if (err) {
@@ -76,8 +77,8 @@ export class Serializer implements NotebookSerializer {
     }
   }
 
-  private async verifyTracked() {
-    const currentDocumentPath = window.activeNotebookEditor?.notebook.uri.fsPath
+  private async checkTracked(notebook?: NotebookDocument) {
+    const currentDocumentPath = notebook?.uri.fsPath
 
     if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
       throw new Error(
@@ -162,7 +163,6 @@ export class Serializer implements NotebookSerializer {
         )
       }
 
-      // todo(sebastian): incomplete
       cell.metadata = { ...elem.metadata }
       accu.push(cell)
 

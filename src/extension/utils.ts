@@ -88,7 +88,7 @@ export function normalizeLanguage(l?: string) {
 
 export async function verifyCheckedInFile (filePath: string) {
   const fileDir = path.dirname(filePath)
-  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => ws.uri.fsPath.includes(fileDir))
+  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => fileDir.includes(ws.uri.fsPath))
 
   if (!workspaceFolder) {
     return false
