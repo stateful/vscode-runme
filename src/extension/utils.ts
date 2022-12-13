@@ -2,7 +2,7 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType, NotebookDocument } from 'vscode'
+import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 import { WasmLib } from '../types'
@@ -10,6 +10,8 @@ import { WasmLib } from '../types'
 import executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
+
+declare var globalThis: any
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
@@ -154,4 +156,18 @@ export async function canEditFile (
   }
 
   return false
+}
+
+export async function initWasm(wasmUri: Uri) {
+  const go = new globalThis.Go()
+  const wasmFile = await workspace.fs.readFile(wasmUri)
+  return WebAssembly.instantiate(wasmFile, go.importObject).then(
+    (result) => {
+      go.run(result.instance)
+    },
+    (err: Error) => {
+      console.error(`[Runme] failed initializing WASM file: ${err.message}`)
+      return err
+    }
+  )
 }

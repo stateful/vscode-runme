@@ -107,7 +107,6 @@ export class Bash extends Shell {
 }
 
 export type StreamSpawnOptions = SpawnOptions & {
-  onCommand?: (command: string) => void
   cancellationToken?: CancellationToken
   shellProvider?: Shell
 
@@ -128,10 +127,7 @@ export async function spawnStreamAsync(
     throw new Error('Command cancelled')
   }
 
-  if (options.onCommand) {
-    options.onCommand([command, ...args].join(' '))
-  }
-
+  console.log('A NEW SPAWN')
   const childProcess = spawn(
     command,
     args,
@@ -148,26 +144,19 @@ export async function spawnStreamAsync(
   )
 
   if (options.stdInPipe && childProcess.stdin) {
-    options.stdInPipe.pipe(childProcess.stdin)
+    options.stdInPipe.pipe(childProcess.stdin, { end:false })
   }
 
   if (options.stdOutPipe && childProcess.stdout) {
-    childProcess.stdout.pipe(options.stdOutPipe)
+    childProcess.stdout.pipe(options.stdOutPipe, { end:false })
   }
 
   if (options.stdErrPipe && childProcess.stderr) {
     childProcess.stderr.pipe(options.stdErrPipe)
   }
 
-  childProcess.stdout?.on('finish', () => {
-    console.log('DOMONNEE!!!')
-  })
-
   return new Promise<number>((resolve, reject) => {
     const disposable = options.cancellationToken?.onCancellationRequested(() => {
-      options.stdOutPipe?.end()
-      options.stdErrPipe?.end()
-      options.stdInPipe?.removeAllListeners()
       childProcess.removeAllListeners()
       childProcess.kill()
       reject(new Error('Command cancelled'))
@@ -181,8 +170,6 @@ export async function spawnStreamAsync(
 
     // Complete the promise when the process exits
     childProcess.on('exit', (code) => {
-      console.log('I AM OUT!!!');
-
       disposable?.dispose()
       if (code === 0) {
         resolve(code)

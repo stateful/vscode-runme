@@ -1,5 +1,3 @@
-import type { EventEmitter } from 'node:events'
-
 import { NotebookCellKind } from 'vscode'
 
 import { OutputType, ClientMessages } from './constants'
@@ -92,10 +90,8 @@ export interface OutputItemsPayload {
 export interface RunmeTaskDefinition {
   type: 'runme'
   filePath: string
-  command: string
+  index: number
   isBackground?: boolean
   closeTerminalOnSuccess?: boolean
   cwd?: string
-  stdoutEvent?: EventEmitter
-  taskPromise?: Promise<number>
 }

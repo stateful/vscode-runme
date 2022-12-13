@@ -147,6 +147,8 @@ export class Kernel implements Disposable {
   }
 
   #handleRunmeTerminals (editor?: NotebookEditor) {
+    console.log('handleRunmeTerminals')
+
     // Todo(Christian): clean up
     if (!editor) {
       return
@@ -159,6 +161,7 @@ export class Kernel implements Disposable {
       return
     }
 
+    console.log('START NEW RUNME TERMINAL', editor.notebook)
     const runmeTerminal = new ExperimentalTerminal(editor.notebook)
     this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
   }

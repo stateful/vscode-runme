@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  workspace,
   window,
   commands,
   NotebookSerializer,
@@ -16,11 +15,10 @@ import { WasmLib } from '../types'
 
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { canEditFile } from './utils'
-
-const DEFAULT_LANG_ID = 'text'
+import { canEditFile, initWasm } from './utils'
 
 declare var globalThis: any
+const DEFAULT_LANG_ID = 'text'
 
 export class Serializer implements NotebookSerializer {
   private readonly wasmReady: Promise<Error | void>
@@ -28,26 +26,9 @@ export class Serializer implements NotebookSerializer {
 
   constructor(private context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
-    this.wasmReady = this.#initWasm()
-  }
 
-  async #initWasm() {
-    const go = new globalThis.Go()
-    const wasmUri = Uri.joinPath(
-      this.context.extensionUri,
-      'wasm',
-      'runme.wasm'
-    )
-    const wasmFile = await workspace.fs.readFile(wasmUri)
-    return WebAssembly.instantiate(wasmFile, go.importObject).then(
-      (result) => {
-        go.run(result.instance)
-      },
-      (err: Error) => {
-        console.error(`[Runme] failed initializing WASM file: ${err.message}`)
-        return err
-      }
-    )
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
+    this.wasmReady = initWasm(wasmUri)
   }
 
   public async serializeNotebook(
@@ -100,12 +81,9 @@ export class Serializer implements NotebookSerializer {
         throw err
       }
       const { Runme } = globalThis as WasmLib.Serializer
-
       const markdown = content.toString()
-
       notebook = await Runme.deserialize(markdown)
-
-      if (!notebook) {
+      if (!notebook || (notebook.cells ?? []).length === 0) {
         return this.#printCell('⚠️ __Error__: no cells found!')
       }
     } catch (err: any) {

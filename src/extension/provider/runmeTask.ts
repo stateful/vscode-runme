@@ -1,16 +1,15 @@
 import path from 'node:path'
-import { EventEmitter } from 'node:events'
 
 import {
   ExtensionContext, ProviderResult, Task, TaskProvider, Uri,
-  workspace, window, TaskScope, TaskRevealKind, TaskPanelKind
+  workspace, window, TaskScope, TaskRevealKind, TaskPanelKind, NotebookCellKind
 } from 'vscode'
 
 import { initWasm } from '../utils'
 import { WasmLib, RunmeTaskDefinition } from '../../types'
 
 declare var globalThis: any
-type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd' | 'stdoutEvent'>
+type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 
 export interface RunmeTask extends Task {
   definition: Required<RunmeTaskDefinition>
@@ -34,39 +33,39 @@ export class RunmeTaskProvider implements TaskProvider {
     }
 
     const mdContent = (await workspace.fs.readFile(current)).toString()
-    const { Runme } = globalThis as WasmLib.Runme
-    Runme.initialize(mdContent)
+    const { Runme } = globalThis as WasmLib.New.Serializer
+    const notebook = await Runme.deserialize(mdContent)
 
-    const cells = Runme.getCells().cells as WasmLib.Cell[]
-    return cells
-      .filter((cell: WasmLib.Cell): cell is WasmLib.CodeCell => cell.type === WasmLib.CellType.Code)
-      .map((cell) => RunmeTaskProvider.getRunmeTask(current.fsPath, cell.name))
+    return notebook.cells
+      .filter((cell: WasmLib.New.Cell): cell is WasmLib.New.Cell => cell.kind === NotebookCellKind.Code)
+      .map((cell) => RunmeTaskProvider.getRunmeTask(current.fsPath, cell.metadata?.name))
   }
 
   public resolveTask(task: Task): ProviderResult<Task> {
+    /**
+     * ToDo(Christian) fetch terminal from Kernel
+     */
     return task
   }
 
-  static getRunmeTask (filePath: string, command: string, options: TaskOptions = {}): RunmeTask {
+  static getRunmeTask (filePath: string, index: number, options: TaskOptions = {}): RunmeTask {
     const cwd = options.cwd || path.dirname(filePath)
     const closeTerminalOnSuccess = options.closeTerminalOnSuccess || true
     const isBackground = options.isBackground || false
-    const stdoutEvent = options.stdoutEvent || new EventEmitter()
 
     const definition: RunmeTaskDefinition = {
       type: 'runme',
       filePath,
-      command,
+      index,
       closeTerminalOnSuccess,
       isBackground,
-      cwd,
-      stdoutEvent
+      cwd
     }
 
     const task = new Task(
       definition,
       TaskScope.Workspace,
-      command,
+      `Runme Command #${index}`,
       RunmeTaskProvider.id
     ) as RunmeTask
 

@@ -1,7 +1,6 @@
-import {
-  NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, tasks, CustomExecution,
-  Pseudoterminal
-} from 'vscode'
+import { PassThrough } from 'node:stream'
+
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
 
 import { RunmeTaskProvider } from '../provider/runmeTask'
 import { OutputType } from '../../constants'
@@ -18,21 +17,22 @@ export async function runme(
   terminal: ExperimentalTerminal
 ): Promise<boolean> {
   const outputItems: Buffer[] = []
-  const mime = exec.cell.metadata.attributes?.mimeType || 'text/plain' as const
-  const command: string = exec.cell.metadata['cliName']
+  const mime = exec.cell.metadata.mimeType || 'text/plain' as const
   const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
   const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
   const t = RunmeTaskProvider.getRunmeTask(
     exec.cell.notebook.uri.fsPath,
-    command,
+    exec.cell.index,
     {
       isBackground,
       closeTerminalOnSuccess
     }
   )
 
-  t.execution = new CustomExecution(async (): Promise<Pseudoterminal> => terminal.execute(t))
-  t.definition.stdoutEvent?.on('stdout', (data: string) => {
+  const outputStream = new PassThrough()
+  outputStream.on('data', (data: Buffer) => {
+    console.log('NEW stdout EVENT', data)
+
     outputItems.push(Buffer.from(data))
     let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
 
@@ -49,7 +49,12 @@ export async function runme(
     exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
   })
 
-  const execution = await tasks.executeTask(t)
+  const { execution, promise } = await terminal.execute(t, {
+    stdout: outputStream,
+    stderr: outputStream
+  })
+  this.context.subscriptions.push(exec.token.onCancellationRequested(
+    () => execution.terminate()))
 
   /**
    * push task as disposable to context so that it is being closed
@@ -59,5 +64,6 @@ export async function runme(
     dispose: () => execution.terminate()
   })
 
-  return (await t.definition.taskPromise) === 0
+  const hasSuccess = (await promise === 0)
+  return hasSuccess
 }
