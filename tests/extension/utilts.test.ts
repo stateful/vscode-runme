@@ -115,6 +115,11 @@ suite('getCmdShellSeq', () => {
     const cellText = 'cd ..\nls / # list dir contents\ncd ..\nls /'
     expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
+
+  test('leading prompts', () => {
+    const cellText = '$ docker build -t runme/demo .\n$ docker ps -qa'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
 })
 
 suite('normalizeLanguage', () => {

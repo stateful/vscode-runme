@@ -53,14 +53,20 @@ export function getKey (runningCell: vscode.TextDocument): keyof typeof executor
  * which need to be executed in sequence
  */
 export function getCmdShellSeq(cellText: string, os: string): string {
-  const trimmed = cellText
+  const trimmed = cellText.trimStart()
     .split('\\\n').map(l => l.trim()).join(' ')
     .split('\n').map(l => {
       const hashPos = l.indexOf('#')
       if (hashPos > -1) {
         return l.substring(0, hashPos).trim()
       }
-      return l.trim()
+      const stripped = l.trim()
+
+      if (stripped.startsWith('$')) {
+        return stripped.slice(1).trim()
+      } else {
+        return stripped
+      }
     })
     .filter(l => {
       const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
