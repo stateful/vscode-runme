@@ -8,6 +8,7 @@ import { WasmLib } from '../../src/types'
 import fixture from './fixtures/document.json'
 
 test('cells', () => {
+  // todo(sebastian): tests legacy deserializer
   expect((fixture as WasmLib.Cells).cells).toBeTypeOf('object')
 })
 

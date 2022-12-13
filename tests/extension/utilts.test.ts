@@ -36,12 +36,12 @@ test('isInteractive', () => {
   // when set to false in configutaration
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(false) } as any)
   expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(false)
-  expect(getExecutionProperty('interactive', { metadata: { attributes: {} } } as any)).toBe(false)
-  expect(getExecutionProperty('interactive', { metadata: { attributes: { interactive: 'true' } } } as any)).toBe(true)
+  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(false)
+  expect(getExecutionProperty('interactive', { metadata: { interactive: 'true' } } as any)).toBe(true)
 
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(true) } as any)
   expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(true)
-  expect(getExecutionProperty('interactive', { metadata: { attributes: {} } } as any)).toBe(true)
+  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(true)
 })
 
 test('getTerminalByCell', () => {
@@ -113,6 +113,11 @@ suite('getCmdShellSeq', () => {
 
   test('trailing comment', () => {
     const cellText = 'cd ..\nls / # list dir contents\ncd ..\nls /'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('leading prompts', () => {
+    const cellText = '$ docker build -t runme/demo .\n$ docker ps -qa'
     expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
   })
 })

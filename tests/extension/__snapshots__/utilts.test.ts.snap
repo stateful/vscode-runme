@@ -4,6 +4,8 @@ exports[`getCmdShellSeq > complex wrapped 1`] = `"set -e -o pipefail; curl \\"ht
 
 exports[`getCmdShellSeq > env only 1`] = `"set -e -o pipefail; export DENO_INSTALL=\\"$HOME/.deno\\"; export PATH=\\"$DENO_INSTALL/bin:$PATH\\""`;
 
+exports[`getCmdShellSeq > leading prompts 1`] = `"set -e -o pipefail; docker build -t runme/demo .; docker ps -qa"`;
+
 exports[`getCmdShellSeq > linux without pipefail 1`] = `"set -e; ls ~/"`;
 
 exports[`getCmdShellSeq > one command 1`] = `"set -e -o pipefail; deno task start"`;

@@ -7,7 +7,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 First, install all dependencies:
 
 ```sh
-yarn install
+npm install
 ```
 
 then, run the development server:
