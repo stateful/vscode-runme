@@ -2,10 +2,16 @@
 .vscode-test/**
 out/test/**
 src/**
+.github
 .gitignore
+.next
+.wdio-vscode-service
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
 **/*.tsbuildinfo
+**/node_modules
+tests
+coverage
