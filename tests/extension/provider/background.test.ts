@@ -1,6 +1,6 @@
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
-import { getExecutionProperty, getMetadata, getTerminalByCell } from '../../../src/extension/utils'
+import { getExecutionProperty, getTerminalByCell } from '../../../src/extension/utils'
 import {
   ShowTerminalProvider,
   BackgroundTaskProvider,
@@ -28,7 +28,6 @@ describe('ShowTerminalProvider', () => {
   beforeEach(() => {
     vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
-    vi.mocked(getMetadata).mockClear()
   })
 
   it('dont show pid if cell is non interactive', async () => {
@@ -70,7 +69,6 @@ describe('BackgroundTaskProvider', () => {
   beforeEach(() => {
     vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
-    vi.mocked(getMetadata).mockClear()
   })
 
   it('dont show bg task label if cell is non a background task', async () => {
@@ -82,7 +80,6 @@ describe('BackgroundTaskProvider', () => {
   it('dont show bg task label if cell is non interactive', async () => {
     cell.metadata.background = 'true'
     vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
-    vi.mocked(getMetadata).mockReturnValue(cell.metadata)
     const p = new BackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
     expect(getExecutionProperty).toBeCalledTimes(1)
@@ -109,11 +106,9 @@ describe('StopBackgroundTaskProvider', () => {
   beforeEach(() => {
     vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
-    vi.mocked(getMetadata).mockClear()
   })
 
   it('dont show bg task label if cell is non a background task', async () => {
-    vi.mocked(getMetadata).mockReturnValue(cell.metadata)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
     expect(getExecutionProperty).toBeCalledTimes(0)

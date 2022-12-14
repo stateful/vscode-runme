@@ -7,7 +7,7 @@ import {
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { getExecutionProperty, getCmdShellSeq, getMetadata } from '../utils'
+import { getExecutionProperty, getCmdShellSeq } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 
@@ -75,8 +75,7 @@ async function taskExecutor(
     //   return new ExperimentalTerminal(scriptFile.fsPath, { cwd, env })
     // })
   )
-  const metadata = getMetadata(exec.cell)
-  const isBackground = metadata?.['background'] === 'true'
+  const isBackground = exec.cell.metadata.background === 'true'
   const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
   taskExecution.isBackground = isBackground
   taskExecution.presentationOptions = {

@@ -1,6 +1,6 @@
 import vscode from 'vscode'
 
-import { getExecutionProperty, getMetadata, getTerminalByCell } from '../utils'
+import { getExecutionProperty, getTerminalByCell } from '../utils'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
@@ -29,8 +29,7 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
-    const metadata = getMetadata(cell)
-    const isBackground = metadata?.['background'] === 'true'
+    const isBackground = cell.metadata.background === 'true'
     /**
      * don't show if not a background task
      */
@@ -47,8 +46,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
 }
 export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
-    const metadata = getMetadata(cell)
-    const isBackground = metadata?.['background'] === 'true'
+    const isBackground = cell.metadata.background === 'true'
     /**
      * don't show if not a background task & if not command currently running
      */

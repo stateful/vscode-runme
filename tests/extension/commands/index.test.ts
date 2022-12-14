@@ -15,12 +15,11 @@ import {
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText,
   stopBackgroundTask } from '../../../src/extension/commands'
-import { getTerminalByCell, getMetadata } from '../../../src/extension/utils'
+import { getTerminalByCell } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
 vi.mock('vscode')
 vi.mock('../../../src/extension/utils', () => ({
-  getMetadata: vi.fn(),
   getTerminalByCell: vi.fn()
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
@@ -32,7 +31,6 @@ vi.mock('../../../src/extension/provider/cli', () => ({
 beforeEach(() => {
   vi.mocked(window.showWarningMessage).mockClear()
   vi.mocked(window.showInformationMessage).mockClear()
-  vi.mocked(getMetadata).mockClear()
 })
 
 test('openTerminal', () => {
@@ -66,7 +64,6 @@ test('runCLICommand if CLI is installed', async () => {
     document: { uri: { fsPath: '/foo/bar' }}
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
-  vi.mocked(getMetadata).mockReturnValue(cell.metadata)
   await runCLICommand(cell)
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)

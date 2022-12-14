@@ -8,8 +8,7 @@ import executors from '../../src/extension/executors'
 vi.mock('vscode')
 vi.mock('../../src/extension/utils', () => ({
   resetEnv: vi.fn(),
-  getKey: vi.fn().mockReturnValue('foobar'),
-  getMetadata: vi.fn(),
+  getKey: vi.fn().mockReturnValue('foobar')
 }))
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() }
