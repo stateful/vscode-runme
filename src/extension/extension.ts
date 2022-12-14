@@ -12,7 +12,8 @@ import {
   copyCellToClipboard,
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText ,
-  stopBackgroundTask
+  stopBackgroundTask,
+  createNewRunmeNotebook
 } from './commands'
 import { Serializer } from './serializer'
 
@@ -42,6 +43,7 @@ export class RunmeExtension {
       commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+      commands.registerCommand('runme.new', createNewRunmeNotebook),
     )
   }
 }

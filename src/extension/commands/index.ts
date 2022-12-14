@@ -1,6 +1,9 @@
 import path from 'node:path'
 
-import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn } from 'vscode'
+import {
+  NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
+} from 'vscode'
 
 import { CliProvider } from '../provider/cli'
 import { getMetadata, getTerminalByCell } from '../utils'
@@ -56,4 +59,12 @@ export function openSplitViewAsMarkdownText (doc: TextDocument) {
   window.showTextDocument(doc, {
     viewColumn: ViewColumn.Beside
   })
+}
+
+export async function createNewRunmeNotebook () {
+  const newNotebook = await workspace.openNotebookDocument('runme', new NotebookData([
+    new NotebookCellData(NotebookCellKind.Markup, '# Runme Notebook\n\nStart writing here...', 'markdown'),
+    new NotebookCellData(NotebookCellKind.Code, 'echo "Hello World"', 'bash')
+  ]))
+  await commands.executeCommand('vscode.openWith', newNotebook.uri, 'runme')
 }

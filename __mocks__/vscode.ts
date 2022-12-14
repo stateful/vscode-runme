@@ -17,6 +17,7 @@ export const Uri = {
 }
 
 export const workspace = {
+  openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
   openTextDocument: vi.fn(),
   registerNotebookSerializer: vi.fn(),
   fs: {
@@ -38,7 +39,8 @@ export const window = {
 }
 
 export const commands = {
-  registerCommand: vi.fn()
+  registerCommand: vi.fn(),
+  executeCommand: vi.fn()
 }
 
 export enum ViewColumn  {
@@ -50,4 +52,11 @@ export const env = {
     writeText: vi.fn()
   },
   openExternal: vi.fn()
+}
+
+export const NotebookData = vi.fn()
+export const NotebookCellData = vi.fn()
+export enum NotebookCellKind {
+  Code = 1,
+  Markup = 2
 }

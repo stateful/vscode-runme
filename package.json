@@ -56,6 +56,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "runme.new",
+        "title": "Create: New Runme Notebook"
+      },
+      {
         "command": "runme.openTerminal",
         "title": "Open Terminal for Background Task"
       },
@@ -175,6 +179,12 @@
             "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
           }
         }
+      }
+    ],
+    "file/newFile": [
+      {
+        "command": "runme.new",
+        "group": "notebook"
       }
     ]
   },

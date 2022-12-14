@@ -1,11 +1,17 @@
+import path from 'node:path'
+
 import { beforeEach, expect, test, vi } from 'vitest'
 import {
-  window, env,
+  window,
+  env,
+  workspace,
+  commands,
   // @ts-expect-error mock feature
   terminal,
   NotebookDocument,
   TextDocument,
   ViewColumn,
+  NotebookCellData
 } from 'vscode'
 
 import {
@@ -14,11 +20,13 @@ import {
   runCLICommand,
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText,
-  stopBackgroundTask } from '../../../src/extension/commands'
+  stopBackgroundTask,
+  createNewRunmeNotebook
+} from '../../../src/extension/commands'
 import { getTerminalByCell, getMetadata } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
-vi.mock('vscode')
+vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('../../../src/extension/utils', () => ({
   getMetadata: vi.fn(),
   getTerminalByCell: vi.fn()
@@ -93,4 +101,11 @@ test('stopBackgroundTask if terminal does not exist', () => {
   vi.mocked(getTerminalByCell).mockReturnValue(undefined)
   stopBackgroundTask({} as any)
   expect(window.showWarningMessage).toBeCalledTimes(1)
+})
+
+test('createNewRunmeNotebook', async () => {
+  await createNewRunmeNotebook()
+  expect(workspace.openNotebookDocument).toBeCalledWith('runme', expect.any(Object))
+  expect(NotebookCellData).toBeCalledTimes(2)
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
 })
