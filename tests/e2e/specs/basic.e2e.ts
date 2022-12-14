@@ -38,7 +38,7 @@ describe('Runme VS Code Extension', () => {
   })
 
   it('should provide a button to run cmd via CLI', async () => {
-    const rows = await $$('.cell-status-item')
+    const rows = await $$('.cell-statusbar-container .cell-status-item')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
       const text = await r.getText()
