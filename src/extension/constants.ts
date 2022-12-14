@@ -11,5 +11,3 @@ export const DEFAULT_ENV = {
 export const ENV_STORE = new Map<string, string>(
   Object.entries(DEFAULT_ENV)
 )
-
-export const RUNME_SUPPORTED_LANGUAGES = ['bash', 'shell', 'sh']

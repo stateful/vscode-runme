@@ -253,14 +253,6 @@
           "cwd": {
             "type": "string",
             "description": "working directory where Runme executes the task"
-          },
-          "stdoutEvent": {
-            "type": "object",
-            "description": "EventEmitter that fires on stdout/stderr events"
-          },
-          "taskPromise": {
-            "type": "object",
-            "description": "promise returning task result"
           }
         }
       }
@@ -327,7 +319,6 @@
     "lit": "^2.5.0",
     "preact": "^10.11.3",
     "tmp-promise": "^3.0.3",
-    "split2": "^4.1.0",
     "undici": "^5.14.0",
     "vercel": "^28.9.0",
     "xdg-app-paths": "^8.2.0",

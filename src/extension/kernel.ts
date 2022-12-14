@@ -9,7 +9,7 @@ import { API } from '../utils/deno/api'
 
 import executor, { runme } from './executors'
 import { ExperimentalTerminal } from './terminal/terminal'
-import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, RUNME_SUPPORTED_LANGUAGES } from './constants'
+import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getMetadata } from './utils'
 
 import './wasm/wasm_exec.js'
@@ -136,11 +136,7 @@ export class Kernel implements Disposable {
     const config = workspace.getConfiguration('runme.experiments')
     const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
     const terminal = this.#terminals.get(cell.document.uri.fsPath)
-    const successfulCellExecution = (
-      RUNME_SUPPORTED_LANGUAGES.includes(execKey) &&
-      hasPsuedoTerminalExperimentEnabled &&
-      terminal
-    )
+    const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
       ? await runme.call(this, exec, terminal)
       : await executor[execKey].call(this, exec, runningCell)
     exec.end(successfulCellExecution)
