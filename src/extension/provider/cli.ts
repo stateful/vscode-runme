@@ -2,12 +2,15 @@ import { spawn } from 'node:child_process'
 
 import vscode from 'vscode'
 
+import { getMetadata } from '../utils'
+
 export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
-     * only show CLI if cliName is known
+     * only show CLI if runme.dev/name is known
      */
-    if (!cell.metadata?.['cliName']) {
+    const metadata = getMetadata(cell)
+    if (!metadata?.['runme.dev/name']) {
       return
     }
 

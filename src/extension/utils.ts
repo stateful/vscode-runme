@@ -5,21 +5,28 @@ import cp from 'node:child_process'
 import vscode, { FileType } from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
+import { WasmLib } from '../types'
 
 import executor from './executors'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
+export function getMetadata(cell: vscode.NotebookCell) {
+  const metadata: WasmLib.Metadata = cell.metadata
+  return metadata
+}
+
 export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const configSetting = config.get<boolean>(property, CONFIGURATION_SHELL_DEFAULTS[property])
+  const metadata = getMetadata(cell)
 
   /**
    * if cell is marked as interactive (default: not set or set to 'true')
    */
-  if (typeof cell.metadata?.[property] === 'string') {
-    return cell.metadata[property] === 'true'
+  if (typeof metadata?.[property] === 'string') {
+    return metadata[property] === 'true'
   }
 
   return configSetting

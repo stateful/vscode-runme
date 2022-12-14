@@ -8,12 +8,12 @@ export namespace WasmLib {
   }
 
   export type Cell = {
-    metadata?: Attribute
+    metadata?: Metadata
     languageId?: string
     value: string
     kind: NotebookCellKind.Markup
   } | {
-    metadata?: Attribute
+    metadata?: Metadata
     languageId?: string
     value: string
     kind: NotebookCellKind.Code
@@ -26,8 +26,12 @@ export namespace WasmLib {
     }
   }
 
-  export interface Attribute {
-    [key: string]: any
+  export interface Metadata {
+    ['background']?: string
+    ['interactive']?: string
+    ['closeTerminalOnSuccess']?: string
+    ['mimeType']?: string
+    ['runme.dev/name']?: string
   }
 }
 
