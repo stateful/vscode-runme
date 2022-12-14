@@ -41,7 +41,9 @@ describe('Runme VS Code Extension', () => {
     const rows = await $$('.cell-status-item')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
-      if ((await r.getText()).includes('CLI')) {
+      const text = await r.getText()
+      console.log(`Looking for CLI button: ${text}`)
+      if (text.includes('CLI')) {
         row = r
       }
     }
