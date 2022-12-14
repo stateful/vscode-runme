@@ -3,57 +3,27 @@ import { NotebookCellKind } from 'vscode'
 import { OutputType, ClientMessages } from './constants'
 
 export namespace WasmLib {
-  export namespace New {
-    export type Notebook = {
-      cells: Cell[]
-    }
-
-    export type Cell = {
-      metadata?: Attribute
-      languageId?: string
-      value: string
-      kind: NotebookCellKind.Markup
-    } | {
-      metadata?: Attribute
-      languageId?: string
-      value: string
-      kind: NotebookCellKind.Code
-    }
-
-    export interface Serializer {
-      Runme: {
-        deserialize: (content: string) => Promise<Notebook>
-        serialize: (content: string) => Promise<string>
-      }
-    }
+  export type Notebook = {
+    cells: Cell[]
   }
 
-  export interface Runme {
-    Runme: {
-      initialize: (source: string) => void
-      getCell: () => Cell
-      getCells: () => Cells
-      getSource: () => string
-      updateCell: (id: number, md: string) => Error | null
-      prepareScript: (lines: string[]) => string
-    }
-  }
   export type Cell = {
-    editable: boolean
-    source: string
-    type: 'markdown'
+    metadata?: Attribute
+    languageId?: string
+    value: string
+    kind: NotebookCellKind.Markup
   } | {
-    attributes?: Attribute
-    editable: boolean
-    executable?: string
-    lines?: string[]
-    name: string
-    source: string
-    type: 'code'
+    metadata?: Attribute
+    languageId?: string
+    value: string
+    kind: NotebookCellKind.Code
   }
 
-  export interface Cells {
-    cells?: Cell[]
+  export interface Serializer {
+    Runme: {
+      deserialize: (content: string) => Promise<Notebook>
+      serialize: (content: string) => Promise<string>
+    }
   }
 
   export interface Attribute {
