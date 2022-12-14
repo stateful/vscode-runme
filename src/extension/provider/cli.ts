@@ -2,8 +2,10 @@ import { spawn } from 'node:child_process'
 
 import vscode from 'vscode'
 
+import type { NotebookCell } from '../../types'
+
 export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
-  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+  async provideCellStatusBarItems(cell: NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * only show CLI if runme.dev/name is known
      */

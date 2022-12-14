@@ -1,4 +1,9 @@
-import { NotebookCellKind } from 'vscode'
+import {
+  NotebookCellKind,
+  NotebookCellData as VSCodeNotebookCellData,
+  NotebookCell as VSCodeNotebookCell,
+  NotebookCellExecution as VSCodeNotebookCellExecution
+} from 'vscode'
 
 import { OutputType, ClientMessages } from './constants'
 
@@ -27,11 +32,11 @@ export namespace WasmLib {
   }
 
   export interface Metadata {
-    ['background']?: string
-    ['interactive']?: string
-    ['closeTerminalOnSuccess']?: string
-    ['mimeType']?: string
-    ['runme.dev/name']?: string
+    background?: string
+    interactive?: string
+    closeTerminalOnSuccess?: string
+    mimeType?: string
+    'runme.dev/name'?: string
   }
 }
 
@@ -84,4 +89,15 @@ export interface ClientMessagePayload {
 export interface OutputItemsPayload {
   content: string
   mime: string
+}
+
+export interface NotebookCellData extends VSCodeNotebookCellData {
+  metadata: WasmLib.Metadata
+}
+export interface NotebookCell extends VSCodeNotebookCell {
+  metadata: WasmLib.Metadata
+}
+
+export interface NotebookCellExecution extends VSCodeNotebookCellExecution {
+  cell: NotebookCell
 }

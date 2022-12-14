@@ -1,9 +1,10 @@
 import vscode from 'vscode'
 
 import { getExecutionProperty, getTerminalByCell } from '../utils'
+import type { NotebookCell } from '../../types'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
-  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+  async provideCellStatusBarItems(cell: NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
      */
@@ -28,7 +29,7 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 }
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
-  provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
+  provideCellStatusBarItems(cell: NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const isBackground = cell.metadata.background === 'true'
     /**
      * don't show if not a background task
@@ -45,7 +46,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
   }
 }
 export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
-  provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
+  provideCellStatusBarItems(cell: NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const isBackground = cell.metadata.background === 'true'
     /**
      * don't show if not a background task & if not command currently running

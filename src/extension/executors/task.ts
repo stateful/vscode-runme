@@ -1,15 +1,15 @@
 import path from 'node:path'
 
 import {
-  Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, TaskRevealKind, TaskPanelKind,
-  ShellExecution
+  Task, TextDocument, TaskScope, tasks, window, TerminalOptions, TaskRevealKind,
+  TaskPanelKind, ShellExecution
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
 import { getExecutionProperty, getCmdShellSeq } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
+import type { NotebookCellExecution } from '../../types'
 
 import { retrieveShellCommand } from './utils'
 import { sh as inlineSh } from './shell'

@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process'
 
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import { NotebookCellOutput, NotebookCellOutputItem } from 'vscode'
 
 import { OutputType } from '../../constants'
-import type { CellOutputPayload } from '../../types'
+import type { CellOutputPayload, NotebookCellExecution } from '../../types'
 import type { Kernel } from '../kernel'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
@@ -28,7 +28,7 @@ async function shellExecutor(
   /**
    * this needs more work / specification
    */
-  const mime = exec.cell.metadata?.mimeType || 'text/plain' as const
+  const mime = exec.cell.metadata.mimeType || 'text/plain' as const
   const index = exec.cell.index
 
   /**

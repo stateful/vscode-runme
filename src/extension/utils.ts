@@ -5,13 +5,15 @@ import cp from 'node:child_process'
 import vscode, { FileType } from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
+import type { NotebookCell } from '../types'
 
 import executor from './executors'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
+
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
-export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
+export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: NotebookCell) {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const configSetting = config.get<boolean>(property, CONFIGURATION_SHELL_DEFAULTS[property])
 
@@ -25,7 +27,7 @@ export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL
   return configSetting
 }
 
-export function getTerminalByCell (cell: vscode.NotebookCell) {
+export function getTerminalByCell (cell: NotebookCell) {
   return vscode.window.terminals.find((t) => {
     const taskEnv = (t.creationOptions as vscode.TerminalOptions).env || {}
     return taskEnv.RUNME_ID === `${cell.document.fileName}:${cell.index}`

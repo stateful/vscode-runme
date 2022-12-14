@@ -1,9 +1,10 @@
 import path from 'node:path'
 
-import { NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn } from 'vscode'
+import { Uri, window, env, NotebookDocument, TextDocument, ViewColumn } from 'vscode'
 
 import { CliProvider } from '../provider/cli'
 import { getTerminalByCell } from '../utils'
+import type { NotebookCell } from '../../types'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -40,7 +41,7 @@ export async function runCLICommand (cell: NotebookCell) {
       Uri.parse('https://github.com/stateful/runme/releases')
     ))
   }
-  const cliName: string = (cell.metadata?.['runme.dev/name'] || '').trim()
+  const cliName: string = (cell.metadata['runme.dev/name'] || '').trim()
   const term = window.createTerminal(`CLI: ${cliName}`)
   term.show(false)
   term.sendText(`runme run ${cliName} --chdir="${path.dirname(cell.document.uri.fsPath)}"`)
