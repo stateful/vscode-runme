@@ -41,7 +41,7 @@ describe('Runme VS Code Extension', () => {
     const rows = await $$('.cell-status-item')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
-      if ((await r.getText()).includes(' CLI')) {
+      if ((await r.getText()).includes('CLI')) {
         row = r
       }
     }
@@ -55,9 +55,7 @@ describe('Runme VS Code Extension', () => {
     const rows = await $$('.cell-editor-container')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
-      const text = await r.getText()
-      console.log(text)
-      if (text.includes('"Foo 👀')) {
+      if ((await r.getText()).includes('"Foo 👀')) {
         row = r
       }
     }
