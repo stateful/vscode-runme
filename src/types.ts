@@ -27,10 +27,10 @@ export namespace WasmLib {
   }
 
   export interface Metadata {
-    ['background']?: string
-    ['interactive']?: string
-    ['closeTerminalOnSuccess']?: string
-    ['mimeType']?: string
+    background?: string
+    interactive?: string
+    closeTerminalOnSuccess?: string
+    mimeType?: string
     ['runme.dev/name']?: string
   }
 }

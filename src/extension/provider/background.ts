@@ -30,7 +30,7 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const metadata = getMetadata(cell)
-    const isBackground = metadata?.['background'] === 'true'
+    const isBackground = metadata?.background === 'true'
     /**
      * don't show if not a background task
      */
@@ -48,7 +48,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
 export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const metadata = getMetadata(cell)
-    const isBackground = metadata?.['background'] === 'true'
+    const isBackground = metadata?.background === 'true'
     /**
      * don't show if not a background task & if not command currently running
      */
