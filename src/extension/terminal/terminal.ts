@@ -26,10 +26,6 @@ export class ExperimentalTerminal implements Pseudoterminal {
   private writeEmitter = new EventEmitter<string>()
   private closeEmitter = new EventEmitter<number>()
 
-  private stdoutStream = new PassThrough()
-  private stderrStream = new PassThrough()
-  private stdinStream = new StdinStream()
-
   private readonly cts: CancellationTokenSource = new CancellationTokenSource()
 
   onDidWrite: Event<string> = this.writeEmitter.event
@@ -37,29 +33,33 @@ export class ExperimentalTerminal implements Pseudoterminal {
 
   constructor (private _notebook: NotebookDocument) {
     this.write(`Runme Session started for file ${this._notebook.uri.fsPath}`)
-    this.stdoutStream.on('data', this.#handleOutput(DEFAULT))
-    this.stderrStream.on('data', this.#handleOutput(YELLOW))
   }
 
   async execute (task: RunmeTask, stream?: StreamOptions) {
-    this.write(`Execute Runme command #${task.definition.index}`, DEFAULTBOLD)
+    this.write(`Execute Runme command #${task.definition.index}\n`, DEFAULTBOLD)
     const start = Date.now()
     const shellProvider = Shell.getShellOrDefault()
 
+    const stdoutStream = new PassThrough()
+    const stderrStream = new PassThrough()
+    const stdinStream = new StdinStream()
+    stdoutStream.on('data', this.#handleOutput(DEFAULT))
+    stderrStream.on('data', this.#handleOutput(YELLOW))
+
     if (stream?.stdout) {
-      this.stdoutStream.pipe(stream.stdout)
+      stdoutStream.pipe(stream.stdout)
     }
 
     if (stream?.stderr) {
-      this.stderrStream.pipe(stream.stderr)
+      stderrStream.pipe(stream.stderr)
     }
 
     // ToDo(Christian): either replace with communication protocol
     const exec = spawnStreamAsync('/opt/homebrew/bin/runme', ['run', 'echo-foo'], {
       cancellationToken: this.cts.token,
-      stdInPipe: this.stdinStream,
-      stdOutPipe: this.stdoutStream,
-      stdErrPipe: this.stderrStream,
+      stdInPipe: stdinStream,
+      stdOutPipe: stdoutStream,
+      stdErrPipe: stderrStream,
       shellProvider,
       cwd: task.definition.cwd,
       env: process.env
@@ -67,16 +67,6 @@ export class ExperimentalTerminal implements Pseudoterminal {
 
     exec.then((code) => {
       this.write(`\nFinished Runme command after ${Date.now() - start}ms with exit code ${code}\n\n`, '0;1m')
-
-      if (stream?.stdout) {
-        stream.stdout.end()
-        this.stdoutStream.unpipe(stream.stdout)
-      }
-
-      if (stream?.stderr) {
-        stream.stderr.end()
-        this.stderrStream.unpipe(stream.stderr)
-      }
 
       if (task.definition.closeTerminalOnSuccess && code === 0) {
         window.activeTerminal?.hide()
@@ -114,8 +104,8 @@ export class ExperimentalTerminal implements Pseudoterminal {
       return this.closeEmitter.fire(-1)
     }
 
-    this.stdinStream.push(Buffer.from(data))
-    this.stdoutStream.write(Buffer.from(data))
+    // this.stdinStream.push(Buffer.from(data))
+    // this.stdoutStream.write(Buffer.from(data))
     // this.definition.stdoutEvent?.emit('stdout')
   }
 

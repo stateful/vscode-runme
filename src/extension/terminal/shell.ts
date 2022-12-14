@@ -144,11 +144,11 @@ export async function spawnStreamAsync(
   )
 
   if (options.stdInPipe && childProcess.stdin) {
-    options.stdInPipe.pipe(childProcess.stdin, { end:false })
+    options.stdInPipe.pipe(childProcess.stdin/*, { end:false } */)
   }
 
   if (options.stdOutPipe && childProcess.stdout) {
-    childProcess.stdout.pipe(options.stdOutPipe, { end:false })
+    childProcess.stdout.pipe(options.stdOutPipe/*, { end:false } */)
   }
 
   if (options.stdErrPipe && childProcess.stderr) {
