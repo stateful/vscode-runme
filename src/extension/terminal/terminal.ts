@@ -12,6 +12,8 @@ import { spawnStreamAsync, Shell } from './shell'
 const DEFAULT = '0m'
 const DEFAULTBOLD = '0;1m'
 const YELLOW = '33m'
+const END_OF_TEXT = '\x03'
+const CR = '\x0D'
 
 class StdinStream extends Readable {
   _read(): void {}
@@ -23,57 +25,66 @@ interface StreamOptions {
 }
 
 export class ExperimentalTerminal implements Pseudoterminal {
+  #stdinStream = new StdinStream()
+  #currentCancellationToken?: CancellationTokenSource
   private writeEmitter = new EventEmitter<string>()
   private closeEmitter = new EventEmitter<number>()
-
-  private readonly cts: CancellationTokenSource = new CancellationTokenSource()
+  readonly #cts: CancellationTokenSource = new CancellationTokenSource()
 
   onDidWrite: Event<string> = this.writeEmitter.event
   onDidClose?: Event<number> = this.closeEmitter.event
 
   constructor (private _notebook: NotebookDocument) {
     this.write(`Runme Session started for file ${this._notebook.uri.fsPath}`)
+    this.#cts.token.onCancellationRequested(this.#cancelExecution)
   }
 
   async execute (task: RunmeTask, stream?: StreamOptions) {
     this.write(`Execute Runme command #${task.definition.index}\n`, DEFAULTBOLD)
+    this.#currentCancellationToken = new CancellationTokenSource()
     const start = Date.now()
     const shellProvider = Shell.getShellOrDefault()
 
     const stdoutStream = new PassThrough()
     const stderrStream = new PassThrough()
-    const stdinStream = new StdinStream()
     stdoutStream.on('data', this.#handleOutput(DEFAULT))
     stderrStream.on('data', this.#handleOutput(YELLOW))
 
     if (stream?.stdout) {
       stdoutStream.pipe(stream.stdout)
+      this.#stdinStream.pipe(stream.stdout)
     }
 
     if (stream?.stderr) {
       stderrStream.pipe(stream.stderr)
     }
 
-    // ToDo(Christian): either replace with communication protocol
-    const exec = spawnStreamAsync('/opt/homebrew/bin/runme', ['run', 'echo-foo'], {
-      cancellationToken: this.cts.token,
-      stdInPipe: stdinStream,
-      stdOutPipe: stdoutStream,
-      stdErrPipe: stderrStream,
-      shellProvider,
-      cwd: task.definition.cwd,
-      env: process.env
+    const exec = new Promise((resolve) => {
+      task.execution = new CustomExecution(async (): Promise<Pseudoterminal> => {
+        // ToDo(Christian): either replace with communication protocol
+        spawnStreamAsync('/opt/homebrew/bin/runme', ['run', 'node-scriptsstdinjs'], {
+          cancellationToken: this.#currentCancellationToken?.token,
+          stdInPipe: this.#stdinStream,
+          stdOutPipe: stdoutStream,
+          stdErrPipe: stderrStream,
+          shellProvider,
+          cwd: task.definition.cwd,
+          env: process.env
+        }).then(resolve, (err: any) => {
+          console.error(12, err)
+          return resolve(1)
+        })
+        return this
+      })
     })
 
     exec.then((code) => {
       this.write(`\nFinished Runme command after ${Date.now() - start}ms with exit code ${code}\n\n`, '0;1m')
-
       if (task.definition.closeTerminalOnSuccess && code === 0) {
         window.activeTerminal?.hide()
       }
     })
 
-    task.execution = new CustomExecution(async (): Promise<Pseudoterminal> => this)
     return {
       execution: await tasks.executeTask(task),
       promise: exec
@@ -96,20 +107,28 @@ export class ExperimentalTerminal implements Pseudoterminal {
    */
   close(): void {
     this.closeEmitter.fire(0)
-    this.cts.cancel()
+    this.#cts.cancel()
   }
 
   handleInput(data: string): void {
-    if (data === '\x03') {
+    if (data === END_OF_TEXT) {
       return this.closeEmitter.fire(-1)
     }
 
-    // this.stdinStream.push(Buffer.from(data))
-    // this.stdoutStream.write(Buffer.from(data))
-    // this.definition.stdoutEvent?.emit('stdout')
+    this.#stdinStream.push(Buffer.from(data))
+    this.write(`${data === CR ? '\n' : data}`)
   }
 
   #handleOutput (color: string) {
     return (data: Buffer) => this.write(data.toString(), color)
+  }
+
+  #cancelExecution () {
+    if (this.#currentCancellationToken?.token.isCancellationRequested) {
+      return
+    }
+    console.log('CANCEL ME');
+
+    this.#currentCancellationToken?.cancel()
   }
 }
