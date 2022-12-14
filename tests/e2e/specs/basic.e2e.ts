@@ -37,6 +37,20 @@ describe('Runme VS Code Extension', () => {
     await webview.close()
   })
 
+  it.skip('should provide a button to run cmd via CLI', async () => {
+    const rows = await $$('.cell-statusbar-container .cell-status-item')
+    let row: WebdriverIO.Element | undefined
+    for (const r of rows) {
+      if ((await r.getText()).includes('CLI')) {
+        row = r
+      }
+    }
+
+    if (!row) {
+      throw new Error('Could not find CLI button')
+    }
+  })
+
   it('should be able to run an example', async () => {
     const rows = await $$('.cell-editor-container')
     let row: WebdriverIO.Element | undefined

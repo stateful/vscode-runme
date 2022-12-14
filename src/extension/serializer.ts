@@ -62,7 +62,7 @@ export class Serializer implements NotebookSerializer {
         throw err
       }
 
-      const { Runme } = globalThis as WasmLib.New.Serializer
+      const { Runme } = globalThis as WasmLib.Serializer
 
       const notebook = JSON.stringify(data)
       const markdown = await Runme.serialize(notebook)
@@ -93,13 +93,13 @@ export class Serializer implements NotebookSerializer {
     content: Uint8Array,
     token: CancellationToken
   ): Promise<NotebookData> {
-    let notebook: WasmLib.New.Notebook
+    let notebook: WasmLib.Notebook
     try {
       const err = await this.wasmReady
       if (err) {
         throw err
       }
-      const { Runme } = globalThis as WasmLib.New.Serializer
+      const { Runme } = globalThis as WasmLib.Serializer
 
       const markdown = content.toString()
 
@@ -143,7 +143,7 @@ export class Serializer implements NotebookSerializer {
     return new NotebookData(cells)
   }
 
-  protected static revive(notebook: WasmLib.New.Notebook) {
+  protected static revive(notebook: WasmLib.Notebook) {
     return notebook.cells.reduce((accu, elem) => {
       let cell: NotebookCellData
       // todo(sebastian): the parser will have to return unsupported as MARKUP
