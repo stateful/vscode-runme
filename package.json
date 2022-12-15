@@ -73,11 +73,6 @@
         "title": "Reset Environment Variables for current VS Code session"
       },
       {
-        "command": "runme.resetEnv",
-        "category": "Runme",
-        "title": "Reset Environment Variables for current VS Code session"
-      },
-      {
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
         "title": "Open markdown as Runme",
