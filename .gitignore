@@ -6,3 +6,4 @@ wasm
 .DS_Store
 coverage
 .wdio-vscode-service
+examples/fresh/deno.lock
