@@ -192,6 +192,31 @@
           }
         }
       }
+    ],
+    "walkthroughs": [
+      {
+        "id": "runme.welcome",
+        "title": "Get Started with creating Runme Notebooks",
+        "description": "Runme allows to create interactive runbooks for VS Code.",
+        "steps": [
+          {
+            "id": "runme.welcome.why",
+            "title": "Why Runme?",
+            "description": "Runme is a human-centric approach to providing and consuming code repository documentation. It's designed to progressively bridge the widening developer experience gaps in a cloud-native age.",
+            "media": {
+              "markdown": "walkthroughs/0-intro.md"
+            }
+          },
+          {
+            "id": "runme.welcome.annotations",
+            "title": "Code Block Annotations",
+            "description": "Runme supports a variety of code block annotations that allows to modify the behavior of the cell and how it is being executed.",
+            "media": {
+              "markdown": "walkthroughs/1-annotations.md"
+            }
+          }
+        ]
+      }
     ]
   },
   "scripts": {
