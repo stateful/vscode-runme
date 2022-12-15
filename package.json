@@ -127,6 +127,12 @@
           "command": "runme.openSplitViewAsMarkdownText",
           "group": "navigation"
         }
+      ],
+      "file/newFile": [
+        {
+          "command": "runme.new",
+          "group": "notebook"
+        }
       ]
     },
     "notebooks": [
@@ -179,12 +185,6 @@
             "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
           }
         }
-      }
-    ],
-    "file/newFile": [
-      {
-        "command": "runme.new",
-        "group": "notebook"
       }
     ]
   },

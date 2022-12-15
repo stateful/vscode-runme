@@ -106,6 +106,6 @@ test('stopBackgroundTask if terminal does not exist', () => {
 test('createNewRunmeNotebook', async () => {
   await createNewRunmeNotebook()
   expect(workspace.openNotebookDocument).toBeCalledWith('runme', expect.any(Object))
-  expect(NotebookCellData).toBeCalledTimes(2)
+  expect(NotebookCellData).toBeCalledTimes(3)
   expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
 })

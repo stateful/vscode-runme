@@ -63,8 +63,21 @@ export function openSplitViewAsMarkdownText (doc: TextDocument) {
 
 export async function createNewRunmeNotebook () {
   const newNotebook = await workspace.openNotebookDocument('runme', new NotebookData([
-    new NotebookCellData(NotebookCellKind.Markup, '# Runme Notebook\n\nStart writing here...', 'markdown'),
-    new NotebookCellData(NotebookCellKind.Code, 'echo "Hello World"', 'bash')
+    new NotebookCellData(
+      NotebookCellKind.Markup,
+      '# Runme Notebook\n\nStart writing here...',
+      'markdown'
+    ),
+    new NotebookCellData(
+      NotebookCellKind.Code,
+      'echo "Hello World"',
+      'bash'
+    ),
+    new NotebookCellData(
+      NotebookCellKind.Markup,
+      '_Find more documentation on writing Runme markdown on [runme.dev](https://www.runme.dev/docs/intro)!_',
+      'markdown'
+    )
   ]))
   await commands.executeCommand('vscode.openWith', newNotebook.uri, 'runme')
 }
