@@ -69,13 +69,13 @@ then ensure to install all project dependencies:
 ```sh
 cd vscode-runme
 nvm install
-GITHUB_TOKEN=$(gh auth token) npm install
+GITHUB_REF_NAME=$(git branch --show-current) GITHUB_TOKEN=$(gh auth token) npm install --include=dev
 ```
 
 This should also download the Runme CLI WASM file. If an error happened follow the error instructions and re-run the download, via:
 
 ```sh
-GITHUB_TOKEN=$(gh auth token) npm run download:wasm
+GITHUB_REF_NAME=$(git branch --show-current) GITHUB_TOKEN=$(gh auth token) npm run download:wasm
 ```
 
 ### Build Project
