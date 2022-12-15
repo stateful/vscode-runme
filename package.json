@@ -176,13 +176,19 @@
             "type": "boolean",
             "scope": "machine",
             "default": true,
-            "markdownDescription": "If set to `true` all shell scripts are run as interactive VS Code tasks, if set to `false` they are executed within the kernel and output is set in resulting cell."
+            "markdownDescription": "If enabled all shell scripts are run as interactive VS Code tasks, if set to `false` they are executed within the kernel and output is set in resulting cell."
           },
           "runme.shell.closeTerminalOnSuccess": {
             "type": "boolean",
             "scope": "machine",
             "default": true,
-            "markdownDescription": "If set to `true`, the terminal closes if task succeeds running."
+            "markdownDescription": "If enabled, the terminal closes if task succeeds running."
+          },
+          "runme.flags.disableSaveRestriction": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
           }
         }
       }

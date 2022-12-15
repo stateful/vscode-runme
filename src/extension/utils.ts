@@ -2,12 +2,13 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType } from 'vscode'
+import vscode, { FileType, NotebookDocument } from 'vscode'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
 import { WasmLib } from '../types'
 
 import executor from './executors'
+import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
@@ -120,4 +121,37 @@ export async function verifyCheckedInFile (filePath: string) {
     { cwd: workspaceFolder.uri.fsPath }
   ).then(() => true, () => false)
   return isCheckedIn
+}
+
+export async function canEditFile (
+  notebook: NotebookDocument,
+  // for testing purposes only
+  verifyCheckedInFileFn = verifyCheckedInFile
+): Promise<boolean> {
+  const config = vscode.workspace.getConfiguration('runme.flags')
+  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction')
+  const currentDocumentPath = notebook.uri.fsPath
+  const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
+
+  /**
+   * allow serializing files if:
+   */
+  if (
+    /**
+     * the user has disabled this restriction
+     */
+    disableSaveRestriction ||
+    /**
+     * the user just created a new file
+     */
+    isNewFile ||
+    /**
+     * the user works on a checked in file
+     */
+    !currentDocumentPath || (await verifyCheckedInFileFn(currentDocumentPath))
+  ) {
+    return true
+  }
+
+  return false
 }

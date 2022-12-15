@@ -2,6 +2,7 @@
 import {
   workspace,
   window,
+  commands,
   NotebookSerializer,
   ExtensionContext,
   Uri,
@@ -9,15 +10,13 @@ import {
   NotebookCellData,
   NotebookCellKind,
   CancellationToken,
-  NotebookDocument
 } from 'vscode'
 
 import { WasmLib } from '../types'
 
 import Languages from './languages'
-import { Kernel } from './kernel'
 import { PLATFORM_OS } from './constants'
-import { verifyCheckedInFile } from './utils'
+import { canEditFile } from './utils'
 
 const DEFAULT_LANG_ID = 'text'
 
@@ -59,40 +58,35 @@ export class Serializer implements NotebookSerializer {
       throw new Error('Could\'t save notebook as it is not active!')
     }
 
-    try {
-      await this.checkTracked(window.activeNotebookEditor.notebook)
-
-      const err = await this.wasmReady
-      if (err) {
-        throw err
-      }
-
-      const { Runme } = globalThis as WasmLib.Serializer
-
-      const notebook = JSON.stringify(data)
-      const markdown = await Runme.serialize(notebook)
-
-      const encoder = new TextEncoder()
-      const encoded = encoder.encode(markdown)
-
-      return encoded
-    } catch (err: any) {
-      console.error(err)
-      throw err
-    }
-  }
-
-  private async checkTracked(notebook: NotebookDocument) {
-    const currentDocumentPath = notebook.uri.fsPath
-    const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
-
-    if (!isNewFile && currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
-      throw new Error(
+    if (!await canEditFile(window.activeNotebookEditor.notebook)) {
+      const errorMessage = (
         'You are writing to a file that is not version controlled! ' +
         'Runme\'s authoring features are in early stages and require hardening. ' +
-        'We wouldn\'t want you to loose important data. Please version track your file first.'
+        'We wouldn\'t want you to loose important data. Please version track your file first ' +
+        'or disable this restriction in the VS Code settings.'
       )
+      window.showErrorMessage(errorMessage, 'Open Runme Settings').then((openSettings) => {
+        if (openSettings) {
+          return commands.executeCommand('workbench.action.openSettings', 'runme.flags.disableSaveRestriction')
+        }
+      })
+      throw new Error('saving non version controlled notebooks is disabled during beta phase.')
     }
+
+    const err = await this.wasmReady
+    if (err) {
+      throw err
+    }
+
+    const { Runme } = globalThis as WasmLib.Serializer
+
+    const notebook = JSON.stringify(data)
+    const markdown = await Runme.serialize(notebook)
+
+    const encoder = new TextEncoder()
+    const encoded = encoder.encode(markdown)
+
+    return encoded
   }
 
   public async deserializeNotebook(
