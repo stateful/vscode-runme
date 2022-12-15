@@ -11,11 +11,13 @@ import { resetEnv, getKey } from './utils'
 import './wasm/wasm_exec.js'
 
 export class Kernel implements Disposable {
+  static readonly type = 'runme' as const
+
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
-    'runme',
-    'runme',
-    'RUNME'
+    Kernel.type,
+    Kernel.type,
+    Kernel.type.toUpperCase()
   )
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 

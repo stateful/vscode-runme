@@ -15,6 +15,7 @@ import {
 import { WasmLib } from '../types'
 
 import Languages from './languages'
+import { Kernel } from './kernel'
 import { PLATFORM_OS } from './constants'
 import { verifyCheckedInFile } from './utils'
 
@@ -54,8 +55,12 @@ export class Serializer implements NotebookSerializer {
     data: NotebookData,
     token: CancellationToken
   ): Promise<Uint8Array> {
+    if (!window.activeNotebookEditor) {
+      throw new Error('Could\'t save notebook as it is not active!')
+    }
+
     try {
-      await this.checkTracked(window.activeNotebookEditor?.notebook)
+      await this.checkTracked(window.activeNotebookEditor.notebook)
 
       const err = await this.wasmReady
       if (err) {
@@ -77,10 +82,11 @@ export class Serializer implements NotebookSerializer {
     }
   }
 
-  private async checkTracked(notebook?: NotebookDocument) {
-    const currentDocumentPath = notebook?.uri.fsPath
+  private async checkTracked(notebook: NotebookDocument) {
+    const currentDocumentPath = notebook.uri.fsPath
+    const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
 
-    if (currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
+    if (!isNewFile && currentDocumentPath && !(await verifyCheckedInFile(currentDocumentPath))) {
       throw new Error(
         'You are writing to a file that is not version controlled! ' +
         'Runme\'s authoring features are in early stages and require hardening. ' +

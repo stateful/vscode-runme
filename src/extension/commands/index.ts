@@ -5,6 +5,7 @@ import {
   workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
 } from 'vscode'
 
+import { Kernel } from '../kernel'
 import { CliProvider } from '../provider/cli'
 import { getMetadata, getTerminalByCell } from '../utils'
 
@@ -62,7 +63,7 @@ export function openSplitViewAsMarkdownText (doc: TextDocument) {
 }
 
 export async function createNewRunmeNotebook () {
-  const newNotebook = await workspace.openNotebookDocument('runme', new NotebookData([
+  const newNotebook = await workspace.openNotebookDocument(Kernel.type, new NotebookData([
     new NotebookCellData(
       NotebookCellKind.Markup,
       '# Runme Notebook\n\nStart writing here...',
@@ -79,5 +80,5 @@ export async function createNewRunmeNotebook () {
       'markdown'
     )
   ]))
-  await commands.executeCommand('vscode.openWith', newNotebook.uri, 'runme')
+  await commands.executeCommand('vscode.openWith', newNotebook.uri, Kernel.type)
 }
