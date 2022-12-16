@@ -57,7 +57,7 @@
     "commands": [
       {
         "command": "runme.new",
-        "title": "Create: New Runme Notebook"
+        "title": "Runme Notebook"
       },
       {
         "command": "runme.openTerminal",
