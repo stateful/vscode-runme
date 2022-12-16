@@ -29,41 +29,15 @@ If you don't want the runme notebook, you can always right click on the .md file
 
 ## Elevated Notebook Experience
 
-Code blocks with `sh` or `bash` designators will result in executable notebook cells. Please note that you might have to look at the raw markdown to see the different attributes.
+Runme allows code blocks to be annotated with attributes to provide control over aspects of execution, output, interaction, and other behavior. Please find a complete list in the [docs](https://runme.dev/docs/intro).
 
-    ```sh
-    ls -al #some executable command here
-    ```
-
-Auto-detection for will be applied to blocks without language designators. Runme however prefers to add language designators to all code blocks.
-
-    ```
-    echo "block without language designation"
-    ```
-
-Run in the background, great for compilers/bundler with file watchers.
+For instance, following annotation will run the command in the background, great for compilers/bundler with file watchers.
 
     ```sh { background=true }
     npx tsc --watch
     ```
 
-Notebook cells will launch a task inside of the terminal panel by default to allow for user-input. However, if code blocks do not require user interactivity it is possible to run them inline.
-
-    ```sh { interactive=false }
-    ls -al #some executable command here
-    ```
-
-Environment variables which are exported will prompt users for input. If their values are quoted Runme will prepopulated the value as placeholder when prompting the user whereas unquoted values will be displayed as prompt message with empty value instead.
-
-    ```sh { interactive=false }
-    echo "Allows to make execution generic"
-    export PATH="$HOME/your/bin:$PATH"
-    export MY_PROJECT_PROMPT=Enter project name
-    export MY_PROJECT_VALUE="my-project-id"
-    echo $MY_PROJECT_PROMPT $MY_PROJECT_VALUE
-    ```
-
-Please see [runme.dev's README.md](https://github.com/stateful/runme.dev/blob/main/README.md) for a reference how to apply these code block attributes in different use-cases.
+Check the complete list at https://runme.dev/docs/annotations or take a look at the [examples](https://github.com/stateful/vscode-runme/tree/main/examples) available inside the VS Code extension repo for a reference how to apply these code block attributes in different use-cases.
 
 ## Interactive Service integrations
 
