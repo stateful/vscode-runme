@@ -96,16 +96,17 @@ Let us know what other services you rely on.
 
 Runme currently consists of a Markdown processor (written in Go) which is both linked in this VS Code extension (via WebAssembly) and the [runme CLI](https://github.com/stateful/runme) (Go binary) allowing for a consistent experience. The Runme VS Code extension leverages the notebook APIs to transparently provide an interactive user experience on top of static markdown.
 
-## Bleeding Edge Software
+## Beta Software
 
-Runme is alpha software that is under heavy development. Here are a few known limitations:
+Runme is under swift development. Checkout our roadmap at [https://github.com/stateful/runme/projects](https://github.com/stateful/runme/projects). Please be aware of following known limitations:
 
-- Notebooks are currently read-only from within the notebook UX, please edit markdown file directly
-- Only shell is currently supported on macOS & Linux, no PowerShell and Windows yet
+- Notebook editing requires your markdown to be git-tracked (unless disabled in config) to avoid accidents
+- Only shell is currently supported on macOS, Linux, and limited support on Windows. PowerShell is not supported yet
 - Be aware of edge cases. Runme still needs to continue maturing. Let us know when you hit a snags. We appreciate it!
 
 We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
 
 - [Join our Discord](https://discord.gg/BQm8zRCBUY)
+- [Review the Roadmap](https://github.com/stateful/runme/projects)
 - [Submit an Issue](https://github.com/stateful/vscode-runme/issues)
 - [Contribute on Github](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
