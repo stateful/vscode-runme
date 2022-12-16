@@ -37,7 +37,7 @@ describe('Runme VS Code Extension', () => {
     await webview.close()
   })
 
-  it.skip('should provide a button to run cmd via CLI', async () => {
+  it('should provide a button to run cmd via CLI', async () => {
     const rows = await $$('.cell-statusbar-container .cell-status-item')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
