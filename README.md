@@ -29,9 +29,9 @@ If you don't want the runme notebook, you can always right click on the .md file
 
 ## Elevated Notebook Experience
 
-Runme allows code blocks to be annotated with attributes to provide control over aspects of execution, output, interaction, and other behavior. Please find a complete list in the [docs](https://runme.dev/docs/intro).
+Runme allows code blocks to be annotated with attributes to provide control over some aspects of execution, output, interaction, and other behavior. Please find a complete list in the [docs](https://runme.dev/docs/intro).
 
-For instance, following annotation will run the command in the background, great for compilers/bundler with file watchers.
+For instance, the following annotation will run the command in the background, great for compilers/bundler with file watchers.
 
     ```sh { background=true }
     npx tsc --watch
@@ -72,7 +72,7 @@ Runme currently consists of a Markdown processor (written in Go) which is both l
 
 ## Beta Software
 
-Runme is under swift development. Checkout our roadmap at [https://github.com/stateful/runme/projects](https://github.com/stateful/runme/projects). Please be aware of following known limitations:
+Runme is in rapid development. Checkout our roadmap at [https://github.com/stateful/runme/projects](https://github.com/stateful/runme/projects). Please be aware of following known limitations:
 
 - Notebook editing requires your markdown to be git-tracked (unless disabled in config) to avoid accidents
 - Only shell is currently supported on macOS, Linux, and limited support on Windows. PowerShell is not supported yet
