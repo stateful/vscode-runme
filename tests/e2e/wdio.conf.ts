@@ -1,6 +1,8 @@
+import fs from 'node:fs/promises'
 import url from 'node:url'
 import path from 'node:path'
 
+import { Key } from 'webdriverio'
 import type { Options } from '@wdio/types'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -148,6 +150,8 @@ export const config: Options.Testrunner = {
     // commands. Instead, they hook themselves up into the test process.
     services: ['vscode'],
 
+    outputDir: path.join(__dirname, 'logs'),
+
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: https://webdriver.io/docs/frameworks
@@ -229,8 +233,21 @@ export const config: Options.Testrunner = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    // before: function (capabilities, specs) {
-    // },
+    before: async function () {
+        await browser.action('key')
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .pause(100)
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .pause(100)
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .perform()
+    },
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name
@@ -271,10 +288,16 @@ export const config: Options.Testrunner = {
      * @param {Boolean} result.passed    true if test has passed, otherwise false
      * @param {Object}  result.retries   informations to spec related retries, e.g. `{ attempts: 0, limit: 0 }`
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterTest: async function (test, __, { passed }) {
+        if (passed) {
+          return
+        }
 
-
+        console.log('Capturing screenshot for debugging')
+        const screenshotDir = path.join(__dirname, 'screenshots')
+        await fs.mkdir(screenshotDir, { recursive: true })
+        await browser.saveScreenshot(path.join(screenshotDir, `${test.parent} - ${test.title}.png`))
+    },
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
