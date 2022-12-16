@@ -124,7 +124,7 @@ export class Serializer implements NotebookSerializer {
           if (
             elem.kind === NotebookCellKind.Code &&
             elem.value &&
-            !elem.languageId
+            (elem.languageId || '') === ''
           ) {
             const norm = Serializer.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
