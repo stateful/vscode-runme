@@ -40,7 +40,7 @@ describe('Serializer', () => {
             window.activeNotebookEditor = {} as any
             const s = new Serializer(context)
             await expect(() => s.serializeNotebook({} as any, {} as any))
-                .rejects.toThrow(/disabled during beta phase/)
+                .rejects.toThrow(/saving non version controlled notebooks is disabled/)
         })
 
         it('throws if wasm fails to laod', async () => {

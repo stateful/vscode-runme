@@ -57,7 +57,7 @@
     "commands": [
       {
         "command": "runme.new",
-        "title": "Create: New Runme Notebook"
+        "title": "Runme Notebook"
       },
       {
         "command": "runme.openTerminal",
@@ -188,7 +188,7 @@
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
+            "markdownDescription": "If enabled, Runme's save restriction on non-git-tracked files will be disabled."
           }
         }
       }

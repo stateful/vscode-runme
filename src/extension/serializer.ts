@@ -70,7 +70,7 @@ export class Serializer implements NotebookSerializer {
           return commands.executeCommand('workbench.action.openSettings', 'runme.flags.disableSaveRestriction')
         }
       })
-      throw new Error('saving non version controlled notebooks is disabled during beta phase.')
+      throw new Error('saving non version controlled notebooks is disabled by default.')
     }
 
     const err = await this.wasmReady
@@ -105,7 +105,7 @@ export class Serializer implements NotebookSerializer {
 
       notebook = await Runme.deserialize(markdown)
 
-      if (!notebook || (notebook.cells ?? []).length === 0) {
+      if (!notebook) {
         return this.#printCell('⚠️ __Error__: no cells found!')
       }
     } catch (err: any) {
