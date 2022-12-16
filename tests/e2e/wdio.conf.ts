@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import url from 'node:url'
 import path from 'node:path'
 
+import { Key } from 'webdriverio'
 import type { Options } from '@wdio/types'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -232,8 +233,21 @@ export const config: Options.Testrunner = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    // before: function (capabilities, specs) {
-    // },
+    before: async function () {
+        await browser.action('key')
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .pause(100)
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .pause(100)
+            .down(Key.Ctrl).down(Key.Subtract)
+            .pause(100)
+            .up(Key.Ctrl).up(Key.Subtract)
+            .perform()
+    },
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name
