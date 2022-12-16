@@ -28,8 +28,8 @@ jobs:
         with:
           name: screenshots
           path: |
-            test/screenshots
-            test/logs
+            tests/e2e/screenshots
+            tests/e2e/logs
       - name: 🐛 Debug Build
         uses: stateful/vscode-server-action@v1
         if: failure()
