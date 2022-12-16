@@ -48,11 +48,7 @@ async function downloadWasm (token) {
   const release = wasmReleaseDefined
     ? releases.data.find((r) => r.tag_name === process.env.RUNME_VERSION)
     : releases.data.filter(
-        (r) => {
-        return true
-        // todo(sebastian): await runme release
-        // return r.prerelease === (process.env.GITHUB_REF_NAME !== "main")
-      }
+        (r) => r.prerelease === (process.env.GITHUB_REF_NAME !== "main")
       )[0]
 
   if (wasmReleaseDefined && !release) {
