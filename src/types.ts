@@ -1,39 +1,4 @@
-import { NotebookCellKind } from 'vscode'
-
 import { OutputType, ClientMessages } from './constants'
-
-export namespace WasmLib {
-  export type Notebook = {
-    cells: Cell[]
-  }
-
-  export type Cell = {
-    metadata?: Metadata
-    languageId?: string
-    value: string
-    kind: NotebookCellKind.Markup
-  } | {
-    metadata?: Metadata
-    languageId?: string
-    value: string
-    kind: NotebookCellKind.Code
-  }
-
-  export interface Serializer {
-    Runme: {
-      deserialize: (content: string) => Promise<Notebook>
-      serialize: (content: string) => Promise<string>
-    }
-  }
-
-  export interface Metadata {
-    background?: string
-    interactive?: string
-    closeTerminalOnSuccess?: string
-    mimeType?: string
-    ['runme.dev/name']?: string
-  }
-}
 
 interface ICellOutput<T extends OutputType> {
   type: T
