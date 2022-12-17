@@ -50,8 +50,10 @@ export async function runme(
     stdout: outputStream,
     stderr: outputStream
   })
-  this.context.subscriptions.push(exec.token.onCancellationRequested(
-    () => execution.terminate()))
+  this.context.subscriptions.push(exec.token.onCancellationRequested(() => {
+    terminal.cancelExecution()
+    execution.terminate()
+  }))
 
   /**
    * push task as disposable to context so that it is being closed

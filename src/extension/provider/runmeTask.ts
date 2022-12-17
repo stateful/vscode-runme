@@ -5,7 +5,7 @@ import {
   workspace, window, TaskScope, TaskRevealKind, TaskPanelKind, NotebookCellKind
 } from 'vscode'
 
-import { initWasm } from '../utils'
+import { initWasm, getMetadata } from '../utils'
 import { WasmLib, RunmeTaskDefinition } from '../../types'
 
 declare var globalThis: any
@@ -38,9 +38,11 @@ export class RunmeTaskProvider implements TaskProvider {
 
     return notebook.cells
       .filter((cell: WasmLib.Cell): cell is WasmLib.Cell => cell.kind === NotebookCellKind.Code)
-      .map((cell, i) => RunmeTaskProvider.getRunmeTask(
+      .map((cell) => RunmeTaskProvider.getRunmeTask(
         current.fsPath,
-        cell.metadata!['runme.dev/name'] || `Cell #${i}`
+        // ToDo(Christian) remove casting once we have defaults
+        // see https://github.com/stateful/runme/issues/90
+        getMetadata(cell as any).name
       ))
   }
 

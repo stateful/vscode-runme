@@ -37,7 +37,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
 
   constructor (private _notebook: NotebookDocument) {
     this.write(`Runme Session started for file ${this._notebook.uri.fsPath}`)
-    this.#cts.token.onCancellationRequested(this.#cancelExecution)
+    this.#cts.token.onCancellationRequested(this.cancelExecution)
   }
 
   async execute (task: RunmeTask, stream?: StreamOptions) {
@@ -133,7 +133,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
     return (data: Buffer) => this.write(data.toString(), color)
   }
 
-  #cancelExecution () {
+  cancelExecution () {
     if (this.#currentCancellationToken?.token.isCancellationRequested) {
       return
     }
