@@ -33,12 +33,15 @@ export class RunmeTaskProvider implements TaskProvider {
     }
 
     const mdContent = (await workspace.fs.readFile(current)).toString()
-    const { Runme } = globalThis as WasmLib.New.Serializer
+    const { Runme } = globalThis as WasmLib.Serializer
     const notebook = await Runme.deserialize(mdContent)
 
     return notebook.cells
-      .filter((cell: WasmLib.New.Cell): cell is WasmLib.New.Cell => cell.kind === NotebookCellKind.Code)
-      .map((cell) => RunmeTaskProvider.getRunmeTask(current.fsPath, cell.metadata?.name))
+      .filter((cell: WasmLib.Cell): cell is WasmLib.Cell => cell.kind === NotebookCellKind.Code)
+      .map((cell, i) => RunmeTaskProvider.getRunmeTask(
+        current.fsPath,
+        cell.metadata!['runme.dev/name'] || `Cell #${i}`
+      ))
   }
 
   public resolveTask(task: Task): ProviderResult<Task> {
@@ -48,7 +51,7 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static getRunmeTask (filePath: string, index: number, options: TaskOptions = {}): RunmeTask {
+  static getRunmeTask (filePath: string, command: string, options: TaskOptions = {}): RunmeTask {
     const cwd = options.cwd || path.dirname(filePath)
     const closeTerminalOnSuccess = options.closeTerminalOnSuccess || true
     const isBackground = options.isBackground || false
@@ -56,7 +59,7 @@ export class RunmeTaskProvider implements TaskProvider {
     const definition: RunmeTaskDefinition = {
       type: 'runme',
       filePath,
-      index,
+      command,
       closeTerminalOnSuccess,
       isBackground,
       cwd
@@ -65,7 +68,7 @@ export class RunmeTaskProvider implements TaskProvider {
     const task = new Task(
       definition,
       TaskScope.Workspace,
-      `Runme Command #${index}`,
+      command,
       RunmeTaskProvider.id
     ) as RunmeTask
 

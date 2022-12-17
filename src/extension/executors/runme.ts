@@ -4,12 +4,13 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { RunmeTaskProvider } from '../provider/runmeTask'
 import { OutputType } from '../../constants'
-import { getExecutionProperty } from '../utils'
+import { getMetadata } from '../utils'
 import { ExperimentalTerminal } from '../terminal/terminal'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
 
-const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
+const DEFAULT_MIME_TYPE = 'text/plain'
+const MIME_TYPES_WITH_CUSTOM_RENDERERS = [DEFAULT_MIME_TYPE]
 
 export async function runme(
   this: Kernel,
@@ -17,31 +18,27 @@ export async function runme(
   terminal: ExperimentalTerminal
 ): Promise<boolean> {
   const outputItems: Buffer[] = []
-  const mime = exec.cell.metadata.mimeType || 'text/plain' as const
-  const isBackground = exec.cell.metadata.attributes?.['background'] === 'true'
-  const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
+  const metadata = getMetadata(exec.cell)
   const t = RunmeTaskProvider.getRunmeTask(
     exec.cell.notebook.uri.fsPath,
-    exec.cell.index,
+    metadata.name,
     {
-      isBackground,
-      closeTerminalOnSuccess
+      isBackground: metadata.background,
+      closeTerminalOnSuccess: metadata.closeTerminalOnSuccess
     }
   )
 
   const outputStream = new PassThrough()
   outputStream.on('data', (data: Buffer) => {
-    console.log('NEW stdout EVENT', data)
-
     outputItems.push(Buffer.from(data))
-    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
+    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), metadata.mimeType || DEFAULT_MIME_TYPE)
 
-    if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
+    if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(metadata.mimeType)) {
       item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,
         output: {
           content: Buffer.concat(outputItems).toString('base64'),
-          mime
+          mime: metadata.mimeType
         }
       }, OutputType.outputItems)
     }

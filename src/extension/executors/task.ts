@@ -76,14 +76,13 @@ async function taskExecutor(
     // })
   )
   const metadata = getMetadata(exec.cell)
-  const isBackground = metadata?.['background'] === 'true'
   const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
-  taskExecution.isBackground = isBackground
+  taskExecution.isBackground = metadata.background
   taskExecution.presentationOptions = {
     focus: true,
     // why doesn't this work with Slient?
-    reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
-    panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
+    reveal: metadata.background ? TaskRevealKind.Never : TaskRevealKind.Always,
+    panel: metadata.background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
   const execution = await tasks.executeTask(taskExecution)
 
@@ -129,7 +128,7 @@ async function taskExecutor(
     })
   })
 
-  if (isBackground) {
+  if (metadata.background) {
     const giveItTime = new Promise<boolean>(
       (resolve) => setTimeout(() => {
         closeTerminalByEnvID(RUNME_ID)

@@ -24,6 +24,13 @@ export const CONFIGURATION_SHELL_DEFAULTS = {
   closeTerminalOnSuccess: true
 } as const
 
+export const METADATA_DEFAULTS = {
+  background: false,
+  interactive: true,
+  closeTerminalOnSuccess: true,
+  mimeType: 'text/plain'
+} as const
+
 // [pretty print, languageId, destination]
 export const LANGUAGES = new Map([
   ['Assembly', 'asm', 'sh'],

@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { Readable, PassThrough } from 'node:stream'
 
 import {
@@ -40,7 +41,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
   }
 
   async execute (task: RunmeTask, stream?: StreamOptions) {
-    this.write(`Execute Runme command #${task.definition.index}\n`, DEFAULTBOLD)
+    this.write(`Execute Runme command #${task.definition.command}\n`, DEFAULTBOLD)
     this.#currentCancellationToken = new CancellationTokenSource()
     const start = Date.now()
     const shellProvider = Shell.getShellOrDefault()
@@ -62,15 +63,24 @@ export class ExperimentalTerminal implements Pseudoterminal {
     const exec = new Promise((resolve) => {
       task.execution = new CustomExecution(async (): Promise<Pseudoterminal> => {
         // ToDo(Christian): either replace with communication protocol
-        spawnStreamAsync('/opt/homebrew/bin/runme', ['run', 'node-scriptsstdinjs'], {
-          cancellationToken: this.#currentCancellationToken?.token,
-          stdInPipe: this.#stdinStream,
-          stdOutPipe: stdoutStream,
-          stdErrPipe: stderrStream,
-          shellProvider,
-          cwd: task.definition.cwd,
-          env: process.env
-        }).then(resolve, (err: any) => {
+        spawnStreamAsync(
+          '/opt/homebrew/bin/runme',
+          [
+            'run',
+            task.definition.command,
+            '--chdir', path.dirname(this._notebook.uri.fsPath),
+            '--filename', path.basename(this._notebook.uri.fsPath)
+          ],
+          {
+            cancellationToken: this.#currentCancellationToken?.token,
+            stdInPipe: this.#stdinStream,
+            stdOutPipe: stdoutStream,
+            stdErrPipe: stderrStream,
+            shellProvider,
+            cwd: task.definition.cwd,
+            env: process.env
+          }
+        ).then(resolve, (err: any) => {
           console.error(12, err)
           return resolve(1)
         })
@@ -127,8 +137,6 @@ export class ExperimentalTerminal implements Pseudoterminal {
     if (this.#currentCancellationToken?.token.isCancellationRequested) {
       return
     }
-    console.log('CANCEL ME');
-
     this.#currentCancellationToken?.cancel()
   }
 }

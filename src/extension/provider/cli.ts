@@ -10,7 +10,7 @@ export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
      * only show CLI if runme.dev/name is known
      */
     const metadata = getMetadata(cell)
-    if (!metadata?.['runme.dev/name']) {
+    if (!metadata.name) {
       return
     }
 
