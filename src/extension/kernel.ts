@@ -1,4 +1,7 @@
-import { Disposable, notebooks, window, workspace, ExtensionContext, NotebookEditor, NotebookCell } from 'vscode'
+import {
+  Disposable, notebooks, window, workspace, ExtensionContext,
+  NotebookEditor, NotebookCell, NotebookCellKind
+} from 'vscode'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -6,9 +9,16 @@ import { API } from '../utils/deno/api'
 
 import executor from './executors'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey } from './utils'
+import { resetEnv, getKey, getMetadata } from './utils'
 
 import './wasm/wasm_exec.js'
+
+enum ConfirmationItems {
+  Yes = 'Yes',
+  No = 'No',
+  Skip = 'Skip Prompt and run all',
+  Cancel = 'Cancel'
+}
 
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
@@ -71,7 +81,40 @@ export class Kernel implements Disposable {
   }
 
   private async _executeAll(cells: NotebookCell[]) {
+    const totalNotebookCells = (
+      cells[0] &&
+      cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length
+    ) || 0
+    const totalCellsToExecute = cells.length
+    let showConfirmPrompt = totalNotebookCells === totalCellsToExecute
+
     for (const cell of cells) {
+      if (showConfirmPrompt) {
+        const metadata = getMetadata(cell)
+        const cellText = cell.document.getText()
+        const cellLabel = (
+          metadata['runme.dev/name'] ||
+          cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
+        )
+
+        const answer = await window.showQuickPick(Object.values(ConfirmationItems), {
+          title: `Are you sure you like to run "${cellLabel}"?`,
+          ignoreFocusOut: true
+        }) as ConfirmationItems | undefined
+
+        if (answer === ConfirmationItems.No) {
+          continue
+        }
+
+        if (answer === ConfirmationItems.Skip) {
+          showConfirmPrompt = false
+        }
+
+        if (answer === ConfirmationItems.Cancel) {
+          return
+        }
+      }
+
       await this._doExecuteCell(cell)
     }
   }
