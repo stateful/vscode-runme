@@ -11,8 +11,8 @@ import {
   NotebookCellKind,
   CancellationToken,
 } from 'vscode'
-
-import { WasmLib } from '../types'
+import { serialize, deserialize } from 'runme'
+import type { Cell } from 'runme/dist/types'
 
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
@@ -23,31 +23,10 @@ const DEFAULT_LANG_ID = 'text'
 declare var globalThis: any
 
 export class Serializer implements NotebookSerializer {
-  private readonly wasmReady: Promise<Error | void>
   private readonly languages: Languages
 
   constructor(private context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
-    this.wasmReady = this.#initWasm()
-  }
-
-  async #initWasm() {
-    const go = new globalThis.Go()
-    const wasmUri = Uri.joinPath(
-      this.context.extensionUri,
-      'wasm',
-      'runme.wasm'
-    )
-    const wasmFile = await workspace.fs.readFile(wasmUri)
-    return WebAssembly.instantiate(wasmFile, go.importObject).then(
-      (result) => {
-        go.run(result.instance)
-      },
-      (err: Error) => {
-        console.error(`[Runme] failed initializing WASM file: ${err.message}`)
-        return err
-      }
-    )
   }
 
   public async serializeNotebook(
@@ -73,19 +52,9 @@ export class Serializer implements NotebookSerializer {
       throw new Error('saving non version controlled notebooks is disabled by default.')
     }
 
-    const err = await this.wasmReady
-    if (err) {
-      throw err
-    }
-
-    const { Runme } = globalThis as WasmLib.Serializer
-
-    const notebook = JSON.stringify(data)
-    const markdown = await Runme.serialize(notebook)
-
+    const markdown = await serialize(data as any)
     const encoder = new TextEncoder()
     const encoded = encoder.encode(markdown)
-
     return encoded
   }
 
@@ -93,21 +62,10 @@ export class Serializer implements NotebookSerializer {
     content: Uint8Array,
     token: CancellationToken
   ): Promise<NotebookData> {
-    let notebook: WasmLib.Notebook
+    let cells: Cell[] = []
     try {
-      const err = await this.wasmReady
-      if (err) {
-        throw err
-      }
-      const { Runme } = globalThis as WasmLib.Serializer
-
       const markdown = content.toString()
-
-      notebook = await Runme.deserialize(markdown)
-
-      if (!notebook) {
-        return this.#printCell('⚠️ __Error__: no cells found!')
-      }
+      cells = await deserialize(markdown)
     } catch (err: any) {
       return this.#printCell(
         '⚠️ __Error__: document could not be loaded' +
@@ -118,8 +76,7 @@ export class Serializer implements NotebookSerializer {
     }
 
     try {
-      const cells = notebook.cells ?? []
-      notebook.cells = await Promise.all(
+      cells = await Promise.all(
         cells.map((elem) => {
           if (
             elem.kind === NotebookCellKind.Code &&
@@ -139,12 +96,12 @@ export class Serializer implements NotebookSerializer {
       console.error(`Error guessing snippet languages: ${err}`)
     }
 
-    const cells = Serializer.revive(notebook)
-    return new NotebookData(cells)
+    const notebookCells = Serializer.revive(cells)
+    return new NotebookData(notebookCells)
   }
 
-  protected static revive(notebook: WasmLib.Notebook) {
-    return notebook.cells.reduce((accu, elem) => {
+  protected static revive(cells: Cell[]) {
+    return cells.reduce((accu, elem) => {
       let cell: NotebookCellData
       // todo(sebastian): the parser will have to return unsupported as MARKUP
       const isSupported = true //Object.keys(executor).includes(elem.languageId ?? '')

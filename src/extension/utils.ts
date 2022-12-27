@@ -3,9 +3,9 @@ import util from 'node:util'
 import cp from 'node:child_process'
 
 import vscode, { FileType, NotebookDocument } from 'vscode'
+import type { Metadata } from 'runme/dist/types'
 
 import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
-import { WasmLib } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -14,7 +14,7 @@ import { ENV_STORE, DEFAULT_ENV } from './constants'
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 
 export function getMetadata(cell: vscode.NotebookCell) {
-  const metadata: WasmLib.Metadata = cell.metadata
+  const metadata: Metadata = cell.metadata
   return metadata
 }
 
