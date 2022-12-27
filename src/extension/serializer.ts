@@ -140,7 +140,11 @@ export class Serializer implements NotebookSerializer {
     }
 
     const cells = Serializer.revive(notebook)
-    return new NotebookData(cells)
+    const notebookData = new NotebookData(cells)
+    if (notebook.metadata) {
+      notebookData.metadata = notebook.metadata
+    }
+    return notebookData
   }
 
   protected static revive(notebook: WasmLib.Notebook) {
