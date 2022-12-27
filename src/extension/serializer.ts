@@ -150,10 +150,8 @@ export class Serializer implements NotebookSerializer {
   protected static revive(notebook: WasmLib.Notebook) {
     return notebook.cells.reduce((accu, elem) => {
       let cell: NotebookCellData
-      // todo(sebastian): the parser will have to return unsupported as MARKUP
-      const isSupported = true //Object.keys(executor).includes(elem.languageId ?? '')
 
-      if (elem.kind === NotebookCellKind.Code && isSupported) {
+      if (elem.kind === NotebookCellKind.Code) {
         cell = new NotebookCellData(
           NotebookCellKind.Code,
           elem.value,
