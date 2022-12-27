@@ -5,6 +5,7 @@ import { OutputType, ClientMessages } from './constants'
 export namespace WasmLib {
   export type Notebook = {
     cells: Cell[]
+    metadata?: Metadata
   }
 
   export type Cell = {
