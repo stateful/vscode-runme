@@ -97,7 +97,7 @@ export class Kernel implements Disposable {
         const metadata = getMetadata(cell)
         const cellText = cell.document.getText()
         const cellLabel = (
-          metadata['runme.dev/name'] ||
+          metadata.name ||
           cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
         )
 
