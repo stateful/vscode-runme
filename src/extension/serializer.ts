@@ -83,8 +83,6 @@ export class Serializer implements NotebookSerializer {
       const { Runme } = globalThis as WasmLib.Serializer
       const markdown = content.toString()
       notebook = await Runme.deserialize(markdown)
-      console.log(notebook)
-
       if (!notebook || (notebook.cells ?? []).length === 0) {
         return this.#printCell('⚠️ __Error__: no cells found!')
       }

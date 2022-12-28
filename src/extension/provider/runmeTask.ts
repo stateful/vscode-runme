@@ -16,6 +16,7 @@ export interface RunmeTask extends Task {
 }
 
 export class RunmeTaskProvider implements TaskProvider {
+  static execCount = 0
   static id = 'runme'
   constructor (private context: ExtensionContext) {}
 
@@ -70,7 +71,12 @@ export class RunmeTaskProvider implements TaskProvider {
     const task = new Task(
       definition,
       TaskScope.Workspace,
-      command,
+      /**
+       * make sure to give command different names so VS Code doesn't
+       * prevent it from executing, see
+       * https://github.com/microsoft/vscode/commit/baea24b353ab2cb575c680c2a66559206ccdf5f5
+       */
+      `${command} #${++this.execCount}`,
       RunmeTaskProvider.id
     ) as RunmeTask
 

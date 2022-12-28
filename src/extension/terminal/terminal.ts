@@ -28,12 +28,12 @@ interface StreamOptions {
 export class ExperimentalTerminal implements Pseudoterminal {
   #stdinStream = new StdinStream()
   #currentCancellationToken?: CancellationTokenSource
-  private writeEmitter = new EventEmitter<string>()
-  private closeEmitter = new EventEmitter<number>()
+  readonly #writeEmitter = new EventEmitter<string>()
+  readonly #closeEmitter = new EventEmitter<number>()
   readonly #cts: CancellationTokenSource = new CancellationTokenSource()
 
-  onDidWrite: Event<string> = this.writeEmitter.event
-  onDidClose?: Event<number> = this.closeEmitter.event
+  onDidWrite: Event<string> = this.#writeEmitter.event
+  onDidClose?: Event<number> = this.#closeEmitter.event
 
   constructor (private _notebook: NotebookDocument) {
     this.write(`Runme Session started for file ${this._notebook.uri.fsPath}`)
@@ -60,7 +60,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
       stderrStream.pipe(stream.stderr)
     }
 
-    const exec = new Promise((resolve) => {
+    const exec = new Promise<number>((resolve) => {
       task.execution = new CustomExecution(async (): Promise<Pseudoterminal> => {
         // ToDo(Christian): either replace with communication protocol
         spawnStreamAsync(
@@ -80,8 +80,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
             cwd: task.definition.cwd,
             env: process.env
           }
-        ).then(resolve, (err: any) => {
-          console.error(12, err)
+        ).then(resolve, () => {
           return resolve(1)
         })
         return this
@@ -89,6 +88,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
     })
 
     exec.then((code) => {
+      this.#closeEmitter.fire(code)
       this.write(`\nFinished Runme command after ${Date.now() - start}ms with exit code ${code}\n\n`, '0;1m')
       if (task.definition.closeTerminalOnSuccess && code === 0) {
         window.activeTerminal?.hide()
@@ -107,7 +107,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
      * not return back to the start of line
      */
     message = message.replace(/\r?\n/g, '\r\n')
-    this.writeEmitter.fire(`\x1b[${color}${message}\x1b[0m`)
+    this.#writeEmitter.fire(`\x1b[${color}${message}\x1b[0m`)
   }
 
   open(): void {}
@@ -116,13 +116,13 @@ export class ExperimentalTerminal implements Pseudoterminal {
    * run if markdown file gets closed
    */
   close(): void {
-    this.closeEmitter.fire(0)
+    this.#closeEmitter.fire(0)
     this.#cts.cancel()
   }
 
   handleInput(data: string): void {
     if (data === END_OF_TEXT) {
-      return this.closeEmitter.fire(-1)
+      return this.#closeEmitter.fire(-1)
     }
 
     this.#stdinStream.push(Buffer.from(data))
