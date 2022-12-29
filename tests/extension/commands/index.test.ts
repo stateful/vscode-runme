@@ -71,14 +71,14 @@ test('runCLICommand if CLI is not installed', async () => {
 test('runCLICommand if CLI is installed', async () => {
   const cell: any = {
     metadata: { 'runme.dev/name': 'foobar' },
-    document: { uri: { fsPath: '/foo/bar' }}
+    document: { uri: { fsPath: '/foo/bar/README.md' }}
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
   vi.mocked(getMetadata).mockReturnValue(cell.metadata)
   await runCLICommand(cell)
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)
-  expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo"')
+  expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo/bar" --filename="README.md"')
 })
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
