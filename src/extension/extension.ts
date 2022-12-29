@@ -6,6 +6,7 @@ import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvide
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { AnnotationsProvider } from './provider/annotations'
 import {
   openTerminal,
   runCLICommand,
@@ -13,7 +14,8 @@ import {
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText ,
   stopBackgroundTask,
-  createNewRunmeNotebook
+  createNewRunmeNotebook,
+  openAnnotationsQuickPick
 } from './commands'
 import { Serializer } from './serializer'
 
@@ -35,6 +37,7 @@ export class RunmeExtension {
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new AnnotationsProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
       commands.registerCommand('runme.resetEnv', resetEnv),
       commands.registerCommand('runme.openTerminal', openTerminal),
@@ -44,6 +47,7 @@ export class RunmeExtension {
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       commands.registerCommand('runme.new', createNewRunmeNotebook),
+      commands.registerCommand('runme.openAnnotationsQuickPick', openAnnotationsQuickPick)
     )
   }
 }

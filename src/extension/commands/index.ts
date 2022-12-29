@@ -82,3 +82,13 @@ export async function createNewRunmeNotebook () {
   )
   await commands.executeCommand('vscode.openWith', newNotebook.uri, Kernel.type)
 }
+
+export async function openAnnotationsQuickPick () {
+  await window.showQuickPick([
+    'Background',
+    'Interactive',
+    'Close Terminal on Success'
+  ], {
+    canPickMany: true
+  })
+}

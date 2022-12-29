@@ -95,6 +95,11 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
+      },
+      {
+        "command": "runme.openAnnotationsQuickPick",
+        "category": "Runme",
+        "title": "Opens menu to update code cell annotations."
       }
     ],
     "menus": {

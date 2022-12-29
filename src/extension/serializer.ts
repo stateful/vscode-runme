@@ -168,6 +168,10 @@ export class Serializer implements NotebookSerializer {
       cell.metadata = { ...elem.metadata }
       accu.push(cell)
 
+      if (elem.kind === NotebookCellKind.Code) {
+        accu.push(new NotebookCellData())
+      }
+
       return accu
     }, <NotebookCellData[]>[])
   }
