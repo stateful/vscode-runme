@@ -80,11 +80,18 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
+  [ClientMessages.openTerminal]: never
+  [ClientMessages.cancelTask]: {
+    filePath: string
+  }
 }
 
 export interface OutputItemsPayload {
+  metadata: NotebookCellMetadata
   content: string
-  mime: string
+  pid: number
+  isRunning: boolean
+  filePath: string
 }
 
 export interface RunmeTaskDefinition {

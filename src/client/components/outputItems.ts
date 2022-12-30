@@ -1,10 +1,12 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { when } from 'lit/directives/when.js'
 
 import '@vscode/webview-ui-toolkit/dist/button/index'
 
 import { getContext } from '../utils'
-import { ClientMessage } from '../../types'
+import { COPY, TERMINAL, STOP } from '../icons'
+import { ClientMessage, NotebookCellMetadata } from '../../types'
 import { ClientMessages } from '../../constants'
 
 @customElement('shell-output-items')
@@ -36,23 +38,32 @@ export class ShellOutputItems extends LitElement {
 
   @property({ type: String })
   content = ''
+  @property({ type: String })
+  filePath = ''
+  @property({ type: Number })
+  pid: number | undefined
+  @property({ type: Boolean })
+  isRunning = false
+  @property({ type: Object })
+  metadata = {} as NotebookCellMetadata
 
   // Render the UI as a function of component state
   render() {
     return html`<section class="output-items">
       <vscode-button appearance="secondary" @click="${this.#copy}">
-        <svg
-          class="icon" width="16" height="16" viewBox="0 0 16 16"
-          xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-        >
-          <path fill-rule="evenodd" clip-rule="evenodd"
-            d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"/>
-          <path fill-rule="evenodd" clip-rule="evenodd"
-            d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"/>
-        </svg>
-        Copy
+        ${COPY} Copy
       </vscode-button>
-    </span>`
+      ${when(this.pid, () => html`
+        <vscode-button appearance="secondary" @click="${this.#openTerminal}">
+          ${TERMINAL} &nbsp; Open Terminal (PID: ${this.pid})
+        </vscode-button>
+      `)}
+      ${when(this.metadata.background && this.isRunning, () => html`
+        <vscode-button appearance="secondary" @click="${this.#cancelTask}">
+          ${STOP} &nbsp; Stop Task
+        </vscode-button>
+      `)}
+    </section>`
   }
 
   #copy () {
@@ -72,5 +83,35 @@ export class ShellOutputItems extends LitElement {
         output: `'Failed to copy to clipboard: ${err.message}!'`
       })
     )
+  }
+
+  #openTerminal () {
+    const ctx = getContext()
+
+    if (!ctx.postMessage) {
+      return
+    }
+
+    ctx.postMessage!(<ClientMessage<ClientMessages.openTerminal>>{
+      type: ClientMessages.openTerminal,
+      output: {
+        filePath: this.filePath
+      }
+    })
+  }
+
+  #cancelTask () {
+    const ctx = getContext()
+
+    if (!ctx.postMessage) {
+      return
+    }
+
+    ctx.postMessage!(<ClientMessage<ClientMessages.cancelTask>>{
+      type: ClientMessages.cancelTask,
+      output: {
+        filePath: this.filePath
+      }
+    })
   }
 }

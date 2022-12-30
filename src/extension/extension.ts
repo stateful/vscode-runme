@@ -32,19 +32,12 @@ export class RunmeExtension {
         },
       }),
 
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
       commands.registerCommand('runme.resetEnv', resetEnv),
-      commands.registerCommand('runme.openTerminal', openTerminal),
-      commands.registerCommand('runme.runCliCommand', runCLICommand),
       commands.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
-      commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
-      commands.registerCommand('runme.new', createNewRunmeNotebook),
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
+      commands.registerCommand('runme.new', createNewRunmeNotebook)
     )
 
     /**
@@ -53,7 +46,17 @@ export class RunmeExtension {
     const config = workspace.getConfiguration('runme.experiments')
     const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
     !hasPsuedoTerminalExperimentEnabled
-      ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
-      : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
+      ? context.subscriptions.push(
+        commands.registerCommand('runme.openTerminal', openTerminal),
+        commands.registerCommand('runme.runCliCommand', runCLICommand),
+        commands.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
+        notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
+        notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
+        notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
+        notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider())
+      )
+      : context.subscriptions.push(
+        tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
+      )
   }
 }

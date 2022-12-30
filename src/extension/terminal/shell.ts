@@ -115,11 +115,11 @@ export type StreamSpawnOptions = SpawnOptions & {
   stdErrPipe?: NodeJS.WritableStream
 }
 
-export async function spawnStreamAsync(
+export function spawnStreamAsync(
   command: string,
   args: Array<string>,
   options: StreamSpawnOptions,
-): Promise<number> {
+) {
   // Force PowerShell as the default on Windows, but use the system default on *nix
   const shell = options.shellProvider?.getShellOrDefault(options.shell) ?? options.shell
 
@@ -154,7 +154,7 @@ export async function spawnStreamAsync(
     childProcess.stderr.pipe(options.stdErrPipe)
   }
 
-  return new Promise<number>((resolve, reject) => {
+  const executionPromise = new Promise<number>((resolve, reject) => {
     const disposable = options.cancellationToken?.onCancellationRequested(() => {
       childProcess.removeAllListeners()
       childProcess.kill()
@@ -177,4 +177,9 @@ export async function spawnStreamAsync(
       }
     })
   })
+
+  return {
+    executionPromise,
+    childProcess
+  }
 }

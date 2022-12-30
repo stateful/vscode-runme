@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { ChildProcess } from 'node:child_process'
 import { Readable, PassThrough } from 'node:stream'
 
 import {
@@ -30,10 +31,12 @@ export class ExperimentalTerminal implements Pseudoterminal {
   #currentCancellationToken?: CancellationTokenSource
   readonly #writeEmitter = new EventEmitter<string>()
   readonly #closeEmitter = new EventEmitter<number>()
+  readonly #processEmitter = new EventEmitter<ChildProcess>()
   readonly #cts: CancellationTokenSource = new CancellationTokenSource()
 
   onDidWrite: Event<string> = this.#writeEmitter.event
-  onDidClose?: Event<number> = this.#closeEmitter.event
+  onDidClose: Event<number> = this.#closeEmitter.event
+  onDidStartNewProcess: Event<ChildProcess> = this.#processEmitter.event
 
   constructor (private _notebook: NotebookDocument) {
     this.write(`Runme Session started for file ${this._notebook.uri.fsPath}`)
@@ -63,7 +66,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
     const exec = new Promise<number>((resolve) => {
       task.execution = new CustomExecution(async (): Promise<Pseudoterminal> => {
         // ToDo(Christian): either replace with communication protocol
-        spawnStreamAsync(
+        const { executionPromise, childProcess } = spawnStreamAsync(
           '/opt/homebrew/bin/runme',
           [
             'run',
@@ -80,9 +83,10 @@ export class ExperimentalTerminal implements Pseudoterminal {
             cwd: task.definition.cwd,
             env: process.env
           }
-        ).then(resolve, () => {
-          return resolve(1)
-        })
+        )
+
+        this.#processEmitter.fire(childProcess)
+        executionPromise.then(resolve, () => resolve(1))
         return this
       })
     })
@@ -97,6 +101,7 @@ export class ExperimentalTerminal implements Pseudoterminal {
 
     return {
       execution: await tasks.executeTask(task),
+      cancellationToken: this.#currentCancellationToken.token,
       promise: exec
     }
   }
