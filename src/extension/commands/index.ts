@@ -47,8 +47,12 @@ export async function runCLICommand (cell: NotebookCell) {
   const metadata = getMetadata(cell)
   const cliName: string = (metadata?.['runme.dev/name'] || '').trim()
   const term = window.createTerminal(`CLI: ${cliName}`)
+  const args = [
+    `--chdir="${path.dirname(cell.document.uri.fsPath)}"`,
+    `--filename="${path.basename(cell.document.uri.fsPath)}"`
+  ]
   term.show(false)
-  term.sendText(`runme run ${cliName} --chdir="${path.dirname(cell.document.uri.fsPath)}"`)
+  term.sendText(`runme run ${cliName} ${args.join(' ')}`)
 }
 export function openAsRunmeNotebook (doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
