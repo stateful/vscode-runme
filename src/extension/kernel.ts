@@ -86,7 +86,7 @@ export class Kernel implements Disposable {
       cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length
     ) || 0
     const totalCellsToExecute = cells.length
-    let showConfirmPrompt = totalNotebookCells === totalCellsToExecute
+    let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
 
     for (const cell of cells) {
       if (showConfirmPrompt) {
