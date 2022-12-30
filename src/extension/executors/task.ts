@@ -7,7 +7,7 @@ import {
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { getExecutionProperty, getCmdShellSeq, getMetadata } from '../utils'
+import { getCmdShellSeq, getMetadata } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 
@@ -57,7 +57,7 @@ async function taskExecutor(
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
-  const isInteractive = getExecutionProperty('interactive', exec.cell)
+  const isInteractive = getMetadata(exec.cell).interactive
   if (!isInteractive) {
     return inlineSh.call(this, exec, cmdLine, cwd, env)
   }
@@ -76,14 +76,12 @@ async function taskExecutor(
     // })
   )
   const metadata = getMetadata(exec.cell)
-  const isBackground = metadata?.['background'] === 'true'
-  const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
-  taskExecution.isBackground = isBackground
+  taskExecution.isBackground = metadata.background
   taskExecution.presentationOptions = {
     focus: true,
     // why doesn't this work with Slient?
-    reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
-    panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
+    reveal: metadata.background ? TaskRevealKind.Never : TaskRevealKind.Always,
+    panel: metadata.background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
   }
   const execution = await tasks.executeTask(taskExecution)
 
@@ -121,7 +119,7 @@ async function taskExecutor(
       /**
        * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0 && closeTerminalOnSuccess) {
+      if (e.exitCode === 0 && metadata.closeTerminalOnSuccess) {
         closeTerminalByEnvID(RUNME_ID)
       }
 
@@ -129,7 +127,7 @@ async function taskExecutor(
     })
   })
 
-  if (isBackground) {
+  if (metadata.background) {
     const giveItTime = new Promise<boolean>(
       (resolve) => setTimeout(() => {
         closeTerminalByEnvID(RUNME_ID)

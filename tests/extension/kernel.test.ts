@@ -84,7 +84,7 @@ suite('_executeAll', async () => {
 
 test('_doExecuteCell', async () => {
   const k = new Kernel({} as any)
-  await k['_doExecuteCell']({ document: {} } as any)
+  await k['_doExecuteCell']({ document: { uri: { fsPath: '/foo/bar' }} } as any)
   // @ts-expect-error mocked out
   expect(executors.foobar).toBeCalledTimes(1)
 })

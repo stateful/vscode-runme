@@ -19,9 +19,11 @@ export enum ClientMessages {
   prod = 'vercel:promotePreview'
 }
 
-export const CONFIGURATION_SHELL_DEFAULTS = {
+export const METADATA_DEFAULTS = {
+  background: false,
   interactive: true,
-  closeTerminalOnSuccess: true
+  closeTerminalOnSuccess: true,
+  mimeType: 'text/plain'
 } as const
 
 // [pretty print, languageId, destination]

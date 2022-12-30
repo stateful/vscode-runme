@@ -7,7 +7,8 @@ import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
-import executor from './executors'
+import executor, { runme } from './executors'
+import { ExperimentalTerminal } from './terminal/terminal'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getMetadata } from './utils'
 
@@ -23,6 +24,7 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
+  #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
     Kernel.type,
@@ -39,12 +41,14 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
+      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
     )
   }
 
   dispose () {
     resetEnv()
+    this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
   }
 
@@ -93,7 +97,7 @@ export class Kernel implements Disposable {
         const metadata = getMetadata(cell)
         const cellText = cell.document.getText()
         const cellLabel = (
-          metadata['runme.dev/name'] ||
+          metadata.name ||
           cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
         )
 
@@ -124,8 +128,34 @@ export class Kernel implements Disposable {
     const exec = this.#controller.createNotebookCellExecution(cell)
 
     exec.start(Date.now())
-    const execKey = getKey(runningCell)
-    const successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
+    let execKey = getKey(runningCell)
+
+    /**
+     * check if user is running experiment to execute shell via runme cli
+     */
+    const config = workspace.getConfiguration('runme.experiments')
+    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    const terminal = this.#terminals.get(cell.document.uri.fsPath)
+    const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
+      ? await runme.call(this, exec, terminal)
+      : await executor[execKey].call(this, exec, runningCell)
     exec.end(successfulCellExecution)
+  }
+
+  #handleRunmeTerminals (editor?: NotebookEditor) {
+    // Todo(Christian): clean up
+    if (!editor) {
+      return
+    }
+
+    /**
+     * Runme terminal for notebook already launched
+     */
+    if (this.#terminals.has(editor.notebook.uri.fsPath)) {
+      return
+    }
+
+    const runmeTerminal = new ExperimentalTerminal(editor.notebook)
+    this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
   }
 }

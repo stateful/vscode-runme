@@ -1,6 +1,6 @@
 import { vi, test, expect, beforeEach } from 'vitest'
 
-import { getExecutionProperty, getTerminalByCell } from '../../../src/extension/utils'
+import { getMetadata, getTerminalByCell } from '../../../src/extension/utils'
 import { PidStatusProvider } from '../../../src/extension/provider/pid'
 
 vi.mock('vscode', () => ({
@@ -15,26 +15,25 @@ vi.mock('vscode', () => ({
 }))
 
 vi.mock('../../../src/extension/utils', () => ({
-  getExecutionProperty: vi.fn(),
+  getMetadata: vi.fn(),
   getTerminalByCell: vi.fn()
 }))
 
 beforeEach(() => {
-  vi.mocked(getExecutionProperty).mockClear()
+  vi.mocked(getMetadata).mockClear()
   vi.mocked(getTerminalByCell).mockClear()
 })
 
 test('dont show pid if cell is non interactive', async () => {
-  vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+  vi.mocked(getMetadata).mockReturnValueOnce({ interactive: false } as any)
   const p = new PidStatusProvider()
   expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
-  expect(getExecutionProperty).toBeCalledTimes(1)
+  expect(getMetadata).toBeCalledTimes(1)
   expect(getTerminalByCell).toBeCalledTimes(0)
-  expect(getExecutionProperty).toBeCalledWith('interactive', 'cell')
 })
 
 test('dont show pid if terminal could not be found', async () => {
-  vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+  vi.mocked(getMetadata).mockReturnValueOnce({ interactive: true } as any)
   vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
   const p = new PidStatusProvider()
   expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
@@ -43,14 +42,14 @@ test('dont show pid if terminal could not be found', async () => {
 })
 
 test('don\'t show if terminal has no pid', async () => {
-  vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+  vi.mocked(getMetadata).mockReturnValueOnce({ interactive: true } as any)
   vi.mocked(getTerminalByCell).mockReturnValueOnce({} as any)
   const p = new PidStatusProvider()
   expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
 })
 
 test('return status item with pid ', async () => {
-  vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+  vi.mocked(getMetadata).mockReturnValueOnce({ interactive: true } as any)
   vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
   const p = new PidStatusProvider()
   const item = await p.provideCellStatusBarItems('cell' as any)

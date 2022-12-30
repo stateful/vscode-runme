@@ -188,7 +188,13 @@
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "If enabled, Runme's save restriction on non-git-tracked files will be disabled."
+            "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
+          },
+          "runme.experiments.pseudoterminal": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, your will executing code blocks natively through the Runme CLI (very experimental)."
           }
         }
       }
@@ -217,6 +223,39 @@
           }
         ]
       }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "runme",
+        "required": [
+          "fileUri",
+          "command"
+        ],
+        "properties": {
+          "fileUri": {
+            "type": "string",
+            "description": "File Uri of the markdown file to call the command on"
+          },
+          "command": {
+            "type": "string",
+            "description": "name of the command to execute"
+          },
+          "isBackground": {
+            "type": "boolean",
+            "default": false,
+            "description": "If set to true the task is run within the background and not awaited to exit"
+          },
+          "closeTerminalOnSuccess": {
+            "type": "boolean",
+            "default": true,
+            "description": "If set to true terminal window is being closed on successful execution"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "working directory where Runme executes the task"
+          }
+        }
+      }
     ]
   },
   "scripts": {
@@ -236,6 +275,7 @@
   "devDependencies": {
     "@octokit/rest": "^19.0.5",
     "@types/node": "^18.11.15",
+    "@types/split2": "^3.2.1",
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",

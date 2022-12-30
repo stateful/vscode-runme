@@ -1,11 +1,12 @@
 
-import { workspace, notebooks, commands, ExtensionContext } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks } from 'vscode'
 
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   openTerminal,
   runCLICommand,
@@ -32,7 +33,6 @@ export class RunmeExtension {
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
@@ -44,6 +44,16 @@ export class RunmeExtension {
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       commands.registerCommand('runme.new', createNewRunmeNotebook),
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
     )
+
+    /**
+     * setup extension based on `pseudoterminal` experiment flag
+     */
+    const config = workspace.getConfiguration('runme.experiments')
+    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    !hasPsuedoTerminalExperimentEnabled
+      ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider('runme', new CliProvider()))
+      : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
   }
 }

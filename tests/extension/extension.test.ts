@@ -5,7 +5,6 @@ import { RunmeExtension } from '../../src/extension/extension'
 
 vi.mock('vscode')
 
-
 test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()

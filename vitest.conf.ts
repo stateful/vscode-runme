@@ -11,10 +11,10 @@ export default defineConfig({
     coverage: {
       enabled: true,
       exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts'],
-      statements: 38,
+      statements: 44,
       branches: 90,
-      functions: 33,
-      lines: 38
+      functions: 36,
+      lines: 44
     }
   }
 })

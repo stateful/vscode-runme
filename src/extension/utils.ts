@@ -2,35 +2,37 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType, NotebookDocument } from 'vscode'
+import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 
-import { CONFIGURATION_SHELL_DEFAULTS } from '../constants'
-import { WasmLib } from '../types'
+import { METADATA_DEFAULTS } from '../constants'
+import { NotebookCellMetadata } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
+declare var globalThis: any
+
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
+const TRUTHY_VALUES = ['1', 'true']
 
 export function getMetadata(cell: vscode.NotebookCell) {
-  const metadata: WasmLib.Metadata = cell.metadata
-  return metadata
-}
-
-export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
   const config = vscode.workspace.getConfiguration('runme.shell')
-  const configSetting = config.get<boolean>(property, CONFIGURATION_SHELL_DEFAULTS[property])
-  const metadata = getMetadata(cell)
-
-  /**
-   * if cell is marked as interactive (default: not set or set to 'true')
-   */
-  if (typeof metadata?.[property] === 'string') {
-    return metadata[property] === 'true'
+  return <NotebookCellMetadata>{
+    background: typeof cell.metadata.background === 'string'
+      ? TRUTHY_VALUES.includes(cell.metadata.background)
+      : METADATA_DEFAULTS.background,
+    interactive: typeof cell.metadata.interactive === 'string'
+      ? TRUTHY_VALUES.includes(cell.metadata.interactive)
+      : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
+    closeTerminalOnSuccess: typeof cell.metadata.closeTerminalOnSuccess === 'string'
+      ? TRUTHY_VALUES.includes(cell.metadata.closeTerminalOnSuccess)
+      : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
+    mimeType: typeof cell.metadata.mimeType === 'string'
+      ? cell.metadata.mimeType
+      : METADATA_DEFAULTS.mimeType,
+    name: cell.metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`
   }
-
-  return configSetting
 }
 
 export function getTerminalByCell (cell: vscode.NotebookCell) {
@@ -154,4 +156,18 @@ export async function canEditFile (
   }
 
   return false
+}
+
+export async function initWasm(wasmUri: Uri) {
+  const go = new globalThis.Go()
+  const wasmFile = await workspace.fs.readFile(wasmUri)
+  return WebAssembly.instantiate(wasmFile, go.importObject).then(
+    (result) => {
+      go.run(result.instance)
+    },
+    (err: Error) => {
+      console.error(`[Runme] failed initializing WASM file: ${err.message}`)
+      return err
+    }
+  )
 }

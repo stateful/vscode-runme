@@ -2,13 +2,13 @@ import vscode from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 
 import {
-  getExecutionProperty,
   getTerminalByCell,
   resetEnv,
   getKey,
   getCmdShellSeq,
   normalizeLanguage,
   canEditFile,
+  getMetadata,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -36,13 +36,13 @@ afterAll(() => { process.env.PATH = PATH })
 test('isInteractive', () => {
   // when set to false in configutaration
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(false) } as any)
-  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(false)
-  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(false)
-  expect(getExecutionProperty('interactive', { metadata: { interactive: 'true' } } as any)).toBe(true)
+  expect(getMetadata({ metadata: {} } as any).interactive).toBe(false)
+  expect(getMetadata({ metadata: {} } as any).interactive).toBe(false)
+  expect(getMetadata({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
 
   vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(true) } as any)
-  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(true)
-  expect(getExecutionProperty('interactive', { metadata: {} } as any)).toBe(true)
+  expect(getMetadata({ metadata: {} } as any).interactive).toBe(true)
+  expect(getMetadata({ metadata: {} } as any).interactive).toBe(true)
 })
 
 test('getTerminalByCell', () => {

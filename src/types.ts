@@ -86,3 +86,20 @@ export interface OutputItemsPayload {
   content: string
   mime: string
 }
+
+export interface RunmeTaskDefinition {
+  type: 'runme'
+  filePath: string
+  command: string
+  isBackground?: boolean
+  closeTerminalOnSuccess?: boolean
+  cwd?: string
+}
+
+export interface NotebookCellMetadata {
+  background: boolean
+  interactive: boolean
+  closeTerminalOnSuccess: boolean
+  mimeType: string
+  name: string
+}
