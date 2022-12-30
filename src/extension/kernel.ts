@@ -73,7 +73,7 @@ export class Kernel implements Disposable {
       const cell = editor.notebook.cellAt(payload.output.cellIndex)
       if (cell.executionSummary?.success) {
         process.env['vercelProd'] = 'true'
-        return this.#doExecuteCell(cell)
+        return this._doExecuteCell(cell)
       }
     } else if (message.type === ClientMessages.infoMessage) {
       return window.showInformationMessage(message.output as string)
@@ -119,11 +119,11 @@ export class Kernel implements Disposable {
         }
       }
 
-      await this.#doExecuteCell(cell)
+      await this._doExecuteCell(cell)
     }
   }
 
-  async #doExecuteCell(cell: NotebookCell): Promise<void> {
+  private async _doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
     const exec = this.#controller.createNotebookCellExecution(cell)
 

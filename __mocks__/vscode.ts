@@ -2,6 +2,7 @@ import { vi } from 'vitest'
 
 export const notebooks = {
   createNotebookController: vi.fn().mockReturnValue({
+    dispose: vi.fn(),
     createNotebookCellExecution: vi.fn().mockReturnValue({ start: vi.fn(), end: vi.fn() })
   }),
   registerNotebookCellStatusBarItemProvider: vi.fn(),
@@ -17,6 +18,7 @@ export const Uri = {
 }
 
 export const workspace = {
+  getConfiguration: vi.fn().mockReturnValue(new Map()),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
   openTextDocument: vi.fn(),
   registerNotebookSerializer: vi.fn(),
@@ -35,7 +37,12 @@ export const window = {
   showInformationMessage: vi.fn(),
   createTerminal: vi.fn().mockReturnValue(terminal),
   showNotebookDocument: vi.fn(),
-  showTextDocument: vi.fn()
+  showTextDocument: vi.fn(),
+  onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() })
+}
+
+export const tasks = {
+  registerTaskProvider: vi.fn()
 }
 
 export const commands = {

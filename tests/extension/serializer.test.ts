@@ -20,7 +20,8 @@ vi.mock('vscode', () => ({
 }))
 
 vi.mock('../../src/extension/utils', () => ({
-    canEditFile: vi.fn().mockResolvedValue(false)
+    canEditFile: vi.fn().mockResolvedValue(false),
+    initWasm: vi.fn()
 }))
 
 describe('Serializer', () => {

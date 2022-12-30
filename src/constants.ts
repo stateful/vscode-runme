@@ -19,11 +19,6 @@ export enum ClientMessages {
   prod = 'vercel:promotePreview'
 }
 
-export const CONFIGURATION_SHELL_DEFAULTS = {
-  interactive: true,
-  closeTerminalOnSuccess: true
-} as const
-
 export const METADATA_DEFAULTS = {
   background: false,
   interactive: true,

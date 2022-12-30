@@ -4,7 +4,7 @@ import cp from 'node:child_process'
 
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 
-import { CONFIGURATION_SHELL_DEFAULTS, METADATA_DEFAULTS } from '../constants'
+import { METADATA_DEFAULTS } from '../constants'
 import { NotebookCellMetadata } from '../types'
 
 import executor from './executors'
@@ -17,36 +17,22 @@ const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const TRUTHY_VALUES = ['1', 'true']
 
 export function getMetadata(cell: vscode.NotebookCell) {
+  const config = vscode.workspace.getConfiguration('runme.shell')
   return <NotebookCellMetadata>{
     background: typeof cell.metadata.background === 'string'
       ? TRUTHY_VALUES.includes(cell.metadata.background)
       : METADATA_DEFAULTS.background,
     interactive: typeof cell.metadata.interactive === 'string'
       ? TRUTHY_VALUES.includes(cell.metadata.interactive)
-      : METADATA_DEFAULTS.interactive,
+      : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
     closeTerminalOnSuccess: typeof cell.metadata.closeTerminalOnSuccess === 'string'
       ? TRUTHY_VALUES.includes(cell.metadata.closeTerminalOnSuccess)
-      : METADATA_DEFAULTS.closeTerminalOnSuccess,
+      : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
     mimeType: typeof cell.metadata.mimeType === 'string'
       ? cell.metadata.mimeType
       : METADATA_DEFAULTS.mimeType,
     name: cell.metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`
   }
-}
-
-export function getExecutionProperty (property: keyof typeof CONFIGURATION_SHELL_DEFAULTS, cell: vscode.NotebookCell) {
-  const config = vscode.workspace.getConfiguration('runme.shell')
-  const configSetting = config.get<boolean>(property, CONFIGURATION_SHELL_DEFAULTS[property])
-  const metadata = getMetadata(cell)
-
-  /**
-   * if cell is marked as interactive (default: not set or set to 'true')
-   */
-  if (typeof metadata[property] === 'string') {
-    return metadata[property]
-  }
-
-  return configSetting
 }
 
 export function getTerminalByCell (cell: vscode.NotebookCell) {

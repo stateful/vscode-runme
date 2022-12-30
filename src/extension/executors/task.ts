@@ -7,7 +7,7 @@ import {
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { getExecutionProperty, getCmdShellSeq, getMetadata } from '../utils'
+import { getCmdShellSeq, getMetadata } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 
@@ -57,7 +57,7 @@ async function taskExecutor(
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
-  const isInteractive = getExecutionProperty('interactive', exec.cell)
+  const isInteractive = getMetadata(exec.cell).interactive
   if (!isInteractive) {
     return inlineSh.call(this, exec, cmdLine, cwd, env)
   }
@@ -76,7 +76,6 @@ async function taskExecutor(
     // })
   )
   const metadata = getMetadata(exec.cell)
-  const closeTerminalOnSuccess = getExecutionProperty('closeTerminalOnSuccess', exec.cell)
   taskExecution.isBackground = metadata.background
   taskExecution.presentationOptions = {
     focus: true,
@@ -120,7 +119,7 @@ async function taskExecutor(
       /**
        * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0 && closeTerminalOnSuccess) {
+      if (e.exitCode === 0 && metadata.closeTerminalOnSuccess) {
         closeTerminalByEnvID(RUNME_ID)
       }
 

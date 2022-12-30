@@ -70,7 +70,7 @@ test('runCLICommand if CLI is not installed', async () => {
 
 test('runCLICommand if CLI is installed', async () => {
   const cell: any = {
-    metadata: { 'runme.dev/name': 'foobar' },
+    metadata: { name: 'foobar' },
     document: { uri: { fsPath: '/foo/bar/README.md' }}
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)

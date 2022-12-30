@@ -1,6 +1,6 @@
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
-import { getExecutionProperty, getMetadata, getTerminalByCell } from '../../../src/extension/utils'
+import { getMetadata, getTerminalByCell } from '../../../src/extension/utils'
 import {
   ShowTerminalProvider,
   BackgroundTaskProvider,
@@ -19,29 +19,27 @@ vi.mock('vscode', () => ({
 }))
 
 vi.mock('../../../src/extension/utils', () => ({
-  getExecutionProperty: vi.fn(),
   getTerminalByCell: vi.fn(),
   getMetadata: vi.fn()
 }))
 
 describe('ShowTerminalProvider', () => {
   beforeEach(() => {
-    vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
     vi.mocked(getMetadata).mockClear()
   })
 
   it('dont show pid if cell is non interactive', async () => {
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+    vi.mocked(getMetadata).mockReturnValueOnce({ interactive: false } as any)
     const p = new ShowTerminalProvider()
     expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(1)
+    expect(getMetadata).toBeCalledTimes(1)
     expect(getTerminalByCell).toBeCalledTimes(0)
-    expect(getExecutionProperty).toBeCalledWith('interactive', 'cell')
+    expect(getMetadata).toBeCalledWith('cell')
   })
 
   it('dont show pid if terminal could not be found', async () => {
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+    vi.mocked(getMetadata).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
     const p = new ShowTerminalProvider()
     expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
@@ -50,7 +48,7 @@ describe('ShowTerminalProvider', () => {
   })
 
   it('return status item with pid ', async () => {
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+    vi.mocked(getMetadata).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
     const p = new ShowTerminalProvider()
     const item = await p.provideCellStatusBarItems('cell' as any)
@@ -68,29 +66,32 @@ describe('BackgroundTaskProvider', () => {
   }
 
   beforeEach(() => {
-    vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
     vi.mocked(getMetadata).mockClear()
   })
 
   it('dont show bg task label if cell is non a background task', async () => {
+    vi.mocked(getMetadata).mockReturnValue({ background: false } as any)
     const p = new BackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(0)
+    expect(getMetadata).toBeCalledTimes(1)
   })
 
   it('dont show bg task label if cell is non interactive', async () => {
     cell.metadata.background = 'true'
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+    cell.metadata.interactive = false
     vi.mocked(getMetadata).mockReturnValue(cell.metadata)
     const p = new BackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(1)
-    expect(getExecutionProperty).toBeCalledWith('interactive', cell)
+    expect(getMetadata).toBeCalledTimes(1)
+    expect(getMetadata).toBeCalledWith(cell)
   })
 
   it('return status item with pid ', async () => {
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+    vi.mocked(getMetadata).mockReturnValueOnce({
+      interactive: true,
+      background: true
+    } as any)
     const p = new BackgroundTaskProvider()
     const item = await p.provideCellStatusBarItems(cell as any)
     expect(item).toEqual({
@@ -107,7 +108,6 @@ describe('StopBackgroundTaskProvider', () => {
   }
 
   beforeEach(() => {
-    vi.mocked(getExecutionProperty).mockClear()
     vi.mocked(getTerminalByCell).mockClear()
     vi.mocked(getMetadata).mockClear()
   })
@@ -116,31 +116,33 @@ describe('StopBackgroundTaskProvider', () => {
     vi.mocked(getMetadata).mockReturnValue(cell.metadata)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(0)
   })
 
   it('dont show bg task label if cell is non interactive', async () => {
     cell.metadata.background = 'true'
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(false)
+    vi.mocked(getMetadata).mockReturnValueOnce({ interactive: false } as any)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(1)
-    expect(getExecutionProperty).toBeCalledWith('interactive', cell)
   })
 
   it('dont show if cell was not yet executed', async () => {
     cell.metadata.background = 'true'
     cell.executionSummary.success = false
+    vi.mocked(getMetadata).mockReturnValueOnce({
+      background: 'true'
+    } as any)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(getExecutionProperty).toBeCalledTimes(1)
     expect(cell.executionSummary.success).toBe(false)
   })
 
   it('return with button to close', async () => {
     cell.metadata.background = 'true'
     cell.executionSummary.success = true
-    vi.mocked(getExecutionProperty).mockReturnValueOnce(true)
+    vi.mocked(getMetadata).mockReturnValueOnce({
+      interactive: true,
+      background: 'true'
+    } as any)
     const p = new StopBackgroundTaskProvider()
     const item = await p.provideCellStatusBarItems(cell)
     expect(item).toEqual({
