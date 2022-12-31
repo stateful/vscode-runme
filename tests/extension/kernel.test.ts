@@ -1,5 +1,5 @@
 import { test, expect, vi, suite } from 'vitest'
-import { window } from 'vscode'
+import { window, NotebookCell } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
 import { resetEnv } from '../../src/extension/utils'
@@ -16,7 +16,7 @@ vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() }
 }))
 
-const cells = ([...new Array(10)]).map((_, i) => ({
+const getCells = (cnt: number) => ([...new Array(cnt)]).map((_, i) => ({
   document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },
   notebook: { getCells: vi.fn().mockReturnValue(
     [...new Array(10)].map(() => ({ kind: 1 }))
@@ -24,7 +24,7 @@ const cells = ([...new Array(10)]).map((_, i) => ({
   metadata: {
     'runme.dev/name': `Cell #${i}`
   }
-}))
+}) as any as NotebookCell)
 
 test('dispose', () => {
   const k = new Kernel({} as any)
@@ -37,7 +37,7 @@ suite('_executeAll', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => {}))
     const k = new Kernel({} as any)
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](cells.slice(0, 5) as any)
+    await k['_executeAll'](getCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(5)
   })
 
@@ -46,9 +46,19 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Yes')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](cells as any)
+    await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
+  })
+
+  test('do not show confirmation for notebooks with just one cell', async () => {
+    const k = new Kernel({} as any)
+    // @ts-ignore readonly
+    window.showQuickPick = vi.fn().mockResolvedValue('Yes')
+    k['_doExecuteCell'] = vi.fn()
+    await k['_executeAll'](getCells(1))
+    expect(window.showQuickPick).toBeCalledTimes(0)
+    expect(k['_doExecuteCell']).toBeCalledTimes(1)
   })
 
   test('runs no cells if answer is no', async () => {
@@ -56,7 +66,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('No')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](cells as any)
+    await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
   })
@@ -66,7 +76,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Cancel')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](cells as any)
+    await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
   })
@@ -76,7 +86,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Skip Prompt and run all')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](cells as any)
+    await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
   })
