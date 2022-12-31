@@ -194,7 +194,7 @@
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "If set to `true`, your will executing code blocks natively through the Runme CLI (very experimental)."
+            "markdownDescription": "If set to `true`, you will executing code blocks natively through the Runme CLI (very experimental)."
           }
         }
       }
