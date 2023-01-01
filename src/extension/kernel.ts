@@ -1,6 +1,6 @@
 import {
   Disposable, notebooks, window, workspace, ExtensionContext,
-  NotebookEditor, NotebookCell, NotebookCellKind
+  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution
 } from 'vscode'
 
 import type { ClientMessage } from '../types'
@@ -21,7 +21,11 @@ enum ConfirmationItems {
   Cancel = 'Cancel'
 }
 
-export class Kernel implements Disposable {
+export interface RunmeKernel {
+  createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution>
+}
+
+export class Kernel implements RunmeKernel, Disposable {
   static readonly type = 'runme' as const
 
   #terminals = new Map<string, ExperimentalTerminal>
@@ -121,6 +125,10 @@ export class Kernel implements Disposable {
 
       await this._doExecuteCell(cell)
     }
+  }
+
+  public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
+    return this.#controller.createNotebookCellExecution(cell)
   }
 
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {

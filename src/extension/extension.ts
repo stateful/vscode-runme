@@ -6,6 +6,7 @@ import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvide
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   openTerminal,
@@ -36,6 +37,8 @@ export class RunmeExtension {
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new AnnotationsProvider(kernel)),
+
       commands.registerCommand('runme.resetEnv', resetEnv),
       commands.registerCommand('runme.openTerminal', openTerminal),
       commands.registerCommand('runme.runCliCommand', runCLICommand),
