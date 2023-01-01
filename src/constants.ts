@@ -7,6 +7,7 @@ export enum OutputType {
   vercel = 'stateful.runme/vercel-stdout',
   deno = 'stateful.runme/deno-stdout',
   outputItems = 'stateful.runme/output-items',
+  annotations = 'stateful.runme/annotations',
   error = 'stateful.runme/error'
 }
 

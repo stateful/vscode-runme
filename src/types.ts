@@ -62,6 +62,9 @@ interface Payload {
     outputItems: string[]
   }
   [OutputType.outputItems]: OutputItemsPayload
+  [OutputType.annotations]: {
+    metadata?: NotebookCellMetadata
+  }
 }
 
 export interface ClientMessage <T extends ClientMessages> {
