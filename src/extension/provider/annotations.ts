@@ -1,32 +1,51 @@
-import vscode, { NotebookCell } from 'vscode'
+import vscode from 'vscode'
 
-import { OutputType } from '../../constants'
-import { CellOutputPayload } from '../../types'
 import { RunmeKernel } from '../kernel'
 import { getMetadata } from '../utils'
 
-
 export class AnnotationsProvider implements vscode.NotebookCellStatusBarItemProvider {
+  #panel?: vscode.WebviewPanel
   constructor(private readonly runmeKernel: RunmeKernel) {
-    vscode.commands.registerCommand('runme.openCellAnnotations', async (cell: NotebookCell) => {
-      try {
-        const exec = await runmeKernel.createCellExecution(cell)
-        exec.start(Date.now())
-        const json = <CellOutputPayload<OutputType.annotations>>{
-          type: OutputType.annotations,
-          output: {
-            metadata: getMetadata(cell),
-          },
-        }
-        await exec.replaceOutput([
-          new vscode.NotebookCellOutput([
-            vscode.NotebookCellOutputItem.json(json, OutputType.annotations),
-          ]),
-        ])
-        exec.end(true)
-      } catch (e: any) {
-        vscode.window.showErrorMessage(e.message)
+    vscode.commands.registerCommand('runme.openCellAnnotations', async (cell: vscode.NotebookCell) => {
+      /**
+       * close panel if already open
+       */
+      if (this.#panel) {
+        this.#panel.dispose()
+        this.#panel = undefined
+        return
       }
+
+      const metadata = getMetadata(cell)
+      this.#panel = vscode.window.createWebviewPanel(
+        'Webview',
+        'Runme Cell',
+        vscode.ViewColumn.Nine,
+        { enableScripts: true }
+      )
+      this.#panel.webview.html = /*html*/`
+      <script type="module">
+        import {
+          provideVSCodeDesignSystem,
+          vsCodeCheckbox,
+          vsCodeTextField
+        } from 'https://esm.sh/@vscode/webview-ui-toolkit@1.2.1'
+
+        provideVSCodeDesignSystem().register(
+          vsCodeCheckbox(),
+          vsCodeTextField()
+        )
+      </script>
+      <h1>Runme Cell</h1>
+      <vscode-checkbox ${metadata.background ? 'checked' : ''}>background</vscode-checkbox>
+      <br />
+      <vscode-checkbox ${metadata.interactive ? 'checked' : ''}>interactive</vscode-checkbox>
+      <br />
+      <vscode-checkbox ${metadata.closeTerminalOnSuccess ? 'checked' : ''}>close on success</vscode-checkbox>
+      <hr style="display: block; height: 1px; border: 0; border-top: 1px solid rgba(255,255,255,.5); margin: 1em 0; padding: 0;" />
+      <p><vscode-text-field value="${metadata.mimeType}">Mime Type</vscode-text-field></p>
+      <p><vscode-text-field value="${metadata.name}" readonly>Cell ID</vscode-text-field></p>
+      `
     })
   }
 
