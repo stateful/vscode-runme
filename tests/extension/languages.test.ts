@@ -9,18 +9,18 @@ import fixture from './fixtures/document.json'
 
 test('cells', () => {
   // todo(sebastian): tests legacy deserializer
-  expect((fixture as WasmLib.Cells).cells).toBeTypeOf('object')
+  expect((fixture as WasmLib.Notebook).cells).toBeTypeOf('object')
 })
 
 test('languages#run', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as WasmLib.Cells
+  const f = fixture as WasmLib.Notebook
 
   const results = await Promise.all(
     f.cells!
-      .filter((s: WasmLib.Cell) => s.type !== 'markdown') // skip pure markdown
-      .map((s: WasmLib.Cell) => {
-        return langs.run(Languages.normalizeSource(s.source)).then(l => {
+      .filter((s) => s.kind !== 1) // skip pure markdown
+      .map((s) => {
+        return langs.run(Languages.normalizeSource(s.value)).then(l => {
           return l?.[0]?.languageId
         })
       })
@@ -32,7 +32,6 @@ test('languages#run', async () => {
     'bat',
     'bat',
     'bat',
-    'groovy',
     'ini',
     'bat',
     'sh',
@@ -43,20 +42,19 @@ test('languages#run', async () => {
     'dart',
     'sh',
     'bat',
-    'bat',
     'csv',
   ])
 })
 
 test('languages#biased', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as WasmLib.Cells
+  const f = fixture as WasmLib.Notebook
 
   const biased = await Promise.all(
     f.cells!
-      .filter((s: WasmLib.Cell) => s.type !== 'markdown') // skip pure markdown
-      .map((s: WasmLib.Cell) => {
-        return langs.run(Languages.normalizeSource(s.source)).then(res => {
+      .filter((s) => s.kind !== 1) // skip pure markdown
+      .map((s) => {
+        return langs.run(Languages.normalizeSource(s.value)).then(res => {
           return [res?.[0].languageId, Languages.biased('darwin', res)]
         })
       })
@@ -68,7 +66,6 @@ test('languages#biased', async () => {
     ['bat', 'sh'],
     ['bat', 'sh'],
     ['bat', 'sh'],
-    ['groovy', 'groovy'],
     ['ini', 'sh'],
     ['bat', 'sh'],
     ['sh', 'sh'],
@@ -78,7 +75,6 @@ test('languages#biased', async () => {
     ['bat', 'sh'],
     ['dart', 'sh'],
     ['sh', 'sh'],
-    ['bat', 'sh'],
     ['bat', 'sh'],
     ['csv', 'sh'],
   ])

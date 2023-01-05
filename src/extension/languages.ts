@@ -61,7 +61,7 @@ export default class Languages {
 
   public static biased(platform: string, results: ModelResult[]): string | undefined {
     let top = results.slice(0, 3)
-    const pstdev = stdev(top.map(r => r.confidence), true)
+    const pstdev = Math.sqrt(stdev(top.map(r => r.confidence), true))
     // if it's tight at the top (< 1% variance) look for execs
     while (pstdev < 0.01 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {
       if (top.length <= 0) {
@@ -83,8 +83,6 @@ export default class Languages {
 // https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-225.php
 const stdev = (arr: any[], usePopulation = false) => {
   const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length
-  return Math.sqrt(
-    arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc: any, val: any) => acc + val, 0) /
-      (arr.length - (usePopulation ? 0 : 1))
-  )
+  return arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc: any, val: any) => acc + val, 0) /
+    (arr.length - (usePopulation ? 0 : 1))
 }
