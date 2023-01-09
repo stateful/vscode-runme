@@ -46,6 +46,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
            */
           const outputItemElem = document.createElement('shell-output-items')
           outputItemElem.setAttribute('content', content)
+          outputItemElem.setAttribute('metadata', JSON.stringify(payload.output.metadata))
+          outputItemElem.setAttribute('pid', payload.output.pid.toString())
+          outputItemElem.setAttribute('filePath', payload.output.filePath)
+          if (payload.output.isRunning) {
+            outputItemElem.setAttribute('isRunning', 'true')
+          }
+
           element.appendChild(outputItemElem)
           break
         case OutputType.error:

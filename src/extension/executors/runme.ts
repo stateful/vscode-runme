@@ -17,6 +17,8 @@ export async function runme(
   exec: NotebookCellExecution,
   terminal: ExperimentalTerminal
 ): Promise<boolean> {
+  let pid: number
+  let isRunning = true
   const outputItems: Buffer[] = []
   const metadata = getMetadata(exec.cell)
   const t = RunmeTaskProvider.getRunmeTask(
@@ -28,32 +30,61 @@ export async function runme(
     }
   )
 
-  const outputStream = new PassThrough()
-  outputStream.on('data', (data: Buffer) => {
-    outputItems.push(Buffer.from(data))
-    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), metadata.mimeType || DEFAULT_MIME_TYPE)
-
-    if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(metadata.mimeType)) {
-      item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
+  function updateOutput () {
+    const item = MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(metadata.mimeType)
+      ? NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,
         output: {
           content: Buffer.concat(outputItems).toString('base64'),
-          mime: metadata.mimeType
+          metadata,
+          pid,
+          isRunning,
+          filePath: exec.cell.notebook.uri.fsPath
         }
       }, OutputType.outputItems)
-    }
+      : new NotebookCellOutputItem(
+        Buffer.concat(outputItems),
+        metadata.mimeType || DEFAULT_MIME_TYPE
+      )
 
     exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
+  }
+
+  const outputStream = new PassThrough()
+  outputStream.on('data', (data: Buffer) => {
+    outputItems.push(Buffer.from(data))
+    updateOutput()
+  })
+  terminal.onDidStartNewProcess((cp) => {
+    if (!cp.pid) {
+      return
+    }
+    pid = cp.pid
+    if (metadata.background) {
+      outputItems.push(Buffer.from(`Running background process (PID: ${pid})`))
+    }
+    updateOutput()
   })
 
-  const { execution, promise } = await terminal.execute(t, {
+  const { execution, promise, cancellationToken } = await terminal.execute(t, {
     stdout: outputStream,
     stderr: outputStream
   })
-  this.context.subscriptions.push(exec.token.onCancellationRequested(() => {
+  function cancelTask () {
+    if (metadata.background) {
+      outputItems[0] = Buffer.from('Background process stopped!')
+    }
+
     terminal.cancelExecution()
     execution.terminate()
-  }))
+  }
+  this.context.subscriptions.push(
+    // when task gets terminated
+    cancellationToken.onCancellationRequested(cancelTask),
+    // when stop button next to cell is clicked
+    exec.token.onCancellationRequested(cancelTask)
+  )
+
 
   /**
    * push task as disposable to context so that it is being closed
@@ -64,5 +95,8 @@ export async function runme(
   })
 
   const hasSuccess = (await promise === 0)
+  isRunning = false
+  updateOutput()
+
   return hasSuccess
 }

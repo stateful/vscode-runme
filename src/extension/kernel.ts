@@ -79,6 +79,15 @@ export class Kernel implements Disposable {
       return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {
       return window.showInformationMessage(message.output as string)
+    } else if (message.type === ClientMessages.cancelTask) {
+      const payload = message as ClientMessage<ClientMessages.cancelTask>
+      const terminal = this.#terminals.get(payload.output.filePath)
+      if (terminal) {
+        return terminal.cancelExecution()
+      }
+      return
+    } else if (message.type === ClientMessages.openTerminal) {
+      return window.activeTerminal?.show()
     }
 
     console.error(`[Runme] Unknown event type: ${message.type}`)

@@ -69,7 +69,7 @@ async function shellExecutor(
         type: OutputType.outputItems,
         output: {
           content: Buffer.concat(outputItems).toString('base64'),
-          mime
+          metadata
         }
       }, OutputType.outputItems)
     }

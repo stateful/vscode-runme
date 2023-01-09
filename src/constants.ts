@@ -16,7 +16,9 @@ export enum ClientMessages {
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
   promote = 'deno:promoteDeployment',
-  prod = 'vercel:promotePreview'
+  prod = 'vercel:promotePreview',
+  cancelTask = 'task:cancel',
+  openTerminal = 'terminal:open'
 }
 
 export const METADATA_DEFAULTS = {
