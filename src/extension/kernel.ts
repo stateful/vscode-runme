@@ -133,7 +133,7 @@ export class Kernel implements RunmeKernel, Disposable {
 
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
-    const exec = this.#controller.createNotebookCellExecution(cell)
+    const exec = await this.createCellExecution(cell)
 
     exec.start(Date.now())
     let execKey = getKey(runningCell)
