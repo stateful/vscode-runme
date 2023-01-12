@@ -1,6 +1,6 @@
 import {
   Disposable, notebooks, window, workspace, ExtensionContext,
-  NotebookEditor, NotebookCell, NotebookCellKind
+  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution
 } from 'vscode'
 
 import type { ClientMessage } from '../types'
@@ -10,7 +10,7 @@ import { API } from '../utils/deno/api'
 import executor, { runme } from './executors'
 import { ExperimentalTerminal } from './terminal/terminal'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey, getMetadata } from './utils'
+import { resetEnv, getKey, getAnnotations } from './utils'
 
 import './wasm/wasm_exec.js'
 
@@ -21,7 +21,11 @@ enum ConfirmationItems {
   Cancel = 'Cancel'
 }
 
-export class Kernel implements Disposable {
+export interface RunmeKernel {
+  createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution>
+}
+
+export class Kernel implements RunmeKernel, Disposable {
   static readonly type = 'runme' as const
 
   #terminals = new Map<string, ExperimentalTerminal>
@@ -54,7 +58,9 @@ export class Kernel implements Disposable {
 
   // eslint-disable-next-line max-len
   async #handleRendererMessage({ editor, message }: { editor: NotebookEditor, message: ClientMessage<ClientMessages> }) {
-    if (message.type === ClientMessages.promote) {
+    if (message.type === ClientMessages.mutateAnnotations) {
+      console.log(message)
+    } else if (message.type === ClientMessages.promote) {
       const payload = message as ClientMessage<ClientMessages.promote>
       const token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
@@ -81,7 +87,7 @@ export class Kernel implements Disposable {
       return window.showInformationMessage(message.output as string)
     }
 
-    console.error(`[Runme] Unknown event type: ${message.type}`)
+    console.error(`[Runme] Unknown kernel event type: ${message.type}`)
   }
 
   private async _executeAll(cells: NotebookCell[]) {
@@ -94,10 +100,10 @@ export class Kernel implements Disposable {
 
     for (const cell of cells) {
       if (showConfirmPrompt) {
-        const metadata = getMetadata(cell)
+        const annotations = getAnnotations(cell)
         const cellText = cell.document.getText()
         const cellLabel = (
-          metadata.name ||
+          annotations.name ||
           cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
         )
 
@@ -123,9 +129,13 @@ export class Kernel implements Disposable {
     }
   }
 
+  public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
+    return this.#controller.createNotebookCellExecution(cell)
+  }
+
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
-    const exec = this.#controller.createNotebookCellExecution(cell)
+    const exec = await this.createCellExecution(cell)
 
     exec.start(Date.now())
     let execKey = getKey(runningCell)

@@ -6,6 +6,7 @@ import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvide
 import { CopyProvider } from './provider/copy'
 import { resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
+import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   openTerminal,
@@ -22,20 +23,24 @@ import { Serializer } from './serializer'
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
+    const serializer = new Serializer(context)
     context.subscriptions.push(
       kernel,
-      workspace.registerNotebookSerializer('runme', new Serializer(context), {
-        transientOutputs: true,
+      workspace.registerNotebookSerializer('runme', serializer, {
+        transientOutputs: false,
         transientCellMetadata: {
           inputCollapsed: true,
           outputCollapsed: true,
         },
       }),
+      serializer,
 
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', new AnnotationsProvider(kernel)),
+
       commands.registerCommand('runme.resetEnv', resetEnv),
       commands.registerCommand('runme.openTerminal', openTerminal),
       commands.registerCommand('runme.runCliCommand', runCLICommand),

@@ -5,7 +5,7 @@ import cp from 'node:child_process'
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 
 import { METADATA_DEFAULTS } from '../constants'
-import { NotebookCellMetadata } from '../types'
+import { NotebookCellAnnotations, WasmLib } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -16,22 +16,44 @@ declare var globalThis: any
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const TRUTHY_VALUES = ['1', 'true']
 
-export function getMetadata(cell: vscode.NotebookCell) {
+/**
+ * Annotations are stored as subset of metadata
+ */
+export function getAnnotations(cell: vscode.NotebookCell): NotebookCellAnnotations
+export function getAnnotations(metadata?: WasmLib.Metadata): NotebookCellAnnotations
+export function getAnnotations(raw: unknown): NotebookCellAnnotations {
   const config = vscode.workspace.getConfiguration('runme.shell')
-  return <NotebookCellMetadata>{
-    background: typeof cell.metadata.background === 'string'
-      ? TRUTHY_VALUES.includes(cell.metadata.background)
-      : METADATA_DEFAULTS.background,
-    interactive: typeof cell.metadata.interactive === 'string'
-      ? TRUTHY_VALUES.includes(cell.metadata.interactive)
-      : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
-    closeTerminalOnSuccess: typeof cell.metadata.closeTerminalOnSuccess === 'string'
-      ? TRUTHY_VALUES.includes(cell.metadata.closeTerminalOnSuccess)
-      : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
-    mimeType: typeof cell.metadata.mimeType === 'string'
-      ? cell.metadata.mimeType
-      : METADATA_DEFAULTS.mimeType,
-    name: cell.metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`
+  const metadataFromCell = raw as vscode.NotebookCell
+  let metadata = raw as WasmLib.Metadata
+
+  if (metadataFromCell.metadata) {
+    metadata = metadataFromCell.metadata
+  }
+
+  return <NotebookCellAnnotations>{
+    background:
+      typeof metadata.background === 'string'
+        ? TRUTHY_VALUES.includes(metadata.background)
+        : METADATA_DEFAULTS.background,
+    interactive:
+      typeof metadata.interactive === 'string'
+        ? TRUTHY_VALUES.includes(metadata.interactive)
+        : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
+    closeTerminalOnSuccess:
+      typeof metadata.closeTerminalOnSuccess === 'string'
+        ? TRUTHY_VALUES.includes(metadata.closeTerminalOnSuccess)
+        : config.get<boolean>(
+            'closeTerminalOnSuccess',
+            METADATA_DEFAULTS.closeTerminalOnSuccess
+          ),
+    mimeType:
+      typeof metadata.mimeType === 'string'
+        ? metadata.mimeType
+        : METADATA_DEFAULTS.mimeType,
+    name:
+      metadata['runme.dev/name'] ||
+      `Cell #${Math.random().toString().slice(2)}`,
+    'runme.dev/uuid': metadata['runme.dev/uuid'],
   }
 }
 
