@@ -1,6 +1,6 @@
 import vscode from 'vscode'
 
-import { getMetadata, getTerminalByCell } from '../utils'
+import { getAnnotations, getTerminalByCell } from '../utils'
 
 export class PidStatusProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
@@ -8,7 +8,7 @@ export class PidStatusProvider implements vscode.NotebookCellStatusBarItemProvid
      * don't show pid if we run it in non-interactive mode where we have no
      * access to the process id
      */
-    if (!getMetadata(cell).interactive) {
+    if (!getAnnotations(cell).interactive) {
       return
     }
 

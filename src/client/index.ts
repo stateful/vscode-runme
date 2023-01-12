@@ -50,7 +50,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.annotations:
           const annoElem = document.createElement('edit-annotations')
-          annoElem.setAttribute('metadata', JSON.stringify(payload.output.metadata ?? []))
+          annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
           element.appendChild(annoElem)
           break
         case OutputType.error:

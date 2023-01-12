@@ -5,7 +5,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
-import { getMetadata } from '../utils'
+import { getAnnotations } from '../utils'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
@@ -29,8 +29,8 @@ async function shellExecutor(
   /**
    * this needs more work / specification
    */
-  const metadata = getMetadata(exec.cell)
-  const mime = metadata?.mimeType || 'text/plain' as const
+  const annotations = getAnnotations(exec.cell)
+  const mime = annotations?.mimeType || 'text/plain' as const
   const index = exec.cell.index
 
   /**

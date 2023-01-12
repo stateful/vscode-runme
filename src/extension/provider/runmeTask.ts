@@ -5,7 +5,7 @@ import {
   workspace, window, TaskScope, TaskRevealKind, TaskPanelKind, NotebookCellKind
 } from 'vscode'
 
-import { initWasm, getMetadata } from '../utils'
+import { initWasm, getAnnotations } from '../utils'
 import { WasmLib, RunmeTaskDefinition } from '../../types'
 
 declare var globalThis: any
@@ -52,7 +52,7 @@ export class RunmeTaskProvider implements TaskProvider {
         current.fsPath,
         // ToDo(Christian) remove casting once we have defaults
         // see https://github.com/stateful/runme/issues/90
-        getMetadata(cell as any).name
+        getAnnotations(cell as any).name
       ))
   }
 

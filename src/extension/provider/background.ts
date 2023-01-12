@@ -1,13 +1,13 @@
 import vscode from 'vscode'
 
-import { getMetadata, getTerminalByCell } from '../utils'
+import { getAnnotations, getTerminalByCell } from '../utils'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
      */
-    if (!getMetadata(cell).interactive) {
+    if (!getAnnotations(cell).interactive) {
       return
     }
 
@@ -29,12 +29,12 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
-    const metadata = getMetadata(cell)
+    const annotations = getAnnotations(cell)
 
     /**
      * don't show if not a background task
      */
-    if (!metadata.background || !metadata.interactive) {
+    if (!annotations.background || !annotations.interactive) {
       return
     }
 
@@ -47,12 +47,12 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
 }
 export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
-    const metadata = getMetadata(cell)
+    const annotations = getAnnotations(cell)
 
     /**
      * don't show if not a background task & if not command currently running
      */
-    if (!metadata.background || !metadata.interactive || !cell.executionSummary?.success) {
+    if (!annotations.background || !annotations.interactive || !cell.executionSummary?.success) {
       return
     }
 

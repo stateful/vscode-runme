@@ -4,7 +4,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { RunmeTaskProvider } from '../provider/runmeTask'
 import { OutputType } from '../../constants'
-import { getMetadata } from '../utils'
+import { getAnnotations } from '../utils'
 import { ExperimentalTerminal } from '../terminal/terminal'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
@@ -18,27 +18,27 @@ export async function runme(
   terminal: ExperimentalTerminal
 ): Promise<boolean> {
   const outputItems: Buffer[] = []
-  const metadata = getMetadata(exec.cell)
+  const annotations = getAnnotations(exec.cell)
   const t = RunmeTaskProvider.getRunmeTask(
     exec.cell.notebook.uri.fsPath,
-    metadata.name,
+    annotations.name,
     {
-      isBackground: metadata.background,
-      closeTerminalOnSuccess: metadata.closeTerminalOnSuccess
+      isBackground: annotations.background,
+      closeTerminalOnSuccess: annotations.closeTerminalOnSuccess
     }
   )
 
   const outputStream = new PassThrough()
   outputStream.on('data', (data: Buffer) => {
     outputItems.push(Buffer.from(data))
-    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), metadata.mimeType || DEFAULT_MIME_TYPE)
+    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), annotations.mimeType || DEFAULT_MIME_TYPE)
 
-    if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(metadata.mimeType)) {
+    if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(annotations.mimeType)) {
       item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,
         output: {
           content: Buffer.concat(outputItems).toString('base64'),
-          mime: metadata.mimeType
+          mime: annotations.mimeType
         }
       }, OutputType.outputItems)
     }
