@@ -214,24 +214,24 @@ export class Serializer implements NotebookSerializer, Disposable {
 }
 
 class AnnotationsEditor {
-  private cells: NotebookCellAnnotations[] = []
+  private cellAnnotations: NotebookCellAnnotations[] = []
 
   reset(notebookData: NotebookData) {
-    this.cells = notebookData.cells.map(c => getAnnotations(c.metadata))
+    this.cellAnnotations = notebookData.cells.map(c => getAnnotations(c.metadata))
   }
 
   mutate(cell: NotebookCellAnnotations) {
-    const idx = this.cells.findIndex(c => c['runme.dev/uuid'] === cell['runme.dev/uuid'])
+    const idx = this.cellAnnotations.findIndex(c => c['runme.dev/uuid'] === cell['runme.dev/uuid'])
     if (idx > -1) {
-      this.cells[idx] = cell
+      this.cellAnnotations[idx] = cell
     }
   }
 
   reconcile(data: NotebookData) {
-    for (const c of this.cells) {
-      const idx = data.cells.findIndex(cell => cell.metadata?.['runme.dev/uuid'] === c['runme.dev/uuid'])
+    for (const canno of this.cellAnnotations) {
+      const idx = data.cells.findIndex(cell => cell.metadata?.['runme.dev/uuid'] === canno['runme.dev/uuid'])
       if (idx > -1) {
-        data.cells[idx].metadata = { ...data.cells[idx].metadata, ...c }
+        data.cells[idx].metadata = { ...data.cells[idx].metadata, ...canno }
       }
     }
     this.reset(data)
