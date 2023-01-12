@@ -27,13 +27,12 @@ export class RunmeExtension {
     context.subscriptions.push(
       kernel,
       workspace.registerNotebookSerializer('runme', serializer, {
-        transientOutputs: false,
+        transientOutputs: true,
         transientCellMetadata: {
           inputCollapsed: true,
           outputCollapsed: true,
         },
       }),
-      serializer,
 
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),

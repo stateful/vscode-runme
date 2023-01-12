@@ -51,7 +51,7 @@ export class Annotations extends LitElement {
         (this.annotations as any)[e.target.id] = e.target.value
         break
       default:
-        (this.annotations as any)[e.target.id] = e.target.checked
+        (this.annotations as any)[e.target.id] = e.target.checked.toString()
     }
 
     this.#dispatch()

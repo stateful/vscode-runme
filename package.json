@@ -277,6 +277,7 @@
     "@octokit/rest": "^19.0.5",
     "@types/node": "^18.11.15",
     "@types/split2": "^3.2.1",
+    "@types/uuid": "^9.0.0",
     "@types/vscode": "^1.71.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
@@ -321,6 +322,7 @@
     "preact": "^10.11.3",
     "tmp-promise": "^3.0.3",
     "undici": "^5.14.0",
+    "uuid": "^9.0.0",
     "vercel": "^28.10.2",
     "xdg-app-paths": "^8.2.0",
     "yargs": "^17.6.2"

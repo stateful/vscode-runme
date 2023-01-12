@@ -11,6 +11,7 @@ import {
   CancellationToken,
   notebooks,
   Disposable,
+  EventEmitter,
   NotebookEditor,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
@@ -26,10 +27,9 @@ import { canEditFile, getAnnotations, initWasm } from './utils'
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 
-export class Serializer implements NotebookSerializer, Disposable {
+export class Serializer implements NotebookSerializer {
   private readonly wasmReady: Promise<Error | void>
   private readonly languages: Languages
-  #annotationsEditor = new AnnotationsEditor()
   #disposables: Disposable[] = []
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
@@ -43,29 +43,6 @@ export class Serializer implements NotebookSerializer, Disposable {
     this.wasmReady = initWasm(wasmUri)
 
     this.messaging.postMessage({ from: 'kernel' })
-    this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this))
-    )
-  }
-
-  dispose() {
-    this.#disposables.forEach((d) => d.dispose())
-  }
-
-  async #handleRendererMessage({
-    editor,
-    message,
-  }: {
-    editor: NotebookEditor
-    message: ClientMessage<ClientMessages>
-  }) {
-    if (message.type === ClientMessages.mutateAnnotations) {
-      const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
-      this.#annotationsEditor.mutate(payload.output.annotations)
-      return
-    }
-
-    console.error(`[Runme] Unknown serializer event type: ${message.type}`)
   }
 
   public async serializeNotebook(
@@ -97,8 +74,6 @@ export class Serializer implements NotebookSerializer, Disposable {
       )
     }
 
-    const output = this.#annotationsEditor.reconcile(data)
-
     const err = await this.wasmReady
     if (err) {
       throw err
@@ -106,7 +81,7 @@ export class Serializer implements NotebookSerializer, Disposable {
 
     const { Runme } = globalThis as WasmLib.Serializer
 
-    const notebook = JSON.stringify(output)
+    const notebook = JSON.stringify(data)
     const markdown = await Runme.serialize(notebook)
 
     const encoder = new TextEncoder()
@@ -163,7 +138,8 @@ export class Serializer implements NotebookSerializer, Disposable {
     }
 
     const notebookData = new NotebookData(Serializer.revive(notebook))
-    this.#annotationsEditor.reset(notebookData)
+    // const cellAnnotations = notebookData.cells.map(c => getAnnotations(c.metadata))
+    // this.#annotationsEditor.reset(notebookData)
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     }
@@ -210,31 +186,5 @@ export class Serializer implements NotebookSerializer, Disposable {
     return new NotebookData([
       new NotebookCellData(NotebookCellKind.Markup, content, languageId),
     ])
-  }
-}
-
-class AnnotationsEditor {
-  private cells: NotebookCellAnnotations[] = []
-
-  reset(notebookData: NotebookData) {
-    this.cells = notebookData.cells.map(c => getAnnotations(c.metadata))
-  }
-
-  mutate(cell: NotebookCellAnnotations) {
-    const idx = this.cells.findIndex(c => c['runme.dev/uuid'] === cell['runme.dev/uuid'])
-    if (idx > -1) {
-      this.cells[idx] = cell
-    }
-  }
-
-  reconcile(data: NotebookData) {
-    for (const c of this.cells) {
-      const idx = data.cells.findIndex(cell => cell.metadata?.['runme.dev/uuid'] === c['runme.dev/uuid'])
-      if (idx > -1) {
-        data.cells[idx].metadata = { ...data.cells[idx].metadata, ...c }
-      }
-    }
-    this.reset(data)
-    return data
   }
 }
