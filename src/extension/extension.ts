@@ -23,15 +23,17 @@ import { Serializer } from './serializer'
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
+    const serializer = new Serializer(context)
     context.subscriptions.push(
       kernel,
-      workspace.registerNotebookSerializer('runme', new Serializer(context), {
-        transientOutputs: true,
+      workspace.registerNotebookSerializer('runme', serializer, {
+        transientOutputs: false,
         transientCellMetadata: {
           inputCollapsed: true,
           outputCollapsed: true,
         },
       }),
+      serializer,
 
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),

@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-// import { ClientMessages } from '../../constants'
-import type { NotebookCellMetadata } from '../../types'
-// import { getContext } from '../utils'
+import { ClientMessages } from '../../constants'
+import type { ClientMessage, NotebookCellAnnotations } from '../../types'
+import { getContext } from '../utils'
 import '@vscode/webview-ui-toolkit/dist/data-grid/index'
 
 @customElement('edit-annotations')
@@ -13,7 +14,7 @@ export class Annotations extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: Arial
+      font-family: Arial;
     }
 
     section {
@@ -37,41 +38,100 @@ export class Annotations extends LitElement {
   `
 
   // Declare reactive properties
-  @property({ type: Object })
-  metadata?: NotebookCellMetadata
+  @property({ type: Object, reflect: true })
+  annotations?: NotebookCellAnnotations
+
+  #onChange(e: { target: { id: string, checked: boolean, value: string, type: string } }) {
+    if (!this.annotations || !e.target) {
+      return
+    }
+
+    switch (e.target.type) {
+      case 'text':
+        (this.annotations as any)[e.target.id] = e.target.value
+        break
+      default:
+        (this.annotations as any)[e.target.id] = e.target.checked
+    }
+
+    this.#dispatch()
+  }
+
+  #dispatch() {
+    const ctx = getContext()
+    if (!ctx.postMessage) {
+      return
+    }
+
+    ctx.postMessage(<ClientMessage<ClientMessages.mutateAnnotations>>{
+      type: ClientMessages.mutateAnnotations,
+      output: { annotations: this.annotations }
+    })
+  }
 
   // Render the UI as a function of component state
   render() {
     // const supportsMessaging = Boolean(getContext().postMessage)
-    if (!this.metadata) {
+    if (!this.annotations) {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }
 
-    const headers = Object.entries(this.metadata).map(([key, val], i) => {
-      return html`<vscode-data-grid-cell cell-type="columnheader" grid-column="${i + 1}">
-        ${when(['true', 'false'].includes(val.toString()), () => {
-          return html`<vscode-checkbox checked="${val || nothing}"> ${key}</vscode-checkbox>`
-        }, () => {
-          return html`<vscode-checkbox checked readonly> ${key}</vscode-checkbox>`
-        })}
-      </vscode-data-grid-cell>`
-    })
+    const filtered = Object.entries(this.annotations).filter(
+      ([k]) => k.indexOf('runme.dev/') < 0
+    )
 
-    const annos = Object.entries(this.metadata).map(([, val], i) => {
+    const headers = filtered
+      .map(([id, val], i) => {
+        return html`<vscode-data-grid-cell
+          cell-type="columnheader"
+          grid-column="${i + 1}"
+        >
+          ${when(
+            ['true', 'false'].includes(val.toString()),
+            () => {
+              return html`<vscode-checkbox
+                id="${id}"
+                @change="${this.#onChange}"
+                checked="${val || nothing}"
+              >
+                ${id}
+              </vscode-checkbox>`
+            },
+            () => {
+              return html`<vscode-checkbox
+                id="${id}"
+                @change="${this.#onChange}"
+                @blur="${this.#onChange}"
+                checked
+                readonly
+              >
+                ${id}</vscode-checkbox
+              >`
+            }
+          )}
+        </vscode-data-grid-cell>`
+      })
+
+    const annos = filtered.map(([key, val], i) => {
       return html`<vscode-data-grid-cell grid-column="${i + 1}">
-        ${when(!['true', 'false'].includes(val.toString()), () => {
-          return html`<vscode-text-field
-            type="text"
-            value="${val}"
-          ></vscode-text-field>`
-        }, () => {
-          return html``
-        })}
+        ${when(
+          !['true', 'false'].includes(val.toString()),
+          () => {
+            return html`<vscode-text-field
+              id="${key}"
+              type="text"
+              value="${val}"
+              @change="${this.#onChange}"
+            ></vscode-text-field>`
+          },
+          () => {
+            return html``
+          }
+        )}
       </vscode-data-grid-cell>`
     })
 
-    return html`
-    <section id="data-grid-row">
+    return html` <section id="data-grid-row">
       <vscode-data-grid
         class="basic-grid"
         generate-header="default"
@@ -79,16 +139,20 @@ export class Annotations extends LitElement {
         aria-label="Cell Annotations"
       >
         <vscode-data-grid-row row-type="header">
-          ${ headers }
+          ${headers}
         </vscode-data-grid-row>
-        <vscode-data-grid-row>
-          ${ annos }
-        </vscode-data-grid-row>
+        <vscode-data-grid-row> ${annos} </vscode-data-grid-row>
       </vscode-data-grid>
     </section>`
   }
 
-  #reset () {
+  #reset() {
     throw new Error('not implemented yet')
+  }
+}
+
+function fromObjAttr(prop: string) {
+  return function (value: string, type: object) {
+    return JSON.parse(value)[prop]
   }
 }

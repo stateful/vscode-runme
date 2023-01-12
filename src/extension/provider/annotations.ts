@@ -3,7 +3,7 @@ import vscode, { NotebookCell } from 'vscode'
 import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { RunmeKernel } from '../kernel'
-import { getMetadata } from '../utils'
+import { getAnnotations } from '../utils'
 
 
 export class AnnotationsProvider implements vscode.NotebookCellStatusBarItemProvider {
@@ -15,12 +15,13 @@ export class AnnotationsProvider implements vscode.NotebookCellStatusBarItemProv
         const json = <CellOutputPayload<OutputType.annotations>>{
           type: OutputType.annotations,
           output: {
-            metadata: getMetadata(cell),
+            annotations: getAnnotations(cell),
           },
         }
         await exec.replaceOutput([
           new vscode.NotebookCellOutput([
             vscode.NotebookCellOutputItem.json(json, OutputType.annotations),
+            vscode.NotebookCellOutputItem.json(json),
           ]),
         ])
         exec.end(true)
