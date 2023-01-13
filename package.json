@@ -95,10 +95,6 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
-      },
-      {
-        "command": "runme.markdownFilter",
-        "title": "Filter markdown files"
       }
     ],
     "menus": {
@@ -136,13 +132,6 @@
         {
           "command": "runme.new",
           "group": "notebook"
-        }
-      ],
-      "explorer/context": [
-        {
-          "command": "runme.markdownFilter",
-          "when": "explorerResourceIsFolder",
-          "group": "navigation"
         }
       ]
     },
@@ -278,15 +267,15 @@
     "views": {
       "explorer": [
         {
-          "id": "runme.markdownFilter",
-          "name": "Markdown file explorer"
+          "id": "runme.launcher",
+          "name": "Runme Notebooks"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "runme.markdownFilter",
-        "contents": "Open a workspace/folder to display markdown files here"
+        "view": "runme.launcher",
+        "contents": "Open a workspace/folder to display Runme files here"
       }
     ]
   },

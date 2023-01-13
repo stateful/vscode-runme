@@ -18,7 +18,7 @@ import {
   createNewRunmeNotebook
 } from './commands'
 import { Serializer } from './serializer'
-import { MarkdownFilterProvider } from './provider/markdownFilter'
+import { RunmeLauncherProvider } from './provider/launcher'
 
 
 export class RunmeExtension {
@@ -49,9 +49,9 @@ export class RunmeExtension {
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       commands.registerCommand('runme.new', createNewRunmeNotebook),
-      commands.registerCommand('runme.openMarkdownFile', MarkdownFilterProvider.openFile),
+      commands.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
-      window.registerTreeDataProvider('runme.markdownFilter', new MarkdownFilterProvider())
+      window.registerTreeDataProvider('runme.launcher', new RunmeLauncherProvider())
     )
 
     /**
