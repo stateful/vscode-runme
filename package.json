@@ -95,6 +95,10 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
+      },
+      {
+        "command": "runme.markdownFilter",
+        "title": "Filter markdown files"
       }
     ],
     "menus": {
@@ -132,6 +136,13 @@
         {
           "command": "runme.new",
           "group": "notebook"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "runme.markdownFilter",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation"
         }
       ]
     },
@@ -263,6 +274,20 @@
           }
         }
       }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "runme.markdownFilter",
+          "name": "Markdown file explorer"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "runme.markdownFilter",
+        "contents": "Open a workspace/folder to display markdown files here"
+      }
     ]
   },
   "scripts": {
@@ -281,6 +306,7 @@
   },
   "devDependencies": {
     "@octokit/rest": "^19.0.5",
+    "@types/glob": "^8.0.0",
     "@types/node": "^18.11.15",
     "@types/split2": "^3.2.1",
     "@types/uuid": "^9.0.0",
@@ -323,6 +349,7 @@
     "@vscode/webview-ui-toolkit": "1.1.0",
     "filenamify": "^5.1.1",
     "get-port": "^6.1.2",
+    "glob": "^8.0.3",
     "got": "^12.5.3",
     "lit": "^2.5.0",
     "preact": "^10.11.3",

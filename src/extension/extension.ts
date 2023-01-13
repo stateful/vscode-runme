@@ -1,5 +1,5 @@
 
-import { workspace, notebooks, commands, ExtensionContext, tasks } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
@@ -18,6 +18,7 @@ import {
   createNewRunmeNotebook
 } from './commands'
 import { Serializer } from './serializer'
+import { MarkdownFilterProvider } from './provider/markdownFilter'
 
 
 export class RunmeExtension {
@@ -48,7 +49,9 @@ export class RunmeExtension {
       commands.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       commands.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       commands.registerCommand('runme.new', createNewRunmeNotebook),
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
+      commands.registerCommand('runme.openMarkdownFile', MarkdownFilterProvider.openFile),
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
+      window.registerTreeDataProvider('runme.markdownFilter', new MarkdownFilterProvider())
     )
 
     /**
