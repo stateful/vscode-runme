@@ -26,14 +26,23 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const current = (
       window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') && window.activeNotebookEditor?.notebook.uri ||
-      workspace.workspaceFolders?.[0].uri && Uri.joinPath(workspace.workspaceFolders?.[0].uri, 'Readme.md')
+      workspace.workspaceFolders?.[0].uri && Uri.joinPath(workspace.workspaceFolders?.[0].uri, 'README.md')
     )
 
     if (!current) {
       return []
     }
 
-    const mdContent = (await workspace.fs.readFile(current)).toString()
+    let mdContent: string
+    try {
+      mdContent = (await workspace.fs.readFile(current)).toString()
+    } catch (err: any) {
+      if (err.code !== 'FileNotFound') {
+        console.log(err)
+      }
+      return []
+    }
+
     const { Runme } = globalThis as WasmLib.Serializer
     const notebook = await Runme.deserialize(mdContent)
 
