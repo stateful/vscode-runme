@@ -60,7 +60,8 @@ export const window = {
   showNotebookDocument: vi.fn(),
   showTextDocument: vi.fn(),
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),
-  registerTreeDataProvider: vi.fn()
+  registerTreeDataProvider: vi.fn(),
+  onDidCloseTerminal: vi.fn()
 }
 
 export const tasks = {

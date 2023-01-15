@@ -3,7 +3,13 @@ import { notebooks, workspace, commands, window } from 'vscode'
 
 import { RunmeExtension } from '../../src/extension/extension'
 
-vi.mock('vscode')
+vi.mock('vscode', async () => {
+  const mocked = await vi.importMock('vscode')
+  return ({
+    ...(mocked as object),
+    default: mocked
+  })
+})
 
 test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }

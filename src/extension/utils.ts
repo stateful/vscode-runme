@@ -198,3 +198,50 @@ export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
   ? workspace.workspaceFolders[0].uri.fsPath : undefined
 }
+
+// eslint-disable-next-line max-len
+// adapted from https://github.com/microsoft/vscode/blob/5e4c5c78122d02469ba19d778588ee05fe841f5a/extensions/markdown-language-features/server/src/util/dispose.ts#L41
+export abstract class DisposableRegistrar implements vscode.Disposable {
+	private _isDisposed = false
+
+	protected _disposables: vscode.Disposable[] = []
+
+	public dispose() {
+		if (this._isDisposed) {
+			return
+		}
+		this._isDisposed = true
+		disposeAll(this._disposables)
+	}
+
+	protected _register<T extends vscode.Disposable>(value: T): T {
+		if (this._isDisposed) {
+			value.dispose()
+		} else {
+			this._disposables.push(value)
+		}
+		return value
+	}
+
+	protected get isDisposed() {
+		return this._isDisposed
+	}
+}
+
+function disposeAll(disposables: Iterable<vscode.Disposable>) {
+	const errors: any[] = []
+
+	for (const disposable of disposables) {
+		try {
+			disposable.dispose()
+		} catch (e) {
+			errors.push(e)
+		}
+	}
+
+	if (errors.length === 1) {
+		throw errors[0]
+	} else if (errors.length > 1) {
+		throw new AggregateError(errors, 'Encountered errors while disposing of store')
+	}
+}

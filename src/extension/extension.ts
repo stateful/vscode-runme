@@ -20,11 +20,12 @@ import {
 import { Serializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 
-
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     const serializer = new Serializer(context)
+    const terminalProvider = new ShowTerminalProvider()
+
     context.subscriptions.push(
       kernel,
       workspace.registerNotebookSerializer('runme', serializer, {
@@ -34,8 +35,8 @@ export class RunmeExtension {
           outputCollapsed: true,
         },
       }),
-
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', new ShowTerminalProvider()),
+      terminalProvider,
+      notebooks.registerNotebookCellStatusBarItemProvider('runme', terminalProvider),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider('runme', new StopBackgroundTaskProvider()),

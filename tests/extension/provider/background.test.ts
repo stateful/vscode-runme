@@ -1,3 +1,4 @@
+import vscode from 'vscode'
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
 import { getAnnotations, getTerminalByCell } from '../../../src/extension/utils'
@@ -7,6 +8,8 @@ import {
   StopBackgroundTaskProvider
 } from '../../../src/extension/provider/background'
 
+const eventFired = vi.fn()
+
 vi.mock('vscode', () => ({
   default: {
     NotebookCellStatusBarItem: class {
@@ -14,14 +17,26 @@ vi.mock('vscode', () => ({
     },
     NotebookCellStatusBarAlignment: {
       Right: 'right'
+    },
+    EventEmitter: class { 
+      fire = eventFired
+    },
+    window: {
+      onDidCloseTerminal: vi.fn()
     }
   }
 }))
 
-vi.mock('../../../src/extension/utils', () => ({
-  getTerminalByCell: vi.fn(),
-  getAnnotations: vi.fn()
-}))
+vi.mock('../../../src/extension/utils', async () => {
+  return ({
+    getTerminalByCell: vi.fn(),
+    getAnnotations: vi.fn(),
+    DisposableRegistrar: class {
+      _register = vi.fn(x => x)
+      _disposables = []
+    }
+  })
+})
 
 describe('ShowTerminalProvider', () => {
   beforeEach(() => {
@@ -57,6 +72,29 @@ describe('ShowTerminalProvider', () => {
       command: 'runme.openTerminal',
       position: 'right'
     })
+  })
+
+  it('will stop showing pid if terminal is destroyed', async () => {
+    let changeActiveTerminal: (() => void)[] = []
+    vi.mocked<any>(vscode.window.onDidCloseTerminal).mockImplementationOnce(c => changeActiveTerminal.push(c))
+    
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
+    vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
+    {
+      const p = new ShowTerminalProvider()
+      const item = await p.provideCellStatusBarItems('cell' as any)
+      expect(item).toBeTruthy()
+    }
+
+    changeActiveTerminal.forEach((c) => c())
+    expect(eventFired).toBeCalledTimes(1)
+
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
+    vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
+    {
+      const p = new ShowTerminalProvider()
+      expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
+    }
   })
 })
 

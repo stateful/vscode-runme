@@ -1,8 +1,19 @@
 import vscode from 'vscode'
 
-import { getAnnotations, getTerminalByCell } from '../utils'
+import { DisposableRegistrar, getTerminalByCell, getAnnotations } from '../utils'
 
-export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider {
+export class ShowTerminalProvider extends DisposableRegistrar implements vscode.NotebookCellStatusBarItemProvider {
+  private _onDidChangeCellStatusBarItems = this._register(new vscode.EventEmitter<void>())
+  onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
+
+  constructor() {
+    super()
+    
+    this._disposables.push(
+      vscode.window.onDidCloseTerminal(() => this.refreshStatusBarItems())
+    )
+  }
+
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
@@ -24,6 +35,10 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
     )
     item.command = 'runme.openTerminal'
     return item
+  }
+
+  refreshStatusBarItems() {
+    this._onDidChangeCellStatusBarItems.fire()
   }
 }
 
