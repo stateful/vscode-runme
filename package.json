@@ -289,13 +289,13 @@
     "postinstall": "npm run download:wasm",
     "test": "run-s test:*",
     "test:lint": "eslint src --ext ts",
+    "test:lint:fix": "eslint src --ext ts --fix",
     "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
     "watch": "npm run build:dev -- --watch"
   },
   "devDependencies": {
     "@octokit/rest": "^19.0.5",
-    "@types/glob": "^8.0.0",
     "@types/node": "^18.11.15",
     "@types/split2": "^3.2.1",
     "@types/uuid": "^9.0.0",
@@ -338,7 +338,6 @@
     "@vscode/webview-ui-toolkit": "1.1.0",
     "filenamify": "^5.1.1",
     "get-port": "^6.1.2",
-    "glob": "^8.0.3",
     "got": "^12.5.3",
     "lit": "^2.5.0",
     "preact": "^10.11.3",

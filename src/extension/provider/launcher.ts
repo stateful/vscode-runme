@@ -1,5 +1,5 @@
-import glob from 'glob'
-import { join, basename, dirname, resolve } from 'path'
+import { join, basename, dirname, resolve } from 'node:path'
+
 import * as vscode from 'vscode'
 
 interface IRunmeFileProps {
@@ -55,18 +55,19 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
     }
 
     if (!element) {
-      return new Promise((resolve: (value: RunmeFile[]) => void) => {
-        this.getRunmeFilesFromWorkspace(resolve)
+      return new Promise(async (resolve: (value: RunmeFile[]) => void) => {
+        await this.getRunmeFilesFromWorkspace(resolve)
       })
     }
 
     const { files, folderPath } = this.filesTree.get(element.label)
     const folderMarkdownItems: RunmeFile[] = []
+
     for (const file of files) {
       folderMarkdownItems.push(
         new RunmeFile(file, {
           collapsibleState: vscode.TreeItemCollapsibleState.None,
-          tooltip: 'Click to open markdown file',
+          tooltip: 'Click to open runme file',
           lightIcon: 'icon.gif',
           darkIcon: 'icon.gif',
           contextValue: 'markdown-file',
@@ -86,38 +87,37 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
     this._onDidChangeTreeData.fire()
   }
 
-  getRunmeFilesFromWorkspace(onComplete: (value: RunmeFile[]) => void): any {
-    glob('**/*.md', { cwd: this.workspaceRoot, ignore: 'node_modules/**', absolute: true }, (err, files) => {
-      const RunmeFileCollection: RunmeFile[] = []
+  async getRunmeFilesFromWorkspace(onComplete: (value: RunmeFile[]) => void): Promise<void> {
+    const runmeFileCollection: RunmeFile[] = []
+    const files = await vscode.workspace.findFiles('**/*.md', '**/node_modules/**')
 
-      for (const file of files) {
-        const info = basename(file)
-        const folderPath = dirname(file)
-        const folderName = dirname(file).replace(resolve(__dirname, '..'), '') || this.workspaceRoot
-        if (!this.filesTree.has(folderName)) {
-          this.filesTree.set(folderName, { files: [info], folderPath })
-        } else {
-          const { files } = this.filesTree.get(folderName)
-          this.filesTree.set(folderName, { files: [...files, info], folderPath })
-        }
+    for (const { path } of files) {
+      const info = basename(path)
+      const folderPath = dirname(path)
+      const folderName = dirname(path).replace(resolve(__dirname, '..'), '') || this.workspaceRoot
+      if (!this.filesTree.has(folderName)) {
+        this.filesTree.set(folderName, { files: [info], folderPath })
+      } else {
+        const { files } = this.filesTree.get(folderName)
+        this.filesTree.set(folderName, { files: [...files, info], folderPath })
       }
+    }
 
-      for (const folder of this.filesTree.keys()) {
-        RunmeFileCollection.push(
-          new RunmeFile(folder || basename(this.workspaceRoot), {
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            tooltip: 'Click to see markdown files',
-            lightIcon: 'folder.svg',
-            darkIcon: 'folder.svg',
-            contextValue: 'folder',
-          })
-        )
-      }
-      onComplete(RunmeFileCollection.reverse())
-    })
+    for (const folder of this.filesTree.keys()) {
+      runmeFileCollection.push(
+        new RunmeFile(folder || basename(this.workspaceRoot), {
+          collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+          tooltip: 'Click to open runme files from folder',
+          lightIcon: 'folder.svg',
+          darkIcon: 'folder.svg',
+          contextValue: 'folder',
+        })
+      )
+    }
+    onComplete(runmeFileCollection)
   }
 
-  public static async openFile({ file, folderPath }: { file: string; folderPath: string }) {
+  public static async openFile({ file, folderPath }: { file: string, folderPath: string }) {
     const doc = vscode.Uri.file(`${folderPath}/${file}`)
     await vscode.commands.executeCommand('vscode.openWith', doc, 'runme')
   }
