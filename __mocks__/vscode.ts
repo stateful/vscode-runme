@@ -9,7 +9,7 @@ export const notebooks = {
   createRendererMessaging: vi.fn().mockReturnValue({
     postMessage: vi.fn(),
     onDidReceiveMessage: vi.fn().mockReturnValue({ dispose: vi.fn() })
-  })
+  }),
 }
 
 export const Uri = {
@@ -23,8 +23,29 @@ export const workspace = {
   openTextDocument: vi.fn(),
   registerNotebookSerializer: vi.fn(),
   fs: {
-    readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file'))
-  }
+    readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
+  },
+  workspaceFolders: [
+    {
+      uri: {
+        fsPath: '/runme/workspace',
+      },
+    },
+  ],
+  findFiles: vi.fn().mockReturnValue([
+    {
+      path: 'runme/workspace/README.md',
+    },
+    {
+      path: 'runme/workspace/src/README.md',
+    },
+    {
+      path: 'runme/workspace/src/COMMANDS.md',
+    },
+    {
+      path: 'runme/workspace/src/RUNME.md',
+    }
+  ]),
 }
 
 export const terminal = {
@@ -39,7 +60,7 @@ export const window = {
   showNotebookDocument: vi.fn(),
   showTextDocument: vi.fn(),
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),
-  registerTreeDataProvider: vi.fn(),
+  registerTreeDataProvider: vi.fn()
 }
 
 export const tasks = {
@@ -51,7 +72,7 @@ export const commands = {
   executeCommand: vi.fn()
 }
 
-export enum ViewColumn  {
+export enum ViewColumn {
   Beside = 'Beside'
 }
 
@@ -69,9 +90,9 @@ export enum NotebookCellKind {
   Markup = 2
 }
 
-export const TreeItem = vi.fn();
-export const EventEmitter = vi.fn();
-export const Event = vi.fn();
+export const TreeItem = vi.fn()
+export const EventEmitter = vi.fn()
+export const Event = vi.fn()
 
 export enum TreeItemCollapsibleState {
   None = 0,

@@ -4,7 +4,7 @@ import { workspace, notebooks, commands, ExtensionContext, tasks, window } from 
 import { Kernel } from './kernel'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { resetEnv } from './utils'
+import { getDefaultWorkspace, resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
@@ -51,7 +51,7 @@ export class RunmeExtension {
       commands.registerCommand('runme.new', createNewRunmeNotebook),
       commands.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
-      window.registerTreeDataProvider('runme.launcher', new RunmeLauncherProvider())
+      window.registerTreeDataProvider('runme.launcher', new RunmeLauncherProvider(getDefaultWorkspace()))
     )
 
     /**

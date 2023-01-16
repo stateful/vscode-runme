@@ -31,13 +31,7 @@ export class RunmeFile extends vscode.TreeItem {
 
 export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile> {
   private filesTree: Map<string, any>
-  private workspaceRoot: string
-  constructor() {
-    const rootPath =
-      vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-        ? vscode.workspace.workspaceFolders[0].uri.fsPath
-        : undefined
-    this.workspaceRoot = rootPath || ''
+  constructor(private workspaceRoot?: string | undefined) {
     this.filesTree = new Map()
   }
 
@@ -94,7 +88,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
     for (const { path } of files) {
       const info = basename(path)
       const folderPath = dirname(path)
-      const folderName = dirname(path).replace(resolve(__dirname, '..'), '') || this.workspaceRoot
+      const folderName = dirname(path).replace(resolve(__dirname, '..'), '')
       if (!this.filesTree.has(folderName)) {
         this.filesTree.set(folderName, { files: [info], folderPath })
       } else {
@@ -105,7 +99,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
 
     for (const folder of this.filesTree.keys()) {
       runmeFileCollection.push(
-        new RunmeFile(folder || basename(this.workspaceRoot), {
+        new RunmeFile(folder || basename(this.workspaceRoot || ''), {
           collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
           tooltip: 'Click to open runme files from folder',
           lightIcon: 'folder.svg',
