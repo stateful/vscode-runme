@@ -9,7 +9,7 @@ test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)
-  expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(5)
+  expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(8)
+  expect(commands.registerCommand).toBeCalledTimes(9)
 })

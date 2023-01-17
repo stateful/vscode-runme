@@ -7,7 +7,7 @@ import {
 
 import { Kernel } from '../kernel'
 import { CliProvider } from '../provider/cli'
-import { getMetadata, getTerminalByCell } from '../utils'
+import { getAnnotations, getTerminalByCell } from '../utils'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -44,14 +44,14 @@ export async function runCLICommand (cell: NotebookCell) {
       Uri.parse('https://github.com/stateful/runme/releases')
     ))
   }
-  const metadata = getMetadata(cell)
-  const term = window.createTerminal(`CLI: ${metadata.name}`)
+  const annotations = getAnnotations(cell)
+  const term = window.createTerminal(`CLI: ${annotations.name}`)
   const args = [
     `--chdir="${path.dirname(cell.document.uri.fsPath)}"`,
     `--filename="${path.basename(cell.document.uri.fsPath)}"`
   ]
   term.show(false)
-  term.sendText(`runme run ${metadata.name} ${args.join(' ')}`)
+  term.sendText(`runme run ${annotations.name} ${args.join(' ')}`)
 }
 export function openAsRunmeNotebook (doc: NotebookDocument) {
   window.showNotebookDocument(doc, {

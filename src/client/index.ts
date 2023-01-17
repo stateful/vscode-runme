@@ -48,6 +48,11 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           outputItemElem.setAttribute('content', content)
           element.appendChild(outputItemElem)
           break
+        case OutputType.annotations:
+          const annoElem = document.createElement('edit-annotations')
+          annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
+          element.appendChild(annoElem)
+          break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`
           break

@@ -7,6 +7,7 @@ export enum OutputType {
   vercel = 'stateful.runme/vercel-stdout',
   deno = 'stateful.runme/deno-stdout',
   outputItems = 'stateful.runme/output-items',
+  annotations = 'stateful.runme/annotations',
   error = 'stateful.runme/error'
 }
 
@@ -16,7 +17,8 @@ export enum ClientMessages {
   update = 'deno:deploymentUpdate',
   deployed = 'deno:finishedDeployment',
   promote = 'deno:promoteDeployment',
-  prod = 'vercel:promotePreview'
+  prod = 'vercel:promotePreview',
+  mutateAnnotations = 'annotations:mutate'
 }
 
 export const METADATA_DEFAULTS = {

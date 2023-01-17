@@ -33,6 +33,7 @@ export namespace WasmLib {
     closeTerminalOnSuccess?: string
     mimeType?: string
     ['runme.dev/name']?: string
+    ['runme.dev/uuid']?: string
   }
 }
 
@@ -62,6 +63,9 @@ interface Payload {
     outputItems: string[]
   }
   [OutputType.outputItems]: OutputItemsPayload
+  [OutputType.annotations]: {
+    annotations?: NotebookCellAnnotations
+  }
 }
 
 export interface ClientMessage <T extends ClientMessages> {
@@ -77,6 +81,9 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.prod]: {
     cellIndex: number
+  }
+  [ClientMessages.mutateAnnotations]: {
+    annotations: NotebookCellAnnotations
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
@@ -96,7 +103,8 @@ export interface RunmeTaskDefinition {
   cwd?: string
 }
 
-export interface NotebookCellMetadata {
+export interface NotebookCellAnnotations {
+  'runme.dev/uuid': string
   background: boolean
   interactive: boolean
   closeTerminalOnSuccess: boolean
