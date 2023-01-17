@@ -7,7 +7,10 @@ import { getAnnotations } from '../utils'
 
 
 export class AnnotationsProvider implements vscode.NotebookCellStatusBarItemProvider {
+  readonly #hasAnnotationsEditExperimentEnabled: boolean
   constructor(private readonly runmeKernel: RunmeKernel) {
+    const config = vscode.workspace.getConfiguration('runme.experiments')
+    this.#hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', false)
     vscode.commands.registerCommand('runme.openCellAnnotations', async (cell: NotebookCell) => {
       try {
         const exec = await runmeKernel.createCellExecution(cell)
@@ -32,6 +35,10 @@ export class AnnotationsProvider implements vscode.NotebookCellStatusBarItemProv
   }
 
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+    if (!this.#hasAnnotationsEditExperimentEnabled) {
+      return
+    }
+
     const item = new vscode.NotebookCellStatusBarItem(
       '$(output-view-icon) Annotations',
       vscode.NotebookCellStatusBarAlignment.Right
