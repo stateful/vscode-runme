@@ -1,9 +1,9 @@
 import {
   Disposable, notebooks, window, workspace, ExtensionContext,
-  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, NotebookData, WorkspaceEdit, NotebookEdit
+  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, WorkspaceEdit, NotebookEdit
 } from 'vscode'
 
-import type { ClientMessage, NotebookCellAnnotations } from '../types'
+import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
@@ -28,7 +28,6 @@ export interface RunmeKernel {
 export class Kernel implements RunmeKernel, Disposable {
   static readonly type = 'runme' as const
 
-  #annotationsEditors = new Map<string, AnnotationsEditor>
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -62,13 +61,6 @@ export class Kernel implements RunmeKernel, Disposable {
     if (message.type === ClientMessages.mutateAnnotations) {
       const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
-      if (!this.#annotationsEditors.has(editor.notebook.uri.fsPath)) {
-        this.#annotationsEditors.set(
-          editor.notebook.uri.fsPath,
-          new AnnotationsEditor()
-        )
-      }
-
       let editCell: NotebookCell | undefined = undefined
       for (const document of workspace.notebookDocuments) {
         for (const cell of document.getCells()) {
@@ -87,15 +79,15 @@ export class Kernel implements RunmeKernel, Disposable {
         }
 		}
 
-      // const annosEditor = this.#annotationsEditors.get(editor.notebook.uri.fsPath)!
-      // annosEditor.mutate(payload.output.annotations)
       if (editCell) {
         const edit = new WorkspaceEdit()
-        const nbEdit = NotebookEdit.updateCellMetadata(editCell.index, {
+        const newMetadata = {
+          ...editCell.metadata,
           ...payload.output.annotations,
-        })
+        }
+        const notebookEdit = NotebookEdit.updateCellMetadata(editCell.index, newMetadata)
 
-        edit.set(editCell.notebook.uri, [nbEdit])
+        edit.set(editCell.notebook.uri, [notebookEdit])
         await workspace.applyEdit(edit)
       }
 
@@ -207,36 +199,5 @@ export class Kernel implements RunmeKernel, Disposable {
 
     const runmeTerminal = new ExperimentalTerminal(editor.notebook)
     this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
-  }
-}
-
-
-export type CellAnnotations = NotebookCellAnnotations[]
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class AnnotationsEditor {
-  private cellAnnotations: CellAnnotations = []
-
-  reset() {
-    this.cellAnnotations = []
-  }
-
-  mutate(cell: NotebookCellAnnotations) {
-    const idx = this.cellAnnotations.findIndex(c => c['runme.dev/uuid'] === cell['runme.dev/uuid'])
-    if (idx > -1) {
-      this.cellAnnotations[idx] = cell
-    } else {
-      this.cellAnnotations.push(cell)
-    }
-  }
-
-  reconcile(data: NotebookData) {
-    for (const canno of this.cellAnnotations) {
-      const idx = data.cells.findIndex(cell => cell.metadata?.['runme.dev/uuid'] === canno['runme.dev/uuid'])
-      if (idx > -1) {
-        data.cells[idx].metadata = { ...data.cells[idx].metadata, ...canno }
-      }
-    }
-    return data
   }
 }

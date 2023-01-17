@@ -8,6 +8,9 @@ import type { ClientMessage, NotebookCellAnnotations } from '../../types'
 import { getContext } from '../utils'
 import '@vscode/webview-ui-toolkit/dist/data-grid/index'
 
+type AnnotationsMutation = Partial<NotebookCellAnnotations>
+type AnnotationsKey = keyof NotebookCellAnnotations
+
 @customElement('edit-annotations')
 export class Annotations extends LitElement {
   // Define scoped styles right with your component, in plain CSS
@@ -41,23 +44,26 @@ export class Annotations extends LitElement {
   @property({ type: Object, reflect: true })
   annotations?: NotebookCellAnnotations
 
-  #onChange(e: { target: { id: string, checked: boolean, value: string, type: string } }) {
+  #onChange(e: { target: { id: AnnotationsKey, checked: boolean, value: string, type: string } }) {
     if (!this.annotations || !e.target) {
       return
     }
 
+    const propVal: any = { 'runme.dev/uuid': this.annotations['runme.dev/uuid'] }
+    const propName = e.target.id
     switch (e.target.type) {
       case 'text':
-        (this.annotations as any)[e.target.id] = e.target.value
-        break
+        (this.annotations as any)[propName] = e.target.value
+        propVal[propName] = e.target.value
+        return this.#dispatch(propVal)
       default:
         (this.annotations as any)[e.target.id] = e.target.checked.toString()
+        propVal[propName] = e.target.checked
+        return this.#dispatch(propVal)
     }
-
-    this.#dispatch()
   }
 
-  #dispatch() {
+  #dispatch(prop: AnnotationsMutation) {
     const ctx = getContext()
     if (!ctx.postMessage) {
       return
@@ -65,7 +71,7 @@ export class Annotations extends LitElement {
 
     ctx.postMessage(<ClientMessage<ClientMessages.mutateAnnotations>>{
       type: ClientMessages.mutateAnnotations,
-      output: { annotations: this.annotations }
+      output: { annotations: prop }
     })
   }
 
