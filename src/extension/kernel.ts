@@ -21,12 +21,10 @@ enum ConfirmationItems {
   Cancel = 'Cancel'
 }
 
-export interface RunmeKernel {
-  createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution>
-}
-
-export class Kernel implements RunmeKernel, Disposable {
+export class Kernel implements Disposable {
   static readonly type = 'runme' as const
+
+  readonly hasAnnotationsEditExperimentEnabled: boolean
 
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
@@ -38,6 +36,9 @@ export class Kernel implements RunmeKernel, Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
+    const config = workspace.getConfiguration('runme.experiments')
+    this.hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', false)
+
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'

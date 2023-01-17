@@ -196,6 +196,12 @@
             "scope": "machine",
             "default": false,
             "markdownDescription": "If set to `true`, you will executing code blocks natively through the Runme CLI (very experimental)."
+          },
+          "runme.experiments.annotationsEdit": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, a button per cell will allow you to drop into a annotations editor."
           }
         }
       }

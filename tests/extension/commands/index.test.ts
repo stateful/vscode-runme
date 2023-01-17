@@ -23,12 +23,12 @@ import {
   stopBackgroundTask,
   createNewRunmeNotebook
 } from '../../../src/extension/commands'
-import { getTerminalByCell, getMetadata } from '../../../src/extension/utils'
+import { getTerminalByCell, getAnnotations } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('../../../src/extension/utils', () => ({
-  getMetadata: vi.fn(),
+  getAnnotations: vi.fn(),
   getTerminalByCell: vi.fn()
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
@@ -40,7 +40,7 @@ vi.mock('../../../src/extension/provider/cli', () => ({
 beforeEach(() => {
   vi.mocked(window.showWarningMessage).mockClear()
   vi.mocked(window.showInformationMessage).mockClear()
-  vi.mocked(getMetadata).mockClear()
+  vi.mocked(getAnnotations).mockClear()
 })
 
 test('openTerminal', () => {
@@ -74,7 +74,7 @@ test('runCLICommand if CLI is installed', async () => {
     document: { uri: { fsPath: '/foo/bar/README.md' }}
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
-  vi.mocked(getMetadata).mockReturnValue(cell.metadata)
+  vi.mocked(getAnnotations).mockReturnValue(cell.metadata)
   await runCLICommand(cell)
   expect(window.createTerminal).toBeCalledWith('CLI: foobar')
   expect(terminal.show).toBeCalledTimes(1)

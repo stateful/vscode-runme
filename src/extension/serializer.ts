@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   window,
   commands,
@@ -9,19 +8,14 @@ import {
   NotebookCellData,
   NotebookCellKind,
   CancellationToken,
-  notebooks,
-  Disposable,
-  EventEmitter,
-  NotebookEditor,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
-import { ClientMessage, NotebookCellAnnotations, WasmLib } from '../types'
-import { ClientMessages } from '../constants'
+import { WasmLib } from '../types'
 
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { canEditFile, getAnnotations, initWasm } from './utils'
+import { canEditFile, initWasm } from './utils'
 
 
 declare var globalThis: any
@@ -30,8 +24,6 @@ const DEFAULT_LANG_ID = 'text'
 export class Serializer implements NotebookSerializer {
   private readonly wasmReady: Promise<Error | void>
   private readonly languages: Languages
-  #disposables: Disposable[] = []
-  protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(private context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
@@ -41,12 +33,11 @@ export class Serializer implements NotebookSerializer {
       'runme.wasm'
     )
     this.wasmReady = initWasm(wasmUri)
-
-    this.messaging.postMessage({ from: 'kernel' })
   }
 
   public async serializeNotebook(
     data: NotebookData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken
   ): Promise<Uint8Array> {
     if (!window.activeNotebookEditor) {
@@ -92,6 +83,7 @@ export class Serializer implements NotebookSerializer {
 
   public async deserializeNotebook(
     content: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken
   ): Promise<NotebookData> {
     let notebook: WasmLib.Notebook

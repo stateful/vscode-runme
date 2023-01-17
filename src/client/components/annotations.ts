@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LitElement, css, html, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
@@ -154,11 +153,5 @@ export class Annotations extends LitElement {
 
   #reset() {
     throw new Error('not implemented yet')
-  }
-}
-
-function fromObjAttr(prop: string) {
-  return function (value: string, type: object) {
-    return JSON.parse(value)[prop]
   }
 }

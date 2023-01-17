@@ -10,7 +10,7 @@ vi.mock('vscode')
 vi.mock('../../src/extension/utils', () => ({
   resetEnv: vi.fn(),
   getKey: vi.fn().mockReturnValue('foobar'),
-  getMetadata: vi.fn((cell) => cell.metadata),
+  getAnnotations: vi.fn((cell) => cell.metadata),
 }))
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() }
