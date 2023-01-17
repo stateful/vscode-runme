@@ -21,7 +21,7 @@ export class Annotations extends LitElement {
 
     section {
       padding: 10px;
-      border: 1px solid #444;
+      border: 1px solid var(--vscode-input-border);
       border-radius: 5px;
       display: flex;
       flex-direction: row;
