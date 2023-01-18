@@ -6,7 +6,7 @@ import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 
 import { METADATA_DEFAULTS } from '../constants'
-import { NotebookCellAnnotations, WasmLib } from '../types'
+import { NotebookCellAnnotations, Serializer } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -21,11 +21,11 @@ const TRUTHY_VALUES = ['1', 'true']
  * Annotations are stored as subset of metadata
  */
 export function getAnnotations(cell: vscode.NotebookCell): NotebookCellAnnotations
-export function getAnnotations(metadata?: WasmLib.Metadata): NotebookCellAnnotations
+export function getAnnotations(metadata?: Serializer.Metadata): NotebookCellAnnotations
 export function getAnnotations(raw: unknown): NotebookCellAnnotations {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
-  let metadata = raw as WasmLib.Metadata
+  let metadata = raw as Serializer.Metadata
 
   if (metadataFromCell.metadata) {
     metadata = metadataFromCell.metadata
