@@ -202,6 +202,12 @@
             "scope": "machine",
             "default": false,
             "markdownDescription": "If set to `true`, you will executing code blocks natively through the Runme CLI (very experimental)."
+          },
+          "runme.experiments.grpcSerializer": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC interface (experimental)."
           }
         }
       }
@@ -340,6 +346,11 @@
     "@vercel/frameworks": "^1.2.4",
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.2-20230118170932-d5682c4caed4.1",
+    "@grpc/grpc-js": "^1.8.4",
+    "@protobuf-ts/grpc-transport": "^2.8.2",
+    "@protobuf-ts/runtime": "^2.8.2",
+    "@protobuf-ts/runtime-rpc": "^2.8.2",
     "filenamify": "^5.1.1",
     "get-port": "^6.1.2",
     "got": "^12.5.3",

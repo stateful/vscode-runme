@@ -25,6 +25,8 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
+  readonly experiments = new Map<string, boolean>()
+
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -35,6 +37,9 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
+    const config = workspace.getConfiguration('runme.experiments')
+    this.experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
+
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'

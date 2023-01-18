@@ -18,14 +18,15 @@ import {
   stopBackgroundTask,
   createNewRunmeNotebook
 } from './commands'
-import { WasmSerializer } from './serializer'
+import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
-    const serializer = new WasmSerializer(context)
+    const grpcSerializer = kernel.experiments.get('grpcSerializer')
+    const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     context.subscriptions.push(
       kernel,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {

@@ -10,19 +10,27 @@ import {
   CancellationToken,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
+// eslint-disable-next-line max-len
+import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb.client'
+import {
+  DeserializeRequest,
+  SerializeRequest,
+} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 import { Serializer } from '../types'
 
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { canEditFile, initWasm } from './utils'
+import { canEditFile, initGrpc, initWasm } from './utils'
 
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 
+type ReadyPromise = Promise<void | Error>
+
 export abstract class SerializerBase implements NotebookSerializer {
-  protected readonly abstract ready: Promise<Error | void>
+  protected readonly abstract ready: ReadyPromise
   protected readonly languages: Languages
 
   constructor(protected context: ExtensionContext) {
@@ -178,7 +186,7 @@ export abstract class SerializerBase implements NotebookSerializer {
 }
 
 export class WasmSerializer extends SerializerBase {
-  protected readonly ready: Promise<Error | void>
+  protected readonly ready: ReadyPromise
 
   constructor(protected context: ExtensionContext) {
     super(context)
@@ -218,5 +226,55 @@ export class WasmSerializer extends SerializerBase {
       return this.printCell('⚠️ __Error__: no cells found!')
     }
     return notebook
+  }
+}
+
+export class GrpcSerializer extends SerializerBase {
+  private client?: ParserServiceClient
+  protected ready: ReadyPromise
+
+  constructor(protected context: ExtensionContext) {
+    super(context)
+
+    this.ready = initGrpc()
+      .then((c) => {
+        this.client = c
+        return
+      })
+      .catch((err) => err)
+  }
+
+  protected async saveNotebook(
+    notebook: unknown,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken
+  ): Promise<Uint8Array> {
+    const serialRequest = <SerializeRequest>{ notebook }
+
+    const request = await this.client!.serialize(serialRequest)
+
+    const { result } = request.response
+    if (result === undefined) {
+      throw new Error('serialization of notebook failed')
+    }
+
+    return result
+  }
+
+  protected async reviveNotebook(
+    content: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken
+  ): Promise<Serializer.Notebook> {
+    const deserialRequest = <DeserializeRequest>{ source: content }
+    const request = await this.client!.deserialize(deserialRequest)
+
+    const { notebook } = request.response
+    if (notebook === undefined) {
+      throw new Error('deserialization failed to revive notebook')
+    }
+
+    // we can remove ugly casting once we switch to GRPC
+    return (notebook as any) as Serializer.Notebook
   }
 }
