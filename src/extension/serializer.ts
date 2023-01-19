@@ -49,7 +49,15 @@ export abstract class SerializerBase implements NotebookSerializer {
     token: CancellationToken
   ): Promise<Uint8Array> {
     await this.preSaveCheck()
-    const encoded = await this.saveNotebook(data, token)
+
+    let encoded: Uint8Array
+    try {
+      encoded = await this.saveNotebook(data, token)
+    } catch(err: any) {
+      console.error(err)
+      throw err
+    }
+
     return encoded
   }
 
