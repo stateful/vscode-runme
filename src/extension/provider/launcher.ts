@@ -1,17 +1,27 @@
 import { join, basename, dirname, resolve } from 'node:path'
 
-import * as vscode from 'vscode'
+import {
+  TreeItem,
+  EventEmitter,
+  workspace,
+  TreeItemCollapsibleState,
+  Command,
+  TreeDataProvider,
+  Event,
+  Uri,
+  commands,
+} from 'vscode'
 
 interface IRunmeFileProps {
   tooltip: string
   lightIcon: string
   darkIcon: string
-  collapsibleState: vscode.TreeItemCollapsibleState
-  onSelectedCommand?: vscode.Command
+  collapsibleState: TreeItemCollapsibleState
+  onSelectedCommand?: Command
   contextValue: string
 }
 
-export class RunmeFile extends vscode.TreeItem {
+export class RunmeFile extends TreeItem {
   constructor(
     public readonly label: string,
     { collapsibleState, tooltip, onSelectedCommand, lightIcon, darkIcon, contextValue }: IRunmeFileProps
@@ -29,18 +39,18 @@ export class RunmeFile extends vscode.TreeItem {
   }
 }
 
-export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile> {
+export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
   private filesTree: Map<string, any>
   constructor(private workspaceRoot?: string | undefined) {
     this.filesTree = new Map()
   }
 
-  private _onDidChangeTreeData: vscode.EventEmitter<RunmeFile | undefined | void> = new vscode.EventEmitter<
+  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined | void> = new EventEmitter<
     RunmeFile | undefined | void
   >()
 
-  readonly onDidChangeTreeData: vscode.Event<RunmeFile | undefined | void> = this._onDidChangeTreeData.event
-  getTreeItem(element: RunmeFile): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  readonly onDidChangeTreeData: Event<RunmeFile | undefined | void> = this._onDidChangeTreeData.event
+  getTreeItem(element: RunmeFile): TreeItem | Thenable<TreeItem> {
     return element
   }
   getChildren(element?: RunmeFile | undefined): Thenable<RunmeFile[]> {
@@ -60,7 +70,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
     for (const file of files) {
       folderMarkdownItems.push(
         new RunmeFile(file, {
-          collapsibleState: vscode.TreeItemCollapsibleState.None,
+          collapsibleState: TreeItemCollapsibleState.None,
           tooltip: 'Click to open runme file',
           lightIcon: 'icon.gif',
           darkIcon: 'icon.gif',
@@ -83,7 +93,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
 
   async getRunmeFilesFromWorkspace(onComplete: (value: RunmeFile[]) => void): Promise<void> {
     const runmeFileCollection: RunmeFile[] = []
-    const files = await vscode.workspace.findFiles('**/*.md', '**/node_modules/**')
+    const files = await workspace.findFiles('**/*.md', '**/node_modules/**')
 
     for (const { path } of files) {
       const info = basename(path)
@@ -100,7 +110,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
     for (const folder of this.filesTree.keys()) {
       runmeFileCollection.push(
         new RunmeFile(folder || basename(this.workspaceRoot || ''), {
-          collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+          collapsibleState: TreeItemCollapsibleState.Collapsed,
           tooltip: 'Click to open runme files from folder',
           lightIcon: 'folder.svg',
           darkIcon: 'folder.svg',
@@ -112,7 +122,7 @@ export class RunmeLauncherProvider implements vscode.TreeDataProvider<RunmeFile>
   }
 
   public static async openFile({ file, folderPath }: { file: string, folderPath: string }) {
-    const doc = vscode.Uri.file(`${folderPath}/${file}`)
-    await vscode.commands.executeCommand('vscode.openWith', doc, 'runme')
+    const doc = Uri.file(`${folderPath}/${file}`)
+    await commands.executeCommand('vscode.openWith', doc, 'runme')
   }
 }
