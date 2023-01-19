@@ -18,7 +18,7 @@ vi.mock('vscode', () => ({
     NotebookCellStatusBarAlignment: {
       Right: 'right'
     },
-    EventEmitter: class { 
+    EventEmitter: class {
       fire = eventFired
     },
     window: {
@@ -30,11 +30,7 @@ vi.mock('vscode', () => ({
 vi.mock('../../../src/extension/utils', async () => {
   return ({
     getTerminalByCell: vi.fn(),
-    getAnnotations: vi.fn(),
-    DisposableRegistrar: class {
-      _register = vi.fn(x => x)
-      _disposables = []
-    }
+    getAnnotations: vi.fn()
   })
 })
 

@@ -9,7 +9,6 @@ import {
   normalizeLanguage,
   canEditFile,
   getAnnotations,
-  DisposableRegistrar,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -177,97 +176,5 @@ suite('canEditFile', () => {
     const notebookMock: any = JSON.parse(JSON.stringify(notebook))
     verifyCheckedInFile.mockResolvedValue(true)
     expect(await canEditFile(notebookMock, verifyCheckedInFile)).toBe(true)
-  })
-})
-
-suite('DisposableRegistrar', () => {
-  test('disposes all disposables', () => {
-    const disposable1 = { dispose: vi.fn() }
-    const disposable2 = { dispose: vi.fn() }
-    const disposable3 = { dispose: vi.fn() }
-    
-    class Registrar extends DisposableRegistrar { 
-      constructor() {
-        super()
-  
-        this._register(disposable1)
-        this._register(disposable2)
-        this._register(disposable3)
-      }
-    }
-  
-    const registrar = new Registrar()
-  
-    registrar.dispose()
-  
-    expect(disposable1.dispose).toBeCalledTimes(1)
-    expect(disposable1.dispose).toBeCalledWith()
-    expect(disposable2.dispose).toBeCalledTimes(1)
-    expect(disposable2.dispose).toBeCalledTimes(1)
-    expect(disposable3.dispose).toBeCalledWith()
-    expect(disposable3.dispose).toBeCalledWith()
-  })
-
-  test('disposes if already disposed', () => {
-    class Registrar extends DisposableRegistrar {
-      public register(disposable: vscode.Disposable) {
-        this._register(disposable)
-      }
-    }
-
-    const registrar = new Registrar()
-    registrar.dispose()
-
-    const disposable = { dispose: vi.fn() }
-    registrar.register(disposable)
-
-    expect(disposable.dispose).toBeCalledTimes(1)
-  })
-
-  test('throws single error if only one disposable error', () => {
-    const err = new Error()
-    const disposable1 = { dispose: () => { throw err } }
-    const disposable2 = { dispose: vi.fn() }
-
-    class Registrar extends DisposableRegistrar { 
-      constructor() {
-        super()
-
-        this._register(disposable1)
-        this._register(disposable2)
-      }
-    }
-    const registrar = new Registrar()
-
-    expect(() => registrar.dispose()).toThrowError(err)
-    expect(disposable2.dispose).toBeCalledTimes(1)
-  })
-
-  test('throws aggregate error if multiple disposable errors', () => {
-    const err1 = new Error()
-    const disposable1 = { dispose: () => { throw err1 } }
-    const err2 = new Error()
-    const disposable2 = { dispose: () => { throw err2 } }
-
-    class Registrar extends DisposableRegistrar { 
-      constructor() {
-        super()
-
-        this._register(disposable1)
-        this._register(disposable2)
-      }
-    }
-    const registrar = new Registrar()
-
-    try {
-      registrar.dispose()
-      throw new Error('Should not get here')
-    } catch(e) {
-      const { errors } = e as { errors: any[] }
-      
-      expect(errors).toHaveLength(2)
-      expect(errors[0]).toStrictEqual(err1)
-      expect(errors[1]).toStrictEqual(err2)
-    }
   })
 })

@@ -1,17 +1,15 @@
 import vscode from 'vscode'
 
-import { DisposableRegistrar, getTerminalByCell, getAnnotations } from '../utils'
+import { getAnnotations, getTerminalByCell } from '../utils'
 
-export class ShowTerminalProvider extends DisposableRegistrar implements vscode.NotebookCellStatusBarItemProvider {
-  private _onDidChangeCellStatusBarItems = this._register(new vscode.EventEmitter<void>())
+export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+  private _onDidChangeCellStatusBarItems = new vscode.EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
+  private _closeTerminalSubscription: vscode.Disposable
+
   constructor() {
-    super()
-    
-    this._disposables.push(
-      vscode.window.onDidCloseTerminal(() => this.refreshStatusBarItems())
-    )
+    this._closeTerminalSubscription = vscode.window.onDidCloseTerminal(() => this.refreshStatusBarItems())
   }
 
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
@@ -40,6 +38,11 @@ export class ShowTerminalProvider extends DisposableRegistrar implements vscode.
   refreshStatusBarItems() {
     this._onDidChangeCellStatusBarItems.fire()
   }
+
+	public dispose() {
+    this._onDidChangeCellStatusBarItems.dispose()
+    this._closeTerminalSubscription.dispose()
+	}
 }
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
