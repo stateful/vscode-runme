@@ -263,6 +263,21 @@
           }
         }
       }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "runme.launcher",
+          "name": "Runme Notebooks",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "runme.launcher",
+        "contents": "Open a workspace/folder to display Runme files here"
+      }
     ]
   },
   "scripts": {
@@ -274,7 +289,8 @@
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "npm run download:wasm",
     "test": "run-s test:*",
-    "test:lint": "eslint src --ext ts",
+    "test:lint": "eslint src tests --ext ts",
+    "test:lint:fix": "eslint src tests --ext ts --fix",
     "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
     "watch": "npm run build:dev -- --watch"
