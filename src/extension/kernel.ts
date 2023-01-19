@@ -25,7 +25,7 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
-  readonly experiments = new Map<string, boolean>()
+  readonly #experiments = new Map<string, boolean>()
 
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
@@ -38,7 +38,9 @@ export class Kernel implements Disposable {
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
+    this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
+    this.#experiments.set('annotationsEdit', config.get<boolean>('annotationsEdit', false))
+    this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
@@ -52,6 +54,10 @@ export class Kernel implements Disposable {
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this))
     )
+  }
+
+  hasExperimentEnabled(key: string, defaultValue?: boolean) {
+    return this.#experiments.get(key) || defaultValue
   }
 
   dispose () {
@@ -218,8 +224,7 @@ export class Kernel implements Disposable {
     /**
      * check if user is running experiment to execute shell via runme cli
      */
-    const config = workspace.getConfiguration('runme.experiments')
-    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    const hasPsuedoTerminalExperimentEnabled = this.hasExperimentEnabled('pseudoterminal')
     const terminal = this.#terminals.get(cell.document.uri.fsPath)
     const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
       ? await runme.call(this, exec, terminal)
