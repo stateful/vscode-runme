@@ -15,6 +15,7 @@ import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-pro
 import {
   DeserializeRequest,
   SerializeRequest,
+  Notebook,
 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 import { Serializer } from '../types'
@@ -253,10 +254,12 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebook(
-    notebook: unknown,
+    data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken
   ): Promise<Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const notebook = Notebook.clone(data as any)
     const serialRequest = <SerializeRequest>{ notebook }
 
     const request = await this.client!.serialize(serialRequest)
@@ -283,6 +286,6 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     // we can remove ugly casting once we switch to GRPC
-    return (notebook as any) as Serializer.Notebook
+    return (notebook as unknown) as Serializer.Notebook
   }
 }
