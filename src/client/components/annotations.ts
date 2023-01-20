@@ -49,6 +49,10 @@ export class Annotations extends LitElement {
     .annotation-item::part(label) {
       color: var(--vscode-foreground);
     }
+
+    .annotation-item::part(checked-indicator) {
+      fill: var(--vscode-foreground);
+    }
   `
 
   // Declare reactive properties
