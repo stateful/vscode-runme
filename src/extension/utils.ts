@@ -3,10 +3,6 @@ import util from 'node:util'
 import cp from 'node:child_process'
 
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
-import { ChannelCredentials } from '@grpc/grpc-js'
-import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-// eslint-disable-next-line max-len
-import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb.client.js'
 import { v5 as uuidv5 } from 'uuid'
 
 import { NotebookCellAnnotations, Serializer } from '../types'
@@ -201,7 +197,7 @@ export async function initWasm(wasmUri: Uri) {
 
 export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-    ? workspace.workspaceFolders[0].uri.fsPath
+      ? workspace.workspaceFolders[0].uri.fsPath
     : undefined
 }
 
@@ -242,13 +238,4 @@ export function hashDocumentUri(uri: string): string {
   const salt = vscode.env.machineId
   const namespace = uuidv5(salt, uuidv5.URL)
   return uuidv5(uri, namespace).toString()
-}
-
-export async function initGrpc(): Promise<ParserServiceClient> {
-  const transport = new GrpcTransport({
-      host: 'unix:///tmp/runme.sock',
-      channelCredentials: ChannelCredentials.createInsecure(),
-  })
-
-  return new ParserServiceClient(transport)
 }

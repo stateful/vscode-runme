@@ -10,6 +10,8 @@ import {
   CancellationToken,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
+import { ChannelCredentials } from '@grpc/grpc-js'
+import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 // eslint-disable-next-line max-len
 import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb.client'
 import {
@@ -22,8 +24,7 @@ import { Serializer } from '../types'
 
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { canEditFile, initGrpc, initWasm } from './utils'
-
+import { canEditFile, initWasm } from './utils'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -242,10 +243,19 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
 
+  static async initGrpc(): Promise<ParserServiceClient> {
+    const transport = new GrpcTransport({
+      host: 'unix:///tmp/runme.sock',
+      channelCredentials: ChannelCredentials.createInsecure(),
+    })
+
+    return new ParserServiceClient(transport)
+  }
+
   constructor(protected context: ExtensionContext) {
     super(context)
 
-    this.ready = initGrpc()
+    this.ready = GrpcSerializer.initGrpc()
       .then((c) => {
         this.client = c
         return
