@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit'
+import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
@@ -19,23 +19,19 @@ export class Annotations extends LitElement {
       font-family: Arial;
     }
 
-    section {
-      padding: 10px;
-      border: 1px solid var(--vscode-input-border);
+    .annotation-container {
+      padding: 1rem;
+      border: 1px solid var(--vscode-focusBorder);
       border-radius: 5px;
       display: flex;
-      flex-direction: row;
-      gap: 50px;
+      flex-direction: column;
       align-items: flex-start;
+      gap: 1rem;
+      width: 90%;
     }
 
-    img {
-      width: 100px;
-      padding: 20px;
-    }
-
-    h4 {
-      margin-bottom: 0;
+    .row {
+      width: 100%;
     }
   `
 
@@ -70,85 +66,56 @@ export class Annotations extends LitElement {
 
     ctx.postMessage(<ClientMessage<ClientMessages.mutateAnnotations>>{
       type: ClientMessages.mutateAnnotations,
-      output: { annotations: prop }
+      output: { annotations: prop },
     })
+  }
+
+  renderCheckbox(id: string, isChecked: boolean, isReadOnly: boolean) {
+    return html`<vscode-checkbox
+      id="${id}"
+      @change="${this.#onChange}"
+      checked="${isReadOnly ? true : isChecked}"
+      @blur="${this.#onChange}"
+      readonly=${isReadOnly}
+      >${id}</vscode-checkbox
+    >`
+  }
+
+  renderTextField(id: string, text: string, placeHolder: string = '') {
+    return html`<vscode-text-field
+      id="${id}"
+      type="text"
+      value="${text}"
+      @change="${this.#onChange}"
+      placeholder=${placeHolder}
+      size="50"
+    ></vscode-text-field>`
   }
 
   // Render the UI as a function of component state
   render() {
-    // const supportsMessaging = Boolean(getContext().postMessage)
     if (!this.annotations) {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }
 
-    const filtered = Object.entries(this.annotations).filter(
-      ([k]) => k.indexOf('runme.dev/') < 0
-    )
+    const displayableAnnotations = Object.entries(this.annotations).filter(([k]) => k.indexOf('runme.dev/') < 0)
 
-    const headers = filtered
-      .map(([id, val], i) => {
-        return html`<vscode-data-grid-cell
-          cell-type="columnheader"
-          grid-column="${i + 1}"
-        >
-          ${when(
-            ['true', 'false'].includes(val.toString()),
-            () => {
-              return html`<vscode-checkbox
-                id="${id}"
-                @change="${this.#onChange}"
-                checked="${val || nothing}"
-              >
-                ${id}
-              </vscode-checkbox>`
-            },
-            () => {
-              return html`<vscode-checkbox
-                id="${id}"
-                @change="${this.#onChange}"
-                @blur="${this.#onChange}"
-                checked
-                readonly
-              >
-                ${id}</vscode-checkbox
-              >`
-            }
-          )}
-        </vscode-data-grid-cell>`
-      })
-
-    const annos = filtered.map(([key, val], i) => {
-      return html`<vscode-data-grid-cell grid-column="${i + 1}">
+    const markup = displayableAnnotations.map(([key, value]) => {
+      return html`<div class="row">
         ${when(
-          !['true', 'false'].includes(val.toString()),
-          () => {
-            return html`<vscode-text-field
-              id="${key}"
-              type="text"
-              value="${val}"
-              @change="${this.#onChange}"
-            ></vscode-text-field>`
-          },
-          () => {
-            return html``
-          }
+          typeof value === 'boolean',
+          () => this.renderCheckbox(key, value, false),
+          () => html``
         )}
-      </vscode-data-grid-cell>`
+        ${when(
+          typeof value === 'string',
+          () => this.renderTextField(key, value, key),
+          () => html``
+        )}
+      </div>`
     })
 
-    return html` <section id="data-grid-row">
-      <vscode-data-grid
-        class="basic-grid"
-        generate-header="default"
-        grid-template-columns="17% 17% 32% 17% 17%"
-        aria-label="Cell Annotations"
-      >
-        <vscode-data-grid-row row-type="header">
-          ${headers}
-        </vscode-data-grid-row>
-        <vscode-data-grid-row> ${annos} </vscode-data-grid-row>
-      </vscode-data-grid>
-    </section>`
+    return html`<section class="annotation-container">${markup}</section>`
   }
 
   #reset() {

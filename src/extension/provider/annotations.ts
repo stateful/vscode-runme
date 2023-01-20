@@ -59,6 +59,8 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
       command: 'runme.openCellAnnotations',
       arguments: [cell],
     }
+
+    item.tooltip = 'Click to view/set annotations'
     return item
   }
 }
