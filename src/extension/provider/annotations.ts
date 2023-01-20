@@ -64,7 +64,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
       return
     }
 
-    if (cell.kind === NotebookCellKind.Markup) {
+    if (cell.kind !== NotebookCellKind.Code) {
       return
     }
 
