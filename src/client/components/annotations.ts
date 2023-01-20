@@ -55,9 +55,17 @@ export class Annotations extends LitElement {
     }
   `
 
+  readonly #descriptions = new Map<string, string>([
+    ['background', 'Run cell as background process']
+  ])
+
   // Declare reactive properties
   @property({ type: Object, reflect: true })
   annotations?: NotebookCellAnnotations
+
+  desc(id: string): string {
+    return this.#descriptions.get(id) || id
+  }
 
   #onChange(e: { target: { id: AnnotationsKey, checked: boolean, value: string, type: string } }) {
     if (!this.annotations || !e.target) {
@@ -73,7 +81,7 @@ export class Annotations extends LitElement {
         return this.#dispatch(propVal)
       default:
         (this.annotations as any)[e.target.id] = e.target.checked.toString()
-        propVal[propName] = e.target.checked
+        propVal[propName] = e.target.checked.toString()
         return this.#dispatch(propVal)
     }
   }

@@ -17,29 +17,41 @@ import { getAnnotations } from '../utils'
 export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   constructor(private readonly kernel: Kernel) {
     commands.registerCommand(
-      'runme.openCellAnnotations',
-      async (cell: NotebookCell) => {
-        try {
-          const exec = await kernel.createCellExecution(cell)
-          exec.start(Date.now())
-          const json = <CellOutputPayload<OutputType.annotations>>{
-            type: OutputType.annotations,
-            output: {
-              annotations: getAnnotations(cell),
-            },
-          }
-          await exec.replaceOutput([
-            new NotebookCellOutput([
-              NotebookCellOutputItem.json(json, OutputType.annotations),
-              NotebookCellOutputItem.json(json),
-            ]),
-          ])
-          exec.end(true)
-        } catch (e: any) {
-          window.showErrorMessage(e.message)
-        }
-      }
+      'runme.toggleCellAnnotations',
+      this.toggleCellAnnotations.bind(this)
     )
+  }
+
+  protected async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
+    const annotationsExists = cell.outputs.find((o) =>
+      o.items.find((oi) => oi.mime === OutputType.annotations)
+    )
+
+    try {
+      const exec = await this.kernel.createCellExecution(cell)
+      exec.start(Date.now())
+
+      if (!annotationsExists) {
+        const json = <CellOutputPayload<OutputType.annotations>>{
+          type: OutputType.annotations,
+          output: {
+            annotations: getAnnotations(cell),
+          },
+        }
+        await exec.replaceOutput([
+          new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.annotations),
+            NotebookCellOutputItem.json(json),
+          ]),
+        ])
+      } else {
+        exec.clearOutput()
+      }
+
+      exec.end(true)
+    } catch (e: any) {
+      window.showErrorMessage(e.message)
+    }
   }
 
   async provideCellStatusBarItems(
@@ -56,7 +68,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
 
     item.command = {
       title: 'Edit cell annotations',
-      command: 'runme.openCellAnnotations',
+      command: 'runme.toggleCellAnnotations',
       arguments: [cell],
     }
 
