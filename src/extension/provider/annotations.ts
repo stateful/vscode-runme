@@ -7,6 +7,7 @@ import {
   NotebookCellStatusBarItemProvider,
   NotebookCellStatusBarItem,
   NotebookCellStatusBarAlignment,
+  NotebookCellExecution,
 } from 'vscode'
 
 import { OutputType } from '../../constants'
@@ -27,30 +28,32 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
       o.items.find((oi) => oi.mime === OutputType.annotations)
     )
 
+    let exec
     try {
-      const exec = await this.kernel.createCellExecution(cell)
+      exec = await this.kernel.createCellExecution(cell)
       exec.start(Date.now())
 
-      if (!annotationsExists) {
-        const json = <CellOutputPayload<OutputType.annotations>>{
-          type: OutputType.annotations,
-          output: {
-            annotations: getAnnotations(cell),
-          },
-        }
-        await exec.replaceOutput([
-          new NotebookCellOutput([
-            NotebookCellOutputItem.json(json, OutputType.annotations),
-            NotebookCellOutputItem.json(json),
-          ]),
-        ])
-      } else {
+      if (annotationsExists) {
         exec.clearOutput()
+        return
       }
 
-      exec.end(true)
+      const json = <CellOutputPayload<OutputType.annotations>>{
+        type: OutputType.annotations,
+        output: {
+          annotations: getAnnotations(cell),
+        },
+      }
+      await exec.replaceOutput([
+        new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.annotations),
+          NotebookCellOutputItem.json(json),
+        ]),
+      ])
     } catch (e: any) {
       window.showErrorMessage(e.message)
+    } finally {
+      exec?.end(true)
     }
   }
 
@@ -62,7 +65,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
     }
 
     const item = new NotebookCellStatusBarItem(
-      '$(output-view-icon) Annotations',
+      '$(gear) Configure',
       NotebookCellStatusBarAlignment.Right
     )
 
