@@ -33,6 +33,22 @@ export class Annotations extends LitElement {
     .row {
       width: 100%;
     }
+
+    .annotation-item::part(control) {
+      background-color: var(--theme-input-background);
+      color: var(--vscode-foreground);
+      border: 1px solid var(--vscode-settings-numberInputBorder, transparent);
+    }
+
+    .annotation-item::part(root) {
+      background: transparent;
+      border:none;
+      color: var(--vscode-foreground);
+    }
+
+    .annotation-item::part(label) {
+      color: var(--vscode-foreground);
+    }
   `
 
   // Declare reactive properties
@@ -77,6 +93,7 @@ export class Annotations extends LitElement {
       checked="${isReadOnly ? true : isChecked}"
       @blur="${this.#onChange}"
       readonly=${isReadOnly}
+      class="annotation-item"
       >${id}</vscode-checkbox
     >`
   }
@@ -89,6 +106,7 @@ export class Annotations extends LitElement {
       @change="${this.#onChange}"
       placeholder=${placeHolder}
       size="50"
+      class="annotation-item"
     ></vscode-text-field>`
   }
 
