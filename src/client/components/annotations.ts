@@ -30,6 +30,10 @@ export class Annotations extends LitElement {
       width: 94%;
     }
 
+    .annotation-container h4 {
+      margin-block: 0;
+    }
+
     .row {
       width: 100%;
     }
@@ -149,7 +153,10 @@ export class Annotations extends LitElement {
       </div>`
     })
 
-    return html`<section class="annotation-container">${markup}</section>`
+    return html`<section class="annotation-container">
+      <h4>Configure cell's execution behavior:</h4>
+      ${markup}
+    </section>`
   }
 
   #reset() {
