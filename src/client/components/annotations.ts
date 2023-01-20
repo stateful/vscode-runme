@@ -27,7 +27,7 @@ export class Annotations extends LitElement {
       flex-direction: column;
       align-items: flex-start;
       gap: 1rem;
-      width: 90%;
+      width: 94%;
     }
 
     .row {
@@ -56,14 +56,18 @@ export class Annotations extends LitElement {
   `
 
   readonly #descriptions = new Map<string, string>([
-    ['background', 'Run cell as background process']
+    ['background', 'Run cell as background process (default: false)'],
+    ['interactive', 'Run cell inside terminal to allow for interactive input (default: true)'],
+    ['closeTerminalOnSuccess', 'Hide terminal after cell successful execution (default: true)'],
+    ['mimeType', 'Cell\'s ouput content MIME type (default: text/plain)'],
+    ['name', 'Cell\'s canonical name for easy referencing in the CLI (default: auto-generated)'],
   ])
 
   // Declare reactive properties
   @property({ type: Object, reflect: true })
   annotations?: NotebookCellAnnotations
 
-  desc(id: string): string {
+  #desc(id: string): string {
     return this.#descriptions.get(id) || id
   }
 
@@ -106,7 +110,7 @@ export class Annotations extends LitElement {
       @blur="${this.#onChange}"
       readonly=${isReadOnly}
       class="annotation-item"
-      >${id}</vscode-checkbox
+      ><b>${id}</b>: ${this.#desc(id)}</vscode-checkbox
     >`
   }
 
@@ -119,7 +123,7 @@ export class Annotations extends LitElement {
       placeholder=${placeHolder}
       size="50"
       class="annotation-item"
-    ></vscode-text-field>`
+    ><b>${id}: </b>${this.#desc(id)}</vscode-text-field>`
   }
 
   // Render the UI as a function of component state
