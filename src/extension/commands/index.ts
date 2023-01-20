@@ -55,7 +55,7 @@ export async function runCLICommand (cell: NotebookCell) {
 }
 export function openAsRunmeNotebook (doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
-    viewColumn: ViewColumn.Beside
+    viewColumn: ViewColumn.Active
   })
 }
 
