@@ -7,7 +7,7 @@ import {
   NotebookCellStatusBarItemProvider,
   NotebookCellStatusBarItem,
   NotebookCellStatusBarAlignment,
-  NotebookCellExecution,
+  NotebookCellKind,
 } from 'vscode'
 
 import { OutputType } from '../../constants'
@@ -61,6 +61,10 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
     cell: NotebookCell
   ): Promise<NotebookCellStatusBarItem | undefined> {
     if (!this.kernel.hasAnnotationsEditExperimentEnabled) {
+      return
+    }
+
+    if (cell.kind === NotebookCellKind.Markup) {
       return
     }
 
