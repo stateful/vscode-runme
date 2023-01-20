@@ -68,6 +68,10 @@
         "title": "Copy Cell Content into Clipboard"
       },
       {
+        "command": "runme.toggleCellAnnotations",
+        "title": "Toggle cell configuration UI"
+      },
+      {
         "command": "runme.runCliCommand",
         "title": "Run CLI command in new terminal"
       },
