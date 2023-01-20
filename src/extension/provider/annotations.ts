@@ -70,12 +70,12 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
     )
 
     item.command = {
-      title: 'Edit cell annotations',
+      title: 'Configure cell behavior',
       command: 'runme.toggleCellAnnotations',
       arguments: [cell],
     }
 
-    item.tooltip = 'Click to view/set annotations'
+    item.tooltip = 'Click to configure cell behavior'
     return item
   }
 }
