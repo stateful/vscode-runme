@@ -1,6 +1,8 @@
 import { NotebookCellKind } from 'vscode'
+import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
+
 
 export namespace WasmLib {
   export type Notebook = {
@@ -64,7 +66,7 @@ interface Payload {
   }
   [OutputType.outputItems]: OutputItemsPayload
   [OutputType.annotations]: {
-    annotations?: NotebookCellAnnotations
+    annotations?: CellAnnotations
   }
 }
 
@@ -83,7 +85,7 @@ export interface ClientMessagePayload {
     cellIndex: number
   }
   [ClientMessages.mutateAnnotations]: {
-    annotations: NotebookCellAnnotations
+    annotations: CellAnnotations
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
@@ -103,11 +105,26 @@ export interface RunmeTaskDefinition {
   cwd?: string
 }
 
-export interface NotebookCellAnnotations {
-  'runme.dev/uuid': string
-  background: boolean
-  interactive: boolean
-  closeTerminalOnSuccess: boolean
-  mimeType: string
-  name: string
-}
+const falseyBoolean = z.preprocess((subject) => {
+  if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
+    return false
+  }
+  return Boolean(subject)
+}, z.boolean())
+
+export const CellAnnotationsSchema = z.object({
+  'runme.dev/uuid': z.string(),
+  'background': falseyBoolean.default(false),
+  'interactive': falseyBoolean.default(true),
+  'closeTerminalOnSuccess': falseyBoolean.default(true),
+  'name': z.string(),
+  'mimeType': z.string().refine(subject => {
+    const parts = subject.split('/')
+    if (parts.length !== 2 || parts.find((p) => typeof p !== 'string')) {
+      return false
+    }
+    return true
+  }, 'mime type specification invalid format').default('text/plain'),
+})
+
+export type CellAnnotations = z.infer<typeof CellAnnotationsSchema>

@@ -130,8 +130,6 @@ export class Serializer implements NotebookSerializer {
     }
 
     const notebookData = new NotebookData(Serializer.revive(notebook))
-    // const cellAnnotations = notebookData.cells.map(c => getAnnotations(c.metadata))
-    // this.#annotationsEditor.reset(notebookData)
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     }

@@ -4,8 +4,7 @@ import cp from 'node:child_process'
 
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 
-import { METADATA_DEFAULTS } from '../constants'
-import { NotebookCellAnnotations, WasmLib } from '../types'
+import { CellAnnotations, CellAnnotationsSchema, WasmLib } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -14,14 +13,13 @@ import { ENV_STORE, DEFAULT_ENV } from './constants'
 declare var globalThis: any
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
-const TRUTHY_VALUES = ['1', 'true']
 
 /**
  * Annotations are stored as subset of metadata
  */
-export function getAnnotations(cell: vscode.NotebookCell): NotebookCellAnnotations
-export function getAnnotations(metadata?: WasmLib.Metadata): NotebookCellAnnotations
-export function getAnnotations(raw: unknown): NotebookCellAnnotations {
+export function getAnnotations(cell: vscode.NotebookCell): CellAnnotations
+export function getAnnotations(metadata?: WasmLib.Metadata): CellAnnotations
+export function getAnnotations(raw: unknown): CellAnnotations {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
   let metadata = raw as WasmLib.Metadata
@@ -30,31 +28,25 @@ export function getAnnotations(raw: unknown): NotebookCellAnnotations {
     metadata = metadataFromCell.metadata
   }
 
-  return <NotebookCellAnnotations>{
-    background:
-      typeof metadata.background === 'string'
-        ? TRUTHY_VALUES.includes(metadata.background)
-        : METADATA_DEFAULTS.background,
-    interactive:
-      typeof metadata.interactive === 'string'
-        ? TRUTHY_VALUES.includes(metadata.interactive)
-        : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
-    closeTerminalOnSuccess:
-      typeof metadata.closeTerminalOnSuccess === 'string'
-        ? TRUTHY_VALUES.includes(metadata.closeTerminalOnSuccess)
-        : config.get<boolean>(
-            'closeTerminalOnSuccess',
-            METADATA_DEFAULTS.closeTerminalOnSuccess
-          ),
-    mimeType:
-      typeof metadata.mimeType === 'string'
-        ? metadata.mimeType
-        : METADATA_DEFAULTS.mimeType,
+  const preValidation = {
+    interactive: config.get<boolean>('interactive'),
+    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
+    ...metadata,
     name:
       metadata['runme.dev/name'] ||
-      `Cell #${Math.random().toString().slice(2)}`,
+      `Cell ${metadata['runme.dev/uuid']}`,
     'runme.dev/uuid': metadata['runme.dev/uuid'],
   }
+
+  let result
+  try {
+    result = CellAnnotationsSchema.parse(preValidation)
+  } catch (err: any) {
+    console.error(`[Runme] Invalid annotations in metadata: ${err.message}`)
+    throw err
+  }
+
+  return result
 }
 
 export function getTerminalByCell (cell: vscode.NotebookCell) {
