@@ -83,7 +83,7 @@ test('runCLICommand if CLI is installed', async () => {
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
-  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside})
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined})
 })
 
 test('open Runme notebook in text editor', (file: TextDocument) => {
