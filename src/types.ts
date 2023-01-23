@@ -113,18 +113,21 @@ const falseyBoolean = z.preprocess((subject) => {
 }, z.boolean())
 
 export const CellAnnotationsSchema = z.object({
-  'runme.dev/uuid': z.string(),
-  'background': falseyBoolean.default(false),
-  'interactive': falseyBoolean.default(true),
-  'closeTerminalOnSuccess': falseyBoolean.default(true),
-  'name': z.string(),
-  'mimeType': z.string().refine(subject => {
-    const parts = subject.split('/')
-    if (parts.length !== 2 || parts.find((p) => typeof p !== 'string')) {
-      return false
-    }
-    return true
-  }, 'mime type specification invalid format').default('text/plain'),
+  'runme.dev/uuid': z.string().optional(),
+  background: falseyBoolean.default(false),
+  interactive: falseyBoolean.default(true),
+  closeTerminalOnSuccess: falseyBoolean.default(true),
+  name: z.string(),
+  mimeType: z
+    .string()
+    .refine((subject) => {
+      const parts = subject.split('/')
+      if (parts.length !== 2 || parts.find((p) => typeof p !== 'string')) {
+        return false
+      }
+      return true
+    }, 'mime type specification invalid format')
+    .default('text/plain'),
 })
 
 export type CellAnnotations = z.infer<typeof CellAnnotationsSchema>

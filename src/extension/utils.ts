@@ -42,7 +42,8 @@ export function getAnnotations(raw: unknown): CellAnnotations {
   try {
     result = CellAnnotationsSchema.parse(preValidation)
   } catch (err: any) {
-    console.error(`[Runme] Invalid annotations in metadata: ${err.message}`)
+    const message = err.format ? JSON.stringify(err.format()) : err.message
+    console.error(`[Runme] Invalid annotations in metadata: ${message}`)
     throw err
   }
 
