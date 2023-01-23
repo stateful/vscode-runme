@@ -37,7 +37,7 @@ export class Kernel implements Disposable {
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', false)
+    this.hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', true)
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false

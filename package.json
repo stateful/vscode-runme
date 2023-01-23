@@ -204,7 +204,7 @@
           "runme.experiments.annotationsEdit": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, a button per cell will allow you to drop into a annotations editor."
           }
         }
