@@ -60,10 +60,6 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(
     cell: NotebookCell
   ): Promise<NotebookCellStatusBarItem | undefined> {
-    if (!this.kernel.hasAnnotationsEditExperimentEnabled) {
-      return
-    }
-
     if (cell.kind !== NotebookCellKind.Code) {
       return
     }

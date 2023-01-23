@@ -24,8 +24,6 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
-  readonly hasAnnotationsEditExperimentEnabled: boolean
-
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -36,9 +34,6 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   constructor(protected context: ExtensionContext) {
-    const config = workspace.getConfiguration('runme.experiments')
-    this.hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', true)
-
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your README.md'
