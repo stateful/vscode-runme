@@ -98,7 +98,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
     for (const { path } of files) {
       const info = basename(path)
       const folderPath = dirname(path)
-      const folderName = dirname(path).replace(resolve(__dirname, '..'), '')
+      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '')
       if (!this.filesTree.has(folderName)) {
         this.filesTree.set(folderName, { files: [info], folderPath })
       } else {
