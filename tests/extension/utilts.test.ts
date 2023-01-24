@@ -226,4 +226,11 @@ suite('mapGitIgnoreToGlobFolders', () => {
     const globPatterns = mapGitIgnoreToGlobFolders(gitIgnoreContents.split('\n'))
     expect(globPatterns).toStrictEqual(expectedGlobPatterns)
   })
+
+  test('should handle empty gitignore file properly', () => {
+    const gitIgnoreContents = ''
+    const expectedGlobPatterns = []
+    const globPatterns = mapGitIgnoreToGlobFolders(gitIgnoreContents.split('\n'))
+    expect(globPatterns).toStrictEqual(expectedGlobPatterns)
+  })
 })

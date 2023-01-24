@@ -17,7 +17,7 @@ export const notebooks = {
 export const Uri = {
   joinPath: vi.fn().mockReturnValue('/foo/bar'),
   parse: vi.fn(),
-  file: vi.fn()
+  file: vi.fn().mockReturnValue('')
 }
 
 export const workspace = {
@@ -29,6 +29,7 @@ export const workspace = {
   registerNotebookSerializer: vi.fn(),
   fs: {
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
+    stat: vi.fn().mockResolvedValue(1)
   },
   workspaceFolders: [
     {
@@ -122,4 +123,43 @@ export enum FileType {
    * A symbolic link to a file.
    */
   SymbolicLink = 64
+}
+
+export enum NotebookCellStatusBarAlignment {
+  Left = 1,
+  Right = 2
+}
+
+export class NotebookCellStatusBarItem {
+  text: string;
+
+  alignment: NotebookCellStatusBarAlignment;
+
+  tooltip?: string;
+
+  priority?: number;
+
+  constructor(text: string, alignment: NotebookCellStatusBarAlignment) {}
+}
+
+
+
+export class NotebookCellOutputItem {
+
+  static json(value: any, mime?: string): NotebookCellOutputItem {
+    return {
+      mime: 'text/plain',
+      data: new Uint8Array()
+    }
+  }
+
+  mime: string;
+  data: Uint8Array;
+  constructor(data: Uint8Array, mime: string) {}
+}
+
+export class NotebookCellOutput {
+  items: NotebookCellOutputItem[];
+  metadata?: { [key: string]: any };
+  constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any }) {}
 }

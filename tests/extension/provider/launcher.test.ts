@@ -1,5 +1,5 @@
 import { vi, describe, it, expect } from 'vitest'
-import { FileType, commands } from 'vscode'
+import {  commands } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
@@ -7,14 +7,24 @@ import { getDefaultWorkspace } from '../../../src/extension/utils'
 
 vi.mock('vscode')
 
-vi.mock('../../../src/extension/utils', async () => {
-  const actual = await import('../../../src/extension/utils')
-  return  {
-    ...actual,
-    getPathType: vi.fn().mockResolvedValue(FileType.File),
-    getDefaultWorkspace: vi.fn().mockReturnValue('runme/workspace/src')
-  }
-})
+vi.mock('../../../src/extension/utils', () => ({
+  getPathType: vi.fn().mockResolvedValue(1),
+  getDefaultWorkspace: vi.fn().mockReturnValue('runme/workspace/src'),
+  mapGitIgnoreToGlobFolders: vi.fn().mockReturnValue([
+    '**/modules/**',
+    '**/out/**',
+    '**/node_modules/**',
+    '**/.vscode-test/**',
+    '**/wasm/**',
+    '**/coverage/**',
+    '**/tests/e2e/logs/**',
+    '**/tests/e2e/screenshots/**',
+    '**/coverage/config/**',
+    '**/abc/**/**',
+    '**/a/**/b/**',
+    '**/jspm_packages/**'
+  ])
+}))
 
 describe('Runme Notebooks', () => {
   it('returns an empty tree for empty workspace', async () => {
