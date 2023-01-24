@@ -207,22 +207,30 @@ export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
   )
 }
 
-export function convertGitIgnoreToGlobPatterns(gitignoreContents: string[]): Array<string | undefined> {
-  return gitignoreContents
-    .filter((entry) => entry)
-    .map((entry) => {
+
+export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<string | undefined> {
+  const entries = gitignoreContents
+    .filter((entry: string) => entry)
+    .map((entry: string) => entry.replace(/\s/g, ''))
+    .map((entry: string) => {
       if (entry) {
-        const starPlacement = entry.substring(0)
-        const slashPlacement = entry.substring(entry.length - 1)
+        let firstChar = entry.charAt(0)
+        if (firstChar === '!' || firstChar === '/') {
+          entry = entry.substring(1, entry.length)
+          firstChar = entry.charAt(0)
+        }
+        const hasExtension = path.extname(entry)
+        const slashPlacement = entry.charAt(entry.length - 1)
         if (slashPlacement === '/') {
-          return `${entry}**`
+          return `**/${entry}**`
         }
-
-        if (starPlacement === '*') {
-          return `**/${entry}/**`
+        if (hasExtension || ['.', '*', '#'].includes(firstChar)) {
+          return
         }
-
         return `**/${entry}/**`
       }
-    })
+    }).filter((entry: string | undefined) => entry)
+
+  return [...new Set(entries)]
 }
+

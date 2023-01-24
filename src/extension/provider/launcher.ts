@@ -13,7 +13,8 @@ import {
   FileType,
 } from 'vscode'
 
-import { convertGitIgnoreToGlobPatterns, getPathType } from '../utils'
+import { Kernel } from '../kernel'
+import { mapGitIgnoreToGlobFolders, getPathType } from '../utils'
 
 interface IRunmeFileProps {
   tooltip: string
@@ -104,7 +105,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
 
       if (hasGitDirectory) {
         const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
-        const patterns = convertGitIgnoreToGlobPatterns(ignoreList.getText().split('\n'))
+        const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
         excludePatterns = patterns.join(',')
       }
     }
@@ -134,11 +135,11 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
         })
       )
     }
-    onComplete(runmeFileCollection)
+    onComplete(runmeFileCollection.sort((a: RunmeFile,b: RunmeFile) => a.label.length > b.label.length ? 1 : -1 ))
   }
 
   public static async openFile({ file, folderPath }: { file: string, folderPath: string }) {
     const doc = Uri.file(`${folderPath}/${file}`)
-    await commands.executeCommand('vscode.openWith', doc, 'runme')
+    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
   }
 }

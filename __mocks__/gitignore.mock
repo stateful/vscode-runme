@@ -1,0 +1,17 @@
+out
+node_modules
+.vscode-test/
+*.vsix
+wasm
+.DS_Store
+coverage
+.wdio-vscode-service
+examples/fresh/deno.lock
+tests/e2e/logs
+tests/e2e/screenshots
+#Comment
+\#README
+!coverage/config
+abc/**
+a/**/b
+hello.*

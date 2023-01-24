@@ -1,10 +1,20 @@
 import { vi, describe, it, expect } from 'vitest'
+import { FileType, commands } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
-import { TreeItemCollapsibleState } from '../../../__mocks__/vscode'
+
 
 vi.mock('vscode')
+
+vi.mock('../../../src/extension/utils', async () => {
+  const actual = await import('../../../src/extension/utils')
+  return  {
+    ...actual,
+    getPathType: vi.fn().mockResolvedValue(FileType.File),
+    getDefaultWorkspace: vi.fn().mockReturnValue('runme/workspace/src')
+  }
+})
 
 describe('Runme Notebooks', () => {
   it('returns an empty tree for empty workspace', async () => {
@@ -22,7 +32,7 @@ describe('Runme Notebooks', () => {
 
     it('should return the items for the selected folder', async () => {
       const element = new RunmeFile('runme/workspace/src', {
-        collapsibleState: TreeItemCollapsibleState.None,
+        collapsibleState: 0,
         tooltip: 'Click to open runme file',
         lightIcon: 'icon.gif',
         darkIcon: 'icon.gif',
@@ -35,6 +45,13 @@ describe('Runme Notebooks', () => {
       })
       const treeItems = await launchProvider.getChildren(element)
       expect(treeItems.length).toStrictEqual(3)
+      expect(launchProvider.getTreeItem(element)).toStrictEqual(element)
+    })
+
+    it('should open a file using runme renderer', () => {
+      RunmeLauncherProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
+      expect(commands.executeCommand).toBeCalledTimes(1)
+      expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
     })
   })
 })

@@ -9,6 +9,7 @@ import {
   normalizeLanguage,
   canEditFile,
   getAnnotations,
+  mapGitIgnoreToGlobFolders,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -176,5 +177,53 @@ suite('canEditFile', () => {
     const notebookMock: any = JSON.parse(JSON.stringify(notebook))
     verifyCheckedInFile.mockResolvedValue(true)
     expect(await canEditFile(notebookMock, verifyCheckedInFile)).toBe(true)
+  })
+})
+
+suite('mapGitIgnoreToGlobFolders', () => {
+  test('map properly to glob patterns folders', () => {
+    const gitIgnoreContents = `
+    # Logs
+    report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+    yarn-error.log
+    modules/
+    out
+    node_modules
+    /node_modules
+    .vscode-test/
+    *.vsix
+    wasm
+    .DS_Store
+    coverage
+    .wdio-vscode-service
+    examples/fresh/deno.lock
+    tests/e2e/logs
+    tests/e2e/screenshots
+    #Comment
+    \#README
+    !coverage/config
+    abc/**
+    a/**/b
+    hello.*
+    jspm_packages/
+    `
+
+    const expectedGlobPatterns = [
+      '**/modules/**',
+      '**/out/**',
+      '**/node_modules/**',
+      '**/.vscode-test/**',
+      '**/wasm/**',
+      '**/coverage/**',
+      '**/tests/e2e/logs/**',
+      '**/tests/e2e/screenshots/**',
+      '**/coverage/config/**',
+      '**/abc/**/**',
+      '**/a/**/b/**',
+      '**/jspm_packages/**'
+    ]
+
+    const globPatterns = mapGitIgnoreToGlobFolders(gitIgnoreContents.split('\n'))
+    expect(globPatterns).toStrictEqual(expectedGlobPatterns)
   })
 })

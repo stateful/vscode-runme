@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { vi } from 'vitest'
 
 export const notebooks = {
@@ -14,13 +16,16 @@ export const notebooks = {
 
 export const Uri = {
   joinPath: vi.fn().mockReturnValue('/foo/bar'),
-  parse: vi.fn()
+  parse: vi.fn(),
+  file: vi.fn()
 }
 
 export const workspace = {
   getConfiguration: vi.fn().mockReturnValue(new Map()),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
-  openTextDocument: vi.fn(),
+  openTextDocument: vi.fn().mockReturnValue({
+    getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
+  }),
   registerNotebookSerializer: vi.fn(),
   fs: {
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
@@ -98,4 +103,23 @@ export enum TreeItemCollapsibleState {
   None = 0,
   Collapsed = 1,
   Expanded = 2
+}
+
+export enum FileType {
+  /**
+   * The file type is unknown.
+   */
+  Unknown = 0,
+  /**
+   * A regular file.
+   */
+  File = 1,
+  /**
+   * A directory.
+   */
+  Directory = 2,
+  /**
+   * A symbolic link to a file.
+   */
+  SymbolicLink = 64
 }
