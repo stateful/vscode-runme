@@ -44,7 +44,8 @@ export class Kernel implements Disposable {
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
+      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
+      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this))
     )
   }
 
@@ -54,8 +55,22 @@ export class Kernel implements Disposable {
     this.#disposables.forEach((d) => d.dispose())
   }
 
+  async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+    if (notebookType !== Kernel.type) {
+      return
+    }
+    const isReadme = uri.fsPath.toUpperCase().includes('README')
+    const hashed = hashDocumentUri(uri.toString())
+    TelemetryReporter.sendTelemetryEvent('notebook.save', {
+      'notebook.hashedUri': hashed,
+      'notebook.isReadme': isReadme.toString(),
+      'notebook.isUntitled': isUntitled.toString(),
+    })
+  }
+
+
   async #handleOpenNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
-    if (notebookType !== 'runme') {
+    if (notebookType !== Kernel.type) {
       return
     }
     const isReadme = uri.fsPath.toUpperCase().includes('README')
