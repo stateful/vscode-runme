@@ -7,6 +7,7 @@ import { OutputType } from '../../../src/constants'
 
 
 vi.mock('vscode')
+vi.mock('vscode-telemetry')
 
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn().mockReturnValue({
@@ -30,7 +31,7 @@ describe('Runme Annotations', () => {
   it('should register a command when initializing', () => {
     new AnnotationsProvider(kernel)
     expect(commands.registerCommand).toBeCalledTimes(1)
-    expect(commands.registerCommand).toBeCalledWith('runme.toggleCellAnnotations', expect.anything())
+    expect(commands.registerCommand).toBeCalledWith('runme.toggleCellAnnotations', expect.anything(), undefined)
   })
 
 
