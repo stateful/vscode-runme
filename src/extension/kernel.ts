@@ -2,6 +2,7 @@ import {
   Disposable, notebooks, window, workspace, ExtensionContext,
   NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, WorkspaceEdit, NotebookEdit
 } from 'vscode'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -125,6 +126,7 @@ export class Kernel implements Disposable {
     ) || 0
     const totalCellsToExecute = cells.length
     let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
+    let cellsExecuted = 0
 
     for (const cell of cells) {
       if (showConfirmPrompt) {
@@ -149,12 +151,22 @@ export class Kernel implements Disposable {
         }
 
         if (answer === ConfirmationItems.Cancel) {
+          TelemetryReporter.sendTelemetryEvent('executeAllCells', {
+            cellsTotal: totalNotebookCells?.toString(),
+            cellsExecuted: cellsExecuted?.toString(),
+          })
           return
         }
       }
 
       await this._doExecuteCell(cell)
+      cellsExecuted++
     }
+
+    TelemetryReporter.sendTelemetryEvent('executeAllCells', {
+      cellsTotal: totalNotebookCells?.toString(),
+      cellsExecuted: cellsExecuted?.toString(),
+    })
   }
 
   public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
@@ -165,6 +177,7 @@ export class Kernel implements Disposable {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
     const exec = await this.createCellExecution(cell)
 
+    TelemetryReporter.sendTelemetryEvent('startExecuteCell')
     exec.start(Date.now())
     let execKey = getKey(runningCell)
 
@@ -177,6 +190,7 @@ export class Kernel implements Disposable {
     const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
       ? await runme.call(this, exec, terminal)
       : await executor[execKey].call(this, exec, runningCell)
+    TelemetryReporter.sendTelemetryEvent('endExecuteCell', { success: successfulCellExecution?.toString() })
     exec.end(successfulCellExecution)
   }
 

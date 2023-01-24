@@ -4,6 +4,7 @@ import { notebooks, workspace, commands, window } from 'vscode'
 import { RunmeExtension } from '../../src/extension/extension'
 
 vi.mock('vscode')
+vi.mock('vscode-telemetry')
 
 test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }

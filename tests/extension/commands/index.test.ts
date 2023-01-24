@@ -27,6 +27,7 @@ import { getTerminalByCell, getAnnotations } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
+vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
   getTerminalByCell: vi.fn()

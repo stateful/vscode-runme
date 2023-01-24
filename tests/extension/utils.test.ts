@@ -26,6 +26,7 @@ vi.mock('vscode', () => ({
     }
   }
 }))
+vi.mock('vscode-telemetry')
 
 const PATH = process.env.PATH
 beforeAll(() => {
