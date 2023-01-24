@@ -27,6 +27,8 @@ export const workspace = {
     getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
   }),
   registerNotebookSerializer: vi.fn(),
+  onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   fs: {
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
     stat: vi.fn().mockResolvedValue(1)

@@ -3,6 +3,7 @@ import util from 'node:util'
 import cp from 'node:child_process'
 
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
+import { v5 as uuidv5 } from 'uuid'
 
 import { METADATA_DEFAULTS } from '../constants'
 import { NotebookCellAnnotations, WasmLib } from '../types'
@@ -207,7 +208,6 @@ export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
   )
 }
 
-
 export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<string | undefined> {
   const entries = gitignoreContents
     .filter((entry: string) => entry)
@@ -234,3 +234,8 @@ export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<st
   return [...new Set(entries)]
 }
 
+export function hashDocumentUri(uri: string): string {
+  const salt = vscode.env.machineId
+  const namespace = uuidv5(salt, uuidv5.URL)
+  return uuidv5(uri, namespace).toString()
+}

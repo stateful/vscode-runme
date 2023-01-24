@@ -6,6 +6,7 @@ import { getDefaultWorkspace } from '../../../src/extension/utils'
 
 
 vi.mock('vscode')
+vi.mock('vscode-telemetry')
 
 vi.mock('../../../src/extension/utils', () => ({
   getPathType: vi.fn().mockResolvedValue(1),

@@ -10,6 +10,7 @@ import {
   canEditFile,
   getAnnotations,
   mapGitIgnoreToGlobFolders,
+  hashDocumentUri,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 
@@ -23,9 +24,13 @@ vi.mock('vscode', () => ({
     },
     workspace: {
       getConfiguration: vi.fn()
+    },
+    env: {
+      machineId: 'test-machine-id'
     }
   }
 }))
+vi.mock('vscode-telemetry')
 
 const PATH = process.env.PATH
 beforeAll(() => {
@@ -233,4 +238,9 @@ suite('mapGitIgnoreToGlobFolders', () => {
     const globPatterns = mapGitIgnoreToGlobFolders(gitIgnoreContents.split('\n'))
     expect(globPatterns).toStrictEqual(expectedGlobPatterns)
   })
+})
+
+test('salt hash filename', () => {
+  const hashed = hashDocumentUri('file:///tmp/test/README.md')
+  expect(hashed).toBe('6617e96a-2b29-5457-b824-b161ebe678bc')
 })

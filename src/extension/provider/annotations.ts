@@ -1,6 +1,5 @@
 import {
   window,
-  commands,
   NotebookCell,
   NotebookCellOutput,
   NotebookCellOutputItem,
@@ -12,12 +11,13 @@ import {
 
 import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
+import { RunmeExtension } from '../extension'
 import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 
 export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   constructor(private readonly kernel: Kernel) {
-    commands.registerCommand(
+    RunmeExtension.registerCommand(
       'runme.toggleCellAnnotations',
       this.toggleCellAnnotations.bind(this)
     )

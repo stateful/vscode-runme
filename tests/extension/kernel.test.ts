@@ -4,9 +4,10 @@ import { window, NotebookCell } from 'vscode'
 import { Kernel } from '../../src/extension/kernel'
 import { resetEnv } from '../../src/extension/utils'
 import executors from '../../src/extension/executors'
-
+import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
 
 vi.mock('vscode')
+vi.mock('vscode-telemetry')
 vi.mock('../../src/extension/utils', () => ({
   resetEnv: vi.fn(),
   getKey: vi.fn().mockReturnValue('foobar'),
@@ -39,6 +40,10 @@ suite('_executeAll', async () => {
     k['_doExecuteCell'] = vi.fn()
     await k['_executeAll'](getCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(5)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '5', 'cells.total': '10' }
+    )
   })
 
   test('runs cells if answer is yes', async () => {
@@ -49,6 +54,10 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '10', 'cells.total': '10' }
+    )
   })
 
   test('do not show confirmation for notebooks with just one cell', async () => {
@@ -59,6 +68,10 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(1))
     expect(window.showQuickPick).toBeCalledTimes(0)
     expect(k['_doExecuteCell']).toBeCalledTimes(1)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '1', 'cells.total': '10' }
+    )
   })
 
   test('runs no cells if answer is no', async () => {
@@ -69,6 +82,10 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '0', 'cells.total': '10' }
+    )
   })
 
   test('cancels execution completely', async () => {
@@ -79,6 +96,10 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '0', 'cells.total': '10' }
+    )
   })
 
   test('skips prompt', async () => {
@@ -89,6 +110,10 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '10', 'cells.total': '10' }
+    )
   })
 })
 
@@ -97,4 +122,11 @@ test('_doExecuteCell', async () => {
   await k['_doExecuteCell']({ document: { uri: { fsPath: '/foo/bar' }} } as any)
   // @ts-expect-error mocked out
   expect(executors.foobar).toBeCalledTimes(1)
+  expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+    'cell.startExecute'
+  )
+  expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+    'cell.endExecute',
+    { success: undefined }
+  )
 })

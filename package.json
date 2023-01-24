@@ -280,8 +280,8 @@
   },
   "scripts": {
     "build": "run-s build:dev",
-    "build:dev": "webpack --mode development",
-    "build:prod": "webpack --mode production",
+    "build:dev": "webpack --mode development --node-env development",
+    "build:prod": "webpack --mode production --node-env production",
     "bundle": "vsce package --pre-release --npm --no-git-tag-version --no-update-package-json -o \"./runme-$npm_package_version.vsix\"",
     "download:wasm": "node .github/scripts/downloadWasm.js",
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
@@ -331,19 +331,20 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@vercel/client": "^12.2.24",
-    "@vercel/frameworks": "^1.1.15",
+    "@vercel/client": "^12.3.2",
+    "@vercel/frameworks": "^1.2.4",
     "@vscode/vscode-languagedetection": "^1.0.22",
-    "@vscode/webview-ui-toolkit": "1.1.0",
+    "@vscode/webview-ui-toolkit": "^1.2.1",
     "filenamify": "^5.1.1",
     "get-port": "^6.1.2",
     "got": "^12.5.3",
-    "lit": "^2.5.0",
+    "lit": "^2.6.1",
     "preact": "^10.11.3",
     "tmp-promise": "^3.0.3",
-    "undici": "^5.14.0",
+    "undici": "^5.16.0",
     "uuid": "^9.0.0",
-    "vercel": "^28.10.2",
+    "vercel": "^28.13.1",
+    "vscode-telemetry": "^0.3.1",
     "xdg-app-paths": "^8.2.0",
     "yargs": "^17.6.2"
   }
