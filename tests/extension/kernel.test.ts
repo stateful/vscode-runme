@@ -41,8 +41,8 @@ suite('_executeAll', async () => {
     await k['_executeAll'](getCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(5)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '5', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '5', 'cells.total': '10' }
     )
   })
 
@@ -55,8 +55,8 @@ suite('_executeAll', async () => {
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '10', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '10', 'cells.total': '10' }
     )
   })
 
@@ -69,8 +69,8 @@ suite('_executeAll', async () => {
     expect(window.showQuickPick).toBeCalledTimes(0)
     expect(k['_doExecuteCell']).toBeCalledTimes(1)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '1', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '1', 'cells.total': '10' }
     )
   })
 
@@ -83,8 +83,8 @@ suite('_executeAll', async () => {
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '0', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '0', 'cells.total': '10' }
     )
   })
 
@@ -97,8 +97,8 @@ suite('_executeAll', async () => {
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '0', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '0', 'cells.total': '10' }
     )
   })
 
@@ -111,8 +111,8 @@ suite('_executeAll', async () => {
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
-      'executeAllCells',
-      { cellsExecuted: '10', cellsTotal: '10' }
+      'cells.executeAll',
+      { 'cells.executed': '10', 'cells.total': '10' }
     )
   })
 })
@@ -123,10 +123,10 @@ test('_doExecuteCell', async () => {
   // @ts-expect-error mocked out
   expect(executors.foobar).toBeCalledTimes(1)
   expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
-    'startExecuteCell'
+    'cell.startExecute'
   )
   expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
-    'endExecuteCell',
+    'cell.endExecute',
     { success: undefined }
   )
 })
