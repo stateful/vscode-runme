@@ -57,15 +57,13 @@ jobs:
         run: npm run build:dev
         env:
           NODE_ENV: development
-          MARQUEE_INSTRUMENTATION_KEY: ${{ secrets.MARQUEE_INSTRUMENTATION_KEY }}
-          MARQUEE_INSTRUMENTATION_KEY_NEW: ${{ secrets.MARQUEE_INSTRUMENTATION_KEY_NEW }}
+          INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
       - name: Build Package
         run: npm run build:prod
         env:
           NODE_ENV: production
-          MARQUEE_INSTRUMENTATION_KEY: ${{ secrets.MARQUEE_INSTRUMENTATION_KEY }}
-          MARQUEE_INSTRUMENTATION_KEY_NEW: ${{ secrets.MARQUEE_INSTRUMENTATION_KEY_NEW }}
+          INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
       - name: Run Tests
         uses: GabrielBB/xvfb-action@v1
@@ -157,4 +155,4 @@ jobs:
         uses: stateful/vscode-server-action@v1
         if: failure()
         with:
-          timeout: '300000'
+          timeout: "300000"
