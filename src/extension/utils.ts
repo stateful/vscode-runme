@@ -42,34 +42,26 @@ export function getAnnotations(raw: unknown): NotebookCellAnnotations {
     closeTerminalOnSuccess:
       typeof metadata.closeTerminalOnSuccess === 'string'
         ? TRUTHY_VALUES.includes(metadata.closeTerminalOnSuccess)
-        : config.get<boolean>(
-            'closeTerminalOnSuccess',
-            METADATA_DEFAULTS.closeTerminalOnSuccess
-          ),
-    mimeType:
-      typeof metadata.mimeType === 'string'
-        ? metadata.mimeType
-        : METADATA_DEFAULTS.mimeType,
-    name:
-      metadata['runme.dev/name'] ||
-      `Cell #${Math.random().toString().slice(2)}`,
+        : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
+    mimeType: typeof metadata.mimeType === 'string' ? metadata.mimeType : METADATA_DEFAULTS.mimeType,
+    name: metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`,
     'runme.dev/uuid': metadata['runme.dev/uuid'],
   }
 }
 
-export function getTerminalByCell (cell: vscode.NotebookCell) {
+export function getTerminalByCell(cell: vscode.NotebookCell) {
   return vscode.window.terminals.find((t) => {
     const taskEnv = (t.creationOptions as vscode.TerminalOptions).env || {}
     return taskEnv.RUNME_ID === `${cell.document.fileName}:${cell.index}`
   })
 }
 
-export function resetEnv () {
+export function resetEnv() {
   [...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
   Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
 }
 
-export function getKey (runningCell: vscode.TextDocument): keyof typeof executor {
+export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
   const text = runningCell.getText()
   if (text.indexOf('deployctl deploy') > -1) {
     return 'deno'
@@ -85,9 +77,13 @@ export function getKey (runningCell: vscode.TextDocument): keyof typeof executor
  * which need to be executed in sequence
  */
 export function getCmdShellSeq(cellText: string, os: string): string {
-  const trimmed = cellText.trimStart()
-    .split('\\\n').map(l => l.trim()).join(' ')
-    .split('\n').map(l => {
+  const trimmed = cellText
+    .trimStart()
+    .split('\\\n')
+    .map((l) => l.trim())
+    .join(' ')
+    .split('\n')
+    .map((l) => {
       const hashPos = l.indexOf('#')
       if (hashPos > -1) {
         return l.substring(0, hashPos).trim()
@@ -100,12 +96,13 @@ export function getCmdShellSeq(cellText: string, os: string): string {
         return stripped
       }
     })
-    .filter(l => {
+    .filter((l) => {
       const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
       return l !== '' && !hasPrefix
-    }).join('; ')
+    })
+    .join('; ')
 
-  if (['darwin'].find(entry => entry === os)) {
+  if (['darwin'].find((entry) => entry === os)) {
     return `set -e -o pipefail; ${trimmed}`
   } else if (os.toLocaleLowerCase().startsWith('win')) {
     return trimmed
@@ -124,7 +121,7 @@ export function normalizeLanguage(l?: string) {
   }
 }
 
-export async function verifyCheckedInFile (filePath: string) {
+export async function verifyCheckedInFile(filePath: string) {
   const fileDir = path.dirname(filePath)
   const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => fileDir.includes(ws.uri.fsPath))
 
@@ -140,14 +137,16 @@ export async function verifyCheckedInFile (filePath: string) {
     return false
   }
 
-  const isCheckedIn = await util.promisify(cp.exec)(
-    `git ls-files --error-unmatch ${filePath}`,
-    { cwd: workspaceFolder.uri.fsPath }
-  ).then(() => true, () => false)
+  const isCheckedIn = await util
+    .promisify(cp.exec)(`git ls-files --error-unmatch ${filePath}`, { cwd: workspaceFolder.uri.fsPath })
+    .then(
+      () => true,
+      () => false
+    )
   return isCheckedIn
 }
 
-export async function canEditFile (
+export async function canEditFile(
   notebook: NotebookDocument,
   // for testing purposes only
   verifyCheckedInFileFn = verifyCheckedInFile
@@ -172,7 +171,8 @@ export async function canEditFile (
     /**
      * the user works on a checked in file
      */
-    !currentDocumentPath || (await verifyCheckedInFileFn(currentDocumentPath))
+    !currentDocumentPath ||
+    (await verifyCheckedInFileFn(currentDocumentPath))
   ) {
     return true
   }
@@ -196,5 +196,41 @@ export async function initWasm(wasmUri: Uri) {
 
 export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-  ? workspace.workspaceFolders[0].uri.fsPath : undefined
+    ? workspace.workspaceFolders[0].uri.fsPath
+    : undefined
 }
+
+export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
+  return workspace.fs.stat(uri).then(
+    (stat) => stat.type,
+    () => FileType.Unknown
+  )
+}
+
+
+export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<string | undefined> {
+  const entries = gitignoreContents
+    .filter((entry: string) => entry)
+    .map((entry: string) => entry.replace(/\s/g, ''))
+    .map((entry: string) => {
+      if (entry) {
+        let firstChar = entry.charAt(0)
+        if (firstChar === '!' || firstChar === '/') {
+          entry = entry.substring(1, entry.length)
+          firstChar = entry.charAt(0)
+        }
+        const hasExtension = path.extname(entry)
+        const slashPlacement = entry.charAt(entry.length - 1)
+        if (slashPlacement === '/') {
+          return `**/${entry}**`
+        }
+        if (hasExtension || ['.', '*', '#'].includes(firstChar)) {
+          return
+        }
+        return `**/${entry}/**`
+      }
+    }).filter((entry: string | undefined) => entry)
+
+  return [...new Set(entries)]
+}
+

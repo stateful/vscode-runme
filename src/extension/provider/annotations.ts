@@ -23,7 +23,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
     )
   }
 
-  protected async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
+  public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
     const annotationsExists = cell.outputs.find((o) =>
       o.items.find((oi) => oi.mime === OutputType.annotations)
     )

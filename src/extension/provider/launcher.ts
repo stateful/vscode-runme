@@ -10,7 +10,11 @@ import {
   Event,
   Uri,
   commands,
+  FileType,
 } from 'vscode'
+
+import { Kernel } from '../kernel'
+import { mapGitIgnoreToGlobFolders, getPathType } from '../utils'
 
 interface IRunmeFileProps {
   tooltip: string
@@ -93,12 +97,25 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
 
   async getRunmeFilesFromWorkspace(onComplete: (value: RunmeFile[]) => void): Promise<void> {
     const runmeFileCollection: RunmeFile[] = []
-    const files = await workspace.findFiles('**/*.md', '**/node_modules/**')
+    let excludePatterns
+
+    if (this.workspaceRoot) {
+      const gitIgnoreUri = Uri.parse(join(this.workspaceRoot, '.gitignore'))
+      const hasGitDirectory = (await getPathType(gitIgnoreUri)) === FileType.File
+
+      if (hasGitDirectory) {
+        const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
+        const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
+        excludePatterns = patterns.join(',')
+      }
+    }
+    const files = await workspace.findFiles('**/*.md', `{${excludePatterns}}`)
+    const rootFolder = basename(this.workspaceRoot || '')
 
     for (const { path } of files) {
       const info = basename(path)
       const folderPath = dirname(path)
-      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '')
+      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '') || rootFolder
       if (!this.filesTree.has(folderName)) {
         this.filesTree.set(folderName, { files: [info], folderPath })
       } else {
@@ -109,7 +126,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
 
     for (const folder of this.filesTree.keys()) {
       runmeFileCollection.push(
-        new RunmeFile(folder || basename(this.workspaceRoot || ''), {
+        new RunmeFile(folder || rootFolder, {
           collapsibleState: TreeItemCollapsibleState.Collapsed,
           tooltip: 'Click to open runme files from folder',
           lightIcon: 'folder.svg',
@@ -118,11 +135,11 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
         })
       )
     }
-    onComplete(runmeFileCollection)
+    onComplete(runmeFileCollection.sort((a: RunmeFile,b: RunmeFile) => a.label.length > b.label.length ? 1 : -1 ))
   }
 
   public static async openFile({ file, folderPath }: { file: string, folderPath: string }) {
     const doc = Uri.file(`${folderPath}/${file}`)
-    await commands.executeCommand('vscode.openWith', doc, 'runme')
+    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
   }
 }
