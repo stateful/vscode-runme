@@ -39,7 +39,6 @@ export class Kernel implements Disposable {
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
-    this.#experiments.set('annotationsEdit', config.get<boolean>('annotationsEdit', false))
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
 
     this.#controller.supportedLanguages = Object.keys(executor)
