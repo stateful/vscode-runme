@@ -101,6 +101,18 @@
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
+      },
+      {
+        "command": "runme.collapseTreeView",
+        "category": "Runme",
+        "title": "Collapse all items",
+        "icon": "$(debug-collapse-all)"
+      },
+      {
+        "command": "runme.expandTreeView",
+        "category": "Runme",
+        "title": "Expand all items",
+        "icon": "$(search-expand-results)"
       }
     ],
     "menus": {
@@ -120,6 +132,14 @@
         {
           "command": "runme.stopBackgroundTask",
           "when": "false"
+        },
+        {
+          "command": "runme.collapseTreeView",
+          "when": "false"
+        },
+        {
+          "command": "runme.expandTreeView",
+          "when": "false"
         }
       ],
       "editor/title": [
@@ -138,6 +158,18 @@
         {
           "command": "runme.new",
           "group": "notebook"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "runme.collapseTreeView",
+          "when": "view == runme.launcher && runme.launcher.isExpanded",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.expandTreeView",
+          "when": "view == runme.launcher && !runme.launcher.isExpanded",
+          "group": "navigation"
         }
       ]
     },
