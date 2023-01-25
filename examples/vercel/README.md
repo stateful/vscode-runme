@@ -94,6 +94,6 @@ vercel logout
 
 or call another command:
 
-```sh
+```sh { interactive=false }
 vercel domain
 ```
