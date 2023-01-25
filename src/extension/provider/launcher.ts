@@ -30,24 +30,23 @@ interface TreeFile {
   folderPath: string
 }
 
-export class RunmeFile extends TreeItem {
-  constructor(
-    public readonly label: string,
-    { collapsibleState, tooltip, onSelectedCommand, lightIcon, darkIcon, contextValue }: IRunmeFileProps
-  ) {
-    console.log('-->', label, collapsibleState, TreeItemCollapsibleState.Expanded)
+/**
+ * used to force VS Code update the tree view when user expands/collapses all
+ * see https://github.com/microsoft/vscode/issues/172479
+ */
+let i = 0
 
-    super(label, collapsibleState)
+export class RunmeFile extends TreeItem {
+  constructor(label: string, options: IRunmeFileProps) {
+    super(label, options.collapsibleState)
     const assetsPath = join(__filename, '..', '..', 'assets')
 
-    this.collapsibleState = collapsibleState
-    this.tooltip = tooltip
-    this.label = label
-    this.command = onSelectedCommand
-    this.contextValue = contextValue
+    this.tooltip = options.tooltip
+    this.command = options.onSelectedCommand
+    this.contextValue = options.contextValue
     this.iconPath = {
-      light: join(assetsPath, lightIcon),
-      dark: join(assetsPath, darkIcon),
+      light: join(assetsPath, options.lightIcon),
+      dark: join(assetsPath, options.darkIcon),
     }
   }
 }
@@ -58,25 +57,39 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
 
   constructor(private workspaceRoot?: string | undefined) {}
 
-  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined | void> = new EventEmitter<
-    RunmeFile | undefined | void
-  >()
+  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> = new EventEmitter<RunmeFile | undefined>()
+  readonly onDidChangeTreeData: Event<RunmeFile | undefined> = this._onDidChangeTreeData.event
 
-  readonly onDidChangeTreeData: Event<RunmeFile | undefined | void> = this._onDidChangeTreeData.event
-  getTreeItem(element: RunmeFile): TreeItem | Thenable<TreeItem> {
+  getTreeItem(element: RunmeFile): TreeItem {
     return element
   }
 
-  getChildren(element?: RunmeFile | undefined): Thenable<RunmeFile[]> | RunmeFile[] {
+  async getChildren(element?: RunmeFile | undefined): Promise<RunmeFile[]> {
     if (!this.workspaceRoot) {
       return Promise.resolve([])
     }
 
-    if (!element) {
-      return this.getRunmeFilesFromWorkspace()
+    /**
+     * scan for files first time we render the tree
+     */
+    if (this.filesTree.size === 0) {
+      await this._scanWorkspace()
     }
 
-    const { files, folderPath } = this.filesTree.get(element.label) || { files: [] }
+    if (!element) {
+      /**
+       * render folders
+       */
+      return [...this.filesTree.keys()].map((folder) => new RunmeFile(folder, {
+        collapsibleState: this.defaultItemState,
+        tooltip: 'Click to open runme files from folder',
+        lightIcon: 'folder.svg',
+        darkIcon: 'folder.svg',
+        contextValue: 'folder',
+      })).sort((a: RunmeFile, b: RunmeFile) => (a.label as string).length > (b.label as string).length ? 1 : -1)
+    }
+
+    const { files, folderPath } = this.filesTree.get(element.label as string) || { files: [] }
     return files.map((file) => new RunmeFile(file, {
       collapsibleState: TreeItemCollapsibleState.None,
       tooltip: 'Click to open runme file',
@@ -91,31 +104,13 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
     }))
   }
 
-  refresh(): void {
-    this.filesTree = new Map()
-    this._scanWorkspace().finally(
-      () => this._onDidChangeTreeData.fire())
+  getParent () {
+    return null
   }
 
-  async getRunmeFilesFromWorkspace(): Promise<RunmeFile[]> {
-
-    if (this.filesTree.size === 0) {
-      await this._scanWorkspace()
-    }
-
-    console.log(
-      'MAP',
-      this.filesTree.keys(),
-      ' to ',
-      this.defaultItemState === TreeItemCollapsibleState.Collapsed ? 'Collapsed' : 'Expanded'
-    )
-    return [...this.filesTree.keys()].map((folder) => new RunmeFile(folder, {
-      collapsibleState: this.defaultItemState,
-      tooltip: 'Click to open runme files from folder',
-      lightIcon: 'folder.svg',
-      darkIcon: 'folder.svg',
-      contextValue: 'folder',
-    })).sort((a: RunmeFile,b: RunmeFile) => a.label.length > b.label.length ? 1 : -1)
+  refresh(): void {
+    this.filesTree = new Map()
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   public static async openFile({ file, folderPath }: { file: string, folderPath: string }) {
@@ -123,16 +118,16 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
     await commands.executeCommand('vscode.openWith', doc, Kernel.type)
   }
 
-  collapseAll () {
+  async collapseAll () {
     this.defaultItemState = TreeItemCollapsibleState.Collapsed
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
     this.refresh()
-    commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
   }
 
-  expandAll () {
+  async expandAll () {
     this.defaultItemState = TreeItemCollapsibleState.Expanded
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
     this.refresh()
-    commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
   }
 
   private async _scanWorkspace () {
@@ -151,10 +146,17 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
     const files = await workspace.findFiles('**/*.md', `{${excludePatterns}}`)
     const rootFolder = basename(this.workspaceRoot || '')
 
+    /**
+     * we need to tweak the folder name to force VS Code re-render the tree view
+     * see https://github.com/microsoft/vscode/issues/172479
+     */
+    const nameTweaker = ++i % 2 ? ' ' : ''
     for (const { path } of files) {
       const info = basename(path)
       const folderPath = dirname(path)
-      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '') || rootFolder
+      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
+      console.log('!!', `"${folderName}"`, i)
+
       if (!this.filesTree.has(folderName)) {
         this.filesTree.set(folderName, { files: [info], folderPath })
       } else {
