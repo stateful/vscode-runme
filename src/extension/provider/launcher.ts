@@ -37,7 +37,7 @@ interface TreeFile {
 let i = 0
 
 export class RunmeFile extends TreeItem {
-  constructor(label: string, options: IRunmeFileProps) {
+  constructor(public label: string, options: IRunmeFileProps) {
     super(label, options.collapsibleState)
     const assetsPath = join(__filename, '..', '..', 'assets')
 
@@ -86,7 +86,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
         lightIcon: 'folder.svg',
         darkIcon: 'folder.svg',
         contextValue: 'folder',
-      })).sort((a: RunmeFile, b: RunmeFile) => (a.label as string).length > (b.label as string).length ? 1 : -1)
+      })).sort((a: RunmeFile, b: RunmeFile) => a.label.length > b.label.length ? 1 : -1)
     }
 
     const { files, folderPath } = this.filesTree.get(element.label as string) || { files: [] }
@@ -155,8 +155,6 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
       const info = basename(path)
       const folderPath = dirname(path)
       const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
-      console.log('!!', `"${folderName}"`, i)
-
       if (!this.filesTree.has(folderName)) {
         this.filesTree.set(folderName, { files: [info], folderPath })
       } else {
