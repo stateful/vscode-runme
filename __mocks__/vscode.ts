@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+
 import { vi } from 'vitest'
 
 export const notebooks = {
@@ -133,14 +134,15 @@ export enum NotebookCellStatusBarAlignment {
 }
 
 export class NotebookCellStatusBarItem {
-  text: string;
+  text: string
 
-  alignment: NotebookCellStatusBarAlignment;
+  alignment: NotebookCellStatusBarAlignment
 
-  tooltip?: string;
+  tooltip?: string
 
-  priority?: number;
+  priority?: number
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(text: string, alignment: NotebookCellStatusBarAlignment) {}
 }
 
@@ -148,6 +150,7 @@ export class NotebookCellStatusBarItem {
 
 export class NotebookCellOutputItem {
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static json(value: any, mime?: string): NotebookCellOutputItem {
     return {
       mime: 'text/plain',
@@ -155,13 +158,15 @@ export class NotebookCellOutputItem {
     }
   }
 
-  mime: string;
-  data: Uint8Array;
+  mime: string
+  data: Uint8Array
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(data: Uint8Array, mime: string) {}
 }
 
 export class NotebookCellOutput {
-  items: NotebookCellOutputItem[];
-  metadata?: { [key: string]: any };
+  items: NotebookCellOutputItem[]
+  metadata?: { [key: string]: any }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any }) {}
 }
