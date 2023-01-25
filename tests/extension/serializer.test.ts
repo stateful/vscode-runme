@@ -7,6 +7,10 @@ import { canEditFile } from '../../src/extension/utils'
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
 
+vi.mock('../../src/extension/grpc/client', () => ({
+  ParserServiceClient: vi.fn(),
+}))
+
 vi.mock('vscode', () => ({
     window: {
         activeNotebookEditor: undefined,

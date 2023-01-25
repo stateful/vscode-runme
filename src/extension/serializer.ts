@@ -12,16 +12,11 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-// eslint-disable-next-line max-len
-import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb.client'
-import {
-  DeserializeRequest,
-  SerializeRequest,
-  Notebook,
-} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 import { Serializer } from '../types'
 
+import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/types'
+import { ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { canEditFile, initWasm } from './utils'
