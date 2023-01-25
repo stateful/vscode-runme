@@ -60,10 +60,7 @@ const extensionConfig: Configuration = {
   },
   plugins: [
     new DefinePlugin({
-      INSTRUMENTATION_KEY:
-        process.env.NODE_ENV === 'development'
-          ? JSON.stringify('invalid')
-          : JSON.stringify(process.env.INSTRUMENTATION_KEY),
+      INSTRUMENTATION_KEY: JSON.stringify(process.env.INSTRUMENTATION_KEY || 'invalid')
     })
   ]
 }
