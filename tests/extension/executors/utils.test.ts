@@ -121,7 +121,7 @@ test('can support expressions', async () => {
   process.env.BAR = 'bar'
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
-  expect(ENV_STORE.get('foo')).toBe('foobar\n')
+  expect(ENV_STORE.get('foo')).toBe('foobar')
 })
 
 test('returns undefined if expression fails', async () => {
