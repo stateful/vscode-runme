@@ -62,6 +62,7 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
       const expression = placeHolder.slice(2, -1)
       const expressionProcess = cp.spawn(expression, {
         cwd,
+        env: {...process.env, ...stateEnv },
         shell: true
       })
       const [isError, data] = await new Promise<[number, string]>((resolve) => {
@@ -69,6 +70,7 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
         expressionProcess.stdout.on('data', (payload) => { data += payload.toString() })
         expressionProcess.stderr.on('data', (payload) => { data += payload.toString() })
         expressionProcess.on('close', (code) => {
+          data = data.trim()
           if (code && code > 0) {
             return resolve([code, data])
           }
