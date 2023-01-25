@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# run Eslint on staged files
+git diff-index --cached --name-only --diff-filter=d HEAD | grep -E ".*\\.[cm]?[jt]sx?$" | xargs -r node_modules/eslint/bin/eslint.js
