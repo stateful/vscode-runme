@@ -13,6 +13,7 @@ import {
   hashDocumentUri,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
+import { NotebookCellAnnotations } from '../../src/types'
 
 vi.mock('vscode', () => ({
   default: {
@@ -243,4 +244,38 @@ suite('mapGitIgnoreToGlobFolders', () => {
 test('salt hash filename', () => {
   const hashed = hashDocumentUri('file:///tmp/test/README.md')
   expect(hashed).toBe('6617e96a-2b29-5457-b824-b161ebe678bc')
+})
+
+suite('#getAnnotations', () => {
+  test('should have sane defaults', () => {
+    const d = getAnnotations({ name: 'command-123', 'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0' })
+    expect(d).toStrictEqual(
+      <NotebookCellAnnotations>{
+        background: false,
+        closeTerminalOnSuccess: false,
+        interactive: false,
+        mimeType: 'text/plain',
+        name: 'command-123',
+        'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0'
+      }
+    )
+  })
+
+  test('should process cell properly', () => {
+    const hello: object = {
+      kind: 2,
+      value: 'echo "Hello World!"',
+      languageId: 'sh',
+      metadata: { 'runme.dev/name': 'echo-hello' },
+    }
+
+    expect(getAnnotations(hello)).toStrictEqual({
+      background: false,
+      closeTerminalOnSuccess: false,
+      interactive: false,
+      mimeType: 'text/plain',
+      name: 'echo-hello',
+      'runme.dev/uuid': undefined,
+    })
+  })
 })
