@@ -53,6 +53,7 @@ export async function runCLICommand (cell: NotebookCell) {
   term.show(false)
   term.sendText(`runme run ${annotations.name} ${args.join(' ')}`)
 }
+
 export function openAsRunmeNotebook (doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
     viewColumn: ViewColumn.Active

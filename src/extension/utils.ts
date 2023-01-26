@@ -45,7 +45,7 @@ export function getAnnotations(raw: unknown): NotebookCellAnnotations {
         ? TRUTHY_VALUES.includes(metadata.closeTerminalOnSuccess)
         : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
     mimeType: typeof metadata.mimeType === 'string' ? metadata.mimeType : METADATA_DEFAULTS.mimeType,
-    name: metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`,
+    name: metadata.name || metadata['runme.dev/name'] || `Cell #${Math.random().toString().slice(2)}`,
     'runme.dev/uuid': metadata['runme.dev/uuid'],
   }
 }

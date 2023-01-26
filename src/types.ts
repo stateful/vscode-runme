@@ -28,6 +28,7 @@ export namespace Serializer {
   }
 
   export interface Metadata {
+    name?: string
     background?: string
     interactive?: string
     closeTerminalOnSuccess?: string
