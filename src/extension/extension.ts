@@ -27,6 +27,8 @@ export class RunmeExtension {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
+    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+
     context.subscriptions.push(
       kernel,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -53,7 +55,13 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
-      window.registerTreeDataProvider('runme.launcher', new RunmeLauncherProvider(getDefaultWorkspace()))
+
+      /**
+       * tree viewer items
+       */
+      window.registerTreeDataProvider('runme.launcher', treeViewer),
+      commands.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
+      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer))
     )
 
     /**

@@ -1,9 +1,8 @@
-import { vi, describe, it, expect } from 'vitest'
-import {  commands } from 'vscode'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { commands } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
-
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -27,6 +26,10 @@ vi.mock('../../../src/extension/utils', () => ({
   ])
 }))
 
+beforeEach(() => {
+  vi.mocked(commands.executeCommand).mockClear()
+})
+
 describe('Runme Notebooks', () => {
   it('returns an empty tree for empty workspace', async () => {
     const launchProvider = new RunmeLauncherProvider()
@@ -42,7 +45,8 @@ describe('Runme Notebooks', () => {
     })
 
     it('should return the items for the selected folder', async () => {
-      const element = new RunmeFile('runme/workspace/src', {
+      // space after "src" is important here, see name tweaker var in launcher
+      const element = new RunmeFile('runme/workspace/src ', {
         collapsibleState: 0,
         tooltip: 'Click to open runme file',
         lightIcon: 'icon.gif',
@@ -64,5 +68,21 @@ describe('Runme Notebooks', () => {
       expect(commands.executeCommand).toBeCalledTimes(1)
       expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
     })
+  })
+
+  it('has a expandAll method', async () => {
+    const launchProvider = new RunmeLauncherProvider()
+    launchProvider.refresh = vi.fn()
+    await launchProvider.collapseAll()
+    expect(commands.executeCommand).toBeCalledWith('setContext', 'runme.launcher.isExpanded', false)
+    expect(launchProvider.refresh).toBeCalledTimes(1)
+  })
+
+  it('has a expandAll method', async () => {
+    const launchProvider = new RunmeLauncherProvider()
+    launchProvider.refresh = vi.fn()
+    await launchProvider.expandAll()
+    expect(commands.executeCommand).toBeCalledWith('setContext', 'runme.launcher.isExpanded', true)
+    expect(launchProvider.refresh).toBeCalledTimes(1)
   })
 })
