@@ -20,6 +20,7 @@ import {
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
+import { RunmeUriHandler } from './handler/uri'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -27,6 +28,7 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    const uriHandler = new RunmeUriHandler()
 
     context.subscriptions.push(
       kernel,
@@ -60,7 +62,12 @@ export class RunmeExtension {
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
       commands.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
-      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer))
+      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
+
+      /**
+       * Uri handler
+       */
+      window.registerUriHandler(uriHandler)
     )
 
     /**
