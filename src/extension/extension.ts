@@ -27,7 +27,6 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
-    const terminalProvider = new ShowTerminalProvider()
 
     context.subscriptions.push(
       kernel,
@@ -38,8 +37,7 @@ export class RunmeExtension {
           outputCollapsed: true,
         },
       }),
-      
-      notebooks.registerNotebookCellStatusBarItemProvider('runme', terminalProvider),
+
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
