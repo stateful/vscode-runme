@@ -1,3 +1,4 @@
+import { window } from 'vscode'
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
 import { getAnnotations, getTerminalByCell } from '../../../src/extension/utils'
@@ -7,21 +8,13 @@ import {
   StopBackgroundTaskProvider
 } from '../../../src/extension/provider/background'
 
-vi.mock('vscode', () => ({
-  default: {
-    NotebookCellStatusBarItem: class {
-      constructor (public label: string, public position: number) {}
-    },
-    NotebookCellStatusBarAlignment: {
-      Right: 'right'
-    }
-  }
-}))
-
-vi.mock('../../../src/extension/utils', () => ({
-  getTerminalByCell: vi.fn(),
-  getAnnotations: vi.fn()
-}))
+vi.mock('vscode')
+vi.mock('../../../src/extension/utils', async () => {
+  return ({
+    getTerminalByCell: vi.fn(),
+    getAnnotations: vi.fn()
+  })
+})
 
 describe('ShowTerminalProvider', () => {
   beforeEach(() => {
@@ -55,8 +48,30 @@ describe('ShowTerminalProvider', () => {
     expect(item).toEqual({
       label: '$(terminal) Open Terminal (PID: 123)',
       command: 'runme.openTerminal',
-      position: 'right'
+      alignment: 2
     })
+  })
+
+  it('will stop showing pid if terminal is destroyed', async () => {
+    let changeActiveTerminal: (() => void)[] = []
+    vi.mocked<any>(window.onDidCloseTerminal).mockImplementationOnce(c => changeActiveTerminal.push(c))
+
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
+    vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
+    const p = new ShowTerminalProvider()
+    p.refreshStatusBarItems = vi.fn()
+    const item = await p.provideCellStatusBarItems('cell' as any)
+    expect(item).toBeTruthy()
+
+    changeActiveTerminal.forEach((c) => c())
+    expect(p.refreshStatusBarItems).toBeCalledTimes(1)
+
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
+    vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
+    {
+      const p = new ShowTerminalProvider()
+      expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
+    }
   })
 })
 
@@ -96,7 +111,7 @@ describe('BackgroundTaskProvider', () => {
     const item = await p.provideCellStatusBarItems(cell as any)
     expect(item).toEqual({
       label: 'Background Task',
-      position: 'right'
+      alignment: 2
     })
   })
 })
@@ -147,7 +162,7 @@ describe('StopBackgroundTaskProvider', () => {
     const item = await p.provideCellStatusBarItems(cell)
     expect(item).toEqual({
       label: '$(circle-slash) Stop Task',
-      position: 'right',
+      alignment: 2,
       command: 'runme.stopBackgroundTask'
     })
   })

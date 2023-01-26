@@ -21,7 +21,6 @@ import {
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 
-
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
