@@ -1,4 +1,4 @@
-import vscode from 'vscode'
+import { window } from 'vscode'
 import { vi, describe, expect, beforeEach, it } from 'vitest'
 
 import { getAnnotations, getTerminalByCell } from '../../../src/extension/utils'
@@ -8,25 +8,7 @@ import {
   StopBackgroundTaskProvider
 } from '../../../src/extension/provider/background'
 
-const eventFired = vi.fn()
-
-vi.mock('vscode', () => ({
-  default: {
-    NotebookCellStatusBarItem: class {
-      constructor (public label: string, public position: number) {}
-    },
-    NotebookCellStatusBarAlignment: {
-      Right: 'right'
-    },
-    EventEmitter: class {
-      fire = eventFired
-    },
-    window: {
-      onDidCloseTerminal: vi.fn()
-    }
-  }
-}))
-
+vi.mock('vscode')
 vi.mock('../../../src/extension/utils', async () => {
   return ({
     getTerminalByCell: vi.fn(),
@@ -66,24 +48,23 @@ describe('ShowTerminalProvider', () => {
     expect(item).toEqual({
       label: '$(terminal) Open Terminal (PID: 123)',
       command: 'runme.openTerminal',
-      position: 'right'
+      alignment: 2
     })
   })
 
   it('will stop showing pid if terminal is destroyed', async () => {
     let changeActiveTerminal: (() => void)[] = []
-    vi.mocked<any>(vscode.window.onDidCloseTerminal).mockImplementationOnce(c => changeActiveTerminal.push(c))
-    
+    vi.mocked<any>(window.onDidCloseTerminal).mockImplementationOnce(c => changeActiveTerminal.push(c))
+
     vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
-    {
-      const p = new ShowTerminalProvider()
-      const item = await p.provideCellStatusBarItems('cell' as any)
-      expect(item).toBeTruthy()
-    }
+    const p = new ShowTerminalProvider()
+    p.refreshStatusBarItems = vi.fn()
+    const item = await p.provideCellStatusBarItems('cell' as any)
+    expect(item).toBeTruthy()
 
     changeActiveTerminal.forEach((c) => c())
-    expect(eventFired).toBeCalledTimes(1)
+    expect(p.refreshStatusBarItems).toBeCalledTimes(1)
 
     vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
@@ -130,7 +111,7 @@ describe('BackgroundTaskProvider', () => {
     const item = await p.provideCellStatusBarItems(cell as any)
     expect(item).toEqual({
       label: 'Background Task',
-      position: 'right'
+      alignment: 2
     })
   })
 })
@@ -181,7 +162,7 @@ describe('StopBackgroundTaskProvider', () => {
     const item = await p.provideCellStatusBarItems(cell)
     expect(item).toEqual({
       label: '$(circle-slash) Stop Task',
-      position: 'right',
+      alignment: 2,
       command: 'runme.stopBackgroundTask'
     })
   })

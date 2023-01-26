@@ -1,15 +1,17 @@
-import vscode from 'vscode'
+import vscode, { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment } from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 
 export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
-  private _onDidChangeCellStatusBarItems = new vscode.EventEmitter<void>()
+  private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
   private _closeTerminalSubscription: vscode.Disposable
 
   constructor() {
-    this._closeTerminalSubscription = vscode.window.onDidCloseTerminal(() => this.refreshStatusBarItems())
+    this._closeTerminalSubscription = window.onDidCloseTerminal(() =>
+      this.refreshStatusBarItems()
+    )
   }
 
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
@@ -27,9 +29,9 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
       return
     }
 
-    const item = new vscode.NotebookCellStatusBarItem(
+    const item = new NotebookCellStatusBarItem(
       `$(terminal) Open Terminal (PID: ${pid})`,
-      vscode.NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.openTerminal'
     return item
@@ -56,9 +58,9 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
       return
     }
 
-    const item = new vscode.NotebookCellStatusBarItem(
+    const item = new NotebookCellStatusBarItem(
       'Background Task',
-      vscode.NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right
     )
     return item
   }
@@ -74,9 +76,9 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
       return
     }
 
-    const item = new vscode.NotebookCellStatusBarItem(
+    const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',
-      vscode.NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.stopBackgroundTask'
     return item

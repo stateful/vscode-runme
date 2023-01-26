@@ -68,6 +68,8 @@ describe('Runme Annotations', () => {
       }
 
       const expectedItem = {
+        label: '$(gear) Configure',
+        alignment: 2,
         command: {
           title: 'Configure cell behavior',
           command: 'runme.toggleCellAnnotations',

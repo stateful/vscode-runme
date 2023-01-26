@@ -101,7 +101,7 @@ export enum NotebookCellKind {
 }
 
 export const TreeItem = vi.fn()
-export const EventEmitter = vi.fn()
+export class EventEmitter {}
 export const Event = vi.fn()
 
 export enum TreeItemCollapsibleState {
@@ -135,7 +135,7 @@ export enum NotebookCellStatusBarAlignment {
 }
 
 export class NotebookCellStatusBarItem {
-  text: string
+  label: string
 
   alignment: NotebookCellStatusBarAlignment
 
@@ -144,7 +144,10 @@ export class NotebookCellStatusBarItem {
   priority?: number
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(text: string, alignment: NotebookCellStatusBarAlignment) {}
+  constructor(label: string, alignment: NotebookCellStatusBarAlignment) {
+    this.label = label
+    this.alignment = alignment
+  }
 }
 
 
