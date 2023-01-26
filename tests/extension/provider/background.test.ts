@@ -58,20 +58,18 @@ describe('ShowTerminalProvider', () => {
 
     vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce({ processId: Promise.resolve(123) } as any)
-    const p = new ShowTerminalProvider()
-    p.refreshStatusBarItems = vi.fn()
-    const item = await p.provideCellStatusBarItems('cell' as any)
+    const p1 = new ShowTerminalProvider()
+    p1.refreshStatusBarItems = vi.fn()
+    const item = await p1.provideCellStatusBarItems('cell' as any)
     expect(item).toBeTruthy()
 
     changeActiveTerminal.forEach((c) => c())
-    expect(p.refreshStatusBarItems).toBeCalledTimes(1)
+    expect(p1.refreshStatusBarItems).toBeCalledTimes(1)
 
     vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
     vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
-    {
-      const p = new ShowTerminalProvider()
-      expect(await p.provideCellStatusBarItems('cell' as any)).toBe(undefined)
-    }
+    const p2 = new ShowTerminalProvider()
+    expect(await p2.provideCellStatusBarItems('cell' as any)).toBe(undefined)
   })
 })
 
