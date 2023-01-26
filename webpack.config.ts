@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
-import type { Configuration } from 'webpack'
+import { Configuration, DefinePlugin } from 'webpack'
 
 const baseConfig: Partial<Configuration> = {
   mode: process.env.NODE_ENV ? 'production' : 'development',
@@ -28,6 +28,12 @@ const baseConfig: Partial<Configuration> = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: [{ loader: 'ts-loader' }],
+      },
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false
+        }
       },
     ],
   }
@@ -57,7 +63,12 @@ const extensionConfig: Configuration = {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',
     devtoolModuleFilenameTemplate: '../[resource-path]',
-  }
+  },
+  plugins: [
+    new DefinePlugin({
+      INSTRUMENTATION_KEY: JSON.stringify(process.env.INSTRUMENTATION_KEY || 'invalid')
+    })
+  ]
 }
 
 export default [extensionConfig, rendererConfig]

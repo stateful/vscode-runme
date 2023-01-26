@@ -6,7 +6,7 @@ import {
 } from 'vscode'
 
 import { initWasm, getAnnotations } from '../utils'
-import { WasmLib, RunmeTaskDefinition } from '../../types'
+import { Serializer, RunmeTaskDefinition } from '../../types'
 
 declare var globalThis: any
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -43,11 +43,11 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    const { Runme } = globalThis as WasmLib.Serializer
+    const { Runme } = globalThis as Serializer.Wasm
     const notebook = await Runme.deserialize(mdContent)
 
     return notebook.cells
-      .filter((cell: WasmLib.Cell): cell is WasmLib.Cell => cell.kind === NotebookCellKind.Code)
+      .filter((cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code)
       .map((cell) => RunmeTaskProvider.getRunmeTask(
         current.fsPath,
         // ToDo(Christian) remove casting once we have defaults

@@ -27,6 +27,7 @@ import { getTerminalByCell, getAnnotations } from '../../../src/extension/utils'
 import { CliProvider } from '../../../src/extension/provider/cli'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
+vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
   getTerminalByCell: vi.fn()
@@ -83,7 +84,7 @@ test('runCLICommand if CLI is installed', async () => {
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
-  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside})
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined})
 })
 
 test('open Runme notebook in text editor', (file: TextDocument) => {

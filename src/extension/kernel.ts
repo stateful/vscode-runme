@@ -1,7 +1,8 @@
 import {
   Disposable, notebooks, window, workspace, ExtensionContext,
-  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, WorkspaceEdit, NotebookEdit
+  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, WorkspaceEdit, NotebookEdit, NotebookDocument
 } from 'vscode'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
@@ -10,7 +11,7 @@ import { API } from '../utils/deno/api'
 import executor, { runme } from './executors'
 import { ExperimentalTerminal } from './terminal/terminal'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey, getAnnotations } from './utils'
+import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
 
 import './wasm/wasm_exec.js'
 
@@ -24,7 +25,7 @@ enum ConfirmationItems {
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
-  readonly hasAnnotationsEditExperimentEnabled: boolean
+  readonly #experiments = new Map<string, boolean>()
 
   #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
@@ -37,7 +38,8 @@ export class Kernel implements Disposable {
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.hasAnnotationsEditExperimentEnabled = config.get<boolean>('annotationsEdit', false)
+    this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
+    this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
@@ -48,13 +50,46 @@ export class Kernel implements Disposable {
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
+      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
+      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this))
     )
+  }
+
+  hasExperimentEnabled(key: string, defaultValue?: boolean) {
+    return this.#experiments.get(key) || defaultValue
   }
 
   dispose () {
     resetEnv()
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
+  }
+
+  async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+    if (notebookType !== Kernel.type) {
+      return
+    }
+    const isReadme = uri.fsPath.toUpperCase().includes('README')
+    const hashed = hashDocumentUri(uri.toString())
+    TelemetryReporter.sendTelemetryEvent('notebook.save', {
+      'notebook.hashedUri': hashed,
+      'notebook.isReadme': isReadme.toString(),
+      'notebook.isUntitled': isUntitled.toString(),
+    })
+  }
+
+
+  async #handleOpenNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+    if (notebookType !== Kernel.type) {
+      return
+    }
+    const isReadme = uri.fsPath.toUpperCase().includes('README')
+    const hashed = hashDocumentUri(uri.toString())
+    TelemetryReporter.sendTelemetryEvent('notebook.open', {
+      'notebook.hashedUri': hashed,
+      'notebook.isReadme': isReadme.toString(),
+      'notebook.isUntitled': isUntitled.toString(),
+    })
   }
 
   // eslint-disable-next-line max-len
@@ -130,6 +165,7 @@ export class Kernel implements Disposable {
     ) || 0
     const totalCellsToExecute = cells.length
     let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
+    let cellsExecuted = 0
 
     for (const cell of cells) {
       if (showConfirmPrompt) {
@@ -154,12 +190,22 @@ export class Kernel implements Disposable {
         }
 
         if (answer === ConfirmationItems.Cancel) {
+          TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
+            'cells.total': totalNotebookCells?.toString(),
+            'cells.executed': cellsExecuted?.toString(),
+          })
           return
         }
       }
 
       await this._doExecuteCell(cell)
+      cellsExecuted++
     }
+
+    TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
+      'cells.total': totalNotebookCells?.toString(),
+      'cells.executed': cellsExecuted?.toString(),
+    })
   }
 
   public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
@@ -170,18 +216,19 @@ export class Kernel implements Disposable {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
     const exec = await this.createCellExecution(cell)
 
+    TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     exec.start(Date.now())
     let execKey = getKey(runningCell)
 
     /**
      * check if user is running experiment to execute shell via runme cli
      */
-    const config = workspace.getConfiguration('runme.experiments')
-    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    const hasPsuedoTerminalExperimentEnabled = this.hasExperimentEnabled('pseudoterminal')
     const terminal = this.#terminals.get(cell.document.uri.fsPath)
     const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
       ? await runme.call(this, exec, terminal)
       : await executor[execKey].call(this, exec, runningCell)
+    TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     exec.end(successfulCellExecution)
   }
 

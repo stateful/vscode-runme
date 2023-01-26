@@ -121,7 +121,35 @@ test('can support expressions', async () => {
   process.env.BAR = 'bar'
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
-  expect(ENV_STORE.get('foo')).toBe('foobar\n')
+  expect(ENV_STORE.get('foo')).toBe('foobar')
+})
+
+test('can recall previous vars', async () => {
+  const exec1: any = {
+    cell: {
+      metadata: { executeableCode: 'export foo=$(echo "foo$BAR")' },
+      document: {
+        getText: vi.fn().mockReturnValue('export foo=$(echo "foo$BAR")'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
+  process.env.BAR = 'bar'
+  const cellText1 = await retrieveShellCommand(exec1)
+  expect(cellText1).toBe('')
+  expect(ENV_STORE.get('foo')).toBe('foobar')
+  const exec2: any = {
+    cell: {
+      metadata: { executeableCode: 'export barfoo=$(echo "bar$foo")' },
+      document: {
+        getText: vi.fn().mockReturnValue('export barfoo=$(echo "bar$foo")'),
+        uri: { fsPath: __dirname }
+      }
+    }
+  }
+  const cellText2 = await retrieveShellCommand(exec2)
+  expect(cellText2).toBe('')
+  expect(ENV_STORE.get('barfoo')).toBe('barfoobar')
 })
 
 test('returns undefined if expression fails', async () => {

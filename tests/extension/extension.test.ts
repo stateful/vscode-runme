@@ -10,6 +10,11 @@ vi.mock('vscode', async () => {
     default: mocked
   })
 })
+vi.mock('vscode-telemetry')
+
+vi.mock('../../src/extension/grpc/client', () => ({
+  ParserServiceClient: vi.fn(),
+}))
 
 test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
@@ -17,6 +22,6 @@ test('initializes all providers', async () => {
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(10)
+  expect(commands.registerCommand).toBeCalledTimes(12)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
 })

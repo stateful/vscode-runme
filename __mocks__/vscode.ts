@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { vi } from 'vitest'
 
 export const notebooks = {
@@ -14,16 +17,22 @@ export const notebooks = {
 
 export const Uri = {
   joinPath: vi.fn().mockReturnValue('/foo/bar'),
-  parse: vi.fn()
+  parse: vi.fn(),
+  file: vi.fn().mockReturnValue('')
 }
 
 export const workspace = {
   getConfiguration: vi.fn().mockReturnValue(new Map()),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
-  openTextDocument: vi.fn(),
+  openTextDocument: vi.fn().mockReturnValue({
+    getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
+  }),
   registerNotebookSerializer: vi.fn(),
+  onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   fs: {
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
+    stat: vi.fn().mockResolvedValue(1)
   },
   workspaceFolders: [
     {
@@ -99,4 +108,66 @@ export enum TreeItemCollapsibleState {
   None = 0,
   Collapsed = 1,
   Expanded = 2
+}
+
+export enum FileType {
+  /**
+   * The file type is unknown.
+   */
+  Unknown = 0,
+  /**
+   * A regular file.
+   */
+  File = 1,
+  /**
+   * A directory.
+   */
+  Directory = 2,
+  /**
+   * A symbolic link to a file.
+   */
+  SymbolicLink = 64
+}
+
+export enum NotebookCellStatusBarAlignment {
+  Left = 1,
+  Right = 2
+}
+
+export class NotebookCellStatusBarItem {
+  text: string
+
+  alignment: NotebookCellStatusBarAlignment
+
+  tooltip?: string
+
+  priority?: number
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(text: string, alignment: NotebookCellStatusBarAlignment) {}
+}
+
+
+
+export class NotebookCellOutputItem {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static json(value: any, mime?: string): NotebookCellOutputItem {
+    return {
+      mime: 'text/plain',
+      data: new Uint8Array()
+    }
+  }
+
+  mime: string
+  data: Uint8Array
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(data: Uint8Array, mime: string) {}
+}
+
+export class NotebookCellOutput {
+  items: NotebookCellOutputItem[]
+  metadata?: { [key: string]: any }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any }) {}
 }

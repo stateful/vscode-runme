@@ -1,10 +1,34 @@
-import { vi, describe, it, expect } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { commands } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
-import { TreeItemCollapsibleState } from '../../../__mocks__/vscode'
 
 vi.mock('vscode')
+vi.mock('vscode-telemetry')
+
+vi.mock('../../../src/extension/utils', () => ({
+  getPathType: vi.fn().mockResolvedValue(1),
+  getDefaultWorkspace: vi.fn().mockReturnValue('runme/workspace/src'),
+  mapGitIgnoreToGlobFolders: vi.fn().mockReturnValue([
+    '**/modules/**',
+    '**/out/**',
+    '**/node_modules/**',
+    '**/.vscode-test/**',
+    '**/wasm/**',
+    '**/coverage/**',
+    '**/tests/e2e/logs/**',
+    '**/tests/e2e/screenshots/**',
+    '**/coverage/config/**',
+    '**/abc/**/**',
+    '**/a/**/b/**',
+    '**/jspm_packages/**'
+  ])
+}))
+
+beforeEach(() => {
+  vi.mocked(commands.executeCommand).mockClear()
+})
 
 describe('Runme Notebooks', () => {
   it('returns an empty tree for empty workspace', async () => {
@@ -21,8 +45,9 @@ describe('Runme Notebooks', () => {
     })
 
     it('should return the items for the selected folder', async () => {
-      const element = new RunmeFile('runme/workspace/src', {
-        collapsibleState: TreeItemCollapsibleState.None,
+      // space after "src" is important here, see name tweaker var in launcher
+      const element = new RunmeFile('runme/workspace/src ', {
+        collapsibleState: 0,
         tooltip: 'Click to open runme file',
         lightIcon: 'icon.gif',
         darkIcon: 'icon.gif',
@@ -35,6 +60,29 @@ describe('Runme Notebooks', () => {
       })
       const treeItems = await launchProvider.getChildren(element)
       expect(treeItems.length).toStrictEqual(3)
+      expect(launchProvider.getTreeItem(element)).toStrictEqual(element)
     })
+
+    it('should open a file using runme renderer', () => {
+      RunmeLauncherProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
+      expect(commands.executeCommand).toBeCalledTimes(1)
+      expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
+    })
+  })
+
+  it('has a expandAll method', async () => {
+    const launchProvider = new RunmeLauncherProvider()
+    launchProvider.refresh = vi.fn()
+    await launchProvider.collapseAll()
+    expect(commands.executeCommand).toBeCalledWith('setContext', 'runme.launcher.isExpanded', false)
+    expect(launchProvider.refresh).toBeCalledTimes(1)
+  })
+
+  it('has a expandAll method', async () => {
+    const launchProvider = new RunmeLauncherProvider()
+    launchProvider.refresh = vi.fn()
+    await launchProvider.expandAll()
+    expect(commands.executeCommand).toBeCalledWith('setContext', 'runme.launcher.isExpanded', true)
+    expect(launchProvider.refresh).toBeCalledTimes(1)
   })
 })
