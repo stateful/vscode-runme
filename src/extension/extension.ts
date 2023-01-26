@@ -18,14 +18,15 @@ import {
   stopBackgroundTask,
   createNewRunmeNotebook
 } from './commands'
-import { Serializer } from './serializer'
+import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
-    const serializer = new Serializer(context)
+    const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
+    const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     context.subscriptions.push(
       kernel,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -58,8 +59,7 @@ export class RunmeExtension {
     /**
      * setup extension based on `pseudoterminal` experiment flag
      */
-    const config = workspace.getConfiguration('runme.experiments')
-    const hasPsuedoTerminalExperimentEnabled = config.get<boolean>('pseudoterminal')
+    const hasPsuedoTerminalExperimentEnabled = kernel.hasExperimentEnabled('pseudoterminal')
     !hasPsuedoTerminalExperimentEnabled
       ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()))
       : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))

@@ -5,8 +5,8 @@ import cp from 'node:child_process'
 import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 
+import { NotebookCellAnnotations, Serializer } from '../types'
 import { METADATA_DEFAULTS } from '../constants'
-import { NotebookCellAnnotations, WasmLib } from '../types'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -21,11 +21,11 @@ const TRUTHY_VALUES = ['1', 'true']
  * Annotations are stored as subset of metadata
  */
 export function getAnnotations(cell: vscode.NotebookCell): NotebookCellAnnotations
-export function getAnnotations(metadata?: WasmLib.Metadata): NotebookCellAnnotations
+export function getAnnotations(metadata?: Serializer.Metadata): NotebookCellAnnotations
 export function getAnnotations(raw: unknown): NotebookCellAnnotations {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
-  let metadata = raw as WasmLib.Metadata
+  let metadata = raw as Serializer.Metadata
 
   if (metadataFromCell.metadata) {
     metadata = metadataFromCell.metadata
@@ -197,7 +197,7 @@ export async function initWasm(wasmUri: Uri) {
 
 export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-    ? workspace.workspaceFolders[0].uri.fsPath
+      ? workspace.workspaceFolders[0].uri.fsPath
     : undefined
 }
 

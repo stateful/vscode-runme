@@ -29,6 +29,12 @@ const baseConfig: Partial<Configuration> = {
         exclude: /node_modules/,
         use: [{ loader: 'ts-loader' }],
       },
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false
+        }
+      },
     ],
   }
 }

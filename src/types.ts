@@ -2,7 +2,7 @@ import { NotebookCellKind } from 'vscode'
 
 import { OutputType, ClientMessages } from './constants'
 
-export namespace WasmLib {
+export namespace Serializer {
   export type Notebook = {
     cells: Cell[]
     metadata?: Metadata
@@ -20,7 +20,7 @@ export namespace WasmLib {
     kind: NotebookCellKind.Code
   }
 
-  export interface Serializer {
+  export interface Wasm {
     Runme: {
       deserialize: (content: string) => Promise<Notebook>
       serialize: (content: string) => Promise<string>
