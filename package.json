@@ -340,7 +340,7 @@
     "@types/node": "^18.11.18",
     "@types/split2": "^3.2.1",
     "@types/uuid": "^9.0.0",
-    "@types/vscode": "1.72.0",
+    "@types/vscode": "1.74.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.0",
     "@types/yargs": "^17.0.20",
