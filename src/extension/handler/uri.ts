@@ -1,14 +1,12 @@
-import { UriHandler, window, Uri, ProgressLocation, commands, workspace } from 'vscode'
-import { dir } from 'tmp-promise'
+import { UriHandler, window, Uri, Progress, ProgressLocation, commands } from 'vscode'
 
-import { BOOTFILE } from '../constants'
+import { getProjectDir, getTargetDirName, waitForProjectCheckout } from './utils'
 
 let NEXT_TERM_ID = 0
-const INTERVAL = 100
-const TIMEOUT = 30 * 1000
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
+        console.log(`[Runme] triggered RunmeUriHandler with ${uri}`)
         const params = new URLSearchParams(uri.query)
         const command = params.get('command')
 
@@ -25,72 +23,59 @@ export class RunmeUriHandler implements UriHandler {
         window.showErrorMessage(`Couldn't recognise command "${command}"`)
     }
 
-    private async _setupProject (
-        repository: string | null = 'git@github.com:stateful/vscode-issue-explorer.git',
-        file = 'README.md'
-    ) {
+    private async _setupProject (repository?: string | null) {
         if (!repository) {
             return window.showErrorMessage('No project to setup was provided in the url')
         }
 
-        if (!repository.startsWith('git@') || !repository.endsWith('.git')) {
+        if (!repository.startsWith('git@') || !repository.endsWith('.git') || repository.split(':').length !== 2) {
             return window.showErrorMessage(
-                'Invalid git url, expected following format "git@provider.com/org/project.git",' +
+                'Invalid git url, expected following format "git@provider.com:org/project.git",' +
                 ` received "${repository}"`
             )
         }
 
-        const targetDir = (await dir()).path
-        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`, '/bin/sh')
-        terminal.show(true)
+        const projectDirUri = await getProjectDir()
+
+        /**
+         * cancel operation if user doesn't want to create set up project directory
+         */
+        if (!projectDirUri) {
+            return
+        }
+
+        const suggestedProjectName = repository.slice(0, -4).split(':')[1]
+        const targetDirUri = Uri.joinPath(projectDirUri, await getTargetDirName(projectDirUri, suggestedProjectName))
         window.showInformationMessage('Setting up a new project using Runme...')
         return window.withProgress({
             location: ProgressLocation.Window,
             cancellable: false,
             title: `Setting up project from repository ${repository}`
-        }, async (progress) => {
-            progress.report({ increment: 0, message: 'Cloning repository...' })
+        }, (progress) => this._cloneProject(progress, targetDirUri, repository))
+    }
 
-            await new Promise<void>((resolve, reject) => {
-                const t = setTimeout(() => {
-                    clearInterval(i)
-                    reject(new Error(`Timed out cloning repository ${repository}`))
-                }, TIMEOUT)
-                const i = setInterval(async () => {
-                    const targetDirUri = Uri.parse(targetDir)
-                    const dirEntries = await workspace.fs.readDirectory(targetDirUri)
-                    /**
-                     * wait until directory has more files than only a ".git"
-                     */
-                    if (dirEntries.length <= 1) {
-                        return
-                    }
+    private async _cloneProject (
+        progress: Progress<{ message?: string, increment?: number }>,
+        targetDirUri: Uri,
+        repository: string
+    ) {
+        progress.report({ increment: 0, message: 'Cloning repository...' })
+        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`, '/bin/sh')
+        terminal.show(true)
 
-                    /**
-                     * write a runme file into the directory, so the extension knows it has
-                     * to open the readme file
-                     */
-                    const fileExist = await workspace.fs.stat(Uri.joinPath(targetDirUri, file))
-                        .then(() => true, () => false)
-                    if (fileExist) {
-                        const enc = new TextEncoder()
-                        await workspace.fs.writeFile(Uri.joinPath(targetDirUri, BOOTFILE), enc.encode(file))
-                    }
+        terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
+        const success = await new Promise<boolean>(
+            (resolve) => waitForProjectCheckout(targetDirUri.fsPath, repository, resolve))
 
-                    clearTimeout(t)
-                    clearInterval(i)
-                    resolve()
-                }, INTERVAL)
+        if (!success) {
+            return terminal.dispose()
+        }
 
-                terminal.sendText(`git clone ${repository} ${targetDir}`)
-            })
-
-            progress.report({ increment: 50, message: 'Opening project...' })
-            await commands.executeCommand('vscode.openFolder', Uri.parse(targetDir), {
-                forceNewWindow: true
-            })
-            progress.report({ increment: 100 })
-            terminal.dispose()
+        progress.report({ increment: 50, message: 'Opening project...' })
+        await commands.executeCommand('vscode.openFolder', Uri.parse(targetDirUri.fsPath), {
+            forceNewWindow: true
         })
+        progress.report({ increment: 100 })
+        terminal.dispose()
     }
 }

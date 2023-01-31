@@ -240,6 +240,17 @@
             "scope": "machine",
             "default": false,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC interface (experimental)."
+          },
+          "runme.checkout.projectDir": {
+            "type": "string",
+            "scope": "machine",
+            "markdownDescription": "Directory to which Runme should clone new projects into."
+          },
+          "runme.checkout.timeout": {
+            "type": "number",
+            "scope": "machine",
+            "default": 60000,
+            "markdownDescription": "Timeout until Runme will cancel the clone process."
           }
         }
       }

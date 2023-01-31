@@ -12,4 +12,4 @@ export const ENV_STORE = new Map<string, string>(
   Object.entries(DEFAULT_ENV)
 )
 
-export const BOOTFILE = '.rumme'
+export const BOOTFILE = '.runme'
