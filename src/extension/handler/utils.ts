@@ -118,3 +118,22 @@ export async function waitForProjectCheckout (
         cb(true)
     }, INTERVAL)
 }
+
+/**
+ * get suggested name from provided repository url
+ */
+export function getSuggestedProjectName (repository: string) {
+    /**
+     * verify repository url has the right format,
+     * e.g. currently we only support "git@provider.com:org/project.git"
+     */
+    if (!repository.startsWith('git@') || !repository.endsWith('.git') || repository.split(':').length !== 2) {
+        window.showErrorMessage(
+            'Invalid git url, expected following format "git@provider.com:org/project.git",' +
+            ` received "${repository}"`
+        )
+        return
+    }
+
+    return repository.slice(0, -4).split(':')[1]
+}

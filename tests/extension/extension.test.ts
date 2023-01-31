@@ -18,4 +18,9 @@ test('initializes all providers', async () => {
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
   expect(commands.registerCommand).toBeCalledTimes(12)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
+  expect(window.registerUriHandler).toBeCalledTimes(1)
+
+  expect(commands.executeCommand).toBeCalledWith('vscode.open', '/foo/bar')
+  expect(workspace.fs.stat).toBeCalledWith('/foo/bar')
+  expect(workspace.fs.delete).toBeCalledWith('/foo/bar')
 })

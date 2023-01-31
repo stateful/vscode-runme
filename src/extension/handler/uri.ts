@@ -1,6 +1,6 @@
 import { UriHandler, window, Uri, Progress, ProgressLocation, commands } from 'vscode'
 
-import { getProjectDir, getTargetDirName, waitForProjectCheckout } from './utils'
+import { getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName } from './utils'
 
 let NEXT_TERM_ID = 0
 
@@ -28,23 +28,18 @@ export class RunmeUriHandler implements UriHandler {
             return window.showErrorMessage('No project to setup was provided in the url')
         }
 
-        if (!repository.startsWith('git@') || !repository.endsWith('.git') || repository.split(':').length !== 2) {
-            return window.showErrorMessage(
-                'Invalid git url, expected following format "git@provider.com:org/project.git",' +
-                ` received "${repository}"`
-            )
-        }
-
+        const suggestedProjectName = getSuggestedProjectName(repository)
         const projectDirUri = await getProjectDir()
 
         /**
-         * cancel operation if user doesn't want to create set up project directory
+         * cancel operation if
+         * - user doesn't want to create set up project directory
+         * - we aren't able to parse the suggested name due to invalid repository param format
          */
-        if (!projectDirUri) {
+        if (!projectDirUri || !suggestedProjectName) {
             return
         }
 
-        const suggestedProjectName = repository.slice(0, -4).split(':')[1]
         const targetDirUri = Uri.joinPath(projectDirUri, await getTargetDirName(projectDirUri, suggestedProjectName))
         window.showInformationMessage('Setting up a new project using Runme...')
         return window.withProgress({

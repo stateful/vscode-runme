@@ -32,7 +32,9 @@ export const workspace = {
   onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   fs: {
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
-    stat: vi.fn().mockResolvedValue(1)
+    stat: vi.fn().mockResolvedValue(1),
+    createDirectory: vi.fn(),
+    delete: vi.fn()
   },
   workspaceFolders: [
     {
@@ -59,18 +61,22 @@ export const workspace = {
 
 export const terminal = {
   show: vi.fn(),
-  sendText: vi.fn()
+  sendText: vi.fn(),
+  dispose: vi.fn()
 }
 
 export const window = {
   showWarningMessage: vi.fn(),
   showInformationMessage: vi.fn(),
+  showErrorMessage: vi.fn(),
   createTerminal: vi.fn().mockReturnValue(terminal),
   showNotebookDocument: vi.fn(),
   showTextDocument: vi.fn(),
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   registerTreeDataProvider: vi.fn(),
-  onDidCloseTerminal: vi.fn()
+  registerUriHandler: vi.fn(),
+  onDidCloseTerminal: vi.fn(),
+  withProgress: vi.fn()
 }
 
 export const tasks = {
@@ -173,4 +179,8 @@ export class NotebookCellOutput {
   metadata?: { [key: string]: any }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any }) {}
+}
+
+export const ProgressLocation = {
+  Window: 1
 }
