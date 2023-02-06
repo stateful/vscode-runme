@@ -94,9 +94,6 @@ export async function waitForProjectCheckout (
         return cb(false)
     }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
     const i = setInterval(async () => {
-        clearTimeout(t)
-        clearInterval(i)
-
         const dirEntries = await workspace.fs.readDirectory(targetDirUri)
         /**
          * wait until directory has more files than only a ".git"
@@ -104,6 +101,7 @@ export async function waitForProjectCheckout (
         if (dirEntries.length <= 1) {
             return
         }
+        console.log(`[Runme] Successfully cloned repository to ${targetDir}`)
 
         /**
          * write a runme file into the directory, so the extension knows it has
@@ -117,8 +115,11 @@ export async function waitForProjectCheckout (
                 Uri.joinPath(targetDirUri, BOOTFILE),
                 enc.encode(fileToOpen)
             )
+            console.log(`[Runme] Created temporary bootstrap file to open ${fileToOpen}`)
         }
 
+        clearTimeout(t)
+        clearInterval(i)
         cb(true)
     }, INTERVAL)
 }
