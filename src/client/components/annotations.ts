@@ -3,12 +3,12 @@ import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
 import { ClientMessages } from '../../constants'
-import type { ClientMessage, NotebookCellAnnotations } from '../../types'
+import type { ClientMessage, CellAnnotations } from '../../types'
 import { getContext } from '../utils'
 import '@vscode/webview-ui-toolkit/dist/data-grid/index'
 
-type AnnotationsMutation = Partial<NotebookCellAnnotations>
-type AnnotationsKey = keyof NotebookCellAnnotations
+type AnnotationsMutation = Partial<CellAnnotations>
+type AnnotationsKey = keyof CellAnnotations
 
 @customElement('edit-annotations')
 export class Annotations extends LitElement {
@@ -69,7 +69,7 @@ export class Annotations extends LitElement {
 
   // Declare reactive properties
   @property({ type: Object, reflect: true })
-  annotations?: NotebookCellAnnotations
+  annotations?: CellAnnotations
 
   #desc(id: string): string {
     return this.#descriptions.get(id) || id
@@ -142,12 +142,12 @@ export class Annotations extends LitElement {
       return html`<div class="row">
         ${when(
           typeof value === 'boolean',
-          () => this.renderCheckbox(key, value, false),
+          () => this.renderCheckbox(key, value as boolean, false),
           () => html``
         )}
         ${when(
           typeof value === 'string',
-          () => this.renderTextField(key, value, key),
+          () => this.renderTextField(key, value as string, key),
           () => html``
         )}
       </div>`
