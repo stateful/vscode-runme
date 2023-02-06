@@ -77,6 +77,11 @@ describe('getSuggestedProjectName', () => {
             .toBe('org/project')
     })
 
+    it('should parse name correctly', () => {
+        expect(getSuggestedProjectName('https://provider.com/org/project.git'))
+            .toBe('org/project')
+    })
+
     it('should fail if format is not correct', () => {
         expect(getSuggestedProjectName('foobar')).toBe(undefined)
         expect(window.showErrorMessage).toBeCalledTimes(1)

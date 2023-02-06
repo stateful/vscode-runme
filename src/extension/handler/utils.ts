@@ -6,7 +6,6 @@ import { BOOTFILE } from '../constants'
 const config = workspace.getConfiguration('runme.checkout')
 const INTERVAL = 500
 const MINIMAL_TIMEOUT = 10 * 1000
-const DEFAULT_START_FILE = 'README.md'
 
 /**
  * Get the project directory from the settings object.
@@ -83,6 +82,7 @@ export async function getTargetDirName (targetDir: Uri, suggestedName: string, i
 }
 
 export async function waitForProjectCheckout (
+    fileToOpen: string,
     targetDir: string,
     repository: string,
     cb: (success: boolean) => void
@@ -94,6 +94,9 @@ export async function waitForProjectCheckout (
         return cb(false)
     }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
     const i = setInterval(async () => {
+        clearTimeout(t)
+        clearInterval(i)
+
         const dirEntries = await workspace.fs.readDirectory(targetDirUri)
         /**
          * wait until directory has more files than only a ".git"
@@ -106,34 +109,42 @@ export async function waitForProjectCheckout (
          * write a runme file into the directory, so the extension knows it has
          * to open the readme file
          */
-        const fileExist = await workspace.fs.stat(Uri.joinPath(targetDirUri, DEFAULT_START_FILE))
+        const fileExist = await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
             .then(() => true, () => false)
         if (fileExist) {
             const enc = new TextEncoder()
-            await workspace.fs.writeFile(Uri.joinPath(targetDirUri, BOOTFILE), enc.encode(DEFAULT_START_FILE))
+            await workspace.fs.writeFile(
+                Uri.joinPath(targetDirUri, BOOTFILE),
+                enc.encode(fileToOpen)
+            )
         }
 
-        clearTimeout(t)
-        clearInterval(i)
         cb(true)
     }, INTERVAL)
 }
 
 /**
- * get suggested name from provided repository url
+ * verify repository url has the right format and get suggested name from provided repository url
  */
+const DOT_GIT_ANNEX_LENGTH = '.git'.length
 export function getSuggestedProjectName (repository: string) {
     /**
-     * verify repository url has the right format,
-     * e.g. currently we only support "git@provider.com:org/project.git"
+     * for "git@provider.com:org/project.git"
      */
-    if (!repository.startsWith('git@') || !repository.endsWith('.git') || repository.split(':').length !== 2) {
-        window.showErrorMessage(
-            'Invalid git url, expected following format "git@provider.com:org/project.git",' +
-            ` received "${repository}"`
-        )
-        return
+    if (repository.startsWith('git@') && repository.endsWith('.git') && repository.split(':').length === 2) {
+        return repository.slice(0, -DOT_GIT_ANNEX_LENGTH).split(':')[1]
     }
 
-    return repository.slice(0, -4).split(':')[1]
+    /**
+     * for "https://provider.com/org/project.git"
+     */
+    if (repository.startsWith('http') && repository.endsWith('.git')) {
+        return repository.split('/').slice(-2).join('/').slice(0, -DOT_GIT_ANNEX_LENGTH)
+    }
+
+    window.showErrorMessage(
+        'Invalid git url, expected following format "git@provider.com:org/project.git",' +
+        ` received "${repository}"`
+    )
+    return
 }

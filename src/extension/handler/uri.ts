@@ -3,6 +3,7 @@ import { UriHandler, window, Uri, Progress, ProgressLocation, commands } from 'v
 import { getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName } from './utils'
 
 let NEXT_TERM_ID = 0
+const DEFAULT_START_FILE = 'README.md'
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
@@ -16,14 +17,15 @@ export class RunmeUriHandler implements UriHandler {
         }
 
         if (command === 'setup') {
-            await this._setupProject(params.get('repository'))
+            const fileToOpen = params.get('fileToOpen') || DEFAULT_START_FILE
+            await this._setupProject(fileToOpen, params.get('repository'))
             return
         }
 
         window.showErrorMessage(`Couldn't recognise command "${command}"`)
     }
 
-    private async _setupProject (repository?: string | null) {
+    private async _setupProject (fileToOpen: string, repository?: string | null) {
         if (!repository) {
             return window.showErrorMessage('No project to setup was provided in the url')
         }
@@ -46,13 +48,14 @@ export class RunmeUriHandler implements UriHandler {
             location: ProgressLocation.Window,
             cancellable: false,
             title: `Setting up project from repository ${repository}`
-        }, (progress) => this._cloneProject(progress, targetDirUri, repository))
+        }, (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen))
     }
 
     private async _cloneProject (
         progress: Progress<{ message?: string, increment?: number }>,
         targetDirUri: Uri,
-        repository: string
+        repository: string,
+        fileToOpen: string
     ) {
         progress.report({ increment: 0, message: 'Cloning repository...' })
         const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`, '/bin/sh')
@@ -60,7 +63,7 @@ export class RunmeUriHandler implements UriHandler {
 
         terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
         const success = await new Promise<boolean>(
-            (resolve) => waitForProjectCheckout(targetDirUri.fsPath, repository, resolve))
+            (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri.fsPath, repository, resolve))
 
         if (!success) {
             return terminal.dispose()
