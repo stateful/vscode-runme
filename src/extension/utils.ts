@@ -153,7 +153,7 @@ export async function canEditFile(
   verifyCheckedInFileFn = verifyCheckedInFile
 ): Promise<boolean> {
   const config = vscode.workspace.getConfiguration('runme.flags')
-  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction')
+  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction', true)
   const currentDocumentPath = notebook.uri.fsPath
   const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
 

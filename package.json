@@ -226,7 +226,7 @@
           "runme.flags.disableSaveRestriction": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
+            "default": true,
             "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
           },
           "runme.experiments.pseudoterminal": {
