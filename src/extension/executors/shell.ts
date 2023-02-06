@@ -74,6 +74,7 @@ async function shellExecutor(
       }, OutputType.outputItems)
     }
 
+    exec.clearOutput() // bug? https://github.com/microsoft/vscode/issues/173577
     exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
   }
 
