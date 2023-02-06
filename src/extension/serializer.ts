@@ -227,7 +227,7 @@ export class WasmSerializer extends SerializerBase {
     const markdown = Buffer.from(content).toString('utf8')
     const notebook = await Runme.deserialize(markdown)
 
-    if (!notebook || (notebook.cells ?? []).length === 0) {
+    if (!notebook) {
       return this.printCell('⚠️ __Error__: no cells found!')
     }
     return notebook
