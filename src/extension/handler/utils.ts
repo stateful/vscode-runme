@@ -114,19 +114,20 @@ export async function waitForProjectCheckout (
          * write a runme file into the directory, so the extension knows it has
          * to open the readme file
          */
-        const fileExist = await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
-            .then(() => true, () => false)
-        if (fileExist) {
-            const enc = new TextEncoder()
-            await workspace.fs.writeFile(
-                Uri.joinPath(targetDirUri, BOOTFILE),
-                enc.encode(fileToOpen)
-            )
-            console.log(`[Runme] Created temporary bootstrap file to open ${fileToOpen}`)
-        }
+        await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
+            .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
 
         cb(true)
     }, INTERVAL)
+}
+
+export async function writeBootstrapFile (targetDirUri: Uri, fileToOpen: string) {
+    const enc = new TextEncoder()
+    await workspace.fs.writeFile(
+        Uri.joinPath(targetDirUri, BOOTFILE),
+        enc.encode(fileToOpen)
+    )
+    console.log(`[Runme] Created temporary bootstrap file to open ${fileToOpen}`)
 }
 
 /**
