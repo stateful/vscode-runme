@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // @ts-expect-error mock feature
 import { commands, window, Uri, terminal, workspace } from 'vscode'
 import got from 'got'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import {
@@ -63,6 +64,8 @@ describe('RunmeUriHandler', () => {
             }} as any)
             await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
             expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'git@github.com:/foo/bar')
+            expect(TelemetryReporter.sendTelemetryEvent)
+              .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'project' })
         })
 
         it('runs _setupFile if command was "setup" but no repository param', async () => {
@@ -70,6 +73,8 @@ describe('RunmeUriHandler', () => {
             vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup', fileToOpen }, fsPath: '/foo/bar' } as any)
             await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
             expect(handler['_setupFile']).toBeCalledWith(fileToOpen)
+            expect(TelemetryReporter.sendTelemetryEvent)
+              .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'file' })
         })
     })
 
