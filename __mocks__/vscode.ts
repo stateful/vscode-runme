@@ -31,6 +31,7 @@ export const workspace = {
   onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   fs: {
+    writeFile: vi.fn(),
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),
     stat: vi.fn().mockResolvedValue(1),
     createDirectory: vi.fn(),

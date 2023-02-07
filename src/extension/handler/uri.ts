@@ -1,9 +1,16 @@
-import { UriHandler, window, Uri, Progress, ProgressLocation, commands } from 'vscode'
+import path from 'node:path'
 
-import { getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName } from './utils'
+import { UriHandler, window, Uri, Progress, ProgressLocation, commands, workspace } from 'vscode'
+import got from 'got'
+import { v4 as uuidv4 } from 'uuid'
+
+import {
+    getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile
+} from './utils'
 
 let NEXT_TERM_ID = 0
 const DEFAULT_START_FILE = 'README.md'
+const REGEX_WEB_RESOURCE = /^https?:\/\//
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
@@ -18,7 +25,14 @@ export class RunmeUriHandler implements UriHandler {
 
         if (command === 'setup') {
             const fileToOpen = params.get('fileToOpen') || DEFAULT_START_FILE
-            await this._setupProject(fileToOpen, params.get('repository'))
+            const repository = params.get('repository')
+
+            if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
+                await this._setupFile(fileToOpen)
+                return
+            }
+
+            await this._setupProject(fileToOpen, repository)
             return
         }
 
@@ -49,6 +63,36 @@ export class RunmeUriHandler implements UriHandler {
             cancellable: false,
             title: `Setting up project from repository ${repository}`
         }, (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen))
+    }
+
+    private async _setupFile (fileToOpen: string) {
+        const fileName = path.basename(Uri.parse(fileToOpen).fsPath)
+        if (!fileName.endsWith('.md')) {
+            return window.showErrorMessage('Parameter "fileToOpen" from URL is not a markdown file!')
+        }
+
+        /**
+         * cancel operation if user doesn't want to create set up project directory
+         */
+        const projectDirUri = await getProjectDir()
+        if (!projectDirUri) {
+            return
+        }
+
+        try {
+            const fileContent = (await got.get(fileToOpen)).body
+            const projectUri = Uri.joinPath(projectDirUri, uuidv4())
+            await workspace.fs.createDirectory(projectUri)
+
+            const enc = new TextEncoder()
+            await workspace.fs.writeFile(Uri.joinPath(projectUri, fileName), enc.encode(fileContent))
+            await writeBootstrapFile(projectUri, fileName)
+            await commands.executeCommand('vscode.openFolder', Uri.parse(projectUri.fsPath), {
+                forceNewWindow: true
+            })
+        } catch (err: unknown) {
+            return window.showErrorMessage(`Failed to set-up project from ${fileToOpen}: ${(err as Error).message}`)
+        }
     }
 
     private async _cloneProject (
