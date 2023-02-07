@@ -132,19 +132,20 @@ export async function waitForProjectCheckout (
 /**
  * verify repository url has the right format and get suggested name from provided repository url
  */
-const DOT_GIT_ANNEX_LENGTH = '.git'.length
+const DOT_GIT_ANNEX = '.git'
+const DOT_GIT_ANNEX_LENGTH = DOT_GIT_ANNEX.length
 export function getSuggestedProjectName (repository: string) {
     /**
      * for "git@provider.com:org/project.git"
      */
-    if (repository.startsWith('git@') && repository.endsWith('.git') && repository.split(':').length === 2) {
+    if (repository.startsWith('git@') && repository.endsWith(DOT_GIT_ANNEX) && repository.split(':').length === 2) {
         return repository.slice(0, -DOT_GIT_ANNEX_LENGTH).split(':')[1]
     }
 
     /**
      * for "https://provider.com/org/project.git"
      */
-    if (repository.startsWith('http') && repository.endsWith('.git')) {
+    if (repository.startsWith('http') && repository.endsWith(DOT_GIT_ANNEX)) {
         return repository.split('/').slice(-2).join('/').slice(0, -DOT_GIT_ANNEX_LENGTH)
     }
 
