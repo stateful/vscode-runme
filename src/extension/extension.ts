@@ -1,5 +1,5 @@
 
-import { workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
@@ -20,6 +20,8 @@ import {
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
+import { RunmeUriHandler } from './handler/uri'
+import { BOOTFILE } from './constants'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -27,6 +29,7 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    const uriHandler = new RunmeUriHandler()
 
     context.subscriptions.push(
       kernel,
@@ -60,7 +63,12 @@ export class RunmeExtension {
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
       commands.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
-      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer))
+      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
+
+      /**
+       * Uri handler
+       */
+      window.registerUriHandler(uriHandler)
     )
 
     /**
@@ -70,6 +78,17 @@ export class RunmeExtension {
     !hasPsuedoTerminalExperimentEnabled
       ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()))
       : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
+
+    if (workspace.workspaceFolders?.length && workspace.workspaceFolders[0]) {
+      const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
+      const hasStartupFile = await workspace.fs.stat(startupFileUri).then(() => true, () => false)
+      if (hasStartupFile) {
+        const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
+        const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
+        await workspace.fs.delete(startupFileUri)
+        await commands.executeCommand('vscode.open', bootFileUri)
+      }
+    }
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {
