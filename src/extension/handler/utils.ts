@@ -94,13 +94,20 @@ export async function waitForProjectCheckout (
         return cb(false)
     }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
     const i = setInterval(async () => {
-        const dirEntries = await workspace.fs.readDirectory(targetDirUri)
+        const dirEntries = await workspace.fs.readDirectory(targetDirUri).then((res) => res, (err) => {
+            console.error(`[Runme] Failed to fetch directory ${targetDir}: ${err.message}`)
+            return []
+        })
+
         /**
          * wait until directory has more files than only a ".git"
          */
         if (dirEntries.length <= 1) {
             return
         }
+
+        clearTimeout(t)
+        clearInterval(i)
         console.log(`[Runme] Successfully cloned repository to ${targetDir}`)
 
         /**
@@ -118,8 +125,6 @@ export async function waitForProjectCheckout (
             console.log(`[Runme] Created temporary bootstrap file to open ${fileToOpen}`)
         }
 
-        clearTimeout(t)
-        clearInterval(i)
         cb(true)
     }, INTERVAL)
 }
