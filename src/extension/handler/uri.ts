@@ -3,6 +3,7 @@ import path from 'node:path'
 import { UriHandler, window, Uri, Progress, ProgressLocation, commands, workspace } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
     getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile
@@ -25,13 +26,16 @@ export class RunmeUriHandler implements UriHandler {
 
         if (command === 'setup') {
             const fileToOpen = params.get('fileToOpen') || DEFAULT_START_FILE
-            const repository = params.get('repository')
+            const repository = params.get('repository')!
+            const telemetryEvent = { command, repository, fileToOpen }
 
             if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
+                TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { ...telemetryEvent, type: 'file' })
                 await this._setupFile(fileToOpen)
                 return
             }
 
+            TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { ...telemetryEvent, type: 'project' })
             await this._setupProject(fileToOpen, repository)
             return
         }
