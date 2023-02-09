@@ -4,10 +4,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Uri, workspace, window } from 'vscode'
 
 import {
-    getProjectDir, getTargetDirName, getSuggestedProjectName
+    getProjectDir, getTargetDirName, getSuggestedProjectName, parseParams
 } from '../../../src/extension/handler/utils'
 
-vi.mocked(Uri.parse).mockImplementation((input: any) => input)
 vi.mocked(Uri.joinPath).mockImplementation(
     (base: any, ...input: string[]) => path.join('/some/path', ...input) as any)
 vi.mock('vscode')
@@ -23,14 +22,13 @@ beforeEach(() => {
 
 describe('getProjectDir', () => {
     it('should use a tmp dir if config is not set', async () => {
-        expect(await getProjectDir()).toBe('/tmp/dir')
+        expect(await getProjectDir()).toMatchObject({ path: '/tmp/dir' })
     })
 
     it('should return project dir if existing', async () => {
         config.set('projectDir', 'foobar')
-        vi.mocked(Uri.parse).mockReturnValue('foobar' as any)
         vi.mocked(workspace.fs.stat).mockResolvedValueOnce({} as any)
-        expect(await getProjectDir()).toBe('foobar')
+        expect(await getProjectDir()).toMatchObject({ path: '/foobar' })
     })
 
     it('should return null if user does not want to create new project dir', async () => {
@@ -44,7 +42,7 @@ describe('getProjectDir', () => {
         config.set('projectDir', 'foobar')
         vi.mocked(window.showInformationMessage).mockResolvedValue('Yes' as any)
         vi.mocked(workspace.fs.stat).mockRejectedValueOnce(new Error(''))
-        expect(await getProjectDir()).toBe('foobar')
+        expect(await getProjectDir()).toMatchObject({ path: '/foobar' })
         expect(workspace.fs.createDirectory).toBeCalledTimes(1)
     })
 })
@@ -86,4 +84,14 @@ describe('getSuggestedProjectName', () => {
         expect(getSuggestedProjectName('foobar')).toBe(undefined)
         expect(window.showErrorMessage).toBeCalledTimes(1)
     })
+})
+
+describe('parseParams', () => {
+  it('should parse params to be used safely', () => {
+    const usp = new URLSearchParams('fileToOpen=foo;bar loo&repository=git@github.com/org/project;foo bar.git')
+    expect(parseParams(usp)).toEqual({
+      fileToOpen: 'foo%3Bbar%20loo',
+      repository: 'git@github.com/org/project%3Bfoo%20bar.git'
+    })
+  })
 })

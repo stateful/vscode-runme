@@ -6,11 +6,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
-    getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile
+    getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile,
+    parseParams
 } from './utils'
 
 let NEXT_TERM_ID = 0
-const DEFAULT_START_FILE = 'README.md'
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 
 export class RunmeUriHandler implements UriHandler {
@@ -25,8 +25,7 @@ export class RunmeUriHandler implements UriHandler {
         }
 
         if (command === 'setup') {
-            const fileToOpen = Uri.parse(params.get('fileToOpen') || DEFAULT_START_FILE).toString()
-            const repository = params.get('repository')
+            const { fileToOpen, repository } = parseParams(params)
 
             if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
                 TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'file' })

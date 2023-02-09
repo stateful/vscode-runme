@@ -156,3 +156,25 @@ export function getSuggestedProjectName (repository: string) {
     )
     return
 }
+
+const FILE_PROTOCOL = 'file:///'
+const GIT_SCHEMA = 'git@'
+const DEFAULT_START_FILE = 'README.md'
+export function parseParams (params: URLSearchParams) {
+  try {
+    const fileToOpen = Uri.parse(params.get('fileToOpen') || DEFAULT_START_FILE).toString().replace(FILE_PROTOCOL, '')
+    let repository = params.get('repository')
+
+    if (repository) {
+      repository = (
+        repository.startsWith(GIT_SCHEMA)
+          ? GIT_SCHEMA + Uri.parse(repository.slice(GIT_SCHEMA.length)).toString()
+          : Uri.parse(repository).toString()
+      ).replace(FILE_PROTOCOL, '')
+    }
+
+    return { fileToOpen, repository }
+  } catch (err) {
+    throw new Error(`Failed to parse url parameters: ${(err as Error).message}`)
+  }
+}
