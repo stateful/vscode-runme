@@ -25,8 +25,8 @@ export class RunmeUriHandler implements UriHandler {
         }
 
         if (command === 'setup') {
-            const fileToOpen = params.get('fileToOpen') || DEFAULT_START_FILE
-            const repository = params.get('repository')!
+            const fileToOpen = Uri.parse(params.get('fileToOpen') || DEFAULT_START_FILE).toString()
+            const repository = params.get('repository')
 
             if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
                 TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'file' })
@@ -35,7 +35,7 @@ export class RunmeUriHandler implements UriHandler {
             }
 
             TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'project' })
-            await this._setupProject(fileToOpen, repository)
+            await this._setupProject(fileToOpen, Uri.parse(repository as string).toString())
             return
         }
 
