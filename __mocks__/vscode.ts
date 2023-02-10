@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { vi } from 'vitest'
+import { URI } from 'vscode-uri'
 
 export const notebooks = {
   createNotebookController: vi.fn().mockReturnValue({
@@ -17,7 +18,7 @@ export const notebooks = {
 
 export const Uri = {
   joinPath: vi.fn().mockReturnValue('/foo/bar'),
-  parse: vi.fn(),
+  parse: vi.fn((uri: string) => URI.parse(uri)),
   file: vi.fn().mockReturnValue('')
 }
 

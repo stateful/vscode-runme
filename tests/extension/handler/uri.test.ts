@@ -6,12 +6,13 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import {
-    getProjectDir, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile
+    getProjectDir, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile, parseParams
 } from '../../../src/extension/handler/utils'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/handler/utils', () => ({
+    parseParams: vi.fn().mockReturnValue({}),
     getProjectDir: vi.fn(),
     getTargetDirName: vi.fn(),
     waitForProjectCheckout: vi.fn(),
@@ -57,23 +58,27 @@ describe('RunmeUriHandler', () => {
         })
 
         it('runs _setupProject if command was "setup"', async () => {
-            vi.mocked(Uri.parse).mockReturnValue({ toString: () => 'some url', query: {
-                command: 'setup',
-                fileToOpen: '/sub/file.md',
-                repository: 'git@github.com:/foo/bar'
-            }} as any)
+            vi.mocked(Uri.parse).mockReturnValue({
+              toString: () => 'some url',
+              query: { command: 'setup' }
+            } as any)
+            vi.mocked(parseParams).mockReturnValue({
+              fileToOpen: '/sub/file.md',
+              repository: 'git@github.com:/foo/bar'
+            })
             await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
-            expect(handler['_setupProject']).toBeCalledWith('some url', 'some url')
+            expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'git@github.com:/foo/bar')
             expect(TelemetryReporter.sendTelemetryEvent)
               .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'project' })
         })
 
         it('runs _setupFile if command was "setup" but no repository param', async () => {
-            const fileToOpen = 'https://raw.githubusercontent.com/stateful/vscode-runme/main/examples/k8s/README.md'
             vi.mocked(Uri.parse).mockReturnValue({
               toString: () => 'https://some url',
-              query: { command: 'setup', fileToOpen }, fsPath: '/foo/bar' } as any
-            )
+              query: { command: 'setup' },
+              fsPath: '/foo/bar'
+            } as any)
+            vi.mocked(parseParams).mockReturnValue({ fileToOpen: 'https://some url', repository: null })
             await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
             expect(handler['_setupFile']).toBeCalledWith('https://some url')
             expect(TelemetryReporter.sendTelemetryEvent)
