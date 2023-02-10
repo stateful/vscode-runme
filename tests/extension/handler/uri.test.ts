@@ -67,7 +67,7 @@ describe('RunmeUriHandler', () => {
               repository: 'git@github.com:/foo/bar'
             })
             await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
-            expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'some url')
+            expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'git@github.com:/foo/bar')
             expect(TelemetryReporter.sendTelemetryEvent)
               .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'project' })
         })
