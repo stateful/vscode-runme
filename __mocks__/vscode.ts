@@ -31,6 +31,7 @@ export const workspace = {
   registerNotebookSerializer: vi.fn(),
   onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   fs: {
     writeFile: vi.fn(),
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),

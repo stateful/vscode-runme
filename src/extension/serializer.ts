@@ -12,6 +12,7 @@ import {
   WorkspaceEdit,
   NotebookEdit,
   NotebookDocumentChangeEvent,
+  Disposable,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { ChannelCredentials } from '@grpc/grpc-js'
@@ -30,17 +31,22 @@ const DEFAULT_LANG_ID = 'text'
 
 type ReadyPromise = Promise<void | Error>
 
-export abstract class SerializerBase implements NotebookSerializer {
+export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
+  protected disposables: Disposable[] = []
 
   constructor(protected context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
-    context.subscriptions.push(
+    this.disposables.push(
       workspace.onDidChangeNotebookDocument(
         this.handleNotebookChanged.bind(this)
       )
     )
+  }
+
+  public dispose() {
+    this.disposables.forEach(d => d.dispose())
   }
 
   protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
