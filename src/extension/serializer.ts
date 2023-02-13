@@ -49,6 +49,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     this.disposables.forEach(d => d.dispose())
   }
 
+
+  /**
+   * Handle newly added cells (live edits) to have UUIDs
+   */
   protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
     changes.contentChanges.forEach((contentChanges) => {
       contentChanges.addedCells.forEach((cellAdded) => {
@@ -213,7 +217,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       }
 
       if (cell.kind === NotebookCellKind.Code) {
-        // todo(sebastian): decide if the serializer should own lifecycle
+        // serializer owns lifecycle due live edits bypass deserialization
         cell.metadata = SerializerBase.addCellUuid(elem.metadata)
       }
 
