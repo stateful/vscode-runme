@@ -8,7 +8,10 @@ vi.mock('vscode-telemetry')
 
 vi.mock('../../src/extension/grpc/client', () => ({
   ParserServiceClient: vi.fn(),
+  RunnerServiceClient: vi.fn(),
 }))
+
+vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 test('initializes all providers', async () => {
   const configValues = {

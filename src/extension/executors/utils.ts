@@ -114,3 +114,14 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
   }
   return cellText
 }
+
+/**
+ * Try to get shell path from environment (`$SHELL`)
+ *
+ * @param execKey Used as fallback in case `$SHELL` is not present
+ */
+export function getShellPath(): string|undefined
+export function getShellPath(execKey: 'bash'|'sh'): string
+export function getShellPath(execKey?: string): string|undefined {
+  return process.env.SHELL ?? execKey
+}

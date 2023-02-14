@@ -1,7 +1,16 @@
 import {
-  Disposable, notebooks, window, workspace, ExtensionContext,
-  NotebookEditor, NotebookCell, NotebookCellKind, NotebookCellExecution, WorkspaceEdit, NotebookEdit, NotebookDocument
-} from 'vscode'
+  Disposable,
+  notebooks,
+  window,
+  workspace,
+  ExtensionContext,
+  NotebookEditor,
+  NotebookCell,
+  NotebookCellKind,
+  NotebookCellExecution,
+  WorkspaceEdit,
+  NotebookEdit,
+  NotebookDocument} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage } from '../types'
@@ -12,8 +21,9 @@ import executor, { runme } from './executors'
 import { ExperimentalTerminal } from './terminal/terminal'
 import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
-
 import './wasm/wasm_exec.js'
+import { IRunner, IRunnerEnvironment } from './runner'
+import { executeRunner } from './executors/runner'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -36,10 +46,16 @@ export class Kernel implements Disposable {
   )
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
-  constructor(protected context: ExtensionContext) {
+  protected runner?: IRunner
+  protected environment?: IRunnerEnvironment
+
+  constructor(
+    protected context: ExtensionContext,
+  ) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
+    this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', false))
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
@@ -237,14 +253,35 @@ export class Kernel implements Disposable {
     exec.start(Date.now())
     let execKey = getKey(runningCell)
 
-    /**
-     * check if user is running experiment to execute shell via runme cli
-     */
     const hasPsuedoTerminalExperimentEnabled = this.hasExperimentEnabled('pseudoterminal')
     const terminal = this.#terminals.get(cell.document.uri.fsPath)
-    const successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
-      ? await runme.call(this, exec, terminal)
-      : await executor[execKey].call(this, exec, runningCell)
+
+    let successfulCellExecution: boolean
+
+    if(
+      this.runner &&
+      !(hasPsuedoTerminalExperimentEnabled && terminal) &&
+      (execKey === 'bash' || execKey === 'sh')
+    ) {
+      successfulCellExecution = await executeRunner(
+        this.runner,
+        exec,
+        runningCell,
+        execKey,
+        this.environment
+      )
+        .catch((e) => {
+          console.error(e)
+          return false
+        })
+    } else {
+      /**
+       * check if user is running experiment to execute shell via runme cli
+       */
+      successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
+        ? await runme.call(this, exec, terminal)
+        : await executor[execKey].call(this, exec, runningCell)
+    }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     exec.end(successfulCellExecution)
   }
@@ -264,5 +301,18 @@ export class Kernel implements Disposable {
 
     const runmeTerminal = new ExperimentalTerminal(editor.notebook)
     this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
+  }
+
+  useRunner(runner: IRunner) {
+    if(this.#experiments.get('grpcRunner') && runner) {
+      this.runner = runner
+
+      this.#disposables.push(runner)
+      runner.createEnvironment(
+        // copy env from process naively for now
+        // later we might want a more sophisticated approach/to bring this serverside
+        Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+      ).then(env => { this.environment = env })
+    }
   }
 }
