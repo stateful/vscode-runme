@@ -13,7 +13,7 @@ import {
   hashDocumentUri,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
-import { NotebookCellAnnotations } from '../../src/types'
+import { CellAnnotations } from '../../src/types'
 
 vi.mock('vscode', () => ({
   default: {
@@ -250,7 +250,7 @@ suite('#getAnnotations', () => {
   test('should have sane defaults', () => {
     const d = getAnnotations({ name: 'command-123', 'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0' })
     expect(d).toStrictEqual(
-      <NotebookCellAnnotations>{
+      <CellAnnotations>{
         background: false,
         closeTerminalOnSuccess: false,
         interactive: false,
@@ -275,7 +275,6 @@ suite('#getAnnotations', () => {
       interactive: false,
       mimeType: 'text/plain',
       name: 'echo-hello',
-      'runme.dev/uuid': undefined,
     })
   })
 })

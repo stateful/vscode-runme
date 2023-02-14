@@ -2,11 +2,17 @@ import { z } from 'zod'
 
 const CELL_RANDOM_NAME = `Cell #${Math.random().toString().slice(2)}`
 
-const falseyBoolean = z.preprocess((subject) => {
+const falseyBoolean = (defaultValue: boolean) => z.preprocess((subject) => {
+    if (typeof subject === 'boolean') {
+        return subject
+    }
     if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
         return false
     }
-    return Boolean(subject)
+    if (typeof subject === 'string' && subject.toLowerCase() === 'true') {
+        return true
+    }
+    return defaultValue
 }, z.boolean())
 
 const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a boolean value') =>
@@ -32,8 +38,8 @@ export const AnnotationSchema = {
     mimeType: z
         .string()
         .refine((subject) => {
-            const [type, subtype] = subject.split('/')
-            if (!type || !subtype) {
+            const [type, subtype, ...rest] = subject.split('/')
+            if (!type || !subtype || rest.length) {
                 return false
             }
             return true
@@ -43,9 +49,9 @@ export const AnnotationSchema = {
 
 export const SafeCellAnnotationsSchema = z.object({
     ...AnnotationSchema,
-    background: falseyBoolean.default(false),
-    interactive: falseyBoolean.default(true),
-    closeTerminalOnSuccess: falseyBoolean.default(true),
+    background: falseyBoolean(false),
+    interactive: falseyBoolean(false),
+    closeTerminalOnSuccess: falseyBoolean(true),
 })
 
 export const CellAnnotationsSchema = z.object({
