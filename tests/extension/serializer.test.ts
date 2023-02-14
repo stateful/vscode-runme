@@ -8,7 +8,7 @@ globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
 
 vi.mock('../../src/extension/grpc/client', () => ({
-  ParserServiceClient: vi.fn(),
+    ParserServiceClient: vi.fn(),
 }))
 
 vi.mock('vscode', () => ({
@@ -18,7 +18,8 @@ vi.mock('vscode', () => ({
     },
     Uri: { joinPath: vi.fn().mockReturnValue('/foo/bar') },
     workspace: {
-        fs: { readFile: vi.fn().mockReturnValue(new Promise(() => {})) }
+        fs: { readFile: vi.fn().mockReturnValue(new Promise(() => {})) },
+        onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     },
     commands: { executeCommand: vi.fn() }
 }))

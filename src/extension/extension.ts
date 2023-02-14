@@ -33,6 +33,7 @@ export class RunmeExtension {
 
     context.subscriptions.push(
       kernel,
+      serializer,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata: {

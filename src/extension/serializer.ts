@@ -8,6 +8,11 @@ import {
   NotebookCellData,
   NotebookCellKind,
   CancellationToken,
+  workspace,
+  WorkspaceEdit,
+  NotebookEdit,
+  NotebookDocumentChangeEvent,
+  Disposable,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { ChannelCredentials } from '@grpc/grpc-js'
@@ -26,12 +31,58 @@ const DEFAULT_LANG_ID = 'text'
 
 type ReadyPromise = Promise<void | Error>
 
-export abstract class SerializerBase implements NotebookSerializer {
-  protected readonly abstract ready: ReadyPromise
+export abstract class SerializerBase implements NotebookSerializer, Disposable {
+  protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
+  protected disposables: Disposable[] = []
 
   constructor(protected context: ExtensionContext) {
     this.languages = Languages.fromContext(this.context)
+    this.disposables.push(
+      workspace.onDidChangeNotebookDocument(
+        this.handleNotebookChanged.bind(this)
+      )
+    )
+  }
+
+  public dispose() {
+    this.disposables.forEach(d => d.dispose())
+  }
+
+
+  /**
+   * Handle newly added cells (live edits) to have UUIDs
+   */
+  protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
+    changes.contentChanges.forEach((contentChanges) => {
+      contentChanges.addedCells.forEach((cellAdded) => {
+        if (
+          cellAdded.kind !== NotebookCellKind.Code ||
+          cellAdded.metadata['runme.dev/uuid'] !== undefined
+        ) {
+          return
+        }
+
+        const notebookEdit = NotebookEdit.updateCellMetadata(
+          cellAdded.index,
+          SerializerBase.addCellUuid(cellAdded.metadata)
+        )
+        const edit = new WorkspaceEdit()
+        edit.set(cellAdded.notebook.uri, [notebookEdit])
+        workspace.applyEdit(edit)
+      })
+    })
+  }
+
+  public static addCellUuid(
+    metadata: Serializer.Metadata | undefined
+  ): {
+    [key: string]: any
+  } {
+    return {
+      ...metadata || {},
+      ...{ 'runme.dev/uuid': uuidv4() },
+    }
   }
 
   protected abstract saveNotebook(
@@ -50,7 +101,7 @@ export abstract class SerializerBase implements NotebookSerializer {
     let encoded: Uint8Array
     try {
       encoded = await this.saveNotebook(data, token)
-    } catch(err: any) {
+    } catch (err: any) {
       console.error(err)
       throw err
     }
@@ -165,9 +216,10 @@ export abstract class SerializerBase implements NotebookSerializer {
         )
       }
 
-      cell.metadata = { ...elem.metadata }
-      // todo(sebastian): decide if the serializer should own lifecycle
-      cell.metadata['runme.dev/uuid'] = uuidv4()
+      if (cell.kind === NotebookCellKind.Code) {
+        // serializer owns lifecycle because live edits bypass deserialization
+        cell.metadata = SerializerBase.addCellUuid(elem.metadata)
+      }
 
       accu.push(cell)
 
