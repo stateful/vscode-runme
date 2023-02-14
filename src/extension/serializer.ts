@@ -217,7 +217,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       }
 
       if (cell.kind === NotebookCellKind.Code) {
-        // serializer owns lifecycle due live edits bypass deserialization
+        // serializer owns lifecycle because live edits bypass deserialization
         cell.metadata = SerializerBase.addCellUuid(elem.metadata)
       }
 
