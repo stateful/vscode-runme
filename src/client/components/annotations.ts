@@ -132,6 +132,9 @@ export class Annotations extends LitElement {
 
     if (!parseResult.success) {
       const { fieldErrors } = parseResult.error.flatten()
+      if (this.validationErrors && !this.validationErrors?.errors) {
+        this.validationErrors.errors = {}
+      }
       if (this.validationErrors?.errors && !this.validationErrors.errors[propName]) {
         this.validationErrors.errors[propName] = fieldErrors[propName]
       }
