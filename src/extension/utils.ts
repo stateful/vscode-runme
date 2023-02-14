@@ -2,10 +2,11 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
+import vscode, { FileType, Uri, workspace, NotebookDocument, NotebookCell } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 
-import { CellAnnotations, CellAnnotationsSchema, Serializer } from '../types'
+import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
+import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -20,7 +21,7 @@ const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
  */
 export function getAnnotations(cell: vscode.NotebookCell): CellAnnotations
 export function getAnnotations(metadata?: Serializer.Metadata): CellAnnotations
-export function getAnnotations(raw: unknown): CellAnnotations {
+export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
   let metadata = raw as Serializer.Metadata
@@ -29,26 +30,53 @@ export function getAnnotations(raw: unknown): CellAnnotations {
     metadata = metadataFromCell.metadata
   }
 
-  const preValidation = {
+  const schema = {
     interactive: config.get<boolean>('interactive'),
     closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
     ...metadata,
     name:
       metadata.name ||
-      metadata['runme.dev/name'] ||
-      `Cell #${Math.random().toString().slice(2)}`,
+      metadata['runme.dev/name'],
   }
 
-  let result
-  try {
-    result = CellAnnotationsSchema.parse(preValidation)
-  } catch (err: any) {
-    const message = err.format ? JSON.stringify(err.format()) : err.message
-    console.error(`[Runme] Invalid annotations in metadata: ${message}`)
-    throw err
+  const parseResult = SafeCellAnnotationsSchema.safeParse(schema)
+  if (parseResult.success) {
+    return parseResult.data
+  }
+}
+
+export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorResult {
+  const config = vscode.workspace.getConfiguration('runme.shell')
+  let metadata = cell as Serializer.Metadata
+
+  if (cell.metadata) {
+    metadata = cell.metadata
   }
 
-  return result
+  const schema = {
+    interactive: config.get<boolean>('interactive'),
+    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
+    ...metadata,
+    name:
+      metadata.name ||
+      metadata['runme.dev/name'],
+  }
+
+  const parseResult = CellAnnotationsSchema.safeParse(schema)
+  if (!parseResult.success) {
+    const { fieldErrors } = parseResult.error.flatten()
+    return {
+      hasErrors: true,
+      errors: fieldErrors,
+      originalAnnotations: schema as unknown as CellAnnotations
+    }
+  }
+
+  return {
+    hasErrors: false,
+    originalAnnotations: schema as unknown as CellAnnotations
+  }
+
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell) {
@@ -198,7 +226,7 @@ export async function initWasm(wasmUri: Uri) {
 
 export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-      ? workspace.workspaceFolders[0].uri.fsPath
+    ? workspace.workspaceFolders[0].uri.fsPath
     : undefined
 }
 

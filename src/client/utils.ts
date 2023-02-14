@@ -12,3 +12,9 @@ export function getContext () {
 export function setContext (c: RendererContext<void>) {
   context = c
 }
+
+export function tryBoolean(element: string) {
+  if (element.toLowerCase() === 'false') { return false }
+  if (element.toLowerCase() === 'true') { return true }
+  return element
+}

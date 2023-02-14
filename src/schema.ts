@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+const CELL_RANDOM_NAME = `Cell #${Math.random().toString().slice(2)}`
+
 const falseyBoolean = z.preprocess((subject) => {
     if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
         return false
@@ -7,12 +9,26 @@ const falseyBoolean = z.preprocess((subject) => {
     return Boolean(subject)
 }, z.boolean())
 
+const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a boolean value') =>
+    z.preprocess((subject) => {
+        if (!subject) {
+            return defaultValue
+        }
+        if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
+            return false
+        }
+        if (typeof subject === 'string' && subject.toLowerCase() === 'true') {
+            return true
+        }
+        return subject
+    }, z.boolean({ invalid_type_error: invalidTypeError }))
+
 export const AnnotationSchema = {
     'runme.dev/uuid': z.string().uuid().optional(),
-    background: z.boolean({ invalid_type_error: 'expected a boolean value' }).default(false),
-    interactive: z.boolean({ invalid_type_error: 'expected a boolean value' }).default(true),
-    closeTerminalOnSuccess: z.boolean({ invalid_type_error: 'expected a boolean value' }).default(true),
-    name: z.string(),
+    background: boolify(false),
+    interactive: boolify(true),
+    closeTerminalOnSuccess: boolify(true),
+    name: z.string().default(CELL_RANDOM_NAME),
     mimeType: z
         .string()
         .refine((subject) => {

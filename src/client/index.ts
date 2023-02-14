@@ -51,6 +51,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
         case OutputType.annotations:
           const annoElem = document.createElement('edit-annotations')
           annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
+          annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
           element.appendChild(annoElem)
           break
         case OutputType.error:
