@@ -104,12 +104,12 @@ export class Kernel implements Disposable {
           if (
             cell.kind !== NotebookCellKind.Code ||
             cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
-            break
+            continue
           }
 
           if (cell.metadata?.['runme.dev/uuid'] === undefined) {
             console.error(`[Runme] Cell with index ${cell.index} lacks uuid`)
-            break
+            continue
           }
 
           if (
