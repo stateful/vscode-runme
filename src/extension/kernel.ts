@@ -101,7 +101,14 @@ export class Kernel implements Disposable {
       let editCell: NotebookCell | undefined = undefined
       for (const document of workspace.notebookDocuments) {
         for (const cell of document.getCells()) {
-          if (cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
+          if (
+            cell.kind !== NotebookCellKind.Code ||
+            cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
+            break
+          }
+
+          if (cell.metadata?.['runme.dev/uuid'] === undefined) {
+            console.error(`[Runme] Cell with index ${cell.index} lacks uuid`)
             break
           }
 
