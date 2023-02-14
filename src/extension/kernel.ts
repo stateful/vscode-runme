@@ -95,7 +95,8 @@ export class Kernel implements Disposable {
   // eslint-disable-next-line max-len
   async #handleRendererMessage({ editor, message }: { editor: NotebookEditor, message: ClientMessage<ClientMessages> }) {
     if (message.type === ClientMessages.mutateAnnotations) {
-      const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
+      const payload =
+        message as ClientMessage<ClientMessages.mutateAnnotations>
 
       let editCell: NotebookCell | undefined = undefined
       for (const document of workspace.notebookDocuments) {
@@ -104,7 +105,10 @@ export class Kernel implements Disposable {
             break
           }
 
-          if (cell.metadata?.['runme.dev/uuid'] === payload.output.annotations['runme.dev/uuid']) {
+          if (
+            cell.metadata?.['runme.dev/uuid'] ===
+            payload.output.annotations['runme.dev/uuid']
+          ) {
             editCell = cell
             break
           }
@@ -113,7 +117,7 @@ export class Kernel implements Disposable {
         if (editCell) {
           break
         }
-		}
+      }
 
       if (editCell) {
         const edit = new WorkspaceEdit()
@@ -121,7 +125,10 @@ export class Kernel implements Disposable {
           ...editCell.metadata,
           ...payload.output.annotations,
         }
-        const notebookEdit = NotebookEdit.updateCellMetadata(editCell.index, newMetadata)
+        const notebookEdit = NotebookEdit.updateCellMetadata(
+          editCell.index,
+          newMetadata
+        )
 
         edit.set(editCell.notebook.uri, [notebookEdit])
         await workspace.applyEdit(edit)
@@ -136,10 +143,13 @@ export class Kernel implements Disposable {
       }
 
       const api = API.fromToken(token)
-      const deployed = await api.promoteDeployment(payload.output.id, payload.output.productionDeployment)
+      const deployed = await api.promoteDeployment(
+        payload.output.id,
+        payload.output.productionDeployment
+      )
       this.messaging.postMessage(<ClientMessage<ClientMessages.deployed>>{
         type: ClientMessages.deployed,
-        output: deployed
+        output: deployed,
       })
     } else if (message.type === ClientMessages.prod) {
       const payload = message as ClientMessage<ClientMessages.prod>
