@@ -251,6 +251,18 @@
             "scope": "machine",
             "default": 60000,
             "markdownDescription": "Timeout until Runme will cancel the clone process."
+          },
+          "runme.server.port": {
+            "type": "number",
+            "scope": "machine",
+            "default": 8084,
+            "markdownDescription": "Port used by Runme server. (It requires the GRPC interface enabled)"
+          },
+          "runme.server.binaryPath": {
+            "type": "string",
+            "scope": "machine",
+            "default": ".bin/runme",
+            "markdownDescription": "Runme server binary location. (It requires the GRPC interface enabled)"
           }
         }
       }

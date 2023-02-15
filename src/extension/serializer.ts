@@ -19,6 +19,7 @@ import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
+import { SERVER_ADDRESS } from '../constants'
 
 import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/types'
 import { ParserServiceClient } from './grpc/client'
@@ -291,8 +292,10 @@ export class GrpcSerializer extends SerializerBase {
   protected ready: ReadyPromise
 
   static async initGrpc(): Promise<ParserServiceClient> {
+    const config = workspace.getConfiguration('runme.server')
+    const serverPort = config.get<number>('port')!
     const transport = new GrpcTransport({
-      host: 'unix:///tmp/runme.sock',
+      host: `${SERVER_ADDRESS}:${serverPort}`,
       channelCredentials: ChannelCredentials.createInsecure(),
     })
 

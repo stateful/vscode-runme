@@ -3,7 +3,8 @@ import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } 
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
-import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider} from './provider/background'
+import Server from './cli/server'
+import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
@@ -14,7 +15,7 @@ import {
   runCLICommand,
   copyCellToClipboard,
   openAsRunmeNotebook,
-  openSplitViewAsMarkdownText ,
+  openSplitViewAsMarkdownText,
   stopBackgroundTask,
   createNewRunmeNotebook
 } from './commands'
@@ -22,11 +23,34 @@ import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import { BOOTFILE } from './constants'
+import ServerError from './cli/serverError'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
+    const server = new Server({
+      retryOnFailure: true,
+      maxNumberOfIntents: 2
+    })
+    /**
+     * Start the CLI server
+     */
+
+    try {
+      if (grpcSerializer) {
+        await server.start()
+      }
+    } catch (e) {
+      // Unrecoverable error happened
+      if (e instanceof ServerError) {
+        TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: e.message })
+        return window.showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
+      }
+      TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
+      return window.showErrorMessage('Failed to start Runme server, please try to reload the window')
+    }
+
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler()
@@ -34,6 +58,7 @@ export class RunmeExtension {
     context.subscriptions.push(
       kernel,
       serializer,
+      server,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata: {
