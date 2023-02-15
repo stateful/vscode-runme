@@ -1,6 +1,8 @@
 import { NotebookCellKind } from 'vscode'
+import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
+import { SafeCellAnnotationsSchema } from './schema'
 
 export namespace Serializer {
   export type Notebook = {
@@ -65,7 +67,8 @@ interface Payload {
   }
   [OutputType.outputItems]: OutputItemsPayload
   [OutputType.annotations]: {
-    annotations?: NotebookCellAnnotations
+    annotations?: CellAnnotations
+    validationErrors?: CellAnnotationsErrorResult
   }
 }
 
@@ -84,7 +87,7 @@ export interface ClientMessagePayload {
     cellIndex: number
   }
   [ClientMessages.mutateAnnotations]: {
-    annotations: NotebookCellAnnotations
+    annotations: CellAnnotations
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
@@ -104,11 +107,17 @@ export interface RunmeTaskDefinition {
   cwd?: string
 }
 
-export interface NotebookCellAnnotations {
-  'runme.dev/uuid': string
-  background: boolean
-  interactive: boolean
-  closeTerminalOnSuccess: boolean
-  mimeType: string
-  name: string
+export type CellAnnotations = z.infer<typeof SafeCellAnnotationsSchema>
+
+export type allKeys<T> = T extends any ? keyof T : never
+
+export type CellAnnotationErrorKey = {
+  [P in allKeys<CellAnnotations>]?: string[]
+}
+
+
+export type CellAnnotationsErrorResult = {
+  hasErrors: boolean
+  errors?: CellAnnotationErrorKey
+  originalAnnotations: CellAnnotations
 }

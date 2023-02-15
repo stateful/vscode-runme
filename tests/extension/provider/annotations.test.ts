@@ -27,6 +27,7 @@ vi.mock('../../../src/extension/utils', () => ({
       }
     }
   }),
+  validateAnnotations: vi.fn()
 }))
 
 describe('Runme Annotations', () => {

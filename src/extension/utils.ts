@@ -2,11 +2,11 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType, Uri, workspace, NotebookDocument } from 'vscode'
+import vscode, { FileType, Uri, workspace, NotebookDocument, NotebookCell } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 
-import { NotebookCellAnnotations, Serializer } from '../types'
-import { METADATA_DEFAULTS } from '../constants'
+import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
+import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 
 import executor from './executors'
 import { Kernel } from './kernel'
@@ -15,14 +15,13 @@ import { ENV_STORE, DEFAULT_ENV } from './constants'
 declare var globalThis: any
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
-const TRUTHY_VALUES = ['1', 'true']
 
 /**
  * Annotations are stored as subset of metadata
  */
-export function getAnnotations(cell: vscode.NotebookCell): NotebookCellAnnotations
-export function getAnnotations(metadata?: Serializer.Metadata): NotebookCellAnnotations
-export function getAnnotations(raw: unknown): NotebookCellAnnotations {
+export function getAnnotations(cell: vscode.NotebookCell): CellAnnotations
+export function getAnnotations(metadata?: Serializer.Metadata): CellAnnotations
+export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
   let metadata = raw as Serializer.Metadata
@@ -31,23 +30,53 @@ export function getAnnotations(raw: unknown): NotebookCellAnnotations {
     metadata = metadataFromCell.metadata
   }
 
-  return <NotebookCellAnnotations>{
-    background:
-      typeof metadata.background === 'string'
-        ? TRUTHY_VALUES.includes(metadata.background)
-        : METADATA_DEFAULTS.background,
-    interactive:
-      typeof metadata.interactive === 'string'
-        ? TRUTHY_VALUES.includes(metadata.interactive)
-        : config.get<boolean>('interactive', METADATA_DEFAULTS.interactive),
-    closeTerminalOnSuccess:
-      typeof metadata.closeTerminalOnSuccess === 'string'
-        ? TRUTHY_VALUES.includes(metadata.closeTerminalOnSuccess)
-        : config.get<boolean>('closeTerminalOnSuccess', METADATA_DEFAULTS.closeTerminalOnSuccess),
-    mimeType: typeof metadata.mimeType === 'string' ? metadata.mimeType : METADATA_DEFAULTS.mimeType,
-    name: metadata.name || metadata['runme.dev/name'],
-    'runme.dev/uuid': metadata['runme.dev/uuid'],
+  const schema = {
+    interactive: config.get<boolean>('interactive'),
+    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
+    ...metadata,
+    name:
+      metadata.name ||
+      metadata['runme.dev/name'],
   }
+
+  const parseResult = SafeCellAnnotationsSchema.safeParse(schema)
+  if (parseResult.success) {
+    return parseResult.data
+  }
+}
+
+export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorResult {
+  const config = vscode.workspace.getConfiguration('runme.shell')
+  let metadata = cell as Serializer.Metadata
+
+  if (cell.metadata) {
+    metadata = cell.metadata
+  }
+
+  const schema = {
+    interactive: config.get<boolean>('interactive'),
+    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
+    ...metadata,
+    name:
+      metadata.name ||
+      metadata['runme.dev/name'],
+  }
+
+  const parseResult = CellAnnotationsSchema.safeParse(schema)
+  if (!parseResult.success) {
+    const { fieldErrors } = parseResult.error.flatten()
+    return {
+      hasErrors: true,
+      errors: fieldErrors,
+      originalAnnotations: schema as unknown as CellAnnotations
+    }
+  }
+
+  return {
+    hasErrors: false,
+    originalAnnotations: schema as unknown as CellAnnotations
+  }
+
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell) {
@@ -153,7 +182,7 @@ export async function canEditFile(
   verifyCheckedInFileFn = verifyCheckedInFile
 ): Promise<boolean> {
   const config = vscode.workspace.getConfiguration('runme.flags')
-  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction', true)
+  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction')
   const currentDocumentPath = notebook.uri.fsPath
   const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
 
@@ -197,7 +226,7 @@ export async function initWasm(wasmUri: Uri) {
 
 export function getDefaultWorkspace(): string | undefined {
   return workspace.workspaceFolders && workspace.workspaceFolders.length > 0
-      ? workspace.workspaceFolders[0].uri.fsPath
+    ? workspace.workspaceFolders[0].uri.fsPath
     : undefined
 }
 

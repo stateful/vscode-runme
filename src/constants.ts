@@ -21,13 +21,6 @@ export enum ClientMessages {
   mutateAnnotations = 'annotations:mutate'
 }
 
-export const METADATA_DEFAULTS = {
-  background: false,
-  interactive: true,
-  closeTerminalOnSuccess: true,
-  mimeType: 'text/plain'
-} as const
-
 // [pretty print, languageId, destination]
 export const LANGUAGES = new Map([
   ['Assembly', 'asm', 'sh'],
