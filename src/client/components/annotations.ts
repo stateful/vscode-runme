@@ -1,10 +1,10 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property, state } from 'lit/decorators.js'
+import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
 import { ClientMessages } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
-import { getContext, tryBoolean } from '../utils'
+import { getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
 import '@vscode/webview-ui-toolkit/dist/data-grid/index'
 
@@ -99,9 +99,6 @@ export class Annotations extends LitElement {
   @property({ type: Object, reflect: true })
   validationErrors?: CellAnnotationsErrorResult
 
-  @state()
-  private shouldRender: boolean = false
-
   #desc(id: string): string {
     return this.#descriptions.get(id) || id
   }
@@ -123,8 +120,7 @@ export class Annotations extends LitElement {
 
     const propVal: any = { 'runme.dev/uuid': this.annotations['runme.dev/uuid'] }
     const propName = e.target.id
-    const value = this.#getTargetValue(e)
-    const targetValue = tryBoolean(value)
+    const targetValue = this.#getTargetValue(e)
 
     const parseResult = CellAnnotationsSchema.safeParse({
       [propName]: targetValue
@@ -132,6 +128,7 @@ export class Annotations extends LitElement {
 
     if (!parseResult.success) {
       const { fieldErrors } = parseResult.error.flatten()
+      // TODO: Revisit this implementation to prevent mutating this object
       if (this.validationErrors && !this.validationErrors?.errors) {
         this.validationErrors.errors = {}
       }
@@ -139,13 +136,12 @@ export class Annotations extends LitElement {
         this.validationErrors.errors[propName] = fieldErrors[propName]
       }
       // Re-render the form
-      return this.shouldRender = !this.shouldRender
+      return this.requestUpdate()
     }
 
     if (this.validationErrors?.errors && this.validationErrors.errors[propName]) {
       delete this.validationErrors.errors[propName]
-      // Re-render the form
-      this.shouldRender = !this.shouldRender
+      this.requestUpdate()
     }
 
     switch (e.target.type) {
