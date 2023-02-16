@@ -3,12 +3,12 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 
-import vscode from 'vscode'
-import { Disposable } from 'vscode'
+import vscode, { Disposable } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
 
 import ServerError from './serverError'
+
 export interface IServerConfig {
     assignPortDynamically?: boolean
     retryOnFailure?: boolean
