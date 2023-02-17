@@ -3,7 +3,8 @@ import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } 
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
-import Server from './cli/server'
+import Server from './server'
+import ServerError from './server/serverError'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
@@ -23,7 +24,6 @@ import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import { BOOTFILE } from './constants'
-import ServerError from './cli/serverError'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -31,7 +31,7 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const server = new Server({
       retryOnFailure: true,
-      maxNumberOfIntents: 2
+      maxNumberOfIntents: 2,
     })
     /**
      * Start the Runme server
@@ -82,8 +82,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
-      RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
-      RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
+      RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
+      RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
 
       /**

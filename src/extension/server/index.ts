@@ -13,6 +13,7 @@ export interface IServerConfig {
     assignPortDynamically?: boolean
     retryOnFailure?: boolean
     maxNumberOfIntents: number
+    onServerDidExit?(exitCode: number): void
 }
 
 class Server implements Disposable {
@@ -23,6 +24,7 @@ class Server implements Disposable {
     #retryOnFailure: boolean
     #intent: number
     #maxNumberOfIntents: number
+    onServerDidExit?(exitCode: number | null): void
 
     constructor(options: IServerConfig) {
         const config = vscode.workspace.getConfiguration('runme.server')
@@ -31,6 +33,7 @@ class Server implements Disposable {
         this.#retryOnFailure = options.retryOnFailure || false
         this.#intent = 0
         this.#maxNumberOfIntents = options.maxNumberOfIntents
+        this.onServerDidExit = options.onServerDidExit
     }
 
     dispose() {
@@ -38,11 +41,7 @@ class Server implements Disposable {
         this.#process?.kill()
     }
 
-    async #start(): Promise<object | ServerError> {
-        this.#intent ++
-        if (this.#maxNumberOfIntents < this.#intent) {
-            return new ServerError(`Cannot start server, reached max number of intents: ${this.#maxNumberOfIntents}`)
-        }
+    async #start(): Promise<object | number | ServerError> {
         const binaryExists = await fs.access(this.#binaryPath)
             .then(() => true, () => false)
         if (!binaryExists) {
@@ -55,31 +54,30 @@ class Server implements Disposable {
                 `${SERVER_ADDRESS}:${this.#runningPort}`
             ])
             this.#process.stderr.on('data', (data) => {
-                // TODO: Parse data to detect if there is any error, for now, simulating nothing failed.
-                const isError = false
-                if (isError) {
-                    return reject(new ServerError(`Server failed, reason: ${data.toString()}`))
-                }
-
                 const msg = data.toString()
                 try {
-                  const log = JSON.parse(msg)
-                  if ('started listening' === log?.['msg']) {
-                    this.#retryOnFailure && isError ?
-                        this.#start() :
+                    const log = JSON.parse(msg)
+                    if ('started listening' === log?.['msg']) {
                         resolve(log)
-                  }
+                    }
                 } catch (err: any) {
-                  reject(new ServerError(msg))
+                    reject(new ServerError(`Server failed, reason: ${msg || (err as Error).message}`))
                 }
-
             })
-            this.#process.on('exit', (code) => reject(new ServerError(`Server ended with exit code ${code}`)))
+            this.#process.on('exit', (code) => this.onServerDidExit ? this.onServerDidExit(code) : undefined)
         })
     }
 
-    async launch(): Promise<object | ServerError> {
-        return this.#start()
+    async launch(): Promise<object | number | ServerError> {
+        try {
+            return await this.#start()
+        } catch (e) {
+            if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
+                this.#intent ++
+                return this.launch()
+            }
+            throw new ServerError(`Cannot start server. Error: ${(e as Error).message}`)
+        }
     }
 }
 
