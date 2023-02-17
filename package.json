@@ -327,6 +327,18 @@
         "view": "runme.launcher",
         "contents": "Open a workspace/folder to display Runme files here"
       }
+    ],
+    "keybindings": [
+      {
+        "command": "runme.keybinding.m",
+        "key": "m",
+        "when": "notebookEditorFocused && !inputFocus && activeEditor == 'workbench.editor.notebook' && notebookCellType == 'code'"
+      },
+      {
+        "command": "runme.keybinding.y",
+        "key": "m",
+        "when": "notebookEditorFocused && !inputFocus && activeEditor == 'workbench.editor.notebook' && notebookCellType == 'markup'"
+      }
     ]
   },
   "scripts": {

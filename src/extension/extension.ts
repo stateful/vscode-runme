@@ -57,6 +57,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
+      RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
+      RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
 
       /**
