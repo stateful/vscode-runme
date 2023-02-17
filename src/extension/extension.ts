@@ -34,12 +34,12 @@ export class RunmeExtension {
       maxNumberOfIntents: 2
     })
     /**
-     * Start the CLI server
+     * Start the Runme server
      */
 
     try {
       if (grpcSerializer) {
-        await server.start()
+        await server.launch()
       }
     } catch (e) {
       // Unrecoverable error happened
