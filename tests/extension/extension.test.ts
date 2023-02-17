@@ -11,6 +11,12 @@ vi.mock('../../src/extension/grpc/client', () => ({
 }))
 
 test('initializes all providers', async () => {
+  const configValues = {
+    binaryPath: '.bin/runme'
+  }
+  vi.mocked(workspace.getConfiguration).mockReturnValue({
+    get: vi.fn().mockImplementation((config: string) => configValues[config])
+  } as any)
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)

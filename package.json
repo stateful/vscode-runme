@@ -263,6 +263,12 @@
             "scope": "machine",
             "default": ".bin/runme",
             "markdownDescription": "Runme server binary location. (It requires the GRPC interface enabled)"
+          },
+          "runme.server.enableLogger": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "Enable Runme server logs. (It requires the GRPC interface enabled)"
           }
         }
       }

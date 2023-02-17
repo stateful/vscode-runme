@@ -3,8 +3,8 @@ import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } 
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
-import Server from './server'
-import ServerError from './server/serverError'
+import RunmeServer from './server/runmeServer'
+import RunmeServerError from './server/runmeServerError'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
@@ -29,7 +29,7 @@ export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
-    const server = new Server({
+    const server = new RunmeServer({
       retryOnFailure: true,
       maxNumberOfIntents: 2,
     })
@@ -43,7 +43,7 @@ export class RunmeExtension {
       }
     } catch (e) {
       // Unrecoverable error happened
-      if (e instanceof ServerError) {
+      if (e instanceof RunmeServerError) {
         TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: e.message })
         return window.showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
       }
