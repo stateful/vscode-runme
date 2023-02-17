@@ -38,7 +38,7 @@ class Server implements Disposable {
         this.#process?.kill()
     }
 
-    async #loadBinary(): Promise<void | ServerError> {
+    async #start(): Promise<object | ServerError> {
         this.#intent ++
         if (this.#maxNumberOfIntents < this.#intent) {
             return new ServerError(`Cannot start server, reached max number of intents: ${this.#maxNumberOfIntents}`)
@@ -52,8 +52,7 @@ class Server implements Disposable {
             this.#process = spawn(this.#binaryPath, [
                 'server',
                 '--address',
-                `${SERVER_ADDRESS}:${this.#runningPort}`,
-                '--web'
+                `${SERVER_ADDRESS}:${this.#runningPort}`
             ])
             this.#process.stderr.on('data', (data) => {
                 // TODO: Parse data to detect if there is any error, for now, simulating nothing failed.
@@ -61,16 +60,26 @@ class Server implements Disposable {
                 if (isError) {
                     return reject(new ServerError(`Server failed, reason: ${data.toString()}`))
                 }
-                this.#retryOnFailure && isError ?
-                    this.#loadBinary() :
-                    resolve()
+
+                const msg = data.toString()
+                try {
+                  const log = JSON.parse(msg)
+                  if ('started listening' === log?.['msg']) {
+                    this.#retryOnFailure && isError ?
+                        this.#start() :
+                        resolve(log)
+                  }
+                } catch (err: any) {
+                  reject(new ServerError(msg))
+                }
+
             })
             this.#process.on('exit', (code) => reject(new ServerError(`Server ended with exit code ${code}`)))
         })
     }
 
-    async start(): Promise<void | ServerError> {
-        return this.#loadBinary()
+    async launch(): Promise<object | ServerError> {
+        return this.#start()
     }
 }
 
