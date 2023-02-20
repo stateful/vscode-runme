@@ -20,6 +20,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 import { SERVER_ADDRESS } from '../constants'
+import { getPortNumber } from '../utils/configuration'
 
 import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/types'
 import { ParserServiceClient } from './grpc/client'
@@ -292,10 +293,8 @@ export class GrpcSerializer extends SerializerBase {
   protected ready: ReadyPromise
 
   static async initGrpc(): Promise<ParserServiceClient> {
-    const config = workspace.getConfiguration('runme.server')
-    const serverPort = config.get<number>('port')!
     const transport = new GrpcTransport({
-      host: `${SERVER_ADDRESS}:${serverPort}`,
+      host: `${SERVER_ADDRESS}:${getPortNumber()}`,
       channelCredentials: ChannelCredentials.createInsecure(),
     })
 

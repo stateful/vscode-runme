@@ -3,9 +3,10 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs/promises'
 
-import { Disposable, workspace } from 'vscode'
+import { Disposable } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
+import { enableServerLogs, getPath, getPortNumber } from '../../utils/configuration'
 
 import RunmeServerError from './runmeServerError'
 
@@ -27,10 +28,9 @@ class RunmeServer implements Disposable {
     #address: string
 
     constructor(options: IServerConfig) {
-        const config = workspace.getConfiguration('runme.server')
-        this.#runningPort = config.get<number>('port')!
-        this.#loggingEnabled = config.get<boolean>('enableLogger', false)
-        this.#binaryPath = path.join(__dirname, '../', config.get<string>('binaryPath')!)
+        this.#runningPort = getPortNumber()
+        this.#loggingEnabled = enableServerLogs()
+        this.#binaryPath = path.join(__dirname, '../', getPath())
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
