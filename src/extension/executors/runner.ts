@@ -10,7 +10,8 @@ import {
   TaskPanelKind,
   tasks,
   NotebookCellExecution,
-  TextDocument
+  TextDocument,
+  ExtensionContext
 } from 'vscode'
 
 import { OutputType } from '../../constants'
@@ -27,6 +28,7 @@ const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
 export async function executeRunner(
+  context: ExtensionContext,
   runner: IRunner,
   exec: NotebookCellExecution,
   runningCell: TextDocument,
@@ -111,6 +113,10 @@ export async function executeRunner(
       program.close()
     })
 
+    context.subscriptions.push({
+      dispose: () => program.close()
+    })
+
     await program.run()
   } else {
     const taskExecution = new Task(
@@ -131,6 +137,10 @@ export async function executeRunner(
     }
 
     const execution = await tasks.executeTask(taskExecution)
+
+    context.subscriptions.push({
+      dispose: () => execution.terminate()
+    })
 
     exec.token.onCancellationRequested(() => {
       try {
@@ -190,7 +200,7 @@ export async function executeRunner(
       setTimeout(
         () => {
           closeTerminalByEnvID(RUNME_ID)
-          return resolve(true)
+          resolve(true)
         },
         BACKGROUND_TASK_HIDE_TIMEOUT
       )

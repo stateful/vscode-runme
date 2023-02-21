@@ -265,6 +265,7 @@ export class Kernel implements Disposable {
       (execKey === 'bash' || execKey === 'sh')
     ) {
       successfulCellExecution = await executeRunner(
+        this.context,
         this.runner,
         exec,
         runningCell,
