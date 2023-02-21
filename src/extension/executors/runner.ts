@@ -23,6 +23,7 @@ import { closeTerminalByEnvID } from './task'
 import { getCommandExportExtractMatches, getShellPath, promptUserForVariable } from './utils'
 
 const LABEL_LIMIT = 15
+const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
 export async function executeRunner(
@@ -183,6 +184,16 @@ export async function executeRunner(
     if(program.hasExited()) {
       // unexpected early return, likely an error
       resolve(false)
+    }
+
+    if(background && interactive) {
+      setTimeout(
+        () => {
+          closeTerminalByEnvID(RUNME_ID)
+          return resolve(true)
+        },
+        BACKGROUND_TASK_HIDE_TIMEOUT
+      )
     }
   })
 }
