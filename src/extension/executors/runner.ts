@@ -20,7 +20,7 @@ import { IRunner, IRunnerEnvironment } from '../runner'
 import { getAnnotations, getCmdSeq, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
-import { getShellPath } from './utils'
+import { getCommandExportExtractMatches, getShellPath, promptUserForVariable } from './utils'
 
 const LABEL_LIMIT = 15
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
@@ -36,7 +36,28 @@ export async function executeRunner(
 
   const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
 
-  const cellText = exec.cell.document.getText()
+  let cellText = exec.cell.document.getText()
+
+  const envs: Record<string, string> = {
+    RUNME_ID
+  }
+
+  const exportMatches = getCommandExportExtractMatches(cellText)
+
+  for (const { hasStringValue, key, match, type, value } of exportMatches) {
+    if(type !== 'prompt') { continue }
+
+    const userValue = await promptUserForVariable(key, value, hasStringValue)
+
+    envs[key] = userValue
+
+    /**
+     * we don't want to run these exports anymore as we already put
+     * them in the `env` store
+     */
+    cellText = cellText.replace(match, '')
+  }
+
   const commands = getCmdSeq(cellText)
 
   const annotations = getAnnotations(exec.cell)
@@ -48,9 +69,7 @@ export async function executeRunner(
     script: {
       type: 'commands', commands
     },
-    envs: [
-      `RUNME_ID=${RUNME_ID}`
-    ],
+    envs: Object.entries(envs).map(([k, v]) => `${k}="${v}"`),
     cwd,
     tty: interactive
   })
