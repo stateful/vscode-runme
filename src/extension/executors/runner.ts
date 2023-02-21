@@ -17,7 +17,7 @@ import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment } from '../runner'
-import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdSeq, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath } from './utils'
@@ -37,7 +37,7 @@ export async function executeRunner(
   const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
 
   const cellText = exec.cell.document.getText()
-  const script = getCmdShellSeq(cellText, PLATFORM_OS)
+  const commands = getCmdSeq(cellText)
 
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background } = annotations
@@ -46,7 +46,7 @@ export async function executeRunner(
     programName: getShellPath(execKey),
     environment,
     script: {
-      type: 'script', script
+      type: 'commands', commands
     },
     envs: [
       `RUNME_ID=${RUNME_ID}`
@@ -65,6 +65,8 @@ export async function executeRunner(
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+
+      const script = getCmdShellSeq(cellText, PLATFORM_OS)
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (script.trim().endsWith('vercel')) {

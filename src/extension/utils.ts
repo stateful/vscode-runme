@@ -114,8 +114,8 @@ export function getKey(runningCell: vscode.TextDocument): keyof typeof executor 
  * treat cells like like a series of individual commands
  * which need to be executed in sequence
  */
-export function getCmdShellSeq(cellText: string, os: string): string {
-  const trimmed = cellText
+export function getCmdSeq(cellText: string): string[] {
+  return cellText
     .trimStart()
     .split('\\\n')
     .map((l) => l.trim())
@@ -138,6 +138,16 @@ export function getCmdShellSeq(cellText: string, os: string): string {
       const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
       return l !== '' && !hasPrefix
     })
+}
+
+/**
+ * treat cells like like a series of individual commands
+ * which need to be executed in sequence
+ *
+ * packages command sequence into single callable script
+ */
+export function getCmdShellSeq(cellText: string, os: string): string {
+  const trimmed = getCmdSeq(cellText)
     .join('; ')
 
   if (['darwin'].find((entry) => entry === os)) {
