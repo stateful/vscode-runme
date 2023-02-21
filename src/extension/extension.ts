@@ -40,6 +40,10 @@ export class RunmeExtension {
     try {
       if (grpcSerializer) {
         await server.launch()
+        server.events.on('closed', () => {
+          window.showErrorMessage(`Runme server is not longer running,
+          please reload the window to start the server again`)
+        })
       }
     } catch (e) {
       // Unrecoverable error happened

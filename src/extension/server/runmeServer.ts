@@ -2,6 +2,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import EventEmitter from 'node:events'
 
 import { Disposable } from 'vscode'
 
@@ -26,6 +27,7 @@ class RunmeServer implements Disposable {
     #loggingEnabled: boolean
     #intent: number
     #address: string
+    events: EventEmitter
 
     constructor(options: IServerConfig) {
         this.#runningPort = getPortNumber()
@@ -35,9 +37,11 @@ class RunmeServer implements Disposable {
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
         this.#address = `${SERVER_ADDRESS}:${this.#runningPort}`
+        this.events = new EventEmitter()
     }
 
     dispose() {
+        this.events.removeAllListeners()
         this.#process?.removeAllListeners()
         this.#process?.kill()
     }
@@ -59,6 +63,17 @@ class RunmeServer implements Disposable {
             '--address',
             this.#address
         ])
+
+        if (this.#loggingEnabled) {
+            console.log(`Runme server process #${this.#process.pid} started`)
+        }
+
+        this.#process.on('close', () => {
+            if (this.#loggingEnabled) {
+                console.log(`Runme server process #${this.#process?.pid} closed`)
+            }
+            this.events.emit('closed')
+        })
 
         this.#process.stderr.on('data', (data) => {
             if (this.#loggingEnabled) {

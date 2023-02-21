@@ -31,11 +31,7 @@ suite('Runme server', () => {
             maxNumberOfIntents: 2
         })
         const serverLaunchSpy = vi.spyOn(server, 'launch')
-        try {
-            await server.launch()
-        } catch (error) {
-            expect(error).toBeInstanceOf(RunmeServerError)
-            expect(serverLaunchSpy).toBeCalledTimes(3)
-        }
+        await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
+        expect(serverLaunchSpy).toBeCalledTimes(3)
     })
 })

@@ -15,7 +15,7 @@ test('initializes all providers', async () => {
     binaryPath: '.bin/runme'
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
-    get: vi.fn().mockImplementation((config: string) => configValues[config])
+    get: vi.fn((config: string) => configValues[config])
   } as any)
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
