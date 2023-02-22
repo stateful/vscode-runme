@@ -2,7 +2,14 @@ import { z } from 'zod'
 
 const CELL_RANDOM_NAME = `Cell #${Math.random().toString().slice(2)}`
 
+const cleanAnnotation = (value: string, character: string): string => {
+    return value.trim().replaceAll(/[ ]{2,}/g, '').replaceAll(character, '')
+}
+
 const falseyBoolean = (defaultValue: boolean) => z.preprocess((subject) => {
+    if (typeof subject === 'string') {
+        subject = cleanAnnotation(subject, ',')
+    }
     if (typeof subject === 'boolean') {
         return subject
     }
@@ -20,6 +27,9 @@ const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a b
         if (!subject) {
             return defaultValue
         }
+        if (typeof subject === 'string') {
+            subject = cleanAnnotation(subject, ',')
+        }
         if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
             return false
         }
@@ -34,7 +44,12 @@ export const AnnotationSchema = {
     background: boolify(false),
     interactive: boolify(true),
     closeTerminalOnSuccess: boolify(true),
-    name: z.string().default(CELL_RANDOM_NAME),
+    name: z.preprocess(
+        (value) =>
+            typeof value === 'string' ?
+                cleanAnnotation(value, ',') :
+                value,
+        z.string().default(CELL_RANDOM_NAME)),
     mimeType: z
         .string()
         .refine((subject) => {

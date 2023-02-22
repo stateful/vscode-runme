@@ -45,6 +45,48 @@ suite('AnnotationSchema', () => {
             const parseResult = AnnotationSchema.name.safeParse('')
             expect(parseResult.success).toBeTruthy()
         })
+
+        test('it should clean the annotation separator for true values', () => {
+            ['true,', 'true    ,', 'true   '].forEach(el => {
+                const parseResult = AnnotationSchema.name.safeParse(el)
+                expect(parseResult.success).toBeTruthy()
+            })
+
+        })
+
+        test('it should clean the annotation separator for false values', () => {
+            ['false,', 'false    ,', 'false   '].forEach(el => {
+                const parseResult = AnnotationSchema.name.safeParse(el)
+                expect(parseResult.success).toBeTruthy()
+            })
+        })
+
+        test('it should clean the annotation separator for string values', () => {
+            [{
+                value: 'annotation',
+                expectedValue: 'annotation'
+            },
+            {
+                value: 'annotation,',
+                expectedValue: 'annotation'
+            },
+            {
+                value: 'annotation      ,',
+                expectedValue: 'annotation'
+            },
+            {
+                value: 'annotation      ',
+                expectedValue: 'annotation'
+            }
+            ].forEach(({ value, expectedValue }) => {
+                const parseResult = AnnotationSchema.name.safeParse(value)
+                expect(parseResult.success).toBeTruthy()
+                if (parseResult.success) {
+                    expect(parseResult.data).toStrictEqual(expectedValue)
+                }
+            })
+        })
+
     })
 
     suite('SafeCellAnnotationsSchema', () => {
