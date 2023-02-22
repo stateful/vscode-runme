@@ -121,3 +121,7 @@ export type CellAnnotationsErrorResult = {
   errors?: CellAnnotationErrorKey
   originalAnnotations: CellAnnotations
 }
+
+export interface DisposableAsync {
+  dispose(): Promise<void>
+}

@@ -241,6 +241,12 @@
             "default": false,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC interface (experimental)."
           },
+          "runme.experiments.grpcRunner": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": false,
+            "markdownDescription": "If set to `true`, the notebook runner will use the GRPC interface (experimental)."
+          },
           "runme.checkout.projectDir": {
             "type": "string",
             "scope": "machine",
@@ -416,7 +422,7 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.2-20230119154408-6077dbdcb8b5.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "2.8.2-20230217155517-b1ae5526a72e.1",
     "@grpc/grpc-js": "^1.8.4",
     "@protobuf-ts/grpc-transport": "^2.8.2",
     "@protobuf-ts/runtime": "^2.8.2",

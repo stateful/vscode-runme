@@ -22,7 +22,7 @@ import { Serializer } from '../types'
 import { SERVER_ADDRESS } from '../constants'
 import { getPortNumber } from '../utils/configuration'
 
-import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/types'
+import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
 import { ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'

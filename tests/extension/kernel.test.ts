@@ -16,6 +16,7 @@ vi.mock('../../src/extension/utils', () => ({
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() }
 }))
+vi.mock('../../src/extension/runner', () => ({ }))
 
 const getCells = (cnt: number) => ([...new Array(cnt)]).map((_, i) => ({
   document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },

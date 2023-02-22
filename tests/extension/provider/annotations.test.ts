@@ -30,6 +30,8 @@ vi.mock('../../../src/extension/utils', () => ({
   validateAnnotations: vi.fn()
 }))
 
+vi.mock('../../../src/extension/runner', () => ({ }))
+
 describe('Runme Annotations', () => {
   const kernel = new Kernel({} as any)
   it('should register a command when initializing', () => {
