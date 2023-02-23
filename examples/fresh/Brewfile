@@ -1,0 +1,2 @@
+brew "deno"
+brew "jq"
