@@ -12,7 +12,6 @@ If this prints the Deno version to the console the installation was successful.
 
 ```sh { closeTerminalOnSuccess=false interactive=false }
   deno --version
-
 ```
 
 To update a previously installed version of Deno, run:
