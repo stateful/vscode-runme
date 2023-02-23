@@ -5,7 +5,22 @@ This project is a showcase for deploying apps with Deno and [Runme Extension](ht
 ## Prerequisites
 
 This project is based on [Fresh](https://fresh.deno.dev/) and requires Deno to
-run. To install Deno via homebrew on macOS:
+run.
+
+To test if you already have Deno installed run:
+If this prints the Deno version to the console the installation was successful.
+
+```sh { closeTerminalOnSuccess=false interactive=false }
+  deno --version
+```
+
+To update a previously installed version of Deno, run:
+
+```sh
+deno upgrade
+```
+
+To install Deno via homebrew on macOS:
 
 ```sh
 # macOS
@@ -47,7 +62,7 @@ This will watch the project directory and restart as necessary.
 To deploy this project you need to have `deployctl` installed on your system. To
 install, please run:
 
-```sh
+```sh { closeTerminalOnSuccess=false interactive=false }
 deno install \
   --allow-read --allow-write \
   --allow-env --allow-net --allow-run \
