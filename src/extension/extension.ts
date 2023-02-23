@@ -30,6 +30,7 @@ export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
+    const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const server = new RunmeServer({
       retryOnFailure: true,
       maxNumberOfIntents: 2,
@@ -39,7 +40,7 @@ export class RunmeExtension {
      */
 
     try {
-      if (grpcSerializer) {
+      if (grpcServer) {
         await server.launch()
         server.events.on('closed', () => {
           window.showErrorMessage(`Runme server is not longer running,
