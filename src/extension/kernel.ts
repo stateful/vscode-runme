@@ -56,6 +56,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', false))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', false))
+    this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', false))
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
