@@ -87,10 +87,15 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
 }
 
+function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
+  return (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID
+    ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1]
+    ?? undefined
+}
+
 export function getTerminalByCell(cell: vscode.NotebookCell) {
   return vscode.window.terminals.find((t) => {
-    const taskEnv = (t.creationOptions as vscode.TerminalOptions).env || {}
-    return taskEnv.RUNME_ID === `${cell.document.fileName}:${cell.index}`
+    return getTerminalRunmeId(t) === `${cell.document.fileName}:${cell.index}`
   })
 }
 

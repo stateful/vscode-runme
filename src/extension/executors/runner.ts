@@ -122,9 +122,9 @@ export async function executeRunner(
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
-      cellText.length > LABEL_LIMIT
+      (cellText.length > LABEL_LIMIT
         ? `${cellText.slice(0, LABEL_LIMIT)}...`
-        : cellText,
+        : cellText) + ` (RUNME_ID: ${RUNME_ID})`,
       'exec',
       new CustomExecution(async () => program)
     )
