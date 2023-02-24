@@ -52,6 +52,10 @@ export async function executeRunner(
 
     const userValue = await promptUserForVariable(key, value, hasStringValue)
 
+    if(userValue === undefined) {
+      return false
+    }
+
     envs[key] = userValue
 
     /**
@@ -72,7 +76,7 @@ export async function executeRunner(
     script: {
       type: 'commands', commands
     },
-    envs: Object.entries(envs).map(([k, v]) => `${k}="${v}"`),
+    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
     tty: interactive
   })

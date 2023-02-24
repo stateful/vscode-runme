@@ -47,14 +47,14 @@ export async function promptUserForVariable(
   key: string,
   placeHolder: string,
   hasStringValue: boolean,
-) {
+): Promise<string | undefined> {
   return await window.showInputBox({
     title: `Set Environment Variable "${key}"`,
     ignoreFocusOut: true,
     placeHolder,
     prompt: 'Your shell script wants to set some environment variables, please enter them here.',
     ...(hasStringValue ? { value: placeHolder } : {})
-  }) || ''
+  })
 }
 
 export function getCommandExportExtractMatches(
@@ -141,7 +141,7 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
        * VS Code, see https://github.com/microsoft/vscode/issues/98098
        */
       stateEnv[key] = populateEnvVar(
-        await promptUserForVariable(key, value, hasStringValue),
+        await promptUserForVariable(key, value, hasStringValue) ?? '',
         {...process.env, ...stateEnv }
       )
     } else {
