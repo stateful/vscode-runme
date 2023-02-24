@@ -5,7 +5,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
-import { getAnnotations } from '../utils'
+import { getAnnotations, replaceOutput } from '../utils'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
@@ -74,8 +74,7 @@ async function shellExecutor(
       }, OutputType.outputItems)
     }
 
-    exec.clearOutput() // bug? https://github.com/microsoft/vscode/issues/173577
-    exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
+    replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
   }
 
   child.stdout.on('data', handleOutput)

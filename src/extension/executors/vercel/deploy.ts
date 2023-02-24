@@ -10,6 +10,7 @@ import { renderError } from '../utils'
 import { OutputType } from '../../../constants'
 import type { Kernel } from '../../kernel'
 import type { CellOutputPayload } from '../../../types'
+import { replaceOutput } from '../../utils'
 
 import { listTeams, getUser, getProject, getProjects, createProject, cancelDeployment, VercelProject } from './api'
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
@@ -147,7 +148,7 @@ export async function deploy (
       }
 
       deploymentId = event.payload.id
-      exec.replaceOutput(new NotebookCellOutput([
+      replaceOutput(exec, new NotebookCellOutput([
         NotebookCellOutputItem.json(<CellOutputPayload<OutputType.vercel>>{
           type: OutputType.vercel,
           output: event
@@ -159,7 +160,7 @@ export async function deploy (
       }
     }
   } catch (err: any) {
-    exec.replaceOutput(new NotebookCellOutput([
+    replaceOutput(exec, new NotebookCellOutput([
       NotebookCellOutputItem.json(<CellOutputPayload<OutputType.error>>{
         type: OutputType.error,
         output: err.message

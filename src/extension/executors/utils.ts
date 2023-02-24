@@ -6,6 +6,7 @@ import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, wind
 import { ENV_STORE } from '../constants'
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
+import { replaceOutput } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -14,7 +15,7 @@ const ENV_VAR_REGEXP = /(\$\w+)/g
 const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
 
 export function renderError (exec: NotebookCellExecution, output: string) {
-  return exec.replaceOutput(new NotebookCellOutput([
+  return replaceOutput(exec, new NotebookCellOutput([
     NotebookCellOutputItem.json(
       <CellOutputPayload<OutputType.error>>{
         type: OutputType.error,

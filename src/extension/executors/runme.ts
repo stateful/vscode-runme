@@ -4,7 +4,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { RunmeTaskProvider } from '../provider/runmeTask'
 import { OutputType } from '../../constants'
-import { getAnnotations } from '../utils'
+import { getAnnotations, replaceOutput } from '../utils'
 import { ExperimentalTerminal } from '../terminal/terminal'
 import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
@@ -43,7 +43,7 @@ export async function runme(
       }, OutputType.outputItems)
     }
 
-    exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
+    replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
   })
 
   const { execution, promise } = await terminal.execute(t, {

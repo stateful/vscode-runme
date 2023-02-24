@@ -6,6 +6,7 @@ import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../c
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
 import type { CellOutputPayload, ClientMessage } from '../../../types'
+import { replaceOutput } from '../../utils'
 
 export async function deploy (
   this: Kernel,
@@ -26,7 +27,7 @@ export async function deploy (
     /**
      * render deno status at the behinning of the operation
      */
-    exec.replaceOutput(new NotebookCellOutput([
+    replaceOutput(exec, new NotebookCellOutput([
       NotebookCellOutputItem.json(
         <CellOutputPayload<OutputType.deno>>{ type: OutputType.deno }, OutputType.deno)
     ], { deno: { deploy: true } }))
