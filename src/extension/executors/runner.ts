@@ -48,12 +48,26 @@ export async function executeRunner(
   const exportMatches = getCommandExportExtractMatches(cellText)
 
   for (const { hasStringValue, key, match, type, value } of exportMatches) {
-    if(type !== 'prompt') { continue }
+    let userValue: string
 
-    const userValue = await promptUserForVariable(key, value, hasStringValue)
+    switch(type) {
+      case 'prompt': {
+        const userInput = await promptUserForVariable(key, value, hasStringValue)
 
-    if(userValue === undefined) {
-      return false
+        if(userInput === undefined) {
+          return false
+        }
+
+        userValue = userInput
+      } break
+
+      case 'direct': {
+        userValue = value
+      } break
+
+      default: {
+        continue
+      }
     }
 
     envs[key] = userValue
