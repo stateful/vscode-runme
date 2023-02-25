@@ -285,7 +285,6 @@ export function replaceOutput(
   out: NotebookCellOutput | readonly NotebookCellOutput[],
   cell?: NotebookCell
 ): Thenable<void> {
-  return exec.clearOutput().then(() => {
-    return exec.replaceOutput(out, cell)
-  })
+  exec.clearOutput()
+  return exec.replaceOutput(out, cell)
 }
