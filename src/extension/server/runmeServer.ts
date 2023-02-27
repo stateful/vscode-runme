@@ -50,7 +50,7 @@ class RunmeServer implements Disposable {
     async #isRunning(): Promise<boolean> {
       const client = initParserClient()
       try {
-        const deserialRequest = <DeserializeRequest>{ source: Buffer.from('## Server running', 'utf-8') }
+        const deserialRequest = DeserializeRequest.create({ source: Buffer.from('## Server running', 'utf-8') })
         const request = client.deserialize(deserialRequest)
         const status = await request.status
         return status.code === 'OK'
