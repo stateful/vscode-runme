@@ -31,8 +31,15 @@ afterEach(() => {
     })
 })
 
-suite('Configuration', () => {
+vi.mock('node:path', async () => {
+  return {
+    join: vi.fn().mockImplementation((...args: any) => {
+      return args[args.length-1]
+    }),
+  }
+})
 
+suite('Configuration', () => {
     test('Should default to a valid port number', () => {
         const portNumber = getPortNumber()
         expect(portNumber).toStrictEqual(8084)
@@ -50,10 +57,16 @@ suite('Configuration', () => {
         expect(path).toStrictEqual('.bin/runme')
     })
 
-    test('Should default to a valid binaryPath when specified', () => {
+    test('Should default to a valid relative binaryPath when specified', () => {
         SETTINGS_MOCK.binaryPath = '.bin/file'
         const path = getPath()
         expect(path).toStrictEqual('.bin/file')
+    })
+
+    test('Should default to a valid absolute binaryPath when specified', () => {
+        SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
+        const path = getPath()
+        expect(path).toStrictEqual('/opt/homebrew/bin/runme')
     })
 
     test('Should disable server logs with an invalid value', () => {

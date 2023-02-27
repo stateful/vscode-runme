@@ -1,3 +1,5 @@
+import { join } from 'node:path'
+
 import { workspace } from 'vscode'
 import { z } from 'zod'
 
@@ -37,7 +39,13 @@ const getPortNumber = (): number => {
 }
 
 const getPath = (): string => {
-    return getServerConfigurationValue<string>('binaryPath', '.bin/runme')
+    const binaryPath = getServerConfigurationValue<string>('binaryPath', '.bin/runme')
+
+    if (!binaryPath.startsWith('/')) {
+      return join(__dirname, '../../', binaryPath)
+    }
+
+    return binaryPath
 }
 
 const enableServerLogs = (): boolean => {

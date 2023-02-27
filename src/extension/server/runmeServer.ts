@@ -1,6 +1,5 @@
 
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
-import path from 'node:path'
 import fs from 'node:fs/promises'
 import EventEmitter from 'node:events'
 
@@ -32,7 +31,7 @@ class RunmeServer implements Disposable {
     constructor(options: IServerConfig) {
         this.#runningPort = getPortNumber()
         this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = path.join(__dirname, '../', getPath())
+        this.#binaryPath = getPath()
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
