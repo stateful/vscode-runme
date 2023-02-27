@@ -18,6 +18,10 @@ vi.mock('vscode', () => ({
   }
 }))
 
+vi.mock('../../../src/extension/utils', () => ({
+  replaceOutput: vi.fn(),
+}))
+
 beforeEach(() => {
   vi.mocked(window.showInputBox).mockClear()
   vi.mocked(window.showErrorMessage).mockClear()

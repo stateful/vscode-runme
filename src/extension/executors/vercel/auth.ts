@@ -8,6 +8,7 @@ import { NotebookCellExecution, NotebookCellOutputItem, NotebookCellOutput, wind
 import type { Argv } from 'yargs'
 
 import { renderError } from '../utils'
+import { replaceOutput } from '../../utils'
 
 import { getAuthToken, getConfigFilePath } from './utils'
 
@@ -91,14 +92,14 @@ export async function login (
     await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
     server.close()
   } catch (err: any) {
-    exec.replaceOutput(new NotebookCellOutput([
+    replaceOutput(exec, new NotebookCellOutput([
       NotebookCellOutputItem.text(err.message)
     ]))
     return false
   }
 
   const { username } = await authPromise as any
-  exec.replaceOutput(new NotebookCellOutput([
+  replaceOutput(exec, new NotebookCellOutput([
     NotebookCellOutputItem.text(`Logged in as ${username}`)
   ]))
   return true
@@ -108,7 +109,7 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
   let token = await getAuthToken()
 
   if (!token) {
-    exec.replaceOutput(new NotebookCellOutput([
+    replaceOutput(exec, new NotebookCellOutput([
       NotebookCellOutputItem.text('Not currently logged in, so logout did nothing')
     ]))
     return true
@@ -143,7 +144,7 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
     return false
   }
 
-  exec.replaceOutput(new NotebookCellOutput([
+  replaceOutput(exec, new NotebookCellOutput([
     NotebookCellOutputItem.text('Logged out!')
   ]))
   return true

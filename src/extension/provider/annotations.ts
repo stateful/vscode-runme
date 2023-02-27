@@ -13,7 +13,7 @@ import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { RunmeExtension } from '../extension'
 import { Kernel } from '../kernel'
-import { getAnnotations, validateAnnotations } from '../utils'
+import { getAnnotations, replaceOutput, validateAnnotations } from '../utils'
 
 export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   constructor(private readonly kernel: Kernel) {
@@ -45,7 +45,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
           validationErrors: validateAnnotations(cell)
         },
       }
-      await exec.replaceOutput([
+      await replaceOutput(exec, [
         new NotebookCellOutput([
           NotebookCellOutputItem.json(json, OutputType.annotations),
           NotebookCellOutputItem.json(json),

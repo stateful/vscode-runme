@@ -17,7 +17,7 @@ import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment } from '../runner'
-import { getAnnotations, getCmdShellSeq } from '../utils'
+import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath } from './utils'
@@ -79,8 +79,7 @@ export async function executeRunner(
         }, OutputType.outputItems)
       }
 
-      exec.clearOutput() // bug? https://github.com/microsoft/vscode/issues/173577
-      exec.replaceOutput([ new NotebookCellOutput([ item ]) ])
+      replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
     }
 
     program.onStdoutRaw(handleOutput)

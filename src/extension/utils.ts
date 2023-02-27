@@ -2,7 +2,15 @@ import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
 
-import vscode, { FileType, Uri, workspace, NotebookDocument, NotebookCell } from 'vscode'
+import vscode, {
+  FileType,
+  Uri,
+  workspace,
+  NotebookDocument,
+  NotebookCell,
+  NotebookCellExecution,
+  NotebookCellOutput,
+} from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 
 import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
@@ -267,4 +275,16 @@ export function hashDocumentUri(uri: string): string {
   const salt = vscode.env.machineId
   const namespace = uuidv5(salt, uuidv5.URL)
   return uuidv5(uri, namespace).toString()
+}
+
+/**
+ * Helper to workaround this bug: https://github.com/microsoft/vscode/issues/173577
+ */
+export function replaceOutput(
+  exec: NotebookCellExecution,
+  out: NotebookCellOutput | readonly NotebookCellOutput[],
+  cell?: NotebookCell
+): Thenable<void> {
+  exec.clearOutput()
+  return exec.replaceOutput(out, cell)
 }
