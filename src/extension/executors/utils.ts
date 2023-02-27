@@ -6,7 +6,7 @@ import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, wind
 import { ENV_STORE } from '../constants'
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
-import { replaceOutput } from '../utils'
+import { replaceOutput, getCmdSeq } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -40,6 +40,7 @@ export interface CommandExportExtractMatch {
   key: string
   value: string
   match: string
+  regexpMatch: RegExpExecArray
   hasStringValue: boolean
 }
 
@@ -60,10 +61,17 @@ export async function promptUserForVariable(
 export function getCommandExportExtractMatches(
   rawText: string
 ): CommandExportExtractMatch[] {
-  const matches = (rawText.endsWith('\n') ? rawText : `${rawText}\n`)
-    .match(EXPORT_EXTRACT_REGEX) || []
+  const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
-  return matches.map(e => {
+  const matchStr = (rawText.endsWith('\n') ? rawText : `${rawText}\n`)
+
+  let match: RegExpExecArray | null
+
+  const result: CommandExportExtractMatch[] = []
+
+  while ((match = test.exec(matchStr)) !== null) {
+    const e = match[0]
+
     const [key, ph] = e.trim().slice('export '.length).split('=')
     const hasStringValue = ph.startsWith('"') || ph.startsWith('\'')
     const placeHolder = hasStringValue ? ph.slice(1, -1) : ph
@@ -80,11 +88,14 @@ export function getCommandExportExtractMatches(
       matchType = 'direct'
     }
 
-    return {
+    result.push({
       type: matchType,
-      key, value, match: e, hasStringValue
-    }
-  })
+      regexpMatch: match,
+      key, value, match: e, hasStringValue,
+    })
+  }
+
+  return result
 }
 
 /**
@@ -103,7 +114,6 @@ export async function retrieveShellCommand (exec: NotebookCellExecution) {
   const exportMatches = getCommandExportExtractMatches(rawText)
 
   const stateEnv = Object.fromEntries(ENV_STORE)
-
 
   for (const { hasStringValue, key, match, type, value } of exportMatches) {
     if (type === 'exec') {
@@ -171,4 +181,66 @@ export function getShellPath(): string|undefined
 export function getShellPath(execKey: 'bash'|'sh'): string
 export function getShellPath(execKey?: string): string|undefined {
   return process.env.SHELL ?? execKey
+}
+
+/**
+ * Parse set of commands, requiring user input for prompted environment
+ * variables, and supporting multiline strings
+ *
+ * Returns `undefined` when a user cancels on prompt
+ */
+export async function parseCommandSeq(
+  cellText: string
+): Promise<string[]|undefined> {
+  const exportMatches = getCommandExportExtractMatches(cellText)
+
+  type CommandBlock =
+    |{
+      type: 'block'
+      content: string
+    }
+    |{
+      type: 'single'
+      content: string
+    }
+
+  const parsedCommandBlocks: CommandBlock[] = []
+
+  let offset = 0
+
+  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+    let userValue: string
+
+    switch(type) {
+      case 'prompt': {
+        const userInput = await promptUserForVariable(key, value, hasStringValue)
+
+        if(userInput === undefined) {
+          return undefined
+        }
+
+        userValue = userInput
+      } break
+
+      case 'direct': {
+        userValue = value
+      } break
+
+      default: {
+        continue
+      }
+    }
+
+    const prior = cellText.slice(offset, regexpMatch.index)
+    parsedCommandBlocks.push({ type: 'block', content: prior })
+
+    parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+
+    offset = regexpMatch.index + match.length
+  }
+
+  parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
+
+  return parsedCommandBlocks
+    .flatMap(({ type, content }) => type === 'block' ? getCmdSeq(content) : [content])
 }

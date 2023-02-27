@@ -18,10 +18,10 @@ import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment } from '../runner'
-import { getAnnotations, getCmdSeq, getCmdShellSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
-import { getCommandExportExtractMatches, getShellPath, promptUserForVariable } from './utils'
+import { getShellPath, parseCommandSeq } from './utils'
 
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
@@ -45,41 +45,12 @@ export async function executeRunner(
     RUNME_ID
   }
 
-  const exportMatches = getCommandExportExtractMatches(cellText)
+  const commands = await parseCommandSeq(cellText)
+  if(!commands) { return false }
 
-  for (const { hasStringValue, key, match, type, value } of exportMatches) {
-    let userValue: string
-
-    switch(type) {
-      case 'prompt': {
-        const userInput = await promptUserForVariable(key, value, hasStringValue)
-
-        if(userInput === undefined) {
-          return false
-        }
-
-        userValue = userInput
-      } break
-
-      case 'direct': {
-        userValue = value
-      } break
-
-      default: {
-        continue
-      }
-    }
-
-    envs[key] = userValue
-
-    /**
-     * we don't want to run these exports anymore as we already put
-     * them in the `env` store
-     */
-    cellText = cellText.replace(match, '')
+  if (commands.length === 0) {
+    commands.push('')
   }
-
-  const commands = getCmdSeq(cellText)
 
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background } = annotations
@@ -225,3 +196,4 @@ export async function executeRunner(
     }
   })
 }
+
