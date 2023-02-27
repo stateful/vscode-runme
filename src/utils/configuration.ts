@@ -12,7 +12,7 @@ const configurationSchema = {
             .positive()
             .min(8080)
             .max(9090)
-            .default(8084),
+            .default(7863),
         binaryPath: z
             .string()
             .transform((schema) => {
@@ -35,7 +35,7 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
 }
 
 const getPortNumber = (): number => {
-    return getServerConfigurationValue<number>('port', 8084)
+    return getServerConfigurationValue<number>('port', 7863)
 }
 
 const getPath = (): string => {

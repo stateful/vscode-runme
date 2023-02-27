@@ -267,7 +267,7 @@
           "runme.server.port": {
             "type": "number",
             "scope": "machine",
-            "default": 8084,
+            "default": 7863,
             "markdownDescription": "Port used by Runme server. (It requires the GRPC interface enabled)"
           },
           "runme.server.binaryPath": {

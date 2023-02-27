@@ -42,7 +42,7 @@ vi.mock('node:path', async () => {
 suite('Configuration', () => {
     test('Should default to a valid port number', () => {
         const portNumber = getPortNumber()
-        expect(portNumber).toStrictEqual(8084)
+        expect(portNumber).toStrictEqual(7863)
     })
 
     test('Should use a valid specified port number', () => {
