@@ -27,10 +27,13 @@ suite('Runme server', () => {
     } as any)
 
     test('Should try 2 times before failing', async () => {
-        const server = new Server({
+        const server = new Server(
+          '/User/user/.vscode/extension/stateful.runme',
+          {
             retryOnFailure: true,
-            maxNumberOfIntents: 2
-        })
+            maxNumberOfIntents: 2,
+          }
+        )
         const serverLaunchSpy = vi.spyOn(server, 'launch')
         await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
         expect(serverLaunchSpy).toBeCalledTimes(3)

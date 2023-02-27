@@ -1,4 +1,3 @@
-
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import EventEmitter from 'node:events'
@@ -6,7 +5,7 @@ import EventEmitter from 'node:events'
 import { Disposable } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
-import { enableServerLogs, getPath, getPortNumber } from '../../utils/configuration'
+import { enableServerLogs, getBinaryLocation, getPath, getPortNumber } from '../../utils/configuration'
 import { initParserClient } from '../grpc/client'
 import { DeserializeRequest } from '../grpc/serializerTypes'
 
@@ -30,10 +29,10 @@ class RunmeServer implements Disposable {
     #address: string
     events: EventEmitter
 
-    constructor(options: IServerConfig) {
+    constructor(extBasePath: string, options: IServerConfig) {
         this.#runningPort = getPortNumber()
         this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getPath()
+        this.#binaryPath = getPath(extBasePath)
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
@@ -69,10 +68,12 @@ class RunmeServer implements Disposable {
           return this.#runningPort
         }
 
-        const binaryExists = await fs.access(this.#binaryPath)
+        const binaryLocation = getBinaryLocation(this.#binaryPath)
+
+        const binaryExists = await fs.access(binaryLocation)
             .then(() => true, () => false)
 
-        const isFile = await fs.stat(this.#binaryPath)
+        const isFile = await fs.stat(binaryLocation)
             .then((result) => {
                 return result.isFile()
             }, () => false)
@@ -81,7 +82,7 @@ class RunmeServer implements Disposable {
             throw new RunmeServerError('Cannot find server binary file')
         }
 
-        this.#process = spawn(this.#binaryPath, [
+        this.#process = spawn(binaryLocation, [
             'server',
             '--address',
             this.#address

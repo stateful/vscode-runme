@@ -15,7 +15,7 @@ vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 test('initializes all providers', async () => {
   const configValues = {
-    binaryPath: 'bin/runme'
+    binaryPath: 'bin'
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config])

@@ -16,7 +16,7 @@ const configurationSchema = {
         binaryPath: z
             .string()
             .transform((schema) => {
-                return schema || 'bin/runme'
+                return schema || 'bin'
             }),
         enableLogger: z
             .boolean()
@@ -38,14 +38,20 @@ const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
 }
 
-const getPath = (): string => {
-    const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin/runme')
+const getPath = (basePath: string): string => {
+    const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
 
     if (!binaryPath.startsWith('/')) {
-      return join(__dirname, '../../', binaryPath)
+      return join(basePath, '/', binaryPath)
     }
 
     return binaryPath
+}
+
+const getBinaryLocation = (binaryPath: string) => {
+    const binName = process.platform.toLocaleLowerCase().startsWith('win') ? 'runme.exe' : 'runme'
+    const sep = binaryPath.endsWith('/') ? '' : '/'
+    return join(binaryPath, sep, binName)
 }
 
 const enableServerLogs = (): boolean => {
@@ -53,6 +59,7 @@ const enableServerLogs = (): boolean => {
 }
 
 export {
+    getBinaryLocation,
     getPortNumber,
     getPath,
     enableServerLogs

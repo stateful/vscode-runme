@@ -273,8 +273,8 @@
           "runme.server.binaryPath": {
             "type": "string",
             "scope": "machine",
-            "default": "bin/runme",
-            "markdownDescription": "Runme server binary location. (It requires the GRPC interface enabled)"
+            "default": "bin",
+            "markdownDescription": "Runme server path to binary. (It requires the GRPC interface enabled)"
           },
           "runme.server.enableLogger": {
             "type": "boolean",
