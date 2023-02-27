@@ -58,7 +58,7 @@ export async function executeRunner(
   const program = await runner.createProgramSession({
     programName: getShellPath(execKey),
     environment,
-    script: {
+    exec: {
       type: 'commands', commands
     },
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),

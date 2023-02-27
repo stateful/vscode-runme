@@ -28,7 +28,7 @@ export interface RunProgramOptions {
   args?: string[]
   cwd?: string
   envs?: string[]
-  script?:
+  exec?:
     |{
       type: 'commands'
       commands: string[]
@@ -369,7 +369,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   static runOptionsToExecuteRequest(
-    { programName, args, cwd, environment, script, tty, envs }: RunProgramOptions
+    { programName, args, cwd, environment, exec, tty, envs }: RunProgramOptions
   ): ExecuteRequest {
     if(environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -382,8 +382,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       tty,
       sessionId: environment?.getSessionId(),
       programName,
-      ...script?.type === 'commands' && { commands: script.commands },
-      ...script?.type === 'script' && { script: script.script }
+      ...exec?.type === 'commands' && { commands: exec.commands },
+      ...exec?.type === 'script' && { script: exec.script }
     })
   }
 }
