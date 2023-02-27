@@ -2,6 +2,7 @@ import { suite, test, expect, vi, beforeEach } from 'vitest'
 import { workspace } from 'vscode'
 
 vi.mock('vscode')
+vi.mock('../../../src/extension/grpc/client', () => ({ initParserClient: vi.fn() }))
 
 import Server from '../../../src/extension/server/runmeServer'
 import RunmeServerError from '../../../src/extension/server/runmeServerError'
@@ -19,7 +20,7 @@ suite('Runme server', () => {
     })
 
     const configValues = {
-        binaryPath: '.bin/runme'
+        binaryPath: 'bin/runme'
     }
     vi.mocked(workspace.getConfiguration).mockReturnValue({
         get: vi.fn().mockImplementation((config: string) => configValues[config])

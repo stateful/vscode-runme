@@ -7,6 +7,8 @@ import { Disposable } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
 import { enableServerLogs, getPath, getPortNumber } from '../../utils/configuration'
+import { initParserClient } from '../grpc/client'
+import { DeserializeRequest } from '../grpc/serializerTypes'
 
 import RunmeServerError from './runmeServerError'
 
@@ -45,7 +47,28 @@ class RunmeServer implements Disposable {
         this.#process?.kill()
     }
 
+    async #isRunning(): Promise<boolean> {
+      const client = initParserClient()
+      try {
+        const deserialRequest = <DeserializeRequest>{ source: Buffer.from('## Server running', 'utf-8') }
+        const request = client.deserialize(deserialRequest)
+        const status = await request.status
+        return status.code === 'OK'
+      } catch (err: any) {
+        if (err?.code === 'UNAVAILABLE') {
+          return false
+        }
+        throw err
+      }
+    }
+
     async #start(): Promise<object | number | RunmeServerError> {
+        const running = await this.#isRunning()
+        if (running) {
+          console.log(`[Runme] Server already running on port ${this.#runningPort}`)
+          return this.#runningPort
+        }
+
         const binaryExists = await fs.access(this.#binaryPath)
             .then(() => true, () => false)
 
@@ -57,21 +80,23 @@ class RunmeServer implements Disposable {
         if (!binaryExists || !isFile) {
             throw new RunmeServerError('Cannot find server binary file')
         }
+
         this.#process = spawn(this.#binaryPath, [
             'server',
             '--address',
             this.#address
         ])
 
-        if (this.#loggingEnabled) {
-            console.log(`Runme server process #${this.#process.pid} started`)
-        }
-
         this.#process.on('close', () => {
             if (this.#loggingEnabled) {
-                console.log(`Runme server process #${this.#process?.pid} closed`)
+                console.log(`[Runme] Server process #${this.#process?.pid} closed`)
             }
             this.events.emit('closed')
+        })
+
+
+        this.#process.stderr.once('data', () => {
+            console.log(`[Runme] Server process #${this.#process?.pid} started`)
         })
 
         this.#process.stderr.on('data', (data) => {

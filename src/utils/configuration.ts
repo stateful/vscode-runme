@@ -16,7 +16,7 @@ const configurationSchema = {
         binaryPath: z
             .string()
             .transform((schema) => {
-                return schema || '.bin/runme'
+                return schema || 'bin/runme'
             }),
         enableLogger: z
             .boolean()
@@ -39,7 +39,7 @@ const getPortNumber = (): number => {
 }
 
 const getPath = (): string => {
-    const binaryPath = getServerConfigurationValue<string>('binaryPath', '.bin/runme')
+    const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin/runme')
 
     if (!binaryPath.startsWith('/')) {
       return join(__dirname, '../../', binaryPath)

@@ -54,13 +54,13 @@ suite('Configuration', () => {
 
     test('Should default to a valid binaryPath', () => {
         const path = getPath()
-        expect(path).toStrictEqual('.bin/runme')
+        expect(path).toStrictEqual('bin/runme')
     })
 
     test('Should default to a valid relative binaryPath when specified', () => {
-        SETTINGS_MOCK.binaryPath = '.bin/file'
+        SETTINGS_MOCK.binaryPath = 'bin/file'
         const path = getPath()
-        expect(path).toStrictEqual('.bin/file')
+        expect(path).toStrictEqual('bin/file')
     })
 
     test('Should default to a valid absolute binaryPath when specified', () => {
