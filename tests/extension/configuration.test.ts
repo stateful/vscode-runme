@@ -60,15 +60,15 @@ suite('Configuration', () => {
     })
 
     test('Should default to a valid relative binaryPath when specified', () => {
-        SETTINGS_MOCK.binaryPath = 'bin/file'
+        SETTINGS_MOCK.binaryPath = 'bin'
         const path = getPath(MOCK_EXT_FSPATH)
-        expect(path).toStrictEqual('bin/file')
+        expect(path).toStrictEqual('bin')
     })
 
     test('Should default to a valid absolute binaryPath when specified', () => {
-        SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
+        SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin'
         const path = getPath(MOCK_EXT_FSPATH)
-        expect(path).toStrictEqual('/opt/homebrew/bin/runme')
+        expect(path).toStrictEqual('/opt/homebrew/bin')
     })
 
     test('Should disable server logs with an invalid value', () => {
