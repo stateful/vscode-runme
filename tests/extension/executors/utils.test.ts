@@ -22,6 +22,8 @@ vi.mock('vscode', () => ({
 
 vi.mock('../../../src/extension/utils', () => ({
   replaceOutput: vi.fn(),
+  // TODO: this should use importActual
+  getCmdSeq: vi.fn((cellText: string) => cellText.trim().split('\n').filter(x => x))
 }))
 
 beforeEach(() => {
