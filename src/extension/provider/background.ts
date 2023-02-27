@@ -29,8 +29,17 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
       return
     }
 
+    const terminalButtonParts = [
+      '$(terminal)',
+      'Open Terminal',
+    ]
+
+    if (pid > -1) {
+      terminalButtonParts.push(`(PID: ${pid})`)
+    }
+
     const item = new NotebookCellStatusBarItem(
-      `$(terminal) Open Terminal (PID: ${pid})`,
+      terminalButtonParts.join(' '),
       NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.openTerminal'

@@ -10,7 +10,8 @@ import {
   TaskPanelKind,
   tasks,
   NotebookCellExecution,
-  TextDocument
+  TextDocument,
+  ExtensionContext
 } from 'vscode'
 
 import { OutputType } from '../../constants'
@@ -20,12 +21,14 @@ import { IRunner, IRunnerEnvironment } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
-import { getShellPath } from './utils'
+import { getShellPath, parseCommandSeq } from './utils'
 
 const LABEL_LIMIT = 15
+const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
 export async function executeRunner(
+  context: ExtensionContext,
   runner: IRunner,
   exec: NotebookCellExecution,
   runningCell: TextDocument,
@@ -36,8 +39,18 @@ export async function executeRunner(
 
   const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
 
-  const cellText = exec.cell.document.getText()
-  const script = getCmdShellSeq(cellText, PLATFORM_OS)
+  let cellText = exec.cell.document.getText()
+
+  const envs: Record<string, string> = {
+    RUNME_ID
+  }
+
+  const commands = await parseCommandSeq(cellText)
+  if(!commands) { return false }
+
+  if (commands.length === 0) {
+    commands.push('')
+  }
 
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background } = annotations
@@ -45,12 +58,10 @@ export async function executeRunner(
   const program = await runner.createProgramSession({
     programName: getShellPath(execKey),
     environment,
-    script: {
-      type: 'script', script
+    exec: {
+      type: 'commands', commands
     },
-    envs: [
-      `RUNME_ID=${RUNME_ID}`
-    ],
+    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
     tty: interactive
   })
@@ -65,6 +76,8 @@ export async function executeRunner(
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+
+      const script = getCmdShellSeq(cellText, PLATFORM_OS)
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (script.trim().endsWith('vercel')) {
@@ -89,14 +102,18 @@ export async function executeRunner(
       program.close()
     })
 
+    context.subscriptions.push({
+      dispose: () => program.close()
+    })
+
     await program.run()
   } else {
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
-      cellText.length > LABEL_LIMIT
+      (cellText.length > LABEL_LIMIT
         ? `${cellText.slice(0, LABEL_LIMIT)}...`
-        : cellText,
+        : cellText) + ` (RUNME_ID: ${RUNME_ID})`,
       'exec',
       new CustomExecution(async () => program)
     )
@@ -109,6 +126,10 @@ export async function executeRunner(
     }
 
     const execution = await tasks.executeTask(taskExecution)
+
+    context.subscriptions.push({
+      dispose: () => execution.terminate()
+    })
 
     exec.token.onCancellationRequested(() => {
       try {
@@ -163,5 +184,16 @@ export async function executeRunner(
       // unexpected early return, likely an error
       resolve(false)
     }
+
+    if(background && interactive) {
+      setTimeout(
+        () => {
+          closeTerminalByEnvID(RUNME_ID)
+          resolve(true)
+        },
+        BACKGROUND_TASK_HIDE_TIMEOUT
+      )
+    }
   })
 }
+

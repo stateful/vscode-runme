@@ -2,12 +2,12 @@ import path from 'node:path'
 
 import {
   Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TerminalOptions, TaskRevealKind, TaskPanelKind,
+  window, TaskRevealKind, TaskPanelKind,
   ShellExecution
 } from 'vscode'
 
 // import { ExperimentalTerminal } from "../terminal"
-import { getCmdShellSeq, getAnnotations } from '../utils'
+import { getCmdShellSeq, getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 
@@ -18,7 +18,7 @@ const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
 
 export function closeTerminalByEnvID (id: string) {
-  const terminal = window.terminals.find((t) => (t.creationOptions as TerminalOptions).env?.RUNME_ID === id)
+  const terminal = window.terminals.find(t => getTerminalRunmeId(t) === id)
   if (terminal) {
     terminal.hide()
   }
