@@ -87,7 +87,7 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
 }
 
-function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
+export function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
   return (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID
     ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1]
     ?? undefined
