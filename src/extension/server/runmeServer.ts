@@ -121,9 +121,37 @@ class RunmeServer implements Disposable {
         })
     }
 
+    async #acceptsConnection(): Promise<void> {
+        const INTERVAL = 200
+        const ATTEMPTS = 50
+        let token: NodeJS.Timer
+        let iter = 0
+        let isRunning = false
+        const ping = (resolve: Function, reject: Function) => {
+          return async () => {
+              iter++
+              isRunning = await this.#isRunning()
+              if (isRunning) {
+                  clearTimeout(token)
+                  return resolve()
+              } else if (iter > ATTEMPTS) {
+                  clearTimeout(token)
+                  return reject(new RunmeServerError(`Server did not accept connections after ${iter*INTERVAL}ms`))
+              }
+              if (!token) {
+                  token = setInterval(ping(resolve, reject), INTERVAL)
+              }
+          }
+        }
+        return new Promise<void>((resolve, reject) => {
+            return ping(resolve, reject)()
+        })
+    }
+
     async launch(): Promise<object | number | RunmeServerError> {
+        let addr
         try {
-            return await this.#start()
+            addr = await this.#start()
         } catch (e) {
             if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
                 this.#intent++
@@ -131,6 +159,8 @@ class RunmeServer implements Disposable {
             }
             throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
         }
+        await this.#acceptsConnection()
+        return addr
     }
 }
 
