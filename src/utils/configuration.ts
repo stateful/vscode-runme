@@ -1,4 +1,4 @@
-import { workspace } from 'vscode'
+import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
 const SERVER_SECTION_NAME = 'runme.server'
@@ -36,27 +36,27 @@ const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
 }
 
-const getPath = (basePath: string, platform: string): string => {
-    const sep = platform.toLowerCase().startsWith('win') ? '\\' : '/'
+const getPath = (basePath: string): string => {
+    const baseUri = Uri.parse(basePath)
     const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
 
+    // relative path
     if (
-      !binaryPath.startsWith(sep) &&
+      !binaryPath.startsWith('/') &&
       binaryPath.length > 2 &&
       binaryPath[1] !== ':'
     ) {
-      return `${basePath}${sep}${binaryPath}`
+      return Uri.joinPath(baseUri, binaryPath).fsPath
     }
 
     return binaryPath
 }
 
-const getBinaryLocation = (binaryPath: string, platform: string) => {
+const getBinaryLocation = (binaryPath: string, platform: string): string => {
     const isWin = platform.toLowerCase().startsWith('win')
-    const platformSep = isWin ? '\\' : '/'
     const binName = isWin ? 'runme.exe' : 'runme'
-    const sep = binaryPath.endsWith(platformSep) ? '' : platformSep
-    return `${binaryPath}${sep}${binName}`
+    const pathUri = Uri.parse(binaryPath)
+    return Uri.joinPath(pathUri, binName).fsPath
 }
 
 const enableServerLogs = (): boolean => {

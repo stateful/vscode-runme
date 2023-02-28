@@ -1,4 +1,6 @@
 import { suite, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { Uri } from 'vscode'
+import { URI } from 'vscode-uri'
 
 import { getPath, getPortNumber, enableServerLogs, getBinaryLocation } from '../../src/utils/configuration'
 
@@ -16,6 +18,11 @@ const SETTINGS_MOCK:
     enableLogger: undefined
 }
 
+const winJoinPath = (uri: any, fragment: string) => {
+    const winFsPath = `C:${uri.path}\\${fragment}`
+    return { fsPath: winFsPath } as any
+}
+
 beforeEach(() => {
     vi.mock('vscode', () => ({
         workspace: {
@@ -24,6 +31,12 @@ beforeEach(() => {
                     return SETTINGS_MOCK[configurationName]
                 }
             })
+        },
+        Uri: {
+            joinPath: vi.fn().mockImplementation((uri: any, fragment: string) => {
+                return URI.parse(`${uri.fsPath}/${fragment}`)
+            }),
+            parse: vi.fn((uri: string) => URI.parse(uri)),
         }
     }))
 })
@@ -48,39 +61,41 @@ suite('Configuration', () => {
 
 
     test('Should default to a valid binaryPath', () => {
-        const path = getPath(FAKE_UNIX_EXT_PATH, 'darwin')
+        const path = getPath(FAKE_UNIX_EXT_PATH)
         expect(path).toStrictEqual('/Users/user/.vscode/extension/stateful.runme/bin')
     })
 
     test('Should default to a valid relative binaryPath when specified', () => {
         SETTINGS_MOCK.binaryPath = 'newBin'
-        const path = getPath(FAKE_UNIX_EXT_PATH, 'darwin')
+        const path = getPath(FAKE_UNIX_EXT_PATH)
         expect(path).toStrictEqual('/Users/user/.vscode/extension/stateful.runme/newBin')
     })
 
     test('Should default to a valid absolute binaryPath when specified', () => {
         SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin'
-        const path = getPath(FAKE_UNIX_EXT_PATH, 'darwin')
+        const path = getPath(FAKE_UNIX_EXT_PATH)
         expect(path).toStrictEqual('/opt/homebrew/bin')
     })
 
     test('Should use runme for non-windows platforms', () => {
         SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin'
-        const path = getPath(FAKE_UNIX_EXT_PATH, 'darwin')
+        const path = getPath(FAKE_UNIX_EXT_PATH)
         const binLoc = getBinaryLocation(path, 'darwin')
         expect(binLoc).toStrictEqual('/opt/homebrew/bin/runme')
     })
 
     test('Should use runme.exe for windows platforms with absolute path', () => {
+        vi.mocked(Uri.joinPath).mockImplementation(winJoinPath)
         SETTINGS_MOCK.binaryPath = 'C:\\Users\\.vscode\\extensions\\stateful.runme\\bin'
-        const path = getPath(FAKE_WIN_EXT_PATH, 'win32')
+        const path = getPath(FAKE_WIN_EXT_PATH)
         const binLoc = getBinaryLocation(path, 'win32')
         expect(binLoc).toStrictEqual('C:\\Users\\.vscode\\extensions\\stateful.runme\\bin\\runme.exe')
     })
 
     test('Should use runme.exe for windows platforms with relative path', () => {
+        vi.mocked(Uri.joinPath).mockImplementation(winJoinPath)
         SETTINGS_MOCK.binaryPath = 'newBin'
-        const path = getPath(FAKE_WIN_EXT_PATH, 'win32')
+        const path = getPath(FAKE_WIN_EXT_PATH)
         const binLoc = getBinaryLocation(path, 'win32')
         expect(binLoc).toStrictEqual('C:\\Users\\.vscode\\extensions\\stateful.runme\\newBin\\runme.exe')
     })

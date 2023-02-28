@@ -32,7 +32,7 @@ class RunmeServer implements Disposable {
     constructor(extBasePath: string, options: IServerConfig) {
         this.#runningPort = getPortNumber()
         this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getPath(extBasePath, process.platform)
+        this.#binaryPath = getPath(extBasePath)
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
