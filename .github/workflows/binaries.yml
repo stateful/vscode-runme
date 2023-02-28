@@ -46,10 +46,6 @@ jobs:
   prepareRelease:
     name: Prepare release
     runs-on: ubuntu-latest
-    env:
-      REPOSITORY: runme
-      BINARY_PATH: .bin
-      DOWNLOAD_PATH: downloads
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -456,5 +452,3 @@ jobs:
         if: failure()
         with:
           timeout: "300000"
-
-

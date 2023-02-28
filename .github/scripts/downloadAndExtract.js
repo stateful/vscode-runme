@@ -5,11 +5,11 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { parseArgs, promisify } from 'node:util'
 
-
 import tar from 'tar-fs'
 import unzipper from 'unzipper'
 
 const streamPipeline = promisify(pipeline)
+const VALID_FORMATS = ['zip', 'tar']
 const SCHEMA = {
     downloadUrl: {
         type: 'string',
@@ -61,7 +61,7 @@ const cleanCliDownload = async (cliDownloadFolder) => {
 }
 
 const downloadBinary = async (downloadUrl, type, binaryDestination, binaryName) => {
-    if (!['zip', 'tar'].includes(type)) {
+    if (!VALID_FORMATS.includes(type)) {
         throw new Error(`Invalid type ${type}, it must be zip or tar file`)
     }
 
@@ -72,7 +72,7 @@ const downloadBinary = async (downloadUrl, type, binaryDestination, binaryName) 
     if (!binaryName) {
         throw new Error('Missing binary name')
     }
-    
+
     const cliFilePath = path.resolve(binaryDestination)
     await cleanCliDownload(cliFilePath)
     await fsp.mkdir(cliFilePath, { recursive: true })

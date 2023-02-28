@@ -386,7 +386,9 @@
     "test:lint:fix": "eslint src tests --ext ts --fix",
     "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
-    "watch": "npm run build:dev -- --watch"
+    "watch": "npm run build:dev -- --watch",
+    "vscode:prepublish": "npm run prepare-binary",
+    "prepare-binary": "node .github/scripts/downloadAndExtract.js -d $DOWNLOAD_URL -f $TYPE -b bin -n runme"
   },
   "devDependencies": {
     "@octokit/rest": "^19.0.7",
@@ -420,6 +422,7 @@
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4",
+    "unzipper": "^0.10.11",
     "vitest": "^0.29.1",
     "vscode-uri": "^3.0.7",
     "wdio-vscode-service": "^5.0.0",
