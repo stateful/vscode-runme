@@ -15,10 +15,13 @@ import { v5 as uuidv5 } from 'uuid'
 
 import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
+import { SERVER_ADDRESS } from '../constants'
+import { getPortNumber } from '../utils/configuration'
 
 import executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
+
 
 declare var globalThis: any
 
@@ -302,4 +305,8 @@ export function replaceOutput(
 ): Thenable<void> {
   exec.clearOutput()
   return exec.replaceOutput(out, cell)
+}
+
+export function getGrpcHost() {
+  return `${SERVER_ADDRESS}:${getPortNumber()}`
 }

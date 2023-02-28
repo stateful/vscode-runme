@@ -5,12 +5,11 @@ import { RunnerServiceClient } from '@buf/stateful_runme.community_timostamm-pro
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
-import { SERVER_ADDRESS } from '../../constants'
-import { getPortNumber } from '../../utils/configuration'
+import { getGrpcHost } from '../utils'
 
 function initParserClient(): ParserServiceClient {
   const transport = new GrpcTransport({
-    host: `${SERVER_ADDRESS}:${getPortNumber()}`,
+    host: getGrpcHost(),
     channelCredentials: ChannelCredentials.createInsecure(),
   })
 

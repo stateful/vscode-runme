@@ -1,4 +1,4 @@
-import vscode from 'vscode'
+import vscode, { workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 
 import {
@@ -11,6 +11,7 @@ import {
   getAnnotations,
   mapGitIgnoreToGlobFolders,
   hashDocumentUri,
+  getGrpcHost,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -28,8 +29,11 @@ vi.mock('vscode', () => ({
     },
     env: {
       machineId: 'test-machine-id'
-    }
-  }
+    },
+  },
+  workspace: {
+    getConfiguration: vi.fn()
+  },
 }))
 vi.mock('vscode-telemetry')
 
@@ -276,5 +280,12 @@ suite('#getAnnotations', () => {
       mimeType: 'text/plain',
       name: 'echo-hello',
     })
+  })
+})
+
+suite('#getGrpcHost', () => {
+  test('should return host addr including config port', () => {
+    vi.mocked(workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(7863) } as any)
+    expect(getGrpcHost()).toStrictEqual('127.0.0.1:7863')
   })
 })

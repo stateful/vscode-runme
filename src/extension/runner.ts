@@ -20,6 +20,7 @@ import {
   Session,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
+import { getGrpcHost } from './utils'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -92,7 +93,7 @@ export class GrpcRunner implements IRunner {
 
   constructor() {
     this.transport = new GrpcTransport({
-      host: 'unix:///tmp/runme.sock',
+      host: getGrpcHost(),
       channelCredentials: ChannelCredentials.createInsecure(),
     })
 
