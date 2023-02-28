@@ -46,6 +46,8 @@ jobs:
   prepareRelease:
     name: Prepare release
     runs-on: ubuntu-latest
+    env:
+      REPOSITORY: runme
     steps:
       - name: Checkout
         uses: actions/checkout@v3
