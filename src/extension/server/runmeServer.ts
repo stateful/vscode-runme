@@ -15,6 +15,10 @@ export interface IServerConfig {
     assignPortDynamically?: boolean
     retryOnFailure?: boolean
     maxNumberOfIntents: number
+    acceptsConnection?: {
+      intents: number
+      interval: number
+    }
 }
 
 class RunmeServer implements Disposable {
@@ -27,6 +31,8 @@ class RunmeServer implements Disposable {
     #loggingEnabled: boolean
     #intent: number
     #address: string
+    #acceptsIntents: number
+    #acceptsInterval: number
     events: EventEmitter
 
     constructor(extBasePath: string, options: IServerConfig) {
@@ -37,6 +43,8 @@ class RunmeServer implements Disposable {
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
         this.#address = `${SERVER_ADDRESS}:${this.#runningPort}`
+        this.#acceptsIntents = options.acceptsConnection?.intents || 50
+        this.#acceptsInterval = options.acceptsConnection?.interval || 200
         this.events = new EventEmitter()
     }
 
@@ -46,7 +54,7 @@ class RunmeServer implements Disposable {
         this.#process?.kill()
     }
 
-    async #isRunning(): Promise<boolean> {
+    async isRunning(): Promise<boolean> {
       const client = initParserClient()
       try {
         const deserialRequest = DeserializeRequest.create({ source: Buffer.from('## Server running', 'utf-8') })
@@ -61,11 +69,11 @@ class RunmeServer implements Disposable {
       }
     }
 
-    async #start(): Promise<object | number | RunmeServerError> {
-        const running = await this.#isRunning()
+    async start(): Promise<string | RunmeServerError> {
+        const running = await this.isRunning()
         if (running) {
-          console.log(`[Runme] Server already running on port ${this.#runningPort}`)
-          return this.#runningPort
+          console.log(`[Runme] Server already running on addr ${this.#address}`)
+          return this.#address
         }
 
         const binaryLocation = getBinaryLocation(this.#binaryPath, process.platform)
@@ -121,20 +129,20 @@ class RunmeServer implements Disposable {
         })
     }
 
-    async #acceptsConnection(): Promise<void> {
-        const INTERVAL = 200
-        const ATTEMPTS = 50
+    async acceptsConnection(): Promise<void> {
+        const INTERVAL = this.#acceptsInterval
+        const INTENTS = this.#acceptsIntents
         let token: NodeJS.Timer
         let iter = 0
         let isRunning = false
         const ping = (resolve: Function, reject: Function) => {
           return async () => {
               iter++
-              isRunning = await this.#isRunning()
+              isRunning = await this.isRunning()
               if (isRunning) {
                   clearTimeout(token)
                   return resolve()
-              } else if (iter > ATTEMPTS) {
+              } else if (iter > INTENTS) {
                   clearTimeout(token)
                   return reject(new RunmeServerError(`Server did not accept connections after ${iter*INTERVAL}ms`))
               }
@@ -148,10 +156,10 @@ class RunmeServer implements Disposable {
         })
     }
 
-    async launch(): Promise<object | number | RunmeServerError> {
+    async launch(): Promise<string | RunmeServerError> {
         let addr
         try {
-            addr = await this.#start()
+            addr = await this.start()
         } catch (e) {
             if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
                 this.#intent++
@@ -159,7 +167,7 @@ class RunmeServer implements Disposable {
             }
             throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
         }
-        await this.#acceptsConnection()
+        await this.acceptsConnection()
         return addr
     }
 }
