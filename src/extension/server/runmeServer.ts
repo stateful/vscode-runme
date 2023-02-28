@@ -32,7 +32,7 @@ class RunmeServer implements Disposable {
     constructor(extBasePath: string, options: IServerConfig) {
         this.#runningPort = getPortNumber()
         this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getPath(extBasePath)
+        this.#binaryPath = getPath(extBasePath, process.platform)
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
@@ -68,7 +68,7 @@ class RunmeServer implements Disposable {
           return this.#runningPort
         }
 
-        const binaryLocation = getBinaryLocation(this.#binaryPath)
+        const binaryLocation = getBinaryLocation(this.#binaryPath, process.platform)
 
         const binaryExists = await fs.access(binaryLocation)
             .then(() => true, () => false)

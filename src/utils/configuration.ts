@@ -1,5 +1,3 @@
-import { join } from 'node:path'
-
 import { workspace } from 'vscode'
 import { z } from 'zod'
 
@@ -38,20 +36,27 @@ const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
 }
 
-const getPath = (basePath: string): string => {
+const getPath = (basePath: string, platform: string): string => {
+    const sep = platform.toLowerCase().startsWith('win') ? '\\' : '/'
     const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
 
-    if (!binaryPath.startsWith('/')) {
-      return join(basePath, '/', binaryPath)
+    if (
+      !binaryPath.startsWith(sep) &&
+      binaryPath.length > 2 &&
+      binaryPath[1] !== ':'
+    ) {
+      return `${basePath}${sep}${binaryPath}`
     }
 
     return binaryPath
 }
 
-const getBinaryLocation = (binaryPath: string) => {
-    const binName = process.platform.toLocaleLowerCase().startsWith('win') ? 'runme.exe' : 'runme'
-    const sep = binaryPath.endsWith('/') ? '' : '/'
-    return join(binaryPath, sep, binName)
+const getBinaryLocation = (binaryPath: string, platform: string) => {
+    const isWin = platform.toLowerCase().startsWith('win')
+    const platformSep = isWin ? '\\' : '/'
+    const binName = isWin ? 'runme.exe' : 'runme'
+    const sep = binaryPath.endsWith(platformSep) ? '' : platformSep
+    return `${binaryPath}${sep}${binName}`
 }
 
 const enableServerLogs = (): boolean => {

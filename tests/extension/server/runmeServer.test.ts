@@ -28,7 +28,7 @@ suite('Runme server', () => {
 
     test('Should try 2 times before failing', async () => {
         const server = new Server(
-          '/User/user/.vscode/extension/stateful.runme',
+          '/Users/user/.vscode/extension/stateful.runme',
           {
             retryOnFailure: true,
             maxNumberOfIntents: 2,
