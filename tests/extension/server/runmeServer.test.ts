@@ -56,7 +56,7 @@ suite('Runme server accept connections', () => {
         )
     })
 
-    test('Should wait until server accepts connections', async () => {
+    test('Should wait until server accepts connection', async () => {
         server.start = vi.fn().mockResolvedValue('localhost:8080')
         server.isRunning = vi.fn().mockResolvedValue(true)
 
@@ -65,7 +65,7 @@ suite('Runme server accept connections', () => {
         ).resolves.toBe('localhost:8080')
     })
 
-    test('Should wait throw error when server never accepts connections', async () => {
+    test('Should wait throw error when server never accepts connection', async () => {
         server.start = vi.fn().mockResolvedValue('localhost:8080')
         server.isRunning = vi.fn().mockResolvedValue(false)
 
