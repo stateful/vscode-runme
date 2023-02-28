@@ -3,14 +3,18 @@ import path from 'node:path'
 import { vi, suite, test, expect } from 'vitest'
 import type { ExecuteResponse } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb'
 
-import { 
-  GrpcRunner, 
-  GrpcRunnerEnvironment, 
-  GrpcRunnerProgramSession, 
-  RunProgramOptions 
+import {
+  GrpcRunner,
+  GrpcRunnerEnvironment,
+  GrpcRunnerProgramSession,
+  RunProgramOptions
 } from '../../src/extension/runner'
 
-vi.mock('vscode', () => ({ 
+vi.mock('../../src/extension/utils', () => ({
+  getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863')
+}))
+
+vi.mock('vscode', () => ({
   ...import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
   EventEmitter: getEventEmitterClass()
 }))
@@ -38,15 +42,15 @@ const deleteSession = vi.fn(async () => ({
 function getEventEmitterClass() {
   return class EventEmitter<T> {
     listeners: MessageCallback<T>[] = []
-    
+
     event: Event<T> = (listener) => {
       this.listeners.push(listener)
-  
+
       return () => {
         this.listeners = this.listeners.filter(x => x !== listener)
       }
     }
-  
+
     fire(data: T) {
       this.listeners.forEach(l => l(data))
     }
@@ -78,10 +82,10 @@ class MockedDuplexClientStream {
 }
 
 vi.mock('../../src/extension/grpc/client', () => ({
-  RunnerServiceClient: class { 
+  RunnerServiceClient: class {
     constructor() {}
 
-    async createSession() { 
+    async createSession() {
       return {
         response: {
           session: createSession()
@@ -112,13 +116,13 @@ suite('grpc Runner', () => {
   test('environment dispose is called on runner dispose', async () => {
     resetId()
     deleteSession.mockClear()
-    
+
     const runner = new GrpcRunner()
     const environment = (await runner.createEnvironment()) as GrpcRunnerEnvironment
 
     const oldEnvDispose = environment.dispose
 
-    const environmentDispose = vi.fn(async () => { 
+    const environmentDispose = vi.fn(async () => {
       await oldEnvDispose.call(environment)
     })
 
@@ -133,17 +137,17 @@ suite('grpc Runner', () => {
   suite('grpc program session', () => {
     test('session dispose is called on runner dispose', async () => {
       const { runner, session, duplex } = await createNewSession()
-      
+
       const oldSessionDispose = session.dispose
-  
+
       const sessionDispose = vi.fn(async () => {
         await oldSessionDispose.call(session)
       })
-  
+
       session.dispose = sessionDispose
-  
+
       await runner.dispose()
-  
+
       expect(sessionDispose).toBeCalledTimes(1)
       expect(duplex.requests.complete).toBeCalledTimes(1)
     })
@@ -171,7 +175,7 @@ suite('grpc Runner', () => {
       })
 
       expect(stdoutListener).not.toBeCalled()
-      
+
       expect(stderrListener).toBeCalledTimes(1)
       expect(stderrListener).toBeCalledWith(Buffer.from('test'))
     })
@@ -201,11 +205,11 @@ suite('grpc Runner', () => {
     })
 
     test('duplex onMessage calls close', async () => {
-      const { 
-        duplex, 
-        stdoutListener, 
-        stderrListener, 
-        closeListener 
+      const {
+        duplex,
+        stdoutListener,
+        stderrListener,
+        closeListener
       } = await createNewSession()
 
       duplex._onMessage.fire({
@@ -247,9 +251,9 @@ async function createNewSession(options: Partial<RunProgramOptions> = {}, runner
   const errListener = vi.fn()
   session.onDidErr(errListener)
 
-  return { 
-    runner, 
-    session, 
+  return {
+    runner,
+    session,
     duplex: getMockedDuplex(session),
     stdoutListener,
     stderrListener,

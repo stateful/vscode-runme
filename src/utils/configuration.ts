@@ -1,4 +1,4 @@
-import { workspace } from 'vscode'
+import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
 const SERVER_SECTION_NAME = 'runme.server'
@@ -10,11 +10,11 @@ const configurationSchema = {
             .positive()
             .min(8080)
             .max(9090)
-            .default(8084),
+            .default(7863),
         binaryPath: z
             .string()
             .transform((schema) => {
-                return schema || '.bin/runme'
+                return schema || 'bin'
             }),
         enableLogger: z
             .boolean()
@@ -33,11 +33,30 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
 }
 
 const getPortNumber = (): number => {
-    return getServerConfigurationValue<number>('port', 8084)
+    return getServerConfigurationValue<number>('port', 7863)
 }
 
-const getPath = (): string => {
-    return getServerConfigurationValue<string>('binaryPath', '.bin/runme')
+const getPath = (basePath: string): string => {
+    const baseUri = Uri.parse(basePath)
+    const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
+
+    // relative path
+    if (
+      !binaryPath.startsWith('/') &&
+      binaryPath.length > 2 &&
+      binaryPath[1] !== ':'
+    ) {
+      return Uri.joinPath(baseUri, binaryPath).fsPath
+    }
+
+    return binaryPath
+}
+
+const getBinaryLocation = (binaryPath: string, platform: string): string => {
+    const isWin = platform.toLowerCase().startsWith('win')
+    const binName = isWin ? 'runme.exe' : 'runme'
+    const pathUri = Uri.parse(binaryPath)
+    return Uri.joinPath(pathUri, binName).fsPath
 }
 
 const enableServerLogs = (): boolean => {
@@ -45,6 +64,7 @@ const enableServerLogs = (): boolean => {
 }
 
 export {
+    getBinaryLocation,
     getPortNumber,
     getPath,
     enableServerLogs

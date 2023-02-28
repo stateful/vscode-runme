@@ -31,7 +31,7 @@ export class RunmeExtension {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
-    const server = new RunmeServer({
+    const server = new RunmeServer(context.extensionUri.fsPath, {
       retryOnFailure: true,
       maxNumberOfIntents: 2,
     })

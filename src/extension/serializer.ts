@@ -15,15 +15,11 @@ import {
   Disposable,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
-import { ChannelCredentials } from '@grpc/grpc-js'
-import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
-import { SERVER_ADDRESS } from '../constants'
-import { getPortNumber } from '../utils/configuration'
 
 import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
-import { ParserServiceClient } from './grpc/client'
+import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { canEditFile, initWasm } from './utils'
@@ -292,24 +288,13 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
 
-  static async initGrpc(): Promise<ParserServiceClient> {
-    const transport = new GrpcTransport({
-      host: `${SERVER_ADDRESS}:${getPortNumber()}`,
-      channelCredentials: ChannelCredentials.createInsecure(),
-    })
-
-    return new ParserServiceClient(transport)
-  }
-
   constructor(protected context: ExtensionContext) {
     super(context)
 
-    this.ready = GrpcSerializer.initGrpc()
-      .then((c) => {
-        this.client = c
-        return
-      })
-      .catch((err) => err)
+    this.ready = new Promise((resolve) => {
+      this.client = initParserClient()
+      resolve()
+    })
   }
 
   protected async saveNotebook(
@@ -336,7 +321,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken
   ): Promise<Serializer.Notebook> {
-    const deserialRequest = <DeserializeRequest>{ source: content }
+    const deserialRequest = DeserializeRequest.create({ source: content })
     const request = await this.client!.deserialize(deserialRequest)
 
     const { notebook } = request.response
