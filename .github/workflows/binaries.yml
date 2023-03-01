@@ -308,19 +308,9 @@ jobs:
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
     
 
-      # VSX Registry
+      # VSX Registry (only Stable releases)
 
       # Linux X86
-      - name: Publish to Open VSX Registry Linux X86 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-x64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry Linux X86 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
@@ -331,16 +321,6 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}-linux-x64-${{ env.RELEASE_VERSION }}.vsix
       # Linux arm64
-      - name: Publish to Open VSX Registry Linux arm64 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-arm64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry Linux arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
@@ -351,16 +331,6 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}-linux-arm64-${{ env.RELEASE_VERSION }}.vsix
       # MacOS x86_64
-      - name: Publish to Open VSX Registry MacOS x86_64 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-x64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry MacOS x86_64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
@@ -371,16 +341,6 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-x64-${{ env.RELEASE_VERSION }}.vsix
       # MacOS arm64
-      - name: Publish to Open VSX Registry MacOS arm64 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-arm64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry MacOS arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
@@ -391,16 +351,6 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-arm64-${{ env.RELEASE_VERSION }}.vsix
       # Windows x64
-      - name: Publish to Open VSX Registry Windows x64 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-x64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry Windows x64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
@@ -411,16 +361,6 @@ jobs:
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}-win32-x64-${{ env.RELEASE_VERSION }}.vsix
       # Windows arm64
-      - name: Publish to Open VSX Registry Windows arm64 (Edge)
-        uses: HaaLeo/publish-vscode-extension@v1
-        timeout-minutes: 20
-        continue-on-error: true
-        if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-        with:
-          preRelease: true
-          pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-arm64-${{ env.RELEASE_VERSION }}.vsix
-
       - name: Publish to Open VSX Registry Windows arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
