@@ -23,21 +23,21 @@ Feel free to submit any issues you may have via the
 
 # Usage
 
-After cloning into a repo in VS Code, open any markdown file and notice that instead of opening the markdown file content, in renders a notebook where shell commands are rendered as runnable blocks.
+After cloning into a repo in VS Code, open any markdown file and notice that instead of opening the markdown file content, in renders a notebook where shell commands are rendered as runnable blocks. Please see Runme's [Getting Started guide](https://runme.dev/docs/getting-started) for step-by-step instructions.
 
-If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
+> If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
 
 ## Configure Cell Execution
 
-Runme allows code blocks to be annotated with attributes to provide control over some aspects of execution, output, interaction, and other behavior. Please find a complete list in the [docs](https://runme.dev/docs/intro).
+Runme allows code blocks to be annotated with attributes to provide control over some aspects of execution, output, interaction, and other behavior. Please find a complete list in the [docs](https://runme.dev/docs/configuration).
 
-For instance, the following annotation will run the command in the background, great for compilers/bundler with file watchers.
+For instance, the following annotation will run the command in the background, great for compilers/bundler with file watchers. To enable or disable any of the available options just click the respective cell's `Configure` button.
 
     ```sh { background=true }
     npx tsc --watch
     ```
 
-Check the complete list at https://runme.dev/docs/annotations or take a look at the [examples](https://github.com/stateful/vscode-runme/tree/main/examples) available inside the VS Code extension repo for a reference how to apply these code block attributes in different use-cases.
+Check the complete list of configuration options at https://runme.dev/docs/configuration or take a look at the [examples](https://github.com/stateful/vscode-runme/tree/main/examples) which are also illustrated in [Runme's integration docs](https://runme.dev/docs/integrations).
 
 ## How It Works
 
