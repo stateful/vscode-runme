@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
@@ -36,27 +38,22 @@ const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
 }
 
-const getPath = (basePath: string): string => {
-    const baseUri = Uri.file(basePath)
-    const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
+const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
+    const userPath = getServerConfigurationValue<string|undefined>('binaryPath', undefined)
 
-    // relative path
-    if (
-      !binaryPath.startsWith('/') &&
-      binaryPath.length > 2 &&
-      binaryPath[1] !== ':'
-    ) {
-      return Uri.joinPath(baseUri, binaryPath).fsPath
-    }
-
-    return binaryPath
-}
-
-const getBinaryLocation = (binaryPath: string, platform: string): string => {
     const isWin = platform.toLowerCase().startsWith('win')
     const binName = isWin ? 'runme.exe' : 'runme'
-    const pathUri = Uri.file(binaryPath)
-    return Uri.joinPath(pathUri, binName).fsPath
+    const bundledPath = Uri.joinPath(extensionBaseUri, 'bin', binName)
+
+    if(userPath) {
+      if (path.isAbsolute(userPath)) {
+        return Uri.file(userPath)
+      } else if(workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+        return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
+      }
+    }
+
+    return bundledPath
 }
 
 const enableServerLogs = (): boolean => {
@@ -64,8 +61,7 @@ const enableServerLogs = (): boolean => {
 }
 
 export {
-    getBinaryLocation,
     getPortNumber,
-    getPath,
+    getBinaryPath,
     enableServerLogs
 }

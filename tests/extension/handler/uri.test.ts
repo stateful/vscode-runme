@@ -6,7 +6,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import {
-    getProjectDir, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile, parseParams
+    getProjectDir, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile, parseParams, getTargetDirName
 } from '../../../src/extension/handler/utils'
 
 vi.mock('vscode')
@@ -103,11 +103,12 @@ describe('RunmeUriHandler', () => {
         it('should not run if project dir or suggested name can not be identified', async () => {
             await handler['_setupProject']('README.md', 'foo')
             expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
-            vi.mocked(getProjectDir).mockResolvedValueOnce('foobar' as any)
+            vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
             await handler['_setupProject']('README.md', 'foo')
             expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
-            vi.mocked(getProjectDir).mockResolvedValueOnce('foobar' as any)
-            vi.mocked(getSuggestedProjectName).mockResolvedValueOnce('stateful/runme')
+            vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
+            vi.mocked(getSuggestedProjectName).mockReturnValueOnce('stateful/runme')
+            vi.mocked(getTargetDirName).mockResolvedValueOnce('stateful/runme')
             await handler['_setupProject']('README.md', 'foo')
             expect(window.showInformationMessage).toHaveBeenCalledTimes(1)
             expect(window.withProgress).toHaveBeenCalledTimes(1)
@@ -132,14 +133,14 @@ describe('RunmeUriHandler', () => {
         it('should fail gracefully', async () => {
             vi.mocked(got.get).mockRejectedValueOnce(new Error('ups'))
             vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup' }, fsPath: '/foo/bar.md'} as any)
-            vi.mocked(getProjectDir).mockResolvedValueOnce('foobar' as any)
+            vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
             await handler['_setupFile']('/foo/bar.md')
             expect(vi.mocked(window.showErrorMessage).mock.calls[0][0]).toMatch(/Failed to set-up/)
         })
 
         it('should create new dir with file and open VS Code', async () => {
             vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup' }, fsPath: '/foo/bar.md'} as any)
-            vi.mocked(getProjectDir).mockResolvedValueOnce('foobar' as any)
+            vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
             await handler['_setupFile']('/foo/bar.md')
             expect(workspace.fs.createDirectory).toBeCalledTimes(1)
             expect(workspace.fs.writeFile).toBeCalledTimes(1)

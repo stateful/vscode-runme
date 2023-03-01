@@ -2,10 +2,10 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import EventEmitter from 'node:events'
 
-import { Disposable } from 'vscode'
+import { Disposable, Uri } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
-import { enableServerLogs, getBinaryLocation, getPath, getPortNumber } from '../../utils/configuration'
+import { enableServerLogs, getBinaryPath, getPortNumber } from '../../utils/configuration'
 import { initParserClient } from '../grpc/client'
 import { DeserializeRequest } from '../grpc/serializerTypes'
 
@@ -25,7 +25,7 @@ class RunmeServer implements Disposable {
 
     #runningPort: number
     #process: ChildProcessWithoutNullStreams | undefined
-    #binaryPath: string
+    #binaryPath: Uri
     #retryOnFailure: boolean
     #maxNumberOfIntents: number
     #loggingEnabled: boolean
@@ -35,10 +35,10 @@ class RunmeServer implements Disposable {
     #acceptsInterval: number
     events: EventEmitter
 
-    constructor(extBasePath: string, options: IServerConfig) {
+    constructor(extBasePath: Uri, options: IServerConfig) {
         this.#runningPort = getPortNumber()
         this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getPath(extBasePath)
+        this.#binaryPath = getBinaryPath(extBasePath, process.platform)
         this.#retryOnFailure = options.retryOnFailure || false
         this.#maxNumberOfIntents = options.maxNumberOfIntents
         this.#intent = 0
@@ -76,7 +76,7 @@ class RunmeServer implements Disposable {
           return this.#address
         }
 
-        const binaryLocation = getBinaryLocation(this.#binaryPath, process.platform)
+        const binaryLocation = this.#binaryPath.fsPath
 
         const binaryExists = await fs.access(binaryLocation)
             .then(() => true, () => false)

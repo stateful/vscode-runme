@@ -1,5 +1,5 @@
 import { test, expect, vi } from 'vitest'
-import { notebooks, workspace, commands, window } from 'vscode'
+import { notebooks, workspace, commands, window, Uri } from 'vscode'
 
 import { RunmeExtension } from '../../src/extension/extension'
 
@@ -20,6 +20,7 @@ test('initializes all providers', async () => {
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config])
   } as any)
+  vi.mocked(Uri.joinPath).mockReturnValue('/foo/bar' as any)
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)
