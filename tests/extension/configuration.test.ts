@@ -19,7 +19,7 @@ const SETTINGS_MOCK:
 }
 
 const winJoinPath = (uri: any, fragment: string) => {
-    const winFsPath = `C:${uri.path}\\${fragment}`
+    const winFsPath = `${uri.fsPath}\\${fragment}`
     return { fsPath: winFsPath } as any
 }
 
@@ -37,6 +37,7 @@ beforeEach(() => {
                 return URI.parse(`${uri.fsPath}/${fragment}`)
             }),
             parse: vi.fn((uri: string) => URI.parse(uri)),
+            file: vi.fn((uri: string) => URI.file(uri))
         }
     }))
 })
@@ -89,7 +90,7 @@ suite('Configuration', () => {
         SETTINGS_MOCK.binaryPath = 'C:\\Users\\.vscode\\extensions\\stateful.runme\\bin'
         const path = getPath(FAKE_WIN_EXT_PATH)
         const binLoc = getBinaryLocation(path, 'win32')
-        expect(binLoc).toStrictEqual('C:\\Users\\.vscode\\extensions\\stateful.runme\\bin\\runme.exe')
+        expect(binLoc).toStrictEqual('c:\\Users\\.vscode\\extensions\\stateful.runme\\bin\\runme.exe')
     })
 
     test('Should use runme.exe for windows platforms with relative path', () => {
@@ -97,7 +98,7 @@ suite('Configuration', () => {
         SETTINGS_MOCK.binaryPath = 'newBin'
         const path = getPath(FAKE_WIN_EXT_PATH)
         const binLoc = getBinaryLocation(path, 'win32')
-        expect(binLoc).toStrictEqual('C:\\Users\\.vscode\\extensions\\stateful.runme\\newBin\\runme.exe')
+        expect(binLoc).toStrictEqual('c:\\Users\\.vscode\\extensions\\stateful.runme\\newBin\\runme.exe')
     })
 
     test('Should disable server logs with an invalid value', () => {

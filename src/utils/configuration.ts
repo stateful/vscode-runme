@@ -37,7 +37,7 @@ const getPortNumber = (): number => {
 }
 
 const getPath = (basePath: string): string => {
-    const baseUri = Uri.parse(basePath)
+    const baseUri = Uri.file(basePath)
     const binaryPath = getServerConfigurationValue<string>('binaryPath', 'bin')
 
     // relative path
@@ -55,7 +55,7 @@ const getPath = (basePath: string): string => {
 const getBinaryLocation = (binaryPath: string, platform: string): string => {
     const isWin = platform.toLowerCase().startsWith('win')
     const binName = isWin ? 'runme.exe' : 'runme'
-    const pathUri = Uri.parse(binaryPath)
+    const pathUri = Uri.file(binaryPath)
     return Uri.joinPath(pathUri, binName).fsPath
 }
 
