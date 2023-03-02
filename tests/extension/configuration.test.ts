@@ -3,7 +3,12 @@ import path from 'node:path'
 import { suite, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
 
-import { getPortNumber, enableServerLogs, getBinaryPath } from '../../src/utils/configuration'
+import {
+  getPortNumber,
+  enableServerLogs,
+  getBinaryPath,
+  getServerConfigurationValue
+} from '../../src/utils/configuration'
 
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
 const FAKE_WIN_EXT_PATH = 'C:\\Users\\.vscode\\extensions\\stateful.runme'
@@ -89,6 +94,22 @@ suite('Configuration', () => {
         SETTINGS_MOCK.enableLogger = 'true'
         const path = enableServerLogs()
         expect(path).toBeFalsy()
+    })
+
+    test('getServerConfigurationValue Should default to undefined binaryPath', () => {
+      SETTINGS_MOCK.binaryPath = undefined
+
+      expect(
+        getServerConfigurationValue<string | undefined>('binaryPath', undefined)
+      ).toStrictEqual(undefined)
+    })
+
+    test('getServerConfigurationValue Should give proper binaryPath if defined', () => {
+      SETTINGS_MOCK.binaryPath = '/binary/path'
+
+      expect(
+        getServerConfigurationValue<string | undefined>('binaryPath', undefined)
+      ).toStrictEqual('/binary/path')
     })
 
     suite('posix', () => {

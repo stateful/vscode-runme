@@ -15,9 +15,7 @@ const configurationSchema = {
             .default(7863),
         binaryPath: z
             .string()
-            .transform((schema) => {
-                return schema || 'bin'
-            }),
+            .optional(),
         enableLogger: z
             .boolean()
             .default(false)
@@ -63,5 +61,6 @@ const enableServerLogs = (): boolean => {
 export {
     getPortNumber,
     getBinaryPath,
-    enableServerLogs
+    enableServerLogs,
+    getServerConfigurationValue
 }
