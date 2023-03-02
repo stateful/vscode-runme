@@ -19,27 +19,6 @@ export const notebooks = {
 
 
 export class Uri extends URI {
-  // private constructor (private filePath: string) { }
-
-  // static file = vi.fn((filePath: string): Uri => {
-  //   return new Uri(filePath)
-  // })
-
-  // static joinPath = vi.fn((uri: Uri, ...segments: string[]): Uri => {
-  //   return new Uri(path.join(uri.fsPath, ...segments))
-  // })
-
-  // static parse = vi.fn((uri: string) => {
-  //   return URI.parse(uri)
-  // })
-
-  // get fsPath () {
-  //   return path.relative(
-  //     path.join(__dirname, '../'),
-  //     super.fsPath,
-  //   )
-  // }
-
   static file = vi.fn(super.file)
   static parse = vi.fn(super.parse)
 

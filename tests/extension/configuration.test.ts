@@ -32,12 +32,6 @@ beforeEach(() => {
         }),
       },
       Uri: mocked.Uri,
-      // Uri: {
-      //     joinPath: vi.fn().mockImplementation((uri: any, fragment: string) => {
-      //         return URI.parse(`${uri.fsPath}/${fragment}`)
-      //     }),
-      //     parse: vi.fn((uri: string) => URI.parse(uri)),
-      // }
     })
   })
 
