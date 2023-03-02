@@ -35,16 +35,16 @@ class RunmeServer implements Disposable {
     #acceptsInterval: number
     events: EventEmitter
 
-    constructor(extBasePath: string, options: IServerConfig) {
-        this.#port = getPortNumber()
-        this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getBinaryPath(extBasePath, process.platform)
-        this.#retryOnFailure = options.retryOnFailure || false
-        this.#maxNumberOfIntents = options.maxNumberOfIntents
-        this.#intent = 0
-        this.#acceptsIntents = options.acceptsConnection?.intents || 50
-        this.#acceptsInterval = options.acceptsConnection?.interval || 200
-        this.events = new EventEmitter()
+    constructor(extBasePath: Uri, options: IServerConfig) {
+      this.#port = getPortNumber()
+      this.#loggingEnabled = enableServerLogs()
+      this.#binaryPath = getBinaryPath(extBasePath, process.platform)
+      this.#retryOnFailure = options.retryOnFailure || false
+      this.#maxNumberOfIntents = options.maxNumberOfIntents
+      this.#intent = 0
+      this.#acceptsIntents = options.acceptsConnection?.intents || 50
+      this.#acceptsInterval = options.acceptsConnection?.interval || 200
+      this.events = new EventEmitter()
     }
 
     dispose() {

@@ -22,6 +22,10 @@ vi.mock('node:fs/promises', async () => ({
   }
 }))
 
+vi.mock('node:child_process', async () => ({
+  spawn: vi.fn(),
+}))
+
 import Server from '../../../src/extension/server/runmeServer'
 import RunmeServerError from '../../../src/extension/server/runmeServerError'
 
@@ -48,7 +52,7 @@ suite('Runme server spawn process', () => {
 
     test('Should increment until port is available', async () => {
       const server = new Server(
-        '/Users/user/.vscode/extension/stateful.runme',
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
         {
           retryOnFailure: true,
           maxNumberOfIntents: 2,
