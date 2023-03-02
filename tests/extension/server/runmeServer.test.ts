@@ -1,5 +1,5 @@
 import { suite, test, expect, vi, beforeEach } from 'vitest'
-import { workspace } from 'vscode'
+import { Uri, workspace } from 'vscode'
 
 vi.mock('vscode')
 vi.mock('../../../src/extension/grpc/client', () => ({ initParserClient: vi.fn() }))
@@ -28,7 +28,7 @@ suite('Runme server spawn process', () => {
 
     test('Should try 2 times before failing', async () => {
         const server = new Server(
-          '/Users/user/.vscode/extension/stateful.runme',
+          Uri.file('/Users/user/.vscode/extension/stateful.runme'),
           {
             retryOnFailure: true,
             maxNumberOfIntents: 2,
@@ -44,7 +44,7 @@ suite('Runme server accept connections', () => {
     let server: Server
     beforeEach(() => {
         server = new Server(
-          '/Users/user/.vscode/extension/stateful.runme',
+          Uri.file('/Users/user/.vscode/extension/stateful.runme'),
           {
             retryOnFailure: false,
             maxNumberOfIntents: 2,

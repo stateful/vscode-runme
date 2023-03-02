@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { commands } from 'vscode'
+import { commands, Uri } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
@@ -64,9 +64,11 @@ describe('Runme Notebooks', () => {
     })
 
     it('should open a file using runme renderer', () => {
+      vi.mocked(Uri.file).mockImplementation((p) => p as any)
+
       RunmeLauncherProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
       expect(commands.executeCommand).toBeCalledTimes(1)
-      expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
+      expect(commands.executeCommand).toBeCalledWith('vscode.openWith', 'runme/workspace/src/README.md', 'runme')
     })
   })
 

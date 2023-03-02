@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -16,10 +17,14 @@ export const notebooks = {
   }),
 }
 
-export const Uri = {
-  joinPath: vi.fn().mockReturnValue('/foo/bar'),
-  parse: vi.fn((uri: string) => URI.parse(uri)),
-  file: vi.fn().mockReturnValue('')
+
+export class Uri extends URI {
+  static file = vi.fn(super.file)
+  static parse = vi.fn(super.parse)
+
+  static joinPath = vi.fn((uri: Uri, ...paths: string[]) => {
+    return Uri.file(path.join(uri.fsPath, ...paths))
+  })
 }
 
 export const workspace = {
