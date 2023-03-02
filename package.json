@@ -294,17 +294,25 @@
           {
             "id": "runme.welcome.why",
             "title": "Why Runme?",
-            "description": "Runme is a human-centric approach to providing and consuming code repository documentation. It's designed to progressively bridge the widening developer experience gaps in a cloud-native age.",
+            "description": "Runme provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart",
             "media": {
               "markdown": "walkthroughs/0-intro.md"
             }
           },
           {
             "id": "runme.welcome.annotations",
-            "title": "Code Block Annotations",
-            "description": "Runme supports a variety of code block annotations that allows to modify the behavior of the cell and how it is being executed.",
+            "title": "Cell Configuration",
+            "description": "To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.",
             "media": {
               "markdown": "walkthroughs/1-annotations.md"
+            }
+          },
+          {
+            "id": "runme.welcome.features",
+            "title": "Key Features",
+            "description": "Get the best of Runme by learning the key features",
+            "media": {
+              "markdown": "walkthroughs/3-features.md"
             }
           }
         ]
