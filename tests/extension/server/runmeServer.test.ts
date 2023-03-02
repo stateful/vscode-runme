@@ -56,10 +56,9 @@ suite('Runme server spawn process', () => {
       )
 
       vi.mocked(fs.access).mockResolvedValueOnce()
-      // @ts-expect-error
       vi.mocked(fs.stat).mockResolvedValueOnce({
         isFile: vi.fn().mockReturnValue(true)
-      })
+      } as any)
 
       vi.mocked(isPortAvailable).mockResolvedValueOnce(false)
       const port = server['_port']()
