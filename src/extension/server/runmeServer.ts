@@ -171,6 +171,10 @@ class RunmeServer implements Disposable {
         await this.acceptsConnection()
         return addr
     }
+
+    private _port() {
+      return this.#port
+    }
 }
 
 export default RunmeServer

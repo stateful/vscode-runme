@@ -1,24 +1,31 @@
+import fs from 'node:fs/promises'
+
 import { suite, test, expect, vi, beforeEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
 
+// eslint-disable-next-line import/order
+import { isPortAvailable } from '../../../src/extension/utils'
+
 vi.mock('vscode')
 vi.mock('../../../src/extension/grpc/client', () => ({ initParserClient: vi.fn() }))
+
+vi.mock('../../../src/extension/utils', () => ({
+  isPortAvailable: vi.fn(async () => true),
+}))
+
+vi.mock('node:fs/promises', async () => ({
+  default: {
+      access: vi.fn().mockResolvedValue(false),
+      stat: vi.fn().mockResolvedValue({
+          isFile: vi.fn().mockReturnValue(false)
+      })
+  }
+}))
 
 import Server from '../../../src/extension/server/runmeServer'
 import RunmeServerError from '../../../src/extension/server/runmeServerError'
 
 suite('Runme server spawn process', () => {
-    beforeEach(() => {
-        vi.mock('node:fs/promises', async () => ({
-            default: {
-                access: vi.fn().mockResolvedValue(false),
-                stat: vi.fn().mockResolvedValue({
-                    isFile: vi.fn().mockReturnValue(false)
-                })
-            }
-        }))
-    })
-
     const configValues = {
         binaryPath: 'bin/runme'
     }
@@ -37,6 +44,28 @@ suite('Runme server spawn process', () => {
         const serverLaunchSpy = vi.spyOn(server, 'launch')
         await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
         expect(serverLaunchSpy).toBeCalledTimes(3)
+    })
+
+    test('Should increment until port is available', async () => {
+      const server = new Server(
+        '/Users/user/.vscode/extension/stateful.runme',
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        }
+      )
+
+      vi.mocked(fs.access).mockResolvedValueOnce()
+      // @ts-expect-error
+      vi.mocked(fs.stat).mockResolvedValueOnce({
+        isFile: vi.fn().mockReturnValue(true)
+      })
+
+      vi.mocked(isPortAvailable).mockResolvedValueOnce(false)
+      const port = server['_port']()
+      await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
+
+      expect(server['_port']()).toStrictEqual(port + 1)
     })
 })
 
