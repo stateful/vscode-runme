@@ -8,6 +8,7 @@ import { SERVER_ADDRESS } from '../../constants'
 import { enableServerLogs, getBinaryPath, getPortNumber } from '../../utils/configuration'
 import { initParserClient } from '../grpc/client'
 import { DeserializeRequest } from '../grpc/serializerTypes'
+import { isPortAvailable } from '../utils'
 
 import RunmeServerError from './runmeServerError'
 
@@ -23,29 +24,27 @@ export interface IServerConfig {
 
 class RunmeServer implements Disposable {
 
-    #runningPort: number
+    #port: number
     #process: ChildProcessWithoutNullStreams | undefined
     #binaryPath: Uri
     #retryOnFailure: boolean
     #maxNumberOfIntents: number
     #loggingEnabled: boolean
     #intent: number
-    #address: string
     #acceptsIntents: number
     #acceptsInterval: number
     events: EventEmitter
 
     constructor(extBasePath: Uri, options: IServerConfig) {
-        this.#runningPort = getPortNumber()
-        this.#loggingEnabled = enableServerLogs()
-        this.#binaryPath = getBinaryPath(extBasePath, process.platform)
-        this.#retryOnFailure = options.retryOnFailure || false
-        this.#maxNumberOfIntents = options.maxNumberOfIntents
-        this.#intent = 0
-        this.#address = `${SERVER_ADDRESS}:${this.#runningPort}`
-        this.#acceptsIntents = options.acceptsConnection?.intents || 50
-        this.#acceptsInterval = options.acceptsConnection?.interval || 200
-        this.events = new EventEmitter()
+      this.#port = getPortNumber()
+      this.#loggingEnabled = enableServerLogs()
+      this.#binaryPath = getBinaryPath(extBasePath, process.platform)
+      this.#retryOnFailure = options.retryOnFailure || false
+      this.#maxNumberOfIntents = options.maxNumberOfIntents
+      this.#intent = 0
+      this.#acceptsIntents = options.acceptsConnection?.intents || 50
+      this.#acceptsInterval = options.acceptsConnection?.interval || 200
+      this.events = new EventEmitter()
     }
 
     dispose() {
@@ -69,13 +68,11 @@ class RunmeServer implements Disposable {
       }
     }
 
-    async start(): Promise<string | RunmeServerError> {
-        const running = await this.isRunning()
-        if (running) {
-          console.log(`[Runme] Server already running on addr ${this.#address}`)
-          return this.#address
-        }
+    private address() {
+      return `${SERVER_ADDRESS}:${this.#port}`
+    }
 
+    async start(): Promise<string | RunmeServerError> {
         const binaryLocation = this.#binaryPath.fsPath
 
         const binaryExists = await fs.access(binaryLocation)
@@ -90,10 +87,14 @@ class RunmeServer implements Disposable {
             throw new RunmeServerError('Cannot find server binary file')
         }
 
+        while (!(await isPortAvailable(this.#port))) {
+          this.#port++
+        }
+
         this.#process = spawn(binaryLocation, [
             'server',
             '--address',
-            this.#address
+            this.address()
         ])
 
         this.#process.on('close', () => {
@@ -105,7 +106,7 @@ class RunmeServer implements Disposable {
 
 
         this.#process.stderr.once('data', () => {
-            console.log(`[Runme] Server process #${this.#process?.pid} started`)
+            console.log(`[Runme] Server process #${this.#process?.pid} started on port ${this.#port}`)
         })
 
         this.#process.stderr.on('data', (data) => {
@@ -119,7 +120,7 @@ class RunmeServer implements Disposable {
                 const msg = data.toString()
                 try {
                     const log = JSON.parse(msg)
-                    if (log.addr === this.#address) {
+                    if (log.addr === this.address()) {
                         return resolve(log.addr)
                     }
                 } catch (err: any) {
@@ -169,6 +170,10 @@ class RunmeServer implements Disposable {
         }
         await this.acceptsConnection()
         return addr
+    }
+
+    private _port() {
+      return this.#port
     }
 }
 

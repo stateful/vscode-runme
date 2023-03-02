@@ -12,6 +12,7 @@ import vscode, {
   NotebookCellOutput,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
+import getPort from 'get-port'
 
 import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
@@ -309,4 +310,8 @@ export function replaceOutput(
 
 export function getGrpcHost() {
   return `${SERVER_ADDRESS}:${getPortNumber()}`
+}
+
+export async function isPortAvailable(port: number): Promise<boolean> {
+  return (await getPort({ port })) === port
 }
