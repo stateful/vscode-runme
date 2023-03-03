@@ -262,11 +262,11 @@ export class Kernel implements Disposable {
     if(
       this.runner &&
       !(hasPsuedoTerminalExperimentEnabled && terminal) &&
-      (execKey === 'bash' || execKey === 'sh')
+      (execKey === 'bash' || execKey === 'sh' || execKey === 'deno')
     ) {
-      successfulCellExecution = await executeRunner(
+      const runScript = (execKey: 'sh'|'bash') => executeRunner(
         this.context,
-        this.runner,
+        this.runner!,
         exec,
         runningCell,
         execKey,
@@ -276,6 +276,17 @@ export class Kernel implements Disposable {
           console.error(e)
           return false
         })
+
+      if (execKey === 'bash' || execKey === 'sh') {
+        successfulCellExecution = await runScript(execKey)
+      } else if (execKey === 'deno') {
+        successfulCellExecution = await executor.deno.call(
+          this, exec, runningCell, () => runScript('bash')
+        )
+      } else {
+        console.error('Unsupported execKey!')
+        successfulCellExecution = false
+      }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli

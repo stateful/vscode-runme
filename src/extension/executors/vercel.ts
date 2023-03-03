@@ -1,13 +1,15 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
-import { TextDocument, NotebookCellExecution } from 'vscode'
+import { TextDocument, NotebookCellExecution, NotebookCellOutputItem } from 'vscode'
 
 import type { Kernel } from '../kernel'
+import { OutputType } from '../../constants'
+import { CellOutputPayload } from '../../types'
 
 import { bash } from './task'
-import { renderError } from './utils'
 import { deploy, login, logout } from './vercel/index'
+import { renderError } from './utils'
 
 const DEFAULT_COMMAND = 'deploy'
 
@@ -67,4 +69,38 @@ export async function vercel (
    * other commands passed to the CLI
    */
   return bash.call(this, exec, doc)
+}
+
+export async function handleVercelOutput(
+  outputItems: Buffer[],
+  index: number,
+  prod: boolean,
+  getEnv: (env: string) => Promise<string|undefined>|string|undefined,
+) {
+  const states = [
+    'Queued',
+    'Building',
+    'Completing',
+  ].reverse()
+
+  const status = (states.find((s) =>
+    outputItems.find(
+      (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
+    )
+  ) || 'pending').replaceAll('Completing', 'complete')
+  // should get this from API instead
+  const projectName = await getEnv('PROJECT_NAME')
+
+  const json = <CellOutputPayload<OutputType.vercel>>{
+    type: OutputType.vercel,
+    output: {
+      outputItems: outputItems.map((oi) => oi.toString()),
+      payload: { status, projectName, index, prod }
+    }
+  }
+  return NotebookCellOutputItem.json(json, OutputType.vercel)
+}
+
+export function isVercelScript(script: string): boolean {
+  return script.trim().endsWith('vercel')
 }

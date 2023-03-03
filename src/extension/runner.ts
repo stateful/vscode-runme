@@ -17,6 +17,7 @@ import {
   ExecuteRequest,
   ExecuteResponse,
   ExecuteStop,
+  GetSessionRequest,
   Session,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
@@ -24,20 +25,21 @@ import { getGrpcHost } from './utils'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
+export type RunProgramExecution = {
+  type: 'commands'
+  commands: string[]
+} | {
+  type: 'script'
+  script: string
+}
+
 export interface RunProgramOptions {
   programName: string
   args?: string[]
   cwd?: string
   envs?: string[]
   exec?:
-    |{
-      type: 'commands'
-      commands: string[]
-    }
-    |{
-      type: 'script'
-      script: string
-    }
+    RunProgramExecution
   tty?: boolean
   environment?: IRunnerEnvironment
 }
@@ -51,6 +53,10 @@ export interface IRunner extends Disposable {
   ): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
+
+  getEnvironmentVariables(
+    environment: IRunnerEnvironment,
+  ): Promise<Record<string, string>|undefined>
 }
 
 export interface IRunnerEnvironment extends DisposableAsync { }
@@ -145,6 +151,27 @@ export class GrpcRunner implements IRunner {
       this.close()
       throw err
     }
+  }
+
+  async getEnvironmentVariables(
+    environment: IRunnerEnvironment,
+  ): Promise<Record<string, string> | undefined> {
+    if(!(environment instanceof GrpcRunnerEnvironment)) {
+      throw new Error('Invalid environment!')
+    }
+
+    const id = environment.getSessionId()
+
+    const { session } = await this.client.getSession(GetSessionRequest.create({ id })).response
+
+    if(!session) { return undefined }
+
+    return session.envs.reduce((prev, curr) => {
+      const [key, value = ''] = curr.split(/\=(.*)/s)
+      prev[key] = value
+
+      return prev
+    }, {} as Record<string, string>)
   }
 
   close(): void {

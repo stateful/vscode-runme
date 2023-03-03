@@ -9,7 +9,8 @@ import { deploy } from './deno/deploy'
 export async function deno (
   this: Kernel,
   exec: NotebookCellExecution,
-  doc: TextDocument
+  doc: TextDocument,
+  runScript?: () => Promise<boolean>,
 ): Promise<boolean> {
   /**
    * ensure token is set for operations
@@ -28,7 +29,7 @@ export async function deno (
     /**
      * run actual deno deployment as bash script
      */
-    bash.call(this, exec, doc),
+    runScript?.() ?? bash.call(this, exec, doc),
     /**
      * fetch data and render custom output
      */

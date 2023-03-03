@@ -17,11 +17,12 @@ import {
 import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
 import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerEnvironment } from '../runner'
+import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
+import { handleVercelOutput, isVercelScript } from './vercel'
 
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
@@ -55,12 +56,31 @@ export async function executeRunner(
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background } = annotations
 
+  let execution: RunProgramExecution = {
+    type: 'commands', commands
+  }
+
+  const script = getCmdShellSeq(cellText, PLATFORM_OS)
+
+  const isVercel = isVercelScript(script)
+  const vercelProd = process.env['vercelProd'] === 'true'
+
+  if (isVercel) {
+    const vercelCommand = [script]
+
+    if(vercelProd) {
+      vercelCommand.push('--prod')
+    }
+
+    execution = {
+      type: 'script', script: vercelCommand.join(' ')
+    }
+  }
+
   const program = await runner.createProgramSession({
     programName: getShellPath(execKey),
     environment,
-    exec: {
-      type: 'commands', commands
-    },
+    exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
     tty: interactive
@@ -77,11 +97,15 @@ export async function executeRunner(
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
-      const script = getCmdShellSeq(cellText, PLATFORM_OS)
-
       // hacky for now, maybe inheritence is a fitting pattern
       if (script.trim().endsWith('vercel')) {
-        // TODO: vercel (see `shellExecutor`)
+        handleVercelOutput(
+          output, exec.cell.index, vercelProd,
+          async (key) => {
+            if(!environment) { return undefined }
+            return (await runner.getEnvironmentVariables(environment))?.[key]
+          }
+        )
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
         item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
           type: OutputType.outputItems,
