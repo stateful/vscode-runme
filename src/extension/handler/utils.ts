@@ -162,8 +162,16 @@ export function getSuggestedProjectName (repository: string) {
 }
 
 export function gitSSHUrlToHTTPS(repositoryUrl: string) {
-  if (!repositoryUrl.startsWith('git@')) {
-    throw new Error(`expected url in the format of "git@provider.com:org/project.git", received ${repositoryUrl}`)
+  const isHTTPSUrl = repositoryUrl.startsWith('https://')
+  if (!repositoryUrl.startsWith('git@') && !isHTTPSUrl) {
+    throw new Error(
+      'expected url in the format of "git@provider.com:org/project.git" ' +
+      `or "https://provider.com/org/project.git", received ${repositoryUrl}`
+    )
+  }
+
+  if (isHTTPSUrl) {
+    return repositoryUrl
   }
 
   const [hostname, path] = repositoryUrl.slice('git@'.length, -DOT_GIT_ANNEX_LENGTH).split(':')
