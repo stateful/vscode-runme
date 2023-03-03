@@ -92,14 +92,14 @@ export async function executeRunner(
     const mime = mimeType || 'text/plain' as const
 
     // adapted from `shellExecutor` in `shell.ts`
-    const handleOutput = (data: Uint8Array) => {
+    const handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
-      if (script.trim().endsWith('vercel')) {
-        handleVercelDeployOutput(
+      if (isVercelDeployScript(script)) {
+        item = await handleVercelDeployOutput(
           output, exec.cell.index, vercelProd,
           async (key) => {
             if(!environment) { return undefined }
