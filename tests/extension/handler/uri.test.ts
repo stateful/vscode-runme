@@ -181,7 +181,7 @@ describe('RunmeUriHandler', () => {
             expect(terminal.dispose).toBeCalledTimes(1)
             expect(commands.executeCommand).toBeCalledWith(
                 'vscode.openFolder',
-                'some url',
+                { fsPath: '/bar/foo' },
                 { forceNewWindow: true }
             )
         })
