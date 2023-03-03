@@ -101,4 +101,14 @@ describe('gitSSHUrlToHTTPS', () => {
     expect(gitSSHUrlToHTTPS('git@provider.com:foo/bar.git'))
       .toBe('https://provider.com/foo/bar.git')
   })
+
+  it('should not transform https urls', () => {
+    expect(gitSSHUrlToHTTPS('https://provider.com/foo/bar.git'))
+      .toBe('https://provider.com/foo/bar.git')
+  })
+
+  it('should throw if something else was provided', () => {
+    expect(() => gitSSHUrlToHTTPS('http://provider.com/foo/bar.git'))
+      .toThrow()
+  })
 })
