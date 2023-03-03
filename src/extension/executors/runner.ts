@@ -66,14 +66,14 @@ export async function executeRunner(
   const vercelProd = process.env['vercelProd'] === 'true'
 
   if (isVercel) {
-    const vercelCommand = [script]
+    const cmdParts = [script]
 
     if(vercelProd) {
-      vercelCommand.push('--prod')
+      cmdParts.push('--prod')
     }
 
     execution = {
-      type: 'script', script: vercelCommand.join(' ')
+      type: 'script', script: cmdParts.join(' ')
     }
   }
 
