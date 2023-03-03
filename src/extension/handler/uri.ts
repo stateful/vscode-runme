@@ -7,7 +7,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
     getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile,
-    parseParams, gitSSHUrlToHTTP
+    parseParams, gitSSHUrlToHTTPS
 } from './utils'
 
 let NEXT_TERM_ID = 0
@@ -106,7 +106,7 @@ export class RunmeUriHandler implements UriHandler {
         const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
         terminal.show(true)
 
-        terminal.sendText(`git clone ${gitSSHUrlToHTTP(repository)} ${targetDirUri.fsPath}`)
+        terminal.sendText(`git clone ${gitSSHUrlToHTTPS(repository)} ${targetDirUri.fsPath}`)
         const success = await new Promise<boolean>(
             (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri.fsPath, repository, resolve))
 
