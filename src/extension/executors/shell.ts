@@ -7,7 +7,7 @@ import type { CellOutputPayload } from '../../types'
 import type { Kernel } from '../kernel'
 import { getAnnotations, replaceOutput } from '../utils'
 
-import { handleVercelOutput, isVercelScript } from './vercel'
+import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
@@ -43,8 +43,8 @@ async function shellExecutor(
     let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
 
     // hacky for now, maybe inheritence is a fitting pattern
-    if (isVercelScript(script)) {
-      item = await handleVercelOutput(outputItems, index, prod, (key) => env[key])
+    if (isVercelDeployScript(script)) {
+      item = await handleVercelDeployOutput(outputItems, index, prod, (key) => env[key])
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
       item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,

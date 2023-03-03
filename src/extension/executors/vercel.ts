@@ -72,7 +72,7 @@ export async function vercel (
   return runScript?.() ?? bash.call(this, exec, doc)
 }
 
-export async function handleVercelOutput(
+export async function handleVercelDeployOutput(
   outputItems: Buffer[],
   index: number,
   prod: boolean,
@@ -102,6 +102,6 @@ export async function handleVercelOutput(
   return NotebookCellOutputItem.json(json, OutputType.vercel)
 }
 
-export function isVercelScript(script: string): boolean {
+export function isVercelDeployScript(script: string): boolean {
   return script.trim().endsWith('vercel')
 }

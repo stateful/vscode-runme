@@ -22,7 +22,7 @@ import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
-import { handleVercelOutput, isVercelScript } from './vercel'
+import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
@@ -62,7 +62,7 @@ export async function executeRunner(
 
   const script = getCmdShellSeq(cellText, PLATFORM_OS)
 
-  const isVercel = isVercelScript(script)
+  const isVercel = isVercelDeployScript(script)
   const vercelProd = process.env['vercelProd'] === 'true'
 
   if (isVercel) {
@@ -99,7 +99,7 @@ export async function executeRunner(
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (script.trim().endsWith('vercel')) {
-        handleVercelOutput(
+        handleVercelDeployOutput(
           output, exec.cell.index, vercelProd,
           async (key) => {
             if(!environment) { return undefined }
