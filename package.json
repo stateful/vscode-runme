@@ -313,6 +313,13 @@
             "media": {
               "markdown": "walkthroughs/3-features.md"
             }
+          },
+          {
+            "id": "runme.welcome.learn",
+            "title": "Learn more",
+            "media": {
+              "markdown": "walkthroughs/4-learn-more.md"
+            }
           }
         ]
       }
