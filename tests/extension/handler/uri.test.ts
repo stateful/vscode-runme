@@ -18,7 +18,7 @@ vi.mock('../../../src/extension/handler/utils', () => ({
     waitForProjectCheckout: vi.fn(),
     getSuggestedProjectName: vi.fn(),
     writeBootstrapFile: vi.fn(),
-    gitSSHUrlToHTTP: vi.fn().mockReturnValue('https://provider.com/foo/bar.git')
+    gitSSHUrlToHTTPS: vi.fn().mockReturnValue('https://provider.com/foo/bar.git')
 }))
 vi.mock('got', () => ({
     default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) }

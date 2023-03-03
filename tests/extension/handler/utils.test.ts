@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Uri, workspace, window } from 'vscode'
 
 import {
-    getProjectDir, getTargetDirName, getSuggestedProjectName, parseParams, gitSSHUrlToHTTP
+    getProjectDir, getTargetDirName, getSuggestedProjectName, parseParams, gitSSHUrlToHTTPS
 } from '../../../src/extension/handler/utils'
 
 vi.mocked(Uri.joinPath).mockImplementation(
@@ -96,9 +96,9 @@ describe('parseParams', () => {
   })
 })
 
-describe('gitSSHUrlToHTTP', () => {
+describe('gitSSHUrlToHTTPS', () => {
   it('should transform ssh urls into https ones', () => {
-    expect(gitSSHUrlToHTTP('git@provider.com:foo/bar.git'))
+    expect(gitSSHUrlToHTTPS('git@provider.com:foo/bar.git'))
       .toBe('https://provider.com/foo/bar.git')
   })
 })

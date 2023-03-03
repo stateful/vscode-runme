@@ -157,7 +157,7 @@ export function getSuggestedProjectName (repository: string) {
     return
 }
 
-export function gitSSHUrlToHTTP(repositoryUrl: string) {
+export function gitSSHUrlToHTTPS(repositoryUrl: string) {
   if (!repositoryUrl.startsWith('git@')) {
     throw new Error(`expected url in the format of "git@provider.com:org/project.git", received ${repositoryUrl}`)
   }
