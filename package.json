@@ -238,7 +238,7 @@
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC interface (experimental)."
           },
           "runme.experiments.grpcRunner": {
@@ -250,7 +250,7 @@
           "runme.experiments.grpcServer": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server (experimental)."
           },
           "runme.checkout.projectDir": {
