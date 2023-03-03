@@ -7,7 +7,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
     getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile,
-    parseParams
+    parseParams, gitSSHUrlToHTTP
 } from './utils'
 
 let NEXT_TERM_ID = 0
@@ -15,7 +15,7 @@ const REGEX_WEB_RESOURCE = /^https?:\/\//
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
-        console.log(`[Runme] triggered RunmeUriHandler with ${uri}`)
+        console.log(`[Runme] triggered RunmeUriHandler with ${uri}!!!`)
         const params = new URLSearchParams(uri.query)
         const command = params.get('command')
 
@@ -103,10 +103,10 @@ export class RunmeUriHandler implements UriHandler {
         fileToOpen: string
     ) {
         progress.report({ increment: 0, message: 'Cloning repository...' })
-        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`, '/bin/sh')
+        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
         terminal.show(true)
 
-        terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
+        terminal.sendText(`git clone ${gitSSHUrlToHTTP(repository)} ${targetDirUri.fsPath}`)
         const success = await new Promise<boolean>(
             (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri.fsPath, repository, resolve))
 

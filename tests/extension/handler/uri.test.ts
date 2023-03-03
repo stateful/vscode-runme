@@ -17,7 +17,8 @@ vi.mock('../../../src/extension/handler/utils', () => ({
     getTargetDirName: vi.fn(),
     waitForProjectCheckout: vi.fn(),
     getSuggestedProjectName: vi.fn(),
-    writeBootstrapFile: vi.fn()
+    writeBootstrapFile: vi.fn(),
+    gitSSHUrlToHTTP: vi.fn().mockReturnValue('https://provider.com/foo/bar.git')
 }))
 vi.mock('got', () => ({
     default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) }
@@ -167,7 +168,7 @@ describe('RunmeUriHandler', () => {
             vi.mocked(waitForProjectCheckout).mockImplementation(
                 async (_, __, ___, resolve) => resolve(false))
             await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
-            expect(terminal.sendText).toBeCalledWith('git clone /foo/bar /bar/foo')
+            expect(terminal.sendText).toBeCalledWith('git clone https://provider.com/foo/bar.git /bar/foo')
             expect(terminal.dispose).toBeCalledTimes(1)
             expect(progress.report).toBeCalledTimes(1)
         })
