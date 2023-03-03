@@ -41,7 +41,7 @@ Check the complete list of configuration options at https://runme.dev/docs/confi
 
 ## How It Works
 
-Runme currently consists of a Markdown processor (written in Go) which is both linked in this VS Code extension (via WebAssembly) and the [runme CLI](https://github.com/stateful/runme) (Go binary) allowing for a consistent experience. The Runme VS Code extension leverages the notebook APIs to transparently provide an interactive user experience on top of static markdown files, such as README.md.
+Runme currently consists of a Markdown server (written in Go) which is connected to VS Code extension (via GRPC; optionally WebAssembly being deprecated) and the [runme CLI](https://github.com/stateful/runme) (Go binary) allowing for a consistent experience. The Runme VS Code extension leverages the notebook APIs to transparently provide an interactive user experience on top of static markdown files, such as README.md.
 
 ## Beta Software
 
