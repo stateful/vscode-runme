@@ -2,18 +2,22 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { renderError } from '../utils'
 import { OutputType, ClientMessages } from '../../../constants'
-import { ENV_STORE, DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
+import { DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
 import type { CellOutputPayload, ClientMessage } from '../../../types'
 import { replaceOutput } from '../../utils'
+import { ENV_STORE_MANAGER, type IEnvironmentManager } from '..'
 
 export async function deploy (
   this: Kernel,
   exec: NotebookCellExecution,
+  environment?: IEnvironmentManager
 ): Promise<boolean> {
-  let token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
-  const pname = ENV_STORE.get(DENO_PROJECT_NAME_KEY)
+  environment ??= ENV_STORE_MANAGER
+
+  let token = await environment?.get(DENO_ACCESS_TOKEN_KEY)
+  const pname = await environment?.get(DENO_PROJECT_NAME_KEY)
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() =>

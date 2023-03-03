@@ -4,6 +4,7 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
+import { ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 import { getAnnotations, replaceOutput } from '../utils'
 
@@ -44,7 +45,12 @@ async function shellExecutor(
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (isVercelDeployScript(script)) {
-      item = await handleVercelDeployOutput(outputItems, index, prod, (key) => env[key])
+      item = await handleVercelDeployOutput(
+        outputItems,
+        index,
+        prod,
+        { get: (key) => env[key], set: (key, val = '') => { ENV_STORE.set(key, val) } }
+      )
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
       item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,

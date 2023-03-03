@@ -22,6 +22,7 @@ import {
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
 import { getGrpcHost } from './utils'
+import { getShellPath } from './executors/utils'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -57,6 +58,11 @@ export interface IRunner extends Disposable {
   getEnvironmentVariables(
     environment: IRunnerEnvironment,
   ): Promise<Record<string, string>|undefined>
+
+  setEnvironmentVariables(
+    environment: IRunnerEnvironment,
+    variables: Record<string, string|undefined>
+  ): Promise<boolean>
 }
 
 export interface IRunnerEnvironment extends DisposableAsync { }
@@ -172,6 +178,38 @@ export class GrpcRunner implements IRunner {
 
       return prev
     }, {} as Record<string, string>)
+  }
+
+  // TODO: create a gRPC endpoint for this so it can be done without making a
+  // new program (and hopefully preventing race conditions etc)
+  async setEnvironmentVariables(
+    environment: IRunnerEnvironment,
+    variables: Record<string, string|undefined>,
+    shellPath?: string
+  ): Promise<boolean> {
+    const commands = Object.entries(variables)
+      .map(([key, val]) => `export ${key}=${val ?? ''}`)
+
+    const program = await this.createProgramSession({
+      programName: shellPath ?? getShellPath() ?? 'sh',
+      environment,
+      exec: {
+        type: 'commands',
+        commands
+      },
+    })
+
+    return await new Promise<boolean>((resolve, reject) => {
+      program.onDidClose((code) => {
+        resolve(code === 0)
+      })
+
+      program.onInternalErr((e) => {
+        reject(e)
+      })
+
+      program.run()
+    })
   }
 
   close(): void {

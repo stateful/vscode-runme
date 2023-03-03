@@ -11,6 +11,8 @@ import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
 import { renderError } from './utils'
 
+import type { IEnvironmentManager } from '.'
+
 const DEFAULT_COMMAND = 'deploy'
 
 export async function vercel (
@@ -76,7 +78,7 @@ export async function handleVercelDeployOutput(
   outputItems: Buffer[],
   index: number,
   prod: boolean,
-  getEnv: (env: string) => Promise<string|undefined>|string|undefined,
+  environment?: IEnvironmentManager,
 ) {
   const states = [
     'Queued',
@@ -90,7 +92,7 @@ export async function handleVercelDeployOutput(
     )
   ) || 'pending').replaceAll('Completing', 'complete')
   // should get this from API instead
-  const projectName = await getEnv('PROJECT_NAME')
+  const projectName = await environment?.get('PROJECT_NAME')
 
   const json = <CellOutputPayload<OutputType.vercel>>{
     type: OutputType.vercel,

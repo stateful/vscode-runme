@@ -24,6 +24,8 @@ import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
+import type { IEnvironmentManager } from '.'
+
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
@@ -34,7 +36,8 @@ export async function executeRunner(
   exec: NotebookCellExecution,
   runningCell: TextDocument,
   execKey: 'bash'|'sh',
-  environment?: IRunnerEnvironment
+  environment?: IRunnerEnvironment,
+  environmentManager?: IEnvironmentManager
 ) {
   const cwd = path.dirname(runningCell.uri.fsPath)
 
@@ -100,11 +103,7 @@ export async function executeRunner(
       // hacky for now, maybe inheritence is a fitting pattern
       if (isVercelDeployScript(script)) {
         item = await handleVercelDeployOutput(
-          output, exec.cell.index, vercelProd,
-          async (key) => {
-            if(!environment) { return undefined }
-            return (await runner.getEnvironmentVariables(environment))?.[key]
-          }
+          output, exec.cell.index, vercelProd, environmentManager
         )
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
         item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
