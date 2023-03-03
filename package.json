@@ -239,7 +239,7 @@
             "type": "boolean",
             "scope": "machine",
             "default": true,
-            "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC interface (experimental)."
+            "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
           },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
@@ -251,7 +251,7 @@
             "type": "boolean",
             "scope": "machine",
             "default": true,
-            "markdownDescription": "If set to `true`, the extension will bring up the GRPC server (experimental)."
+            "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
           },
           "runme.checkout.projectDir": {
             "type": "string",
