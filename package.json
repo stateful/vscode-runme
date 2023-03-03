@@ -400,7 +400,7 @@
     "test:lint:fix": "eslint src tests --ext ts --fix",
     "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
-    "pretest:e2e": "DOWNLOAD_URL=https://download.stateful.com/runme/0.6.1/runme_`uname -s | tr '[:upper:]' '[:lower:]'`_`uname -m`.tar.gz TYPE=tar npm run prepare-binary",
+    "pretest:e2e": "DOWNLOAD_URL=$(node .github/scripts/getLastStableRelease) TYPE=tar npm run prepare-binary",
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
     "prepare-binary": "node .github/scripts/downloadAndExtract.js -d $DOWNLOAD_URL -f $TYPE -b bin -n runme"
