@@ -6,6 +6,12 @@ This VS Code extension transparently opens markdown files (i.e. README.md) as ru
 
 ![Text and notebook view side-by-side](https://runme.dev/img/intro.gif)
 
+## Documentation
+
+Please visit Runme's documentation to learn about its purpose, all its features, and how to get the most out of it:
+
+- [https://runme.dev/docs/intro](https://runme.dev/docs/intro)
+
 This project is open source licensed under APL2.0 and its code can be found in the following repos:
 
 - [stateful/vscode-runme](https://github.com/stateful/vscode-runme)
