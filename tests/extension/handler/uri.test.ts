@@ -38,7 +38,7 @@ describe('RunmeUriHandler', () => {
         let handler: RunmeUriHandler
 
         beforeEach(() => {
-            handler = new RunmeUriHandler()
+            handler = new RunmeUriHandler({} as any)
             handler['_setupProject'] = vi.fn()
             handler['_setupFile'] = vi.fn()
         })
@@ -90,7 +90,7 @@ describe('RunmeUriHandler', () => {
         let handler: RunmeUriHandler
 
         beforeEach(() => {
-            handler = new RunmeUriHandler()
+            handler = new RunmeUriHandler({} as any)
         })
 
         it('doesn not do anything if repository was not provided', async () => {
@@ -119,7 +119,7 @@ describe('RunmeUriHandler', () => {
         let handler: RunmeUriHandler
 
         beforeEach(() => {
-            handler = new RunmeUriHandler()
+            handler = new RunmeUriHandler({} as any)
         })
 
         it('shows warning if file is not a markdown', async () => {
@@ -158,7 +158,7 @@ describe('RunmeUriHandler', () => {
         const progress = { report: vi.fn() }
 
         beforeEach(() => {
-            handler = new RunmeUriHandler()
+            handler = new RunmeUriHandler({} as any)
             progress.report.mockClear()
             terminal.dispose.mockClear()
         })

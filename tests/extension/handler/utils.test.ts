@@ -10,9 +10,6 @@ import {
 vi.mocked(Uri.joinPath).mockImplementation(
   (base: any, ...input: string[]) => path.join('/some/path', ...input) as any)
 vi.mock('vscode')
-vi.mock('tmp-promise', () => ({
-  dir: vi.fn().mockResolvedValue({ path: '/tmp/dir' })
-}))
 
 const config = workspace.getConfiguration()
 
@@ -20,29 +17,35 @@ beforeEach(() => {
   vi.mocked(workspace.fs.createDirectory).mockClear()
 })
 
+const context: any = {
+  globalStorageUri: {
+    toString: vi.fn().mockReturnValue('/some/path')
+  }
+}
+
 describe('getProjectDir', () => {
   it('should use a tmp dir if config is not set', async () => {
-    expect(await getProjectDir()).toMatchObject({ path: '/tmp/dir' })
+    expect(await getProjectDir(context)).toMatchObject(context.globalStorageUri)
   })
 
   it('should return project dir if existing', async () => {
     config.set('projectDir', 'foobar')
     vi.mocked(workspace.fs.stat).mockResolvedValueOnce({} as any)
-    expect(await getProjectDir()).toMatchObject({ path: '/foobar' })
+    expect((await getProjectDir(context))?.scheme).toEqual('file')
   })
 
   it('should return null if user does not want to create new project dir', async () => {
     config.set('projectDir', 'foobar')
     vi.mocked(window.showInformationMessage).mockResolvedValue('No' as any)
     vi.mocked(workspace.fs.stat).mockRejectedValueOnce(new Error(''))
-    expect(await getProjectDir()).toBe(null)
+    expect(await getProjectDir(context)).toBe(null)
   })
 
   it('should create directory if approved', async () => {
     config.set('projectDir', 'foobar')
     vi.mocked(window.showInformationMessage).mockResolvedValue('Yes' as any)
     vi.mocked(workspace.fs.stat).mockRejectedValueOnce(new Error(''))
-    expect(await getProjectDir()).toMatchObject({ path: '/foobar' })
+    expect((await getProjectDir(context))?.scheme).toEqual('file')
     expect(workspace.fs.createDirectory).toBeCalledTimes(1)
   })
 })
