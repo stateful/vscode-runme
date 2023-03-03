@@ -186,6 +186,7 @@ export class Annotations extends LitElement {
       type="text"
       value="${text}"
       @change="${this.#onChange}"
+      @keyup="${ this.#onChange}"
       placeholder=${placeHolder}
       size="50"
       class="annotation-item"
