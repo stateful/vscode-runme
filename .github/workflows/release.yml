@@ -41,6 +41,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Deprecated
+        run: exit 1
       - name: Clone Repository
         uses: actions/checkout@v2
         with:
