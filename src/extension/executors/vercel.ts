@@ -16,7 +16,8 @@ const DEFAULT_COMMAND = 'deploy'
 export async function vercel (
   this: Kernel,
   exec: NotebookCellExecution,
-  doc: TextDocument
+  doc: TextDocument,
+  runScript?: () => Promise<boolean>,
 ): Promise<boolean> {
   const command = doc.getText()
 
@@ -68,7 +69,7 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return bash.call(this, exec, doc)
+  return runScript?.() ?? bash.call(this, exec, doc)
 }
 
 export async function handleVercelOutput(

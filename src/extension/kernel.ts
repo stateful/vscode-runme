@@ -261,10 +261,9 @@ export class Kernel implements Disposable {
 
     if(
       this.runner &&
-      !(hasPsuedoTerminalExperimentEnabled && terminal) &&
-      (execKey === 'bash' || execKey === 'sh' || execKey === 'deno')
+      !(hasPsuedoTerminalExperimentEnabled && terminal)
     ) {
-      const runScript = (execKey: 'sh'|'bash') => executeRunner(
+      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
         this.context,
         this.runner!,
         exec,
@@ -279,13 +278,10 @@ export class Kernel implements Disposable {
 
       if (execKey === 'bash' || execKey === 'sh') {
         successfulCellExecution = await runScript(execKey)
-      } else if (execKey === 'deno') {
-        successfulCellExecution = await executor.deno.call(
-          this, exec, runningCell, () => runScript('bash')
-        )
       } else {
-        console.error('Unsupported execKey!')
-        successfulCellExecution = false
+        successfulCellExecution = await executor[execKey].call(
+          this, exec, runningCell, runScript
+        )
       }
     } else {
       /**
