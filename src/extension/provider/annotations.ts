@@ -1,4 +1,5 @@
 import {
+  commands,
   window,
   NotebookCell,
   NotebookCellOutput,
@@ -52,6 +53,10 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
         ]),
       ])
     } catch (e: any) {
+      if (e.message.toString().includes('controller is NOT associated')) {
+        commands.executeCommand('_notebook.selectKernel')
+        return
+      }
       window.showErrorMessage(e.message)
     } finally {
       exec?.end(true)
