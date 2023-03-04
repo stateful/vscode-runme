@@ -93,7 +93,8 @@ export const tasks = {
 
 export const commands = {
   registerCommand: vi.fn(),
-  executeCommand: vi.fn()
+  executeCommand: vi.fn(),
+  getCommands: vi.fn().mockResolvedValue(['_notebook.selectKernel'])
 }
 
 export enum ViewColumn {
