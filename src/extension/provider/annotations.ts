@@ -16,12 +16,36 @@ import { RunmeExtension } from '../extension'
 import { Kernel } from '../kernel'
 import { getAnnotations, replaceOutput, validateAnnotations } from '../utils'
 
+const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
+
 export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
+  // cmd may go away https://github.com/microsoft/vscode/issues/126534#issuecomment-864053106
+  readonly selectionCommandAvailable = commands
+    .getCommands()
+    .then(cmds => cmds.includes(NOTEBOOK_SELECTION_COMMAND))
+
   constructor(private readonly kernel: Kernel) {
     RunmeExtension.registerCommand(
       'runme.toggleCellAnnotations',
       this.toggleCellAnnotations.bind(this)
     )
+  }
+
+  private async handleNotebookKernelSelection() {
+    if (!(await this.selectionCommandAvailable)) {
+      window.showWarningMessage(
+        'Please select a kernel (top right: "Select Kernel") to continue.')
+      return
+    }
+    return window.showInformationMessage(
+      'Please select a notebook kernel first to continue.',
+      'Select Kernel'
+    ).then(option => {
+      if (!option) {
+        return
+      }
+      commands.executeCommand(NOTEBOOK_SELECTION_COMMAND)
+    })
   }
 
   public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
@@ -54,8 +78,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
       ])
     } catch (e: any) {
       if (e.message.toString().includes('controller is NOT associated')) {
-        commands.executeCommand('_notebook.selectKernel')
-        return
+        return this.handleNotebookKernelSelection()
       }
       window.showErrorMessage(e.message)
     } finally {
