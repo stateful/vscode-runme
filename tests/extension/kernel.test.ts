@@ -14,7 +14,8 @@ vi.mock('../../src/extension/utils', () => ({
   getAnnotations: vi.fn((cell) => cell.metadata),
 }))
 vi.mock('../../src/extension/executors/index.js', () => ({
-  default: { foobar: vi.fn() }
+  default: { foobar: vi.fn() },
+  ENV_STORE_MANAGER: { }
 }))
 vi.mock('../../src/extension/runner', () => ({ }))
 

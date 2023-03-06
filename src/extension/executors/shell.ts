@@ -4,8 +4,11 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
+import { ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 import { getAnnotations, replaceOutput } from '../utils'
+
+import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
@@ -36,34 +39,18 @@ async function shellExecutor(
   /**
    * handle output for stdout and stderr
    */
-  function handleOutput(data: Buffer) {
+  async function handleOutput(data: Buffer) {
     outputItems.push(data)
     let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
 
     // hacky for now, maybe inheritence is a fitting pattern
-    if (script.trim().endsWith('vercel')) {
-      const states = [
-        'Queued',
-        'Building',
-        'Completing',
-      ].reverse()
-
-      const status = (states.find((s) =>
-        outputItems.find(
-          (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
-        )
-      ) || 'pending').replaceAll('Completing', 'complete')
-      // should get this from API instead
-      const projectName = env['PROJECT_NAME']
-
-      const json = <CellOutputPayload<OutputType.vercel>>{
-        type: OutputType.vercel,
-        output: {
-          outputItems: outputItems.map((oi) => oi.toString()),
-          payload: { status, projectName, index, prod }
-        }
-      }
-      item = NotebookCellOutputItem.json(json, OutputType.vercel)
+    if (isVercelDeployScript(script)) {
+      item = await handleVercelDeployOutput(
+        outputItems,
+        index,
+        prod,
+        { get: (key) => env[key], set: (key, val = '') => { ENV_STORE.set(key, val) } }
+      )
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
       item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
         type: OutputType.outputItems,

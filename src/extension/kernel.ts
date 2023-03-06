@@ -17,9 +17,9 @@ import type { ClientMessage } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
-import executor, { runme } from './executors'
+import executor, { type IEnvironmentManager, runme, ENV_STORE_MANAGER } from './executors'
 import { ExperimentalTerminal } from './terminal/terminal'
-import { ENV_STORE, DENO_ACCESS_TOKEN_KEY } from './constants'
+import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
@@ -161,7 +161,7 @@ export class Kernel implements Disposable {
       return
     } else if (message.type === ClientMessages.promote) {
       const payload = message as ClientMessage<ClientMessages.promote>
-      const token = ENV_STORE.get(DENO_ACCESS_TOKEN_KEY)
+      const token = await this.getEnvironmentManager().get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
       }
@@ -259,23 +259,33 @@ export class Kernel implements Disposable {
 
     let successfulCellExecution: boolean
 
+    const environmentManager = this.getEnvironmentManager()
+
     if(
       this.runner &&
-      !(hasPsuedoTerminalExperimentEnabled && terminal) &&
-      (execKey === 'bash' || execKey === 'sh')
+      !(hasPsuedoTerminalExperimentEnabled && terminal)
     ) {
-      successfulCellExecution = await executeRunner(
+      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
         this.context,
-        this.runner,
+        this.runner!,
         exec,
         runningCell,
         execKey,
-        this.environment
+        this.environment,
+        environmentManager
       )
         .catch((e) => {
           console.error(e)
           return false
         })
+
+      if (execKey === 'bash' || execKey === 'sh') {
+        successfulCellExecution = await runScript(execKey)
+      } else {
+        successfulCellExecution = await executor[execKey].call(
+          this, exec, runningCell, runScript, environmentManager
+        )
+      }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli
@@ -315,6 +325,24 @@ export class Kernel implements Disposable {
         // later we might want a more sophisticated approach/to bring this serverside
         Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
       ).then(env => { this.environment = env })
+    }
+  }
+
+  // TODO: use better abstraction as part of move away from executor model
+  private getEnvironmentManager(): IEnvironmentManager {
+    if (this.runner) {
+      return {
+        get: async (key) => {
+          if(!this.environment) { return undefined }
+          return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
+        },
+        set: async (key, val) => {
+          if(!this.environment) { return undefined }
+          await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
+        }
+      }
+    } else {
+      return ENV_STORE_MANAGER
     }
   }
 }
