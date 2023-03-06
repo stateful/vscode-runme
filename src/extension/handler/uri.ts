@@ -17,7 +17,7 @@ const sleep = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
-        console.log(`[Runme] triggered RunmeUriHandler with ${uri}!!!`)
+        console.log(`[Runme] triggered RunmeUriHandler with ${uri}`)
         const params = new URLSearchParams(uri.query)
         const command = params.get('command')
 
