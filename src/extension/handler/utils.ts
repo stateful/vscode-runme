@@ -90,7 +90,11 @@ export async function waitForProjectCheckout (
     const targetDirUri = Uri.parse(targetDir)
     const t = setTimeout(() => {
         clearInterval(i)
-        window.showErrorMessage(`Timed out cloning repository ${repository}`)
+        window.showErrorMessage(
+          `Timed out cloning repository ${repository}! ` +
+          'Please make sure you have Git set-up and permissions to access the repository ' +
+          'or use use an HTTPS url when cloning public repositories.'
+        )
         return cb(false)
     }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
     const i = setInterval(async () => {
@@ -155,23 +159,6 @@ export function getSuggestedProjectName (repository: string) {
         ` received "${repository}"`
     )
     return
-}
-
-export function gitSSHUrlToHTTPS(repositoryUrl: string) {
-  const isHTTPSUrl = repositoryUrl.startsWith('https://')
-  if (!repositoryUrl.startsWith('git@') && !isHTTPSUrl) {
-    throw new Error(
-      'expected url in the format of "git@provider.com:org/project.git" ' +
-      `or "https://provider.com/org/project.git", received ${repositoryUrl}`
-    )
-  }
-
-  if (isHTTPSUrl) {
-    return repositoryUrl
-  }
-
-  const [hostname, path] = repositoryUrl.slice('git@'.length, -DOT_GIT_ANNEX_LENGTH).split(':')
-  return `https://${hostname}/${path}${DOT_GIT_ANNEX}`
 }
 
 const FILE_PROTOCOL = 'file:///'

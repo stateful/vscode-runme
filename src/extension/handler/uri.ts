@@ -7,13 +7,11 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
     getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile,
-    parseParams, gitSSHUrlToHTTPS
+    parseParams
 } from './utils'
 
 let NEXT_TERM_ID = 0
 const REGEX_WEB_RESOURCE = /^https?:\/\//
-
-const sleep = (ms = 200) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export class RunmeUriHandler implements UriHandler {
     async handleUri (uri: Uri) {
@@ -108,21 +106,9 @@ export class RunmeUriHandler implements UriHandler {
         const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
         terminal.show(true)
 
-        terminal.sendText(`git clone ${gitSSHUrlToHTTPS(repository)} ${targetDirUri.fsPath}`)
+        terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
         const success = await new Promise<boolean>(
             (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri.fsPath, repository, resolve))
-
-        /**
-         * We always checkout the project using HTTPS to avoid issues with git not being set up.
-         * However in case the user provided a ssh url we want to switch back to the original
-         * origin url so in case git was set up the user can work with the right git connection.
-         */
-        if (repository.startsWith('git@')) {
-            terminal.sendText(`cd ${targetDirUri.fsPath}`)
-            await sleep()
-            terminal.sendText(`git remote set-url origin ${repository}`)
-            await sleep()
-        }
 
         if (!success) {
             return terminal.dispose()
