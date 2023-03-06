@@ -6,17 +6,15 @@ import type { Kernel } from '../kernel'
 import { bash } from './task'
 import { deploy } from './deno/deploy'
 
-import { ENV_STORE_MANAGER, type IEnvironmentManager } from '.'
+import { ENV_STORE_MANAGER } from '.'
 
 export async function deno (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
   runScript?: () => Promise<boolean>,
-  environment?: IEnvironmentManager,
+  environment = ENV_STORE_MANAGER
 ): Promise<boolean> {
-  environment ??= ENV_STORE_MANAGER
-
   /**
    * ensure token is set for operations
    */
