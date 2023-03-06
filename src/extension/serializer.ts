@@ -15,6 +15,7 @@ import {
   Disposable,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
+import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 
@@ -23,6 +24,7 @@ import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { canEditFile, initWasm } from './utils'
+import RunmeServer from './server/runmeServer'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -288,13 +290,26 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
 
-  constructor(protected context: ExtensionContext) {
+  private serverReadyListener: Disposable|undefined
+
+  constructor(
+    protected context: ExtensionContext,
+    protected server: RunmeServer,
+  ) {
     super(context)
 
     this.ready = new Promise((resolve) => {
-      this.client = initParserClient()
-      resolve()
+      this.serverReadyListener = server.onTransportReady(({ transport }) => {
+        this.initParserClient(transport)
+        resolve()
+      })
     })
+
+    // this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
+  }
+
+  private initParserClient(transport?: GrpcTransport) {
+    this.client = initParserClient(transport ?? this.server.transport())
   }
 
   protected async saveNotebook(
@@ -331,5 +346,10 @@ export class GrpcSerializer extends SerializerBase {
 
     // we can remove ugly casting once we switch to GRPC
     return (notebook as unknown) as Serializer.Notebook
+  }
+
+  public dispose(): void {
+    this.serverReadyListener?.dispose()
+    super.dispose()
   }
 }

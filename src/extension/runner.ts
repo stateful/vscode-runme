@@ -1,4 +1,3 @@
-import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
@@ -21,8 +20,8 @@ import {
   Session,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
-import { getGrpcHost } from './utils'
 import { getShellPath } from './executors/utils'
+import RunmeServer from './server/runmeServer'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -46,6 +45,13 @@ export interface RunProgramOptions {
 }
 
 export interface IRunner extends Disposable {
+  /**
+   * Called when underlying transport is ready
+   *
+   * May be called multiple times if server restarts
+   */
+  readonly onReady: Event<void>
+
   close(): void
 
   createEnvironment(
@@ -65,9 +71,11 @@ export interface IRunner extends Disposable {
   ): Promise<boolean>
 }
 
-export interface IRunnerEnvironment extends DisposableAsync { }
+interface IRunnerChild extends DisposableAsync { }
 
-export interface IRunnerProgramSession extends DisposableAsync, Pseudoterminal {
+export interface IRunnerEnvironment extends IRunnerChild { }
+
+export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   /**
    * Called when an unrecoverable error occurs, for instance a failure over gRPC
    * transport
@@ -98,23 +106,46 @@ export interface IRunnerProgramSession extends DisposableAsync, Pseudoterminal {
 }
 
 export class GrpcRunner implements IRunner {
-  protected readonly client: RunnerServiceClient
-  protected transport: GrpcTransport
+  protected client?: RunnerServiceClient
 
-  private children: WeakRef<DisposableAsync>[] = []
+  private children: WeakRef<IRunnerChild>[] = []
+  private disposables: Disposable[] = []
 
-  constructor() {
-    this.transport = new GrpcTransport({
-      host: getGrpcHost(),
-      channelCredentials: ChannelCredentials.createInsecure(),
-    })
+  protected _onReady = this.register(new EventEmitter<void>())
+  onReady = this._onReady.event
 
-    this.client = new RunnerServiceClient(this.transport)
+  constructor(protected server: RunmeServer) {
+    this.disposables.push(
+      server.onTransportReady(({ transport }) => this.initRunnerClient(transport))
+    )
+
+    this.disposables.push(
+      server.onClose(() => this.deinitRunnerClient())
+    )
+  }
+
+  private deinitRunnerClient() {
+    this.disposeChildren()
+    this.client = undefined
+  }
+
+  private initRunnerClient(transport?: GrpcTransport) {
+    this.deinitRunnerClient()
+    this.client = new RunnerServiceClient(transport ?? this.server.transport())
+    this._onReady.fire()
+  }
+
+  protected static assertClient(client: RunnerServiceClient|undefined): asserts client {
+    if(!client) {
+      throw new Error('Client is not active!')
+    }
   }
 
   async createProgramSession(
     opts: RunProgramOptions
   ): Promise<IRunnerProgramSession> {
+    GrpcRunner.assertClient(this.client)
+
     const session = new GrpcRunnerProgramSession(
       this.client,
       opts
@@ -129,12 +160,16 @@ export class GrpcRunner implements IRunner {
     envs?: string[],
     metadata?: { [index: string]: string }
   ) {
+    GrpcRunner.assertClient(this.client)
+
     const request = CreateSessionRequest.create({
       metadata, envs
     })
 
     try {
-      return this.client
+      const client = this.client
+
+      return client
         .createSession(request)
         .then(({ response: { session } }) => {
           if(!session) {
@@ -142,7 +177,7 @@ export class GrpcRunner implements IRunner {
           }
 
           const environment = new GrpcRunnerEnvironment(
-            this.client,
+            client,
             session
           )
 
@@ -212,14 +247,17 @@ export class GrpcRunner implements IRunner {
     })
   }
 
-  close(): void {
-    this.transport.close()
-  }
+  close(): void { }
 
   async dispose(): Promise<void> {
+    this.disposables.forEach(d => d.dispose())
+    await this.disposeChildren().finally(() => this.close())
+  }
+
+  async disposeChildren(): Promise<void> {
     await Promise.all(
       this.children.map(c => c.deref()?.dispose())
-    ).finally(() => this.close())
+    )
   }
 
   /**
@@ -228,6 +266,11 @@ export class GrpcRunner implements IRunner {
    */
   protected registerChild(d: DisposableAsync) {
     this.children.push(new WeakRef(d))
+  }
+
+  protected register<T extends Disposable>(d: T): T {
+    this.disposables.push(d)
+    return d
   }
 }
 
@@ -279,6 +322,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         this._onDidErr.fire(stderr)
       })
     )
+
+    this.register( this._onDidClose.event(() => this.dispose()) )
+    this.register( this._onInternalErr.event(() => this.dispose()) )
 
     this.session.responses.onMessage(({ stderrData, stdoutData, exitCode }) => {
       if(stdoutData.length > 0) {
