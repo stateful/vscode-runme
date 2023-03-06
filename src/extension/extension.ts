@@ -31,12 +31,13 @@ export class RunmeExtension {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
+    const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
     const server = new RunmeServer(context.extensionUri, {
       retryOnFailure: true,
       maxNumberOfIntents: 2,
-    }, !grpcServer)
+    }, !grpcServer, grpcRunner)
+    grpcRunner && kernel.useRunner(new GrpcRunner(server))
     const serializer = grpcSerializer ? new GrpcSerializer(context, server) : new WasmSerializer(context)
-    kernel.hasExperimentEnabled('grpcRunner') && kernel.useRunner(new GrpcRunner(server))
 
     /**
      * Start the Runme server

@@ -299,13 +299,13 @@ export class GrpcSerializer extends SerializerBase {
     super(context)
 
     this.ready = new Promise((resolve) => {
-      this.serverReadyListener = server.onTransportReady(({ transport }) => {
-        this.initParserClient(transport)
+      const disposable = server.onTransportReady(() => {
+        disposable.dispose()
         resolve()
       })
     })
 
-    // this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
+    this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
   }
 
   private initParserClient(transport?: GrpcTransport) {

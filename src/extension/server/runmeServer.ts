@@ -45,7 +45,8 @@ class RunmeServer implements Disposable {
     constructor(
       extBasePath: Uri,
       options: IServerConfig,
-      protected readonly externalServer: boolean
+      protected readonly externalServer: boolean,
+      protected readonly enableRunner = false
     ) {
       this.#port = getPortNumber()
       this.#loggingEnabled = enableServerLogs()
@@ -132,11 +133,17 @@ class RunmeServer implements Disposable {
           this.#port++
         }
 
-        const process = spawn(binaryLocation, [
-            'server',
-            '--address',
-            this.address()
-        ])
+        const args = [
+          'server',
+          '--address',
+          this.address()
+        ]
+
+        if(this.enableRunner) {
+          args.push('--runner')
+        }
+
+        const process = spawn(binaryLocation, args)
 
         process.on('close', (code) => {
             if (this.#loggingEnabled) {
@@ -164,17 +171,21 @@ class RunmeServer implements Disposable {
         this.#process = process
 
         return new Promise((resolve, reject) => {
-            this.#process!.stderr.on('data', (data) => {
-                const msg = data.toString()
-                try {
-                    const log = JSON.parse(msg)
-                    if (log.addr === this.address()) {
-                      return resolve(log.addr)
-                    }
-                } catch (err: any) {
-                    reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
-                }
-            })
+          const cb = (data: any) => {
+              const msg = data.toString()
+              try {
+                  const log = JSON.parse(msg)
+                  if (log.addr === this.address()) {
+                    return resolve(log.addr)
+                  }
+              } catch (err: any) {
+                  reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
+              } finally {
+                process.stderr.off('data', cb)
+              }
+          }
+
+          process.stderr.on('data', cb)
         })
     }
 
@@ -219,8 +230,6 @@ class RunmeServer implements Disposable {
         return this.address()
       }
 
-      const oldProcess = this.#process
-
       let addr
       try {
           addr = await this.start()
@@ -233,15 +242,14 @@ class RunmeServer implements Disposable {
       }
 
       await this.connect()
-      this.disposeProcess(oldProcess)
 
       return addr
     }
 
     protected async connect(): Promise<void> {
+      this.closeTransport()
       await this.acceptsConnection()
 
-      this.closeTransport()
       this.#onTransportReady.fire({ transport: this.transport() })
     }
 
