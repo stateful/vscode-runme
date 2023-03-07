@@ -156,7 +156,7 @@ export class GrpcRunner implements IRunner {
     return session
   }
 
-  createEnvironment(
+  async createEnvironment(
     envs?: string[],
     metadata?: { [index: string]: string }
   ) {

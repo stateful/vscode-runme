@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import { vi, suite, test, expect } from 'vitest'
+import { vi, suite, test, expect, beforeEach } from 'vitest'
 import type { ExecuteResponse } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { EventEmitter } from 'vscode'
@@ -98,11 +98,13 @@ class MockedRunmeServer {
   onClose = this._onClose.event
 }
 
+beforeEach(() => {
+  resetId()
+  deleteSession.mockClear()
+})
+
 suite('grpc Runner', () => {
   test('environment dispose is called on runner dispose', async () => {
-    resetId()
-    deleteSession.mockClear()
-
     const { runner } = createGrpcRunner()
     const environment = (await runner.createEnvironment()) as GrpcRunnerEnvironment
 
@@ -118,6 +120,30 @@ suite('grpc Runner', () => {
 
     expect(environmentDispose).toBeCalledTimes(1)
     expect(deleteSession).toBeCalledTimes(1)
+  })
+
+  test('cannot create environment if server not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create program session if server not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create environment if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create program session if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
   })
 
   suite('grpc program session', () => {
