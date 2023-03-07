@@ -197,6 +197,8 @@ export class GrpcRunner implements IRunner {
   async getEnvironmentVariables(
     environment: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined> {
+    GrpcRunner.assertClient(this.client)
+
     if(!(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Invalid environment!')
     }

@@ -132,6 +132,11 @@ suite('grpc Runner', () => {
     await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
   })
 
+  test('cannot get environment variables not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
+  })
+
   test('cannot create environment if server closed', async () => {
     const { runner, server } = createGrpcRunner(true)
 
@@ -144,6 +149,13 @@ suite('grpc Runner', () => {
 
     server._onClose.fire({ code: null })
     await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot get environment variables if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
   })
 
   suite('grpc program session', () => {
