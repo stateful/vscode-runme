@@ -18,6 +18,7 @@ import {
   ExecuteStop,
   GetSessionRequest,
   Session,
+  Winsize,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
 import { getShellPath } from './executors/utils'
@@ -388,6 +389,14 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.initialized = true
 
+    this.opts.envs ??= []
+
+    if(this.opts.tty) {
+      this.opts.envs.push('TERM=xterm')
+    } else {
+      this.opts.envs.push('TERM=')
+    }
+
     await this.session.requests.send(GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts))
   }
 
@@ -510,6 +519,12 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.dispose()
   }
 
+  setDimensions(dimensions: TerminalDimensions): void {
+    this.session.requests.send(ExecuteRequest.create({
+      winsize: terminalDimensionsToWinsize(dimensions)
+    }))
+  }
+
   hasExited() {
     return this.exitReason
   }
@@ -520,7 +535,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   static runOptionsToExecuteRequest(
-    { programName, args, cwd, environment, exec, tty, envs }: RunProgramOptions
+    { programName, args, cwd, environment, exec, tty, envs, terminalDimensions }: RunProgramOptions
   ): ExecuteRequest {
     if(environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -534,7 +549,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       sessionId: environment?.getSessionId(),
       programName,
       ...exec?.type === 'commands' && { commands: exec.commands },
-      ...exec?.type === 'script' && { script: exec.script }
+      ...exec?.type === 'script' && { script: exec.script },
+      ...terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) },
     })
   }
 }
@@ -562,6 +578,9 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   }
 }
 
-// function terminalDimensionsToWinsize(terminalDimension: TerminalDimensions) {
-
-// }
+function terminalDimensionsToWinsize({ rows, columns }: TerminalDimensions): Winsize {
+  return Winsize.create({
+    cols: columns,
+    rows,
+  })
+}
