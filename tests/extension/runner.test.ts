@@ -12,6 +12,7 @@ import {
   RunProgramOptions
 } from '../../src/extension/runner'
 
+
 vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863')
 }))
@@ -86,6 +87,12 @@ vi.mock('../../src/extension/grpc/client', () => ({
 vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb', () => ({
   default: { },
   CreateSessionRequest: {
+    create: vi.fn((x: any) => x)
+  },
+  ExecuteRequest: {
+    create: vi.fn((x: any) => x)
+  },
+  Winsize: {
     create: vi.fn((x: any) => x)
   }
 }))
@@ -249,6 +256,41 @@ suite('grpc Runner', () => {
 
       expect(closeListener).toBeCalledTimes(1)
       expect(closeListener).toBeCalledWith(1)
+    })
+
+    test('initial request has winsize', async () => {
+      const { duplex, session } = await createNewSession({
+        tty: true
+      })
+
+      session.open({ columns: 50, rows: 20 })
+
+      expect(duplex.requests.send).toBeCalledTimes(1)
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toMatchObject({
+        tty: true,
+        winsize: {
+          cols: 50,
+          rows: 20,
+        }
+      })
+    })
+
+    test('further requests have winsize', async () => {
+      const { duplex, session } = await createNewSession({
+        tty: true
+      })
+
+      session.open({ columns: 50, rows: 20 })
+
+      session.setDimensions({ columns: 60, rows: 30 })
+
+      expect(duplex.requests.send).toBeCalledTimes(2)
+      expect((duplex.requests.send.mock.calls[1] as any)[0]).toStrictEqual({
+        winsize: {
+          cols: 60,
+          rows: 30,
+        }
+      })
     })
   })
 })
