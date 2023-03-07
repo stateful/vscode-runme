@@ -90,7 +90,11 @@ export async function waitForProjectCheckout (
     const targetDirUri = Uri.parse(targetDir)
     const t = setTimeout(() => {
         clearInterval(i)
-        window.showErrorMessage(`Timed out cloning repository ${repository}`)
+        window.showErrorMessage(
+          `Timed out cloning repository ${repository}! ` +
+          'Please make sure you have Git set-up and permissions to access the repository ' +
+          'or use use an HTTPS url when cloning public repositories.'
+        )
         return cb(false)
     }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
     const i = setInterval(async () => {

@@ -103,7 +103,7 @@ export class RunmeUriHandler implements UriHandler {
         fileToOpen: string
     ) {
         progress.report({ increment: 0, message: 'Cloning repository...' })
-        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`, '/bin/sh')
+        const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
         terminal.show(true)
 
         terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
