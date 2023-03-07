@@ -4,6 +4,8 @@ import { join } from 'node:path'
 
 import { vi } from 'vitest'
 import { URI } from 'vscode-uri'
+import type { Disposable } from 'vscode'
+
 
 export const notebooks = {
   createNotebookController: vi.fn().mockReturnValue({
@@ -116,7 +118,6 @@ export enum NotebookCellKind {
 }
 
 export const TreeItem = vi.fn()
-export class EventEmitter {}
 export const Event = vi.fn()
 
 export enum TreeItemCollapsibleState {
@@ -192,4 +193,27 @@ export class NotebookCellOutput {
 
 export const ProgressLocation = {
   Window: 1
+}
+
+type MessageCallback<T> = (message: T) => void
+type Event<T> = (listener: MessageCallback<T>) => Disposable
+
+export class EventEmitter<T> {
+  listeners: MessageCallback<T>[] = []
+
+  event: Event<T> = (listener) => {
+    this.listeners.push(listener)
+
+    return {
+      dispose: () => {
+        this.listeners = this.listeners.filter(x => x !== listener)
+      }
+    }
+  }
+
+  fire(data: T) {
+    this.listeners.forEach(l => l(data))
+  }
+
+  dispose() { }
 }
