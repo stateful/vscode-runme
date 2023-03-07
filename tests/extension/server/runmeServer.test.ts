@@ -43,7 +43,8 @@ suite('Runme server spawn process', () => {
           {
             retryOnFailure: true,
             maxNumberOfIntents: 2,
-          }
+          },
+          false
         )
         const serverLaunchSpy = vi.spyOn(server, 'launch')
         await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
@@ -56,7 +57,8 @@ suite('Runme server spawn process', () => {
         {
           retryOnFailure: true,
           maxNumberOfIntents: 2,
-        }
+        },
+        false
       )
 
       vi.mocked(fs.access).mockResolvedValueOnce()
@@ -84,7 +86,8 @@ suite('Runme server accept connections', () => {
               intents: 4,
               interval: 1,
             }
-          }
+          },
+          false
         )
     })
 
