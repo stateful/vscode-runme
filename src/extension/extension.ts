@@ -59,7 +59,7 @@ export class RunmeExtension {
 
     const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
-    const uriHandler = new RunmeUriHandler()
+    const uriHandler = new RunmeUriHandler(context)
     kernel.hasExperimentEnabled('grpcRunner') && kernel.useRunner(new GrpcRunner())
 
     context.subscriptions.push(
