@@ -1,10 +1,11 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
-  Pseudoterminal,
-  Event,
+  type Pseudoterminal,
+  type Event,
+  type Disposable,
+  type TerminalDimensions,
   EventEmitter,
-  Disposable,
 } from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
@@ -41,6 +42,7 @@ export interface RunProgramOptions {
     RunProgramExecution
   tty?: boolean
   environment?: IRunnerEnvironment
+  terminalDimensions?: TerminalDimensions
 }
 
 export interface IRunner extends Disposable {
@@ -450,13 +452,15 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }))
   }
 
-  open(): void {
+  open(initialDimensions?: TerminalDimensions): void {
     // Workaround to force terminal to close if opened after early exit
     // TODO(mxs): find a better solution here
     if(this.hasExited()) {
       this._onDidClose.fire(1)
       return
     }
+
+    this.opts.terminalDimensions = initialDimensions
 
     // in pty, we wait for open to run
     this.run()
@@ -557,3 +561,7 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
     return await this.client.deleteSession({ id: this.getSessionId() })
   }
 }
+
+// function terminalDimensionsToWinsize(terminalDimension: TerminalDimensions) {
+
+// }
