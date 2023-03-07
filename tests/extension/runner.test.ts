@@ -18,7 +18,6 @@ vi.mock('../../src/extension/utils', () => ({
 
 vi.mock('vscode', async () => ({
   ...await import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
-  // EventEmitter: getEventEmitterClass()
 }))
 
 vi.mock('@protobuf-ts/grpc-transport', () => ({
@@ -40,33 +39,6 @@ const createSession = vi.fn(() => ({
 const deleteSession = vi.fn(async () => ({
 
 }))
-
-// function getEventEmitterClass() {
-//   return class EventEmitter<T> {
-//     listeners: MessageCallback<T>[] = []
-
-//     event: Event<T> = (listener) => {
-//       this.listeners.push(listener)
-
-//       return {
-//         dispose: () => {
-//           this.listeners = this.listeners.filter(x => x !== listener)
-//         }
-//       }
-//     }
-
-//     fire(data: T) {
-//       this.listeners.forEach(l => l(data))
-//     }
-
-//     dispose() { }
-//   }
-// }
-
-// type MessageCallback<T> = (message: T) => void
-// type Event<T> = (listener: MessageCallback<T>) => Disposable
-
-// const EventEmitter = getEventEmitterClass()
 
 class MockedDuplexClientStream {
   constructor() {}
@@ -125,10 +97,6 @@ class MockedRunmeServer {
   onTransportReady = this._onTransportReady.event
   onClose = this._onClose.event
 }
-
-// vi.mock('../../src/extension/server/runmeServer', () => ({
-//   default:
-// }))
 
 suite('grpc Runner', () => {
   test('environment dispose is called on runner dispose', async () => {
