@@ -113,7 +113,7 @@ class RunmeServer implements Disposable {
       return this.#transport
     }
 
-    async start(): Promise<string | RunmeServerError> {
+    async start(): Promise<string> {
         const binaryLocation = this.#binaryPath.fsPath
 
         const binaryExists = await fs.access(binaryLocation)
@@ -224,7 +224,7 @@ class RunmeServer implements Disposable {
      *
      * @returns Address of server or error
      */
-    async launch(): Promise<string | RunmeServerError> {
+    async launch(): Promise<string> {
       if (this.externalServer) {
         await this.connect()
         return this.address()
