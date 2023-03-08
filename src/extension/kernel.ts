@@ -48,6 +48,7 @@ export class Kernel implements Disposable {
 
   protected runner?: IRunner
   protected environment?: IRunnerEnvironment
+  protected runnerReadyListener?: Disposable
 
   constructor(
     protected context: ExtensionContext,
@@ -80,6 +81,7 @@ export class Kernel implements Disposable {
     resetEnv()
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
+    this.runnerReadyListener?.dispose()
   }
 
   async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
@@ -316,15 +318,23 @@ export class Kernel implements Disposable {
   }
 
   useRunner(runner: IRunner) {
+    this.runnerReadyListener?.dispose()
+
     if(this.#experiments.get('grpcRunner') && runner) {
       this.runner = runner
 
-      this.#disposables.push(runner)
-      runner.createEnvironment(
-        // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this serverside
-        Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
-      ).then(env => { this.environment = env })
+      this.runnerReadyListener = runner.onReady(() => {
+        this.environment = undefined
+
+        runner.createEnvironment(
+          // copy env from process naively for now
+          // later we might want a more sophisticated approach/to bring this serverside
+          Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+        ).then(env => {
+          if(this.runner !== runner) { return }
+          this.environment = env
+        })
+      })
     }
   }
 

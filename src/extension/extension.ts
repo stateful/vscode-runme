@@ -31,22 +31,19 @@ export class RunmeExtension {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
+    const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
     const server = new RunmeServer(context.extensionUri, {
       retryOnFailure: true,
       maxNumberOfIntents: 2,
-    })
+    }, !grpcServer, grpcRunner)
+    grpcRunner && kernel.useRunner(new GrpcRunner(server))
+    const serializer = grpcSerializer ? new GrpcSerializer(context, server) : new WasmSerializer(context)
+
     /**
      * Start the Runme server
      */
-
     try {
-      if (grpcServer) {
-        await server.launch()
-        server.events.on('closed', () => {
-          window.showErrorMessage(`Runme server is not longer running,
-          please reload the window to start the server again`)
-        })
-      }
+      await server.launch()
     } catch (e) {
       // Unrecoverable error happened
       if (e instanceof RunmeServerError) {
@@ -57,10 +54,8 @@ export class RunmeExtension {
       return window.showErrorMessage('Failed to start Runme server, please try to reload the window')
     }
 
-    const serializer = grpcSerializer ? new GrpcSerializer(context) : new WasmSerializer(context)
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
-    kernel.hasExperimentEnabled('grpcRunner') && kernel.useRunner(new GrpcRunner())
 
     context.subscriptions.push(
       kernel,

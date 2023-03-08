@@ -1,7 +1,9 @@
 import path from 'node:path'
 
-import { vi, suite, test, expect } from 'vitest'
+import { vi, suite, test, expect, beforeEach } from 'vitest'
 import type { ExecuteResponse } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb'
+import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
+import { EventEmitter } from 'vscode'
 
 import {
   GrpcRunner,
@@ -14,9 +16,8 @@ vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863')
 }))
 
-vi.mock('vscode', () => ({
-  ...import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
-  EventEmitter: getEventEmitterClass()
+vi.mock('vscode', async () => ({
+  ...await import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
 }))
 
 vi.mock('@protobuf-ts/grpc-transport', () => ({
@@ -38,29 +39,6 @@ const createSession = vi.fn(() => ({
 const deleteSession = vi.fn(async () => ({
 
 }))
-
-function getEventEmitterClass() {
-  return class EventEmitter<T> {
-    listeners: MessageCallback<T>[] = []
-
-    event: Event<T> = (listener) => {
-      this.listeners.push(listener)
-
-      return () => {
-        this.listeners = this.listeners.filter(x => x !== listener)
-      }
-    }
-
-    fire(data: T) {
-      this.listeners.forEach(l => l(data))
-    }
-  }
-}
-
-type MessageCallback<T> = (message: T) => void
-type Event<T> = (listener: MessageCallback<T>) => (() => void)
-
-const EventEmitter = getEventEmitterClass()
 
 class MockedDuplexClientStream {
   constructor() {}
@@ -112,12 +90,22 @@ vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/run
   }
 }))
 
+class MockedRunmeServer {
+  _onTransportReady = new EventEmitter<{ transport: GrpcTransport }>()
+  _onClose = new EventEmitter<{ code: number|null }>()
+
+  onTransportReady = this._onTransportReady.event
+  onClose = this._onClose.event
+}
+
+beforeEach(() => {
+  resetId()
+  deleteSession.mockClear()
+})
+
 suite('grpc Runner', () => {
   test('environment dispose is called on runner dispose', async () => {
-    resetId()
-    deleteSession.mockClear()
-
-    const runner = new GrpcRunner()
+    const { runner } = createGrpcRunner()
     const environment = (await runner.createEnvironment()) as GrpcRunnerEnvironment
 
     const oldEnvDispose = environment.dispose
@@ -132,6 +120,42 @@ suite('grpc Runner', () => {
 
     expect(environmentDispose).toBeCalledTimes(1)
     expect(deleteSession).toBeCalledTimes(1)
+  })
+
+  test('cannot create environment if server not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create program session if server not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot get environment variables not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create environment if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot create program session if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+  })
+
+  test('cannot get environment variables if server closed', async () => {
+    const { runner, server } = createGrpcRunner(true)
+
+    server._onClose.fire({ code: null })
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
   })
 
   suite('grpc program session', () => {
@@ -233,8 +257,21 @@ function getMockedDuplex(session: GrpcRunnerProgramSession): MockedDuplexClientS
   return session['session'] as unknown as MockedDuplexClientStream
 }
 
-async function createNewSession(options: Partial<RunProgramOptions> = {}, runner?: GrpcRunner) {
-  runner ??= new GrpcRunner()
+function createGrpcRunner(initialize = true) {
+  const server = new MockedRunmeServer()
+  const runner = new GrpcRunner(server as any)
+
+  if (initialize) {
+    server._onTransportReady.fire({ transport: {} as any })
+  }
+
+  return { server, runner }
+}
+
+async function createNewSession(options: Partial<RunProgramOptions> = {}, runner?: GrpcRunner, initialize?: boolean) {
+  const { runner: generatedRunner, server } = createGrpcRunner(initialize)
+
+  runner ??= generatedRunner
   const session = (await runner.createProgramSession({
     programName: 'sh',
     ...options
@@ -260,5 +297,6 @@ async function createNewSession(options: Partial<RunProgramOptions> = {}, runner
     closeListener,
     writeListener,
     errListener,
+    server,
   }
 }
