@@ -6,7 +6,6 @@ import {
   EventEmitter,
   Disposable,
 } from 'vscode'
-import type { UInt32Value } from '@buf/stateful_runme.community_timostamm-protobuf-ts/google/protobuf/wrappers_pb'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
@@ -75,6 +74,19 @@ interface IRunnerChild extends DisposableAsync { }
 
 export interface IRunnerEnvironment extends IRunnerChild { }
 
+export type RunnerExitReason =
+  |{
+    type: 'exit'
+    code: number
+  }
+  |{
+    type: 'error'
+    error: Error
+  }
+  |{
+    type: 'disposed'
+  }
+
 export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   /**
    * Called when an unrecoverable error occurs, for instance a failure over gRPC
@@ -85,7 +97,7 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   readonly onInternalErr: Event<Error>
 
   readonly onDidErr: Event<string>
-  readonly onDidClose: Event<number>
+  readonly onDidClose: Event<number | void>
 
   /**
    * Implementers should **still call `onDidWrite`** to stay compatible with
@@ -102,7 +114,7 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   setRunOptions(opts: RunProgramOptions): void
   run(): Promise<void>
-  hasExited(): boolean
+  hasExited(): RunnerExitReason|undefined
 }
 
 export class GrpcRunner implements IRunner {
@@ -282,7 +294,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly _onInternalErr = this.register(new EventEmitter<Error>())
   readonly _onDidWrite    = this.register(new EventEmitter<string>())
   readonly _onDidErr      = this.register(new EventEmitter<string>())
-  readonly _onDidClose    = this.register(new EventEmitter<number>())
+  readonly _onDidClose    = this.register(new EventEmitter<number | void>())
   readonly _onStdoutRaw   = this.register(new EventEmitter<Uint8Array>())
   readonly _onStderrRaw   = this.register(new EventEmitter<Uint8Array>())
 
@@ -293,9 +305,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly onStderrRaw = this._onStderrRaw.event
   readonly onInternalErr = this._onInternalErr.event
 
-  private readonly session: ExecuteDuplex
+  protected exitReason?: RunnerExitReason
 
-  private exitCode: UInt32Value|undefined
+  private readonly session: ExecuteDuplex
 
   private isDisposed = false
 
@@ -338,8 +350,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       }
 
       if(exitCode) {
-        this._onDidClose.fire(exitCode.value)
-        this.exitCode = exitCode
+        this._close({ type: 'exit', code: exitCode.value })
         this.dispose()
       }
     })
@@ -440,6 +451,13 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   open(): void {
+    // Workaround to force terminal to close if opened after early exit
+    // TODO(mxs): find a better solution here
+    if(this.hasExited()) {
+      this._onDidClose.fire(1)
+      return
+    }
+
     // in pty, we wait for open to run
     this.run()
   }
@@ -448,7 +466,19 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     if(this.isDisposed) { return }
     this.isDisposed = true
 
+    this._close({ type: 'disposed' })
+
     await this.session.requests.complete()
+  }
+
+  _close(reason: RunnerExitReason) {
+    if (this.hasExited()) { return }
+
+    this.exitReason = reason
+
+    if(reason.type !== 'disposed') {
+      this._onDidClose.fire(reason.type === 'exit' ? reason.code : 1)
+    }
   }
 
   /**
@@ -469,12 +499,15 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
    * Unrecoverable internal error
    */
   private error(error: Error) {
+    this._close({ type: 'error', error })
+
     this._onInternalErr.fire(error)
+
     this.dispose()
   }
 
   hasExited() {
-    return this.exitCode !== undefined || this.isDisposed
+    return this.exitReason
   }
 
   protected register<T extends Disposable>(disposable: T): T {

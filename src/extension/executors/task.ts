@@ -17,10 +17,14 @@ import { sh as inlineSh } from './shell'
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
 
-export function closeTerminalByEnvID (id: string) {
+export function closeTerminalByEnvID (id: string, kill?: boolean) {
   const terminal = window.terminals.find(t => getTerminalRunmeId(t) === id)
   if (terminal) {
-    terminal.hide()
+    if(kill) {
+      terminal.dispose()
+    } else {
+      terminal.hide()
+    }
   }
 }
 
