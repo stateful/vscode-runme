@@ -11,6 +11,7 @@ import {
   Uri,
   commands,
   FileType,
+  Disposable,
 } from 'vscode'
 
 import { Kernel } from '../kernel'
@@ -51,11 +52,24 @@ export class RunmeFile extends TreeItem {
   }
 }
 
-export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
+export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Disposable {
+  #disposables: Disposable[] = []
+
   private filesTree: Map<string, TreeFile> = new Map()
   private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
 
-  constructor(private workspaceRoot?: string | undefined) {}
+  constructor(private workspaceRoot?: string | undefined) {
+    const watcher = workspace.createFileSystemWatcher(
+      '**/*.md',
+      false,
+      true,
+      false
+    )
+    this.#disposables.push(
+      watcher.onDidCreate((file) => this.#onFileChange(file, true)),
+      watcher.onDidDelete(this.#onFileChange.bind(this))
+    )
+  }
 
   private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> = new EventEmitter<RunmeFile | undefined>()
   readonly onDidChangeTreeData: Event<RunmeFile | undefined> = this._onDidChangeTreeData.event
@@ -104,6 +118,10 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
     }))
   }
 
+  get disposables () {
+    return this.#disposables
+  }
+
   getParent () {
     return null
   }
@@ -143,24 +161,54 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile> {
         excludePatterns = patterns.join(',')
       }
     }
-    const files = await workspace.findFiles('**/*.md', `{${excludePatterns}}`)
-    const rootFolder = basename(this.workspaceRoot || '')
 
     /**
      * we need to tweak the folder name to force VS Code re-render the tree view
      * see https://github.com/microsoft/vscode/issues/172479
      */
-    const nameTweaker = ++i % 2 ? ' ' : ''
-    for (const { path } of files) {
-      const info = basename(path)
-      const folderPath = dirname(path)
-      const folderName = dirname(path).replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
-      if (!this.filesTree.has(folderName)) {
-        this.filesTree.set(folderName, { files: [info], folderPath })
-      } else {
-        const { files } = this.filesTree.get(folderName) || { files: [] }
-        this.filesTree.set(folderName, { files: [...files, info], folderPath })
-      }
+    ++i
+
+    const files = await workspace.findFiles('**/*.md', `{${excludePatterns}}`)
+    for (const file of files) {
+      this.#addFileToTree(file)
     }
+  }
+
+  #uriToEntry (file: Uri) {
+    const nameTweaker = i % 2 ? ' ' : ''
+
+    const rootFolder = basename(this.workspaceRoot || '')
+    const info = basename(file.path)
+    const folderPath = dirname(file.path)
+    const folderName = folderPath.replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
+    return { info, folderPath, folderName }
+  }
+
+  #addFileToTree (file: Uri) {
+    const { info, folderPath, folderName } = this.#uriToEntry(file)
+    if (!this.filesTree.has(folderName)) {
+      this.filesTree.set(folderName, { files: [info], folderPath })
+    } else {
+      const { files } = this.filesTree.get(folderName) || { files: [] }
+      this.filesTree.set(folderName, { files: [...files, info], folderPath })
+    }
+  }
+
+  #onFileChange (file: Uri, isAdded: boolean) {
+    /**
+     * adding a file this way allows us to keep folder open
+     * when a file was added
+     */
+    if (isAdded) {
+      this.#addFileToTree(file)
+      return this._onDidChangeTreeData.fire(undefined)
+    }
+
+    this.refresh()
+  }
+
+  dispose() {
+    this.refresh()
+    this.#disposables.forEach((d) => d.dispose())
   }
 }
