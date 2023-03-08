@@ -323,17 +323,17 @@ export class Kernel implements Disposable {
     if(this.#experiments.get('grpcRunner') && runner) {
       this.runner = runner
 
-      this.runnerReadyListener = runner.onReady(() => {
+      this.runnerReadyListener = runner.onReady(async () => {
         this.environment = undefined
 
-        runner.createEnvironment(
+        const env = await runner.createEnvironment(
           // copy env from process naively for now
           // later we might want a more sophisticated approach/to bring this serverside
           Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
-        ).then(env => {
-          if(this.runner !== runner) { return }
-          this.environment = env
-        })
+        )
+
+        if(this.runner !== runner) { return }
+        this.environment = env
       })
     }
   }
