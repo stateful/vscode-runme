@@ -167,7 +167,7 @@ describe('RunmeUriHandler', () => {
       vi.mocked(waitForProjectCheckout).mockImplementation(
         async (_, __, ___, resolve) => resolve(false))
       await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
-      expect(terminal.sendText).toBeCalledWith('git clone /foo/bar /bar/foo')
+      expect(terminal.sendText).toBeCalledWith('git clone /foo/bar "/bar/foo"')
       expect(terminal.dispose).toBeCalledTimes(1)
       expect(progress.report).toBeCalledTimes(1)
     })
