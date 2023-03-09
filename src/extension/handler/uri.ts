@@ -124,7 +124,7 @@ export class RunmeUriHandler implements UriHandler {
 
     progress.report({ increment: 50, message: 'Opening project...' })
     console.log(`[Runme] Attempt to open folder ${targetDirUri.fsPath}`)
-    await commands.executeCommand('vscode.openFolder', Uri.parse(targetDirUri.fsPath), {
+    await commands.executeCommand('vscode.openFolder', targetDirUri, {
       forceNewWindow: true
     })
     progress.report({ increment: 100 })
