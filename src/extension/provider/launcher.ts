@@ -67,7 +67,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     )
     this.#disposables.push(
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
-      watcher.onDidDelete(this.#onFileChange.bind(this))
+      watcher.onDidDelete((file) => this.#onFileChange(file))
     )
   }
 
@@ -156,9 +156,13 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
       const hasGitDirectory = (await getPathType(gitIgnoreUri)) === FileType.File
 
       if (hasGitDirectory) {
-        const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
-        const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
-        excludePatterns = patterns.join(',')
+        try {
+          const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
+          const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
+          excludePatterns = patterns.join(',')
+        } catch (err: unknown) {
+          console.error(`Failed to read .gitignore file: ${(err as Error).message}`)
+        }
       }
     }
 
@@ -194,7 +198,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     }
   }
 
-  #onFileChange (file: Uri, isAdded: boolean) {
+  #onFileChange (file: Uri, isAdded = false) {
     /**
      * adding a file this way allows us to keep folder open
      * when a file was added

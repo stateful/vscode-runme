@@ -44,6 +44,10 @@ export const workspace = {
     createDirectory: vi.fn(),
     delete: vi.fn()
   },
+  createFileSystemWatcher: vi.fn().mockReturnValue({
+    onDidCreate: vi.fn(),
+    onDidDelete: vi.fn()
+  }),
   workspaceFolders: [
     {
       uri: {

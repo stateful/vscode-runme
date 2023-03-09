@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { commands, Uri } from 'vscode'
+import { commands, Uri, workspace } from 'vscode'
 
 import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
@@ -28,6 +28,7 @@ vi.mock('../../../src/extension/utils', () => ({
 
 beforeEach(() => {
   vi.mocked(commands.executeCommand).mockClear()
+  vi.mocked(workspace.createFileSystemWatcher).mockClear()
 })
 
 describe('Runme Notebooks', () => {
@@ -85,6 +86,23 @@ describe('Runme Notebooks', () => {
     launchProvider.refresh = vi.fn()
     await launchProvider.expandAll()
     expect(commands.executeCommand).toBeCalledWith('setContext', 'runme.launcher.isExpanded', true)
+    expect(launchProvider.refresh).toBeCalledTimes(1)
+  })
+
+  it('adds files to list', async () => {
+    const handler = vi.fn()
+    vi.mocked(workspace.createFileSystemWatcher).mockReturnValue({
+      onDidCreate: handler,
+      onDidDelete: handler
+    } as any)
+    const launchProvider = new RunmeLauncherProvider()
+    launchProvider.refresh = vi.fn()
+    launchProvider['_onDidChangeTreeData'] = { fire: vi.fn() } as any
+    expect(workspace.createFileSystemWatcher).toBeCalledWith('**/*.md', false, true, false)
+    handler.mock.calls[0][0]({ path: '/foo/bar' }, true)
+    expect([...launchProvider['filesTree'].entries()])
+      .toEqual([['/foo ', { files: ['bar'], folderPath: '/foo' }]])
+      handler.mock.calls[1][0]({ path: '/foo/bar' })
     expect(launchProvider.refresh).toBeCalledTimes(1)
   })
 })
