@@ -114,7 +114,7 @@ export class RunmeUriHandler implements UriHandler {
     const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
     terminal.show(true)
 
-    terminal.sendText(`git clone ${repository} ${targetDirUri.fsPath}`)
+    terminal.sendText(`git clone ${repository} "${targetDirUri.fsPath}"`)
     const success = await new Promise<boolean>(
       (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri, repository, resolve))
 
