@@ -202,6 +202,7 @@
           "stateful.runme/html-stdout",
           "stateful.runme/output-items",
           "stateful.runme/annotations",
+          "stateful.runme/terminal",
           "stateful.runme/error"
         ],
         "requiresMessaging": "optional"
@@ -467,6 +468,7 @@
     "vercel": "^28.13.1",
     "vscode-telemetry": "^0.3.1",
     "xdg-app-paths": "^8.2.0",
+    "xterm": "^5.1.0",
     "yargs": "^17.6.2",
     "zod": "^3.20.2"
   }

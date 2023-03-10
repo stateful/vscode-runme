@@ -54,6 +54,11 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
           element.appendChild(annoElem)
           break
+        case OutputType.terminal:
+          const terminalElement = document.createElement('terminal-view')
+          terminalElement.setAttribute('input', payload.output.input)
+          element.appendChild(terminalElement)
+          break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`
           break

@@ -70,6 +70,9 @@ interface Payload {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
   }
+  [OutputType.terminal]: {
+    input: string
+  }
 }
 
 export interface ClientMessage <T extends ClientMessages> {

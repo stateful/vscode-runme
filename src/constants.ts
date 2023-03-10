@@ -8,6 +8,7 @@ export enum OutputType {
   deno = 'stateful.runme/deno-stdout',
   outputItems = 'stateful.runme/output-items',
   annotations = 'stateful.runme/annotations',
+  terminal = 'stateful.runme/terminal',
   error = 'stateful.runme/error'
 }
 
