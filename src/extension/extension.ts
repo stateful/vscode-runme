@@ -75,6 +75,7 @@ export class RunmeExtension {
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new StopBackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
+      // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal),

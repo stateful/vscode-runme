@@ -54,6 +54,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
           element.appendChild(annoElem)
           break
+        case OutputType.terminal:
+          const terminalElement = document.createElement('terminal-view')
+          terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
+          terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
+          terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
+          element.appendChild(terminalElement)
+          break
         case OutputType.error:
           element.innerHTML = `⚠️ ${payload.output}`
           break
