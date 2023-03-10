@@ -61,6 +61,7 @@ export class RunmeExtension {
       kernel,
       serializer,
       server,
+      treeViewer,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata: {
