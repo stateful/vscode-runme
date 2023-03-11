@@ -56,7 +56,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.terminal:
           const terminalElement = document.createElement('terminal-view')
-          terminalElement.setAttribute('input', payload.output.input)
+          terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           element.appendChild(terminalElement)
           break
         case OutputType.error:

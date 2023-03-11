@@ -142,12 +142,12 @@ export class DenoOutput extends LitElement {
 
       switch (e.type) {
         case ClientMessages.deployed: {
-          const payload = e.output as ClientMessage<ClientMessages.deployed>['output']
+          const payload = e.output
           this.#promoted = payload
           break
         }
         case ClientMessages.update: {
-          const payload = e.output as ClientMessage<ClientMessages.update>['output']
+          const payload = e.output
           this.deployed = Boolean(payload.deployed)
           this.project = payload.project
           this.deployments = payload.deployments

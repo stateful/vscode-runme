@@ -19,7 +19,10 @@ export enum ClientMessages {
   deployed = 'deno:finishedDeployment',
   promote = 'deno:promoteDeployment',
   prod = 'vercel:promotePreview',
-  mutateAnnotations = 'annotations:mutate'
+  mutateAnnotations = 'annotations:mutate',
+  terminalStdout = 'terminal:stdout',
+  terminalStderr = 'terminal:stderr',
+  terminalStdin = 'terminal:stdin'
 }
 
 // [pretty print, languageId, destination]

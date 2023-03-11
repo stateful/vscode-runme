@@ -11,14 +11,16 @@ import {
   tasks,
   NotebookCellExecution,
   TextDocument,
-  ExtensionContext
+  ExtensionContext,
+  NotebookRendererMessaging
 } from 'vscode'
 
-import { OutputType } from '../../constants'
-import { CellOutputPayload } from '../../types'
+import { ClientMessages, OutputType } from '../../constants'
+import { CellOutputPayload, ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
+import { postClientMessage } from '../../utils/messaging'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -35,6 +37,8 @@ export async function executeRunner(
   runner: IRunner,
   exec: NotebookCellExecution,
   runningCell: TextDocument,
+  messaging: NotebookRendererMessaging,
+  cellUUID: string,
   execKey: 'bash'|'sh',
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
@@ -87,6 +91,28 @@ export async function executeRunner(
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
     tty: interactive
+  })
+
+  program.onDidWrite((data) => postClientMessage(messaging, ClientMessages.terminalStdout, {
+    'runme.dev/uuid': cellUUID,
+    data
+  }))
+
+  program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
+    'runme.dev/uuid': cellUUID,
+    data
+  }))
+
+  messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
+    const { type, output } = message
+
+    if (type !== ClientMessages.terminalStdin) { return }
+
+    const { 'runme.dev/uuid': uuid, input } = output
+
+    if (uuid !== cellUUID) { return }
+
+    program.handleInput(input)
   })
 
   if(!interactive) {
@@ -143,8 +169,8 @@ export async function executeRunner(
 
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
-      focus: true,
-      reveal: background ? TaskRevealKind.Never : TaskRevealKind.Always,
+      focus: false,
+      reveal: TaskRevealKind.Never,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
@@ -153,6 +179,20 @@ export async function executeRunner(
     context.subscriptions.push({
       dispose: () => execution.terminate()
     })
+
+    const json: CellOutputPayload<OutputType.terminal> = {
+      type: OutputType.terminal,
+      output: {
+        'runme.dev/uuid': cellUUID
+      },
+    }
+
+    await replaceOutput(exec, [
+      new NotebookCellOutput([
+        NotebookCellOutputItem.json(json, OutputType.terminal),
+        NotebookCellOutputItem.json(json),
+      ]),
+    ])
 
     exec.token.onCancellationRequested(() => {
       try {

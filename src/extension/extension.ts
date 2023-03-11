@@ -11,7 +11,6 @@ import { getDefaultWorkspace, resetEnv } from './utils'
 import { CliProvider } from './provider/cli'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
-import { TerminalViewProvider } from './provider/terminalView'
 import {
   openTerminal,
   runCLICommand,
@@ -76,7 +75,7 @@ export class RunmeExtension {
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new StopBackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
+      // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal),
