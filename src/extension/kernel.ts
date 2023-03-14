@@ -33,7 +33,7 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType, XTermState } from './terminal/terminalState'
-import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './notebook'
+import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
 
 enum ConfirmationItems {
   Yes = 'Yes',
