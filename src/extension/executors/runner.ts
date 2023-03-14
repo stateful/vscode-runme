@@ -11,7 +11,8 @@ import {
   tasks,
   NotebookCellExecution,
   TextDocument,
-  ExtensionContext
+  ExtensionContext,
+  Disposable,
 } from 'vscode'
 
 import { OutputType } from '../../constants'
@@ -89,6 +90,8 @@ export async function executeRunner(
     tty: interactive
   })
 
+  const disposables: Disposable[] = [ program ]
+
   if(!interactive) {
     const output: Buffer[] = []
 
@@ -125,9 +128,7 @@ export async function executeRunner(
       program.close()
     })
 
-    context.subscriptions.push({
-      dispose: () => program.close()
-    })
+    disposables.push({ dispose: () => program.close() })
 
     await program.run()
   } else {
@@ -150,17 +151,13 @@ export async function executeRunner(
 
     const execution = await tasks.executeTask(taskExecution)
 
-    context.subscriptions.push({
-      dispose: () => execution.terminate()
-    })
+    disposables.push({ dispose: () => execution.terminate() })
 
     exec.token.onCancellationRequested(() => {
       try {
         // runs `program.close()` implicitly
         execution.terminate()
-        closeTerminalByEnvID(RUNME_ID)
       } catch (err: any) {
-        // console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
         throw new Error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
       }
     })
@@ -193,19 +190,35 @@ export async function executeRunner(
     })
   }
 
-  return await new Promise<boolean>((resolve) => {
+  const dispose: Disposable = { dispose() { disposables.forEach(d => d.dispose()) }, }
+  context.subscriptions.push(dispose)
+
+  return await new Promise<boolean>((resolve, reject) => {
     program.onDidClose((code) => {
       resolve(code === 0)
     })
 
     program.onInternalErr((e) => {
-      console.error('Internal failure executing runner', e)
-      resolve(false)
+      reject(e)
     })
 
-    if(program.hasExited()) {
-      // unexpected early return, likely an error
-      resolve(false)
+    const exitReason = program.hasExited()
+
+    // unexpected early return, likely an error
+    if(exitReason) {
+      switch(exitReason.type) {
+        case 'error': {
+          reject(exitReason.error)
+        } break
+
+        case 'exit': {
+          resolve(exitReason.code === 0)
+        } break
+
+        default: {
+          resolve(false)
+        }
+      }
     }
 
     if(background && interactive) {
@@ -217,6 +230,6 @@ export async function executeRunner(
         BACKGROUND_TASK_HIDE_TIMEOUT
       )
     }
-  })
+  }).finally(() => { dispose.dispose() })
 }
 

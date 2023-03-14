@@ -267,7 +267,7 @@ export class Kernel implements Disposable {
       this.runner &&
       !(hasPsuedoTerminalExperimentEnabled && terminal)
     ) {
-      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
+      const runScript = async (execKey: 'sh'|'bash' = 'bash') => await executeRunner(
         this.context,
         this.runner!,
         exec,
@@ -277,7 +277,8 @@ export class Kernel implements Disposable {
         environmentManager
       )
         .catch((e) => {
-          console.error(e)
+          window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
+          console.error('[Runme] Internal failure executing runner', e.message)
           return false
         })
 
@@ -323,17 +324,22 @@ export class Kernel implements Disposable {
     if(this.#experiments.get('grpcRunner') && runner) {
       this.runner = runner
 
-      this.runnerReadyListener = runner.onReady(() => {
+      this.runnerReadyListener = runner.onReady(async () => {
         this.environment = undefined
 
-        runner.createEnvironment(
-          // copy env from process naively for now
-          // later we might want a more sophisticated approach/to bring this serverside
-          Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
-        ).then(env => {
+        try {
+          const env = await runner.createEnvironment(
+            // copy env from process naively for now
+            // later we might want a more sophisticated approach/to bring this serverside
+            Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+          )
+
           if(this.runner !== runner) { return }
           this.environment = env
-        })
+        } catch(e: any) {
+          window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
+          console.error('[Runme] Failed to create gRPC Runner environment', e)
+        }
       })
     }
   }
