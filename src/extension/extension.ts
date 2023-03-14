@@ -48,7 +48,9 @@ export class RunmeExtension {
       kernel.useRunner(runner)
     }
 
-    const serializer = grpcSerializer ? new GrpcSerializer(context, server) : new WasmSerializer(context)
+    const serializer = grpcSerializer ?
+      new GrpcSerializer(context, server, kernel) :
+      new WasmSerializer(context, kernel)
 
     /**
      * Start the Runme server

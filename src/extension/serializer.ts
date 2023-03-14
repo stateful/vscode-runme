@@ -25,6 +25,7 @@ import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { canEditFile, initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
+import { Kernel } from './kernel'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -36,7 +37,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
 
-  constructor(protected context: ExtensionContext) {
+  constructor(
+    protected context: ExtensionContext,
+    protected kernel: Kernel
+  ) {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
       workspace.onDidChangeNotebookDocument(
@@ -56,6 +60,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
     changes.contentChanges.forEach((contentChanges) => {
       contentChanges.addedCells.forEach((cellAdded) => {
+        this.kernel.registerNotebookCell(cellAdded)
+
         if (
           cellAdded.kind !== NotebookCellKind.Code ||
           cellAdded.metadata['runme.dev/uuid'] !== undefined
@@ -245,8 +251,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 export class WasmSerializer extends SerializerBase {
   protected readonly ready: ReadyPromise
 
-  constructor(protected context: ExtensionContext) {
-    super(context)
+  constructor(protected context: ExtensionContext, kernel: Kernel) {
+    super(context, kernel)
     const wasmUri = Uri.joinPath(
       this.context.extensionUri,
       'wasm',
@@ -295,8 +301,9 @@ export class GrpcSerializer extends SerializerBase {
   constructor(
     protected context: ExtensionContext,
     protected server: RunmeServer,
+    kernel: Kernel
   ) {
-    super(context)
+    super(context, kernel)
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {

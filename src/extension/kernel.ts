@@ -7,7 +7,6 @@ import {
   NotebookEditor,
   NotebookCell,
   NotebookCellKind,
-  NotebookCellExecution,
   WorkspaceEdit,
   NotebookEdit,
   NotebookDocument,
@@ -34,6 +33,7 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType, XTermState } from './terminal/terminalState'
+import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './notebook'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -60,6 +60,7 @@ export class Kernel implements Disposable {
   protected runnerReadyListener?: Disposable
 
   protected cellTerminalState = new WeakMap<NotebookCell, ITerminalState>()
+  protected cellManager = new NotebookCellManager(this.#controller)
 
   constructor(
     protected context: ExtensionContext,
@@ -81,6 +82,10 @@ export class Kernel implements Disposable {
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
     )
+  }
+
+  registerNotebookCell(cell: NotebookCell) {
+    this.cellManager.registerCell(cell)
   }
 
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
@@ -154,10 +159,11 @@ export class Kernel implements Disposable {
   }
 
 
-  async #handleOpenNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+  async #handleOpenNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
     }
+    getCells().forEach(cell => this.registerNotebookCell(cell))
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -312,13 +318,19 @@ export class Kernel implements Disposable {
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
-    return this.#controller.createNotebookCellExecution(cell)
+  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution> {
+    return await this.cellManager.createNotebookCellExecution(cell)
+    // return this.#controller.createNotebookCellExecution(cell)
+  }
+
+  public async getCellOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
+    return await this.cellManager.getNotebookOutputs(cell)
   }
 
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
-    const runningCell = cell.document
-    const exec = await this.createCellExecution(cell)
+    const runningCell = await workspace.openTextDocument(cell.document.uri)
+    const runmeExec = await this.createCellExecution(cell)
+    const exec = runmeExec.underlyingExecution
 
     const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']
 
@@ -327,7 +339,7 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    exec.start(Date.now())
+    runmeExec.start(Date.now())
     let execKey = getKey(runningCell)
 
     let successfulCellExecution: boolean
@@ -340,7 +352,9 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = async (execKey: 'sh' | 'bash' = 'bash') => await executeRunner(
+      const outputs = await this.getCellOutputs(cell)
+
+      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
         this,
         this.context,
         this.runner!,
@@ -349,6 +363,7 @@ export class Kernel implements Disposable {
         this.messaging,
         uuid,
         execKey,
+        outputs,
         this.environment,
         environmentManager
       )
@@ -372,7 +387,7 @@ export class Kernel implements Disposable {
       successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
-    exec.end(successfulCellExecution)
+    runmeExec.end(successfulCellExecution)
   }
 
   useRunner(runner: IRunner) {

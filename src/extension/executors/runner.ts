@@ -22,10 +22,11 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
+import { isNotebookTerminalEnabledForCell, isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 import { openTerminal } from '../commands'
+import { NotebookCellOutputManager } from '../notebook'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -251,6 +252,8 @@ export async function executeRunner(
       program.close()
     })
   } else {
+    outputs.replaceOutputs([ ])
+
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,

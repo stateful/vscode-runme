@@ -2,19 +2,19 @@ import {
   commands,
   window,
   NotebookCell,
-  NotebookCellOutput,
-  NotebookCellOutputItem,
+  // NotebookCellOutput,
+  // NotebookCellOutputItem,
   NotebookCellStatusBarItemProvider,
   NotebookCellStatusBarItem,
   NotebookCellStatusBarAlignment,
   NotebookCellKind,
 } from 'vscode'
 
-import { OutputType } from '../../constants'
-import { CellOutputPayload } from '../../types'
+// import { OutputType } from '../../constants'
+// import { CellOutputPayload } from '../../types'
 import { RunmeExtension } from '../extension'
 import { Kernel } from '../kernel'
-import { getAnnotations, replaceOutput, validateAnnotations } from '../utils'
+// import { getAnnotations, replaceOutput, validateAnnotations } from '../utils'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -49,41 +49,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   }
 
   public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
-    const annotationsExists = cell.outputs.find((o) =>
-      o.items.find((oi) => oi.mime === OutputType.annotations)
-    )
-
-    let exec
-    try {
-      exec = await this.kernel.createCellExecution(cell)
-      exec.start(Date.now())
-
-      if (annotationsExists) {
-        exec.clearOutput()
-        return
-      }
-
-      const json = <CellOutputPayload<OutputType.annotations>>{
-        type: OutputType.annotations,
-        output: {
-          annotations: getAnnotations(cell),
-          validationErrors: validateAnnotations(cell)
-        },
-      }
-      await replaceOutput(exec, [
-        new NotebookCellOutput([
-          NotebookCellOutputItem.json(json, OutputType.annotations),
-          NotebookCellOutputItem.json(json),
-        ]),
-      ])
-    } catch (e: any) {
-      if (e.message.toString().includes('controller is NOT associated')) {
-        return this.handleNotebookKernelSelection()
-      }
-      window.showErrorMessage(e.message)
-    } finally {
-      exec?.end(true)
-    }
+    await (await this.kernel.getCellOutputs(cell)).toggleAnnotations()
   }
 
   async provideCellStatusBarItems(
