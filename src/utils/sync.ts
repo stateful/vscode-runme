@@ -1,11 +1,8 @@
 /* Mutex provides mutex feature by building a promise chain.
   const m = new Mutex();
-  const unlock = await m.lock();
-  try {
-	  // critical section
-  } finally {
-	  unlock();
-  }
+  await m.withLock(async () => {
+    // critical section
+  })
 
   https://github.com/golang/vscode-go/blob/fa820d45d7b9217e949c21ffd13268e20c7e0ee4/src/utils/mutex.ts#L8
 */
