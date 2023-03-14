@@ -6,6 +6,8 @@
   } finally {
 	  unlock();
   }
+
+  https://github.com/golang/vscode-go/blob/fa820d45d7b9217e949c21ffd13268e20c7e0ee4/src/utils/mutex.ts#L8
 */
 export class Mutex {
 	private mutex = Promise.resolve()
