@@ -278,7 +278,7 @@ export class Kernel implements Disposable {
       )
         .catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
-          console.error('Internal failure executing runner', e.message)
+          console.error('[Runme] Internal failure executing runner', e.message)
           return false
         })
 
