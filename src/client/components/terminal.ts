@@ -1,4 +1,4 @@
-import { LitElement, css, html, PropertyValues } from 'lit'
+import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
@@ -6,9 +6,48 @@ import { ITheme, Terminal as XTermJS } from 'xterm'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
+
+
+const vscodeCSS = (...identifiers: string[]) => `var(--vscode-${identifiers.join('-')})`
+const terminalCSS = (id: string) => vscodeCSS('terminal', id)
+const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
+
+const ansiColors = [
+  'black',
+  'red',
+  'green',
+  'yellow',
+  'blue',
+  'magenta',
+  'cyan',
+  'white',
+
+  'brightBlack',
+  'brightRed',
+  'brightGreen',
+  'brightYellow',
+  'brightBlue',
+  'brightMagenta',
+  'brightCyan',
+  'brightWhite',
+]satisfies (keyof ITheme)[]
+
 @customElement('terminal-view')
 export class TerminalView extends LitElement {
   static styles = css`
+  ${unsafeCSS(
+    ansiColors.map((v, i) => `
+      .xterm-fg-${i} {
+        color: ${terminalCSS(toAnsi(v))} !important;
+      }
+
+      .xterm-bg-${i} {
+        background-color: ${terminalCSS(toAnsi(v))} !important;
+      }
+      `.trim()).join('\n\n')
+  )
+    }
+
     .xterm {
       cursor: text;
       position: relative;
@@ -254,8 +293,12 @@ export class TerminalView extends LitElement {
       cursorAccent: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
       selectionForeground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
       selectionInactiveBackground: this.#getThemeHexColor('--vscode-editor-inactiveSelectionBackground)'),
-    }
+      ...(Object.fromEntries(
+        ansiColors.map(k => [k, terminalCSS(`ansi${k.charAt(0).toUpperCase() + k.slice(1)}`)] as const)
+      ) as Record<keyof typeof ansiColors, string>),
 
+    }
+    
     this.terminal!.options.theme = terminalTheme
   }
 
