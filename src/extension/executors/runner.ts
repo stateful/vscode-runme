@@ -117,9 +117,9 @@ export async function executeRunner(
     program.handleInput(input)
   })
 
-  
+  const useIntegrated = isRunmeIntegratedTerminalEnabled()
 
-  if (!interactive || !isRunmeIntegratedTerminalEnabled()) {
+  if (!interactive) {
     const output: Buffer[] = []
 
     const mime = mimeType || 'text/plain' as const
@@ -173,8 +173,8 @@ export async function executeRunner(
 
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
-      focus: false,
-      reveal: TaskRevealKind.Never,
+      focus: useIntegrated ? false : true,
+      reveal: useIntegrated ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
@@ -184,24 +184,26 @@ export async function executeRunner(
       dispose: () => execution.terminate()
     })
 
-    const editorSettings = workspace.getConfiguration('editor')
-    const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
-    const fontSize = editorSettings.get<number>('fontSize', 10)
+    if (useIntegrated) {
+      const editorSettings = workspace.getConfiguration('editor')
+      const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
+      const fontSize = editorSettings.get<number>('fontSize', 10)
 
-    const json: CellOutputPayload<OutputType.terminal> = {
-      type: OutputType.terminal,
-      output: {
-        'runme.dev/uuid': cellUUID,
-        terminalFontFamily: fontFamily,
-        terminalFontSize: fontSize,
-      },
+      const json: CellOutputPayload<OutputType.terminal> = {
+        type: OutputType.terminal,
+        output: {
+          'runme.dev/uuid': cellUUID,
+          terminalFontFamily: fontFamily,
+          terminalFontSize: fontSize,
+        },
+      }
+
+      await replaceOutput(exec, [
+        new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.terminal),
+        ]),
+      ])
     }
-
-    await replaceOutput(exec, [
-      new NotebookCellOutput([
-        NotebookCellOutputItem.json(json, OutputType.terminal),
-      ]),
-    ])
 
     exec.token.onCancellationRequested(() => {
       try {
