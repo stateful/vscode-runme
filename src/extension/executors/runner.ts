@@ -12,7 +12,8 @@ import {
   NotebookCellExecution,
   TextDocument,
   ExtensionContext,
-  NotebookRendererMessaging
+  NotebookRendererMessaging,
+  workspace
 } from 'vscode'
 
 import { ClientMessages, OutputType } from '../../constants'
@@ -39,7 +40,7 @@ export async function executeRunner(
   runningCell: TextDocument,
   messaging: NotebookRendererMessaging,
   cellUUID: string,
-  execKey: 'bash'|'sh',
+  execKey: 'bash' | 'sh',
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
@@ -54,7 +55,7 @@ export async function executeRunner(
   }
 
   const commands = await parseCommandSeq(cellText)
-  if(!commands) { return false }
+  if (!commands) { return false }
 
   if (commands.length === 0) {
     commands.push('')
@@ -75,7 +76,7 @@ export async function executeRunner(
   if (isVercel) {
     const cmdParts = [script]
 
-    if(vercelProd) {
+    if (vercelProd) {
       cmdParts.push('--prod')
     }
 
@@ -115,7 +116,7 @@ export async function executeRunner(
     program.handleInput(input)
   })
 
-  if(!interactive) {
+  if (!interactive) {
     const output: Buffer[] = []
 
     const mime = mimeType || 'text/plain' as const
@@ -141,7 +142,7 @@ export async function executeRunner(
         }, OutputType.outputItems)
       }
 
-      replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
+      replaceOutput(exec, [new NotebookCellOutput([item])])
     }
 
     program.onStdoutRaw(handleOutput)
@@ -180,17 +181,20 @@ export async function executeRunner(
       dispose: () => execution.terminate()
     })
 
+    const fontFamilySettings = workspace.getConfiguration('editor')
+    const fontFamily = fontFamilySettings.get<string>('fontFamily', 'Arial')
+
     const json: CellOutputPayload<OutputType.terminal> = {
       type: OutputType.terminal,
       output: {
-        'runme.dev/uuid': cellUUID
+        'runme.dev/uuid': cellUUID,
+        terminalFontFamily: fontFamily
       },
     }
 
     await replaceOutput(exec, [
       new NotebookCellOutput([
         NotebookCellOutputItem.json(json, OutputType.terminal),
-        NotebookCellOutputItem.json(json),
       ]),
     ])
 
@@ -243,12 +247,12 @@ export async function executeRunner(
       resolve(false)
     })
 
-    if(program.hasExited()) {
+    if (program.hasExited()) {
       // unexpected early return, likely an error
       resolve(false)
     }
 
-    if(background && interactive) {
+    if (background && interactive) {
       setTimeout(
         () => {
           closeTerminalByEnvID(RUNME_ID)

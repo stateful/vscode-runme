@@ -72,6 +72,7 @@ interface Payload {
   }
   [OutputType.terminal]: {
     ['runme.dev/uuid']: string
+    terminalFontFamily: string
   }
 }
 

@@ -1,4 +1,4 @@
-import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
+import { LitElement, css, html, PropertyValues } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
@@ -6,65 +6,9 @@ import { ITheme, Terminal as XTermJS } from 'xterm'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
-
-const vscodeCSS = (...identifiers: string[]) => `var(--vscode-${identifiers.join('-')})`
-const terminalCSS = (id: string) => vscodeCSS('terminal', id)
-const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
-
-const ansiColors = [
-  'black',
-  'red',
-  'green',
-  'yellow',
-  'blue',
-  'magenta',
-  'cyan',
-  'white',
-
-  'brightBlack',
-  'brightRed',
-  'brightGreen',
-  'brightYellow',
-  'brightBlue',
-  'brightMagenta',
-  'brightCyan',
-  'brightWhite',
-] satisfies (keyof ITheme)[]
-
-const xtermjsThemeVscode: ITheme = {
-  background: terminalCSS('background'),
-  foreground: terminalCSS('foreground'),
-
-  ...(Object.fromEntries(
-    ansiColors.map(k => [k, terminalCSS(`ansi${k.charAt(0).toUpperCase() + k.slice(1)}`)] as const)
-  ) as Record<keyof typeof ansiColors, string>),
-
-  cursor: vscodeCSS('terminalCursor', 'foreground'),
-  cursorAccent: vscodeCSS('terminalCursor', 'background'),
-
-  selectionBackground: terminalCSS('selectionBackground'),
-  selectionForeground: terminalCSS('selectionForeground'),
-  selectionInactiveBackground: terminalCSS('inactiveSelectionBackground'),
-}
-
 @customElement('terminal-view')
 export class TerminalView extends LitElement {
-  // TODO: use `var(--vscode-terminal-border)` for terminal border
   static styles = css`
-    ${
-      unsafeCSS(
-        ansiColors.map((v, i) => `
-        .xterm-fg-${i} {
-          color: ${terminalCSS(toAnsi(v))} !important;
-        }
-
-        .xterm-bg-${i} {
-          background-color: ${terminalCSS(toAnsi(v))} !important;
-        }
-        `.trim()).join('\n\n')
-      )
-    }
-
     .xterm {
       cursor: text;
       position: relative;
@@ -108,7 +52,6 @@ export class TerminalView extends LitElement {
     }
 
     .xterm .composition-view {
-        background: #000;
         color: #FFF;
         display: none;
         position: absolute;
@@ -121,11 +64,7 @@ export class TerminalView extends LitElement {
     }
 
     .xterm .xterm-viewport {
-        color: ${unsafeCSS(terminalCSS('foreground'))} !important;
-        background-color: ${unsafeCSS(terminalCSS('background'))} !important;
-
-        border: 1px solid ${unsafeCSS(terminalCSS('border'))};
-
+        border: solid 1px var(--vscode-terminal-border);
         /* On OS X this is required in order for the scroll bar to appear fully opaque */
         overflow-y: scroll;
         cursor: default;
@@ -231,6 +170,9 @@ export class TerminalView extends LitElement {
   @property({ type: String })
   uuid?: string
 
+  @property({ type: String })
+  terminalFontFamily?: string
+
   #dispatch() {
     const ctx = getContext()
     if (!ctx.postMessage) {
@@ -241,21 +183,17 @@ export class TerminalView extends LitElement {
   connectedCallback(): void {
     super.connectedCallback()
 
-    if(!this.uuid) {
+    if (!this.uuid) {
       throw new Error('No uuid provided to terminal!')
     }
 
-    console.log(xtermjsThemeVscode)
-
     this.terminal = new XTermJS({
       rows: 10,
-      // cols: 20,
       cursorBlink: true,
-      cursorStyle: 'bar',
+      cursorStyle: 'block',
       disableStdin: false,
       allowProposedApi: true,
-      theme: xtermjsThemeVscode,
-      fontFamily: '"Fira Code", courier-new, courier, monospace, "Powerline Extra Symbols"',
+      fontFamily: this.terminalFontFamily,
     })
 
     const ctx = getContext()
@@ -269,11 +207,8 @@ export class TerminalView extends LitElement {
           case ClientMessages.terminalStderr: {
             const { 'runme.dev/uuid': uuid, data } = e.output
 
-            // console.log({ uuid, cellUUID: this.uuid, eq: uuid === this.uuid })
             if (uuid !== this.uuid) { return }
 
-            // eslint-disable-next-line max-len
-            // console.log({ type: e.type, against: ClientMessages.terminalStdout, eq: e.type === ClientMessages.terminalStdout })
             if (e.type === ClientMessages.terminalStdout) {
               this.terminal!.write(data)
             }
@@ -297,9 +232,26 @@ export class TerminalView extends LitElement {
     const terminalContainer = this.shadowRoot?.querySelector('#terminal')
 
     if (terminalContainer) {
-      this.terminal!.focus()
+      const terminalTheme: ITheme = {
+        foreground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
+        background: this.#getThemeHexColor('--vscode-editor-background'),
+        selectionBackground: this.#getThemeHexColor('--vscode-editor-selectionBackground'),
+        cursor: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
+        cursorAccent: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
+        selectionForeground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
+        selectionInactiveBackground: this.#getThemeHexColor('--vscode-editor-inactiveSelectionBackground)'),
+      }
+
       this.terminal!.open(terminalContainer as HTMLElement)
+      this.terminal!.options.theme = terminalTheme
+      this.terminal!.focus()
     }
+  }
+
+
+  #getThemeHexColor(variableName: string): string | undefined {
+    const terminalContainer = this.shadowRoot?.querySelector('#terminal')
+    return getComputedStyle(terminalContainer!).getPropertyValue(variableName)
   }
 
   // Render the UI as a function of component state
