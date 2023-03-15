@@ -8,7 +8,7 @@ import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 
 
-const vscodeCSS = (...identifiers: string[]) => `var(--vscode-${identifiers.join('-')})`
+const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
 
@@ -35,19 +35,6 @@ const ansiColors = [
 @customElement('terminal-view')
 export class TerminalView extends LitElement {
   static styles = css`
-  ${unsafeCSS(
-    ansiColors.map((v, i) => `
-      .xterm-fg-${i} {
-        color: ${terminalCSS(toAnsi(v))} !important;
-      }
-
-      .xterm-bg-${i} {
-        background-color: ${terminalCSS(toAnsi(v))} !important;
-      }
-      `.trim()).join('\n\n')
-  )
-    }
-
     .xterm {
       cursor: text;
       position: relative;
@@ -103,6 +90,7 @@ export class TerminalView extends LitElement {
     }
 
     .xterm .xterm-viewport {
+        background-color: var(${unsafeCSS(terminalCSS('background'))}) !important;
         border: solid 1px var(--vscode-terminal-border);
         /* On OS X this is required in order for the scroll bar to appear fully opaque */
         overflow-y: scroll;
@@ -286,26 +274,27 @@ export class TerminalView extends LitElement {
 
   #updateTerminalTheme(): void {
     const terminalTheme: ITheme = {
-      foreground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
-      background: this.#getThemeHexColor('--vscode-editor-background'),
-      selectionBackground: this.#getThemeHexColor('--vscode-editor-selectionBackground'),
-      cursor: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
-      cursorAccent: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
-      selectionForeground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
-      selectionInactiveBackground: this.#getThemeHexColor('--vscode-editor-inactiveSelectionBackground)'),
-      ...(Object.fromEntries(
-        ansiColors.map(k => [k, terminalCSS(`ansi${k.charAt(0).toUpperCase() + k.slice(1)}`)] as const)
-      ) as Record<keyof typeof ansiColors, string>),
+      foreground: this.#getThemeHexColor(terminalCSS('foreground')),
 
+      cursor: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'foreground')),
+      cursorAccent: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'background')),
+
+      selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
+      selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
+      selectionInactiveBackground: this.#getThemeHexColor(terminalCSS('inactiveSelectionBackground')),
+
+      ...(Object.fromEntries(
+        ansiColors.map(k => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
+      )),
     }
-    
+
     this.terminal!.options.theme = terminalTheme
   }
 
 
   #getThemeHexColor(variableName: string): string | undefined {
     const terminalContainer = this.shadowRoot?.querySelector('#terminal')
-    return getComputedStyle(terminalContainer!).getPropertyValue(variableName)
+    return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
   }
 
   // Render the UI as a function of component state
