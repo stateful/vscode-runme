@@ -22,6 +22,7 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
+import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -116,7 +117,9 @@ export async function executeRunner(
     program.handleInput(input)
   })
 
-  if (!interactive) {
+  
+
+  if (!interactive || !isRunmeIntegratedTerminalEnabled()) {
     const output: Buffer[] = []
 
     const mime = mimeType || 'text/plain' as const

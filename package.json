@@ -285,7 +285,7 @@
           "runme.terminal.enabled": {
             "type": "boolean",
             "scope": "machine",
-            "default": "false",
+            "default": false,
             "markdownDescription": "Enable Runme integrated terminal (Experimental)"
           }
         }

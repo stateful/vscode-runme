@@ -211,6 +211,12 @@ export class TerminalView extends LitElement {
   @property({ type: Number })
   terminalFontSize?: number
 
+  @property({ type: String })
+  initialContent?: string
+
+  @property({ type: Number })
+  lastLine?: number // TODO: Get the last line of the terminal and store it.
+
   constructor() {
     super()
     this.windowSize = {
@@ -242,14 +248,7 @@ export class TerminalView extends LitElement {
 
     const ctx = getContext()
 
-    window.addEventListener('resize', () => {
-      const { innerWidth } = window
-      // Prevent adjusting the terminal size if the width remains the same
-      if (this.windowSize.width !== innerWidth) {
-        this.windowSize.width = innerWidth
-        this.fitAddon?.fit()
-      }
-    })
+    window.addEventListener('resize', this.#onResizeWindow)
 
     this.disposables.push(
       onClientMessage(ctx, (e) => {
@@ -279,7 +278,9 @@ export class TerminalView extends LitElement {
   }
 
   disconnectedCallback(): void {
+    super.disconnectedCallback()
     this.dispose()
+    window.removeEventListener('resize', this.#onResizeWindow)
   }
 
   protected firstUpdated(props: PropertyValues): void {
@@ -289,6 +290,14 @@ export class TerminalView extends LitElement {
     this.terminal!.focus()
     this.fitAddon?.fit()
     this.#updateTerminalTheme()
+
+    if (this.initialContent) {
+      this.terminal?.write(this.initialContent)
+    }
+
+    if (this.lastLine) {
+      this.terminal!.scrollToLine(this.lastLine)
+    }
   }
 
   #getTerminalElement(): Element {
@@ -319,6 +328,15 @@ export class TerminalView extends LitElement {
     return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
   }
 
+  #onResizeWindow(): void {
+    const { innerWidth } = window
+    // Prevent adjusting the terminal size if the width remains the same
+    if (this.windowSize.width !== innerWidth) {
+      this.windowSize.width = innerWidth
+      this.fitAddon?.fit()
+    }
+  }
+
   // Render the UI as a function of component state
   render() {
     return html`<div id="terminal"></div>`
@@ -327,4 +345,5 @@ export class TerminalView extends LitElement {
   dispose() {
     this.disposables.forEach(({ dispose }) => dispose())
   }
+
 }
