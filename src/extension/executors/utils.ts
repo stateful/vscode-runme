@@ -7,7 +7,7 @@ import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, wind
 import { ENV_STORE } from '../constants'
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
-import { replaceOutput, getCmdSeq } from '../utils'
+import { replaceOutput } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -191,7 +191,8 @@ export function getShellPath(execKey?: string): string|undefined {
  * Returns `undefined` when a user cancels on prompt
  */
 export async function parseCommandSeq(
-  cellText: string
+  cellText: string,
+  parseBlock?: (block: string) => string[]
 ): Promise<string[]|undefined> {
   const exportMatches = getCommandExportExtractMatches(cellText)
 
@@ -243,7 +244,7 @@ export async function parseCommandSeq(
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
   return parsedCommandBlocks
-    .flatMap(({ type, content }) => type === 'block' ? getCmdSeq(content) : [content])
+    .flatMap(({ type, content }) => type === 'block' && parseBlock?.(content) || [content])
 }
 
 export function isWindows(): boolean {
