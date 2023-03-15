@@ -22,7 +22,8 @@ export enum ClientMessages {
   mutateAnnotations = 'annotations:mutate',
   terminalStdout = 'terminal:stdout',
   terminalStderr = 'terminal:stderr',
-  terminalStdin = 'terminal:stdin'
+  terminalStdin = 'terminal:stdin',
+  activeThemeChanged = 'theme:changed'
 }
 
 // [pretty print, languageId, destination]

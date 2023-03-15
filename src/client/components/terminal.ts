@@ -20,7 +20,7 @@ export class TerminalView extends LitElement {
 
     .xterm.focus,
     .xterm:focus {
-        outline: none;
+        border: solid 1px var(--vscode-focusBorder);
     }
 
     .xterm .xterm-helpers {
@@ -173,6 +173,9 @@ export class TerminalView extends LitElement {
   @property({ type: String })
   terminalFontFamily?: string
 
+  @property({ type: Number })
+  terminalFontSize?: number
+
   #dispatch() {
     const ctx = getContext()
     if (!ctx.postMessage) {
@@ -190,7 +193,8 @@ export class TerminalView extends LitElement {
     this.terminal = new XTermJS({
       rows: 10,
       cursorBlink: true,
-      cursorStyle: 'block',
+      fontSize: this.terminalFontSize,
+      cursorStyle: 'bar',
       disableStdin: false,
       allowProposedApi: true,
       fontFamily: this.terminalFontFamily,
@@ -200,9 +204,12 @@ export class TerminalView extends LitElement {
 
     this.disposables.push(
       onClientMessage(ctx, (e) => {
-        if (!e.type.startsWith('terminal:')) { return }
+        if (!(e.type.startsWith('terminal:') || e.type.startsWith('theme:'))) { return }
 
         switch (e.type) {
+          case ClientMessages.activeThemeChanged:
+            this.#updateTerminalTheme()
+            break
           case ClientMessages.terminalStdout:
           case ClientMessages.terminalStderr: {
             const { 'runme.dev/uuid': uuid, data } = e.output
@@ -228,24 +235,28 @@ export class TerminalView extends LitElement {
 
   protected firstUpdated(props: PropertyValues): void {
     super.firstUpdated(props)
+    const terminalContainer = this.#getTerminalElement()
+    this.terminal!.open(terminalContainer as HTMLElement)
+    this.terminal!.focus()
+    this.#updateTerminalTheme()
+  }
 
-    const terminalContainer = this.shadowRoot?.querySelector('#terminal')
+  #getTerminalElement(): Element {
+    return this.shadowRoot?.querySelector('#terminal')!
+  }
 
-    if (terminalContainer) {
-      const terminalTheme: ITheme = {
-        foreground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
-        background: this.#getThemeHexColor('--vscode-editor-background'),
-        selectionBackground: this.#getThemeHexColor('--vscode-editor-selectionBackground'),
-        cursor: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
-        cursorAccent: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
-        selectionForeground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
-        selectionInactiveBackground: this.#getThemeHexColor('--vscode-editor-inactiveSelectionBackground)'),
-      }
-
-      this.terminal!.open(terminalContainer as HTMLElement)
-      this.terminal!.options.theme = terminalTheme
-      this.terminal!.focus()
+  #updateTerminalTheme(): void {
+    const terminalTheme: ITheme = {
+      foreground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
+      background: this.#getThemeHexColor('--vscode-editor-background'),
+      selectionBackground: this.#getThemeHexColor('--vscode-editor-selectionBackground'),
+      cursor: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
+      cursorAccent: this.#getThemeHexColor('--vscode-editorCursor-foreground'),
+      selectionForeground: this.#getThemeHexColor('--vscode-commandCenter-activeForeground'),
+      selectionInactiveBackground: this.#getThemeHexColor('--vscode-editor-inactiveSelectionBackground)'),
     }
+
+    this.terminal!.options.theme = terminalTheme
   }
 
 

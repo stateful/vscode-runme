@@ -181,14 +181,16 @@ export async function executeRunner(
       dispose: () => execution.terminate()
     })
 
-    const fontFamilySettings = workspace.getConfiguration('editor')
-    const fontFamily = fontFamilySettings.get<string>('fontFamily', 'Arial')
+    const editorSettings = workspace.getConfiguration('editor')
+    const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
+    const fontSize = editorSettings.get<number>('fontSize', 10)
 
     const json: CellOutputPayload<OutputType.terminal> = {
       type: OutputType.terminal,
       output: {
         'runme.dev/uuid': cellUUID,
-        terminalFontFamily: fontFamily
+        terminalFontFamily: fontFamily,
+        terminalFontSize: fontSize,
       },
     }
 

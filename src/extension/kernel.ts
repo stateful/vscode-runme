@@ -69,7 +69,8 @@ export class Kernel implements Disposable {
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
-      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this))
+      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
+      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
     )
   }
 
@@ -247,6 +248,12 @@ export class Kernel implements Disposable {
     TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
       'cells.total': totalNotebookCells?.toString(),
       'cells.executed': cellsExecuted?.toString(),
+    })
+  }
+
+  #handleActiveColorThemeMessage(): void {
+    this.messaging.postMessage(<ClientMessage<ClientMessages.activeThemeChanged>>{
+      type: ClientMessages.activeThemeChanged,
     })
   }
 

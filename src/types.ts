@@ -73,6 +73,7 @@ interface Payload {
   [OutputType.terminal]: {
     ['runme.dev/uuid']: string
     terminalFontFamily: string
+    terminalFontSize: number
   }
 }
 
@@ -107,6 +108,7 @@ export interface ClientMessagePayload {
     ['runme.dev/uuid']: string
     input: string
   }
+  [ClientMessages.activeThemeChanged]: string
 }
 
 export interface OutputItemsPayload {
