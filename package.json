@@ -281,6 +281,12 @@
             "scope": "machine",
             "default": false,
             "markdownDescription": "Enable Runme server logs. (It requires the GRPC interface enabled)"
+          },
+          "runme.terminal.enabled": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": "false",
+            "markdownDescription": "Enable Runme integrated terminal (Experimental)"
           }
         }
       }

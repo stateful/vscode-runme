@@ -4,6 +4,7 @@ import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
 const SERVER_SECTION_NAME = 'runme.server'
+const TERMINAL_SECTION_NAME= 'runme.terminal'
 
 const configurationSchema = {
     server: {
@@ -19,6 +20,9 @@ const configurationSchema = {
         enableLogger: z
             .boolean()
             .default(false)
+    },
+    terminal: {
+        enabled: z.boolean().default(false)
     }
 }
 
@@ -32,23 +36,31 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
     return defaultValue
 }
 
+const getRunmeTerminalConfigurationValue = <T>(configName: keyof typeof configurationSchema.terminal) => {
+    const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
+    const configurationValue = configurationSection.get<T>(configName)!
+    // Since a default value is configured, its safe to use parse here.
+    const parseResult = configurationSchema.terminal[configName].parse(configurationValue)
+    return parseResult as T
+}
+
 const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
-    const userPath = getServerConfigurationValue<string|undefined>('binaryPath', undefined)
+    const userPath = getServerConfigurationValue<string | undefined>('binaryPath', undefined)
 
     const isWin = platform.toLowerCase().startsWith('win')
     const binName = isWin ? 'runme.exe' : 'runme'
     const bundledPath = Uri.joinPath(extensionBaseUri, 'bin', binName)
 
-    if(userPath) {
-      if (path.isAbsolute(userPath)) {
-        return Uri.file(userPath)
-      } else if(workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-        return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
-      }
+    if (userPath) {
+        if (path.isAbsolute(userPath)) {
+            return Uri.file(userPath)
+        } else if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+            return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
+        }
     }
 
     return bundledPath
@@ -58,9 +70,14 @@ const enableServerLogs = (): boolean => {
     return getServerConfigurationValue<boolean>('enableLogger', false)
 }
 
+const isRunmeIntegratedTerminalEnabled = (): boolean => {
+    return getRunmeTerminalConfigurationValue('enabled')
+}
+
 export {
     getPortNumber,
     getBinaryPath,
     enableServerLogs,
-    getServerConfigurationValue
+    getServerConfigurationValue,
+    isRunmeIntegratedTerminalEnabled
 }

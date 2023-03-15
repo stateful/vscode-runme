@@ -9,6 +9,11 @@ import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 
 
+interface IWindowSize {
+  width: number
+  height: number
+}
+
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
@@ -195,6 +200,7 @@ export class TerminalView extends LitElement {
   protected disposables: Disposable[] = []
   protected terminal?: XTermJS
   protected fitAddon?: FitAddon
+  protected windowSize: IWindowSize
 
   @property({ type: String })
   uuid?: string
@@ -205,10 +211,11 @@ export class TerminalView extends LitElement {
   @property({ type: Number })
   terminalFontSize?: number
 
-  #dispatch() {
-    const ctx = getContext()
-    if (!ctx.postMessage) {
-      return
+  constructor() {
+    super()
+    this.windowSize = {
+      height: window.innerHeight,
+      width: window.innerWidth
     }
   }
 
@@ -227,6 +234,7 @@ export class TerminalView extends LitElement {
       disableStdin: false,
       allowProposedApi: true,
       fontFamily: this.terminalFontFamily,
+      drawBoldTextInBrightColors: false,
     })
 
     this.fitAddon = new FitAddon()
@@ -235,7 +243,12 @@ export class TerminalView extends LitElement {
     const ctx = getContext()
 
     window.addEventListener('resize', () => {
-      this.fitAddon?.fit()
+      const { innerWidth } = window
+      // Prevent adjusting the terminal size if the width remains the same
+      if (this.windowSize.width !== innerWidth) {
+        this.windowSize.width = innerWidth
+        this.fitAddon?.fit()
+      }
     })
 
     this.disposables.push(
@@ -292,12 +305,11 @@ export class TerminalView extends LitElement {
       selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
       selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
       selectionInactiveBackground: this.#getThemeHexColor(terminalCSS('inactiveSelectionBackground')),
-
       ...(Object.fromEntries(
         ansiColors.map(k => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
       )),
     }
-
+    console.log('terminal theme', terminalTheme)
     this.terminal!.options.theme = terminalTheme
   }
 
