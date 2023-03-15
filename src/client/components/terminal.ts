@@ -2,6 +2,7 @@ import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
+import { FitAddon } from 'xterm-addon-fit'
 
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
@@ -193,6 +194,7 @@ export class TerminalView extends LitElement {
 
   protected disposables: Disposable[] = []
   protected terminal?: XTermJS
+  protected fitAddon?: FitAddon
 
   @property({ type: String })
   uuid?: string
@@ -227,7 +229,14 @@ export class TerminalView extends LitElement {
       fontFamily: this.terminalFontFamily,
     })
 
+    this.fitAddon = new FitAddon()
+    this.terminal.loadAddon(this.fitAddon)
+
     const ctx = getContext()
+
+    window.addEventListener('resize', () => {
+      this.fitAddon?.fit()
+    })
 
     this.disposables.push(
       onClientMessage(ctx, (e) => {
@@ -265,6 +274,7 @@ export class TerminalView extends LitElement {
     const terminalContainer = this.#getTerminalElement()
     this.terminal!.open(terminalContainer as HTMLElement)
     this.terminal!.focus()
+    this.fitAddon?.fit()
     this.#updateTerminalTheme()
   }
 
