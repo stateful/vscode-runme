@@ -31,10 +31,6 @@ sleep 100000
 ## Complex Output
 
 ```sh
-npx colortest
-```
-
-```sh
 npm i -g webdriverio
 ```
 

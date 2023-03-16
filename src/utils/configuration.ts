@@ -39,8 +39,6 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
 const getRunmeTerminalConfiguration = <T>(configName: keyof typeof configurationSchema.terminal, defaultValue: T) => {
     const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
     const configurationValue = configurationSection.get<T>(configName)!
-    // Since a default value is configured, its safe to use parse here.
-
     const parseResult = configurationSchema.terminal[configName].safeParse(configurationValue)
     if (parseResult.success) {
         return parseResult.data as T

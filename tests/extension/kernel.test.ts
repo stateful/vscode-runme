@@ -15,15 +15,17 @@ vi.mock('../../src/extension/utils', () => ({
 }))
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() },
-  ENV_STORE_MANAGER: { }
+  ENV_STORE_MANAGER: {}
 }))
-vi.mock('../../src/extension/runner', () => ({ }))
+vi.mock('../../src/extension/runner', () => ({}))
 
 const getCells = (cnt: number) => ([...new Array(cnt)]).map((_, i) => ({
   document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },
-  notebook: { getCells: vi.fn().mockReturnValue(
-    [...new Array(10)].map(() => ({ kind: 1 }))
-  )},
+  notebook: {
+    getCells: vi.fn().mockReturnValue(
+      [...new Array(10)].map(() => ({ kind: 1 }))
+    )
+  },
   metadata: {
     'runme.dev/name': `Cell #${i}`
   }
@@ -37,7 +39,7 @@ test('dispose', () => {
 
 suite('_executeAll', async () => {
   test('runs individual cells or cell selections', async () => {
-    window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => {}))
+    window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
     const k = new Kernel({} as any)
     k['_doExecuteCell'] = vi.fn()
     await k['_executeAll'](getCells(10).slice(0, 5))
@@ -121,7 +123,10 @@ suite('_executeAll', async () => {
 
 test('_doExecuteCell', async () => {
   const k = new Kernel({} as any)
-  await k['_doExecuteCell']({ document: { uri: { fsPath: '/foo/bar' }} } as any)
+  await k['_doExecuteCell']({
+    document: { uri: { fsPath: '/foo/bar' } },
+    metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+  } as any)
   // @ts-expect-error mocked out
   expect(executors.foobar).toBeCalledTimes(1)
   expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
