@@ -183,6 +183,13 @@ export function getShellPath(execKey?: string): string|undefined {
   return process.env.SHELL ?? execKey
 }
 
+export function getShellName(execKey?: 'bash'|'sh'): string|undefined {
+  const shellPath = execKey ? getShellPath(execKey) : getShellPath()
+  if(!shellPath) { return undefined }
+
+  return path.parse(getShellPath() ?? '').name
+}
+
 /**
  * Parse set of commands, requiring user input for prompted environment
  * variables, and supporting multiline strings

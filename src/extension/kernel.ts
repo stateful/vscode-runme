@@ -24,6 +24,7 @@ import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
+import { getShellName } from './executors/utils'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -263,9 +264,13 @@ export class Kernel implements Disposable {
 
     const environmentManager = this.getEnvironmentManager()
 
+    const shell = getShellName()
+
     if(
       this.runner &&
-      !(hasPsuedoTerminalExperimentEnabled && terminal)
+      !(hasPsuedoTerminalExperimentEnabled && terminal) &&
+      // hard disable gRPC runner in windows shells
+      shell !== 'pwsh' && shell !== 'powershell' && shell !== 'cmd'
     ) {
       const runScript = async (execKey: 'sh'|'bash' = 'bash') => await executeRunner(
         this.context,
