@@ -45,7 +45,7 @@ type NotebookOutputs = NotebookCellOutput | readonly NotebookCellOutput[]
 export class NotebookCellOutputManager {
   protected outputs: readonly NotebookCellOutput[] = []
 
-  protected annotationsEnabled: boolean = false
+  protected annotationsEnabled = false
 
   protected mutex: Mutex = new Mutex()
   protected withLock = this.mutex.withLock.bind(this.mutex)
@@ -105,6 +105,11 @@ export class NotebookCellOutputManager {
     })
   }
 
+  protected hasOutputTypeUnsafe(type: OutputType, cells?: readonly NotebookCellOutput[]): boolean {
+    cells ??= this.cell.outputs
+    return cells.some(x => x.items.some(y => y.mime === type))
+  }
+
   async replaceOutputs(outputs: NotebookOutputs) {
     await this.refreshOutputs(() => {
       this.outputs = outputsAsArray(outputs)
@@ -113,23 +118,22 @@ export class NotebookCellOutputManager {
 
   async toggleAnnotations() {
     await this.refreshOutputs(() => {
-      this.annotationsEnabled = !this.annotationsEnabled
+      this.annotationsEnabled = !this.hasOutputTypeUnsafe(OutputType.annotations)
     })
   }
 
   protected async refreshOutputs(cb?: () => Promise<void>|void) {
     await this.withLock(async () => {
-      await cb?.()
-      await this.refreshOutputsUnsafe()
-    })
-  }
+      await this.getExecutionUnsafe(async (exec) => {
+        this.annotationsEnabled = this.hasOutputTypeUnsafe(OutputType.annotations)
 
-  protected async refreshOutputsUnsafe() {
-    await this.getExecutionUnsafe(async (exec) => {
-      await replaceOutput(exec, [
-        ...this.annotationsEnabled ? [ NotebookCellOutputManager.generateAnnotationOutput(this.cell) ] : [],
-        ...this.outputs,
-      ])
+        await cb?.()
+
+        await replaceOutput(exec, [
+          ...this.annotationsEnabled ? [ NotebookCellOutputManager.generateAnnotationOutput(this.cell) ] : [],
+          ...this.outputs,
+        ])
+      })
     })
   }
 
