@@ -8,9 +8,10 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```
+```sh
 echo "Hello World!"
 ```
+
 ## More Shell
 
 ```sh { interactive=false }
@@ -35,7 +36,7 @@ npm i -g webdriverio
 
 ## Stdin Example
 
-```
+```sh
 node ./scripts/stdin.js
 ```
 
@@ -65,7 +66,7 @@ echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"
 
 Supports multiple lines where the export is just somewhere in between:
 
-```
+```sh
 echo "Auth token for service foo"
 export SERVICE_FOO_TOKEN=foobar
 echo "Auth token for service bar"

@@ -70,12 +70,17 @@ interface Payload {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
   }
+  [OutputType.terminal]: {
+    ['runme.dev/uuid']: string
+    terminalFontFamily: string
+    terminalFontSize: number
+  }
 }
 
-export interface ClientMessage <T extends ClientMessages> {
+export type ClientMessage <T extends ClientMessages> = T extends any ? {
   type: T
   output: ClientMessagePayload[T]
-}
+} : never
 export interface ClientMessagePayload {
   [ClientMessages.deployed]: boolean
   [ClientMessages.update]: DenoPayload
@@ -91,6 +96,19 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
+  [ClientMessages.terminalStdout]: {
+    ['runme.dev/uuid']: string
+    data: Uint8Array|string
+  }
+  [ClientMessages.terminalStderr]: {
+    ['runme.dev/uuid']: string
+    data: Uint8Array|string
+  }
+  [ClientMessages.terminalStdin]: {
+    ['runme.dev/uuid']: string
+    input: string
+  }
+  [ClientMessages.activeThemeChanged]: string
 }
 
 export interface OutputItemsPayload {

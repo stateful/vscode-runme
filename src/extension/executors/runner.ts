@@ -13,13 +13,17 @@ import {
   TextDocument,
   ExtensionContext,
   Disposable,
+  NotebookRendererMessaging,
+  workspace
 } from 'vscode'
 
-import { OutputType } from '../../constants'
-import { CellOutputPayload } from '../../types'
+import { ClientMessages, OutputType } from '../../constants'
+import { CellOutputPayload, ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
+import { postClientMessage } from '../../utils/messaging'
+import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -36,7 +40,9 @@ export async function executeRunner(
   runner: IRunner,
   exec: NotebookCellExecution,
   runningCell: TextDocument,
-  execKey: 'bash'|'sh',
+  messaging: NotebookRendererMessaging,
+  cellUUID: string,
+  execKey: 'bash' | 'sh',
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
@@ -51,7 +57,7 @@ export async function executeRunner(
   }
 
   const commands = await parseCommandSeq(cellText)
-  if(!commands) { return false }
+  if (!commands) { return false }
 
   if (commands.length === 0) {
     commands.push('')
@@ -72,7 +78,7 @@ export async function executeRunner(
   if (isVercel) {
     const cmdParts = [script]
 
-    if(vercelProd) {
+    if (vercelProd) {
       cmdParts.push('--prod')
     }
 
@@ -90,9 +96,33 @@ export async function executeRunner(
     tty: interactive
   })
 
-  const disposables: Disposable[] = [ program ]
+  const disposables: Disposable[] = [program]
 
-  if(!interactive) {
+  program.onDidWrite((data) => postClientMessage(messaging, ClientMessages.terminalStdout, {
+    'runme.dev/uuid': cellUUID,
+    data
+  }))
+
+  program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
+    'runme.dev/uuid': cellUUID,
+    data
+  }))
+
+  messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
+    const { type, output } = message
+
+    if (type !== ClientMessages.terminalStdin) { return }
+
+    const { 'runme.dev/uuid': uuid, input } = output
+
+    if (uuid !== cellUUID) { return }
+
+    program.handleInput(input)
+  })
+
+  const useIntegrated = isRunmeIntegratedTerminalEnabled()
+
+  if (!interactive) {
     const output: Buffer[] = []
 
     const mime = mimeType || 'text/plain' as const
@@ -118,7 +148,7 @@ export async function executeRunner(
         }, OutputType.outputItems)
       }
 
-      replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
+      replaceOutput(exec, [new NotebookCellOutput([item])])
     }
 
     program.onStdoutRaw(handleOutput)
@@ -129,8 +159,8 @@ export async function executeRunner(
     })
 
     disposables.push({ dispose: () => program.close() })
-
     await program.run()
+
   } else {
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
@@ -144,12 +174,37 @@ export async function executeRunner(
 
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
-      focus: true,
-      reveal: background ? TaskRevealKind.Never : TaskRevealKind.Always,
+      focus: useIntegrated ? false : true,
+      reveal: useIntegrated ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
     const execution = await tasks.executeTask(taskExecution)
+
+    context.subscriptions.push({
+      dispose: () => execution.terminate()
+    })
+
+    if (useIntegrated) {
+      const editorSettings = workspace.getConfiguration('editor')
+      const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
+      const fontSize = editorSettings.get<number>('fontSize', 10)
+
+      const json: CellOutputPayload<OutputType.terminal> = {
+        type: OutputType.terminal,
+        output: {
+          'runme.dev/uuid': cellUUID,
+          terminalFontFamily: fontFamily,
+          terminalFontSize: fontSize,
+        },
+      }
+
+      await replaceOutput(exec, [
+        new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.terminal),
+        ]),
+      ])
+    }
 
     disposables.push({ dispose: () => execution.terminate() })
 
@@ -189,7 +244,6 @@ export async function executeRunner(
       }
     })
   }
-
   const dispose: Disposable = { dispose() { disposables.forEach(d => d.dispose()) }, }
   context.subscriptions.push(dispose)
 
@@ -205,8 +259,8 @@ export async function executeRunner(
     const exitReason = program.hasExited()
 
     // unexpected early return, likely an error
-    if(exitReason) {
-      switch(exitReason.type) {
+    if (exitReason) {
+      switch (exitReason.type) {
         case 'error': {
           reject(exitReason.error)
         } break
@@ -221,7 +275,7 @@ export async function executeRunner(
       }
     }
 
-    if(background && interactive) {
+    if (background && interactive) {
       setTimeout(
         () => {
           closeTerminalByEnvID(RUNME_ID)

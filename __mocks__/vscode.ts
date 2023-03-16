@@ -90,7 +90,8 @@ export const window = {
   registerTreeDataProvider: vi.fn(),
   registerUriHandler: vi.fn(),
   onDidCloseTerminal: vi.fn(),
-  withProgress: vi.fn()
+  withProgress: vi.fn(),
+  onDidChangeActiveColorTheme: vi.fn().mockReturnValue({ dispose: vi.fn() }),
 }
 
 export const tasks = {

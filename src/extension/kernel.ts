@@ -13,7 +13,7 @@ import {
   NotebookDocument} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { ClientMessage } from '../types'
+import type { ClientMessage, Serializer } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
@@ -69,7 +69,8 @@ export class Kernel implements Disposable {
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
-      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this))
+      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
+      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
     )
   }
 
@@ -189,6 +190,12 @@ export class Kernel implements Disposable {
       return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {
       return window.showInformationMessage(message.output as string)
+    } else if (
+      message.type === ClientMessages.terminalStdin ||
+      message.type === ClientMessages.terminalStdout ||
+      message.type === ClientMessages.terminalStderr
+    ) {
+      return
     }
 
     console.error(`[Runme] Unknown kernel event type: ${message.type}`)
@@ -244,13 +251,25 @@ export class Kernel implements Disposable {
     })
   }
 
+  #handleActiveColorThemeMessage(): void {
+    this.messaging.postMessage(<ClientMessage<ClientMessages.activeThemeChanged>>{
+      type: ClientMessages.activeThemeChanged,
+    })
+  }
+
   public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
     return this.#controller.createNotebookCellExecution(cell)
   }
 
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
-    const runningCell = await workspace.openTextDocument(cell.document.uri)
+    const runningCell = cell.document
     const exec = await this.createCellExecution(cell)
+
+    const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']
+
+    if(!uuid) {
+      throw new Error('Executable cell does not have UUID field!')
+    }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     exec.start(Date.now())
@@ -272,6 +291,8 @@ export class Kernel implements Disposable {
         this.runner!,
         exec,
         runningCell,
+        this.messaging,
+        uuid,
         execKey,
         this.environment,
         environmentManager
