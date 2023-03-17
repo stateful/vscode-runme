@@ -42,6 +42,7 @@ export namespace Serializer {
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
     ['runme.dev/denoState']?: DenoState
+    ['runme.dev/vercelState']?: VercelState
   }
 }
 
@@ -63,14 +64,15 @@ export interface DenoState {
   deployments?: any[]
 }
 
+export interface VercelState {
+  payload?: any
+  outputItems: string[]
+}
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
-  [OutputType.vercel]: {
-    type: string
-    payload?: any
-    outputItems: string[]
-  }
+  [OutputType.vercel]: VercelState
   [OutputType.outputItems]: OutputItemsPayload
   [OutputType.annotations]: {
     annotations?: CellAnnotations
@@ -95,7 +97,7 @@ export interface ClientMessagePayload {
     id: string
     productionDeployment: string
   }
-  [ClientMessages.prod]: {
+  [ClientMessages.vercelProd]: {
     cellIndex: number
   }
   [ClientMessages.mutateAnnotations]: {

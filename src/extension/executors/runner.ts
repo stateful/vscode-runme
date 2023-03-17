@@ -217,13 +217,15 @@ export async function executeRunner(
     const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
-      let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+      let item: NotebookCellOutputItem|undefined = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (isVercelDeployScript(script)) {
-        item = await handleVercelDeployOutput(
-          output, exec.cell.index, vercelProd, environmentManager
+        await handleVercelDeployOutput(
+          exec.cell, outputs, output, exec.cell.index, vercelProd, environmentManager
         )
+
+        item = undefined
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
         item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
           type: OutputType.outputItems,
@@ -234,7 +236,9 @@ export async function executeRunner(
         }, OutputType.outputItems)
       }
 
-      outputItems$.next(item)
+      if (item) {
+        outputItems$.next(item)
+      }
     }
 
     // debounce by 0.5s because human preception likely isn't as fast

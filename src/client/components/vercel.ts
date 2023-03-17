@@ -114,8 +114,8 @@ export class VercelOutput extends LitElement {
 
     this.#isPromoting = true
     this.requestUpdate()
-    ctx.postMessage(<ClientMessage<ClientMessages.prod>>{
-      type: ClientMessages.prod,
+    ctx.postMessage(<ClientMessage<ClientMessages.vercelProd>>{
+      type: ClientMessages.vercelProd,
       output: { cellIndex: this.content.payload.index }
     })
   }

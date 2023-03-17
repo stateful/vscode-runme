@@ -1,12 +1,12 @@
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
 import type { Argv } from 'yargs'
-import { TextDocument, NotebookCellExecution, NotebookCellOutputItem } from 'vscode'
+import { TextDocument, NotebookCellExecution, NotebookCell } from 'vscode'
 
 import type { Kernel } from '../kernel'
+import { VercelState } from '../../types'
+import { NotebookCellOutputManager, updateCellMetadata } from '../cell'
 import { OutputType } from '../../constants'
-import { CellOutputPayload } from '../../types'
-import { NotebookCellOutputManager } from '../cell'
 
 import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
@@ -77,6 +77,8 @@ export async function vercel (
 }
 
 export async function handleVercelDeployOutput(
+  cell: NotebookCell,
+  outputs: NotebookCellOutputManager,
   outputItems: Buffer[],
   index: number,
   prod: boolean,
@@ -96,14 +98,13 @@ export async function handleVercelDeployOutput(
   // should get this from API instead
   const projectName = await environment?.get('PROJECT_NAME')
 
-  const json = <CellOutputPayload<OutputType.vercel>>{
-    type: OutputType.vercel,
-    output: {
-      outputItems: outputItems.map((oi) => oi.toString()),
-      payload: { status, projectName, index, prod }
-    }
+  const vercelState: VercelState = {
+    outputItems: outputItems.map((oi) => oi.toString()),
+    payload: { status, projectName, index, prod }
   }
-  return NotebookCellOutputItem.json(json, OutputType.vercel)
+
+  updateCellMetadata(cell, { 'runme.dev/vercelState': vercelState })
+  await outputs.showOutput(OutputType.vercel)
 }
 
 export function isVercelDeployScript(script: string): boolean {

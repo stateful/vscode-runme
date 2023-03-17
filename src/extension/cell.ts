@@ -66,6 +66,8 @@ export class NotebookCellOutputManager {
   ) { }
 
   protected static generateOutput(cell: NotebookCell, type: OutputType): NotebookCellOutput|undefined {
+    const metadata = cell.metadata as Serializer.Metadata
+
     switch(type) {
       case OutputType.annotations: {
         const annotationJson: CellOutputPayload<OutputType.annotations> = {
@@ -85,12 +87,25 @@ export class NotebookCellOutputManager {
       case OutputType.deno: {
         const payload: CellOutputPayload<OutputType.deno> = {
           type: OutputType.deno,
-          output: (cell.metadata as Serializer.Metadata)['runme.dev/denoState'],
+          output: metadata['runme.dev/denoState'],
         }
 
         return new NotebookCellOutput([
           NotebookCellOutputItem.json(payload, OutputType.deno)
         ], { deno: { deploy: true } })
+      }
+
+      case OutputType.vercel: {
+        const json: CellOutputPayload<OutputType.vercel> = {
+          type: OutputType.vercel,
+          output: metadata['runme.dev/vercelState'] ?? {
+            outputItems: [],
+          },
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.vercel)
+        ])
       }
 
       default: {

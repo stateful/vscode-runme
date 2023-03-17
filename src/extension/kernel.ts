@@ -239,8 +239,8 @@ export class Kernel implements Disposable {
       postClientMessage(this.messaging, ClientMessages.denoUpdate, {
         promoted: deployed.valueOf()
       })
-    } else if (message.type === ClientMessages.prod) {
-      const payload = message as ClientMessage<ClientMessages.prod>
+    } else if (message.type === ClientMessages.vercelProd) {
+      const payload = message as ClientMessage<ClientMessages.vercelProd>
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cell = editor.notebook.cellAt(payload.output.cellIndex)
       if (cell.executionSummary?.success) {
