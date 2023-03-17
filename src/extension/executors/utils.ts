@@ -60,7 +60,8 @@ export async function promptUserForVariable(
 }
 
 export function getCommandExportExtractMatches(
-  rawText: string
+  rawText: string,
+  supportsDirect = true
 ): CommandExportExtractMatch[] {
   const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
@@ -85,8 +86,10 @@ export function getCommandExportExtractMatches(
       value = placeHolder.slice(2, -1)
     } else if (!placeHolder.includes('\n')) {
       matchType = 'prompt'
-    } else {
+    } else if (supportsDirect) {
       matchType = 'direct'
+    } else {
+      continue
     }
 
     result.push({
@@ -194,7 +197,9 @@ export async function parseCommandSeq(
   cellText: string,
   parseBlock?: (block: string) => string[]
 ): Promise<string[]|undefined> {
-  const exportMatches = getCommandExportExtractMatches(cellText)
+  parseBlock ??= (s) => s ? s.split('\n') : []
+
+  const exportMatches = getCommandExportExtractMatches(cellText, false)
 
   type CommandBlock =
     |{
@@ -244,7 +249,7 @@ export async function parseCommandSeq(
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
   return parsedCommandBlocks
-    .flatMap(({ type, content }) => type === 'block' && parseBlock?.(content) || [content])
+    .flatMap(({ type, content }) => (type === 'block' && parseBlock?.(content)) || (content ? [content] : []))
 }
 
 export function isWindows(): boolean {
