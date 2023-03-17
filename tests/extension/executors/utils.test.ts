@@ -209,24 +209,24 @@ suite('parseCommandSeq', () => {
   })
 
   test('multiline export', async () => {
-    const exportLine = [
+    const exportLines = [
       'export TEST="I',
       'am',
       'doing',
       'well!"'
-    ].join('\n')
+    ]
 
-    const res = await parseCommandSeq(exportLine)
+    const res = await parseCommandSeq(exportLines.join('\n'))
 
     expect(res).toBeTruthy
-    expect(res).toHaveLength(1)
-    expect(res?.[0]).toBe(exportLine)
+    expect(res).toHaveLength(4)
+    expect(res).toStrictEqual(exportLines)
   })
 
   test('exports between normal command sequences', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const cmd = [
+    const cmdLines = [
       'echo "Hello!"',
       'echo "Hi!"',
       'export TEST="<placeholder>"',
@@ -237,23 +237,24 @@ suite('parseCommandSeq', () => {
       'multiline',
       'env!"',
       'echo $TEST_MULTILINE'
-    ].join('\n')
+    ]
 
-    const res = await parseCommandSeq(cmd)
+    const res = await parseCommandSeq(cmdLines.join('\n'))
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
       'echo "Hello!"',
       'echo "Hi!"',
       'export TEST="test value"',
+      '',
       'echo $TEST',
-      [
+      ...[
         'export TEST_MULTILINE="This',
         'is',
         'a',
         'multiline',
         'env!"',
-      ].join('\n'),
+      ],
       'echo $TEST_MULTILINE'
     ])
   })
