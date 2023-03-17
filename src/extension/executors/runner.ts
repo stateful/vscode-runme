@@ -22,11 +22,12 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { isNotebookTerminalEnabledForCell, isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
+import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 import { openTerminal } from '../commands'
-import { NotebookCellOutputManager } from '../notebook'
+import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
+import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -47,6 +48,7 @@ export async function executeRunner(
   messaging: NotebookRendererMessaging,
   cellUUID: string,
   execKey: 'bash' | 'sh',
+  outputs: NotebookCellOutputManager,
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
