@@ -6,14 +6,13 @@ import '@vscode/webview-ui-toolkit/dist/button/index'
 import { getContext } from '../utils'
 import { Deployment, Project } from '../../utils/deno/api_types'
 import { ClientMessages } from '../../constants'
-import type { ClientMessage } from '../../types'
+import type { ClientMessage, DenoState } from '../../types'
 
 import './spinner'
 
 @customElement('deno-output')
 export class DenoOutput extends LitElement {
   #isPromoting = false
-  #promoted = false
 
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
@@ -48,13 +47,24 @@ export class DenoOutput extends LitElement {
     }
   `
 
-  // Declare reactive properties
-  @property({ type: Boolean })
-  deployed = false
   @property({ type: Object })
-  project?: Project
-  @property({ type: Object })
-  deployments?: Deployment[]
+  state: DenoState = {}
+
+  private get project(): Project {
+    return this.state?.project
+  }
+
+  private get deployments() {
+    return this.state?.deployments
+  }
+
+  private get deployed() {
+    return this.state?.deployed
+  }
+
+  private get promoted() {
+    return this.state?.promoted
+  }
 
   // Render the UI as a function of component state
   render() {
@@ -87,9 +97,9 @@ export class DenoOutput extends LitElement {
         ${this.deployed ? (new Date(deployment.createdAt)).toString() : 'Pending' }
         <h4>Status</h4>
           ${this.deployed
-          ? ((supportsMessaging && this.#promoted) ? 'Production' : 'Preview')
+          ? ((supportsMessaging && this.promoted) ? 'Production' : 'Preview')
             : html`Deploying <vscode-spinner />`}
-        ${when(this.deployed && supportsMessaging && !this.#promoted, () => html`
+        ${when(this.deployed && supportsMessaging && !this.promoted, () => html`
           <vscode-button
             class="btnPromote"
             @click="${() => this.#promote(deployment)}"
@@ -98,7 +108,7 @@ export class DenoOutput extends LitElement {
             🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
           </vscode-button>
         `)}
-        ${when(this.deployed && supportsMessaging && this.#promoted && project.hasProductionDeployment, () => html`
+        ${when(this.deployed && supportsMessaging && this.promoted && project.hasProductionDeployment, () => html`
           <p>
             Promoted to 🚀:
             <vscode-link href="https://${prodDomainMapping?.domain}">
@@ -118,8 +128,8 @@ export class DenoOutput extends LitElement {
 
     this.#isPromoting= true
     this.requestUpdate()
-    ctx.postMessage(<ClientMessage<ClientMessages.promote>>{
-      type: ClientMessages.promote,
+    ctx.postMessage(<ClientMessage<ClientMessages.denoPromote>>{
+      type: ClientMessages.denoPromote,
       output: {
         id: deployment.projectId,
         productionDeployment: deployment.id
@@ -141,16 +151,12 @@ export class DenoOutput extends LitElement {
       }
 
       switch (e.type) {
-        case ClientMessages.deployed: {
+        case ClientMessages.denoUpdate: {
           const payload = e.output
-          this.#promoted = payload
-          break
-        }
-        case ClientMessages.update: {
-          const payload = e.output
-          this.deployed = Boolean(payload.deployed)
-          this.project = payload.project
-          this.deployments = payload.deployments
+          this.state = {
+            ...this.state,
+            ...payload,
+          }
         }
       }
       this.requestUpdate()

@@ -4,11 +4,14 @@ import {
   NotebookCellExecution,
   NotebookCellOutput,
   NotebookCellOutputItem,
-  NotebookController
+  NotebookController,
+  NotebookEdit,
+  workspace,
+  WorkspaceEdit
 } from 'vscode'
 
 import { OutputType } from '../constants'
-import { CellOutputPayload } from '../types'
+import { CellOutputPayload, Serializer } from '../types'
 import { Mutex } from '../utils/sync'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -45,7 +48,11 @@ type NotebookOutputs = NotebookCellOutput | readonly NotebookCellOutput[]
 export class NotebookCellOutputManager {
   protected outputs: readonly NotebookCellOutput[] = []
 
-  protected annotationsEnabled = false
+  protected enabledOutputs = new Map([
+    [OutputType.annotations, false],
+    [OutputType.deno, false],
+    [OutputType.vercel, false],
+  ])
 
   protected mutex: Mutex = new Mutex()
   protected withLock = this.mutex.withLock.bind(this.mutex)
@@ -58,19 +65,38 @@ export class NotebookCellOutputManager {
     protected controller: NotebookController
   ) { }
 
-  protected static generateAnnotationOutput(cell: NotebookCell): NotebookCellOutput {
-    const annotationJson: CellOutputPayload<OutputType.annotations> = {
-      type: OutputType.annotations,
-      output: {
-        annotations: getAnnotations(cell),
-        validationErrors: validateAnnotations(cell)
-      },
-    }
+  protected static generateOutput(cell: NotebookCell, type: OutputType): NotebookCellOutput|undefined {
+    switch(type) {
+      case OutputType.annotations: {
+        const annotationJson: CellOutputPayload<OutputType.annotations> = {
+          type: OutputType.annotations,
+          output: {
+            annotations: getAnnotations(cell),
+            validationErrors: validateAnnotations(cell)
+          },
+        }
 
-    return new NotebookCellOutput([
-      NotebookCellOutputItem.json(annotationJson, OutputType.annotations),
-      NotebookCellOutputItem.json(annotationJson),
-    ])
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(annotationJson, OutputType.annotations),
+          NotebookCellOutputItem.json(annotationJson),
+        ])
+      }
+
+      case OutputType.deno: {
+        const payload: CellOutputPayload<OutputType.deno> = {
+          type: OutputType.deno,
+          output: (cell.metadata as Serializer.Metadata)['runme.dev/denoState'],
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(payload, OutputType.deno)
+        ], { deno: { deploy: true } })
+      }
+
+      default: {
+        return undefined
+      }
+    }
   }
 
   async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution> {
@@ -116,21 +142,35 @@ export class NotebookCellOutputManager {
     })
   }
 
-  async toggleAnnotations() {
-    await this.refreshOutputs(() => {
-      this.annotationsEnabled = !this.hasOutputTypeUnsafe(OutputType.annotations)
+  async toggleOutput(type: OutputType) {
+    await this.showOutput(type, () => !this.hasOutputTypeUnsafe(type))
+  }
+
+  async showOutput(type: OutputType, shown: boolean|(() => boolean|Promise<boolean>) = true) {
+    await this.refreshOutputs(async () => {
+      this.enabledOutputs.set(type, typeof shown === 'function' ? await shown() : shown)
     })
   }
 
   protected async refreshOutputs(cb?: () => Promise<void>|void) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
-        this.annotationsEnabled = this.hasOutputTypeUnsafe(OutputType.annotations)
+        for(const key of [...this.enabledOutputs.keys()]) {
+          this.enabledOutputs.set(key, this.hasOutputTypeUnsafe(key))
+        }
 
         await cb?.()
 
         await replaceOutput(exec, [
-          ...this.annotationsEnabled ? [ NotebookCellOutputManager.generateAnnotationOutput(this.cell) ] : [],
+          ...[ ...this.enabledOutputs.entries() ]
+            .flatMap(([type, enabled]) => {
+              if (!enabled) { return [] }
+
+              const output = NotebookCellOutputManager.generateOutput(this.cell, type)
+              if(!output) { return [] }
+
+              return [ output ]
+            }),
           ...this.outputs,
         ])
       })
@@ -197,4 +237,16 @@ export class RunmeNotebookCellExecution implements Disposable {
   get underlyingExecution() {
     return this.exec
   }
+}
+
+export async function updateCellMetadata(cell: NotebookCell, meta: Partial<Serializer.Metadata>) {
+  const edit = new WorkspaceEdit()
+
+  const notebookEdit = NotebookEdit.updateCellMetadata(cell.index, {
+    ...cell.metadata,
+    ...meta,
+  })
+
+  edit.set(cell.notebook.uri, [notebookEdit])
+  await workspace.applyEdit(edit)
 }

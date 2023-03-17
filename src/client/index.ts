@@ -28,9 +28,9 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
         case OutputType.deno:
           const deno = payload.output || {}
           const denoElem = document.createElement('deno-output')
-          deno.deployed && denoElem.setAttribute('deployed', deno.deployed.toString())
-          deno.project && denoElem.setAttribute('project', JSON.stringify(deno.project))
-          denoElem.setAttribute('deployments', JSON.stringify(deno.deployments))
+
+          denoElem.setAttribute('state', JSON.stringify(deno))
+
           element.appendChild(denoElem)
           break
         case OutputType.outputItems:

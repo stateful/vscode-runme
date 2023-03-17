@@ -6,6 +6,7 @@ import { TextDocument, NotebookCellExecution, NotebookCellOutputItem } from 'vsc
 import type { Kernel } from '../kernel'
 import { OutputType } from '../../constants'
 import { CellOutputPayload } from '../../types'
+import { NotebookCellOutputManager } from '../cell'
 
 import { bash } from './task'
 import { deploy, login, logout } from './vercel/index'
@@ -19,6 +20,7 @@ export async function vercel (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
+  outputs: NotebookCellOutputManager,
   runScript?: () => Promise<boolean>,
 ): Promise<boolean> {
   const command = doc.getText()
@@ -71,7 +73,7 @@ export async function vercel (
   /**
    * other commands passed to the CLI
    */
-  return runScript?.() ?? bash.call(this, exec, doc)
+  return runScript?.() ?? bash.call(this, exec, doc, outputs)
 }
 
 export async function handleVercelDeployOutput(

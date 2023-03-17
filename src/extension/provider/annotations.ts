@@ -2,19 +2,15 @@ import {
   commands,
   window,
   NotebookCell,
-  // NotebookCellOutput,
-  // NotebookCellOutputItem,
   NotebookCellStatusBarItemProvider,
   NotebookCellStatusBarItem,
   NotebookCellStatusBarAlignment,
   NotebookCellKind,
 } from 'vscode'
 
-// import { OutputType } from '../../constants'
-// import { CellOutputPayload } from '../../types'
+import { OutputType } from '../../constants'
 import { RunmeExtension } from '../extension'
 import { Kernel } from '../kernel'
-// import { getAnnotations, replaceOutput, validateAnnotations } from '../utils'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -49,7 +45,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   }
 
   public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
-    await (await this.kernel.getCellOutputs(cell)).toggleAnnotations()
+    await (await this.kernel.getCellOutputs(cell)).toggleOutput(OutputType.annotations)
   }
 
   async provideCellStatusBarItems(

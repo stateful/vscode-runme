@@ -41,6 +41,7 @@ export namespace Serializer {
     mimeType?: string
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
+    ['runme.dev/denoState']?: DenoState
   }
 }
 
@@ -55,7 +56,8 @@ export type CellOutputPayload<T extends OutputType> = T extends any
 
 export type CellOutput = CellOutputPayload<OutputType>
 
-interface DenoPayload {
+export interface DenoState {
+  promoted?: boolean
   deployed?: boolean
   project?: any
   deployments?: any[]
@@ -63,7 +65,7 @@ interface DenoPayload {
 
 interface Payload {
   [OutputType.error]: string
-  [OutputType.deno]?: DenoPayload
+  [OutputType.deno]?: DenoState
   [OutputType.vercel]: {
     type: string
     payload?: any
@@ -88,9 +90,8 @@ export type ClientMessage <T extends ClientMessages> = T extends any ? {
   output: ClientMessagePayload[T]
 } : never
 export interface ClientMessagePayload {
-  [ClientMessages.deployed]: boolean
-  [ClientMessages.update]: DenoPayload
-  [ClientMessages.promote]: {
+  [ClientMessages.denoUpdate]: DenoState
+  [ClientMessages.denoPromote]: {
     id: string
     productionDeployment: string
   }

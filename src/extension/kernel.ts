@@ -25,6 +25,7 @@ import {
   getNotebookTerminalFontSize,
   getNotebookTerminalRows
 } from '../utils/configuration'
+import { postClientMessage } from '../utils/messaging'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -223,8 +224,8 @@ export class Kernel implements Disposable {
       }
 
       return
-    } else if (message.type === ClientMessages.promote) {
-      const payload = message as ClientMessage<ClientMessages.promote>
+    } else if (message.type === ClientMessages.denoPromote) {
+      const payload = message
       const token = await this.getEnvironmentManager().get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
@@ -235,9 +236,8 @@ export class Kernel implements Disposable {
         payload.output.id,
         payload.output.productionDeployment
       )
-      this.messaging.postMessage(<ClientMessage<ClientMessages.deployed>>{
-        type: ClientMessages.deployed,
-        output: deployed,
+      postClientMessage(this.messaging, ClientMessages.denoUpdate, {
+        promoted: deployed.valueOf()
       })
     } else if (message.type === ClientMessages.prod) {
       const payload = message as ClientMessage<ClientMessages.prod>
@@ -345,6 +345,7 @@ export class Kernel implements Disposable {
     let successfulCellExecution: boolean
 
     const environmentManager = this.getEnvironmentManager()
+    const outputs = await this.getCellOutputs(cell)
 
     if (
       this.runner &&
@@ -352,8 +353,6 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const outputs = await this.getCellOutputs(cell)
-
       const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
         this,
         this.context,
@@ -377,14 +376,14 @@ export class Kernel implements Disposable {
         successfulCellExecution = await runScript(execKey)
       } else {
         successfulCellExecution = await executor[execKey].call(
-          this, exec, runningCell, runScript, environmentManager
+          this, exec, runningCell, outputs, runScript, environmentManager
         )
       }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
+      successfulCellExecution =  await executor[execKey].call(this, exec, runningCell, outputs)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     runmeExec.end(successfulCellExecution)

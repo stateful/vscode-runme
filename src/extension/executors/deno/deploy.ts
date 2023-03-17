@@ -1,17 +1,19 @@
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import { NotebookCellExecution } from 'vscode'
 
 import { renderError } from '../utils'
 import { OutputType, ClientMessages } from '../../../constants'
 import { DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
 import type { Kernel } from '../../kernel'
-import type { CellOutputPayload, ClientMessage } from '../../../types'
-import { replaceOutput } from '../../utils'
+import type { DenoState } from '../../../types'
 import { ENV_STORE_MANAGER, type IEnvironmentManager } from '..'
+import { postClientMessage } from '../../../utils/messaging'
+import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
 
 export async function deploy (
   this: Kernel,
   exec: NotebookCellExecution,
+  outputs: NotebookCellOutputManager,
   environment?: IEnvironmentManager
 ): Promise<boolean> {
   environment ??= ENV_STORE_MANAGER
@@ -28,13 +30,7 @@ export async function deploy (
       throw new Error('No token supplied')
     }
 
-    /**
-     * render deno status at the behinning of the operation
-     */
-    replaceOutput(exec, new NotebookCellOutput([
-      NotebookCellOutputItem.json(
-        <CellOutputPayload<OutputType.deno>>{ type: OutputType.deno }, OutputType.deno)
-    ], { deno: { deploy: true } }))
+    outputs.showOutput(OutputType.deno)
 
     const start = new Date()
     const denoAPI = API.fromToken(token)
@@ -55,14 +51,16 @@ export async function deploy (
       }
 
       deployed = created > start
-      this.messaging.postMessage(<ClientMessage<ClientMessages.update>>{
-        type: ClientMessages.update,
-        output: {
+
+      const denoState: DenoState = {
+          ...exec.cell.metadata['runme.dev/denoState'],
           deployed,
-          deployments,
-          project
-        }
-      })
+          deployments: deployments ?? undefined,
+          project,
+      }
+
+      updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
+      postClientMessage(this.messaging, ClientMessages.denoUpdate, denoState)
 
       // keep going slower after 20 loops
       const timeout = 1000 + Math.max(0, iteration - 20) * 1000
