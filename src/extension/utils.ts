@@ -110,9 +110,13 @@ export function resetEnv() {
   Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
 }
 
-export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
+export function isDenoScript(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
-  if (text.indexOf('deployctl deploy') > -1) {
+  return text.indexOf('deployctl deploy') > -1
+}
+
+export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
+  if (isDenoScript(runningCell)) {
     return 'deno'
   }
   // if (text.startsWith('vercel ')) {
