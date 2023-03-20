@@ -21,11 +21,21 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
 
       switch (payload.type) {
         case OutputType.vercel:
+          if(payload.output.error) {
+            renderError(payload.output.error)
+            break
+          }
+
           const vercelElem = document.createElement('vercel-output')
           vercelElem.setAttribute('content', JSON.stringify(payload.output))
           element.appendChild(vercelElem)
           break
         case OutputType.deno:
+          if(payload.output?.error) {
+            renderError(payload.output.error)
+            break
+          }
+
           const deno = payload.output || {}
           const denoElem = document.createElement('deno-output')
 
@@ -71,9 +81,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           element.appendChild(terminalElement)
           break
         case OutputType.error:
-          element.innerHTML = `⚠️ ${payload.output}`
+          renderError(payload.output)
           break
         default: element.innerHTML = 'No renderer found!'
+      }
+
+      function renderError(message: string) {
+        element.innerHTML = `⚠️ ${message}`
       }
     },
     disposeOutputItem(/* outputId */) {

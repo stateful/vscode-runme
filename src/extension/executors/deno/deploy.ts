@@ -1,6 +1,5 @@
 import { NotebookCellExecution } from 'vscode'
 
-import { renderError } from '../utils'
 import { OutputType, ClientMessages } from '../../../constants'
 import { DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
@@ -30,6 +29,13 @@ export async function deploy (
       throw new Error('No token supplied')
     }
 
+    const denoState: DenoState = {
+      ...exec.cell.metadata['runme.dev/denoState'],
+      error: undefined
+    }
+
+    updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
+
     outputs.showOutput(OutputType.deno)
 
     const start = new Date()
@@ -53,10 +59,11 @@ export async function deploy (
       deployed = created > start
 
       const denoState: DenoState = {
-          ...exec.cell.metadata['runme.dev/denoState'],
-          deployed,
-          deployments: deployments ?? undefined,
-          project,
+        ...exec.cell.metadata['runme.dev/denoState'],
+        deployed,
+        deployments: deployments ?? undefined,
+        project,
+        error: undefined
       }
 
       updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
@@ -69,11 +76,17 @@ export async function deploy (
       iteration++
     }
     if (!deployed) {
-      renderError(exec, 'Timed out')
-      return false
+      throw new Error('Timed out')
     }
   } catch (err: any) {
-    renderError(exec, err.message)
+    const denoState: DenoState = {
+      ...exec.cell.metadata['runme.dev/denoState'],
+      error: err.message,
+    }
+
+    updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
+    outputs.showOutput(OutputType.deno)
+
     return false
   }
 

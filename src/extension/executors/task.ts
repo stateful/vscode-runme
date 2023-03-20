@@ -33,7 +33,6 @@ async function taskExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   const cwd = path.dirname(doc.uri.fsPath)
@@ -66,7 +65,7 @@ async function taskExecutor(
    */
   const isInteractive = getAnnotations(exec.cell).interactive
   if (!isInteractive) {
-    return inlineSh.call(this, exec, cmdLine, cwd, env)
+    return inlineSh.call(this, exec, cmdLine, cwd, env, outputs)
   }
 
   const taskExecution = new Task(

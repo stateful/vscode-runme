@@ -230,6 +230,34 @@ describe('NotebookCellOutputManager', () => {
     expect(result[0].items).toHaveLength(1)
     expect(result[0].items[0].mime).toBe(OutputType.deno)
   })
+
+  it('does not update cells if refreshing non present type', async () => {
+    const cell = mockCell([ { items: [ ] } ])
+
+    const { controller, replaceOutput } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    await outputs.refreshOutput(OutputType.annotations)
+    expect(replaceOutput).toHaveBeenCalledTimes(0)
+  })
+
+  it('does update cells if refreshing present type', async () => {
+    const cell = mockCell([ { items: [ { mime: OutputType.annotations } ] } ])
+
+    const { controller, replaceOutput } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    await outputs.refreshOutput(OutputType.annotations)
+    expect(replaceOutput).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('RunmeNotebookCellExecution', () => {

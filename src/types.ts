@@ -62,11 +62,14 @@ export interface DenoState {
   deployed?: boolean
   project?: any
   deployments?: any[]
+  error?: any
 }
 
 export interface VercelState {
   payload?: any
   outputItems: string[]
+  type?: string
+  error?: any
 }
 
 interface Payload {

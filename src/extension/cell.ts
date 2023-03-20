@@ -167,14 +167,31 @@ export class NotebookCellOutputManager {
     })
   }
 
-  protected async refreshOutputs(cb?: () => Promise<void>|void) {
+  /**
+   * Refreshes the output list
+   *
+   * @param type * If present, only refresh output list if the given OutputType(s)
+   * are present in the outputs, otherwise does nothing
+   */
+  async refreshOutput(type?: OutputType|OutputType[]) {
+    await this.refreshOutputs(() => {
+      if(type === undefined) { return }
+
+      const typeSet = Array.isArray(type) ? type : [type]
+      return typeSet.some(t => this.hasOutputTypeUnsafe(t))
+    })
+  }
+
+  protected async refreshOutputs(cb?: () => Promise<boolean|void>|boolean|void) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
         for(const key of [...this.enabledOutputs.keys()]) {
           this.enabledOutputs.set(key, this.hasOutputTypeUnsafe(key))
         }
 
-        await cb?.()
+        if (!(await cb?.() ?? true)) {
+          return
+        }
 
         await replaceOutput(exec, [
           ...[ ...this.enabledOutputs.entries() ]

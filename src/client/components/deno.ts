@@ -132,7 +132,7 @@ export class DenoOutput extends LitElement {
       type: ClientMessages.denoPromote,
       output: {
         id: deployment.projectId,
-        productionDeployment: deployment.id
+        productionDeployment: deployment.id,
       }
     })
   }

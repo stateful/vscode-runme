@@ -4,13 +4,12 @@ import path from 'node:path'
 import sanitize from 'filenamify'
 import frameworkList, { Framework } from '@vercel/frameworks'
 import { createDeployment, VercelClientOptions, DeploymentOptions } from '@vercel/client'
-import { TextDocument, NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution, window } from 'vscode'
+import { TextDocument, NotebookCellExecution, window } from 'vscode'
 
-import { renderError } from '../utils'
 import { OutputType } from '../../../constants'
 import type { Kernel } from '../../kernel'
-import type { CellOutputPayload } from '../../../types'
-import { replaceOutput } from '../../utils'
+import type { VercelState } from '../../../types'
+import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
 
 import { listTeams, getUser, getProject, getProjects, createProject, cancelDeployment, VercelProject } from './api'
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
@@ -26,6 +25,7 @@ export async function deploy (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   let token = await getAuthToken()
   const cwd = path.dirname(doc.uri.fsPath)
@@ -143,29 +143,28 @@ export async function deploy (
     }))
     for await (const event of createDeployment(clientParams, deployParams)) {
       if (event.type === 'error') {
-        renderError(exec, event.payload.message)
-        return false
+        throw Error(event.payload.message)
       }
 
       deploymentId = event.payload.id
-      replaceOutput(exec, new NotebookCellOutput([
-        NotebookCellOutputItem.json(<CellOutputPayload<OutputType.vercel>>{
-          type: OutputType.vercel,
-          output: event
-        }, OutputType.vercel)
-      ]))
+
+      const vercelState: VercelState = {
+        outputItems: [],
+        payload: event.payload,
+        type: event.type,
+      }
+
+      updateCellMetadata(exec.cell, { 'runme.dev/vercelState': vercelState })
+      outputs.showOutput(OutputType.vercel)
 
       if (deployCanceled) {
         break
       }
     }
   } catch (err: any) {
-    replaceOutput(exec, new NotebookCellOutput([
-      NotebookCellOutputItem.json(<CellOutputPayload<OutputType.error>>{
-        type: OutputType.error,
-        output: err.message
-      }, OutputType.error)
-    ]))
+    updateCellMetadata(exec.cell, { 'runme.dev/vercelState': { error: err.message, outputItems: [] }})
+    outputs.showOutput(OutputType.vercel)
+
     return false
   }
 
