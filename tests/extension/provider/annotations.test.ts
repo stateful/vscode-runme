@@ -4,7 +4,6 @@ import { commands, NotebookCellKind } from 'vscode'
 import { AnnotationsProvider } from '../../../src/extension/provider/annotations'
 import { Kernel } from '../../../src/extension/kernel'
 import { OutputType } from '../../../src/constants'
-import { replaceOutput } from '../../../src/extension/utils'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -106,17 +105,13 @@ describe('Runme Annotations', () => {
         }]
       }
 
-      const clearOutput = vi.fn()
-      const end = vi.fn()
-      kernel.createCellExecution = vi.fn().mockResolvedValue({
-        start: vi.fn(),
-        end,
-        clearOutput,
+      const toggleOutput = vi.fn()
+      kernel.getCellOutputs = vi.fn().mockResolvedValue({
+        toggleOutput
       })
       await annotationsProvider.toggleCellAnnotations(cell as any)
-      expect(kernel.createCellExecution).toBeCalledTimes(1)
-      expect(clearOutput).toBeCalledTimes(1)
-      expect(end).toBeCalledTimes(1)
+      expect(toggleOutput).toBeCalledTimes(1)
+      expect(toggleOutput).toBeCalledWith(OutputType.annotations)
     })
 
     it('should replace the output when the annotation is not rendered', async () => {
@@ -132,15 +127,13 @@ describe('Runme Annotations', () => {
         outputs: []
       }
 
-      const end = vi.fn()
-      kernel.createCellExecution = vi.fn().mockResolvedValue({
-        start: vi.fn(),
-        end,
+      const toggleOutput = vi.fn()
+      kernel.getCellOutputs = vi.fn().mockResolvedValue({
+        toggleOutput
       })
       await annotationsProvider.toggleCellAnnotations(cell as any)
-      expect(kernel.createCellExecution).toBeCalledTimes(1)
-      expect(replaceOutput).toBeCalledTimes(1)
-      expect(end).toBeCalledTimes(1)
+      expect(toggleOutput).toBeCalledTimes(1)
+      expect(toggleOutput).toBeCalledWith(OutputType.annotations)
     })
   })
 })

@@ -180,9 +180,9 @@ export class NotebookCellStatusBarItem {
 export class NotebookCellOutputItem {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static json(value: any, mime?: string): NotebookCellOutputItem {
+  static json(value: any, mime = 'text/plain'): NotebookCellOutputItem {
     return {
-      mime: 'text/plain',
+      mime: mime,
       data: new Uint8Array()
     }
   }
@@ -194,10 +194,8 @@ export class NotebookCellOutputItem {
 }
 
 export class NotebookCellOutput {
-  items: NotebookCellOutputItem[]
-  metadata?: { [key: string]: any }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(items: NotebookCellOutputItem[], metadata?: { [key: string]: any }) {}
+  constructor(public items: NotebookCellOutputItem[], public metadata?: { [key: string]: any }) {}
 }
 
 export const ProgressLocation = {

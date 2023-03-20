@@ -146,9 +146,9 @@ export class NotebookCellOutputManager {
     })
   }
 
-  protected hasOutputTypeUnsafe(type: OutputType, cells?: readonly NotebookCellOutput[]): boolean {
-    cells ??= this.cell.outputs
-    return cells.some(x => x.items.some(y => y.mime === type))
+  protected hasOutputTypeUnsafe(type: OutputType, outputs?: readonly NotebookCellOutput[]): boolean {
+    outputs ??= this.cell.outputs
+    return outputs.some(x => x.items.some(y => y.mime === type))
   }
 
   async replaceOutputs(outputs: NotebookOutputs) {
