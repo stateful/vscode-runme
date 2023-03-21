@@ -286,6 +286,6 @@ suite('#getAnnotations', () => {
 suite('#getGrpcHost', () => {
   test('should return host addr including config port', () => {
     vi.mocked(workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(7863) } as any)
-    expect(getGrpcHost()).toStrictEqual('127.0.0.1:7863')
+    expect(getGrpcHost()).toStrictEqual('localhost:7863')
   })
 })

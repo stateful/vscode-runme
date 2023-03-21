@@ -18,7 +18,18 @@ vi.mock('node:fs/promises', async () => ({
       access: vi.fn().mockResolvedValue(false),
       stat: vi.fn().mockResolvedValue({
           isFile: vi.fn().mockReturnValue(false)
-      })
+      }),
+      readFile: vi.fn().mockImplementation((filePath) => {
+        if (filePath.toString().endsWith('cert.pem')) {
+          return testCertPEM
+        }
+
+        if (filePath.toString().endsWith('key.pem')) {
+          return testPrivKeyPEM
+        }
+
+        return Buffer.from('')
+      }),
   }
 }))
 
@@ -28,6 +39,7 @@ vi.mock('node:child_process', async () => ({
 
 import Server from '../../../src/extension/server/runmeServer'
 import RunmeServerError from '../../../src/extension/server/runmeServerError'
+import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
 
 suite('Runme server spawn process', () => {
     const configValues = {
