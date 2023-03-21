@@ -320,7 +320,6 @@ export class Kernel implements Disposable {
 
   public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution> {
     return await this.cellManager.createNotebookCellExecution(cell)
-    // return this.#controller.createNotebookCellExecution(cell)
   }
 
   public async getCellOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
