@@ -24,6 +24,7 @@ import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import { BOOTFILE } from './constants'
 import { GrpcRunner, IRunner } from './runner'
+import { CliProvider } from './provider/cli'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -94,6 +95,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
       RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner)),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**
        * tree viewer items
