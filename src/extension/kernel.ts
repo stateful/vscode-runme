@@ -17,8 +17,7 @@ import type { ClientMessage, Serializer } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 
-import executor, { type IEnvironmentManager, runme, ENV_STORE_MANAGER } from './executors'
-import { ExperimentalTerminal } from './terminal/terminal'
+import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
 import './wasm/wasm_exec.js'
@@ -38,7 +37,6 @@ export class Kernel implements Disposable {
 
   readonly #experiments = new Map<string, boolean>()
 
-  #terminals = new Map<string, ExperimentalTerminal>
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
     Kernel.type,
@@ -55,7 +53,6 @@ export class Kernel implements Disposable {
     protected context: ExtensionContext,
   ) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.#experiments.set('pseudoterminal', config.get<boolean>('pseudoterminal', false))
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', false))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
@@ -68,7 +65,6 @@ export class Kernel implements Disposable {
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
-      window.onDidChangeActiveNotebookEditor(this.#handleRunmeTerminals.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
@@ -276,16 +272,12 @@ export class Kernel implements Disposable {
     exec.start(Date.now())
     let execKey = getKey(runningCell)
 
-    const hasPsuedoTerminalExperimentEnabled = this.hasExperimentEnabled('pseudoterminal')
-    const terminal = this.#terminals.get(cell.document.uri.fsPath)
-
     let successfulCellExecution: boolean
 
     const environmentManager = this.getEnvironmentManager()
 
     if(
       this.runner &&
-      !(hasPsuedoTerminalExperimentEnabled && terminal) &&
       // hard disable gRPC runner on windows
       // TODO(mxs): support windows shells
       !isWindows()
@@ -318,29 +310,10 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = (hasPsuedoTerminalExperimentEnabled && terminal)
-        ? await runme.call(this, exec, terminal)
-        : await executor[execKey].call(this, exec, runningCell)
+      successfulCellExecution =  await executor[execKey].call(this, exec, runningCell)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     exec.end(successfulCellExecution)
-  }
-
-  #handleRunmeTerminals (editor?: NotebookEditor) {
-    // Todo(Christian): clean up
-    if (!editor) {
-      return
-    }
-
-    /**
-     * Runme terminal for notebook already launched
-     */
-    if (this.#terminals.has(editor.notebook.uri.fsPath)) {
-      return
-    }
-
-    const runmeTerminal = new ExperimentalTerminal(editor.notebook)
-    this.#terminals.set(editor.notebook.uri.fsPath, runmeTerminal)
   }
 
   useRunner(runner: IRunner) {

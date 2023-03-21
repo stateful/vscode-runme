@@ -16,4 +16,3 @@ export const ENV_STORE_MANAGER: IEnvironmentManager = {
 }
 
 export default { sh, bash, vercel, deno }
-export * from './runme'

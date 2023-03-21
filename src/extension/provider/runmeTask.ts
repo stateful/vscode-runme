@@ -1,14 +1,29 @@
 import path from 'node:path'
 
 import {
-  ExtensionContext, ProviderResult, Task, TaskProvider, Uri,
-  workspace, window, TaskScope, TaskRevealKind, TaskPanelKind, NotebookCellKind
+  ExtensionContext,
+  ProviderResult,
+  Task,
+  TaskProvider,
+  Uri,
+  workspace,
+  window,
+  TaskScope,
+  TaskRevealKind,
+  TaskPanelKind,
+  NotebookCellKind,
+  CancellationToken,
+  CustomExecution,
+  NotebookCell,
+  NotebookCellData,
 } from 'vscode'
 
-import { initWasm, getAnnotations } from '../utils'
+import { getAnnotations } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
+import { SerializerBase } from '../serializer'
+import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
+import { getShellPath } from '../executors/utils'
 
-declare var globalThis: any
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 
 export interface RunmeTask extends Task {
@@ -18,11 +33,18 @@ export interface RunmeTask extends Task {
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
   static id = 'runme'
-  constructor (private context: ExtensionContext) {}
+  constructor (
+    private context: ExtensionContext,
+    private serializer: SerializerBase,
+    private runner?: IRunner,
+    private environment?: IRunnerEnvironment
+  ) {}
 
-  public async provideTasks(): Promise<Task[]> {
-    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
-    await initWasm(wasmUri)
+  public async provideTasks(token: CancellationToken): Promise<Task[]> {
+    if(!this.runner) {
+      console.error('Tasks only supported with gRPC runner enabled')
+      return []
+    }
 
     const current = (
       window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') && window.activeNotebookEditor?.notebook.uri ||
@@ -33,9 +55,9 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    let mdContent: string
+    let mdContent: Uint8Array
     try {
-      mdContent = (await workspace.fs.readFile(current)).toString()
+      mdContent = (await workspace.fs.readFile(current))
     } catch (err: any) {
       if (err.code !== 'FileNotFound') {
         console.log(err)
@@ -43,17 +65,18 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    const { Runme } = globalThis as Serializer.Wasm
-    const notebook = await Runme.deserialize(mdContent)
+    const notebook = await this.serializer.deserializeNotebook(mdContent, token)
 
-    return notebook.cells
+    return await Promise.all(notebook.cells
       .filter((cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code)
-      .map((cell) => RunmeTaskProvider.getRunmeTask(
+      .map(async (cell) => await RunmeTaskProvider.getRunmeTask(
         current.fsPath,
-        // ToDo(Christian) remove casting once we have defaults
-        // see https://github.com/stateful/runme/issues/90
-        getAnnotations(cell as any).name
-      ))
+        `${getAnnotations(cell.metadata).name}`,
+        cell,
+        {},
+        this.runner!,
+        this.environment
+      )))
   }
 
   public resolveTask(task: Task): ProviderResult<Task> {
@@ -63,36 +86,51 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static getRunmeTask (filePath: string, command: string, options: TaskOptions = {}): RunmeTask {
-    const cwd = options.cwd || path.dirname(filePath)
-    const closeTerminalOnSuccess = options.closeTerminalOnSuccess || true
-    const isBackground = options.isBackground || false
+  static async getRunmeTask (
+    filePath: string,
+    command: string,
+    cell: NotebookCell|NotebookCellData,
+    options: TaskOptions = {},
+    runner: IRunner,
+    environment?: IRunnerEnvironment,
+  ): Promise<Task> {
+    const source = workspace.workspaceFolders?.[0] ?
+      path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath) :
+      path.basename(filePath)
 
-    const definition: RunmeTaskDefinition = {
-      type: 'runme',
-      filePath,
-      command,
-      closeTerminalOnSuccess,
-      isBackground,
-      cwd
+    const { interactive, background } = getAnnotations(cell.metadata)
+
+    const cwd = options.cwd || path.dirname(filePath)
+    const isBackground = options.isBackground || background
+
+    const runOpts: RunProgramOptions = {
+      programName: getShellPath() ?? 'sh',
+      exec: {
+        type: 'script',
+        script: 'value' in cell ? cell.value : cell.document.getText(),
+      },
+      cwd,
+      environment,
+      tty: interactive,
     }
 
+    const name = `${command}`
+
     const task = new Task(
-      definition,
+      { type: 'runme', name, command: name },
       TaskScope.Workspace,
-      /**
-       * make sure to give command different names so VS Code doesn't
-       * prevent it from executing, see
-       * https://github.com/microsoft/vscode/commit/baea24b353ab2cb575c680c2a66559206ccdf5f5
-       */
-      `${command} #${++this.execCount}`,
-      RunmeTaskProvider.id
-    ) as RunmeTask
+      name,
+      source,
+      new CustomExecution(async () => {
+        const program = await runner.createProgramSession(runOpts)
+        return program
+      })
+    )
 
     task.isBackground = isBackground
     task.presentationOptions = {
       focus: true,
-      // why doesn't this work with Slient?
+      // why doesn't this work with Silent?
       reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
       panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
