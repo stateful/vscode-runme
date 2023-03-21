@@ -12,7 +12,7 @@ const getLastStableRelease = async () => {
     })
     const { tag_name } = await response.json()
     const arch = os.arch()
-    const binary = `${os.platform()}_${arch === 'x64' ? 'x86_64' : arch}.tar.gz`
+    const binary = `${os.platform().replace('win32', 'windows')}_${arch === 'x64' ? 'x86_64' : arch}.tar.gz`
     const downloadUrl = `https://download.stateful.com/runme/${tag_name.replace('v', '')}/runme_${binary}`
     // This console log is important since it's being exported to a ENV VAR
     console.log(downloadUrl)
