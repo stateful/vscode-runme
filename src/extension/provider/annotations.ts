@@ -45,7 +45,8 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   }
 
   public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
-    await (await this.kernel.getCellOutputs(cell)).toggleOutput(OutputType.annotations)
+    const outputs = await this.kernel.getCellOutputs(cell)
+    await outputs.toggleOutput(OutputType.annotations)
   }
 
   async provideCellStatusBarItems(
