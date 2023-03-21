@@ -17,15 +17,15 @@ import { Mutex } from '../utils/sync'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
 
 export class NotebookCellManager {
-  private data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
+  #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
 
   constructor(
     protected controller: NotebookController
   ) { }
 
   registerCell(cell: NotebookCell) {
-    if(this.data.has(cell)) { return }
-    this.data.set(cell, new NotebookCellOutputManager(cell, this.controller))
+    if(this.#data.has(cell)) { return }
+    this.#data.set(cell, new NotebookCellOutputManager(cell, this.controller))
   }
 
   async createNotebookCellExecution(cell: NotebookCell) {
@@ -34,7 +34,7 @@ export class NotebookCellManager {
   }
 
   async getNotebookOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
-    const outputs = this.data.get(cell)
+    const outputs = this.#data.get(cell)
     if(!outputs) {
       throw new Error(`cell at index ${cell.index} has not been registered!`)
     }
