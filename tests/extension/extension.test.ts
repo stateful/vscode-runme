@@ -36,10 +36,10 @@ test('initializes all providers', async () => {
     get: vi.fn((config: string) => configValues[config])
   } as any)
   vi.mocked(Uri.joinPath).mockReturnValue('/foo/bar' as any)
+  RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)
-  RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
   expect(commands.registerCommand).toBeCalledTimes(14)
