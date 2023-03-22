@@ -94,15 +94,19 @@ class RunmeServer implements Disposable {
       return `${SERVER_ADDRESS}:${this.#port}`
     }
 
+    private static async getTLS(tlsDir: string) {
+      const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
+      const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
+
+      return { certPEM, privKeyPEM }
+    }
+
     protected async channelCredentials(): Promise<ChannelCredentials> {
       if (!getTLSEnabled()) {
         return ChannelCredentials.createInsecure()
       }
 
-      const tlsDir = getTLSDir()
-
-      const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
-      const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
+      const { certPEM, privKeyPEM } = await RunmeServer.getTLS(getTLSDir())
 
       return ChannelCredentials.createSsl(
         certPEM,

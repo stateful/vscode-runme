@@ -2,6 +2,8 @@ import { test, expect, vi } from 'vitest'
 import { notebooks, workspace, commands, window, Uri } from 'vscode'
 
 import { RunmeExtension } from '../../src/extension/extension'
+import RunmeServer from '../../src/extension/server/runmeServer'
+import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -37,6 +39,7 @@ test('initializes all providers', async () => {
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)
+  RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
   expect(commands.registerCommand).toBeCalledTimes(14)
