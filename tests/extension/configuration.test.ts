@@ -40,6 +40,7 @@ beforeEach(() => {
     })
   })
 
+  vi.mock('vscode-telemetry')
 
   vi.mock('node:path', async () => {
     const p = await vi.importActual('node:path') as typeof import('node:path')
