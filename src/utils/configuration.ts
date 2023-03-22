@@ -4,6 +4,8 @@ import os from 'node:os'
 import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
+import { isWindows } from '../extension/executors/utils'
+
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
 const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
@@ -60,6 +62,11 @@ const getPortNumber = (): number => {
 }
 
 const getTLSEnabled = (): boolean => {
+  if(isWindows()) {
+    // disable on windows until we figure out file permissions
+    return false
+  }
+
   return getServerConfigurationValue('enableTLS', true)
 }
 
