@@ -144,11 +144,7 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Check Git diff
-        run: |
-          git diff
-      
+  
       - name: Version Package
         if: steps.tag_check.outputs.exists_tag == 'false'
         run: |
