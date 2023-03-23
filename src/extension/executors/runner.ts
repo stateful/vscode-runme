@@ -12,7 +12,6 @@ import {
   NotebookCellExecution,
   TextDocument,
   ExtensionContext,
-  Disposable,
   NotebookRendererMessaging,
   workspace
 } from 'vscode'
@@ -96,7 +95,7 @@ export async function executeRunner(
     tty: interactive
   })
 
-  const disposables: Disposable[] = [program]
+  context.subscriptions.push(program)
 
   program.onDidWrite((data) => postClientMessage(messaging, ClientMessages.terminalStdout, {
     'runme.dev/uuid': cellUUID,
@@ -240,9 +239,6 @@ export async function executeRunner(
       }
     })
   }
-
-  const dispose: Disposable = { dispose() { disposables.forEach(d => d.dispose()) }, }
-  context.subscriptions.push(dispose)
 
   return await new Promise<boolean>((resolve, reject) => {
     program.onDidClose((code) => {
