@@ -1,10 +1,11 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
-  Pseudoterminal,
-  Event,
+  type Pseudoterminal,
+  type Event,
+  type Disposable,
+  type TerminalDimensions,
   EventEmitter,
-  Disposable,
 } from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
@@ -17,6 +18,7 @@ import {
   ExecuteStop,
   GetSessionRequest,
   Session,
+  Winsize,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
 import { getShellPath } from './executors/utils'
@@ -41,6 +43,7 @@ export interface RunProgramOptions {
     RunProgramExecution
   tty?: boolean
   environment?: IRunnerEnvironment
+  terminalDimensions?: TerminalDimensions
 }
 
 export interface IRunner extends Disposable {
@@ -386,6 +389,14 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.initialized = true
 
+    this.opts.envs ??= []
+
+    if(this.opts.tty) {
+      this.opts.envs.push('TERM=xterm-256color')
+    } else {
+      this.opts.envs.push('TERM=')
+    }
+
     await this.session.requests.send(GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts))
   }
 
@@ -450,13 +461,15 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }))
   }
 
-  open(): void {
+  open(initialDimensions?: TerminalDimensions): void {
     // Workaround to force terminal to close if opened after early exit
     // TODO(mxs): find a better solution here
     if(this.hasExited()) {
       this._onDidClose.fire(1)
       return
     }
+
+    this.opts.terminalDimensions = initialDimensions
 
     // in pty, we wait for open to run
     this.run()
@@ -506,6 +519,12 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.dispose()
   }
 
+  setDimensions(dimensions: TerminalDimensions): void {
+    this.session.requests.send(ExecuteRequest.create({
+      winsize: terminalDimensionsToWinsize(dimensions)
+    }))
+  }
+
   hasExited() {
     return this.exitReason
   }
@@ -516,7 +535,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   static runOptionsToExecuteRequest(
-    { programName, args, cwd, environment, exec, tty, envs }: RunProgramOptions
+    { programName, args, cwd, environment, exec, tty, envs, terminalDimensions }: RunProgramOptions
   ): ExecuteRequest {
     if(environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -530,7 +549,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       sessionId: environment?.getSessionId(),
       programName,
       ...exec?.type === 'commands' && { commands: exec.commands },
-      ...exec?.type === 'script' && { script: exec.script }
+      ...exec?.type === 'script' && { script: exec.script },
+      ...terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) },
     })
   }
 }
@@ -556,4 +576,11 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   private async delete() {
     return await this.client.deleteSession({ id: this.getSessionId() })
   }
+}
+
+function terminalDimensionsToWinsize({ rows, columns }: TerminalDimensions): Winsize {
+  return Winsize.create({
+    cols: columns,
+    rows,
+  })
 }
