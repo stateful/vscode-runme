@@ -392,7 +392,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.opts.envs ??= []
 
     if(this.opts.tty) {
-      this.opts.envs.push('TERM=xterm')
+      this.opts.envs.push('TERM=xterm-256color')
     } else {
       this.opts.envs.push('TERM=')
     }
