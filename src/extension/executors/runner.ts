@@ -12,7 +12,6 @@ import {
   NotebookCellExecution,
   TextDocument,
   ExtensionContext,
-  Disposable,
   NotebookRendererMessaging,
   workspace
 } from 'vscode'
@@ -64,7 +63,7 @@ export async function executeRunner(
   }
 
   const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background } = annotations
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
 
   let execution: RunProgramExecution = {
     type: 'commands', commands
@@ -96,7 +95,7 @@ export async function executeRunner(
     tty: interactive
   })
 
-  const disposables: Disposable[] = [program]
+  context.subscriptions.push(program)
 
   program.onDidWrite((data) => postClientMessage(messaging, ClientMessages.terminalStdout, {
     'runme.dev/uuid': cellUUID,
@@ -158,9 +157,7 @@ export async function executeRunner(
       program.close()
     })
 
-    disposables.push({ dispose: () => program.close() })
     await program.run()
-
   } else {
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
@@ -206,8 +203,6 @@ export async function executeRunner(
       ])
     }
 
-    disposables.push({ dispose: () => execution.terminate() })
-
     exec.token.onCancellationRequested(() => {
       try {
         // runs `program.close()` implicitly
@@ -239,13 +234,11 @@ export async function executeRunner(
       /**
        * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0 && annotations.closeTerminalOnSuccess) {
+      if (e.exitCode === 0 && closeTerminalOnSuccess && !background) {
         closeTerminalByEnvID(RUNME_ID)
       }
     })
   }
-  const dispose: Disposable = { dispose() { disposables.forEach(d => d.dispose()) }, }
-  context.subscriptions.push(dispose)
 
   return await new Promise<boolean>((resolve, reject) => {
     program.onDidClose((code) => {
@@ -278,12 +271,15 @@ export async function executeRunner(
     if (background && interactive) {
       setTimeout(
         () => {
-          closeTerminalByEnvID(RUNME_ID)
+          if (closeTerminalOnSuccess) {
+            closeTerminalByEnvID(RUNME_ID)
+          }
+
           resolve(true)
         },
         BACKGROUND_TASK_HIDE_TIMEOUT
       )
     }
-  }).finally(() => { dispose.dispose() })
+  })
 }
 
