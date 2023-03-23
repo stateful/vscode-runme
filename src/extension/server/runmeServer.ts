@@ -136,7 +136,8 @@ class RunmeServer implements Disposable {
         const args = [
           'server',
           '--address',
-          this.address()
+          this.address(),
+          '--insecure',
         ]
 
         if(this.enableRunner) {
