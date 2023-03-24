@@ -315,3 +315,7 @@ export function getGrpcHost() {
 export async function isPortAvailable(port: number): Promise<boolean> {
   return (await getPort({ port })) === port
 }
+
+export function processEnviron(): string[] {
+  return Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+}

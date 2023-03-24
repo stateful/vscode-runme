@@ -8,7 +8,6 @@ import RunmeServerError from './server/runmeServerError'
 import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
-import { CliProvider } from './provider/cli'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -24,7 +23,8 @@ import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import { BOOTFILE } from './constants'
-import { GrpcRunner } from './runner'
+import { GrpcRunner, IRunner } from './runner'
+import { CliProvider } from './provider/cli'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -36,7 +36,13 @@ export class RunmeExtension {
       retryOnFailure: true,
       maxNumberOfIntents: 2,
     }, !grpcServer, grpcRunner)
-    grpcRunner && kernel.useRunner(new GrpcRunner(server))
+
+    let runner: IRunner|undefined
+    if (grpcRunner) {
+      runner = new GrpcRunner(server)
+      kernel.useRunner(runner)
+    }
+
     const serializer = grpcSerializer ? new GrpcSerializer(context, server) : new WasmSerializer(context)
 
     /**
@@ -88,7 +94,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
       RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context)),
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner, kernel)),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**
        * tree viewer items
@@ -102,14 +109,6 @@ export class RunmeExtension {
        */
       window.registerUriHandler(uriHandler)
     )
-
-    /**
-     * setup extension based on `pseudoterminal` experiment flag
-     */
-    const hasPsuedoTerminalExperimentEnabled = kernel.hasExperimentEnabled('pseudoterminal')
-    !hasPsuedoTerminalExperimentEnabled
-      ? context.subscriptions.push(notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()))
-      : tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context))
 
     if (workspace.workspaceFolders?.length && workspace.workspaceFolders[0]) {
       const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)

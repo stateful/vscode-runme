@@ -1,4 +1,4 @@
-import { NotebookCellKind } from 'vscode'
+import { NotebookCellKind, TaskDefinition } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -116,7 +116,7 @@ export interface OutputItemsPayload {
   mime: string
 }
 
-export interface RunmeTaskDefinition {
+export interface RunmeTaskDefinition extends TaskDefinition {
   type: 'runme'
   filePath: string
   command: string

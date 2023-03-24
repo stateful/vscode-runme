@@ -230,12 +230,6 @@
             "default": true,
             "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
           },
-          "runme.experiments.pseudoterminal": {
-            "type": "boolean",
-            "scope": "machine",
-            "default": false,
-            "markdownDescription": "If set to `true`, you will executing code blocks natively through the Runme CLI (very experimental)."
-          },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "machine",
