@@ -18,11 +18,12 @@ import {
   NotebookCellData,
 } from 'vscode'
 
-import { getAnnotations } from '../utils'
+import { getAnnotations, processEnviron } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
 import { getShellPath } from '../executors/utils'
+import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 
@@ -37,7 +38,7 @@ export class RunmeTaskProvider implements TaskProvider {
     private context: ExtensionContext,
     private serializer: SerializerBase,
     private runner?: IRunner,
-    private environment?: IRunnerEnvironment
+    private kernel?: Kernel
   ) {}
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
@@ -67,6 +68,8 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const notebook = await this.serializer.deserializeNotebook(mdContent, token)
 
+    const environment = this.kernel?.getRunnerEnvironment()
+
     return await Promise.all(notebook.cells
       .filter((cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code)
       .map(async (cell) => await RunmeTaskProvider.getRunmeTask(
@@ -75,7 +78,7 @@ export class RunmeTaskProvider implements TaskProvider {
         cell,
         {},
         this.runner!,
-        this.environment
+        environment
       )))
   }
 
@@ -112,6 +115,10 @@ export class RunmeTaskProvider implements TaskProvider {
       cwd,
       environment,
       tty: interactive,
+    }
+
+    if (!environment) {
+      runOpts.envs = processEnviron()
     }
 
     const name = `${command}`

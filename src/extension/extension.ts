@@ -94,7 +94,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
       RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner)),
+      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner, kernel)),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**

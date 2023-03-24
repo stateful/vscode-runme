@@ -19,7 +19,7 @@ import { API } from '../utils/deno/api'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey, getAnnotations, hashDocumentUri } from './utils'
+import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
@@ -329,7 +329,7 @@ export class Kernel implements Disposable {
           const env = await runner.createEnvironment(
             // copy env from process naively for now
             // later we might want a more sophisticated approach/to bring this serverside
-            Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+            processEnviron()
           )
 
           if(this.runner !== runner) { return }
@@ -340,6 +340,10 @@ export class Kernel implements Disposable {
         }
       })
     }
+  }
+
+  getRunnerEnvironment(): IRunnerEnvironment | undefined {
+    return this.environment
   }
 
   // TODO: use better abstraction as part of move away from executor model
