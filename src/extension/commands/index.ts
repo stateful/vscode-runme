@@ -47,9 +47,10 @@ export function runCLICommand(
 ) {
  return async function(cell: NotebookCell) {
     let runmeExecutable: string
+    const cwd = path.dirname(cell.document.uri.fsPath)
 
     const args = [
-      `--chdir="${path.dirname(cell.document.uri.fsPath)}"`,
+      `--chdir="${cwd}"`,
       `--filename="${path.basename(cell.document.uri.fsPath)}"`
     ]
 
@@ -86,6 +87,7 @@ export function runCLICommand(
     const annotations = getAnnotations(cell)
     const term = window.createTerminal({
       name: `CLI: ${annotations.name}`,
+      cwd,
       env: envs,
     })
     term.show(false)
