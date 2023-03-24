@@ -1,13 +1,17 @@
 import path from 'node:path'
+import os from 'node:os'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
   workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
 } from 'vscode'
 
+import { getBinaryPath, getTLSDir, getTLSEnabled } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { CliProvider } from '../provider/cli'
 import { getAnnotations, getTerminalByCell } from '../utils'
+import RunmeServer from '../server/runmeServer'
+import { GrpcRunnerEnvironment } from '../runner'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -35,23 +39,53 @@ export function stopBackgroundTask (cell: NotebookCell) {
   return window.showInformationMessage(`${terminal?.name} task terminated!`)
 }
 
-export async function runCLICommand (cell: NotebookCell) {
-  if (!await CliProvider.isCliInstalled()) {
-    return window.showInformationMessage(
-      'Runme CLI is not installed. Do you want to download it?',
-      'Download now'
-    ).then((openBrowser) => openBrowser && env.openExternal(
-      Uri.parse('https://github.com/stateful/runme/releases')
-    ))
+export function runCLICommand(
+  extensionBaseUri: Uri,
+  grpcRunner: boolean,
+  server: RunmeServer,
+  kernel: Kernel
+) {
+ return async function(cell: NotebookCell) {
+    let runmeExecutable: string
+
+    const args = [
+      `--chdir="${path.dirname(cell.document.uri.fsPath)}"`,
+      `--filename="${path.basename(cell.document.uri.fsPath)}"`
+    ]
+
+    if (grpcRunner) {
+      runmeExecutable = getBinaryPath(extensionBaseUri, os.platform()).fsPath
+
+      args.push(`--server=${server.address()}`)
+
+      if (getTLSEnabled()) {
+        args.push(`--tls=${getTLSDir()}`)
+      } else {
+        args.push('--insecure')
+      }
+
+      const runnerEnv = kernel.getRunnerEnvironment()
+      if(runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
+        args.push(`--session=${runnerEnv.getSessionId()}`)
+      }
+    } else {
+      if (!await CliProvider.isCliInstalled()) {
+        return window.showInformationMessage(
+          'Runme CLI is not installed. Do you want to download it?',
+          'Download now'
+        ).then((openBrowser) => openBrowser && env.openExternal(
+          Uri.parse('https://github.com/stateful/runme/releases')
+        ))
+      }
+
+      runmeExecutable = 'runme'
+    }
+
+    const annotations = getAnnotations(cell)
+    const term = window.createTerminal(`CLI: ${annotations.name}`)
+    term.show(false)
+    term.sendText(`${runmeExecutable} run ${annotations.name} ${args.join(' ')}`)
   }
-  const annotations = getAnnotations(cell)
-  const term = window.createTerminal(`CLI: ${annotations.name}`)
-  const args = [
-    `--chdir="${path.dirname(cell.document.uri.fsPath)}"`,
-    `--filename="${path.basename(cell.document.uri.fsPath)}"`
-  ]
-  term.show(false)
-  term.sendText(`runme run ${annotations.name} ${args.join(' ')}`)
 }
 
 export function openAsRunmeNotebook (doc: NotebookDocument) {

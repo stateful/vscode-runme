@@ -90,7 +90,7 @@ class RunmeServer implements Disposable {
       }
     }
 
-    protected address() {
+    address() {
       return `${SERVER_ADDRESS}:${this.#port}`
     }
 

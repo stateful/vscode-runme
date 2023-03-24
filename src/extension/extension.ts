@@ -85,7 +85,10 @@ export class RunmeExtension {
 
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal),
-      RunmeExtension.registerCommand('runme.runCliCommand', runCLICommand),
+      RunmeExtension.registerCommand(
+        'runme.runCliCommand',
+        runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+      ),
       RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
