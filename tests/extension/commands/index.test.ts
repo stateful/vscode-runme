@@ -38,6 +38,14 @@ vi.mock('../../../src/extension/provider/cli', () => ({
   }
 }))
 
+vi.mock('../../../src/extension/server/runmeServer.ts', () => ({
+  default: class { }
+}))
+
+vi.mock('../../../src/extension/runner', () => ({
+  GrpcRunnerEnvironment: class { }
+}))
+
 beforeEach(() => {
   vi.mocked(window.showWarningMessage).mockClear()
   vi.mocked(window.showInformationMessage).mockClear()
@@ -60,12 +68,15 @@ test('copyCellToClipboard', () => {
 })
 
 test('runCLICommand if CLI is not installed', async () => {
-  const cell: any = {}
+  const cell: any = {
+    metadata: { name: 'foobar' },
+    document: { uri: { fsPath: '/foo/bar/README.md' }}
+  }
   vi.mocked(window.showInformationMessage).mockResolvedValueOnce(false as any)
-  await runCLICommand(cell)
+  await runCLICommand({} as any, false, {} as any, {} as any)(cell)
   expect(env.openExternal).toBeCalledTimes(0)
   vi.mocked(window.showInformationMessage).mockResolvedValue(true as any)
-  await runCLICommand(cell)
+  await runCLICommand({} as any, false, {} as any, {} as any)(cell)
   expect(env.openExternal).toBeCalledTimes(1)
 })
 
@@ -76,8 +87,11 @@ test('runCLICommand if CLI is installed', async () => {
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
   vi.mocked(getAnnotations).mockReturnValue(cell.metadata)
-  await runCLICommand(cell)
-  expect(window.createTerminal).toBeCalledWith('CLI: foobar')
+  await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+  expect(window.createTerminal).toBeCalledWith({
+    env: {},
+    name: 'CLI: foobar'
+  })
   expect(terminal.show).toBeCalledTimes(1)
   expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo/bar" --filename="README.md"')
 })
