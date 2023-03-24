@@ -79,7 +79,7 @@ class RunmeServer implements Disposable {
     }
 
     async isRunning(): Promise<boolean> {
-      const client = new HealthClient(this.transport())
+      const client = new HealthClient(await this.transport())
 
       try {
         const { response } = await client.check(HealthCheckRequest.create())
