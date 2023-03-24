@@ -8,7 +8,7 @@ import { isWindows } from '../extension/executors/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
-const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
+export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
 
 const configurationSchema = {
     server: {
