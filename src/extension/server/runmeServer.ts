@@ -163,6 +163,8 @@ class RunmeServer implements Disposable {
 
         if(getTLSEnabled()) {
           args.push('--tls', getTLSDir())
+        } else {
+          args.push('--insecure')
         }
 
         const process = spawn(binaryLocation, args)
