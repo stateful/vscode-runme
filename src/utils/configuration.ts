@@ -1,10 +1,14 @@
 import path from 'node:path'
+import os from 'node:os'
 
 import { Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
+import { isWindows } from '../extension/executors/utils'
+
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
+export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
 
 const configurationSchema = {
     server: {
@@ -19,7 +23,14 @@ const configurationSchema = {
             .optional(),
         enableLogger: z
             .boolean()
-            .default(false)
+            .default(false),
+        enableTLS: z
+            .boolean()
+            .default(true),
+        tlsDir: z
+            .string()
+            .nonempty()
+            .default(DEFAULT_TLS_DIR),
     },
     terminal: {
         enabled: z.boolean().default(false)
@@ -48,6 +59,19 @@ return defaultValue
 
 const getPortNumber = (): number => {
     return getServerConfigurationValue<number>('port', 7863)
+}
+
+const getTLSEnabled = (): boolean => {
+  if(isWindows()) {
+    // disable on windows until we figure out file permissions
+    return false
+  }
+
+  return getServerConfigurationValue('enableTLS', true)
+}
+
+const getTLSDir = (): string => {
+  return getServerConfigurationValue('tlsDir', DEFAULT_TLS_DIR)
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
@@ -81,5 +105,7 @@ export {
     getBinaryPath,
     enableServerLogs,
     getServerConfigurationValue,
-    isRunmeIntegratedTerminalEnabled
+    isRunmeIntegratedTerminalEnabled,
+    getTLSEnabled,
+    getTLSDir,
 }

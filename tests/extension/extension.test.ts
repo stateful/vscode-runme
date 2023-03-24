@@ -2,6 +2,8 @@ import { test, expect, vi } from 'vitest'
 import { notebooks, workspace, commands, window, Uri } from 'vscode'
 
 import { RunmeExtension } from '../../src/extension/extension'
+import RunmeServer from '../../src/extension/server/runmeServer'
+import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -34,6 +36,7 @@ test('initializes all providers', async () => {
     get: vi.fn((config: string) => configValues[config])
   } as any)
   vi.mocked(Uri.joinPath).mockReturnValue('/foo/bar' as any)
+  RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
   const ext = new RunmeExtension()
   await ext.initialize(context)

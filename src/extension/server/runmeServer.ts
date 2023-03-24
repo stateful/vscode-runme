@@ -1,12 +1,13 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
+import path from 'node:path'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Disposable, Uri, EventEmitter } from 'vscode'
 
 import { SERVER_ADDRESS } from '../../constants'
-import { enableServerLogs, getBinaryPath, getPortNumber } from '../../utils/configuration'
+import { enableServerLogs, getBinaryPath, getPortNumber, getTLSDir, getTLSEnabled } from '../../utils/configuration'
 import { initParserClient } from '../grpc/client'
 import { DeserializeRequest } from '../grpc/serializerTypes'
 import { isPortAvailable } from '../utils'
@@ -75,7 +76,7 @@ class RunmeServer implements Disposable {
     }
 
     async isRunning(): Promise<boolean> {
-      const client = initParserClient(this.transport())
+      const client = initParserClient(await this.transport())
       try {
         const deserialRequest = DeserializeRequest.create({ source: Buffer.from('## Server running', 'utf-8') })
         const request = client.deserialize(deserialRequest)
@@ -93,8 +94,25 @@ class RunmeServer implements Disposable {
       return `${SERVER_ADDRESS}:${this.#port}`
     }
 
-    protected channelCredentials() {
-      return ChannelCredentials.createInsecure()
+    private static async getTLS(tlsDir: string) {
+      const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
+      const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
+
+      return { certPEM, privKeyPEM }
+    }
+
+    protected async channelCredentials(): Promise<ChannelCredentials> {
+      if (!getTLSEnabled()) {
+        return ChannelCredentials.createInsecure()
+      }
+
+      const { certPEM, privKeyPEM } = await RunmeServer.getTLS(getTLSDir())
+
+      return ChannelCredentials.createSsl(
+        certPEM,
+        privKeyPEM,
+        certPEM,
+      )
     }
 
     protected closeTransport() {
@@ -102,12 +120,12 @@ class RunmeServer implements Disposable {
       this.#transport = undefined
     }
 
-    transport() {
+    async transport() {
       if(this.#transport) { return this.#transport }
 
       this.#transport = new GrpcTransport({
         host: this.address(),
-        channelCredentials: this.channelCredentials(),
+        channelCredentials: await this.channelCredentials(),
       })
 
       return this.#transport
@@ -137,11 +155,16 @@ class RunmeServer implements Disposable {
           'server',
           '--address',
           this.address(),
-          '--insecure',
         ]
 
         if(this.enableRunner) {
           args.push('--runner')
+        }
+
+        if(getTLSEnabled()) {
+          args.push('--tls', getTLSDir())
+        } else {
+          args.push('--insecure')
         }
 
         const process = spawn(binaryLocation, args)
@@ -171,23 +194,30 @@ class RunmeServer implements Disposable {
 
         this.#process = process
 
-        return new Promise((resolve, reject) => {
-          const cb = (data: any) => {
-              const msg = data.toString()
-              try {
+        return Promise.race(
+          [
+            new Promise<string>((resolve, reject) => {
+              const cb = (data: any) => {
+                const msg = data.toString()
+                try {
                   const log = JSON.parse(msg)
-                  if (log.addr === this.address()) {
+                  if (log.addr) {
+                    process.stderr.off('data', cb)
                     return resolve(log.addr)
                   }
-              } catch (err: any) {
-                  reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
-              } finally {
-                process.stderr.off('data', cb)
+                } catch (err: any) {
+                    reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
+                }
               }
-          }
 
-          process.stderr.on('data', cb)
-        })
+              process.stderr.on('data', cb)
+            }),
+            new Promise<never>((_, reject) => setTimeout(
+              () => reject(new Error('Timed out listening for server ready message')),
+              10000
+            )),
+          ]
+        )
     }
 
     async acceptsConnection(): Promise<void> {
@@ -235,9 +265,10 @@ class RunmeServer implements Disposable {
       try {
           addr = await this.start()
       } catch (e) {
-          if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
-              this.#intent++
-              return this.launch()
+        if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
+            console.error(`Failed to start runme server, retrying. Error: ${(e as Error).message}`)
+            this.#intent++
+            return this.launch()
           }
           throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
       }
@@ -251,7 +282,7 @@ class RunmeServer implements Disposable {
       this.closeTransport()
       await this.acceptsConnection()
 
-      this.#onTransportReady.fire({ transport: this.transport() })
+      this.#onTransportReady.fire({ transport: await this.transport() })
     }
 
     private _port() {

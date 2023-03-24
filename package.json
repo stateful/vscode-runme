@@ -282,6 +282,17 @@
             "default": false,
             "markdownDescription": "Enable Runme server logs. (It requires the GRPC interface enabled)"
           },
+          "runme.server.tlsDir": {
+            "type": "string",
+            "scope": "machine",
+            "markdownDescription": "Directory for storing TLS certificates for GRPC interface"
+          },
+          "runme.server.enableTLS": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": true,
+            "markdownDescription": "Use TLS over GRPC server interface (strongly recommended - only disable if you know what you are doing!!!)"
+          },
           "runme.terminal.enabled": {
             "type": "boolean",
             "scope": "machine",

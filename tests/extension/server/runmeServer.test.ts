@@ -18,7 +18,18 @@ vi.mock('node:fs/promises', async () => ({
       access: vi.fn().mockResolvedValue(false),
       stat: vi.fn().mockResolvedValue({
           isFile: vi.fn().mockReturnValue(false)
-      })
+      }),
+      readFile: vi.fn().mockImplementation((filePath) => {
+        if (filePath.toString().endsWith('cert.pem')) {
+          return testCertPEM
+        }
+
+        if (filePath.toString().endsWith('key.pem')) {
+          return testPrivKeyPEM
+        }
+
+        return Buffer.from('')
+      }),
   }
 }))
 
@@ -28,30 +39,67 @@ vi.mock('node:child_process', async () => ({
 
 import Server from '../../../src/extension/server/runmeServer'
 import RunmeServerError from '../../../src/extension/server/runmeServerError'
+import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
 
 suite('Runme server spawn process', () => {
-    const configValues = {
+    const configValues: Record<string, any> = {
         binaryPath: 'bin/runme'
     }
     vi.mocked(workspace.getConfiguration).mockReturnValue({
         get: vi.fn().mockImplementation((config: string) => configValues[config])
     } as any)
 
+    test('proper credentials without tls', async () => {
+      configValues.enableTLS = false
+
+      const server = new Server(
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        },
+        false
+      )
+
+      const creds = await server['channelCredentials']()
+      expect(creds._isSecure()).toBe(false)
+  })
+
+  test('proper credentials with tls', async () => {
+    configValues.enableTLS = true
+
+    const server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false
+    )
+
+    const creds = await server['channelCredentials']()
+    expect(creds._isSecure()).toBe(true)
+})
+
     test('Should try 2 times before failing', async () => {
-        const server = new Server(
-          Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-          {
-            retryOnFailure: true,
-            maxNumberOfIntents: 2,
-          },
-          false
-        )
-        const serverLaunchSpy = vi.spyOn(server, 'launch')
-        await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
-        expect(serverLaunchSpy).toBeCalledTimes(3)
+      configValues.enableTLS = true
+
+      const server = new Server(
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        },
+        false
+      )
+      const serverLaunchSpy = vi.spyOn(server, 'launch')
+      await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
+      expect(serverLaunchSpy).toBeCalledTimes(3)
     })
 
     test('Should increment until port is available', async () => {
+      configValues.enableTLS = true
+
       const server = new Server(
         Uri.file('/Users/user/.vscode/extension/stateful.runme'),
         {

@@ -144,9 +144,9 @@ export class GrpcRunner implements IRunner {
     this.client = undefined
   }
 
-  private initRunnerClient(transport?: GrpcTransport) {
+  private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
-    this.client = new RunnerServiceClient(transport ?? this.server.transport())
+    this.client = new RunnerServiceClient(transport ?? await this.server.transport())
     this._onReady.fire()
   }
 

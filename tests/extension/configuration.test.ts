@@ -7,7 +7,9 @@ import {
   getPortNumber,
   enableServerLogs,
   getBinaryPath,
-  getServerConfigurationValue
+  getServerConfigurationValue,
+  getTLSDir,
+  DEFAULT_TLS_DIR
 } from '../../src/utils/configuration'
 
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
@@ -18,10 +20,12 @@ const SETTINGS_MOCK:
         port: number | string | undefined
         binaryPath: string | undefined
         enableLogger: string | boolean | undefined
+        tlsDir: string | undefined
     } = {
     port: undefined,
     binaryPath: undefined,
-    enableLogger: undefined
+    enableLogger: undefined,
+    tlsDir: undefined
 }
 
 beforeEach(() => {
@@ -40,6 +44,7 @@ beforeEach(() => {
     })
   })
 
+  vi.mock('vscode-telemetry')
 
   vi.mock('node:path', async () => {
     const p = await vi.importActual('node:path') as typeof import('node:path')
@@ -94,6 +99,16 @@ suite('Configuration', () => {
         SETTINGS_MOCK.enableLogger = 'true'
         const path = enableServerLogs()
         expect(path).toBeFalsy()
+    })
+
+    test('Should get default TLS dir by default', () => {
+      SETTINGS_MOCK.tlsDir = undefined
+      expect(getTLSDir()).toBe(DEFAULT_TLS_DIR)
+    })
+
+    test('Should get set TLS dir if set', () => {
+      SETTINGS_MOCK.tlsDir = '/tmp/runme/tls'
+      expect(getTLSDir()).toBe('/tmp/runme/tls')
     })
 
     test('getServerConfigurationValue Should default to undefined binaryPath', () => {

@@ -308,8 +308,8 @@ export class GrpcSerializer extends SerializerBase {
     this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
   }
 
-  private initParserClient(transport?: GrpcTransport) {
-    this.client = initParserClient(transport ?? this.server.transport())
+  private async initParserClient(transport?: GrpcTransport) {
+    this.client = initParserClient(transport ?? await this.server.transport())
   }
 
   protected async saveNotebook(
