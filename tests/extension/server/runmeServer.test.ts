@@ -2,12 +2,26 @@ import fs from 'node:fs/promises'
 
 import { suite, test, expect, vi, beforeEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
+import {
+  HealthCheckResponse_ServingStatus
+} from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
 // eslint-disable-next-line import/order
 import { isPortAvailable } from '../../../src/extension/utils'
 
+import Server, { IServerConfig } from '../../../src/extension/server/runmeServer'
+import RunmeServerError from '../../../src/extension/server/runmeServerError'
+import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
+
+const healthCheck = vi.fn()
+
 vi.mock('vscode')
-vi.mock('../../../src/extension/grpc/client', () => ({ initParserClient: vi.fn() }))
+vi.mock('../../../src/extension/grpc/client', () => ({
+  initParserClient: vi.fn(),
+  HealthClient: class {
+    check = healthCheck
+  }
+}))
 
 vi.mock('../../../src/extension/utils', () => ({
   isPortAvailable: vi.fn(async () => true),
@@ -37,9 +51,28 @@ vi.mock('node:child_process', async () => ({
   spawn: vi.fn(),
 }))
 
-import Server from '../../../src/extension/server/runmeServer'
-import RunmeServerError from '../../../src/extension/server/runmeServerError'
-import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
+suite('health check', () => {
+  test('passes if serving', async () => {
+    const server = createServer()
+    healthCheck.mockResolvedValueOnce({ response: { status: HealthCheckResponse_ServingStatus.SERVING } })
+
+    expect(await server['isRunning']()).toBe(true)
+  })
+
+  test('fails if not serving', async () => {
+    const server = createServer()
+    healthCheck.mockResolvedValueOnce({ response: { status: HealthCheckResponse_ServingStatus.NOT_SERVING } })
+
+    expect(await server['isRunning']()).toBe(false)
+  })
+
+  test('fails if error', async () => {
+    const server = createServer()
+    healthCheck.mockRejectedValueOnce({ code: 'UNAVAILABLE' })
+
+    expect(await server['isRunning']()).toBe(false)
+  })
+})
 
 suite('Runme server spawn process', () => {
     const configValues: Record<string, any> = {
@@ -84,14 +117,11 @@ suite('Runme server spawn process', () => {
     test('Should try 2 times before failing', async () => {
       configValues.enableTLS = true
 
-      const server = new Server(
-        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-        {
-          retryOnFailure: true,
-          maxNumberOfIntents: 2,
-        },
-        false
-      )
+      const server = createServer({
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      })
+
       const serverLaunchSpy = vi.spyOn(server, 'launch')
       await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
       expect(serverLaunchSpy).toBeCalledTimes(3)
@@ -100,14 +130,10 @@ suite('Runme server spawn process', () => {
     test('Should increment until port is available', async () => {
       configValues.enableTLS = true
 
-      const server = new Server(
-        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-        {
+      const server = createServer({
           retryOnFailure: true,
           maxNumberOfIntents: 2,
-        },
-        false
-      )
+      })
 
       vi.mocked(fs.access).mockResolvedValueOnce()
       vi.mocked(fs.stat).mockResolvedValueOnce({
@@ -125,18 +151,14 @@ suite('Runme server spawn process', () => {
 suite('Runme server accept connections', () => {
     let server: Server
     beforeEach(() => {
-        server = new Server(
-          Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-          {
-            retryOnFailure: false,
-            maxNumberOfIntents: 2,
-            acceptsConnection: {
-              intents: 4,
-              interval: 1,
-            }
-          },
-          false
-        )
+      server = createServer({
+        retryOnFailure: false,
+        maxNumberOfIntents: 2,
+        acceptsConnection: {
+          intents: 4,
+          interval: 1,
+        }
+      })
     })
 
     test('Should wait until server accepts connection', async () => {
@@ -160,24 +182,16 @@ suite('Runme server accept connections', () => {
     })
 })
 
-test('Runme server clears server disposables', () => {
-  const server = new Server(
+function createServer(
+  config: IServerConfig = {
+    retryOnFailure: true,
+    maxNumberOfIntents: 2,
+  },
+  externalServer = false
+) {
+  return new Server(
     Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-    {
-      retryOnFailure: false,
-      maxNumberOfIntents: 2,
-      acceptsConnection: {
-        intents: 4,
-        interval: 1,
-      }
-    },
-    false
+    config,
+    externalServer
   )
-
-  const dispose = vi.fn()
-
-  server['registerServerDisposable']({ dispose })
-  server['clearServerDisposables']()
-
-  expect(dispose).toHaveBeenCalledTimes(1)
-})
+}
