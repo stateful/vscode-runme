@@ -53,20 +53,22 @@ export function runCLICommand(
       `--filename="${path.basename(cell.document.uri.fsPath)}"`
     ]
 
+    const envs: Record<string, string> = { }
+
     if (grpcRunner) {
       runmeExecutable = getBinaryPath(extensionBaseUri, os.platform()).fsPath
 
-      args.push(`--server=${server.address()}`)
+      envs['RUNME_SERVER_ADDR'] = server.address()
 
       if (getTLSEnabled()) {
-        args.push(`--tls=${getTLSDir()}`)
+        envs['RUNME_TLS_DIR'] = getTLSDir()
       } else {
         args.push('--insecure')
       }
 
       const runnerEnv = kernel.getRunnerEnvironment()
       if(runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
-        args.push(`--session=${runnerEnv.getSessionId()}`)
+        envs['RUNME_SESSION'] = runnerEnv.getSessionId()
       }
     } else {
       if (!await CliProvider.isCliInstalled()) {
@@ -82,7 +84,10 @@ export function runCLICommand(
     }
 
     const annotations = getAnnotations(cell)
-    const term = window.createTerminal(`CLI: ${annotations.name}`)
+    const term = window.createTerminal({
+      name: `CLI: ${annotations.name}`,
+      env: envs,
+    })
     term.show(false)
     term.sendText(`${runmeExecutable} run ${annotations.name} ${args.join(' ')}`)
   }
