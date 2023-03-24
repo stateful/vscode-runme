@@ -89,6 +89,7 @@ test('runCLICommand if CLI is installed', async () => {
   vi.mocked(getAnnotations).mockReturnValue(cell.metadata)
   await runCLICommand({} as any, false, {} as any, {} as any)(cell)
   expect(window.createTerminal).toBeCalledWith({
+    cwd: '/foo/bar',
     env: {},
     name: 'CLI: foobar'
   })
