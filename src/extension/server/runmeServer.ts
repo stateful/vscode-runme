@@ -155,7 +155,6 @@ class RunmeServer implements Disposable {
           'server',
           '--address',
           this.address(),
-          '--insecure',
         ]
 
         if(this.enableRunner) {
