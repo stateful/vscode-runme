@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-const CELL_RANDOM_NAME = `Cell #${Math.random().toString().slice(2)}`
-
 const cleanAnnotation = (value: string, character: string): string => {
     return value.trim().replaceAll(/[ ]{2,}/g, '').replaceAll(character, '')
 }
@@ -49,7 +47,7 @@ export const AnnotationSchema = {
             typeof value === 'string' ?
                 cleanAnnotation(value, ',') :
                 value,
-        z.string().default(CELL_RANDOM_NAME)),
+        z.string().default('')),
     mimeType: z
         .string()
         .refine((subject) => {
