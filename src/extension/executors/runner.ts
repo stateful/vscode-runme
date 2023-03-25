@@ -22,7 +22,7 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
+import { isNotebookTerminalFeatureEnabled } from '../../utils/configuration'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -119,8 +119,6 @@ export async function executeRunner(
     program.handleInput(input)
   })
 
-  const useIntegrated = isRunmeIntegratedTerminalEnabled()
-
   if (!interactive) {
     const output: Buffer[] = []
 
@@ -146,8 +144,30 @@ export async function executeRunner(
           }
         }, OutputType.outputItems)
       }
+      const enableNotebookTerminal = mime === 'text/plain' && isNotebookTerminalFeatureEnabled('nonInteractive')
+      if (!enableNotebookTerminal) {
+        replaceOutput(exec, [new NotebookCellOutput([item])])
+      } else {
+        const editorSettings = workspace.getConfiguration('editor')
+        const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
+        const fontSize = editorSettings.get<number>('fontSize', 10)
 
-      replaceOutput(exec, [new NotebookCellOutput([item])])
+        const json: CellOutputPayload<OutputType.terminal> = {
+          type: OutputType.terminal,
+          output: {
+            'runme.dev/uuid': cellUUID,
+            terminalFontFamily: fontFamily,
+            terminalFontSize: fontSize,
+            content: Buffer.concat(output).toString('base64')
+          },
+        }
+
+        await replaceOutput(exec, [
+          new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.terminal),
+          ]),
+        ])
+      }
     }
 
     program.onStdoutRaw(handleOutput)
@@ -168,11 +188,14 @@ export async function executeRunner(
       'exec',
       new CustomExecution(async () => program)
     )
+    const revealNotebookTerminal = background ?
+      isNotebookTerminalFeatureEnabled('backgroundTask') :
+      isNotebookTerminalFeatureEnabled('interactive')
 
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
-      focus: useIntegrated ? false : true,
-      reveal: useIntegrated ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
+      focus: revealNotebookTerminal ? false : true,
+      reveal: revealNotebookTerminal ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
@@ -182,7 +205,7 @@ export async function executeRunner(
       dispose: () => execution.terminate()
     })
 
-    if (useIntegrated) {
+    if (revealNotebookTerminal) {
       const editorSettings = workspace.getConfiguration('editor')
       const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
       const fontSize = editorSettings.get<number>('fontSize', 10)

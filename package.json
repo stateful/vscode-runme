@@ -287,11 +287,23 @@
             "default": true,
             "markdownDescription": "Use TLS over GRPC server interface (strongly recommended - only disable if you know what you are doing!!!)"
           },
-          "runme.terminal.enabled": {
+          "runme.terminal.backgroundTask": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": true,
+            "markdownDescription": "Enable Runme integrated terminal in Background tasks (Experimental)"
+          },
+          "runme.terminal.nonInteractive": {
+            "type": "boolean",
+            "scope": "machine",
+            "default": true,
+            "markdownDescription": "Enable Runme integrated terminal in Non-Interactive scripts (Experimental)"
+          },
+          "runme.terminal.interactive": {
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "Enable Runme integrated terminal (Experimental)"
+            "markdownDescription": "Enable Runme integrated terminal in Interactive scripts (Experimental)"
           }
         }
       }

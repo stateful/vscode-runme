@@ -59,6 +59,11 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
+          terminalElement.setAttribute('initialContent',
+            decodeURIComponent(
+              escape(window.atob(payload.output.content || ''))
+            )
+          )
           element.appendChild(terminalElement)
           break
         case OutputType.error:

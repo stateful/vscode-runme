@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { isWindows } from '../extension/executors/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
-const TERMINAL_SECTION_NAME= 'runme.terminal'
+const TERMINAL_SECTION_NAME = 'runme.terminal'
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
 
 const configurationSchema = {
@@ -32,8 +32,10 @@ const configurationSchema = {
             .nonempty()
             .default(DEFAULT_TLS_DIR),
     },
-    terminal: {
-        enabled: z.boolean().default(false)
+    notebookTerminal: {
+        backgroundTask: z.boolean().default(true),
+        nonInteractive: z.boolean().default(true),
+        interactive: z.boolean().default(false)
     }
 }
 
@@ -47,14 +49,16 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
     return defaultValue
 }
 
-const getRunmeTerminalConfiguration = <T>(configName: keyof typeof configurationSchema.terminal, defaultValue: T) => {
+const getRunmeTerminalConfiguration = <T>(
+    configName: keyof typeof configurationSchema.notebookTerminal,
+    defaultValue: T) => {
     const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
     const configurationValue = configurationSection.get<T>(configName)!
-    const parseResult = configurationSchema.terminal[configName].safeParse(configurationValue)
+    const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
     if (parseResult.success) {
         return parseResult.data as T
     }
-return defaultValue
+    return defaultValue
 }
 
 const getPortNumber = (): number => {
@@ -62,16 +66,16 @@ const getPortNumber = (): number => {
 }
 
 const getTLSEnabled = (): boolean => {
-  if(isWindows()) {
-    // disable on windows until we figure out file permissions
-    return false
-  }
+    if (isWindows()) {
+        // disable on windows until we figure out file permissions
+        return false
+    }
 
-  return getServerConfigurationValue('enableTLS', true)
+    return getServerConfigurationValue('enableTLS', true)
 }
 
 const getTLSDir = (): string => {
-  return getServerConfigurationValue('tlsDir', DEFAULT_TLS_DIR)
+    return getServerConfigurationValue('tlsDir', DEFAULT_TLS_DIR)
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
@@ -96,8 +100,8 @@ const enableServerLogs = (): boolean => {
     return getServerConfigurationValue<boolean>('enableLogger', false)
 }
 
-const isRunmeIntegratedTerminalEnabled = (): boolean => {
-    return getRunmeTerminalConfiguration('enabled', false)
+const isNotebookTerminalFeatureEnabled = (featureName: keyof typeof configurationSchema.notebookTerminal): boolean => {
+    return getRunmeTerminalConfiguration(featureName, false)
 }
 
 export {
@@ -105,7 +109,7 @@ export {
     getBinaryPath,
     enableServerLogs,
     getServerConfigurationValue,
-    isRunmeIntegratedTerminalEnabled,
+    isNotebookTerminalFeatureEnabled,
     getTLSEnabled,
     getTLSDir,
 }

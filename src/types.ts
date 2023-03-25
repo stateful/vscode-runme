@@ -74,6 +74,7 @@ interface Payload {
     ['runme.dev/uuid']: string
     terminalFontFamily: string
     terminalFontSize: number
+    content?: string
   }
 }
 
