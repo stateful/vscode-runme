@@ -2,8 +2,6 @@ import { expect, test, suite } from 'vitest'
 
 import { AnnotationSchema, SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../../src/schema'
 
-const CELL_REGEX = new RegExp('(Cell #)[0-9]+')
-
 suite('AnnotationSchema', () => {
     suite('mimeType', () => {
         test('should fail for an invalid mime-type', () => {
@@ -30,7 +28,9 @@ suite('AnnotationSchema', () => {
         test('it should add a default name when empty', () => {
             const parseResult = AnnotationSchema.name.safeParse(undefined)
             expect(parseResult.success).toBeTruthy()
-            expect(parseResult.success && CELL_REGEX.test(parseResult.data)).toBeTruthy()
+            if (parseResult.success) {
+              expect(parseResult.data).toBe('')
+            }
         })
 
         test('it should fail for null value', () => {
@@ -121,7 +121,7 @@ suite('AnnotationSchema', () => {
                 expect(closeTerminalOnSuccess).toBeTruthy()
                 expect(interactive).toBeFalsy()
                 expect(mimeType).toStrictEqual('text/plain')
-                expect(CELL_REGEX.test(name)).toBeTruthy()
+                expect(name).toBe('')
             }
         })
     })
@@ -153,7 +153,7 @@ suite('AnnotationSchema', () => {
                 expect(closeTerminalOnSuccess).toBeTruthy()
                 expect(interactive).toBeFalsy()
                 expect(mimeType).toStrictEqual('text/plain')
-                expect(CELL_REGEX.test(name)).toBeTruthy()
+                expect(name).toBe('')
             }
         })
     })
