@@ -52,12 +52,12 @@ beforeEach(() => {
   vi.mocked(getAnnotations).mockClear()
 })
 
-test('openTerminal', () => {
-  expect(openTerminal({} as any)).toBe(undefined)
+test('openTerminal', async () => {
+  expect(await openTerminal({} as any, {} as any)).toBe(undefined)
   expect(window.showWarningMessage).toBeCalledTimes(1)
 
   vi.mocked(getTerminalByCell).mockReturnValue({ show: vi.fn().mockReturnValue('showed') } as any)
-  expect(openTerminal({} as any)).toBe('showed')
+  expect(await openTerminal({} as any, {} as any)).toBe('showed')
 })
 
 test('copyCellToClipboard', () => {
@@ -70,7 +70,7 @@ test('copyCellToClipboard', () => {
 test('runCLICommand if CLI is not installed', async () => {
   const cell: any = {
     metadata: { name: 'foobar' },
-    document: { uri: { fsPath: '/foo/bar/README.md' }}
+    document: { uri: { fsPath: '/foo/bar/README.md' } }
   }
   vi.mocked(window.showInformationMessage).mockResolvedValueOnce(false as any)
   await runCLICommand({} as any, false, {} as any, {} as any)(cell)
@@ -83,7 +83,7 @@ test('runCLICommand if CLI is not installed', async () => {
 test('runCLICommand if CLI is installed', async () => {
   const cell: any = {
     metadata: { name: 'foobar' },
-    document: { uri: { fsPath: '/foo/bar/README.md' }}
+    document: { uri: { fsPath: '/foo/bar/README.md' } }
   }
   vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
   vi.mocked(getAnnotations).mockReturnValue(cell.metadata)
@@ -99,12 +99,12 @@ test('runCLICommand if CLI is installed', async () => {
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
-  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined})
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined })
 })
 
 test('open Runme notebook in text editor', (file: TextDocument) => {
   openSplitViewAsMarkdownText(file)
-  expect(window.showTextDocument).toBeCalledWith(file, {viewColumn: ViewColumn.Beside})
+  expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside })
 })
 
 test('stopBackgroundTask if terminal exists', () => {

@@ -40,7 +40,7 @@ export namespace Serializer {
   }
 }
 
-interface ICellOutput<T extends OutputType> {
+export interface ICellOutput<T extends OutputType> {
   type: T
   output: Payload[T]
 }
@@ -74,7 +74,15 @@ interface Payload {
     ['runme.dev/uuid']: string
     terminalFontFamily: string
     terminalFontSize: number
+    /**
+     * The content to display in the terminal
+     */
     content?: string
+    /**
+     * By default, the Notebook Terminal state will be persisted.
+     * Set to true if you want to start a new terminal with a clean state
+     */
+    removeState: boolean
   }
 }
 

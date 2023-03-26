@@ -10,7 +10,6 @@ import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 
-
 interface IWindowSize {
   width: number
   height: number
@@ -205,6 +204,7 @@ export class TerminalView extends LitElement {
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
   protected windowSize: IWindowSize
+  protected terminalContent: string
 
   @property({ type: String })
   uuid?: string
@@ -227,6 +227,7 @@ export class TerminalView extends LitElement {
       height: window.innerHeight,
       width: window.innerWidth
     }
+    this.terminalContent = ''
   }
 
   connectedCallback(): void {
@@ -275,6 +276,7 @@ export class TerminalView extends LitElement {
             const { 'runme.dev/uuid': uuid, data } = e.output
             if (uuid !== this.uuid) { return }
             if (e.type === ClientMessages.terminalStdout) {
+              this.terminalContent += data
               this.terminal!.write(data)
             }
           } break
@@ -291,6 +293,12 @@ export class TerminalView extends LitElement {
     super.disconnectedCallback()
     this.dispose()
     window.removeEventListener('resize', this.#onResizeWindow)
+    this.dispatchEvent(new CustomEvent(
+      'onNotebookTerminalClosed', {
+      detail: {
+        content: this.terminalContent
+      }
+    }))
   }
 
   protected firstUpdated(props: PropertyValues): void {

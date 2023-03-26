@@ -1,5 +1,5 @@
 
-import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri, NotebookCell } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
@@ -84,7 +84,7 @@ export class RunmeExtension {
       // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openTerminal', openTerminal),
+      RunmeExtension.registerCommand('runme.openTerminal', (cell: NotebookCell) => openTerminal(cell, kernel)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
         runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)

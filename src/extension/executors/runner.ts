@@ -13,7 +13,6 @@ import {
   TextDocument,
   ExtensionContext,
   NotebookRendererMessaging,
-  workspace
 } from 'vscode'
 
 import { ClientMessages, OutputType } from '../../constants'
@@ -23,6 +22,7 @@ import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalFeatureEnabled } from '../../utils/configuration'
+import NotebookTerminal from '../notebookTerminal'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -148,19 +148,10 @@ export async function executeRunner(
       if (!enableNotebookTerminal) {
         replaceOutput(exec, [new NotebookCellOutput([item])])
       } else {
-        const editorSettings = workspace.getConfiguration('editor')
-        const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
-        const fontSize = editorSettings.get<number>('fontSize', 10)
-
-        const json: CellOutputPayload<OutputType.terminal> = {
-          type: OutputType.terminal,
-          output: {
-            'runme.dev/uuid': cellUUID,
-            terminalFontFamily: fontFamily,
-            terminalFontSize: fontSize,
-            content: Buffer.concat(output).toString('base64')
-          },
-        }
+        const json = NotebookTerminal.create(cellUUID, {
+          content: Buffer.concat(output).toString('base64'),
+          removeState: true
+        })
 
         await replaceOutput(exec, [
           new NotebookCellOutput([
@@ -206,18 +197,10 @@ export async function executeRunner(
     })
 
     if (revealNotebookTerminal) {
-      const editorSettings = workspace.getConfiguration('editor')
-      const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
-      const fontSize = editorSettings.get<number>('fontSize', 10)
 
-      const json: CellOutputPayload<OutputType.terminal> = {
-        type: OutputType.terminal,
-        output: {
-          'runme.dev/uuid': cellUUID,
-          terminalFontFamily: fontFamily,
-          terminalFontSize: fontSize,
-        },
-      }
+      const json = NotebookTerminal.create(cellUUID, {
+        removeState: true
+      })
 
       await replaceOutput(exec, [
         new NotebookCellOutput([

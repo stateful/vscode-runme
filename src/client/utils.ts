@@ -1,6 +1,6 @@
 import type { RendererContext } from 'vscode-notebook-renderer'
 
-let context: RendererContext<void> | undefined
+let context: RendererContext<string | void>
 
 export function getContext () {
   if (!context) {
@@ -9,6 +9,6 @@ export function getContext () {
   return context
 }
 
-export function setContext (c: RendererContext<void>) {
+export function setContext (c: RendererContext<string | void>) {
   context = c
 }

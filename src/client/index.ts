@@ -13,7 +13,7 @@ import './components'
 // rendering logic inside of the `render()` function.
 // ----------------------------------------------------------------------------
 
-export const activate: ActivationFunction = (context: RendererContext<void>) => {
+export const activate: ActivationFunction = (context: RendererContext<string | void>) => {
   setContext(context)
   return {
     renderOutputItem(outputItem, element) {
@@ -59,10 +59,24 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
+
+          if (payload.output.removeState) {
+            context.setState()
+          }
+          terminalElement.addEventListener('onNotebookTerminalClosed', (data: CustomEventInit<{ content: string }>) => {
+            const content = data.detail!.content
+            if (content) {
+              context.setState(content)
+            }
+          })
+
+          const decodedNotebookTerminalContent = decodeURIComponent(
+            escape(window.atob(payload.output.content || ''))
+          )
+
           terminalElement.setAttribute('initialContent',
-            decodeURIComponent(
-              escape(window.atob(payload.output.content || ''))
-            )
+            context.getState() ??
+            decodedNotebookTerminalContent
           )
           element.appendChild(terminalElement)
           break
