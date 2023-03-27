@@ -1,10 +1,11 @@
 import path from 'node:path'
 import os from 'node:os'
 
-import { Uri, workspace } from 'vscode'
+import { NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
 import { isWindows } from '../extension/executors/utils'
+import { getAnnotations } from '../extension/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
@@ -104,12 +105,23 @@ const isNotebookTerminalFeatureEnabled = (featureName: keyof typeof configuratio
     return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
+const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
+  const { interactive, background } = getAnnotations(cell)
+
+  return interactive ?
+    background ?
+      isNotebookTerminalFeatureEnabled('backgroundTask') :
+      isNotebookTerminalFeatureEnabled('interactive') :
+    isNotebookTerminalFeatureEnabled('nonInteractive')
+}
+
 export {
     getPortNumber,
     getBinaryPath,
     enableServerLogs,
     getServerConfigurationValue,
     isNotebookTerminalFeatureEnabled,
+    isNotebookTerminalEnabledForCell,
     getTLSEnabled,
     getTLSDir,
 }

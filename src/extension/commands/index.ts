@@ -6,7 +6,7 @@ import {
   workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
 } from 'vscode'
 
-import { getBinaryPath, getTLSDir, getTLSEnabled, isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
+import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { getAnnotations, getTerminalByCell, replaceOutput } from '../utils'
 import RunmeServer from '../server/runmeServer'
@@ -23,7 +23,7 @@ export function openTerminal (kernel: Kernel, grpcRunner: boolean) {
       return showWarningMessage()
     }
 
-    if (isRunmeIntegratedTerminalEnabled() && grpcRunner) {
+    if (isNotebookTerminalEnabledForCell(cell) && grpcRunner) {
       const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
 
       if (terminalOutput) {

@@ -21,7 +21,7 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { isNotebookTerminalFeatureEnabled } from '../../utils/configuration'
+import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 
@@ -128,11 +128,7 @@ export async function executeRunner(
     terminalState?.input(input, true)
   })
 
-  let revealNotebookTerminal = interactive ?
-    background ?
-      isNotebookTerminalFeatureEnabled('backgroundTask') :
-      isNotebookTerminalFeatureEnabled('interactive') :
-    isNotebookTerminalFeatureEnabled('nonInteractive')
+  let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
   if (revealNotebookTerminal) {
     terminalState = kernel.registerCellTerminalState(exec.cell, 'xterm')

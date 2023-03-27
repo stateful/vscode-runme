@@ -248,6 +248,10 @@ export class TerminalView extends LitElement {
       drawBoldTextInBrightColors: false,
     })
 
+    if (this.initialContent) {
+      this.terminal?.write(this.initialContent)
+    }
+
     this.fitAddon = new FitAddon()
     this.serializer = new SerializeAddon()
     const unicode11Addon = new Unicode11Addon()
@@ -261,10 +265,10 @@ export class TerminalView extends LitElement {
 
     window.addEventListener('resize', this.#onResizeWindow)
 
-
     this.disposables.push(
       onClientMessage(ctx, (e) => {
         if (!LISTEN_TO_EVENTS.some(event => e.type.startsWith(event))) { return }
+
         switch (e.type) {
           case ClientMessages.activeThemeChanged:
             this.#updateTerminalTheme()
@@ -299,10 +303,6 @@ export class TerminalView extends LitElement {
     this.terminal!.focus()
     this.fitAddon?.fit()
     this.#updateTerminalTheme()
-
-    if (this.initialContent) {
-      this.terminal?.write(this.initialContent)
-    }
 
     if (this.lastLine) {
       this.terminal!.scrollToLine(this.lastLine)
