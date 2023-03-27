@@ -1,5 +1,3 @@
-import { spawn } from 'node:child_process'
-
 import vscode, { NotebookCellKind } from 'vscode'
 
 import { getAnnotations } from '../utils'
@@ -24,13 +22,5 @@ export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
     )
     item.command = 'runme.runCliCommand'
     return item
-  }
-
-  public static async isCliInstalled(): Promise<boolean> {
-    const child = spawn('which runme', { shell: true, env: process.env })
-    return new Promise<boolean>((resolve, reject) => {
-      child.on('exit', () => resolve(child.exitCode === 0))
-      child.on('error', (err) => reject(err))
-    })
   }
 }

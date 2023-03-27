@@ -8,7 +8,6 @@ import {
 
 import { getBinaryPath, getTLSDir, getTLSEnabled } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { CliProvider } from '../provider/cli'
 import { getAnnotations, getTerminalByCell } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
@@ -46,7 +45,6 @@ export function runCLICommand(
   kernel: Kernel
 ) {
  return async function(cell: NotebookCell) {
-    let runmeExecutable: string
     const cwd = path.dirname(cell.document.uri.fsPath)
 
     const args = [
@@ -56,9 +54,9 @@ export function runCLICommand(
 
     const envs: Record<string, string> = { }
 
-    if (grpcRunner) {
-      runmeExecutable = getBinaryPath(extensionBaseUri, os.platform()).fsPath
+    const runmeExecutable = getBinaryPath(extensionBaseUri, os.platform()).fsPath
 
+    if (grpcRunner) {
       envs['RUNME_SERVER_ADDR'] = server.address()
 
       if (getTLSEnabled()) {
@@ -71,17 +69,6 @@ export function runCLICommand(
       if(runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
         envs['RUNME_SESSION'] = runnerEnv.getSessionId()
       }
-    } else {
-      if (!await CliProvider.isCliInstalled()) {
-        return window.showInformationMessage(
-          'Runme CLI is not installed. Do you want to download it?',
-          'Download now'
-        ).then((openBrowser) => openBrowser && env.openExternal(
-          Uri.parse('https://github.com/stateful/runme/releases')
-        ))
-      }
-
-      runmeExecutable = 'runme'
     }
 
     const annotations = getAnnotations(cell)
@@ -90,6 +77,7 @@ export function runCLICommand(
       cwd,
       env: envs,
     })
+
     term.show(false)
     term.sendText(`${runmeExecutable} run ${annotations.name} ${args.join(' ')}`)
   }
