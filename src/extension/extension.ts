@@ -84,7 +84,7 @@ export class RunmeExtension {
       // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openTerminal', openTerminal),
+      RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
         runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)

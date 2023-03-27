@@ -6,9 +6,9 @@ import {
   workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
 } from 'vscode'
 
-import { getBinaryPath, getTLSDir, getTLSEnabled } from '../../utils/configuration'
+import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { getAnnotations, getTerminalByCell } from '../utils'
+import { getAnnotations, getTerminalByCell, replaceOutput } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 
@@ -16,12 +16,34 @@ function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
-export function openTerminal (cell: NotebookCell) {
-  const terminal = getTerminalByCell(cell)
-  if (!terminal) {
-    return showWarningMessage()
+export function openTerminal (kernel: Kernel, grpcRunner: boolean) {
+  return async function (cell: NotebookCell) {
+    const terminal = getTerminalByCell(cell)
+    if (!terminal) {
+      return showWarningMessage()
+    }
+
+    if (isNotebookTerminalEnabledForCell(cell) && grpcRunner) {
+      const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
+
+      if (terminalOutput) {
+        let exec
+        try {
+          exec = await kernel.createCellExecution(cell)
+          exec.start(Date.now())
+
+          await replaceOutput(exec, terminalOutput)
+        } catch (e: any) {
+          window.showErrorMessage(e.message)
+        } finally {
+          exec?.end(true)
+          return
+        }
+      }
+    }
+
+    return terminal.show()
   }
-  return terminal.show()
 }
 
 export function copyCellToClipboard (cell: NotebookCell) {
