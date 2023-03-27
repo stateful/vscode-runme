@@ -36,7 +36,7 @@ const configurationSchema = {
     },
     notebookTerminal: {
         backgroundTask: z.boolean().default(true),
-        nonInteractive: z.boolean().default(true),
+        nonInteractive: z.boolean().default(false),
         interactive: z.boolean().default(false)
     }
 }
