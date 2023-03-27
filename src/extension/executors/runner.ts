@@ -13,7 +13,6 @@ import {
   TextDocument,
   ExtensionContext,
   NotebookRendererMessaging,
-  workspace
 } from 'vscode'
 
 import { ClientMessages, OutputType } from '../../constants'
@@ -22,7 +21,8 @@ import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
+import { isNotebookTerminalFeatureEnabled } from '../../utils/configuration'
+import NotebookTerminal from '../notebookTerminal'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -119,7 +119,20 @@ export async function executeRunner(
     program.handleInput(input)
   })
 
-  const useIntegrated = isRunmeIntegratedTerminalEnabled()
+  const revealNotebookTerminal = interactive ?
+    background ?
+      isNotebookTerminalFeatureEnabled('backgroundTask') :
+      isNotebookTerminalFeatureEnabled('interactive') :
+    isNotebookTerminalFeatureEnabled('nonInteractive')
+
+  if (revealNotebookTerminal) {
+    await replaceOutput(exec, [
+      new NotebookCellOutput([
+        NotebookCellOutputItem.json(NotebookTerminal.create(cellUUID), OutputType.terminal),
+      ]),
+    ])
+  }
+
 
   if (!interactive) {
     const output: Buffer[] = []
@@ -128,6 +141,10 @@ export async function executeRunner(
 
     // adapted from `shellExecutor` in `shell.ts`
     const handleOutput = async (data: Uint8Array) => {
+      if (revealNotebookTerminal) {
+        return
+      }
+
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
@@ -171,8 +188,8 @@ export async function executeRunner(
 
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
-      focus: useIntegrated ? false : true,
-      reveal: useIntegrated ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
+      focus: revealNotebookTerminal ? false : true,
+      reveal: revealNotebookTerminal ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
@@ -181,27 +198,6 @@ export async function executeRunner(
     context.subscriptions.push({
       dispose: () => execution.terminate()
     })
-
-    if (useIntegrated) {
-      const editorSettings = workspace.getConfiguration('editor')
-      const fontFamily = editorSettings.get<string>('fontFamily', 'Arial')
-      const fontSize = editorSettings.get<number>('fontSize', 10)
-
-      const json: CellOutputPayload<OutputType.terminal> = {
-        type: OutputType.terminal,
-        output: {
-          'runme.dev/uuid': cellUUID,
-          terminalFontFamily: fontFamily,
-          terminalFontSize: fontSize,
-        },
-      }
-
-      await replaceOutput(exec, [
-        new NotebookCellOutput([
-          NotebookCellOutputItem.json(json, OutputType.terminal),
-        ]),
-      ])
-    }
 
     exec.token.onCancellationRequested(() => {
       try {

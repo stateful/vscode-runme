@@ -242,6 +242,7 @@ export class TerminalView extends LitElement {
       fontSize: this.terminalFontSize,
       cursorStyle: 'bar',
       disableStdin: false,
+      convertEol: true,
       allowProposedApi: true,
       fontFamily: this.terminalFontFamily,
       drawBoldTextInBrightColors: false,
