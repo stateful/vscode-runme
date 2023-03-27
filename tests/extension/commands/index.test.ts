@@ -11,7 +11,8 @@ import {
   NotebookDocument,
   TextDocument,
   ViewColumn,
-  NotebookCellData
+  NotebookCellData,
+  Uri,
 } from 'vscode'
 
 import {
@@ -24,13 +25,16 @@ import {
   createNewRunmeNotebook
 } from '../../../src/extension/commands'
 import { getTerminalByCell, getAnnotations } from '../../../src/extension/utils'
-import { CliProvider } from '../../../src/extension/provider/cli'
+import { getBinaryPath } from '../../../src/utils/configuration'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
   getTerminalByCell: vi.fn()
+}))
+vi.mock('../../../src/utils/configuration', () => ({
+  getBinaryPath: vi.fn(),
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
   CliProvider: {
@@ -67,34 +71,21 @@ test('copyCellToClipboard', () => {
   expect(window.showInformationMessage).toBeCalledTimes(1)
 })
 
-test('runCLICommand if CLI is not installed', async () => {
+test('runCLICommand', async () => {
   const cell: any = {
     metadata: { name: 'foobar' },
     document: { uri: { fsPath: '/foo/bar/README.md' }}
   }
+  vi.mocked(getAnnotations).mockReturnValueOnce({
+    name: 'foo-bar',
+  } as any)
+  vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
   vi.mocked(window.showInformationMessage).mockResolvedValueOnce(false as any)
-  await runCLICommand({} as any, false, {} as any, {} as any)(cell)
-  expect(env.openExternal).toBeCalledTimes(0)
-  vi.mocked(window.showInformationMessage).mockResolvedValue(true as any)
-  await runCLICommand({} as any, false, {} as any, {} as any)(cell)
-  expect(env.openExternal).toBeCalledTimes(1)
-})
 
-test('runCLICommand if CLI is installed', async () => {
-  const cell: any = {
-    metadata: { name: 'foobar' },
-    document: { uri: { fsPath: '/foo/bar/README.md' }}
-  }
-  vi.mocked(CliProvider.isCliInstalled).mockResolvedValue(true)
-  vi.mocked(getAnnotations).mockReturnValue(cell.metadata)
   await runCLICommand({} as any, false, {} as any, {} as any)(cell)
-  expect(window.createTerminal).toBeCalledWith({
-    cwd: '/foo/bar',
-    env: {},
-    name: 'CLI: foobar'
-  })
-  expect(terminal.show).toBeCalledTimes(1)
-  expect(terminal.sendText).toBeCalledWith('runme run foobar --chdir="/foo/bar" --filename="README.md"')
+  expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
+    '/bin/runme run foo-bar --chdir="/foo/bar" --filename="README.md"'
+  )
 })
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
