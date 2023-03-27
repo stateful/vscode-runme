@@ -296,7 +296,7 @@
           "runme.terminal.nonInteractive": {
             "type": "boolean",
             "scope": "machine",
-            "default": true,
+            "default": false,
             "markdownDescription": "Enable Runme notebook terminal in non-interactive scripts (experimental)"
           },
           "runme.terminal.interactive": {
