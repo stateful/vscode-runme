@@ -40,7 +40,7 @@ export namespace Serializer {
   }
 }
 
-interface ICellOutput<T extends OutputType> {
+export interface ICellOutput<T extends OutputType> {
   type: T
   output: Payload[T]
 }
