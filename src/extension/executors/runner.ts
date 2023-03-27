@@ -22,7 +22,8 @@ import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalFeatureEnabled } from '../../utils/configuration'
-import NotebookTerminal from '../notebookTerminal'
+import { Kernel } from '../kernel'
+import { ITerminalState } from '../terminal/terminalState'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -35,6 +36,7 @@ const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
 export async function executeRunner(
+  kernel: Kernel,
   context: ExtensionContext,
   runner: IRunner,
   exec: NotebookCellExecution,
@@ -97,10 +99,16 @@ export async function executeRunner(
 
   context.subscriptions.push(program)
 
-  program.onDidWrite((data) => postClientMessage(messaging, ClientMessages.terminalStdout, {
-    'runme.dev/uuid': cellUUID,
-    data
-  }))
+  let terminalState: ITerminalState | undefined
+
+  program.onDidWrite((data) => {
+    postClientMessage(messaging, ClientMessages.terminalStdout, {
+      'runme.dev/uuid': cellUUID,
+      data
+    })
+
+    terminalState?.write(data)
+  })
 
   program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
     'runme.dev/uuid': cellUUID,
@@ -117,20 +125,25 @@ export async function executeRunner(
     if (uuid !== cellUUID) { return }
 
     program.handleInput(input)
+    terminalState?.input(input, true)
   })
 
-  const revealNotebookTerminal = interactive ?
+  let revealNotebookTerminal = interactive ?
     background ?
       isNotebookTerminalFeatureEnabled('backgroundTask') :
       isNotebookTerminalFeatureEnabled('interactive') :
     isNotebookTerminalFeatureEnabled('nonInteractive')
 
   if (revealNotebookTerminal) {
-    await replaceOutput(exec, [
-      new NotebookCellOutput([
-        NotebookCellOutputItem.json(NotebookTerminal.create(cellUUID), OutputType.terminal),
-      ]),
-    ])
+    terminalState = kernel.registerCellTerminalState(exec.cell, 'xterm')
+
+    const terminalOutput = kernel.getCellTerminalOutputPayload(exec.cell)
+
+    if (terminalOutput) {
+      await replaceOutput(exec, terminalOutput)
+    } else {
+      revealNotebookTerminal = false
+    }
   }
 
 
