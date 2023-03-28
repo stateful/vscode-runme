@@ -7,7 +7,7 @@ import { BOOTFILE } from '../constants'
 const config = workspace.getConfiguration('runme.checkout')
 const INTERVAL = 500
 const MINIMAL_TIMEOUT = 10 * 1000
-const MAX_STAT_TRIES = 5
+const MAX_STAT_TRIES = 50
 
 /**
  * Get the project directory from the settings object.
