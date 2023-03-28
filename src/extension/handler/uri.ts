@@ -1,16 +1,18 @@
 import path from 'node:path'
 
-import { UriHandler, window, Uri, Progress, ProgressLocation, commands, workspace, ExtensionContext } from 'vscode'
+import {
+  UriHandler, window, Uri, Progress, ProgressLocation, commands, workspace,
+  ExtensionContext, Task, TaskScope, ShellExecution, tasks
+} from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
-  getProjectDir, getTargetDirName, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile,
+  getProjectDir, getTargetDirName, getSuggestedProjectName, writeBootstrapFile,
   parseParams
 } from './utils'
 
-let NEXT_TERM_ID = 0
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 
 export class RunmeUriHandler implements UriHandler {
@@ -111,16 +113,40 @@ export class RunmeUriHandler implements UriHandler {
     fileToOpen: string
   ) {
     progress.report({ increment: 0, message: 'Cloning repository...' })
-    const terminal = window.createTerminal(`Runme Terminal #${NEXT_TERM_ID++}`)
-    terminal.show(true)
 
-    terminal.sendText(`git clone ${repository} "${targetDirUri.fsPath}"`)
-    const success = await new Promise<boolean>(
-      (resolve) => waitForProjectCheckout(fileToOpen, targetDirUri, repository, resolve))
+    const taskExecution = new Task(
+      { type: 'shell', name: 'Clone Repo' },
+      TaskScope.Workspace,
+      'Clone Repo',
+      'exec',
+      new ShellExecution(`git clone ${repository} "${targetDirUri.fsPath}"`)
+    )
 
-    if (!success) {
-      return terminal.dispose()
-    }
+    await new Promise<void>((resolve) => {
+      tasks.executeTask(taskExecution).then((execution) => {
+        tasks.onDidEndTaskProcess((e) => {
+          const taskId = (e.execution as any)['_id']
+          const executionId = (execution as any)['_id']
+
+          if (
+            taskId !== executionId ||
+            typeof e.exitCode === 'undefined'
+          ) {
+            return
+          }
+
+          /**
+           * only close terminal if execution passed and desired by user
+           */
+          if (e.exitCode === 0) {
+            resolve()
+          }
+        })
+      })
+    })
+
+    await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
+      .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
 
     progress.report({ increment: 50, message: 'Opening project...' })
     console.log(`[Runme] Attempt to open folder ${targetDirUri.fsPath}`)
@@ -128,6 +154,5 @@ export class RunmeUriHandler implements UriHandler {
       forceNewWindow: true
     })
     progress.report({ increment: 100 })
-    terminal.dispose()
   }
 }

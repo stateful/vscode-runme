@@ -5,9 +5,6 @@ import { workspace, window, Uri, ExtensionContext } from 'vscode'
 import { BOOTFILE } from '../constants'
 
 const config = workspace.getConfiguration('runme.checkout')
-const INTERVAL = 500
-const MINIMAL_TIMEOUT = 10 * 1000
-const MAX_STAT_TRIES = 50
 
 /**
  * Get the project directory from the settings object.
@@ -81,66 +78,6 @@ export async function getTargetDirName(targetDir: Uri, suggestedName: string, in
   }
 
   return amendedSuggestedName
-}
-
-export async function waitForProjectCheckout(
-  fileToOpen: string,
-  targetDirUri: Uri,
-  repository: string,
-  cb: (success: boolean) => void
-) {
-  const t = setTimeout(() => {
-    clearInterval(i)
-    window.showErrorMessage(
-      `Timed out cloning repository ${repository}! ` +
-      'Please make sure you have Git set-up and permissions to access the repository ' +
-      'or use use an HTTPS url when cloning public repositories.'
-    )
-    return cb(false)
-  }, Math.max(config.get('timeout') || 0, MINIMAL_TIMEOUT))
-  const i = setInterval(async () => {
-    const dirEntries = await workspace.fs.readDirectory(targetDirUri).then((res) => res, (err) => {
-      console.error(`[Runme] Failed to fetch directory ${targetDirUri.toString()}: ${err.message}`)
-      return []
-    })
-
-    /**
-     * wait until directory has more files than only a ".git"
-     */
-    if (dirEntries.length <= 1) {
-      return
-    }
-
-    clearTimeout(t)
-    clearInterval(i)
-    console.log(`[Runme] Successfully cloned repository to ${targetDirUri.toString()}`)
-
-    const fileUri = Uri.joinPath(targetDirUri, fileToOpen)
-
-    let statTries = 0
-    while (statTries <= MAX_STAT_TRIES) {
-      try {
-        await workspace.fs.stat(fileUri)
-        break
-      } catch(e) {
-        if (statTries === MAX_STAT_TRIES) {
-          return cb(false)
-        }
-      }
-
-      await new Promise((r) => setTimeout(r, 100))
-
-      statTries++
-    }
-
-    /**
-     * write a runme file into the directory, so the extension knows it has
-     * to open the readme file
-     */
-    await writeBootstrapFile(targetDirUri, fileToOpen)
-
-    cb(true)
-  }, INTERVAL)
 }
 
 export async function writeBootstrapFile(targetDirUri: Uri, fileToOpen: string) {
