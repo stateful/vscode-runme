@@ -59,7 +59,7 @@ export class Kernel implements Disposable {
   ) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
-    this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', false))
+    this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
 
     this.#controller.supportedLanguages = Object.keys(executor)
@@ -367,7 +367,7 @@ export class Kernel implements Disposable {
   useRunner(runner: IRunner) {
     this.runnerReadyListener?.dispose()
 
-    if(this.#experiments.get('grpcRunner') && runner) {
+    if(this.hasExperimentEnabled('grpcRunner') && runner) {
       this.runner = runner
 
       this.runnerReadyListener = runner.onReady(async () => {
