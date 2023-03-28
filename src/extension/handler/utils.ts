@@ -7,6 +7,7 @@ import { BOOTFILE } from '../constants'
 const config = workspace.getConfiguration('runme.checkout')
 const INTERVAL = 500
 const MINIMAL_TIMEOUT = 10 * 1000
+const MAX_STAT_TRIES = 5
 
 /**
  * Get the project directory from the settings object.
@@ -114,12 +115,29 @@ export async function waitForProjectCheckout(
     clearInterval(i)
     console.log(`[Runme] Successfully cloned repository to ${targetDirUri.toString()}`)
 
+    const fileUri = Uri.joinPath(targetDirUri, fileToOpen)
+
+    let statTries = 0
+    while (statTries <= MAX_STAT_TRIES) {
+      try {
+        await workspace.fs.stat(fileUri)
+        break
+      } catch(e) {
+        if (statTries === MAX_STAT_TRIES) {
+          return cb(false)
+        }
+      }
+
+      await new Promise((r) => setTimeout(r, 100))
+
+      statTries++
+    }
+
     /**
      * write a runme file into the directory, so the extension knows it has
      * to open the readme file
      */
-    await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
-      .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
+    await writeBootstrapFile(targetDirUri, fileToOpen)
 
     cb(true)
   }, INTERVAL)
