@@ -122,7 +122,7 @@ export class RunmeUriHandler implements UriHandler {
       new ShellExecution(`git clone ${repository} "${targetDirUri.fsPath}"`)
     )
 
-    await new Promise<void>((resolve) => {
+    const success = await new Promise<boolean>((resolve) => {
       tasks.executeTask(taskExecution).then((execution) => {
         tasks.onDidEndTaskProcess((e) => {
           const taskId = (e.execution as any)['_id']
@@ -139,11 +139,18 @@ export class RunmeUriHandler implements UriHandler {
            * only close terminal if execution passed and desired by user
            */
           if (e.exitCode === 0) {
-            resolve()
+            resolve(true)
+          } else {
+            resolve(false)
           }
         })
       })
     })
+
+    if (!success) {
+      window.showErrorMessage('Failed to checkout repository; see integrated terminal for more details/logs')
+      return
+    }
 
     await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
       .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
