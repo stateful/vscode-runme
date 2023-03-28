@@ -239,8 +239,8 @@
           "runme.experiments.grpcRunner": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
-            "markdownDescription": "If set to `true`, the notebook runner will use the GRPC interface (experimental)."
+            "default": true,
+            "markdownDescription": "If set to `true`, the notebook runner will use the GRPC interface (except on Windows)."
           },
           "runme.experiments.grpcServer": {
             "type": "boolean",
