@@ -195,12 +195,25 @@ class RunmeServer implements Disposable {
           [
             new Promise<string>((resolve, reject) => {
               const cb = (data: any) => {
-                const msg = data.toString()
+                const msg: string = data.toString()
                 try {
-                  const log = JSON.parse(msg)
-                  if (log.addr) {
-                    process.stderr.off('data', cb)
-                    return resolve(log.addr)
+                  for (const line of msg.split('\n')) {
+                    if (!line) {
+                      continue
+                    }
+
+                    let log: any
+
+                    try {
+                      log = JSON.parse(line)
+                    } catch(e) {
+                      continue
+                    }
+
+                    if (log.addr) {
+                      process.stderr.off('data', cb)
+                      return resolve(log.addr)
+                    }
                   }
                 } catch (err: any) {
                     reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
