@@ -216,7 +216,7 @@ class RunmeServer implements Disposable {
                     }
                   }
                 } catch (err: any) {
-                    reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
+                    reject(new RunmeServerError(`Server failed, reason: ${(err as Error).message}`))
                 }
               }
 
