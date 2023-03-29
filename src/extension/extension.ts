@@ -34,7 +34,7 @@ export class RunmeExtension {
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
     const server = new RunmeServer(context.extensionUri, {
       retryOnFailure: true,
-      maxNumberOfIntents: 2,
+      maxNumberOfIntents: 10,
     }, !grpcServer, grpcRunner)
 
     let runner: IRunner|undefined

@@ -3,13 +3,14 @@ import os from 'node:os'
 
 import { NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
+import { v4 as uuidv4 } from 'uuid'
 
 import { isWindows } from '../extension/executors/utils'
 import { getAnnotations } from '../extension/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
-export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', 'tls')
+export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 

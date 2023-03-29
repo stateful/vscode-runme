@@ -31,11 +31,11 @@ class RunmeServer implements Disposable {
     #retryOnFailure: boolean
     #maxNumberOfIntents: number
     #loggingEnabled: boolean
-    #intent: number
     #acceptsIntents: number
     #acceptsInterval: number
     #disposables: Disposable[] = []
     #transport?: GrpcTransport
+    #serverDisposables: Disposable[] = []
 
     readonly #onClose = this.register(new EventEmitter<{ code: number|null }>())
     readonly #onTransportReady = this.register(new EventEmitter<{ transport: GrpcTransport }>())
@@ -54,7 +54,6 @@ class RunmeServer implements Disposable {
       this.#binaryPath = getBinaryPath(extBasePath, process.platform)
       this.#retryOnFailure = options.retryOnFailure || false
       this.#maxNumberOfIntents = options.maxNumberOfIntents
-      this.#intent = 0
       this.#acceptsIntents = options.acceptsConnection?.intents || 50
       this.#acceptsInterval = options.acceptsConnection?.interval || 200
     }
@@ -69,6 +68,7 @@ class RunmeServer implements Disposable {
 
       if(process === this.#process) {
         this.#process = undefined
+        this.clearServerDisposables()
       }
 
       process?.removeAllListeners()
@@ -176,9 +176,6 @@ class RunmeServer implements Disposable {
             this.#onClose.fire({ code })
 
             this.disposeProcess(process)
-
-            // try to relaunch
-            this.launch()
         })
 
 
@@ -198,19 +195,38 @@ class RunmeServer implements Disposable {
           [
             new Promise<string>((resolve, reject) => {
               const cb = (data: any) => {
-                const msg = data.toString()
+                const msg: string = data.toString()
                 try {
-                  const log = JSON.parse(msg)
-                  if (log.addr) {
-                    process.stderr.off('data', cb)
-                    return resolve(log.addr)
+                  for (const line of msg.split('\n')) {
+                    if (!line) {
+                      continue
+                    }
+
+                    let log: any
+
+                    try {
+                      log = JSON.parse(line)
+                    } catch(e) {
+                      continue
+                    }
+
+                    if (log.addr) {
+                      process.stderr.off('data', cb)
+                      return resolve(log.addr)
+                    }
                   }
                 } catch (err: any) {
-                    reject(new RunmeServerError(`Server failed, reason: ${msg || (err as Error).message}`))
+                    reject(new RunmeServerError(`Server failed, reason: ${(err as Error).message}`))
                 }
               }
 
               process.stderr.on('data', cb)
+            }),
+            new Promise<never>((_, reject) => {
+              const { dispose } = this.#onClose.event(() => {
+                dispose()
+                reject(new Error('Server closed prematurely!'))
+              })
             }),
             new Promise<never>((_, reject) => setTimeout(
               () => reject(new Error('Timed out listening for server ready message')),
@@ -223,28 +239,21 @@ class RunmeServer implements Disposable {
     async acceptsConnection(): Promise<void> {
         const INTERVAL = this.#acceptsInterval
         const INTENTS = this.#acceptsIntents
-        let token: NodeJS.Timer
         let iter = 0
         let isRunning = false
-        const ping = (resolve: Function, reject: Function) => {
-          return async () => {
-              iter++
-              isRunning = await this.isRunning()
-              if (isRunning) {
-                  clearTimeout(token)
-                  return resolve()
-              } else if (iter > INTENTS) {
-                  clearTimeout(token)
-                  return reject(new RunmeServerError(`Server did not accept connections after ${iter*INTERVAL}ms`))
-              }
-              if (!token) {
-                  token = setInterval(ping(resolve, reject), INTERVAL)
-              }
+
+        while (iter < INTENTS) {
+          isRunning = await this.isRunning()
+          if (isRunning) {
+            return
           }
+
+          await new Promise(r => setInterval(r, INTERVAL))
+
+          iter++
         }
-        return new Promise<void>((resolve, reject) => {
-            return ping(resolve, reject)()
-        })
+
+        throw new RunmeServerError(`Server did not accept connections after ${iter*INTERVAL}ms`)
     }
 
     /**
@@ -255,7 +264,9 @@ class RunmeServer implements Disposable {
      *
      * @returns Address of server or error
      */
-    async launch(): Promise<string> {
+    async launch(intent = 0): Promise<string> {
+      this.disposeProcess()
+
       if (this.externalServer) {
         await this.connect()
         return this.address()
@@ -265,15 +276,22 @@ class RunmeServer implements Disposable {
       try {
           addr = await this.start()
       } catch (e) {
-        if (this.#retryOnFailure && this.#maxNumberOfIntents > this.#intent) {
+        if (this.#retryOnFailure && this.#maxNumberOfIntents > intent) {
             console.error(`Failed to start runme server, retrying. Error: ${(e as Error).message}`)
-            this.#intent++
-            return this.launch()
+            return this.launch(intent + 1)
           }
           throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
       }
 
       await this.connect()
+
+      // relaunch on close
+      this.registerServerDisposable(
+        this.#onClose.event(() => {
+          this.launch()
+          this.#serverDisposables.forEach(({ dispose }) => dispose())
+        })
+      )
 
       return addr
     }
@@ -292,6 +310,15 @@ class RunmeServer implements Disposable {
     protected register<T extends Disposable>(disposable: T): T {
       this.#disposables.push(disposable)
       return disposable
+    }
+
+    private registerServerDisposable<T extends Disposable>(d: T) {
+      this.#serverDisposables.push(d)
+    }
+
+    private clearServerDisposables() {
+      this.#serverDisposables.forEach(({ dispose }) => dispose())
+      this.#serverDisposables = []
     }
 }
 

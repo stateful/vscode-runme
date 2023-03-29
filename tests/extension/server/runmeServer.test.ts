@@ -155,7 +155,29 @@ suite('Runme server accept connections', () => {
         await expect(
           server.launch()
         ).rejects.toThrowErrorMatchingInlineSnapshot(
-          '"Server did not accept connections after 5ms"'
+          '"Server did not accept connections after 4ms"'
         )
     })
+})
+
+test('Runme server clears server disposables', () => {
+  const server = new Server(
+    Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+    {
+      retryOnFailure: false,
+      maxNumberOfIntents: 2,
+      acceptsConnection: {
+        intents: 4,
+        interval: 1,
+      }
+    },
+    false
+  )
+
+  const dispose = vi.fn()
+
+  server['registerServerDisposable']({ dispose })
+  server['clearServerDisposables']()
+
+  expect(dispose).toHaveBeenCalledTimes(1)
 })
