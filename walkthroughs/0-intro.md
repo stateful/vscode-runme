@@ -4,6 +4,11 @@ Thank you for interest in Runme 💟!
 
 Runme strives to provide a great experience right out of the box. Please continue to learn how to get the most out of our docs via Runme. Please don't be surprised if Runme's docs prompt you to use Runme. Learning by using is very effective.
 
+<div>
+  <img width="15" src="https://runme.dev/img/logo.svg" />
+  <a href="command:runme.try">Give Runme a try</a>
+</div>
+
 A well-written README can significantly impact time to get up and running on your projects, reduce onboarding time, and interactively document common development and operations workflows (runbooks). On the contrary, a poorly written README can negatively impact the visibility of your project, even if the underyling code of your software is in excellent condition. For new contributors, it can quickly become a very frustrating experience.
 
 The Runme team believes that even if you have textually excellent README.md, encouraging your users to experience it through the lens of Runme, your docs will be more reliable, less susceptible to bit-rot, and a lot more humanly ergnomic. All of which leeds to happier and more productive developers.

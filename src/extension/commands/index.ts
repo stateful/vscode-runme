@@ -3,8 +3,9 @@ import os from 'node:os'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext
 } from 'vscode'
+import { v4 as uuidv4 } from 'uuid'
 
 import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -144,4 +145,17 @@ export async function welcome () {
     'stateful.runme#runme.welcome',
     false
   )
+}
+
+export async function tryIt (context: ExtensionContext) {
+  const fileContent = await workspace.fs.readFile(
+    Uri.file(path.join(__dirname, '..', 'walkthroughs', 'welcome.md'))
+  )
+
+  const projectUri = Uri.joinPath(context.globalStorageUri, uuidv4())
+  await workspace.fs.createDirectory(projectUri)
+  const enc = new TextEncoder()
+  const newNotebookUri = Uri.joinPath(projectUri, 'Welcome to Runme.md')
+  await workspace.fs.writeFile(newNotebookUri, enc.encode(fileContent.toString()))
+  await commands.executeCommand('vscode.openWith', newNotebookUri, Kernel.type)
 }

@@ -18,7 +18,8 @@ import {
   openSplitViewAsMarkdownText,
   stopBackgroundTask,
   createNewRunmeNotebook,
-  welcome
+  welcome,
+  tryIt
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -96,6 +97,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
+      RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
       RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
