@@ -170,3 +170,9 @@ test('tryIt command', async () => {
   ).toBe(true)
   expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(Object), 'runme')
 })
+
+test('tryIt command in failure case', async () => {
+  vi.mocked(workspace.fs.createDirectory).mockRejectedValue('ups')
+  await tryIt({ extensionPath: '/foo/bar' } as any)
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(Object), 'runme')
+})
