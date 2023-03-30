@@ -8,7 +8,7 @@ It allows you to run Shell scripts within a Notebook interface, give it a try:
 echo "Hello Runme!"
 ```
 
-Awesome!
+Awesome! 🎉
 
 It also persist your session state, so all environment variables stay around, e.g.:
 

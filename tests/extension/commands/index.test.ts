@@ -22,7 +22,8 @@ import {
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText,
   stopBackgroundTask,
-  createNewRunmeNotebook
+  createNewRunmeNotebook,
+  welcome
 } from '../../../src/extension/commands'
 import { getTerminalByCell, getAnnotations, replaceOutput } from '../../../src/extension/utils'
 import { getBinaryPath, isNotebookTerminalEnabledForCell } from '../../../src/utils/configuration'
@@ -147,4 +148,25 @@ test('createNewRunmeNotebook', async () => {
   expect(workspace.openNotebookDocument).toBeCalledWith('runme', expect.any(Object))
   expect(NotebookCellData).toBeCalledTimes(3)
   expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
+})
+
+test('welcome in success case', async () => {
+  await welcome({ globalStorageUri: { fsPath: '/foo/bar' } } as any)
+  expect(
+    vi.mocked(workspace.fs.createDirectory).mock.calls[0][0].path.startsWith('/foo/bar')
+  ).toBe(true)
+  expect(
+    vi.mocked(workspace.fs.writeFile).mock.calls[0][0].path.endsWith('Welcome to Runme.md')
+  ).toBe(true)
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(Object), 'runme')
+})
+
+test('welcome in failure case', async () => {
+  vi.mocked(workspace.fs.createDirectory).mockRejectedValue(new Error('ups'))
+  await welcome({ globalStorageUri: { fsPath: '/foo/bar' } } as any)
+  expect(commands.executeCommand).toBeCalledWith(
+    'workbench.action.openWalkthrough',
+    'stateful.runme#runme.welcome',
+    false
+  )
 })

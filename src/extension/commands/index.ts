@@ -1,6 +1,5 @@
 import path from 'node:path'
 import os from 'node:os'
-import fs from 'node:fs/promises'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
@@ -145,7 +144,10 @@ export async function welcome (context: ExtensionContext) {
    * create temporary markdown file
    */
   try {
-    const fileContent = (await fs.readFile(path.resolve(__dirname, '..', 'walkthroughs', 'welcome.md')))
+    const fileContent = await workspace.fs.readFile(
+      Uri.file(path.join(__dirname, '..', 'walkthroughs', 'welcome.md'))
+    )
+
     const projectUri = Uri.joinPath(context.globalStorageUri, uuidv4())
     await workspace.fs.createDirectory(projectUri)
     const enc = new TextEncoder()
