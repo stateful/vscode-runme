@@ -121,6 +121,27 @@ export class TerminalView extends LitElement {
         top: 0;
     }
 
+    .xterm-viewport::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .xterm-viewport::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0);
+      min-height: 20px;
+    }
+
+    .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb {
+      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'background'))});
+    }
+
+    .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb:hover {
+      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'hoverBackground'))});
+    }
+
+    .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb:active {
+      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'activeBackground'))});
+    }
+
     .xterm .xterm-scroll-area {
         visibility: hidden;
     }
