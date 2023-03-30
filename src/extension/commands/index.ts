@@ -137,3 +137,11 @@ export async function createNewRunmeNotebook () {
   )
   await commands.executeCommand('vscode.openWith', newNotebook.uri, Kernel.type)
 }
+
+export function welcome () {
+  commands.executeCommand(
+    'workbench.action.openWalkthrough',
+    'stateful.runme#runme.welcomePage',
+    false
+  )
+}

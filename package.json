@@ -52,6 +52,7 @@
   "activationEvents": [
     "onNotebook:runme",
     "onRenderer:runme-renderer",
+    "onCommand:runme.welcome",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
@@ -113,6 +114,12 @@
         "category": "Runme",
         "title": "Expand all items",
         "icon": "$(search-expand-results)"
+      },
+      {
+        "command": "runme.welcome",
+        "title": "Welcome",
+        "category": "Runme",
+        "description": "Open the welcome page for the Runme extension."
       }
     ],
     "menus": {
@@ -343,6 +350,21 @@
             "title": "Learn more",
             "media": {
               "markdown": "walkthroughs/4-learn-more.md"
+            }
+          }
+        ]
+      },
+      {
+        "id": "runme.welcomePage",
+        "title": "Get Started with creating Runme Notebooks",
+        "description": "Runme allows to create interactive runbooks for VS Code.",
+        "steps": [
+          {
+            "id": "runme.welcome.why",
+            "title": "Why Runme?",
+            "description": "Runme provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart",
+            "media": {
+              "markdown": "walkthroughs/0-intro.md"
             }
           }
         ]
