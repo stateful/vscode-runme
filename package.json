@@ -353,21 +353,6 @@
             }
           }
         ]
-      },
-      {
-        "id": "runme.welcomePage",
-        "title": "Get Started with creating Runme Notebooks",
-        "description": "Runme allows to create interactive runbooks for VS Code.",
-        "steps": [
-          {
-            "id": "runme.welcome.why",
-            "title": "Why Runme?",
-            "description": "Runme provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart",
-            "media": {
-              "markdown": "walkthroughs/0-intro.md"
-            }
-          }
-        ]
       }
     ],
     "taskDefinitions": [

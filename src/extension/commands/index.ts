@@ -1,10 +1,12 @@
 import path from 'node:path'
 import os from 'node:os'
+import fs from 'node:fs/promises'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext
 } from 'vscode'
+import { v4 as uuidv4 } from 'uuid'
 
 import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -138,10 +140,26 @@ export async function createNewRunmeNotebook () {
   await commands.executeCommand('vscode.openWith', newNotebook.uri, Kernel.type)
 }
 
-export function welcome () {
-  commands.executeCommand(
-    'workbench.action.openWalkthrough',
-    'stateful.runme#runme.welcomePage',
-    false
-  )
+export async function welcome (context: ExtensionContext) {
+  /**
+   * create temporary markdown file
+   */
+  try {
+    const fileContent = (await fs.readFile(path.resolve(__dirname, '..', 'walkthroughs', 'welcome.md')))
+    const projectUri = Uri.joinPath(context.globalStorageUri, uuidv4())
+    await workspace.fs.createDirectory(projectUri)
+    const enc = new TextEncoder()
+    const newNotebookUri = Uri.joinPath(projectUri, 'Welcome to Runme.md')
+    await workspace.fs.writeFile(newNotebookUri, enc.encode(fileContent.toString()))
+    await commands.executeCommand('vscode.openWith', newNotebookUri, Kernel.type)
+  } catch (err: unknown) {
+    /**
+     * if something goes wrong, fallback and open the VS Code walkthrough
+     */
+    commands.executeCommand(
+      'workbench.action.openWalkthrough',
+      'stateful.runme#runme.welcome',
+      false
+    )
+  }
 }
