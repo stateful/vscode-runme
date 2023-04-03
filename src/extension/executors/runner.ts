@@ -26,7 +26,6 @@ import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 import { openTerminal } from '../commands'
-import { isRunmeIntegratedTerminalEnabled } from '../../utils/configuration'
 import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'

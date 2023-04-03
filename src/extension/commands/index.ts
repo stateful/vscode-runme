@@ -12,6 +12,7 @@ import { Kernel } from '../kernel'
 import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook, replaceOutput } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
+import { RunmeNotebookCellExecution } from '../cell'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -24,16 +25,21 @@ export function openTerminal (kernel: Kernel, notebookTerminal: boolean, existin
       return showWarningMessage()
     }
 
+    // TODO(mxs): integrate this with notebookoutputmanager
     if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
       const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
 
       if (terminalOutput) {
-        const runOnExec = async (exec: NotebookCellExecution) => {
-          await replaceOutput(exec, terminalOutput)
-        }
+
+        const runOnExec = async (exec: RunmeNotebookCellExecution|NotebookCellExecution) => {
+          await replaceOutput(
+            'underlyingExecution' in exec ? exec.underlyingExecution : exec,
+            terminalOutput
+            )
+          }
 
         if (!existingExecution) {
-          let exec: NotebookCellExecution|undefined
+          let exec: RunmeNotebookCellExecution|NotebookCellExecution|undefined
           try {
             exec = await kernel.createCellExecution(cell)
             exec.start(Date.now())
