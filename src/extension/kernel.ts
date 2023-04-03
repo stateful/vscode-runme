@@ -21,11 +21,10 @@ import { API } from '../utils/deno/api'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron } from './utils'
+import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron, isWindows } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
-import { isWindows } from './executors/utils'
 import { ITerminalState, NotebookTerminalType, XTermState } from './terminal/terminalState'
 
 enum ConfirmationItems {

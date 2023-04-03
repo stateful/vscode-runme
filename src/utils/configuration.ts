@@ -5,8 +5,7 @@ import { NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 
-import { isWindows } from '../extension/executors/utils'
-import { getAnnotations } from '../extension/utils'
+import { getAnnotations, isWindows } from '../extension/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
@@ -19,7 +18,7 @@ const configurationSchema = {
         port: z
             .number()
             .positive()
-            .min(8080)
+            .min(7070)
             .max(9090)
             .default(7863),
         binaryPath: z
