@@ -66,7 +66,8 @@ export class Survey implements Disposable {
 
     const name = 'Runme Windows Shell'
     const tmpfile = path.join(this.#tmpDir.fsPath, 'defaultShell')
-    const cmdline = `rm "${tmpfile}"; echo $SHELL > "${tmpfile}"; echo $PSVersionTable >> "${tmpfile}"`
+    // eslint-disable-next-line max-len
+    const cmdline = `rm "${tmpfile}"; echo $SHELL > "${tmpfile}"; echo $PSVersionTable | Out-File -Encoding utf8 "${tmpfile}"`
     const taskExecution = new Task(
       { type: 'shell', name },
       TaskScope.Workspace,
