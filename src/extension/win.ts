@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { readFileSync, unlinkSync } from 'node:fs'
 
 import {
   Disposable,
@@ -14,6 +15,7 @@ import {
   tasks,
   Uri,
 } from 'vscode'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
 import { isWindows } from './utils'
@@ -64,7 +66,7 @@ export class Survey implements Disposable {
 
     const name = 'Runme Windows Shell'
     const tmpfile = path.join(this.#tmpDir.fsPath, 'defaultShell')
-    const cmdline = `echo $SHELL > "${tmpfile}"; echo $PSVersionTable >> "{tmpfile}"`
+    const cmdline = `rm "${tmpfile}"; echo $SHELL > "${tmpfile}"; echo $PSVersionTable >> "${tmpfile}"`
     const taskExecution = new Task(
       { type: 'shell', name },
       TaskScope.Workspace,
@@ -97,7 +99,9 @@ export class Survey implements Disposable {
     //   })
     // })
 
-    // TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
+    const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
+    TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
+    unlinkSync(tmpfile)
   }
 
   dispose() {
