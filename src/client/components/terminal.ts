@@ -9,6 +9,7 @@ import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
+import { stripANSI } from '../../utils/ansi'
 
 
 interface IWindowSize {
@@ -219,6 +220,35 @@ export class TerminalView extends LitElement {
         z-index: 2;
         position: relative;
     }
+
+    vscode-button {
+      background: transparent;
+      color: #ccc;
+      transform: scale(.9);
+    }
+    vscode-button:hover {
+      background: var(--button-secondary-background);
+    }
+    vscode-button:focus {
+      outline: #007fd4 1px solid;
+    }
+    .icon {
+      width: 13px;
+      margin: 0 5px 0 -5px;
+      padding: 0;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+    }
+
+    section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
   `
 
   protected disposables: Disposable[] = []
@@ -371,11 +401,38 @@ export class TerminalView extends LitElement {
 
   // Render the UI as a function of component state
   render() {
-    return html`<div id="terminal"></div>`
+    return html`<section>
+      <div id="terminal"></div>
+      <div class="button-group">
+        <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
+          <svg
+            class="icon" width="16" height="16" viewBox="0 0 16 16"
+            xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+          >
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"/>
+          </svg>
+          Copy
+        </vscode-button>
+      </div>
+    </section>`
   }
 
   dispose() {
     this.disposables.forEach(({ dispose }) => dispose())
   }
 
+  #copy() {
+    const ctx = getContext()
+    if (!ctx.postMessage) { return }
+
+    const content = stripANSI(this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '')
+
+    return navigator.clipboard.writeText(content).then(
+      () => postClientMessage(ctx, ClientMessages.infoMessage, 'Copied result content to clipboard!'),
+      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `'Failed to copy to clipboard: ${err.message}!'`),
+    )
+  }
 }
