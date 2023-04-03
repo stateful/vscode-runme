@@ -104,8 +104,8 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
-      commands.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
-      commands.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
 
       /**
        * Uri handler
