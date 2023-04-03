@@ -319,8 +319,13 @@ export class TerminalView extends LitElement {
 
   protected firstUpdated(props: PropertyValues): void {
     super.firstUpdated(props)
-    const terminalContainer = this.#getTerminalElement()
-    this.terminal!.open(terminalContainer as HTMLElement)
+    const terminalContainer = this.#getTerminalElement() as HTMLElement
+
+    window.addEventListener('focus', () => {
+      this.terminal?.focus()
+    })
+
+    this.terminal!.open(terminalContainer)
     this.terminal!.focus()
     this.fitAddon?.fit()
     this.#updateTerminalTheme()
