@@ -5,11 +5,11 @@ import path from 'node:path'
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Disposable, Uri, EventEmitter } from 'vscode'
+
 import {
   HealthCheckRequest,
   HealthCheckResponse_ServingStatus
-} from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
-
+} from '../grpc/healthTypes'
 import { SERVER_ADDRESS } from '../../constants'
 import { enableServerLogs, getBinaryPath, getPortNumber, getTLSDir, getTLSEnabled } from '../../utils/configuration'
 import { isPortAvailable } from '../utils'
