@@ -10,12 +10,6 @@ import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 
-
-interface IWindowSize {
-  width: number
-  height: number
-}
-
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
@@ -225,7 +219,6 @@ export class TerminalView extends LitElement {
   protected terminal?: XTermJS
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
-  protected windowSize: IWindowSize
 
   @property({ type: String })
   uuid?: string
@@ -244,10 +237,6 @@ export class TerminalView extends LitElement {
 
   constructor() {
     super()
-    this.windowSize = {
-      height: window.innerHeight,
-      width: window.innerWidth
-    }
   }
 
   connectedCallback(): void {
@@ -274,9 +263,9 @@ export class TerminalView extends LitElement {
     }
 
     this.fitAddon = new FitAddon()
+    this.fitAddon.activate(this.terminal!)
     this.serializer = new SerializeAddon()
     const unicode11Addon = new Unicode11Addon()
-    this.terminal.loadAddon(this.fitAddon)
     this.terminal.loadAddon(this.serializer)
     this.terminal.loadAddon(unicode11Addon)
     this.terminal.unicode.activeVersion = '11'
@@ -284,7 +273,7 @@ export class TerminalView extends LitElement {
 
     const ctx = getContext()
 
-    window.addEventListener('resize', this.#onResizeWindow)
+    window.addEventListener('resize', this.#onResizeWindow.bind(this))
 
     this.disposables.push(
       onClientMessage(ctx, (e) => {
@@ -356,12 +345,7 @@ export class TerminalView extends LitElement {
   }
 
   #onResizeWindow(): void {
-    const { innerWidth } = window
-    // Prevent adjusting the terminal size if the width remains the same
-    if (this.windowSize.width !== innerWidth) {
-      this.windowSize.width = innerWidth
-      this.fitAddon?.fit()
-    }
+    this.fitAddon?.fit()
   }
 
   // Render the UI as a function of component state
