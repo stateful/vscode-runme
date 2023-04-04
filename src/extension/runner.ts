@@ -321,6 +321,11 @@ export class GrpcRunner implements IRunner {
 interface TerminalWindowState {
   dimensions?: TerminalDimensions
   opened: boolean
+  /**
+   * Used in VSCode to determine if this is part of the initial call to
+   * `setDimensions`, which generally should be ignored
+   */
+  hasSetDimensions?: boolean
 }
 
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
@@ -606,9 +611,13 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }
 
     if(terminalWindow === 'vscode' && this.initialized) {
-      // VSCode terminal window calls `setDimensions` only when focused - this
-      // can be conveniently used to set the active window to the terminal
-      this._setActiveTerminalWindow(terminalWindow)
+      if (terminalWindowState.hasSetDimensions) {
+        // VSCode terminal window calls `setDimensions` only when focused - this
+        // can be conveniently used to set the active window to the terminal
+        this._setActiveTerminalWindow(terminalWindow)
+      } else {
+        terminalWindowState.hasSetDimensions = true
+      }
     }
 
     terminalWindowState.dimensions = dimensions
