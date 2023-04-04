@@ -298,7 +298,7 @@ export class TerminalView extends LitElement {
     this.serializer = new SerializeAddon()
     this.terminal.loadAddon(this.serializer)
     this.terminal.loadAddon(new Unicode11Addon())
-    this.terminal.loadAddon(new WebLinksAddon(this.#onWebLinkClick))
+    this.terminal.loadAddon(new WebLinksAddon(this.#onWebLinkClick.bind(this)))
     this.terminal.unicode.activeVersion = '11'
     this.terminal.options.drawBoldTextInBrightColors
 
