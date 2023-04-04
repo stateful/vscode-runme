@@ -68,7 +68,7 @@ Supports multiple lines where the export is just somewhere in between:
 
 ```sh
 echo "Auth token for service foo"
-export SERVICE_FOO_TOKEN=foobar
+export SERVICE_FOO_TOKEN="foobar"
 echo "Auth token for service bar"
 export SERVICE_BAR_TOKEN="barfoo"
 ```
