@@ -101,7 +101,7 @@ describe('Runme Notebooks', () => {
     expect(workspace.createFileSystemWatcher).toBeCalledWith('**/*.md', false, true, false)
     handler.mock.calls[0][0]({ path: '/foo/bar' }, true)
     expect([...launchProvider['filesTree'].entries()])
-      .toEqual([['/foo ', { files: ['bar'], folderPath: '/foo' }]])
+      .toEqual([['foo ', { files: ['bar'], folderPath: '/foo' }]])
       handler.mock.calls[1][0]({ path: '/foo/bar' })
     expect(launchProvider.refresh).toBeCalledTimes(1)
   })
