@@ -32,8 +32,8 @@ export class Survey implements Disposable {
     this.#tempDir = context.globalStorageUri
     this.#context = context
 
-    // negate Windows check once ready
-    if (isWindows()) {
+    // Only prompt on Windows
+    if (!isWindows()) {
       return
     }
 
@@ -46,7 +46,7 @@ export class Survey implements Disposable {
     if (
       notebookType !== Kernel.type ||
       this.#context.globalState.get<boolean>(
-        'runme.winSurvey.defaultShell',
+        'runme.surveyWinDefaultShell',
         false
       )
     ) {
