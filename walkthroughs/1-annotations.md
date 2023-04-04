@@ -8,11 +8,11 @@ See the complete list of cell configuration options [in the docs](https://runme.
 
 You want to enable the `background` setting if notebook execution will continue indefinitely on a single command.
 
-![Readme background task status bar](https://runme.dev/assets/images/long-running-process-28a244ba20337b531c85fd31e7a669ad.png)
+![Readme background task status bar](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/long-running-process.png)
 
 It is very common to use file-watcher enabled compilers/bundlers (`npm start dev`, `watchexec`... etc) in the background during development. For any cell containing an instance of these commands be sure to tick the `"background"` cell setting. It prevents execution from permanently blocking the notebook UX. Once ticked notice the "Background Task" label shows up in the cell status bar.
 
-![Readme background task status bar](https://runme.dev/assets/images/background-task-process-fb519197e23bcf3411d4ce405ae93082.png)
+![Readme background task status bar](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/background-task-process.png)
 
 **Default:** `false`
 **Example:**
@@ -25,7 +25,7 @@ It is very common to use file-watcher enabled compilers/bundlers (`npm start dev
 
 If a cell's commands do not require any input from a reader it might be a good fit to include the cell's output inside the notebook. This is useful if the resulting output could be useful as input in a downstream cell. This is what `interactive=false` is for which defaults to true.
 
-![Readme interactive task status bar](https://runme.dev/assets/images/interactive-execution-46d0d65215954b7ac770448a5394051d.png)
+![Readme interactive task status bar](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/interactive-execution.png)
 
 **Default:** `true`
 **Example:**
@@ -52,7 +52,7 @@ Check the docs on [runme.dev](https://runme.dev/docs/annotations) for more
 
 JSON, text, images, etc. Not all cells’ output is plain text. Using the `mimeType` specifier it is possible to specify the expected output's type. Notebooks have a variety of renderers that will display them human friendly. The MIME type defaults to text/plain.
 
-![Readme mimeType task status bar](https://runme.dev/assets/images/human-centric-output-b9290d4818822a18e4e45700efa7592a.png)
+![Readme mimeType task status bar](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/human-centric-output.png)
 
 
 ## Supported MIME types
