@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { readFileSync, unlinkSync } from 'node:fs'
+import { mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 
 import {
   Disposable,
@@ -76,7 +76,8 @@ export class WinDefaultShell implements Disposable {
       await this.#done()
       return
     }
-mkdirSync(this.#tempDir.fsPath, { recursive: true })
+
+    mkdirSync(this.#tempDir.fsPath, { recursive: true })
 
     const name = 'Runme Windows Shell'
     const tmpfile = path.join(this.#tempDir.fsPath, 'defaultShell')
@@ -104,7 +105,7 @@ mkdirSync(this.#tempDir.fsPath, { recursive: true })
       panel: TaskPanelKind.Dedicated
     }
 
-    await new Promise<number>((resolve) => {
+    const exitCode = await new Promise<number>((resolve) => {
       tasks.executeTask(taskExecution).then((execution) => {
         this.#disposables.push(tasks.onDidEndTaskProcess((e) => {
           const taskId = (e.execution as any)['_id']
@@ -125,10 +126,9 @@ mkdirSync(this.#tempDir.fsPath, { recursive: true })
 
     try {
       const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
-      TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', { output })
-      unlinkSync(tmpfile)
-
+      TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', { output, exitCode: exitCode.toString() })
       await this.#done()
+      unlinkSync(tmpfile)
     } catch (err) {
       if (err instanceof Error) {
         console.log(err.message)
