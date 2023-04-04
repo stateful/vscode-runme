@@ -22,13 +22,13 @@ import { Kernel } from './kernel'
 import { isWindows } from './utils'
 
 export class WinDefaultShell implements Disposable {
-  readonly #id: string = 'runme.surveyWinDefaultShell'
+  static readonly #id: string = 'runme.surveyWinDefaultShell'
   readonly #tempDir: Uri
   readonly #context: ExtensionContext
   readonly #disposables: Disposable[] = []
 
   constructor(context: ExtensionContext) {
-    commands.registerCommand(this.#id, this.#prompt.bind(this))
+    commands.registerCommand(WinDefaultShell.#id, this.#prompt.bind(this))
 
     this.#tempDir = context.globalStorageUri
     this.#context = context
@@ -47,7 +47,7 @@ export class WinDefaultShell implements Disposable {
     if (
       notebookType !== Kernel.type ||
       this.#context.globalState.get<boolean>(
-        this.#id,
+        WinDefaultShell.#id,
         false
       )
     ) {
@@ -55,7 +55,7 @@ export class WinDefaultShell implements Disposable {
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 2000))
-    await commands.executeCommand(this.#id, false)
+    await commands.executeCommand(WinDefaultShell.#id, false)
   }
 
   async #prompt(runDirect = true) {
@@ -137,11 +137,11 @@ export class WinDefaultShell implements Disposable {
   }
 
   async #undo() {
-    await this.#context.globalState.update(this.#id, false)
+    await this.#context.globalState.update(WinDefaultShell.#id, false)
   }
 
   async #done() {
-    await this.#context.globalState.update(this.#id, true)
+    await this.#context.globalState.update(WinDefaultShell.#id, true)
   }
 
   dispose() {
