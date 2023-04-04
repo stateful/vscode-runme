@@ -85,7 +85,7 @@
       {
         "command": "runme.surveyWinDefaultShell",
         "category": "Runme",
-        "title": "Prompt to partipciate in Windows Default Shell survey"
+        "title": "Prompt to participate in Windows Default Shell survey"
       },
       {
         "command": "runme.openAsRunmeNotebook",
