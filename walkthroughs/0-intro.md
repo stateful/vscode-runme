@@ -36,7 +36,7 @@ Gaps in developer experience such as:
 - Docs that have fallen behind undetected
 - The vault lines of commonplace tools were designed for machines, not humans.
 
-![Readme as Notebook and Markdown side-by-side](https://www.runme.dev/assets/images/README_side_by_side-e67bbc4db8e183d9193f1fcccd9b302b.png)
+![Readme as Notebook and Markdown side-by-side](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/sidebyside.png)
 
 Runme’s purpose is to enable developers to achieve a functional local development environment quickly, starting with copy&paste, click to run commands, and many more features. While README.md is the most well-known, there are several other markdown files often found in a repo that you may encounter, including; BUILD.md, CONTRIBUTING.md, and many more. Runme supports most .md and .mdx files!
 
