@@ -52,6 +52,7 @@
   "activationEvents": [
     "onNotebook:runme",
     "onRenderer:runme-renderer",
+    "onCommand:runme.welcome",
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
@@ -113,6 +114,18 @@
         "category": "Runme",
         "title": "Expand all items",
         "icon": "$(search-expand-results)"
+      },
+      {
+        "command": "runme.welcome",
+        "title": "Welcome",
+        "category": "Runme",
+        "description": "Open the welcome page for the Runme extension."
+      },
+      {
+        "command": "runme.try",
+        "title": "Try Runme",
+        "category": "Runme",
+        "description": "Walk through some interactive notebook examples."
       }
     ],
     "menus": {
