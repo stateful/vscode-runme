@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "rootDir": ".",
     "moduleResolution": "node",
     "module": "ESNext",
     "types": [
@@ -13,6 +14,6 @@
     ],
     "target": "es2022"
   },
-  "include": ["specs", "./wdio.conf.ts"],
+  "include": ["specs", "./wdio.conf.ts", "pageobjects"],
   "exclude": []
 }

@@ -5,7 +5,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -19,6 +19,7 @@ jobs:
       - name: 🏗 Build Project
         run: npm run build:dev
       - name: 🧪 Run Tests
+        if: matrix.os == 'macos-latest'
         uses: GabrielBB/xvfb-action@v1
         with:
           run: npm test
