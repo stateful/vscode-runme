@@ -29,7 +29,6 @@ import * as survey from './survey'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
-    new survey.WinDefaultShell(context)
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
@@ -64,12 +63,14 @@ export class RunmeExtension {
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
+    const winSurvey = new survey.WinDefaultShell(context)
 
     context.subscriptions.push(
       kernel,
       serializer,
       server,
       treeViewer,
+      winSurvey,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata: {
