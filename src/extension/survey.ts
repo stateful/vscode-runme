@@ -59,6 +59,7 @@ export class WinDefaultShell implements Disposable {
   }
 
   async #prompt(runDirect = true) {
+    // reset done when run from command palette
     if (runDirect) {
       await this.#undo()
     }
