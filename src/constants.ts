@@ -23,7 +23,8 @@ export enum ClientMessages {
   terminalStdout = 'terminal:stdout',
   terminalStderr = 'terminal:stderr',
   terminalStdin = 'terminal:stdin',
-  activeThemeChanged = 'theme:changed'
+  activeThemeChanged = 'theme:changed',
+  openLink = 'terminal:openLink'
 }
 
 // [pretty print, languageId, destination]

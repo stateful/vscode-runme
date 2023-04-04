@@ -110,6 +110,7 @@ export interface ClientMessagePayload {
     input: string
   }
   [ClientMessages.activeThemeChanged]: string
+  [ClientMessages.openLink]: string
 }
 
 export interface OutputItemsPayload {

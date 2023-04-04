@@ -12,7 +12,10 @@ import {
   NotebookEdit,
   NotebookDocument,
   NotebookCellOutput,
-  NotebookCellOutputItem} from 'vscode'
+  NotebookCellOutputItem,
+  env,
+  Uri
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { CellOutputPayload, ClientMessage, Serializer } from '../types'
@@ -79,7 +82,7 @@ export class Kernel implements Disposable {
     return this.#experiments.get(key) || defaultValue
   }
 
-  dispose () {
+  dispose() {
     resetEnv()
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
@@ -233,6 +236,8 @@ export class Kernel implements Disposable {
       return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {
       return window.showInformationMessage(message.output as string)
+    } else if (message.type === ClientMessages.openLink) {
+      return env.openExternal(Uri.parse(message.output))
     } else if (
       message.type === ClientMessages.terminalStdin ||
       message.type === ClientMessages.terminalStdout ||
@@ -259,7 +264,7 @@ export class Kernel implements Disposable {
         const cellText = cell.document.getText()
         const cellLabel = (
           annotations.name ||
-          cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
+            cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
         )
 
         const answer = await window.showQuickPick(Object.values(ConfirmationItems), {
@@ -310,7 +315,7 @@ export class Kernel implements Disposable {
 
     const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']
 
-    if(!uuid) {
+    if (!uuid) {
       throw new Error('Executable cell does not have UUID field!')
     }
 
@@ -322,13 +327,13 @@ export class Kernel implements Disposable {
 
     const environmentManager = this.getEnvironmentManager()
 
-    if(
+    if (
       this.runner &&
       // hard disable gRPC runner on windows
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = async (execKey: 'sh'|'bash' = 'bash') => await executeRunner(
+      const runScript = async (execKey: 'sh' | 'bash' = 'bash') => await executeRunner(
         this,
         this.context,
         this.runner!,
@@ -357,7 +362,7 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution =  await executor[execKey].call(this, exec, runningCell)
+      successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     exec.end(successfulCellExecution)
@@ -366,7 +371,7 @@ export class Kernel implements Disposable {
   useRunner(runner: IRunner) {
     this.runnerReadyListener?.dispose()
 
-    if(this.hasExperimentEnabled('grpcRunner') && runner) {
+    if (this.hasExperimentEnabled('grpcRunner') && runner) {
       this.runner = runner
 
       this.runnerReadyListener = runner.onReady(async () => {
@@ -379,9 +384,9 @@ export class Kernel implements Disposable {
             processEnviron()
           )
 
-          if(this.runner !== runner) { return }
+          if (this.runner !== runner) { return }
           this.environment = env
-        } catch(e: any) {
+        } catch (e: any) {
           window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
           console.error('[Runme] Failed to create gRPC Runner environment', e)
         }
@@ -398,11 +403,11 @@ export class Kernel implements Disposable {
     if (this.runner) {
       return {
         get: async (key) => {
-          if(!this.environment) { return undefined }
+          if (!this.environment) { return undefined }
           return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
         },
         set: async (key, val) => {
-          if(!this.environment) { return undefined }
+          if (!this.environment) { return undefined }
           await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
         }
       }

@@ -5,6 +5,7 @@ import { ITheme, Terminal as XTermJS } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { SerializeAddon } from 'xterm-addon-serialize'
 import { Unicode11Addon } from 'xterm-addon-unicode11'
+import { WebLinksAddon } from 'xterm-addon-web-links'
 
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
@@ -34,7 +35,7 @@ const ANSI_COLORS = [
   'brightMagenta',
   'brightCyan',
   'brightWhite',
-]satisfies (keyof ITheme)[]
+] satisfies (keyof ITheme)[]
 
 @customElement('terminal-view')
 export class TerminalView extends LitElement {
@@ -295,9 +296,9 @@ export class TerminalView extends LitElement {
     this.fitAddon = new FitAddon()
     this.fitAddon.activate(this.terminal!)
     this.serializer = new SerializeAddon()
-    const unicode11Addon = new Unicode11Addon()
     this.terminal.loadAddon(this.serializer)
-    this.terminal.loadAddon(unicode11Addon)
+    this.terminal.loadAddon(new Unicode11Addon())
+    this.terminal.loadAddon(new WebLinksAddon(this.#onWebLinkClick.bind(this)))
     this.terminal.unicode.activeVersion = '11'
     this.terminal.options.drawBoldTextInBrightColors
 
@@ -381,6 +382,10 @@ export class TerminalView extends LitElement {
 
   #onResizeWindow(): void {
     this.fitAddon?.fit()
+  }
+
+  #onWebLinkClick(event: MouseEvent, uri: string): void {
+    postClientMessage(getContext(), ClientMessages.openLink, uri)
   }
 
   // Render the UI as a function of component state
