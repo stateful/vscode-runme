@@ -22,14 +22,14 @@ import { Kernel } from './kernel'
 import { isWindows } from './utils'
 
 export class Survey implements Disposable {
-  readonly #tmpDir: Uri
+  readonly #tempDir: Uri
   readonly #context: ExtensionContext
   readonly #disposables: Disposable[] = []
 
   constructor(context: ExtensionContext) {
     commands.registerCommand('runme.surveyWinDefaultShell', this.#prompt.bind(this))
 
-    this.#tmpDir = context.globalStorageUri
+    this.#tempDir = context.globalStorageUri
     this.#context = context
 
     // negate Windows check once ready
@@ -69,7 +69,7 @@ export class Survey implements Disposable {
 
 
     const name = 'Runme Windows Shell'
-    const tmpfile = path.join(this.#tmpDir.fsPath, 'defaultShell')
+    const tmpfile = path.join(this.#tempDir.fsPath, 'defaultShell')
     try {
       unlinkSync(tmpfile)
     } catch (err) {
