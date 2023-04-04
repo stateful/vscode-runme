@@ -65,7 +65,7 @@ export class WinDefaultShell implements Disposable {
     }
 
     const option = await window.showInformationMessage(
-      'Please help us improve Runme on Windows: Click OK to share what default shell you are running.',
+      'Please help us improve Runme on Windows: Click OK to share what default shell you are using.',
       'OK',
       'Don\'t ask again',
       'Dismiss'
