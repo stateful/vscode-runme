@@ -57,6 +57,21 @@
       "args": ["run", "${relativeFile}"],
       "smartStep": true,
       "console": "integratedTerminal"
-    }
+    },
+    {
+      "name": "run selected e2e spec",
+      "type": "node",
+      "request": "launch",
+      "args": ["wdio.conf.ts", "--spec", "${file}"],
+      "cwd": "${workspaceFolder}/tests/e2e",
+      "autoAttachChildProcesses": true,
+      "program": "${workspaceRoot}/node_modules/@wdio/cli/bin/wdio.js",
+      "console": "integratedTerminal",
+      "skipFiles": [
+          "${workspaceFolder}/node_modules/**/*.js",
+          "${workspaceFolder}/lib/**/*.js",
+          "<node_internals>/**/*.js"
+      ]
+  }
   ]
 }
