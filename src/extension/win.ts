@@ -14,6 +14,7 @@ import {
   TaskPanelKind,
   tasks,
   Uri,
+  commands,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -33,6 +34,8 @@ export class Survey implements Disposable {
       return
     }
 
+    commands.registerCommand('runme.surveyWinDefaultShell', this.#prompt.bind(this))
+
     this.#disposables.push(
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
     )
@@ -50,7 +53,7 @@ export class Survey implements Disposable {
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 2000))
-    await this.#prompt()
+    await commands.executeCommand('runme.surveyWinDefaultShell')
   }
 
   async #prompt() {
@@ -66,7 +69,13 @@ export class Survey implements Disposable {
 
     const name = 'Runme Windows Shell'
     const tmpfile = path.join(this.#tmpDir.fsPath, 'defaultShell')
-    unlinkSync(tmpfile)
+    try {
+      unlinkSync(tmpfile)
+    } catch (err) {
+      if (err instanceof Error) {
+        console.log(err.message)
+      }
+    }
     // eslint-disable-next-line max-len
     const cmdline = `echo $SHELL > "${tmpfile}"; echo $PSVersionTable | Out-File -Encoding utf8 "${tmpfile}"`
     const taskExecution = new Task(
@@ -83,27 +92,35 @@ export class Survey implements Disposable {
       reveal: TaskRevealKind.Never,
       panel: TaskPanelKind.Dedicated
     }
-    await tasks.executeTask(taskExecution)
 
-    // let buffer = ''
-    // const child = spawn('echo $SHELL; echo $PSVersionTable', { shell: true, env })
-    // const concat = (buf: Uint8Array) => buffer += buf.toString()
-    // child.stdout.on('data', concat)
-    // child.stderr.on('data', concat)
+    await new Promise<number>((resolve) => {
+      tasks.executeTask(taskExecution).then((execution) => {
+        this.#disposables.push(tasks.onDidEndTaskProcess((e) => {
+          const taskId = (e.execution as any)['_id']
+          const executionId = (execution as any)['_id']
 
-    // const output = await new Promise<string>((resolve, reject) => {
-    //   child.on('exit', (exitCode) => {
-    //     if (exitCode === 0) {
-    //       resolve(buffer.trim())
-    //       return
-    //     }
-    //     reject(exitCode?.toString())
-    //   })
-    // })
+          if (
+            taskId !== executionId ||
+            typeof e.exitCode === 'undefined'
+          ) {
+            return
+          }
 
-    const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
-    TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
-    unlinkSync(tmpfile)
+          // non-zero exit code does not mean failure
+          resolve(e.exitCode)
+        }))
+      })
+    })
+
+    try {
+      const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
+      TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
+      unlinkSync(tmpfile)
+    } catch (err) {
+      if (err instanceof Error) {
+        console.log(err.message)
+      }
+    }
   }
 
   dispose() {
