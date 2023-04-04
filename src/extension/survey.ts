@@ -55,16 +55,24 @@ export class WinDefaultShell implements Disposable {
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 2000))
-    await commands.executeCommand(this.#id)
+    await commands.executeCommand(this.#id, false)
   }
 
-  async #prompt() {
+  async #prompt(runDirect = true) {
+    if (runDirect) {
+      await this.#undo()
+    }
+
     const option = await window.showInformationMessage(
       'Please help us improve Runme on Windows: Click OK to share what default shell you are running.',
       'OK',
+      'Don\'t ask again',
       'Dismiss'
     )
-    if (option !== 'OK') {
+    if (option === 'Dismiss') {
+      return
+    } else if (option !== 'OK') {
+      await this.#done()
       return
     }
 
@@ -119,12 +127,20 @@ export class WinDefaultShell implements Disposable {
       TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
       unlinkSync(tmpfile)
 
-      await this.#context.globalState.update(this.#id, true)
+      await this.#done()
     } catch (err) {
       if (err instanceof Error) {
         console.log(err.message)
       }
     }
+  }
+
+  async #undo() {
+    await this.#context.globalState.update(this.#id, false)
+  }
+
+  async #done() {
+    await this.#context.globalState.update(this.#id, true)
   }
 
   dispose() {
