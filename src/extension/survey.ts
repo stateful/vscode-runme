@@ -76,7 +76,7 @@ export class WinDefaultShell implements Disposable {
       await this.#done()
       return
     }
-
+mkdirSync(this.#tempDir.fsPath, { recursive: true })
 
     const name = 'Runme Windows Shell'
     const tmpfile = path.join(this.#tempDir.fsPath, 'defaultShell')
