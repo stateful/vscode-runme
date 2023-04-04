@@ -541,6 +541,7 @@
     "@vercel/frameworks": "^1.2.4",
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.1",
+    "clipboardy": "^3.0.0",
     "detect-port": "^1.5.1",
     "filenamify": "^6.0.0",
     "get-port": "^6.1.2",

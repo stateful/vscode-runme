@@ -9,7 +9,7 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
 
     /**
      * Finds a cell by content
-     * @param content {string} Keyword to use for searching a specific cell 
+     * @param content {string} Keyword to use for searching a specific cell
      * @returns {Cell|undefined}
      */
     async findCell(content: string): Promise<Cell | undefined> {
@@ -45,7 +45,7 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
      * Find a Notebook cell by its content.
      * If the end of the Notebook is reached with no results,
      * it will throw an error.
-     * 
+     *
      * @param cellContent The content to use to find the cell
      * @param [timeout=60000] {number} The maximum amount of time to wait until finding the cell (1 minute by default)
      * @returns Found Cell or Error
@@ -65,7 +65,7 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
                 if (elapsedTime > timeout) {
                     searchCell = false
                 }
-                await this.scrollDown(3)
+                await browser.keys(Key.ArrowDown)
             } else {
                 searchCell = false
             }
@@ -76,14 +76,4 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
         return cell
     }
 
-    /**
-     * Scroll down by pressing the Arrow Down key
-     * @param times [number=1] Number of times to scroll
-     */
-    async scrollDown(times: number = 1) {
-        for (let i = 0; i < times; i++) {
-            await browser.keys(Key.ArrowDown)
-        }
-    }
-
-}   
+}
