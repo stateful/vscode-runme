@@ -22,12 +22,13 @@ import { Kernel } from './kernel'
 import { isWindows } from './utils'
 
 export class WinDefaultShell implements Disposable {
+  readonly #id: string = 'runme.surveyWinDefaultShell'
   readonly #tempDir: Uri
   readonly #context: ExtensionContext
   readonly #disposables: Disposable[] = []
 
   constructor(context: ExtensionContext) {
-    commands.registerCommand('runme.surveyWinDefaultShell', this.#prompt.bind(this))
+    commands.registerCommand(this.#id, this.#prompt.bind(this))
 
     this.#tempDir = context.globalStorageUri
     this.#context = context
@@ -46,7 +47,7 @@ export class WinDefaultShell implements Disposable {
     if (
       notebookType !== Kernel.type ||
       this.#context.globalState.get<boolean>(
-        'runme.surveyWinDefaultShell',
+        this.#id,
         false
       )
     ) {
@@ -54,7 +55,7 @@ export class WinDefaultShell implements Disposable {
     }
 
     await new Promise<void>(resolve => setTimeout(resolve, 2000))
-    await commands.executeCommand('runme.surveyWinDefaultShell')
+    await commands.executeCommand(this.#id)
   }
 
   async #prompt() {
@@ -117,6 +118,8 @@ export class WinDefaultShell implements Disposable {
       const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
       TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
       unlinkSync(tmpfile)
+
+      await this.#context.globalState.update(this.#id, true)
     } catch (err) {
       if (err instanceof Error) {
         console.log(err.message)
