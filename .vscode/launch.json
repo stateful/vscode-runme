@@ -59,7 +59,7 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Run Current e2e Spec",
+      "name": "run selected e2e spec",
       "type": "node",
       "request": "launch",
       "args": ["wdio.conf.ts", "--spec", "${file}"],
