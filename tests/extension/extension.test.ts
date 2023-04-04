@@ -1,5 +1,8 @@
 import { test, expect, vi } from 'vitest'
 import { notebooks, workspace, commands, window, Uri } from 'vscode'
+import {
+  HealthCheckResponse_ServingStatus
+} from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
 import { RunmeExtension } from '../../src/extension/extension'
 import RunmeServer from '../../src/extension/server/runmeServer'
@@ -23,6 +26,15 @@ vi.mock('../../src/extension/grpc/client', () => {
         return { status: { code: 'OK' } }
       })
     })),
+    HealthClient: class {
+      async check() {
+        return {
+          response: {
+            status: HealthCheckResponse_ServingStatus.SERVING
+          }
+        }
+      }
+    },
   })
 })
 

@@ -6,11 +6,14 @@ import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Disposable, Uri, EventEmitter } from 'vscode'
 
+import {
+  HealthCheckRequest,
+  HealthCheckResponse_ServingStatus
+} from '../grpc/healthTypes'
 import { SERVER_ADDRESS } from '../../constants'
 import { enableServerLogs, getBinaryPath, getPortNumber, getTLSDir, getTLSEnabled } from '../../utils/configuration'
-import { initParserClient } from '../grpc/client'
-import { DeserializeRequest } from '../grpc/serializerTypes'
 import { isPortAvailable } from '../utils'
+import { HealthClient } from '../grpc/client'
 
 import RunmeServerError from './runmeServerError'
 
@@ -76,18 +79,22 @@ class RunmeServer implements Disposable {
     }
 
     async isRunning(): Promise<boolean> {
-      const client = initParserClient(await this.transport())
+      const client = new HealthClient(await this.transport())
+
       try {
-        const deserialRequest = DeserializeRequest.create({ source: Buffer.from('## Server running', 'utf-8') })
-        const request = client.deserialize(deserialRequest)
-        const status = await request.status
-        return status.code === 'OK'
+        const { response } = await client.check(HealthCheckRequest.create())
+
+        if (response.status === HealthCheckResponse_ServingStatus.SERVING) {
+          return true
+        }
       } catch (err: any) {
         if (err?.code === 'UNAVAILABLE') {
           return false
         }
         throw err
       }
+
+      return false
     }
 
     address() {
