@@ -25,11 +25,11 @@ import { RunmeUriHandler } from './handler/uri'
 import { BOOTFILE } from './constants'
 import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
-import { Survey } from './win'
+import { WinDefaultShell } from './survey'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
-    new Survey(context)
+    new WinDefaultShell(context)
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')

@@ -21,7 +21,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { Kernel } from './kernel'
 import { isWindows } from './utils'
 
-export class Survey implements Disposable {
+export class WinDefaultShell implements Disposable {
   readonly #tempDir: Uri
   readonly #context: ExtensionContext
   readonly #disposables: Disposable[] = []
