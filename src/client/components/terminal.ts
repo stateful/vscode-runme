@@ -9,12 +9,7 @@ import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
-
-
-interface IWindowSize {
-  width: number
-  height: number
-}
+import { stripANSI } from '../../utils/ansi'
 
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
@@ -219,13 +214,41 @@ export class TerminalView extends LitElement {
         z-index: 2;
         position: relative;
     }
+
+    vscode-button {
+      background: transparent;
+      color: #ccc;
+      transform: scale(.9);
+    }
+    vscode-button:hover {
+      background: var(--button-secondary-background);
+    }
+    vscode-button:focus {
+      outline: #007fd4 1px solid;
+    }
+    .icon {
+      width: 13px;
+      margin: 0 5px 0 -5px;
+      padding: 0;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: row;
+      justify-content: end;
+    }
+
+    section {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
   `
 
   protected disposables: Disposable[] = []
   protected terminal?: XTermJS
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
-  protected windowSize: IWindowSize
 
   @property({ type: String })
   uuid?: string
@@ -244,10 +267,6 @@ export class TerminalView extends LitElement {
 
   constructor() {
     super()
-    this.windowSize = {
-      height: window.innerHeight,
-      width: window.innerWidth
-    }
   }
 
   connectedCallback(): void {
@@ -274,9 +293,9 @@ export class TerminalView extends LitElement {
     }
 
     this.fitAddon = new FitAddon()
+    this.fitAddon.activate(this.terminal!)
     this.serializer = new SerializeAddon()
     const unicode11Addon = new Unicode11Addon()
-    this.terminal.loadAddon(this.fitAddon)
     this.terminal.loadAddon(this.serializer)
     this.terminal.loadAddon(unicode11Addon)
     this.terminal.unicode.activeVersion = '11'
@@ -284,7 +303,7 @@ export class TerminalView extends LitElement {
 
     const ctx = getContext()
 
-    window.addEventListener('resize', this.#onResizeWindow)
+    window.addEventListener('resize', this.#onResizeWindow.bind(this))
 
     this.disposables.push(
       onClientMessage(ctx, (e) => {
@@ -319,8 +338,13 @@ export class TerminalView extends LitElement {
 
   protected firstUpdated(props: PropertyValues): void {
     super.firstUpdated(props)
-    const terminalContainer = this.#getTerminalElement()
-    this.terminal!.open(terminalContainer as HTMLElement)
+    const terminalContainer = this.#getTerminalElement() as HTMLElement
+
+    window.addEventListener('focus', () => {
+      this.terminal?.focus()
+    })
+
+    this.terminal!.open(terminalContainer)
     this.terminal!.focus()
     this.fitAddon?.fit()
     this.#updateTerminalTheme()
@@ -356,21 +380,43 @@ export class TerminalView extends LitElement {
   }
 
   #onResizeWindow(): void {
-    const { innerWidth } = window
-    // Prevent adjusting the terminal size if the width remains the same
-    if (this.windowSize.width !== innerWidth) {
-      this.windowSize.width = innerWidth
-      this.fitAddon?.fit()
-    }
+    this.fitAddon?.fit()
   }
 
   // Render the UI as a function of component state
   render() {
-    return html`<div id="terminal"></div>`
+    return html`<section>
+      <div id="terminal"></div>
+      <div class="button-group">
+        <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
+          <svg
+            class="icon" width="16" height="16" viewBox="0 0 16 16"
+            xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+          >
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"/>
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"/>
+          </svg>
+          Copy
+        </vscode-button>
+      </div>
+    </section>`
   }
 
   dispose() {
     this.disposables.forEach(({ dispose }) => dispose())
   }
 
+  #copy() {
+    const ctx = getContext()
+    if (!ctx.postMessage) { return }
+
+    const content = stripANSI(this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '')
+
+    return navigator.clipboard.writeText(content).then(
+      () => postClientMessage(ctx, ClientMessages.infoMessage, 'Copied result content to clipboard!'),
+      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `'Failed to copy to clipboard: ${err.message}!'`),
+    )
+  }
 }
