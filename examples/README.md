@@ -140,7 +140,9 @@ curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b9
 
 ## Terminal Dimensions
 
-```sh { closeTerminalOnSuccess=false }
-echo Rows: $(tput lines)
-echo Columns: $(tput cols)
+```sh { background=false closeTerminalOnSuccess=false }
+watch -n 0.1 "
+echo Rows: \$(tput lines)
+echo Columns: \$(tput cols)
+"
 ```

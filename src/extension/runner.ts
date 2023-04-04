@@ -34,6 +34,8 @@ export type RunProgramExecution = {
   script: string
 }
 
+export type TerminalWindow = 'vscode'|'notebook'
+
 export interface RunProgramOptions {
   programName: string
   args?: string[]
@@ -113,11 +115,36 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
    */
   readonly onStderrRaw: Event<Uint8Array>
 
+  /**
+   * Number of registered terminal windows
+   */
+  readonly numTerminalWindows: number
+
   handleInput(message: string): Promise<void>
 
   setRunOptions(opts: RunProgramOptions): void
   run(): Promise<void>
   hasExited(): RunnerExitReason|undefined
+
+  setDimensions(dimensions: TerminalDimensions, terminalWindow?: TerminalWindow): void|Promise<void>
+
+  /**
+   * Register terminal window for usage with this program
+   *
+   * When windows are registered, the program will be run after all registered
+   * windows have made a call to `open`
+   *
+   * @param window Type of terminal window
+   */
+  registerTerminalWindow(window: TerminalWindow, initialDimensions?: TerminalDimensions): void
+
+  /**
+   * The "active" terminal window is the one whose dimensions are used for the
+   * underlying program sesssion's shell process
+   */
+  setActiveTerminalWindow(window: TerminalWindow): Promise<void>
+
+  open(initialDimensions?: TerminalDimensions, terminalWindow?: TerminalWindow): void|Promise<void>
 }
 
 export class GrpcRunner implements IRunner {
@@ -291,6 +318,11 @@ export class GrpcRunner implements IRunner {
   }
 }
 
+interface TerminalWindowState {
+  dimensions?: TerminalDimensions
+  opened: boolean
+}
+
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   private disposables: Disposable[] = []
 
@@ -317,6 +349,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   protected initialized = false
 
   protected buffer = ''
+
+  protected activeTerminalWindow?: TerminalWindow
+  protected terminalWindows = new Map<TerminalWindow, TerminalWindowState>()
 
   constructor(
     private readonly client: RunnerServiceClient,
@@ -461,7 +496,47 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }))
   }
 
-  open(initialDimensions?: TerminalDimensions): void {
+  registerTerminalWindow(window: TerminalWindow, initialDimensions?: TerminalDimensions): void {
+    this.terminalWindows.set(window, {
+      dimensions: initialDimensions,
+      opened: false,
+    })
+  }
+
+  private _setActiveTerminalWindow(window: TerminalWindow): void {
+    this.activeTerminalWindow = window
+  }
+
+  async setActiveTerminalWindow(window: TerminalWindow): Promise<void> {
+    const terminalWindowState = this.terminalWindows.get(window)
+
+    if(!terminalWindowState) {
+      console.error(`Attempted to set active terminal window to unregistered window '${window}'`)
+      return
+    }
+
+    this._setActiveTerminalWindow(window)
+
+    if (terminalWindowState.dimensions && this.initialized) {
+      await this.setDimensions(terminalWindowState.dimensions, window)
+    }
+  }
+
+  open(initialDimensions?: TerminalDimensions, terminalWindow: TerminalWindow = 'vscode'): void {
+    const terminalWindowState = this.terminalWindows.get(terminalWindow)
+
+    if (!terminalWindowState) {
+      console.error(`Attempted to open unregistered terminal window '${terminalWindow}!'`)
+      return
+    }
+
+    if (terminalWindowState.opened) {
+      console.error(`Attempted to open terminal window '${terminalWindow}' that has already opened!`)
+      return
+    }
+
+    terminalWindowState.opened = true
+
     // Workaround to force terminal to close if opened after early exit
     // TODO(mxs): find a better solution here
     if(this.hasExited()) {
@@ -469,10 +544,14 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       return
     }
 
-    this.opts.terminalDimensions = initialDimensions
+    if (terminalWindow === this.activeTerminalWindow) {
+      this.opts.terminalDimensions = initialDimensions
+    }
 
-    // in pty, we wait for open to run
-    this.run()
+    if ([ ...this.terminalWindows.values() ].every(({ opened }) => opened)) {
+      // in pty, we wait for open to run
+      this.run()
+    }
   }
 
   async dispose() {
@@ -519,10 +598,26 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.dispose()
   }
 
-  setDimensions(dimensions: TerminalDimensions): void {
-    this.session.requests.send(ExecuteRequest.create({
-      winsize: terminalDimensionsToWinsize(dimensions)
-    }))
+  async setDimensions(dimensions: TerminalDimensions, terminalWindow: TerminalWindow = 'vscode'): Promise<void> {
+    const terminalWindowState = this.terminalWindows.get(terminalWindow)
+
+    if (!terminalWindowState) {
+      throw new Error(`Tried to set dimensions for unregistered terminal window ${terminalWindow}`)
+    }
+
+    if(terminalWindow === 'vscode' && this.initialized) {
+      // VSCode terminal window calls `setDimensions` only when focused - this
+      // can be conveniently used to set the active window to the terminal
+      this._setActiveTerminalWindow(terminalWindow)
+    }
+
+    terminalWindowState.dimensions = dimensions
+
+    if (this.activeTerminalWindow === terminalWindow && this.initialized) {
+      await this.session.requests.send(ExecuteRequest.create({
+        winsize: terminalDimensionsToWinsize(dimensions)
+      }))
+    }
   }
 
   hasExited() {
@@ -552,6 +647,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...exec?.type === 'script' && { script: exec.script },
       ...terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) },
     })
+  }
+
+  get numTerminalWindows() {
+    return this.terminalWindows.size
   }
 }
 

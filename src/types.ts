@@ -1,4 +1,4 @@
-import { NotebookCellKind, TaskDefinition } from 'vscode'
+import { NotebookCellKind, TaskDefinition, TerminalDimensions } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -108,6 +108,15 @@ export interface ClientMessagePayload {
   [ClientMessages.terminalStdin]: {
     ['runme.dev/uuid']: string
     input: string
+  }
+  [ClientMessages.terminalFocus]: { ['runme.dev/uuid']: string }
+  [ClientMessages.terminalResize]: {
+    ['runme.dev/uuid']: string
+    terminalDimensions: TerminalDimensions
+  }
+  [ClientMessages.terminalOpen]: {
+    ['runme.dev/uuid']: string
+    terminalDimensions?: TerminalDimensions
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string

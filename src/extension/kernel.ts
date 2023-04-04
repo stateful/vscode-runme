@@ -239,9 +239,7 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.openLink) {
       return env.openExternal(Uri.parse(message.output))
     } else if (
-      message.type === ClientMessages.terminalStdin ||
-      message.type === ClientMessages.terminalStdout ||
-      message.type === ClientMessages.terminalStderr
+      message.type.startsWith('terminal:')
     ) {
       return
     }
