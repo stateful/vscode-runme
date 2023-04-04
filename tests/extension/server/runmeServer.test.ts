@@ -11,6 +11,7 @@ vi.mock('../../../src/extension/grpc/client', () => ({ initParserClient: vi.fn()
 
 vi.mock('../../../src/extension/utils', () => ({
   isPortAvailable: vi.fn(async () => true),
+  isWindows: vi.fn().mockReturnValue(false)
 }))
 
 vi.mock('node:fs/promises', async () => ({
