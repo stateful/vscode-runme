@@ -27,14 +27,15 @@ export class Survey implements Disposable {
   readonly #disposables: Disposable[] = []
 
   constructor(context: ExtensionContext) {
+    commands.registerCommand('runme.surveyWinDefaultShell', this.#prompt.bind(this))
+
     this.#tmpDir = context.globalStorageUri
     this.#context = context
+
     // negate Windows check once ready
     if (isWindows()) {
       return
     }
-
-    commands.registerCommand('runme.surveyWinDefaultShell', this.#prompt.bind(this))
 
     this.#disposables.push(
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
