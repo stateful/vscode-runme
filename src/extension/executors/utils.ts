@@ -1,6 +1,5 @@
 import cp from 'node:child_process'
 import path from 'node:path'
-import os from 'node:os'
 
 import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, window } from 'vscode'
 
@@ -250,8 +249,4 @@ export async function parseCommandSeq(
 
   return parsedCommandBlocks
     .flatMap(({ type, content }) => (type === 'block' && parseBlock?.(content)) || (content ? [content] : []))
-}
-
-export function isWindows(): boolean {
-  return os.platform().startsWith('win')
 }

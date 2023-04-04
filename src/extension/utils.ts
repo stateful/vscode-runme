@@ -1,6 +1,7 @@
 import path from 'node:path'
 import util from 'node:util'
 import cp from 'node:child_process'
+import os from 'node:os'
 
 import vscode, {
   FileType,
@@ -318,4 +319,8 @@ export async function isPortAvailable(port: number): Promise<boolean> {
 
 export function processEnviron(): string[] {
   return Object.entries(process.env).map(([k, v]) => `${k}=${v || ''}`)
+}
+
+export function isWindows(): boolean {
+  return os.platform().startsWith('win')
 }
