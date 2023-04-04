@@ -184,7 +184,8 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     const rootFolder = basename(this.workspaceRoot || '')
     const info = basename(file.path)
     const folderPath = dirname(file.path)
-    const folderName = folderPath.replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
+    let folderName = folderPath.replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
+    folderName = folderName.startsWith('/') ? folderName.substring(1, folderName.length) : folderName
     return { info, folderPath, folderName }
   }
 
