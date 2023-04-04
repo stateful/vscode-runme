@@ -125,7 +125,7 @@ export class WinDefaultShell implements Disposable {
 
     try {
       const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
-      TelemetryReporter.sendTelemetryEvent('winSurvey.defaultShell', { output })
+      TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', { output })
       unlinkSync(tmpfile)
 
       await this.#done()
