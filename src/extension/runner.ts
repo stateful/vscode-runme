@@ -531,7 +531,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     const terminalWindowState = this.terminalWindows.get(terminalWindow)
 
     if (!terminalWindowState) {
-      console.error(`Attempted to open unregistered terminal window '${terminalWindow}!'`)
+      console.error(`Attempted to open unregistered terminal window '${terminalWindow}'!`)
       return
     }
 
@@ -549,8 +549,12 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       return
     }
 
+    if (initialDimensions) {
+      terminalWindowState.dimensions = initialDimensions
+    }
+
     if (terminalWindow === this.activeTerminalWindow) {
-      this.opts.terminalDimensions = initialDimensions
+      this.opts.terminalDimensions = terminalWindowState.dimensions
     }
 
     if ([ ...this.terminalWindows.values() ].every(({ opened }) => opened)) {
