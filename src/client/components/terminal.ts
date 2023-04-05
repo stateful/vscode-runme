@@ -293,8 +293,10 @@ export class TerminalView extends LitElement {
       this.terminal?.write(this.initialContent)
     }
 
-    this.fitAddon = new FitAddon()
-    this.fitAddon.activate(this.terminal!)
+    // TODO(mxs): bring back, see #383
+    // this.fitAddon = new FitAddon()
+    // this.fitAddon.activate(this.terminal!)
+
     this.serializer = new SerializeAddon()
     this.terminal.loadAddon(this.serializer)
     this.terminal.loadAddon(new Unicode11Addon())
@@ -347,7 +349,8 @@ export class TerminalView extends LitElement {
 
     this.terminal!.open(terminalContainer)
     this.terminal!.focus()
-    this.fitAddon?.fit()
+    // TODO(mxs): bring back, see #383
+    // this.fitAddon?.fit()
     this.#updateTerminalTheme()
 
     if (this.lastLine) {
@@ -381,7 +384,8 @@ export class TerminalView extends LitElement {
   }
 
   #onResizeWindow(): void {
-    this.fitAddon?.fit()
+    // TODO(mxs): bring back, see #383
+    // this.fitAddon?.fit()
   }
 
   #onWebLinkClick(event: MouseEvent, uri: string): void {
