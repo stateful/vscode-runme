@@ -263,6 +263,9 @@ suite('grpc Runner', () => {
         tty: true
       })
 
+      session.registerTerminalWindow('vscode')
+      session.setActiveTerminalWindow('vscode')
+
       session.open({ columns: 50, rows: 20 })
 
       expect(duplex.requests.send).toBeCalledTimes(1)
@@ -280,8 +283,10 @@ suite('grpc Runner', () => {
         tty: true
       })
 
-      session.open({ columns: 50, rows: 20 })
+      session.registerTerminalWindow('vscode')
+      session.setActiveTerminalWindow('vscode')
 
+      session.open({ columns: 50, rows: 20 })
       session.setDimensions({ columns: 60, rows: 30 })
 
       expect(duplex.requests.send).toBeCalledTimes(2)
