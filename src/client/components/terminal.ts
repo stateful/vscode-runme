@@ -2,15 +2,20 @@ import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
-import { FitAddon } from 'xterm-addon-fit'
 import { SerializeAddon } from 'xterm-addon-serialize'
 import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 
+import { FitAddon } from '../fitAddon'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 import { stripANSI } from '../../utils/ansi'
+
+interface IWindowSize {
+  width: number
+  height: number
+}
 
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
@@ -250,6 +255,7 @@ export class TerminalView extends LitElement {
   protected terminal?: XTermJS
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
+  protected windowSize: IWindowSize
 
   @property({ type: String })
   uuid?: string
@@ -268,6 +274,10 @@ export class TerminalView extends LitElement {
 
   constructor() {
     super()
+    this.windowSize = {
+      height: window.innerHeight,
+      width: window.innerWidth
+    }
   }
 
   connectedCallback(): void {
@@ -293,9 +303,8 @@ export class TerminalView extends LitElement {
       this.terminal?.write(this.initialContent)
     }
 
-    // TODO(mxs): bring back, see #383
-    // this.fitAddon = new FitAddon()
-    // this.fitAddon.activate(this.terminal!)
+    this.fitAddon = new FitAddon()
+    this.fitAddon.activate(this.terminal!)
 
     this.serializer = new SerializeAddon()
     this.terminal.loadAddon(this.serializer)
@@ -349,8 +358,7 @@ export class TerminalView extends LitElement {
 
     this.terminal!.open(terminalContainer)
     this.terminal!.focus()
-    // TODO(mxs): bring back, see #383
-    // this.fitAddon?.fit()
+    this.fitAddon?.fit()
     this.#updateTerminalTheme()
 
     if (this.lastLine) {
@@ -377,15 +385,18 @@ export class TerminalView extends LitElement {
     this.terminal!.options.theme = terminalTheme
   }
 
-
   #getThemeHexColor(variableName: string): string | undefined {
     const terminalContainer = this.shadowRoot?.querySelector('#terminal')
     return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
   }
 
   #onResizeWindow(): void {
-    // TODO(mxs): bring back, see #383
-    // this.fitAddon?.fit()
+    const { innerWidth } = window
+    // Prevent adjusting the terminal size if the width remains the same
+    if (Math.abs(this.windowSize.width - innerWidth) > Number.EPSILON) {
+      this.windowSize.width = innerWidth
+      this.fitAddon?.fit()
+    }
   }
 
   #onWebLinkClick(event: MouseEvent, uri: string): void {
