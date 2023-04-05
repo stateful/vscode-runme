@@ -349,8 +349,6 @@ export class TerminalView extends LitElement {
   }
 
   protected firstUpdated(props: PropertyValues): void {
-    console.log('got to first updated cb!!')
-
     super.firstUpdated(props)
     const terminalContainer = this.#getTerminalElement() as HTMLElement
 
