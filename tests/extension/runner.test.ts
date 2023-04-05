@@ -421,13 +421,13 @@ suite('grpc Runner', () => {
 
       session.registerTerminalWindow('notebook')
 
-      const consoleError = vi.spyOn(console, 'error')
+      const consoleWarn = vi.spyOn(console, 'warn')
       session.open(undefined, 'notebook')
-      expect(consoleError).toBeCalledTimes(0)
+      expect(consoleWarn).toBeCalledTimes(0)
 
       session.open(undefined, 'notebook')
 
-      expect(consoleError).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
+      expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
     })
   })
 })

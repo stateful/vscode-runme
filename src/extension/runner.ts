@@ -536,7 +536,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }
 
     if (terminalWindowState.opened) {
-      console.error(`Attempted to open terminal window '${terminalWindow}' that has already opened!`)
+      console.warn(`Attempted to open terminal window '${terminalWindow}' that has already opened!`)
       return
     }
 
