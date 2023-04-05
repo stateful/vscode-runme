@@ -15,6 +15,7 @@ import { CellOutputPayload, Serializer } from '../types'
 import { Mutex } from '../utils/sync'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
+import { ITerminalState, LocalBufferTermState, NotebookTerminalType, XTermState } from './terminal/terminalState'
 
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
@@ -23,9 +24,14 @@ export class NotebookCellManager {
     protected controller: NotebookController
   ) { }
 
-  registerCell(cell: NotebookCell) {
-    if(this.#data.has(cell)) { return }
-    this.#data.set(cell, new NotebookCellOutputManager(cell, this.controller))
+  registerCell(cell: NotebookCell): NotebookCellOutputManager {
+    const existing = this.#data.get(cell)
+    if(existing) { return existing }
+
+    const outputs = new NotebookCellOutputManager(cell, this.controller)
+    this.#data.set(cell, outputs)
+
+    return outputs
   }
 
   async createNotebookCellExecution(cell: NotebookCell) {
@@ -36,10 +42,10 @@ export class NotebookCellManager {
   async getNotebookOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
     const outputs = this.#data.get(cell)
     if(!outputs) {
-      throw new Error(`cell at index ${cell.index} has not been registered!`)
+      console.error(`cell at index ${cell.index} has not been registered!`)
     }
 
-    return outputs
+    return outputs ?? this.registerCell(cell)
   }
 }
 
@@ -60,12 +66,16 @@ export class NotebookCellOutputManager {
   protected onFinish = Promise.resolve()
   protected execution?: NotebookCellExecution
 
+  protected terminalState?: ITerminalState
+  protected terminalEnabled = false
+
   constructor(
     protected cell: NotebookCell,
     protected controller: NotebookController
   ) { }
 
-  protected static generateOutput(cell: NotebookCell, type: OutputType): NotebookCellOutput|undefined {
+  protected generateOutputUnsafe(type: OutputType): NotebookCellOutput|undefined {
+    const cell = this.cell
     const metadata = cell.metadata as Serializer.Metadata
 
     switch(type) {
@@ -108,10 +118,59 @@ export class NotebookCellOutputManager {
         ])
       }
 
+      case OutputType.terminal: {
+        const terminalState = this.terminalState
+        if (!terminalState) { return }
+
+        const cellId = getAnnotations(cell)['runme.dev/uuid']
+        if (!cellId) { throw new Error('Cannot open cell terminal with invalid UUID!') }
+
+        const editorSettings = workspace.getConfiguration('editor')
+
+        const json: CellOutputPayload<OutputType.terminal> = {
+          type: OutputType.terminal,
+          output: {
+            'runme.dev/uuid': cellId,
+            terminalFontFamily: editorSettings.get<string>('fontFamily', 'Arial'),
+            terminalFontSize: editorSettings.get<number>('fontSize', 10),
+            content: terminalState.serialize(),
+          }
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.terminal),
+        ])
+      }
+
       default: {
         return undefined
       }
     }
+  }
+
+  registerCellTerminalState(type: NotebookTerminalType): ITerminalState {
+    let terminalState: ITerminalState
+
+    switch (type) {
+      case 'xterm': {
+        terminalState = new XTermState()
+      } break
+
+      case 'local': {
+        const _terminalState: ITerminalState = new LocalBufferTermState()
+        const outer = this
+
+        terminalState = {
+          ..._terminalState,
+          write(data) {
+            _terminalState.write(data)
+            outer.refreshOutput(OutputType.outputItems)
+          },
+        }
+      } break
+    }
+
+    return terminalState
   }
 
   async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution> {
@@ -152,7 +211,7 @@ export class NotebookCellOutputManager {
   }
 
   async replaceOutputs(outputs: NotebookOutputs) {
-    await this.refreshOutputs(() => {
+    await this.refreshOutputInternal(() => {
       this.outputs = outputsAsArray(outputs)
     })
   }
@@ -162,8 +221,20 @@ export class NotebookCellOutputManager {
   }
 
   async showOutput(type: OutputType, shown: boolean|(() => boolean|Promise<boolean>) = true) {
-    await this.refreshOutputs(async () => {
+    await this.refreshOutputInternal(async () => {
       this.enabledOutputs.set(type, typeof shown === 'function' ? await shown() : shown)
+    })
+  }
+
+  async toggleTerminal() {
+    await this.showTerminal(() => {
+      return !this.terminalEnabled
+    })
+  }
+
+  async showTerminal(shown: boolean|(() => boolean) = true) {
+    await this.refreshOutputInternal(async () => {
+      this.terminalEnabled = (typeof shown === 'function' ? shown() : shown)
     })
   }
 
@@ -174,7 +245,7 @@ export class NotebookCellOutputManager {
    * are present in the outputs, otherwise does nothing
    */
   async refreshOutput(type?: OutputType|OutputType[]) {
-    await this.refreshOutputs(() => {
+    await this.refreshOutputInternal(() => {
       if(type === undefined) { return }
 
       const typeSet = Array.isArray(type) ? type : [type]
@@ -182,11 +253,34 @@ export class NotebookCellOutputManager {
     })
   }
 
-  protected async refreshOutputs(cb?: () => Promise<boolean|void>|boolean|void) {
+  /**
+   * Internal refresh ouptut function. Runs under mutex.
+   *
+   * @param cb Optional callback, which runs after enabled outputs are
+   * retrieved, but before outputs are replaced. This callback should be used to
+   * set whether or not an output is enabled.
+   *
+   * It can also be used to prevent outputs from being replaced at all, by
+   * returning `false`. This is used in the exposed `refreshOutput` function,
+   * where the user can prevent refreshing if a certain output type is not
+   * present.
+   */
+  protected async refreshOutputInternal(cb?: () => Promise<boolean|void>|boolean|void) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
         for(const key of [...this.enabledOutputs.keys()]) {
           this.enabledOutputs.set(key, this.hasOutputTypeUnsafe(key))
+        }
+
+        const terminalOutput = this.terminalState?.outputType
+        let terminalCellOutput: NotebookCellOutput|undefined
+
+        if (terminalOutput) {
+          this.terminalEnabled = this.hasOutputTypeUnsafe(terminalOutput)
+
+          if (this.terminalEnabled) {
+            terminalCellOutput = this.generateOutputUnsafe(terminalOutput)
+          }
         }
 
         if (!(await cb?.() ?? true)) {
@@ -198,11 +292,12 @@ export class NotebookCellOutputManager {
             .flatMap(([type, enabled]) => {
               if (!enabled) { return [] }
 
-              const output = NotebookCellOutputManager.generateOutput(this.cell, type)
+              const output = this.generateOutputUnsafe(type)
               if(!output) { return [] }
 
               return [ output ]
             }),
+          ...terminalCellOutput ? [terminalCellOutput] : [],
           ...this.outputs,
         ])
       })

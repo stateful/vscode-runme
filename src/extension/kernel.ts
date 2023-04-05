@@ -10,15 +10,13 @@ import {
   WorkspaceEdit,
   NotebookEdit,
   NotebookDocument,
-  NotebookCellOutput,
-  NotebookCellOutputItem,
   env,
   Uri
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { CellOutputPayload, ClientMessage, Serializer } from '../types'
-import { ClientMessages, OutputType } from '../constants'
+import type { ClientMessage, Serializer } from '../types'
+import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 import {
   getNotebookTerminalFontFamily,
@@ -33,7 +31,7 @@ import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron, isWi
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
-import { ITerminalState, NotebookTerminalType, XTermState } from './terminal/terminalState'
+import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
 
 enum ConfirmationItems {
@@ -60,7 +58,6 @@ export class Kernel implements Disposable {
   protected environment?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
 
-  protected cellTerminalState = new WeakMap<NotebookCell, ITerminalState>()
   protected cellManager = new NotebookCellManager(this.#controller)
 
   constructor(
@@ -100,50 +97,9 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
-  getCellTerminalState(cell: NotebookCell): ITerminalState | undefined {
-    return this.cellTerminalState.get(cell)
-  }
-
-  registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): ITerminalState {
-    let terminalState: ITerminalState
-
-    switch (type) {
-      case 'xterm': {
-        terminalState = new XTermState()
-      } break
-    }
-
-    this.cellTerminalState.set(cell, terminalState)
-
-    return terminalState
-  }
-
-  getCellTerminalOutputPayload(cell: NotebookCell): NotebookCellOutput | undefined {
-    const terminalState = this.getCellTerminalState(cell)
-    if (!terminalState) { return }
-
-    const cellId = getAnnotations(cell)['runme.dev/uuid']
-    if (!cellId) { throw new Error('Cannot open cell terminal with invalid UUID!') }
-
-    const editorSettings = workspace.getConfiguration('editor')
-
-    const terminalFontFamily = getNotebookTerminalFontFamily() ?? editorSettings.get<string>('fontFamily', 'Arial')
-    const terminalFontSize = getNotebookTerminalFontSize() ?? editorSettings.get<number>('fontSize', 10)
-
-    const json: CellOutputPayload<OutputType.terminal> = {
-      type: OutputType.terminal,
-      output: {
-        'runme.dev/uuid': cellId,
-        terminalFontFamily,
-        terminalFontSize,
-        content: terminalState.serialize(),
-        initialRows: getNotebookTerminalRows(),
-      }
-    }
-
-    return new NotebookCellOutput([
-      NotebookCellOutputItem.json(json, OutputType.terminal),
-    ])
+  async registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): Promise<ITerminalState> {
+    const outputs = await this.cellManager.getNotebookOutputs(cell)
+    return outputs.registerCellTerminalState(type)
   }
 
   async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {

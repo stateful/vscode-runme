@@ -196,7 +196,7 @@ export async function executeRunner(
     MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
     !isVercelDeployScript(script)
   ) {
-    terminalState = kernel.registerCellTerminalState(exec.cell, 'xterm')
+    terminalState = await kernel.registerCellTerminalState(exec.cell, 'xterm')
 
     const terminalOutput = kernel.getCellTerminalOutputPayload(exec.cell)
 
