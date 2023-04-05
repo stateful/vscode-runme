@@ -32,7 +32,11 @@ export class XTermState implements ITerminalState {
   }
 
   input(data: string, wasUserInput: boolean): void {
-    // @ts-expect-error unexposed method
-    this.xterm['coreService']['triggerDataEvent'](data, wasUserInput)
+    try {
+      // @ts-expect-error unexposed method
+      this.xterm['_core']['coreService']['triggerDataEvent'](data, wasUserInput)
+    } catch (e) {
+      console.error(e)
+    }
   }
 }
