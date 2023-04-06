@@ -151,6 +151,25 @@ export function getCmdSeq(cellText: string): string[] {
 }
 
 /**
+ * Does the following to a command list:
+ *
+ * - Splits by new lines
+ * - Removes trailing `$` characters
+ */
+export function prepareCmdSeq(cellText: string): string[] {
+  return cellText.split('\n')
+    .map(l => {
+      const stripped = l.trimStart()
+
+      if (stripped.startsWith('$')) {
+        return stripped.slice(1).trimStart()
+      }
+
+      return l
+    })
+}
+
+/**
  * treat cells like like a series of individual commands
  * which need to be executed in sequence
  *
