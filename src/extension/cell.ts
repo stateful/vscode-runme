@@ -118,6 +118,7 @@ export class NotebookCellOutputManager {
         ])
       }
 
+      case OutputType.outputItems:
       case OutputType.terminal: {
         const terminalState = this.terminalState
         if (!terminalState) { return }
@@ -125,21 +126,35 @@ export class NotebookCellOutputManager {
         const cellId = getAnnotations(cell)['runme.dev/uuid']
         if (!cellId) { throw new Error('Cannot open cell terminal with invalid UUID!') }
 
-        const editorSettings = workspace.getConfiguration('editor')
+        if (type === OutputType.terminal) {
+          const editorSettings = workspace.getConfiguration('editor')
 
-        const json: CellOutputPayload<OutputType.terminal> = {
-          type: OutputType.terminal,
-          output: {
-            'runme.dev/uuid': cellId,
-            terminalFontFamily: editorSettings.get<string>('fontFamily', 'Arial'),
-            terminalFontSize: editorSettings.get<number>('fontSize', 10),
-            content: terminalState.serialize(),
+          const json: CellOutputPayload<OutputType.terminal> = {
+            type: OutputType.terminal,
+            output: {
+              'runme.dev/uuid': cellId,
+              terminalFontFamily: editorSettings.get<string>('fontFamily', 'Arial'),
+              terminalFontSize: editorSettings.get<number>('fontSize', 10),
+              content: terminalState.serialize(),
+            }
           }
-        }
 
-        return new NotebookCellOutput([
-          NotebookCellOutputItem.json(json, OutputType.terminal),
-        ])
+          return new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.terminal),
+          ])
+        } else {
+          const json: CellOutputPayload<OutputType.outputItems> = {
+            type: OutputType.outputItems,
+            output: {
+              content: terminalState.serialize(),
+              mime: 'text/plain',
+            }
+          }
+
+          return new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.outputItems)
+          ])
+        }
       }
 
       default: {
@@ -157,16 +172,15 @@ export class NotebookCellOutputManager {
       } break
 
       case 'local': {
-        const _terminalState: ITerminalState = new LocalBufferTermState()
-        const outer = this
+        const _terminalState = new LocalBufferTermState()
+        const _write = _terminalState.write
 
-        terminalState = {
-          ..._terminalState,
-          write(data) {
-            _terminalState.write(data)
-            outer.refreshOutput(OutputType.outputItems)
-          },
+        _terminalState.write = (data) => {
+          _write.call(_terminalState, data)
+          this.refreshOutput(OutputType.outputItems)
         }
+
+        terminalState = _terminalState
       } break
     }
 

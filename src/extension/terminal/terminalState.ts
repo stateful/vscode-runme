@@ -50,14 +50,14 @@ export class XTermState implements ITerminalState {
 export class LocalBufferTermState implements ITerminalState {
   readonly outputType = OutputType.outputItems
 
-  private buf: string = ''
+  private output: Buffer[] = []
 
   write(data: string | Uint8Array) {
-    this.buf += data.toString()
+    this.output.push(Buffer.from(data))
   }
 
   // noop
   input(): void { }
 
-  serialize(): string { return this.buf }
+  serialize(): string { return Buffer.concat(this.output).toString('base64') }
 }
