@@ -57,8 +57,8 @@ export async function executeRunner(
     RUNME_ID
   }
 
-  const commands = await parseCommandSeq(cellText)
-  if (!commands) { return false }
+  const commands = await parseCommandSeq(cellText, (s) => s.split('\n'))
+  if(!commands) { return false }
 
   if (commands.length === 0) {
     commands.push('')
