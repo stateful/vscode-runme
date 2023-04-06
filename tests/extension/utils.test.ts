@@ -295,5 +295,6 @@ suite('prepareCmdSeq', () => {
   test('should eliminate trailing dollar signs', () => {
     expect(prepareCmdSeq('$ echo hi')).toStrictEqual([ 'echo hi' ])
     expect(prepareCmdSeq('  $  echo hi')).toStrictEqual([ 'echo hi' ])
+    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
   })
 })
