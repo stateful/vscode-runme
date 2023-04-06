@@ -35,7 +35,7 @@ interface IRenderDimensions {
   }
 }
 
-interface ITerminalDimensions {
+export interface ITerminalDimensions {
   /**
    * The number of rows in the terminal.
    */
