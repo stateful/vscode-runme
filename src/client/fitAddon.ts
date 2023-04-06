@@ -3,6 +3,8 @@
  * @license MIT
  */
 
+// Adjusted to use more direct method in cell size computation
+
 import { Terminal, ITerminalAddon } from 'xterm'
 
 interface IOffset {
