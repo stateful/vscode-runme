@@ -9,7 +9,7 @@ This markdown file contains some custom examples to test the execution within a 
 ## Shell Executions
 
 ```sh
-echo "Hello World!"
+$ echo "Hello World!"
 ```
 
 ## More Shell
@@ -31,7 +31,7 @@ sleep 100000
 ## Complex Output
 
 ```sh
-npm i -g webdriverio
+$ npm i -g webdriverio
 ```
 
 ## Stdin Example
@@ -55,7 +55,7 @@ function attach() {
 Within single lines:
 
 ```sh
-export DENO_ACCESS_TOKEN="<insert-token-here>"
+$ export DENO_ACCESS_TOKEN="<insert-token-here>"
 ```
 
 verify:
