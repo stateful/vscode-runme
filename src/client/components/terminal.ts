@@ -363,9 +363,11 @@ export class TerminalView extends LitElement {
   }
 
   #updateTerminalTheme(): void {
+    const foregroundColor = this.#getThemeHexColor(terminalCSS('foreground'))
+
     const terminalTheme: ITheme = {
-      foreground: this.#getThemeHexColor(terminalCSS('foreground')),
-      cursor: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'foreground')),
+      foreground: foregroundColor,
+      cursor: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'foreground')) || foregroundColor,
       cursorAccent: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'background')),
       selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
       selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
