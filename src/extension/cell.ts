@@ -170,6 +170,7 @@ export class NotebookCellOutputManager {
       } break
     }
 
+    this.terminalState = terminalState
     return terminalState
   }
 
@@ -273,19 +274,16 @@ export class NotebookCellOutputManager {
         }
 
         const terminalOutput = this.terminalState?.outputType
-        let terminalCellOutput: NotebookCellOutput|undefined
 
         if (terminalOutput) {
           this.terminalEnabled = this.hasOutputTypeUnsafe(terminalOutput)
-
-          if (this.terminalEnabled) {
-            terminalCellOutput = this.generateOutputUnsafe(terminalOutput)
-          }
         }
 
         if (!(await cb?.() ?? true)) {
           return
         }
+
+        let terminalCellOutput = this.terminalEnabled && terminalOutput && this.generateOutputUnsafe(terminalOutput)
 
         await replaceOutput(exec, [
           ...[ ...this.enabledOutputs.entries() ]

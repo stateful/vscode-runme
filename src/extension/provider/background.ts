@@ -3,7 +3,7 @@ import { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarA
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 
-export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+export class ToggleTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
@@ -19,9 +19,9 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
     /**
      * don't show status item if we run it in non-interactive mode where there is no terminal to open
      */
-    if (!getAnnotations(cell).interactive) {
-      return
-    }
+    // if (!getAnnotations(cell).interactive) {
+    //   return
+    // }
 
     const terminal = getTerminalByCell(cell)
 
@@ -31,14 +31,14 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 
     const terminalButtonParts = [
       '$(terminal)',
-      'Open Terminal',
+      'Terminal',
     ]
 
     const item = new NotebookCellStatusBarItem(
       terminalButtonParts.join(' '),
       NotebookCellStatusBarAlignment.Right
     )
-    item.command = 'runme.openTerminal'
+    item.command = 'runme.toggleTerminal'
     return item
   }
 

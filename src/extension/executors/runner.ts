@@ -16,8 +16,8 @@ import {
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
-import { ClientMessages, OutputType } from '../../constants'
-import { CellOutputPayload, ClientMessage } from '../../types'
+import { ClientMessages } from '../../constants'
+import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
@@ -191,20 +191,14 @@ export async function executeRunner(
 
   const mime = mimeType || 'text/plain' as const
 
+  terminalState = await kernel.registerCellTerminalState(exec.cell, revealNotebookTerminal ? 'xterm' : 'local')
+
   if (
     revealNotebookTerminal &&
     MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
     !isVercelDeployScript(script)
   ) {
-    terminalState = await kernel.registerCellTerminalState(exec.cell, 'xterm')
-
-    const terminalOutput = kernel.getCellTerminalOutputPayload(exec.cell)
-
-    if (terminalOutput) {
-      await replaceOutput(exec, terminalOutput)
-    } else {
-      revealNotebookTerminal = false
-    }
+    await outputs.showTerminal()
 
     program.registerTerminalWindow('notebook')
     await program.setActiveTerminalWindow('notebook')
@@ -226,17 +220,13 @@ export async function executeRunner(
 
         item = undefined
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
-        item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
-          type: OutputType.outputItems,
-          output: {
-            content: Buffer.concat(output).toString('base64'),
-            mime
-          }
-        }, OutputType.outputItems)
+        item = undefined
       }
 
       if (item) {
         outputItems$.next(item)
+      } else {
+        await outputs.showTerminal()
       }
     }
 
@@ -257,7 +247,8 @@ export async function executeRunner(
       program.close()
     })
   } else {
-    outputs.replaceOutputs([ ])
+    await outputs.replaceOutputs([ ])
+    await outputs.showTerminal()
 
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },

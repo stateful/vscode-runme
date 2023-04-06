@@ -63,8 +63,8 @@
         "title": "Runme Notebook"
       },
       {
-        "command": "runme.openTerminal",
-        "title": "Open Terminal for Background Task"
+        "command": "runme.toggleTerminal",
+        "title": "Toggle Terminal For Cell"
       },
       {
         "command": "runme.openIntegratedTerminal",
@@ -148,7 +148,7 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "runme.openTerminal",
+          "command": "runme.toggleTerminal",
           "when": "false"
         },
         {

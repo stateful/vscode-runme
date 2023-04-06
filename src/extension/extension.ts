@@ -5,13 +5,13 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
 import RunmeServerError from './server/runmeServerError'
-import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
+import { ToggleTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
-  openTerminal,
+  toggleTerminal,
   runCLICommand,
   copyCellToClipboard,
   openAsRunmeNotebook,
@@ -92,20 +92,19 @@ export class RunmeExtension {
         },
       }),
 
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ShowTerminalProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
-      // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       stopBackgroundTaskProvider,
 
       codeLensProvider,
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openTerminal(kernel, false)),
+      RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
         runCLI

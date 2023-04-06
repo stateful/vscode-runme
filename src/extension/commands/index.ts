@@ -12,51 +12,21 @@ import { Kernel } from '../kernel'
 import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook, replaceOutput } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
-import { RunmeNotebookCellExecution } from '../cell'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
-export function openTerminal (kernel: Kernel, notebookTerminal: boolean, existingExecution?: NotebookCellExecution) {
+export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean) {
   return async function (cell: NotebookCell) {
     const terminal = getTerminalByCell(cell)
     if (!terminal) {
       return showWarningMessage()
     }
 
-    // TODO(mxs): integrate this with notebookoutputmanager
     if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
-      const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
-
-      if (terminalOutput) {
-
-        const runOnExec = async (exec: RunmeNotebookCellExecution|NotebookCellExecution) => {
-          await replaceOutput(
-            'underlyingExecution' in exec ? exec.underlyingExecution : exec,
-            terminalOutput
-            )
-          }
-
-        if (!existingExecution) {
-          let exec: RunmeNotebookCellExecution|NotebookCellExecution|undefined
-          try {
-            exec = await kernel.createCellExecution(cell)
-            exec.start(Date.now())
-
-            await runOnExec(exec)
-          } catch (e: any) {
-            window.showErrorMessage(e.message)
-          } finally {
-            exec?.end(true)
-            return
-          }
-        } else {
-          await runOnExec(existingExecution)
-        }
-
-        return
-      }
+      const outputs = await kernel.getCellOutputs(cell)
+      return await outputs.toggleTerminal()
     }
 
     return terminal.show()
