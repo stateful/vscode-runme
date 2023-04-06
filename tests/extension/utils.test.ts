@@ -12,6 +12,7 @@ import {
   mapGitIgnoreToGlobFolders,
   hashDocumentUri,
   getGrpcHost,
+  prepareCmdSeq,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -287,5 +288,13 @@ suite('#getGrpcHost', () => {
   test('should return host addr including config port', () => {
     vi.mocked(workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(7863) } as any)
     expect(getGrpcHost()).toStrictEqual('localhost:7863')
+  })
+})
+
+suite('prepareCmdSeq', () => {
+  test('should eliminate trailing dollar signs', () => {
+    expect(prepareCmdSeq('$ echo hi')).toStrictEqual([ 'echo hi' ])
+    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual([ 'echo hi' ])
+    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
   })
 })
