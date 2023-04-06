@@ -2,6 +2,7 @@ import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { Disposable, TerminalDimensions } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
+import type { ITerminalDimensions } from 'xterm-addon-fit'
 import { SerializeAddon } from 'xterm-addon-serialize'
 import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
@@ -349,6 +350,8 @@ export class TerminalView extends LitElement {
   }
 
   protected firstUpdated(props: PropertyValues): void {
+    console.log('got to first updated cb!!')
+
     super.firstUpdated(props)
     const terminalContainer = this.#getTerminalElement() as HTMLElement
 
