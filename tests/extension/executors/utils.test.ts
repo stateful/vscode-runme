@@ -5,7 +5,6 @@ import { expect, vi, test, suite, beforeEach } from 'vitest'
 
 import { ENV_STORE } from '../../../src/extension/constants'
 import { retrieveShellCommand, parseCommandSeq } from '../../../src/extension/executors/utils'
-import { getCmdSeq } from '../../../src/extension/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -209,35 +208,25 @@ suite('parseCommandSeq', () => {
     expect(res?.[0]).toBe('export TEST="test value"')
   })
 
-  test('single line export with cancelled prompt', async () => {
-    vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
-
-    const res = await parseCommandSeq([
-      'export TEST="<placeholder>"'
-    ].join('\n'))
-
-    expect(res).toBe(undefined)
-  })
-
   test('multiline export', async () => {
-    const exportLines = [
+    const exportLine = [
       'export TEST="I',
       'am',
       'doing',
       'well!"'
-    ]
+    ].join('\n')
 
-    const res = await parseCommandSeq(exportLines.join('\n'))
+    const res = await parseCommandSeq(exportLine)
 
     expect(res).toBeTruthy
-    expect(res).toHaveLength(4)
-    expect(res).toStrictEqual(exportLines)
+    expect(res).toHaveLength(1)
+    expect(res?.[0]).toBe(exportLine)
   })
 
   test('exports between normal command sequences', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const cmdLines = [
+    const cmd = [
       'echo "Hello!"',
       'echo "Hi!"',
       'export TEST="<placeholder>"',
@@ -248,45 +237,9 @@ suite('parseCommandSeq', () => {
       'multiline',
       'env!"',
       'echo $TEST_MULTILINE'
-    ]
+    ].join('\n')
 
-    const res = await parseCommandSeq(cmdLines.join('\n'))
-
-    expect(res).toBeTruthy()
-    expect(res).toStrictEqual([
-      'echo "Hello!"',
-      'echo "Hi!"',
-      'export TEST="test value"',
-      '',
-      'echo $TEST',
-      ...[
-        'export TEST_MULTILINE="This',
-        'is',
-        'a',
-        'multiline',
-        'env!"',
-      ],
-      'echo $TEST_MULTILINE'
-    ])
-  })
-
-  test('exports between normal command sequences with getCmdSeq', async () => {
-    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
-
-    const cmdLines = [
-      'echo "Hello!"',
-      'echo "Hi!"',
-      'export TEST="<placeholder>"',
-      'echo $TEST',
-      'export TEST_MULTILINE="This',
-      'is',
-      'a',
-      'multiline',
-      'env!"',
-      'echo $TEST_MULTILINE'
-    ]
-
-    const res = await parseCommandSeq(cmdLines.join('\n'), getCmdSeq)
+    const res = await parseCommandSeq(cmd)
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
@@ -294,13 +247,13 @@ suite('parseCommandSeq', () => {
       'echo "Hi!"',
       'export TEST="test value"',
       'echo $TEST',
-      ...[
+      [
         'export TEST_MULTILINE="This',
         'is',
         'a',
         'multiline',
         'env!"',
-      ],
+      ].join('\n'),
       'echo $TEST_MULTILINE'
     ])
   })
