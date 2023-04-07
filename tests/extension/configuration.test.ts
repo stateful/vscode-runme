@@ -9,7 +9,9 @@ import {
   getBinaryPath,
   getServerConfigurationValue,
   getTLSDir,
-  DEFAULT_TLS_DIR
+  DEFAULT_TLS_DIR,
+  getNotebookTerminalFontFamily,
+  getNotebookTerminalFontSize
 } from '../../src/utils/configuration'
 
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
@@ -78,6 +80,16 @@ afterEach(() => {
 })
 
 suite('Configuration', () => {
+    test('should get nullish from font family', () => {
+      const fontFamily = getNotebookTerminalFontFamily()
+      expect(fontFamily).toBeUndefined()
+    })
+
+    test('should get nullish from font size', () => {
+      const fontSize = getNotebookTerminalFontSize()
+      expect(fontSize).toBeUndefined()
+    })
+
     test('Should default to a valid port number', () => {
         const portNumber = getPortNumber()
         expect(portNumber).toStrictEqual(7863)
