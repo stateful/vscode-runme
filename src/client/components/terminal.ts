@@ -1,12 +1,12 @@
 import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { Disposable } from 'vscode'
+import { Disposable, TerminalDimensions } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
 import { SerializeAddon } from 'xterm-addon-serialize'
 import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 
-import { FitAddon } from '../fitAddon'
+import { FitAddon, type ITerminalDimensions } from '../fitAddon'
 import { ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
@@ -352,14 +352,21 @@ export class TerminalView extends LitElement {
     super.firstUpdated(props)
     const terminalContainer = this.#getTerminalElement() as HTMLElement
 
-    window.addEventListener('focus', () => {
-      this.terminal?.focus()
-    })
+    window.addEventListener('focus', () => { this.#onFocusWindow() })
+    window.addEventListener('click', () => { this.#onFocusWindow(false) })
 
     this.terminal!.open(terminalContainer)
     this.terminal!.focus()
     this.fitAddon?.fit()
     this.#updateTerminalTheme()
+
+    const ctx = getContext()
+    ctx.postMessage && postClientMessage(ctx, ClientMessages.terminalOpen, {
+      'runme.dev/uuid': this.uuid!,
+      terminalDimensions: convertXTermDimensions(
+        this.fitAddon?.proposeDimensions()
+      )
+    })
 
     if (this.lastLine) {
       this.terminal!.scrollToLine(this.lastLine)
@@ -392,13 +399,42 @@ export class TerminalView extends LitElement {
     return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
   }
 
-  #onResizeWindow(): void {
+  async #onResizeWindow(): Promise<void> {
+    if (!this.fitAddon) { return }
+
     const { innerWidth } = window
+
     // Prevent adjusting the terminal size if the width remains the same
-    if (Math.abs(this.windowSize.width - innerWidth) > Number.EPSILON) {
-      this.windowSize.width = innerWidth
-      this.fitAddon?.fit()
+    if (Math.abs(this.windowSize.width - innerWidth) <= Number.EPSILON) {
+      return
     }
+
+    this.windowSize.width = innerWidth
+    this.fitAddon.fit()
+
+    const proposedDimensions = this.fitAddon.proposeDimensions()
+    if (proposedDimensions) {
+      const ctx = getContext()
+      if (!ctx.postMessage) { return }
+
+      await postClientMessage(ctx, ClientMessages.terminalResize, {
+        'runme.dev/uuid': this.uuid!,
+        terminalDimensions: convertXTermDimensions(proposedDimensions)
+      })
+    }
+  }
+
+  async #onFocusWindow(focusTerminal = true): Promise<void> {
+    if (focusTerminal) {
+      this.terminal?.focus()
+    }
+
+    const ctx = getContext()
+    if (!ctx.postMessage) { return }
+
+    await postClientMessage(ctx, ClientMessages.terminalFocus, {
+      'runme.dev/uuid': this.uuid!
+    })
   }
 
   #onWebLinkClick(event: MouseEvent, uri: string): void {
@@ -441,4 +477,14 @@ export class TerminalView extends LitElement {
       (err) => postClientMessage(ctx, ClientMessages.infoMessage, `'Failed to copy to clipboard: ${err.message}!'`),
     )
   }
+}
+
+function convertXTermDimensions(dimensions: ITerminalDimensions): TerminalDimensions
+function convertXTermDimensions(dimensions: undefined): undefined
+function convertXTermDimensions(dimensions: ITerminalDimensions|undefined): TerminalDimensions|undefined
+function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions|undefined {
+  if (!dimensions) { return undefined }
+
+  const { rows, cols } = dimensions
+  return { columns: cols, rows }
 }

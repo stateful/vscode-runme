@@ -263,6 +263,9 @@ suite('grpc Runner', () => {
         tty: true
       })
 
+      session.registerTerminalWindow('vscode')
+      session.setActiveTerminalWindow('vscode')
+
       session.open({ columns: 50, rows: 20 })
 
       expect(duplex.requests.send).toBeCalledTimes(1)
@@ -280,8 +283,10 @@ suite('grpc Runner', () => {
         tty: true
       })
 
-      session.open({ columns: 50, rows: 20 })
+      session.registerTerminalWindow('vscode')
+      session.setActiveTerminalWindow('vscode')
 
+      session.open({ columns: 50, rows: 20 })
       session.setDimensions({ columns: 60, rows: 30 })
 
       expect(duplex.requests.send).toBeCalledTimes(2)
@@ -291,6 +296,138 @@ suite('grpc Runner', () => {
           rows: 30,
         }
       })
+    })
+
+    test('requires all active windows to open before starting', async () => {
+      const { duplex, session } = await createNewSession({
+        tty: true
+      })
+
+      session.registerTerminalWindow('vscode')
+
+      session.registerTerminalWindow('notebook')
+      session.setActiveTerminalWindow('notebook')
+
+      session.open({ columns: 50, rows: 20 })
+      expect(duplex.requests.send).toBeCalledTimes(0)
+
+      session.open({ columns: 60, rows: 30 }, 'notebook')
+      expect(duplex.requests.send).toBeCalledTimes(1)
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toMatchObject({
+        tty: true,
+        winsize: {
+          cols: 60,
+          rows: 30,
+        }
+      })
+      duplex.requests.send.mockClear()
+
+      session.setDimensions({ columns: 70, rows: 40 })
+      expect(duplex.requests.send).toBeCalledTimes(0)
+
+      duplex.requests.send.mockClear()
+
+      session.setDimensions({ columns: 80, rows: 50 }, 'notebook')
+      expect(duplex.requests.send).toBeCalledTimes(1)
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toStrictEqual({
+        winsize: {
+          cols: 80,
+          rows: 50,
+        }
+      })
+      duplex.requests.send.mockClear()
+
+      await session.setActiveTerminalWindow('vscode')
+      expect(duplex.requests.send).toBeCalledTimes(1)
+      expect(((duplex.requests.send.mock.calls[0]) as any)[0]).toStrictEqual({
+        winsize: { cols: 70, rows: 40 }
+      })
+    })
+
+    test('active window does not send dimensions if program is uninitialized', async () => {
+      const { duplex, session } = await createNewSession({
+        tty: true
+      })
+
+      session.registerTerminalWindow('vscode', { rows: 40, columns: 40 })
+      session.registerTerminalWindow('notebook', { rows: 50, columns: 50 })
+
+      await session.setActiveTerminalWindow('vscode')
+      expect(duplex.requests.send).toBeCalledTimes(0)
+      duplex.requests.send.mockClear()
+
+      session.open(undefined, 'vscode')
+      session.open(undefined, 'notebook')
+
+      expect(duplex.requests.send).toBeCalledTimes(1)
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toMatchObject({
+        tty: true,
+        winsize: {
+          cols: 40,
+          rows: 40,
+        }
+      })
+      duplex.requests.send.mockClear()
+
+      await session.setActiveTerminalWindow('notebook')
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toStrictEqual({
+        winsize: {
+          cols: 50,
+          rows: 50,
+        }
+      })
+      duplex.requests.send.mockClear()
+    })
+
+    test('cannot set dimensions of unregistered terminal window', async () => {
+      const { session } = await createNewSession({
+        tty: true
+      })
+
+      expect( session.setDimensions({ columns: 10, rows: 10 }, 'vscode'))
+        .rejects.toThrowError('Tried to set dimensions for unregistered terminal window vscode')
+    })
+
+    test('cannot set active terminal to unregistered window', async () => {
+      const { session } = await createNewSession({
+        tty: true
+      })
+
+      session.registerTerminalWindow('vscode')
+      session.setActiveTerminalWindow('vscode')
+
+      const consoleError = vi.spyOn(console, 'error')
+      session.setActiveTerminalWindow('notebook')
+
+      expect(consoleError).toBeCalledWith('Attempted to set active terminal window to unregistered window \'notebook\'')
+    })
+
+    test('cannot open unregistered terminal window', async () => {
+      const { session } = await createNewSession({
+        tty: true
+      })
+
+      const consoleError = vi.spyOn(console, 'error')
+      session.open(undefined, 'notebook')
+
+      expect(consoleError).toBeCalledWith('Attempted to open unregistered terminal window \'notebook\'!')
+      expect(session['terminalWindows'].get('notebook')?.opened).toBeUndefined()
+    })
+
+    test('cannot open terminal window twice', async () => {
+      const { session } = await createNewSession({
+        tty: true
+      })
+
+      session.registerTerminalWindow('notebook')
+
+      const consoleWarn = vi.spyOn(console, 'warn')
+      session.open(undefined, 'notebook')
+      expect(consoleWarn).toBeCalledTimes(0)
+
+      session.open(undefined, 'notebook')
+
+      expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
     })
   })
 })

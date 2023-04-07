@@ -118,15 +118,39 @@ export async function executeRunner(
   messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
     const { type, output } = message
 
-    if (type !== ClientMessages.terminalStdin) { return }
+    if (typeof output === 'object' && 'runme.dev/uuid' in output) {
+      const uuid = output['runme.dev/uuid']
+      if (uuid !== cellUUID) { return }
+    }
 
-    const { 'runme.dev/uuid': uuid, input } = output
+    switch (type) {
+      case ClientMessages.terminalStdin: {
+        const { input } = output
 
-    if (uuid !== cellUUID) { return }
+        program.handleInput(input)
+        terminalState?.input(input, true)
+      } break
 
-    program.handleInput(input)
-    terminalState?.input(input, true)
+      case ClientMessages.terminalFocus: {
+        program.setActiveTerminalWindow('notebook')
+      } break
+
+      case ClientMessages.terminalResize: {
+        const { terminalDimensions } = output
+        program.setDimensions(terminalDimensions, 'notebook')
+      } break
+
+      case ClientMessages.terminalOpen: {
+        const { terminalDimensions } = output
+        program.open(terminalDimensions, 'notebook')
+      } break
+    }
   })
+
+  if (interactive) {
+    program.registerTerminalWindow('vscode')
+    await program.setActiveTerminalWindow('vscode')
+  }
 
   let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
@@ -140,8 +164,10 @@ export async function executeRunner(
     } else {
       revealNotebookTerminal = false
     }
-  }
 
+    program.registerTerminalWindow('notebook')
+    await program.setActiveTerminalWindow('notebook')
+  }
 
   if (!interactive) {
     const output: Buffer[] = []
@@ -182,8 +208,6 @@ export async function executeRunner(
     exec.token.onCancellationRequested(() => {
       program.close()
     })
-
-    await program.run()
   } else {
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
@@ -243,6 +267,10 @@ export async function executeRunner(
         closeTerminalByEnvID(RUNME_ID)
       }
     })
+  }
+
+  if (program.numTerminalWindows === 0) {
+    await program.run()
   }
 
   return await new Promise<boolean>((resolve, reject) => {
