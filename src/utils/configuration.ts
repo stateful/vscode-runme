@@ -40,7 +40,8 @@ const configurationSchema = {
         nonInteractive: z.boolean().default(false),
         interactive: z.boolean().default(false),
         fontSize: z.number().optional(),
-        fontFamily: z.string().optional()
+        fontFamily: z.string().optional(),
+        rows: z.number().int()
     }
 }
 
@@ -125,6 +126,10 @@ const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
     isNotebookTerminalFeatureEnabled('nonInteractive')
 }
 
+const getNotebookTerminalRows = (): number => {
+  return getRunmeTerminalConfigurationValue<number>('rows', 10)
+}
+
 export {
     getPortNumber,
     getBinaryPath,
@@ -136,4 +141,5 @@ export {
     getTLSDir,
     getNotebookTerminalFontFamily,
     getNotebookTerminalFontSize,
+    getNotebookTerminalRows,
 }

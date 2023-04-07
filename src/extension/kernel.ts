@@ -23,7 +23,8 @@ import { ClientMessages, OutputType } from '../constants'
 import { API } from '../utils/deno/api'
 import {
   getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize
+  getNotebookTerminalFontSize,
+  getNotebookTerminalRows
 } from '../utils/configuration'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
@@ -130,6 +131,7 @@ export class Kernel implements Disposable {
         terminalFontFamily,
         terminalFontSize,
         content: terminalState.serialize(),
+        initialRows: getNotebookTerminalRows(),
       }
     }
 

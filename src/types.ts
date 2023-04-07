@@ -75,6 +75,7 @@ interface Payload {
     terminalFontFamily: string
     terminalFontSize: number
     content?: string
+    initialRows?: number
   }
 }
 

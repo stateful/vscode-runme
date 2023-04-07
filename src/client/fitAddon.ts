@@ -61,10 +61,12 @@ export class FitAddon implements ITerminalAddon {
 
   public dispose(): void {}
 
-  public fit(): void {
+  public fit(overrideRows?: number): ITerminalDimensions | undefined {
     const dims = this.proposeDimensions()
+    if (overrideRows !== undefined && dims) { dims.rows = overrideRows }
+
     if (!dims || !this._terminal || isNaN(dims.cols) || isNaN(dims.rows)) {
-      return
+      return undefined
     }
 
     // TODO: Remove reliance on private API
@@ -75,6 +77,8 @@ export class FitAddon implements ITerminalAddon {
       core._renderService.clear()
       this._terminal.resize(dims.cols, dims.rows)
     }
+
+    return dims
   }
 
   public proposeDimensions(): ITerminalDimensions | undefined {
@@ -87,10 +91,8 @@ export class FitAddon implements ITerminalAddon {
     }
 
     // TODO: Remove reliance on private API
-    const core = (this._terminal as any)._core
+    const core = this.getCore()
     const dims: IRenderDimensions = core._renderService.dimensions
-
-    const renderer = core._renderService._renderer
 
     if (dims.css.cell.width === 0 || dims.css.cell.height === 0) {
       return undefined
@@ -114,8 +116,7 @@ export class FitAddon implements ITerminalAddon {
     const availableHeight = parentElementHeight - elementPaddingVer
     const availableWidth = parentElementWidth - elementPaddingHor - scrollbarWidth
 
-    const cellWidth = renderer._charSizeService.width + Math.round(renderer._optionsService.rawOptions.letterSpacing)
-    const cellHeight = Math.floor(renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight)
+    const { width: cellWidth, height: cellHeight } = this.getCellSize()
 
     const geometry = {
       cols: Math.max(MINIMUM_COLS, Math.floor(availableWidth / cellWidth)),
@@ -123,5 +124,18 @@ export class FitAddon implements ITerminalAddon {
     }
 
     return geometry
+  }
+
+  getCellSize() {
+    const renderer = this.getCore()._renderService._renderer
+
+    return {
+      width: renderer._charSizeService.width + Math.round(renderer._optionsService.rawOptions.letterSpacing),
+      height: Math.floor(renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight),
+    }
+  }
+
+  private getCore() {
+    return (this._terminal as any)._core
   }
 }

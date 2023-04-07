@@ -332,6 +332,11 @@
             "type": [ "string", "null" ],
             "default": null,
             "markdownDescription": "Font family of Runme notebook terminal"
+          },
+          "runme.terminal.rows": {
+            "type": "integer",
+            "default": 10,
+            "markdownDescription": "Default number of rows in notebook terminal"
           }
         }
       }
