@@ -614,15 +614,17 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       throw new Error(`Tried to set dimensions for unregistered terminal window ${terminalWindow}`)
     }
 
-    if(terminalWindow === 'vscode' && this.initialized) {
-      if (terminalWindowState.hasSetDimensions) {
-        // VSCode terminal window calls `setDimensions` only when focused - this
-        // can be conveniently used to set the active window to the terminal
-        this._setActiveTerminalWindow(terminalWindow)
-      } else {
-        terminalWindowState.hasSetDimensions = true
-      }
-    }
+    // removed this functionality in favor of preferring notebook terminal
+    //
+    // if(terminalWindow === 'vscode' && this.initialized) {
+    //   if (terminalWindowState.hasSetDimensions) {
+    //     // VSCode terminal window calls `setDimensions` only when focused - this
+    //     // can be conveniently used to set the active window to the terminal
+    //     this._setActiveTerminalWindow(terminalWindow)
+    //   } else {
+    //     terminalWindowState.hasSetDimensions = true
+    //   }
+    // }
 
     terminalWindowState.dimensions = dimensions
 
