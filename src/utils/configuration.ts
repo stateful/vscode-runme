@@ -39,7 +39,7 @@ const configurationSchema = {
         backgroundTask: z.boolean().default(true),
         nonInteractive: z.boolean().default(false),
         interactive: z.boolean().default(false),
-        fontSize: z.number().int().optional(),
+        fontSize: z.number().optional(),
         fontFamily: z.string().optional()
     }
 }
