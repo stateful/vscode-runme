@@ -322,6 +322,16 @@
             "scope": "machine",
             "default": false,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
+          },
+          "runme.terminal.fontSize": {
+            "type": [ "number", "null" ],
+            "default": null,
+            "markdownDescription": "Font size of Runme notebook terminal"
+          },
+          "runme.terminal.fontFamily": {
+            "type": [ "string", "null" ],
+            "default": null,
+            "markdownDescription": "Font family of Runme notebook terminal"
           }
         }
       }
