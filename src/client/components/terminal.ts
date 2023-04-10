@@ -408,21 +408,21 @@ export class TerminalView extends LitElement {
       initialRows: number
     } | undefined
 
-    dragHandle.addEventListener('mousedown', (e) => {
+    const onMouseDown = (e: MouseEvent) => {
       dragState = {
         initialClientY: e.clientY,
         initialRows: this.rows
       }
       e.preventDefault()
       this.terminal?.focus()
-    })
+    }
 
-    window.addEventListener('mouseup', () => {
+    const onMouseUp = () => {
       if (dragState === undefined) { return }
       dragState = undefined
-    })
+    }
 
-    window.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e: MouseEvent) => {
       if (dragState === undefined || !this.fitAddon) { return }
 
       const delta = e.clientY - dragState.initialClientY
@@ -434,7 +434,17 @@ export class TerminalView extends LitElement {
         this.#resizeTerminal(newRows)
         this.terminal?.focus()
       }
-    })
+    }
+
+    dragHandle.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mouseup', onMouseUp)
+    window.addEventListener('mousemove', onMouseMove)
+
+    this.disposables.push({dispose: () => {
+      dragHandle.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('mousemove', onMouseMove)
+    }})
 
     return dragHandle
   }
