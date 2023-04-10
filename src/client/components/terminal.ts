@@ -413,6 +413,8 @@ export class TerminalView extends LitElement {
         initialClientY: e.clientY,
         initialRows: this.rows
       }
+      e.preventDefault()
+      this.terminal?.focus()
     })
 
     window.addEventListener('mouseup', () => {
@@ -432,6 +434,7 @@ export class TerminalView extends LitElement {
 
       if (newRows !== this.rows) {
         this.#resizeTerminal(newRows)
+        this.terminal?.focus()
       }
     })
 
