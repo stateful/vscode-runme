@@ -59,6 +59,11 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
+
+          if (payload.output.initialRows !== undefined) {
+            terminalElement.setAttribute('initialRows', payload.output.initialRows.toString())
+          }
+
           if (payload.output.content !== undefined) {
             terminalElement.setAttribute('initialContent', payload.output.content)
           }

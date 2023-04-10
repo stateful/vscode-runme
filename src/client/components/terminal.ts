@@ -249,6 +249,18 @@ export class TerminalView extends LitElement {
       flex-direction: column;
       gap: 5px;
     }
+
+    .xterm-drag-handle {
+      width: 100%;
+      position: absolute;
+      bottom: -5px;
+      height: 10px;
+      cursor: row-resize;
+    }
+
+    #terminal {
+      position: relative;
+    }
   `
 
   protected disposables: Disposable[] = []
@@ -256,6 +268,8 @@ export class TerminalView extends LitElement {
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
   protected windowSize: IWindowSize
+
+  protected rows: number = 10
 
   @property({ type: String })
   uuid?: string
@@ -268,6 +282,9 @@ export class TerminalView extends LitElement {
 
   @property({ type: String })
   initialContent?: string
+
+  @property({ type: Number })
+  initialRows?: number
 
   @property({ type: Number })
   lastLine?: number // TODO: Get the last line of the terminal and store it.
@@ -287,8 +304,10 @@ export class TerminalView extends LitElement {
       throw new Error('No uuid provided to terminal!')
     }
 
+    this.rows = this.initialRows ?? this.rows
+
     this.terminal = new XTermJS({
-      rows: 10,
+      rows: this.rows,
       cursorBlink: true,
       fontSize: this.terminalFontSize,
       cursorStyle: 'bar',
@@ -357,8 +376,10 @@ export class TerminalView extends LitElement {
 
     this.terminal!.open(terminalContainer)
     this.terminal!.focus()
-    this.fitAddon?.fit()
+    this.#resizeTerminal()
     this.#updateTerminalTheme()
+
+    terminalContainer.appendChild(this.#createResizeHandle())
 
     const ctx = getContext()
     ctx.postMessage && postClientMessage(ctx, ClientMessages.terminalOpen, {
@@ -371,6 +392,61 @@ export class TerminalView extends LitElement {
     if (this.lastLine) {
       this.terminal!.scrollToLine(this.lastLine)
     }
+  }
+
+  #resizeTerminal(rows?: number) {
+    if (rows !== undefined) { this.rows = rows }
+    return this.fitAddon?.fit(this.rows)
+  }
+
+  #createResizeHandle(): HTMLElement {
+    const dragHandle = document.createElement('div')
+    dragHandle.setAttribute('class', 'xterm-drag-handle')
+
+    let dragState: {
+      initialClientY: number
+      initialRows: number
+    } | undefined
+
+    const onMouseDown = (e: MouseEvent) => {
+      dragState = {
+        initialClientY: e.clientY,
+        initialRows: this.rows
+      }
+      e.preventDefault()
+      this.terminal?.focus()
+    }
+
+    const onMouseUp = () => {
+      if (dragState === undefined) { return }
+      dragState = undefined
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (dragState === undefined || !this.fitAddon) { return }
+
+      const delta = e.clientY - dragState.initialClientY
+
+      const deltaRows = delta / this.fitAddon.getCellSize().height
+      const newRows = Math.round(dragState.initialRows + deltaRows)
+
+      if (newRows !== this.rows) {
+        this.#resizeTerminal(newRows)
+        this.terminal?.focus()
+      }
+    }
+
+    dragHandle.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mouseup', onMouseUp)
+    window.addEventListener('mousemove', onMouseMove)
+
+    this.disposables.push({dispose: () => {
+      dragHandle.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('mousemove', onMouseMove)
+    }})
+
+    return dragHandle
   }
 
   #getTerminalElement(): Element {
@@ -410,9 +486,9 @@ export class TerminalView extends LitElement {
     }
 
     this.windowSize.width = innerWidth
-    this.fitAddon.fit()
 
-    const proposedDimensions = this.fitAddon.proposeDimensions()
+    const proposedDimensions = this.#resizeTerminal()
+
     if (proposedDimensions) {
       const ctx = getContext()
       if (!ctx.postMessage) { return }
