@@ -427,8 +427,6 @@ export class TerminalView extends LitElement {
 
       const delta = e.clientY - dragState.initialClientY
 
-      console.log({ delta, cellHeight: this.fitAddon.getCellSize().height })
-
       const deltaRows = delta / this.fitAddon.getCellSize().height
       const newRows = Math.round(dragState.initialRows + deltaRows)
 
