@@ -38,7 +38,9 @@ const configurationSchema = {
     notebookTerminal: {
         backgroundTask: z.boolean().default(true),
         nonInteractive: z.boolean().default(false),
-        interactive: z.boolean().default(false)
+        interactive: z.boolean().default(false),
+        fontSize: z.number().optional(),
+        fontFamily: z.string().optional()
     }
 }
 
@@ -105,6 +107,14 @@ const isNotebookTerminalFeatureEnabled = (featureName: keyof typeof configuratio
     return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
+const getNotebookTerminalFontSize = (): number|undefined => {
+  return getRunmeTerminalConfigurationValue<number|undefined>('fontSize', undefined)
+}
+
+const getNotebookTerminalFontFamily = (): string|undefined => {
+  return getRunmeTerminalConfigurationValue<string|undefined>('fontFamily', undefined)
+}
+
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
   const { interactive, background } = getAnnotations(cell)
 
@@ -124,4 +134,6 @@ export {
     isNotebookTerminalEnabledForCell,
     getTLSEnabled,
     getTLSDir,
+    getNotebookTerminalFontFamily,
+    getNotebookTerminalFontSize,
 }

@@ -21,6 +21,10 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import type { CellOutputPayload, ClientMessage, Serializer } from '../types'
 import { ClientMessages, OutputType } from '../constants'
 import { API } from '../utils/deno/api'
+import {
+  getNotebookTerminalFontFamily,
+  getNotebookTerminalFontSize
+} from '../utils/configuration'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -116,12 +120,15 @@ export class Kernel implements Disposable {
 
     const editorSettings = workspace.getConfiguration('editor')
 
+    const terminalFontFamily = getNotebookTerminalFontFamily() ?? editorSettings.get<string>('fontFamily', 'Arial')
+    const terminalFontSize = getNotebookTerminalFontSize() ?? editorSettings.get<number>('fontSize', 10)
+
     const json: CellOutputPayload<OutputType.terminal> = {
       type: OutputType.terminal,
       output: {
         'runme.dev/uuid': cellId,
-        terminalFontFamily: editorSettings.get<string>('fontFamily', 'Arial'),
-        terminalFontSize: editorSettings.get<number>('fontSize', 10),
+        terminalFontFamily,
+        terminalFontSize,
         content: terminalState.serialize(),
       }
     }
