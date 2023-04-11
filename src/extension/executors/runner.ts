@@ -101,14 +101,16 @@ export async function executeRunner(
 
   let terminalState: ITerminalState | undefined
 
-  program.onDidWrite((data) => {
+  const writeToTerminalStdout = (data: string|Uint8Array) => {
     postClientMessage(messaging, ClientMessages.terminalStdout, {
       'runme.dev/uuid': cellUUID,
       data
     })
 
     terminalState?.write(data)
-  })
+  }
+
+  program.onDidWrite(writeToTerminalStdout)
 
   program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
     'runme.dev/uuid': cellUUID,
@@ -145,6 +147,18 @@ export async function executeRunner(
         program.open(terminalDimensions, 'notebook')
       } break
     }
+  })
+
+  program.onDidClose((code) => {
+    if (!background) { return }
+
+    const parts = [ 'Program exited' ]
+
+    if (code !== undefined) { parts.push(`with code ${code}`) }
+
+    const text = parts.join(' ') + '.'
+
+    writeToTerminalStdout(`\x1B[7m * \x1B[0m ${text}`)
   })
 
   if (interactive) {
