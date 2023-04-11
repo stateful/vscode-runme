@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "1.0.6-edge.1",
+  "version": "1.0.6-edge.2",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "Run your README.md as an interactive notebook",
@@ -324,12 +324,18 @@
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
           },
           "runme.terminal.fontSize": {
-            "type": [ "number", "null" ],
+            "type": [
+              "number",
+              "null"
+            ],
             "default": null,
             "markdownDescription": "Font size of Runme notebook terminal"
           },
           "runme.terminal.fontFamily": {
-            "type": [ "string", "null" ],
+            "type": [
+              "string",
+              "null"
+            ],
             "default": null,
             "markdownDescription": "Font family of Runme notebook terminal"
           },
