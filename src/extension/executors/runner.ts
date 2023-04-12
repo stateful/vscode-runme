@@ -168,7 +168,13 @@ export async function executeRunner(
 
   let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
-  if (revealNotebookTerminal) {
+  const mime = mimeType || 'text/plain' as const
+
+  if (
+    revealNotebookTerminal &&
+    MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
+    !isVercelDeployScript(script)
+  ) {
     terminalState = kernel.registerCellTerminalState(exec.cell, 'xterm')
 
     const terminalOutput = kernel.getCellTerminalOutputPayload(exec.cell)
@@ -181,19 +187,11 @@ export async function executeRunner(
 
     program.registerTerminalWindow('notebook')
     await program.setActiveTerminalWindow('notebook')
-  }
-
-  if (!interactive) {
+  } else {
     const output: Buffer[] = []
-
-    const mime = mimeType || 'text/plain' as const
 
     // adapted from `shellExecutor` in `shell.ts`
     const handleOutput = async (data: Uint8Array) => {
-      if (revealNotebookTerminal) {
-        return
-      }
-
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
@@ -218,7 +216,9 @@ export async function executeRunner(
 
     program.onStdoutRaw(handleOutput)
     program.onStderrRaw(handleOutput)
+  }
 
+  if (!interactive) {
     exec.token.onCancellationRequested(() => {
       program.close()
     })
