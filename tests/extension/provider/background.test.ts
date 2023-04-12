@@ -47,7 +47,7 @@ describe('ShowTerminalProvider', () => {
     const p = new ShowTerminalProvider()
     const item = await p.provideCellStatusBarItems('cell' as any)
     expect(item).toEqual({
-      label: '$(terminal) Open Terminal (PID: 123)',
+      label: '$(terminal) Open Terminal',
       command: 'runme.openTerminal',
       alignment: 2
     })
