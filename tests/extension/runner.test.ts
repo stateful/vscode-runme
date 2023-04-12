@@ -10,6 +10,7 @@ import {
   GrpcRunnerProgramSession,
   RunProgramOptions
 } from '../../src/extension/runner'
+import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 
 
 vi.mock('../../src/extension/utils', () => ({
