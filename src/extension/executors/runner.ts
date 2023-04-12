@@ -16,7 +16,7 @@ import {
 } from 'vscode'
 
 import { ClientMessages, OutputType } from '../../constants'
-import { CellOutputPayload, ClientMessage, RunmeTerminal } from '../../types'
+import { CellOutputPayload, ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'

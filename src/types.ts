@@ -1,4 +1,4 @@
-import { NotebookCellKind, TaskDefinition, Terminal, TerminalDimensions } from 'vscode'
+import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -159,5 +159,4 @@ export interface DisposableAsync {
 
 export interface RunmeTerminal extends Terminal {
   runnerSession?: IRunnerProgramSession
-  runmeProcessId?: Promise<number | undefined>
 }
