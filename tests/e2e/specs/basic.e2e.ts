@@ -1,6 +1,9 @@
 import { DefaultTreeItem } from 'wdio-vscode-service'
+import { Key } from 'webdriverio'
+import clipboard from 'clipboardy'
 
 import { Notebook } from '../pageobjects/notebook.page.js'
+import { TerminalType } from '../pageobjects/cell.page.js'
 
 
 
@@ -58,75 +61,77 @@ describe('Runme VS Code Extension', async () => {
 
   describe('Runme examples', async () => {
     const notebook = new Notebook({ notebook: {} })
+    before(async () => {
+      await notebook.focusDocument()
+    })
 
-    it.skip('basic hello world shell execution', async () => {
+    it('basic hello world shell execution', async () => {
       const cell = await notebook.getCell('echo "Hello World!')
       await cell.run()
-      expect(await cell.getCellOutput()).toBe('Hello World!')
+      expect(await cell.cellOutputExists('Hello World!', TerminalType.ShellOutput)).toBe(true)
     })
+
+    it('more shell example', async () => {
+      const cell = await notebook.getCell('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
+      await cell.run()
+      await browser.pause(5000)
+      expect(await cell.cellOutputExists('Foo 👀\nBar 🕺\nLoo 🚀', TerminalType.ShellOutput)).toBe(true)
+    })
+
+
+    it('background task example', async () => {
+      const cell = await notebook.getCell('sleep 100000')
+      await cell.run()
+      expect(await cell.cellOutputExists('', TerminalType.ShellOutput)).toBe(true)
+    })
+
+    it('complex output', async () => {
+      const cell = await notebook.getCell('npm i -g webdriverio')
+      await cell.run()
+      const regex = new RegExp(/(added|changed) \d+ packages in \d+(?:ms|s)/)
+      let outputFound = false
+      await browser.waitUntil(async () => {
+        outputFound = await cell.cellOutputExists('added 244 packages in 12s', TerminalType.ShellOutput, regex)
+        return outputFound === true
+      }, {
+        timeout: 20000
+      })
+      return expect(outputFound).toBe(true)
+    })
+
+    it('stdin example', async () => {
+      const cell = await notebook.getCell('node ./scripts/stdin.js')
+      await cell.run()
+      const workbench = await browser.getWorkbench()
+      const bottomBar = workbench.getBottomBar()
+      await bottomBar.wait(1000)
+
+      const answer1 = 'I love it, but there is deno'
+      const answer2 = 'Great'
+      await browser.keys([answer1, Key.Enter, answer2, Key.Enter])
+
+      expect(await cell.isSuccessfulExecution()).toBe(true)
+      await cell.openTerminal()
+      await browser.pause(1000)
+      await workbench.executeCommand('Terminal select all')
+      await workbench.executeCommand('Copy')
+      const text = await clipboard.read()
+      await clipboard.write('')
+      expect(text.includes(`What do you think of Node.js? ${answer1}`)).toBe(true)
+      expect(text.includes(`Thank you for your valuable feedback: ${answer1}`)).toBe(true)
+      expect(text.includes(`Another question: how are you today? ${answer2}`)).toBe(true)
+      expect(text.includes(`I am glad you are feeling: ${answer2}`)).toBe(true)
+
+      //Give back focus to the Notebook
+      await notebook.focusDocument()
+    })
+
 
     it('openssl test', async () => {
-      const monaco = await $('.notebookOverlay .monaco-list-rows')
-      // TODO: Move to the getCell method, scroll iteratively until finding the element
-      const scrollCanvas = await $('.notebook-overview-ruler-container canvas')
-      await scrollCanvas.click({
-        y: 100
-      })
-
-      // If top position is not changing probably we didn't find the element.
-      const top = await browser.execute((m: HTMLElement) => {
-        return parseInt(m.style.top)
-      }, monaco as any)
-      
       const cell = await notebook.getCell('openssl rand -base64 32')
       await cell.run()
-      const output = await cell.getCellOutput()
-      console.log(output)
+      const regex = /(?:[A-Za-z0-9+\/]{4}\\n?)*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)/
+      expect(await cell.cellOutputExists('', TerminalType.ShellOutput, regex)).toBe(true)
     })
-
-
-    // it('more shell example', async () => {
-    //   const outputReference = await resolveCellOuput('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
-    //   expect(outputReference).toHaveText('Foo 👀\nBar 🕺\nLoo 🚀')
-    // })
-
-    // it('background task example', async () => {
-    //   const outputReference = await resolveCellOuput('sleep 100000')
-    //   expect(outputReference).toHaveText('')
-    // })
-
-    // it('complex output', async () => {
-    //   const outputReference = await resolveCellOuput('npm i -g webdriverio')
-    //   if (outputReference) {
-    //     const regex = new RegExp(/(added|changed) \d+ packages in \d+(?:ms|s)/)
-    //     let expectedText = ''
-    //     await browser.waitUntil(async () => {
-    //       const text = await outputReference.getText()
-    //       expectedText = text
-    //       return regex.test(text)
-    //     }, {
-    //       timeout: 20000
-    //     })
-    //     return expect(outputReference).toHaveText(expectedText)
-    //   }
-    // })
-
-
-    // it('stdin example', async () => {
-    //   const outputReference = await resolveCellOuput('node ./scripts/stdin.js')
-    //   if (outputReference) {
-    //     const answer1 = 'I love it'
-    //     const answer2 = 'Great'
-    //     expect(outputReference).toHaveText('What do you think of Node.js?')
-    //     await browser.keys([answer1, Key.Enter])
-    //     await browser.keys([answer2, Key.Enter])
-    //     expect(outputReference).toHaveText(`
-    //     What do you think of Node.js? ${answer1}
-    //     Thank you for your valuable feedback: ${answer1}
-    //     Another question: how are you today? ${answer2}
-    //     I am glad you are feeling: ${answer2}`)
-    //   }
-    // })
   })
-
 })

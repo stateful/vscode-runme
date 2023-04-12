@@ -1,12 +1,24 @@
-import { PageDecorator, IPageDecorator, BasePage } from 'wdio-vscode-service'
+import { BasePage } from 'wdio-vscode-service'
+
+export enum TerminalType {
+    TerminalView = 'terminal-view',
+    ShellOutput = 'shell-output'
+}
+
+export interface NotebookCommand {
+    element$: WebdriverIO.Element,
+    text: string
+}
 
 export class Cell extends BasePage<{}, { cell: {} }> {
     public locatorKey = 'cell' as const
     #cellRow: WebdriverIO.Element
-    constructor(cellRow: WebdriverIO.Element) {
+    #cellText: string
+    constructor(cellRow: WebdriverIO.Element, cellText: string) {
         // TODO: Write the locator map
         super({ cell: {} })
         this.#cellRow = cellRow
+        this.#cellText = cellText
     }
 
     async run() {
@@ -14,34 +26,110 @@ export class Cell extends BasePage<{}, { cell: {} }> {
         await container.$('.run-button-container').click()
     }
 
-    async getCellOutput(): Promise<string> {
-        // TODO: Improve the selector and the name
-        await browser.switchToParentFrame()
-        const iframe = await $('iframe')
-        await browser.switchToFrame(iframe!)
-        const anotherIframe = await $('iframe')
-        await browser.switchToFrame(anotherIframe!)
+    async getStatusBarElements(): Promise<NotebookCommand[]> {
+        const successStateRows = await browser.$$('.codicon-notebook-state-success')
+        let commands: NotebookCommand[] = []
 
-        const notebookTerminal = await $('terminal-view')
-        const shellOutput = await $('shell-output')
-        let terminalText = ''
+        for await (const row of successStateRows) {
+            const parent = await row
+                .parentElement()
+                .parentElement()
+                .parentElement()
+                .parentElement()
+                .parentElement()
+            const cellEditorContainer = await parent.$('.cell-editor-container')
+            if (await cellEditorContainer.getText() === this.#cellText) {
+                const statusBar$ = await parent.$('.cell-statusbar-container')
+                const statusRight$ = await statusBar$.$('.cell-status-right')
+                const contributedRight$ = await statusRight$.$('.cell-contributed-items-right')
+                const commandsResult$$ = await contributedRight$.$$('.cell-status-item-has-command')
 
-
-        if (!notebookTerminal.error) {
-            terminalText = await notebookTerminal.getText()
+                for await (const row of commandsResult$$) {
+                    const text = await row.getText()
+                    commands.push({
+                        element$: row,
+                        text: text.trim()
+                    })
+                }
+                break
+            }
         }
 
-        if (!shellOutput.error) {
-            terminalText = await shellOutput.getText()
+        return commands
+    }
+
+    async openTerminal() {
+        const commands = await this.getStatusBarElements()
+        const terminal = commands.find((command) => command.text === 'Open Terminal')
+        if (!terminal) {
+            throw new Error('Could not find a terminal to open')
         }
+        await terminal.element$.click()
+    }
+
+    /**
+     * Check if there is an associated success status next to the code cell.
+     * @returns Promise<boolean>
+     */
+    async isSuccessfulExecution(): Promise<boolean> {
+        const successRows = await browser.$$('.codicon-notebook-state-success')
+        let cellExists = false
+        for await (const row of successRows) {
+            const executionRow = await row
+                .parentElement()
+                .parentElement()
+                .parentElement()
+                .parentElement()
+                .parentElement()
+            const cellEditor = await executionRow.$('.cell-editor-container')
+            if (await cellEditor.getText() === this.#cellText) {
+                cellExists = true
+                break
+            }
+        }
+        return cellExists
+    }
+
+    /**
+     * Checks if the specified output (a string or regular expression) is rendered
+     * @param expectedOutput {string}
+     * @param regex {RegExp}
+     * @returns boolean
+     */
+    async cellOutputExists(expectedOutput: string, expectedTerminal: TerminalType, regex?: RegExp): Promise<boolean> {
+        await browser.switchToParentFrame()
+        const notebookIframe = await $('iframe')
+        if (notebookIframe.error) {
+            throw new Error('Could not find notebook iframe')
+        }
+        await browser.switchToFrame(notebookIframe)
+        const executionIFrame = await $('iframe')
+        if (executionIFrame.error) {
+            throw new Error('Could not find execution iframe')
+        }
+        await browser.switchToFrame(executionIFrame)
+        let outputExists = false
+
+        for (const row of await $$(expectedTerminal)) {
+            if (row.error) {
+                throw row.error
+            }
+            const text = await row.getText()
+            if (regex) {
+                outputExists = regex.test(text)
+            } else if (text.includes(expectedOutput)) {
+                outputExists = true
+            }
+
+            if (outputExists) {
+                break
+            }
+        }
+
 
         await browser.switchToParentFrame()
         await browser.switchToParentFrame()
 
-        if (!terminalText.length) {
-            throw new Error('Could not found an output')
-        }
-
-        return terminalText
+        return outputExists
     }
 }
