@@ -75,6 +75,25 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
   }
 }
 export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
+  private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
+  onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
+
+  protected disposables: vscode.Disposable[] = []
+
+  constructor() {
+    this.disposables.push(
+      vscode.tasks.onDidEndTaskProcess(() => {
+        this._onDidChangeCellStatusBarItems.fire()
+      })
+    )
+
+    this.disposables.push(
+      window.onDidCloseTerminal(() => {
+        this._onDidChangeCellStatusBarItems.fire()
+      })
+    )
+  }
+
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const annotations = getAnnotations(cell)
 
@@ -85,11 +104,20 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
       return
     }
 
+    const terminal = getTerminalByCell(cell)
+
+    // TODO: `terminal.exitStatus` does not appear to work
+    if (!terminal || terminal.exitStatus) { return }
+
     const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',
       NotebookCellStatusBarAlignment.Right
     )
     item.command = 'runme.stopBackgroundTask'
     return item
+  }
+
+  dispose() {
+    this.disposables.forEach(({ dispose }) => dispose())
   }
 }

@@ -318,10 +318,6 @@ export async function executeRunner(
     if (background && interactive) {
       setTimeout(
         () => {
-          if (closeTerminalOnSuccess) {
-            closeTerminalByEnvID(RUNME_ID)
-          }
-
           resolve(true)
         },
         BACKGROUND_TASK_HIDE_TIMEOUT
