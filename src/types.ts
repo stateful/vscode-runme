@@ -159,4 +159,5 @@ export interface DisposableAsync {
 
 export interface RunmeTerminal extends Terminal {
   runnerSession?: IRunnerProgramSession
+  runmeProcessId?: Promise<number | undefined>
 }

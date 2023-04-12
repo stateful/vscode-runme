@@ -17,14 +17,14 @@ function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
-export function openTerminal (kernel: Kernel, grpcRunner: boolean, existingExecution?: NotebookCellExecution) {
+export function openTerminal (kernel: Kernel, notebookTerminal: boolean, existingExecution?: NotebookCellExecution) {
   return async function (cell: NotebookCell) {
     const terminal = getTerminalByCell(cell)
     if (!terminal) {
       return showWarningMessage()
     }
 
-    if (isNotebookTerminalEnabledForCell(cell) && grpcRunner) {
+    if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
       const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
 
       if (terminalOutput) {

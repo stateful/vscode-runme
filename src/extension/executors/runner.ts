@@ -16,7 +16,7 @@ import {
 } from 'vscode'
 
 import { ClientMessages, OutputType } from '../../constants'
-import { CellOutputPayload, ClientMessage } from '../../types'
+import { CellOutputPayload, ClientMessage, RunmeTerminal } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
 import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
@@ -110,7 +110,8 @@ export async function executeRunner(
     exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
-    tty: interactive
+    background,
+    tty: interactive,
   })
 
   context.subscriptions.push(program)
@@ -275,16 +276,19 @@ export async function executeRunner(
       const taskId = (e.execution as any)['_id']
       const executionId = (execution as any)['_id']
 
-      if (
-        taskId !== executionId
-      ) {
-        return
-      }
+      if (taskId !== executionId) { return }
 
       const terminal = getTerminalByCell(exec.cell)
       if (!terminal) { return }
 
       terminal.runnerSession = program
+
+      // proxy pid value
+      Object.defineProperty(terminal, 'processId', {
+        get: function () {
+          return program.pid
+        }
+      })
     })
 
     tasks.onDidEndTaskProcess((e) => {

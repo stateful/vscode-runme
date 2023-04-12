@@ -24,9 +24,8 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
     }
 
     const terminal = getTerminalByCell(cell)
-    const pid = await terminal?.processId
 
-    if (!Boolean(terminal) || !pid) {
+    if (!Boolean(terminal)) {
       return
     }
 
@@ -34,10 +33,6 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
       '$(terminal)',
       'Open Terminal',
     ]
-
-    if (pid > -1) {
-      terminalButtonParts.push(`(PID: ${pid})`)
-    }
 
     const item = new NotebookCellStatusBarItem(
       terminalButtonParts.join(' '),
@@ -58,8 +53,17 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
 }
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
-  provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
+  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const annotations = getAnnotations(cell)
+
+    const terminal = getTerminalByCell(cell)
+    const pid = await terminal?.processId
+
+    let text = 'Background Task'
+
+    if (pid !== undefined && pid > -1) {
+      text = `PID: ${pid}`
+    }
 
     /**
      * don't show if not a background task
@@ -69,9 +73,14 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
     }
 
     const item = new NotebookCellStatusBarItem(
-      'Background Task',
+      text,
       NotebookCellStatusBarAlignment.Right
     )
+
+    if (terminal) {
+      item.command = 'runme.openIntegratedTerminal'
+    }
+
     return item
   }
 }

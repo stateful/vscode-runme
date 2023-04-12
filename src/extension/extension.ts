@@ -93,6 +93,7 @@ export class RunmeExtension {
 
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),
+      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openTerminal(kernel, false)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
         runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
