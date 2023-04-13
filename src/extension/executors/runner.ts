@@ -24,6 +24,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
+import { openTerminal } from '../commands'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -57,7 +58,7 @@ export async function executeRunner(
 
     if (terminal && terminal.runnerSession) {
       if (!terminal.runnerSession.hasExited()) {
-        // TODO: focus terminal
+        openTerminal(kernel, true, exec)(exec.cell)
         return true
       } else {
         terminal.dispose()
