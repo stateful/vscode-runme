@@ -20,7 +20,7 @@ import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { SERVER_ADDRESS } from '../constants'
 import { getPortNumber } from '../utils/configuration'
 
-import executor from './executors'
+import type executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 

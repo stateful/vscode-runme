@@ -14,6 +14,9 @@ import {
   getNotebookTerminalFontSize
 } from '../../src/utils/configuration'
 
+vi.mock('../../src/extension/grpc/client', () => ({}))
+vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
 const FAKE_WIN_EXT_PATH = 'C:\\Users\\.vscode\\extensions\\stateful.runme'
 
