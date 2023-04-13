@@ -66,6 +66,7 @@ export class RunmeExtension {
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
     const winSurvey = new survey.WinDefaultShell(context)
+    const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
     context.subscriptions.push(
       kernel,
@@ -84,9 +85,11 @@ export class RunmeExtension {
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ShowTerminalProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new StopBackgroundTaskProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
       // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
+
+      stopBackgroundTaskProvider,
 
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),

@@ -19,7 +19,7 @@ import { ClientMessages, OutputType } from '../../constants'
 import { CellOutputPayload, ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCmdShellSeq, prepareCmdSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -47,6 +47,24 @@ export async function executeRunner(
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
+  const annotations = getAnnotations(exec.cell)
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
+
+  // enforce background tasks as singleton instanes
+  // to do this,
+  if (background) {
+    const terminal = getTerminalByCell(exec.cell)
+
+    if (terminal && terminal.runnerSession) {
+      if (!terminal.runnerSession.hasExited()) {
+        // TODO: focus terminal
+        return true
+      } else {
+        terminal.dispose()
+      }
+    }
+  }
+
   const cwd = path.dirname(runningCell.uri.fsPath)
 
   const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
@@ -63,9 +81,6 @@ export async function executeRunner(
   if (commands.length === 0) {
     commands.push('')
   }
-
-  const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
 
   let execution: RunProgramExecution = {
     type: 'commands', commands
@@ -253,6 +268,22 @@ export async function executeRunner(
       } catch (err: any) {
         throw new Error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
       }
+    })
+
+    tasks.onDidStartTaskProcess((e) => {
+      const taskId = (e.execution as any)['_id']
+      const executionId = (execution as any)['_id']
+
+      if (
+        taskId !== executionId
+      ) {
+        return
+      }
+
+      const terminal = getTerminalByCell(exec.cell)
+      if (!terminal) { return }
+
+      terminal.runnerSession = program
     })
 
     tasks.onDidEndTaskProcess((e) => {

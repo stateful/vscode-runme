@@ -1,8 +1,9 @@
-import { NotebookCellKind, TaskDefinition, TerminalDimensions } from 'vscode'
+import { NotebookCellKind, TaskDefinition, Terminal, TerminalDimensions } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema } from './schema'
+import type { IRunnerProgramSession } from './extension/runner'
 
 export namespace Serializer {
   export type Notebook = {
@@ -154,4 +155,8 @@ export type CellAnnotationsErrorResult = {
 
 export interface DisposableAsync {
   dispose(): Promise<void>
+}
+
+export interface RunmeTerminal extends Terminal {
+  runnerSession?: IRunnerProgramSession
 }

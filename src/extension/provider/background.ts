@@ -74,7 +74,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
     return item
   }
 }
-export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
+export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
@@ -106,8 +106,7 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
 
     const terminal = getTerminalByCell(cell)
 
-    // TODO: `terminal.exitStatus` does not appear to work
-    if (!terminal || terminal.exitStatus) { return }
+    if (!terminal || (terminal.runnerSession?.hasExited() !== undefined)) { return }
 
     const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',
