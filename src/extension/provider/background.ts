@@ -1,4 +1,5 @@
-import vscode, { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment } from 'vscode'
+import type vscode from 'vscode'
+import { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment, tasks } from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 
@@ -82,7 +83,7 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
 
   constructor() {
     this.disposables.push(
-      vscode.tasks.onDidEndTaskProcess(() => {
+      tasks.onDidEndTaskProcess(() => {
         this._onDidChangeCellStatusBarItems.fire()
       })
     )
@@ -100,7 +101,7 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
     /**
      * don't show if not a background task & if not command currently running
      */
-    if (!annotations.background || !annotations.interactive || !cell.executionSummary?.success) {
+    if (!annotations.background || !annotations.interactive) {
       return
     }
 
