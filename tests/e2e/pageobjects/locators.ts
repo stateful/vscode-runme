@@ -14,5 +14,5 @@ export const notebookCellStatus = {
   success: '.codicon-notebook-state-success',
   failure: '.codicon-notebook-state-error',
   item: '.cell-status-item',
-  command: '.cell-status-item.cell-status-item-has-command'
+  command: '.cell-status-item-has-command'
 }
