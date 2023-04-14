@@ -1,4 +1,5 @@
 import { BasePage, IPageDecorator, PageDecorator } from 'wdio-vscode-service'
+import { Key } from 'webdriverio'
 
 import { NotebookCell } from './cell.page.js'
 import * as locatorMap from './locators.js'
@@ -23,13 +24,31 @@ export class RunmeNotebook extends BasePage<typeof runmeNotebookLocators, typeof
      * @returns {Cell|undefined}
      */
     async findCell(content: string): Promise<NotebookCell | undefined> {
-        const rows = await this.codeCell$$
-        for (const r of rows) {
-            const text = await r.getText()
-            if (text.includes(content)) {
-                return new NotebookCell(r as any, content)
-            }
-        }
+      const func = `
+function() {
+  const rows = this.querySelectorAll('.code-cell-row')
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i]
+    const text = r.innerText
+    if (text?.includes(${JSON.stringify(content.replaceAll(' ', '\xA0'))})) {
+      return r
+    }
+  }
+}
+      `.trim()
+
+      const passedFunc = function() { }
+      passedFunc['toString'] = () => func
+
+      const cell = new NotebookCell(
+        this.elem.$(passedFunc as any),
+        content
+      )
+
+      if (await cell.elem.isExisting()) {
+        await cell.focus()
+        return cell
+      }
     }
 
     /**
@@ -67,7 +86,8 @@ export class RunmeNotebook extends BasePage<typeof runmeNotebookLocators, typeof
 
         while (!cell) {
             cell = await this.findCell(cellContent)
-            await workbench.executeCommand('focus next cell editor')
+            // await workbench.executeCommand('focus next cell editor')
+            await browser.keys(Key.ArrowDown)
 
             if (!cell) {
                 const elapsedTime = (new Date().getTime() - startTime.getTime())

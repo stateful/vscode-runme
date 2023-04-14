@@ -35,9 +35,7 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
     public locatorKey = 'notebookCell' as const
     #cellText: string
     constructor(cellContainer: ChainablePromiseElement<WebdriverIO.Element>, cellText: string) {
-        super(locatorMap)
-        this['_baseElem'] = cellContainer
-
+        super(locatorMap, cellContainer)
         this.#cellText = cellText
     }
 
@@ -61,7 +59,7 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
     }
 
     getStatusBar() {
-      return new NotebookCellStatusBar(this.statusBar$)
+      return new NotebookCellStatusBar(this.statusBar$, this)
     }
 
     async openTerminal() {
@@ -115,7 +113,10 @@ export interface NotebookCellStatusBar extends IPageDecorator<typeof notebookCel
 export class NotebookCellStatusBar extends BasePage<typeof notebookCellStatusLocators, typeof locatorMap> {
   locatorKey = 'notebookCellStatus' as const
 
-  constructor(container: ChainablePromiseElement<WebdriverIO.Element>) {
+  constructor(
+    container: ChainablePromiseElement<WebdriverIO.Element>,
+    protected parentCell: NotebookCell
+  ) {
     super(locatorMap, container)
   }
 
@@ -128,6 +129,9 @@ export class NotebookCellStatusBar extends BasePage<typeof notebookCellStatusLoc
   }
 
   async waitForSuccess() {
+    await this.parentCell.elem.isExisting()
+    // console.log(await this.parentCell.elem.getText())
+    await this.parentCell.focus()
     return this.success$.waitForExist()
   }
 

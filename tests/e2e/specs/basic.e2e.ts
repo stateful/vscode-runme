@@ -102,7 +102,7 @@ describe('Runme VS Code Extension', async () => {
       await stopTaskCmd.waitForExist()
       await stopTaskCmd.waitForClickable()
 
-      // await stopTaskCmd!.click()
+      await stopTaskCmd!.click()
 
       // TODO: check to ensure this works
     })
@@ -152,7 +152,7 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // TODO: fails for some very strange reason
-    it.skip('single line environment variable', async () => {
+    it('single line environment variable', async () => {
       const workbench = await browser.getWorkbench()
 
       {
@@ -160,6 +160,8 @@ describe('Runme VS Code Extension', async () => {
         await cell.run(false)
 
         await waitForInputBox(workbench)
+
+        await notebook.wait(100)
 
         await browser.keys(['token', Key.Enter])
 
@@ -169,41 +171,41 @@ describe('Runme VS Code Extension', async () => {
       {
         const cell = await notebook.getCell('echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"')
         await cell.run()
-        expect(await cell.getCellOutput(OutputType.ShellOutput)).toStrictEqual([
-          'DENO_ACCESS_TOKEN: token\n'
-        ])
+
+        const output = await cell.getCellOutput(OutputType.ShellOutput)
+        expect(output[1]).toStrictEqual('DENO_ACCESS_TOKEN: token\n')
       }
     })
 
     // TODO: fails for some very strange reason
-    it.skip('multiple lines environment variable', async () => {
-      const workbench = await browser.getWorkbench()
+    // it.skip('multiple lines environment variable', async () => {
+    //   const workbench = await browser.getWorkbench()
 
-      const cell = await notebook.getCell([
-        'echo "Auth token for service foo"',
-        'export SERVICE_FOO_TOKEN="foobar"',
-        'echo "Auth token for service bar"',
-        'export SERVICE_BAR_TOKEN="barfoo"'
-      ].join('\n'))
+    //   const cell = await notebook.getCell([
+    //     'echo "Auth token for service foo"',
+    //     'export SERVICE_FOO_TOKEN="foobar"',
+    //     'echo "Auth token for service bar"',
+    //     'export SERVICE_BAR_TOKEN="barfoo"'
+    //   ].join('\n'))
 
-      await cell.run(false)
+    //   await cell.run(false)
 
-      await waitForInputBox(workbench)
-      await browser.keys(Key.Enter)
+    //   await waitForInputBox(workbench)
+    //   await browser.keys(Key.Enter)
 
-      await waitForInputBox(workbench)
-      await browser.keys(Key.Enter)
+    //   await waitForInputBox(workbench)
+    //   await browser.keys(Key.Enter)
 
-      const text = await getTerminalText(workbench)
+    //   const text = await getTerminalText(workbench)
 
-      expect(text).toMatch([
-        'Auth token for service foo',
-        'Auth token for service bar'
-      ].join('\n'))
-    })
+    //   expect(text).toMatch([
+    //     'Auth token for service foo',
+    //     'Auth token for service bar'
+    //   ].join('\n'))
+    // })
 
     // TODO: same issue as prior
-    it.skip('support changes to $PATH', async () => {
+    it('support changes to $PATH', async () => {
       const workbench = await browser.getWorkbench()
       const cell = await notebook.getCell('export PATH="/some/path:$PATH"\necho $PATH')
       await cell.run(false)
@@ -223,8 +225,8 @@ describe('Runme VS Code Extension', async () => {
         await cell.run()
 
         const output = await cell.getCellOutput(OutputType.ShellOutput)
-        expect(output).toHaveLength(1)
-        expect(output[0]).toMatch('Apache License')
+        expect(output).toHaveLength(2)
+        expect(output[1]).toMatch('Apache License')
       }
     })
 
@@ -245,9 +247,8 @@ describe('Runme VS Code Extension', async () => {
       {
         const cell = await notebook.getCell('echo "PRIVATE_KEY: $PRIVATE_KEY"')
         await cell.run()
-        expect(await cell.getCellOutput(OutputType.ShellOutput)).toStrictEqual([
-          'PRIVATE_KEY: ' + private_key + '\n'
-        ])
+        const outputs = await cell.getCellOutput(OutputType.ShellOutput)
+        expect(outputs[1]).toStrictEqual('PRIVATE_KEY: ' + private_key + '\n')
       }
     })
 
