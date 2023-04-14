@@ -1,5 +1,4 @@
 import { BasePage, IPageDecorator, PageDecorator } from 'wdio-vscode-service'
-import { Key } from 'webdriverio'
 
 import { NotebookCell } from './cell.page.js'
 import * as locatorMap from './locators.js'
@@ -62,14 +61,17 @@ export class RunmeNotebook extends BasePage<typeof runmeNotebookLocators, typeof
 
         let cell: NotebookCell | undefined
         const startTime = new Date()
+        const workbench = await browser.getWorkbench()
+
+        await workbench.executeCommand('notebook: focus first cell')
+
         while (!cell) {
             cell = await this.findCell(cellContent)
-            await (await browser.getWorkbench()).executeCommand('focus next cell editor')
+            await workbench.executeCommand('focus next cell editor')
 
             if (!cell) {
                 const elapsedTime = (new Date().getTime() - startTime.getTime())
                 if (elapsedTime > timeout) {
-                  await browser.keys(Key.ArrowDown)
                   break
                 }
             } else {
