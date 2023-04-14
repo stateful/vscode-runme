@@ -271,16 +271,16 @@ export class NotebookCellOutputManager {
   /**
    * Internal refresh ouptut function. Runs under mutex.
    *
-   * @param cb Optional callback, which runs after enabled outputs are
-   * retrieved, but before outputs are replaced. This callback should be used to
-   * set whether or not an output is enabled.
+   * @param mutater Optional callback, which runs after enabled outputs are
+   * retrieved, but before outputs are replaced. This function should be used to
+   * mutate the state of enabled outputs.
    *
    * It can also be used to prevent outputs from being replaced at all, by
    * returning `false`. This is used in the exposed `refreshOutput` function,
    * where the user can prevent refreshing if a certain output type is not
    * present.
    */
-  protected async refreshOutputInternal(cb?: () => Promise<boolean|void>|boolean|void) {
+  protected async refreshOutputInternal(mutater?: () => Promise<boolean|void>|boolean|void) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
         for(const key of [...this.enabledOutputs.keys()]) {
@@ -293,7 +293,7 @@ export class NotebookCellOutputManager {
           this.terminalEnabled = this.hasOutputTypeUnsafe(terminalOutput)
         }
 
-        if (!(await cb?.() ?? true)) {
+        if (!(await mutater?.() ?? true)) {
           return
         }
 
