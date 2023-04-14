@@ -60,7 +60,7 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
                 if (elapsedTime > timeout) {
                     searchCell = false
                 }
-                await browser.keys(Key.ArrowDown)
+                await this.scrollDown(3)
             } else {
                 searchCell = false
             }
@@ -69,6 +69,12 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
             throw new Error(`Could not find cell with content ${cellContent}`)
         }
         return cell
+    }
+
+    async scrollDown(times: number = 1) {
+        for (let i = 0; i < times; i++) {
+            await browser.keys(Key.ArrowDown)
+        }
     }
 
 }   
