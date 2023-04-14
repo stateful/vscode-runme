@@ -110,7 +110,8 @@ export async function executeRunner(
     exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
-    tty: interactive
+    background,
+    tty: interactive,
   })
 
   context.subscriptions.push(program)
@@ -275,16 +276,19 @@ export async function executeRunner(
       const taskId = (e.execution as any)['_id']
       const executionId = (execution as any)['_id']
 
-      if (
-        taskId !== executionId
-      ) {
-        return
-      }
+      if (taskId !== executionId) { return }
 
       const terminal = getTerminalByCell(exec.cell)
       if (!terminal) { return }
 
       terminal.runnerSession = program
+
+      // proxy pid value
+      Object.defineProperty(terminal, 'processId', {
+        get: function () {
+          return program.pid
+        }
+      })
     })
 
     tasks.onDidEndTaskProcess((e) => {

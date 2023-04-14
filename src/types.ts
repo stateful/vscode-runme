@@ -1,4 +1,4 @@
-import { NotebookCellKind, TaskDefinition, Terminal, TerminalDimensions } from 'vscode'
+import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'

@@ -41,11 +41,11 @@ export interface RunProgramOptions {
   args?: string[]
   cwd?: string
   envs?: string[]
-  exec?:
-    RunProgramExecution
+  exec?: RunProgramExecution
   tty?: boolean
   environment?: IRunnerEnvironment
   terminalDimensions?: TerminalDimensions
+  background?: boolean
 }
 
 export interface IRunner extends Disposable {
@@ -119,6 +119,8 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
    * Number of registered terminal windows
    */
   readonly numTerminalWindows: number
+
+  readonly pid: Promise<number|undefined>
 
   handleInput(message: string): Promise<void>
 
@@ -337,6 +339,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly _onDidClose    = this.register(new EventEmitter<number | void>())
   readonly _onStdoutRaw   = this.register(new EventEmitter<Uint8Array>())
   readonly _onStderrRaw   = this.register(new EventEmitter<Uint8Array>())
+  readonly _onPid        = this.register(new EventEmitter<number|undefined>())
 
   readonly onDidWrite = this._onDidWrite.event
   readonly onDidErr = this._onDidErr.event
@@ -357,6 +360,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   protected activeTerminalWindow?: TerminalWindow
   protected terminalWindows = new Map<TerminalWindow, TerminalWindowState>()
+
+  pid = new Promise<number|undefined>(this._onPid.event)
 
   constructor(
     private readonly client: RunnerServiceClient,
@@ -383,7 +388,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.register( this._onDidClose.event(() => this.dispose()) )
     this.register( this._onInternalErr.event(() => this.dispose()) )
 
-    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode }) => {
+    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid }) => {
       if(stdoutData.length > 0) {
         this._onStdoutRaw.fire(stdoutData)
       }
@@ -395,6 +400,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       if(exitCode) {
         this._close({ type: 'exit', code: exitCode.value })
         this.dispose()
+      }
+
+      if(pid) {
+        this._onPid.fire(Number(pid.pid))
       }
     })
 
@@ -435,6 +444,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       this.opts.envs.push('TERM=xterm-256color')
     } else {
       this.opts.envs.push('TERM=')
+    }
+
+    if (!this.opts.background) {
+      this._onPid.fire(undefined)
     }
 
     await this.session.requests.send(GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts))
@@ -645,7 +658,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   static runOptionsToExecuteRequest(
-    { programName, args, cwd, environment, exec, tty, envs, terminalDimensions }: RunProgramOptions
+    { programName, args, cwd, environment, exec, tty, envs, terminalDimensions, background }: RunProgramOptions
   ): ExecuteRequest {
     if(environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -658,6 +671,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       tty,
       sessionId: environment?.getSessionId(),
       programName,
+      background: background,
       ...exec?.type === 'commands' && { commands: exec.commands },
       ...exec?.type === 'script' && { script: exec.script },
       ...terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) },

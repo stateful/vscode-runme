@@ -1,7 +1,6 @@
 import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
-import type { ExecuteResponse } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { EventEmitter } from 'vscode'
 
@@ -11,6 +10,7 @@ import {
   GrpcRunnerProgramSession,
   RunProgramOptions
 } from '../../src/extension/runner'
+import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 
 
 vi.mock('../../src/extension/utils', () => ({
@@ -209,6 +209,32 @@ suite('grpc Runner', () => {
 
       expect(stderrListener).toBeCalledTimes(1)
       expect(stderrListener).toBeCalledWith(Buffer.from('test'))
+    })
+
+    test('duplex onMessage exposes PID in background mode', async () => {
+      const { duplex, session } = await createNewSession({ background: true })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from(''),
+        stderrData: Buffer.from(''),
+        pid: {
+          pid: '1234'
+        }
+      })
+
+      const pid = await session.pid
+
+      expect(pid).toStrictEqual(1234)
+    })
+
+    test('PID is undefined in non-background mode', async () => {
+      const { session } = await createNewSession()
+
+      await session.run()
+
+      const pid = await session.pid
+
+      expect(pid).toBeUndefined()
     })
 
     test('duplex onMessage calls onDidWrite', async () => {
