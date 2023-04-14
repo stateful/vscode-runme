@@ -231,8 +231,8 @@ describe('Runme VS Code Extension', async () => {
         '-----BEGIN RSA PRIVATE KEY-----',
         'MIIEpAIBAAKCAQEA04up8hoqzS1+',
         '...',
-        'l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2V',
-        // '-----END RSA PRIVATE KEY-----',
+        'l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==',
+        '-----END RSA PRIVATE KEY-----',
       ].join('\n')
 
       {
@@ -275,7 +275,7 @@ describe('Runme VS Code Extension', async () => {
 
     it('terminal dimensions', async () => {
       const workbench = await browser.getWorkbench()
-      const cell = await notebook.getCell('echo Rows: $(tput lines)\necho Columns: $(tput cols)')
+      const cell = await notebook.getCell('echo Rows: \\$(tput lines)\necho Columns: \\$(tput cols)')
 
       await cell.run(false)
 
