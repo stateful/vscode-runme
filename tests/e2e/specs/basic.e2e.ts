@@ -98,7 +98,7 @@ describe('Runme VS Code Extension', async () => {
       expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([''])
 
       const stopTaskCmd = cell.getStatusBar().getCommand(StatusBarElements.StopTask)
-      await stopTaskCmd.waitForExist()
+      await stopTaskCmd.waitForClickable()
 
       await stopTaskCmd!.click()
 
