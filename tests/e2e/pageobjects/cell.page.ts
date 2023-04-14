@@ -66,7 +66,7 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
     }
 
     async openTerminal() {
-      const terminalButton = await this.getStatusBar().getCommand('Open Terminal')
+      const terminalButton = await this.getStatusBar().getCommand(StatusBarElements.OpenTerminal)
 
       if (!terminalButton?.isExisting()) {
         throw new Error('Could not find a terminal to open')
@@ -175,20 +175,7 @@ export class NotebookCellStatusBar extends BasePage<typeof notebookCellStatusLoc
     return this.command$$
   }
 
-  async getCommand(test: string): Promise<WebdriverIO.Element | undefined> {
-    const commands = await this.getCommands()
-    for (const command of commands) {
-      const innerText = (await command.getText()).trim()
-
-      if (innerText !== test) {
-        continue
-      }
-
-      return command
-    }
-  }
-
-  getStopTaskCommand() {
-    return this.getCommand('Stop Task')
+  getCommand(test: StatusBarElements) {
+    return $(`${this.locators.command}*=${test}`)
   }
 }

@@ -3,7 +3,7 @@ import { Key } from 'webdriverio'
 import clipboard from 'clipboardy'
 
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
-import { OutputType } from '../pageobjects/cell.page.js'
+import { OutputType, StatusBarElements } from '../pageobjects/cell.page.js'
 
 describe('Runme VS Code Extension', async () => {
   it('should load successfully', async () => {
@@ -97,10 +97,8 @@ describe('Runme VS Code Extension', async () => {
 
       expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([''])
 
-      browser.waitUntil(async () => !!(await cell.getStatusBar().getStopTaskCommand()))
-
-      const stopTaskCmd = await cell.getStatusBar().getStopTaskCommand()
-      expect(stopTaskCmd).toBeTruthy()
+      const stopTaskCmd = cell.getStatusBar().getCommand(StatusBarElements.StopTask)
+      await stopTaskCmd.waitForExist()
 
       await stopTaskCmd!.click()
 
