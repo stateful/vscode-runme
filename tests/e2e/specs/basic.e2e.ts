@@ -69,6 +69,7 @@ describe('Runme VS Code Extension', async () => {
       const workbench = await browser.getWorkbench()
       await tryExecuteCommand(workbench, 'notebook: clear all outputs')
       await tryExecuteCommand(workbench, 'kill all terminals')
+      await tryExecuteCommand(workbench, 'clear all notifications')
     })
 
     it('basic hello world shell execution', async () => {
