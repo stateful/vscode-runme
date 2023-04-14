@@ -38,7 +38,7 @@ const configurationSchema = {
     notebookTerminal: {
         backgroundTask: z.boolean().default(true),
         nonInteractive: z.boolean().default(false),
-        interactive: z.boolean().default(false),
+        interactive: z.boolean().default(true),
         fontSize: z.number().optional(),
         fontFamily: z.string().optional(),
         rows: z.number().int()

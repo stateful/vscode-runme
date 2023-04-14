@@ -328,7 +328,7 @@
           "runme.terminal.interactive": {
             "type": "boolean",
             "scope": "machine",
-            "default": false,
+            "default": true,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
           },
           "runme.terminal.fontSize": {
