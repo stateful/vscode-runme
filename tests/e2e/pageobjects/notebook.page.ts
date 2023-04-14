@@ -7,6 +7,11 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
     public locatorKey = 'notebook' as const
     #monacoEditor: WebdriverIO.Element | undefined
 
+    /**
+     * Finds a cell by content
+     * @param content {string} Keyword to use for searching a specific cell 
+     * @returns {Cell|undefined}
+     */
     async findCell(content: string): Promise<Cell | undefined> {
         const rows = await $$('.cell-editor-container')
         let row: WebdriverIO.Element | undefined
@@ -42,7 +47,7 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
      * it will throw an error.
      * 
      * @param cellContent The content to use to find the cell
-     * @param timeout The maximum amount of time to wait until finding the cell (1 minute by default)
+     * @param [timeout=60000] {number} The maximum amount of time to wait until finding the cell (1 minute by default)
      * @returns Found Cell or Error
      */
     async getCell(cellContent: string, timeout: number = 60000): Promise<Cell> {
@@ -71,6 +76,10 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
         return cell
     }
 
+    /**
+     * Scroll down by pressing the Arrow Down key
+     * @param times [number=1] Number of times to scroll
+     */
     async scrollDown(times: number = 1) {
         for (let i = 0; i < times; i++) {
             await browser.keys(Key.ArrowDown)

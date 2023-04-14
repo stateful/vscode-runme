@@ -35,7 +35,12 @@ export class Cell extends BasePage<{}, { cell: {} }> {
         this.#cellText = cellText
     }
 
-    async #getCurrentExecutionRow(expectedContent?: string) {
+    /**
+     * Determines the output of a cell by identifying its successful execution status
+     * @param expectedContent The content used to identify the location of the code cell.
+     * @returns Promise<WebdriverIO.Element | undefined>
+     */
+    async #getCurrentExecutionRow(expectedContent?: string): Promise<WebdriverIO.Element | undefined> {
         const successRows = await browser.$$('.codicon-notebook-state-success')
         for await (const row of successRows) {
             const executionRow = await row
@@ -52,19 +57,13 @@ export class Cell extends BasePage<{}, { cell: {} }> {
         }
     }
 
-    async focus() {
-        const container = await this.#cellRow.parentElement().parentElement()
-        await container.click()
-    }
-
-    async run() {
-        const container = await this.#cellRow.parentElement().parentElement()
-        await container.$('.run-button-container').click()
-    }
-
+    /**
+     * Finds the cell status bar command elements
+     * @returns Promise<NotebookCommand[]>
+     */
     async #getStatusBarElements(): Promise<NotebookCommand[]> {
         const executionRow = await this.#getCurrentExecutionRow()
-        let commands: NotebookCommand[] = []
+        const commands: NotebookCommand[] = []
         if (executionRow) {
             const statusBar$ = await executionRow.$('.cell-statusbar-container')
             const statusRight$ = await statusBar$.$('.cell-status-right')
@@ -82,7 +81,26 @@ export class Cell extends BasePage<{}, { cell: {} }> {
         return commands
     }
 
-    async openTerminal() {
+    /**
+     * Ensure the focus is over the cell code block element
+     */
+    async focus() {
+        const container = await this.#cellRow.parentElement().parentElement()
+        await container.click()
+    }
+
+    /**
+     * Clicks the Run cell button
+     */
+    async run(): Promise<void> {
+        const container = await this.#cellRow.parentElement().parentElement()
+        await container.$('.run-button-container').click()
+    }
+
+    /**
+     * Opens the associated cell terminal by clicking Open Terminal command.
+     */
+    async openTerminal(): Promise<void> {
         const commands = await this.#getStatusBarElements()
         const terminal = commands.find((command) => command.text === 'Open Terminal')
         if (!terminal) {
@@ -146,7 +164,7 @@ export class Cell extends BasePage<{}, { cell: {} }> {
      * @param openTerminal {boolean} Indicate if the terminal should be opened (default: true)
      * @returns 
      */
-    async getTerminalText(openTerminal: boolean = true) {
+    async getTerminalText(openTerminal: boolean = true): Promise<string> {
         const workbench = await browser.getWorkbench()
         if (openTerminal) {
             await this.openTerminal()
@@ -165,15 +183,20 @@ export class Cell extends BasePage<{}, { cell: {} }> {
      * @param expectedContent {string} Override the cell text value in case
      * the output has some special formatting. (e.g remove new lines from multine content)
      */
-    async waitForSuccess(expectedContent?: string | undefined, timeout = DEFAULT_SEARCH_FOR_CELL_TIMEOUT) {
+    async waitForCellOutput(expectedContent?: string | undefined, timeout?: number): Promise<void> {
         await browser.waitUntil(async () => {
             return (await this.isSuccessfulExecution(expectedContent)) === true
         }, {
-            timeout
+            timeout: timeout ?? DEFAULT_SEARCH_FOR_CELL_TIMEOUT
         })
     }
 
-    async areStatusBarCommandsRendered(elements: StatusBarElements[]) {
+    /**
+     * Check if the specified list of commands are being rendered
+     * @param elements List of elements to check
+     * @returns {boolean}
+     */
+    async isStatusBarCommandsRendered(elements: StatusBarElements[]): Promise<boolean> {
         const renderedElements = await this.#getStatusBarElements()
         let missingElement = true
         for (const element of renderedElements) {
@@ -185,8 +208,17 @@ export class Cell extends BasePage<{}, { cell: {} }> {
         return missingElement
     }
 
-    async areCommonStatusBarCommandsRendered(extraCommands: StatusBarElements[] = []) {
-        return this.areStatusBarCommandsRendered([
+    /**
+     * Checks if common rendered commands around cells are being rendered:
+     *  - Copy
+     *  - Configure
+     *  - CLI
+     *  - Shell Script
+     * @param extraCommands Specify additional commands to check aside of the common ones for all rendered cells.
+     * @returns { boolean }
+     */
+    async isCommonStatusBarCommandsRendered(extraCommands: StatusBarElements[] = []): Promise<boolean> {
+        return this.isStatusBarCommandsRendered([
             StatusBarElements.Copy,
             StatusBarElements.Configure,
             StatusBarElements.CLI,

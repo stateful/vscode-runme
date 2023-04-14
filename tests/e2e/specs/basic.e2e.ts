@@ -65,29 +65,28 @@ describe('Runme VS Code Extension', async () => {
     })
 
     it('basic hello world shell execution', async () => {
-      const cell = await notebook.getCell('echo "Hello World!"')
+      const cell = await notebook.getCell('$ echo "Hello World!"')
       await cell.run()
-      await cell.waitForSuccess()
+      await cell.waitForCellOutput()
       expect(await cell.cellOutputExists('Hello World!', OutputType.ShellOutput)).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
     })
 
     it('more shell example', async () => {
       const cell = await notebook.getCell('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
       await cell.run()
-      await cell.waitForSuccess()
+      await cell.waitForCellOutput()
       expect(await cell.cellOutputExists('Foo 👀\nBar 🕺\nLoo 🚀', OutputType.ShellOutput)).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
     })
-
 
     it('background task example', async () => {
       const cell = await notebook.getCell('sleep 100000')
       await cell.run()
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
-      await cell.waitForSuccess()
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
+      await cell.waitForCellOutput()
       expect(await cell.cellOutputExists('', OutputType.ShellOutput)).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal,
         StatusBarElements.StopTask,
       ])).toBe(true)
@@ -96,12 +95,12 @@ describe('Runme VS Code Extension', async () => {
 
     it('complex output', async () => {
       const cell = await notebook.getCell('npm i -g webdriverio')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       const regex = new RegExp(/(added|changed) \d+ packages in \d+(?:ms|s)/)
-      await cell.waitForSuccess()
+      await cell.waitForCellOutput()
       expect(regex.test(await cell.getTerminalText())).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
       await cell.focus()
@@ -109,7 +108,7 @@ describe('Runme VS Code Extension', async () => {
 
     it('stdin example', async () => {
       const cell = await notebook.getCell('node ./scripts/stdin.js')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       const workbench = await browser.getWorkbench()
       const bottomBar = workbench.getBottomBar()
@@ -124,25 +123,25 @@ describe('Runme VS Code Extension', async () => {
       expect(text.includes(`Thank you for your valuable feedback: ${answer1}`)).toBe(true)
       expect(text.includes(`Another question: how are you today? ${answer2}`)).toBe(true)
       expect(text.includes(`I am glad you are feeling: ${answer2}`)).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
     })
 
     it('single line environment variable', async () => {
       const cell = await notebook.getCell('export DENO_ACCESS_TOKEN="<insert-token-here>"')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await browser.keys(['token', Key.Enter])
-      await cell.waitForSuccess()
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      await cell.waitForCellOutput()
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
     })
 
     it('verify single line environment variable', async () => {
       const cell = await notebook.getCell('echo "DENO_ACCESS_TOKEN: $DENO_ACCESS_TOKEN"')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await notebook.scrollDown()
       expect(await cell.cellOutputExists('DENO_ACCESS_TOKEN: token', OutputType.ShellOutput)).toBe(true)
@@ -156,13 +155,13 @@ describe('Runme VS Code Extension', async () => {
         'export SERVICE_BAR_TOKEN="barfoo"'
       ]
       const cell = await notebook.getCell(lines.join('\n'))
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await browser.keys(Key.Enter)
       await browser.keys(Key.Enter)
       await notebook.scrollDown()
-      await cell.waitForSuccess()
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      await cell.waitForCellOutput()
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
     })
@@ -177,7 +176,7 @@ describe('Runme VS Code Extension', async () => {
         'SERVICE_BAR_TOKEN: barfoo'
       ]
       const cell = await notebook.getCell(lines.join('\n'))
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await notebook.scrollDown()
       await browser.pause(1000)
@@ -186,7 +185,7 @@ describe('Runme VS Code Extension', async () => {
 
     it('support changes to $PATH', async () => {
       const cell = await notebook.getCell('export PATH="/some/path:$PATH"\necho $PATH')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await browser.pause(1000)
       await browser.keys(Key.Enter)
@@ -196,12 +195,12 @@ describe('Runme VS Code Extension', async () => {
 
     it('support piping content to an environment variable', async () => {
       const cell = await notebook.getCell('export LICENSE=$(cat ../LICENSE)')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
-      await cell.waitForSuccess()
+      await cell.waitForCellOutput()
       await notebook.scrollDown()
       expect(await cell.isSuccessfulExecution()).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
 
@@ -209,7 +208,7 @@ describe('Runme VS Code Extension', async () => {
 
     it('verify piping content to an environment variable', async () => {
       const cell = await notebook.getCell('echo "LICENSE: $LICENSE"')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await browser.pause(1000)
       expect(await cell.isSuccessfulExecution()).toBe(true)
@@ -225,7 +224,7 @@ describe('Runme VS Code Extension', async () => {
 
       ]
       const cell = await notebook.getCell(lines.join('\n'))
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await notebook.scrollDown()
       const cellExecutionContent = `
@@ -234,16 +233,16 @@ describe('Runme VS Code Extension', async () => {
       ...
       l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==
       -----END RSA PRIVATE KEY-----"`.replace(/^\s+/gm, '')
-      await cell.waitForSuccess(cellExecutionContent)
+      await cell.waitForCellOutput(cellExecutionContent)
       expect(await cell.isSuccessfulExecution(cellExecutionContent)).toBe(true)
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
     })
 
     it('verify for multiline exports', async () => {
       const cell = await notebook.getCell('echo "PRIVATE_KEY: $PRIVATE_KEY"')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await browser.pause(1000)
       expect(await cell.isSuccessfulExecution()).toBe(true)
@@ -252,7 +251,7 @@ describe('Runme VS Code Extension', async () => {
 
     it('copy from result cell', async () => {
       const cell = await notebook.getCell('openssl rand -base64 32')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       const regex = /(?:[A-Za-z0-9+\/]{4}\\n?)*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)/
       expect(await cell.cellOutputExists('', OutputType.ShellOutput, regex)).toBe(true)
@@ -261,22 +260,22 @@ describe('Runme VS Code Extension', async () => {
     it('Curl an image', async () => {
       // eslint-disable-next-line max-len
       const cell = await notebook.getCell('curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2>/dev/null')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       await cell.focus()
-      await cell.waitForSuccess()
+      await cell.waitForCellOutput()
       const imageRegex = new RegExp('<img src="blob:vscode-webview:\/\/(.)+">')
       expect(await cell.cellOutputExists('', OutputType.Display, imageRegex)).toBe(true)
     })
 
     it('terminal dimensions', async () => {
       const cell = await notebook.getCell('echo Rows: $(tput lines)\necho Columns: $(tput cols)')
-      expect(await cell.areCommonStatusBarCommandsRendered()).toBe(true)
+      expect(await cell.isCommonStatusBarCommandsRendered()).toBe(true)
       await cell.run()
       const regex = /Rows:\s+(\d+)\s+Columns:\s+(\d+)/
       expect(regex.test(await cell.getTerminalText(false))).toBe(true)
-      await cell.waitForSuccess()
-      expect(await cell.areCommonStatusBarCommandsRendered([
+      await cell.waitForCellOutput()
+      expect(await cell.isCommonStatusBarCommandsRendered([
         StatusBarElements.OpenTerminal
       ])).toBe(true)
     })
