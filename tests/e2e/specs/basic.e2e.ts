@@ -97,6 +97,8 @@ describe('Runme VS Code Extension', async () => {
 
       expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([''])
 
+      browser.waitUntil(async () => !!(await cell.getStatusBar().getStopTaskCommand()))
+
       const stopTaskCmd = await cell.getStatusBar().getStopTaskCommand()
       expect(stopTaskCmd).toBeTruthy()
 
