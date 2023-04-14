@@ -1,31 +1,36 @@
-import { BasePage } from 'wdio-vscode-service'
+import { BasePage, IPageDecorator, PageDecorator } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 
-import { Cell } from './cell.page.js'
+import { NotebookCell } from './cell.page.js'
+import * as locatorMap from './locators.js'
+import {
+  runmeNotebook as runmeNotebookLocators
+} from './locators.js'
 
-export class Notebook extends BasePage<{}, { notebook: {} }> {
-    public locatorKey = 'notebook' as const
+export interface RunmeNotebook extends IPageDecorator<typeof locatorMap.runmeNotebook> { }
+
+@PageDecorator(runmeNotebookLocators)
+export class RunmeNotebook extends BasePage<typeof runmeNotebookLocators, typeof locatorMap> {
+    public locatorKey = 'runmeNotebook' as const
     #monacoEditor: WebdriverIO.Element | undefined
+
+    constructor() {
+      super(locatorMap)
+    }
 
     /**
      * Finds a cell by content
      * @param content {string} Keyword to use for searching a specific cell
      * @returns {Cell|undefined}
      */
-    async findCell(content: string): Promise<Cell | undefined> {
-        const rows = await $$('.cell-editor-container')
-        let row: WebdriverIO.Element | undefined
+    async findCell(content: string): Promise<NotebookCell | undefined> {
+        const rows = await this.codeCell$$
         for (const r of rows) {
             const text = await r.getText()
             if (text.includes(content)) {
-                row = r
-                break
+                return new NotebookCell(r as any, content)
             }
         }
-        if (!row) {
-            return
-        }
-        return new Cell(row, content)
     }
 
     /**
@@ -50,30 +55,29 @@ export class Notebook extends BasePage<{}, { notebook: {} }> {
      * @param [timeout=60000] {number} The maximum amount of time to wait until finding the cell (1 minute by default)
      * @returns Found Cell or Error
      */
-    async getCell(cellContent: string, timeout: number = 60000): Promise<Cell> {
+    async getCell(cellContent: string, timeout: number = 60000): Promise<NotebookCell> {
         if (!this.#monacoEditor) {
             throw new Error('Missing Monaco editor instance, did you forget to run focusDocument?')
         }
 
-        let cell: Cell | undefined
-        let searchCell = true
+        let cell: NotebookCell | undefined
         const startTime = new Date()
-        while (searchCell && !cell) {
+        while (!cell) {
             cell = await this.findCell(cellContent)
             if (!cell) {
                 const elapsedTime = (new Date().getTime() - startTime.getTime())
                 if (elapsedTime > timeout) {
-                    searchCell = false
+                  await browser.keys(Key.ArrowDown)
+                  break
                 }
-                await browser.keys(Key.ArrowDown)
             } else {
-                searchCell = false
+                break
             }
         }
         if (!cell) {
             throw new Error(`Could not find cell with content ${cellContent}`)
         }
+        cell.focus()
         return cell
     }
-
 }
