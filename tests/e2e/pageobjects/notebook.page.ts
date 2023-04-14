@@ -64,6 +64,8 @@ export class RunmeNotebook extends BasePage<typeof runmeNotebookLocators, typeof
         const startTime = new Date()
         while (!cell) {
             cell = await this.findCell(cellContent)
+            await (await browser.getWorkbench()).executeCommand('focus next cell editor')
+
             if (!cell) {
                 const elapsedTime = (new Date().getTime() - startTime.getTime())
                 if (elapsedTime > timeout) {
