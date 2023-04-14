@@ -15,12 +15,12 @@ import vscode, {
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 
-import { CellAnnotations, CellAnnotationsErrorResult, Serializer } from '../types'
+import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { SERVER_ADDRESS } from '../constants'
 import { getPortNumber } from '../utils/configuration'
 
-import executor from './executors'
+import type executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
@@ -98,10 +98,10 @@ export function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
     ?? undefined
 }
 
-export function getTerminalByCell(cell: vscode.NotebookCell) {
+export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
   return vscode.window.terminals.find((t) => {
     return getTerminalRunmeId(t) === `${cell.document.fileName}:${cell.index}`
-  })
+  }) as RunmeTerminal | undefined
 }
 
 export function resetEnv() {

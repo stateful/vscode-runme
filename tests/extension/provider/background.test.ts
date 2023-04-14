@@ -9,6 +9,7 @@ import {
 } from '../../../src/extension/provider/background'
 
 vi.mock('vscode')
+
 vi.mock('../../../src/extension/utils', async () => {
   return ({
     getTerminalByCell: vi.fn(),
@@ -140,21 +141,45 @@ describe('StopBackgroundTaskProvider', () => {
 
   it('dont show if cell was not yet executed', async () => {
     cell.metadata.background = 'true'
-    cell.executionSummary.success = false
+    vi.mocked(getTerminalByCell).mockReturnValueOnce(undefined)
     vi.mocked(getAnnotations).mockReturnValueOnce({
-      background: 'true'
+      background: true,
+      interactive: true
     } as any)
     const p = new StopBackgroundTaskProvider()
     expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
-    expect(cell.executionSummary.success).toBe(false)
+    expect(getAnnotations).toHaveBeenCalledOnce()
+    expect(getTerminalByCell).toHaveBeenCalledOnce()
+  })
+
+  it('dont show if cell has not finished executing', async () => {
+    cell.metadata.background = 'true'
+    vi.mocked(getTerminalByCell).mockReturnValueOnce({
+      runnerSession: {
+        hasExited: () => ({})
+      }
+    } as any)
+    vi.mocked(getAnnotations).mockReturnValueOnce({
+      background: true,
+      interactive: true
+    } as any)
+    const p = new StopBackgroundTaskProvider()
+    expect(await p.provideCellStatusBarItems(cell as any)).toBe(undefined)
+
+    expect(getAnnotations).toHaveBeenCalledOnce()
+    expect(getTerminalByCell).toHaveBeenCalledOnce()
   })
 
   it('return with button to close', async () => {
     cell.metadata.background = 'true'
-    cell.executionSummary.success = true
+    vi.mocked(getTerminalByCell).mockReturnValueOnce({
+      runnerSession: {
+        hasExited: () => undefined
+      }
+    } as any)
     vi.mocked(getAnnotations).mockReturnValueOnce({
       interactive: true,
-      background: 'true'
+      background: true
     } as any)
     const p = new StopBackgroundTaskProvider()
     const item = await p.provideCellStatusBarItems(cell)
@@ -163,5 +188,7 @@ describe('StopBackgroundTaskProvider', () => {
       alignment: 2,
       command: 'runme.stopBackgroundTask'
     })
+    expect(getAnnotations).toHaveBeenCalledOnce()
+    expect(getTerminalByCell).toHaveBeenCalledOnce()
   })
 })

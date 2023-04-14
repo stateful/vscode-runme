@@ -1,4 +1,5 @@
-import vscode, { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment } from 'vscode'
+import type vscode from 'vscode'
+import { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment, tasks } from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 
@@ -74,16 +75,39 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
     return item
   }
 }
-export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
+export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+  private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
+  onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
+
+  protected disposables: vscode.Disposable[] = []
+
+  constructor() {
+    this.disposables.push(
+      tasks.onDidEndTaskProcess(() => {
+        this._onDidChangeCellStatusBarItems.fire()
+      })
+    )
+
+    this.disposables.push(
+      window.onDidCloseTerminal(() => {
+        this._onDidChangeCellStatusBarItems.fire()
+      })
+    )
+  }
+
   provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
     const annotations = getAnnotations(cell)
 
     /**
      * don't show if not a background task & if not command currently running
      */
-    if (!annotations.background || !annotations.interactive || !cell.executionSummary?.success) {
+    if (!annotations.background || !annotations.interactive) {
       return
     }
+
+    const terminal = getTerminalByCell(cell)
+
+    if (!terminal || (terminal.runnerSession?.hasExited() !== undefined)) { return }
 
     const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',
@@ -91,5 +115,9 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
     )
     item.command = 'runme.stopBackgroundTask'
     return item
+  }
+
+  dispose() {
+    this.disposables.forEach(({ dispose }) => dispose())
   }
 }

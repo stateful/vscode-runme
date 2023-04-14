@@ -19,11 +19,12 @@ import { ClientMessages, OutputType } from '../../constants'
 import { CellOutputPayload, ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCmdShellSeq, prepareCmdSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
+import { openTerminal } from '../commands'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -47,6 +48,24 @@ export async function executeRunner(
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
+  const annotations = getAnnotations(exec.cell)
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
+
+  // enforce background tasks as singleton instanes
+  // to do this,
+  if (background) {
+    const terminal = getTerminalByCell(exec.cell)
+
+    if (terminal && terminal.runnerSession) {
+      if (!terminal.runnerSession.hasExited()) {
+        openTerminal(kernel, true, exec)(exec.cell)
+        return true
+      } else {
+        terminal.dispose()
+      }
+    }
+  }
+
   const cwd = path.dirname(runningCell.uri.fsPath)
 
   const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
@@ -63,9 +82,6 @@ export async function executeRunner(
   if (commands.length === 0) {
     commands.push('')
   }
-
-  const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
 
   let execution: RunProgramExecution = {
     type: 'commands', commands
@@ -255,6 +271,22 @@ export async function executeRunner(
       }
     })
 
+    tasks.onDidStartTaskProcess((e) => {
+      const taskId = (e.execution as any)['_id']
+      const executionId = (execution as any)['_id']
+
+      if (
+        taskId !== executionId
+      ) {
+        return
+      }
+
+      const terminal = getTerminalByCell(exec.cell)
+      if (!terminal) { return }
+
+      terminal.runnerSession = program
+    })
+
     tasks.onDidEndTaskProcess((e) => {
       const taskId = (e.execution as any)['_id']
       const executionId = (execution as any)['_id']
@@ -318,10 +350,6 @@ export async function executeRunner(
     if (background && interactive) {
       setTimeout(
         () => {
-          if (closeTerminalOnSuccess) {
-            closeTerminalByEnvID(RUNME_ID)
-          }
-
           resolve(true)
         },
         BACKGROUND_TASK_HIDE_TIMEOUT

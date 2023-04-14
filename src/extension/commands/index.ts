@@ -3,7 +3,7 @@ import os from 'node:os'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext, NotebookCellExecution
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -17,7 +17,7 @@ function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
-export function openTerminal (kernel: Kernel, grpcRunner: boolean) {
+export function openTerminal (kernel: Kernel, grpcRunner: boolean, existingExecution?: NotebookCellExecution) {
   return async function (cell: NotebookCell) {
     const terminal = getTerminalByCell(cell)
     if (!terminal) {
@@ -28,18 +28,28 @@ export function openTerminal (kernel: Kernel, grpcRunner: boolean) {
       const terminalOutput = kernel.getCellTerminalOutputPayload(cell)
 
       if (terminalOutput) {
-        let exec
-        try {
-          exec = await kernel.createCellExecution(cell)
-          exec.start(Date.now())
-
+        const runOnExec = async (exec: NotebookCellExecution) => {
           await replaceOutput(exec, terminalOutput)
-        } catch (e: any) {
-          window.showErrorMessage(e.message)
-        } finally {
-          exec?.end(true)
-          return
         }
+
+        if (!existingExecution) {
+          let exec: NotebookCellExecution|undefined
+          try {
+            exec = await kernel.createCellExecution(cell)
+            exec.start(Date.now())
+
+            await runOnExec(exec)
+          } catch (e: any) {
+            window.showErrorMessage(e.message)
+          } finally {
+            exec?.end(true)
+            return
+          }
+        } else {
+          await runOnExec(existingExecution)
+        }
+
+        return
       }
     }
 
