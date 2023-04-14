@@ -54,7 +54,6 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
         await runButton.click()
 
         await new Promise(cb => setTimeout(cb, 100))
-        // await runButton.$('.codicon-notebook-stop').waitForExist()
 
         if (waitForFinish) {
           await runButton.$('.codicon-notebook-execute').waitForExist()
@@ -68,36 +67,10 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
     async openTerminal() {
       const terminalButton = await this.getStatusBar().getCommand(StatusBarElements.OpenTerminal)
 
-      if (!terminalButton?.isExisting()) {
-        throw new Error('Could not find a terminal to open')
-      }
+      await terminalButton.isClickable()
 
       await terminalButton.click()
     }
-
-    /**
-     * Check if there is an associated success status next to the code cell.
-     * @returns Promise<boolean>
-     */
-    // async isSuccessfulExecution(): Promise<boolean> {
-    //     const successRows = await browser.$$('.codicon-notebook-state-success')
-    //     let cellExists = false
-    //     for await (const row of successRows) {
-    //         const executionRow = await row
-    //             .parentElement()
-    //             .parentElement()
-    //             .parentElement()
-    //             .parentElement()
-    //             .parentElement()
-    //         const cellEditor = await executionRow.$('.cell-editor-container')
-    //         const text = await cellEditor.getText()
-    //         if (text === this.#cellText) {
-    //             cellExists = true
-    //             break
-    //         }
-    //     }
-    //     return cellExists
-    // }
 
     /**
      * Checks if the specified output (a string or regular expression) is rendered
@@ -125,19 +98,10 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
             }
             const text = !OutputType.Display ? await row.getText() : await row.getHTML(false)
             res.push(text)
-            // if (regex) {
-            //     outputExists = regex.test(text)
-            // } else if (text.includes(expectedOutput)) {
-            //     outputExists = true
-            // }
-            // if (outputExists) {
-            //     break
-            // }
         }
         await browser.switchToParentFrame()
         await browser.switchToParentFrame()
         return res
-        // return outputExists
     }
 
     async getContainer() {
