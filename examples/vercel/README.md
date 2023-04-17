@@ -61,7 +61,7 @@ vercel team switch
 
 go on to list projects:
 
-```sh { interactive=false }
+```sh { interactive=true }
 vercel projects list 2>&1 | tail -n +5
 ```
 

@@ -205,19 +205,26 @@ export async function executeRunner(
     program.registerTerminalWindow('notebook')
     await program.setActiveTerminalWindow('notebook')
   } else {
+    const isVercel = isVercelDeployScript(script)
     const output: Buffer[] = []
+    let item: NotebookCellOutputItem
+
+    const _appendOutput = () => {
+      replaceOutput(exec, [new NotebookCellOutput([item])])
+    }
 
     // adapted from `shellExecutor` in `shell.ts`
-    const handleOutput = async (data: Uint8Array) => {
+    const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
-      let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+      item = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
-      if (isVercelDeployScript(script)) {
+      if (isVercel) {
         item = await handleVercelDeployOutput(
           output, exec.cell.index, vercelProd, environmentManager
         )
+        _appendOutput()
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
         item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
           type: OutputType.outputItems,
@@ -227,12 +234,13 @@ export async function executeRunner(
           }
         }, OutputType.outputItems)
       }
-
-      replaceOutput(exec, [new NotebookCellOutput([item])])
     }
 
-    program.onStdoutRaw(handleOutput)
-    program.onStderrRaw(handleOutput)
+    program.onStdoutRaw(_handleOutput)
+    program.onStderrRaw(_handleOutput)
+    if (!isVercel) {
+      program.onDidClose(_appendOutput)
+    }
   }
 
   if (!interactive) {
