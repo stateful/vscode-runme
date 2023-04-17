@@ -14,6 +14,7 @@ import {
   ExtensionContext,
   NotebookRendererMessaging,
 } from 'vscode'
+import { Subject, debounceTime } from 'rxjs'
 
 import { ClientMessages, OutputType } from '../../constants'
 import { CellOutputPayload, ClientMessage } from '../../types'
@@ -205,26 +206,20 @@ export async function executeRunner(
     program.registerTerminalWindow('notebook')
     await program.setActiveTerminalWindow('notebook')
   } else {
-    const isVercel = isVercelDeployScript(script)
     const output: Buffer[] = []
-    let item: NotebookCellOutputItem
-
-    const _appendOutput = () => {
-      replaceOutput(exec, [new NotebookCellOutput([item])])
-    }
+    const outputItems$ = new Subject<NotebookCellOutputItem>()
 
     // adapted from `shellExecutor` in `shell.ts`
     const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
-      item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+      let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
-      if (isVercel) {
+      if (isVercelDeployScript(script)) {
         item = await handleVercelDeployOutput(
           output, exec.cell.index, vercelProd, environmentManager
         )
-        _appendOutput()
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
         item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
           type: OutputType.outputItems,
@@ -234,13 +229,20 @@ export async function executeRunner(
           }
         }, OutputType.outputItems)
       }
+
+      outputItems$.next(item)
     }
+
+    // debounce by 0.5s because human preception likely isn't as fast
+    const sub = outputItems$.pipe(debounceTime(500)).subscribe((item) =>
+      replaceOutput(exec, [new NotebookCellOutput([item])])
+    )
+
+    context.subscriptions.push({ dispose: () => sub.unsubscribe() })
 
     program.onStdoutRaw(_handleOutput)
     program.onStderrRaw(_handleOutput)
-    if (!isVercel) {
-      program.onDidClose(_appendOutput)
-    }
+    program.onDidClose(() => outputItems$.complete())
   }
 
   if (!interactive) {
