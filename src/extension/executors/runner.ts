@@ -14,6 +14,7 @@ import {
   ExtensionContext,
   NotebookRendererMessaging,
 } from 'vscode'
+import { Subject, debounceTime } from 'rxjs'
 
 import { ClientMessages, OutputType } from '../../constants'
 import { CellOutputPayload, ClientMessage } from '../../types'
@@ -206,9 +207,10 @@ export async function executeRunner(
     await program.setActiveTerminalWindow('notebook')
   } else {
     const output: Buffer[] = []
+    const outputItems$ = new Subject<NotebookCellOutputItem>()
 
     // adapted from `shellExecutor` in `shell.ts`
-    const handleOutput = async (data: Uint8Array) => {
+    const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
       let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
@@ -228,11 +230,19 @@ export async function executeRunner(
         }, OutputType.outputItems)
       }
 
-      replaceOutput(exec, [new NotebookCellOutput([item])])
+      outputItems$.next(item)
     }
 
-    program.onStdoutRaw(handleOutput)
-    program.onStderrRaw(handleOutput)
+    // debounce by 0.5s because human preception likely isn't as fast
+    const sub = outputItems$.pipe(debounceTime(500)).subscribe((item) =>
+      replaceOutput(exec, [new NotebookCellOutput([item])])
+    )
+
+    context.subscriptions.push({ dispose: () => sub.unsubscribe() })
+
+    program.onStdoutRaw(_handleOutput)
+    program.onStderrRaw(_handleOutput)
+    program.onDidClose(() => outputItems$.complete())
   }
 
   if (!interactive) {
