@@ -77,7 +77,7 @@ export function runCLICommand(
   server: RunmeServer,
   kernel: Kernel
 ) {
- return async function(cell: NotebookCell) {
+ return async function(cell: { metadata?: any, document: TextDocument }) {
     const cwd = path.dirname(cell.document.uri.fsPath)
 
     const args = [
@@ -104,7 +104,7 @@ export function runCLICommand(
       }
     }
 
-    const annotations = getAnnotations(cell)
+    const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
       name: `CLI: ${annotations.name}`,
       cwd,
