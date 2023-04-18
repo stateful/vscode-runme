@@ -11,13 +11,18 @@ import {
   languages,
   commands,
   workspace,
-  window
+  window,
+  tasks
 } from 'vscode'
 
-// import { Kernel } from '../kernel'
 import { SerializerBase } from '../serializer'
 import { Serializer } from '../../types'
 import type { runCLICommand } from '../commands'
+import { IRunner } from '../runner'
+import { Kernel } from '../kernel'
+import { getAnnotations } from '../utils'
+
+import { RunmeTaskProvider } from './runmeTask'
 
 const ActionCommand = 'runme.codelens.action' as const
 
@@ -46,7 +51,9 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
   constructor(
     protected serializer: SerializerBase,
-    protected runCLI: ReturnType<typeof runCLICommand>
+    protected runCLI: ReturnType<typeof runCLICommand>,
+    protected runner?: IRunner,
+    protected kernel?: Kernel
   ) {
     this.register(
       languages.registerCodeLensProvider('*', this)
@@ -61,6 +68,10 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
+    if (!this.runner) {
+      return []
+    }
+
     const contentBytes = Buffer.from(document.getText())
     const { cells } = await this.serializer['reviveNotebook'](contentBytes, token)
 
@@ -147,7 +158,18 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       } break
 
       case 'run': {
-        await this.runCLI({ metadata: cell.metadata, document })
+        // await this.runCLI({ metadata: cell.metadata, document })
+
+        const task = await RunmeTaskProvider.getRunmeTask(
+          document.uri.fsPath,
+          getAnnotations(cell.metadata).name,
+          cell,
+          {},
+          this.runner!,
+          this.kernel?.getRunnerEnvironment()
+        )
+
+        await tasks.executeTask(task)
       } break
     }
   }

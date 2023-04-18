@@ -71,7 +71,7 @@ export class RunmeExtension {
 
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
-    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI)
+    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, runner, kernel)
 
     context.subscriptions.push(
       kernel,

@@ -92,7 +92,7 @@ export class RunmeTaskProvider implements TaskProvider {
   static async getRunmeTask (
     filePath: string,
     command: string,
-    cell: NotebookCell|NotebookCellData,
+    cell: NotebookCell|NotebookCellData|Serializer.Cell,
     options: TaskOptions = {},
     runner: IRunner,
     environment?: IRunnerEnvironment,
@@ -130,6 +130,10 @@ export class RunmeTaskProvider implements TaskProvider {
       source,
       new CustomExecution(async () => {
         const program = await runner.createProgramSession(runOpts)
+
+        program.registerTerminalWindow('vscode')
+        program.setActiveTerminalWindow('vscode')
+
         return program
       })
     )
