@@ -16,11 +16,12 @@ import {
 } from 'vscode'
 
 import { SerializerBase } from '../serializer'
-import { Serializer } from '../../types'
 import type { runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
+import { Serializer } from '../../types'
+import { getCodeLensEnabled } from '../../utils/configuration'
 
 import { RunmeTaskProvider } from './runmeTask'
 
@@ -64,11 +65,17 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     this.register(
       commands.registerCommand('runme.codelens.action', cmd),
     )
+
+    this.register(
+      workspace.onDidChangeConfiguration(() =>
+        this._onDidChangeCodeLenses.fire()
+      )
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
-    if (!this.runner) {
+    if (!this.runner || !getCodeLensEnabled()) {
       return []
     }
 
@@ -153,13 +160,12 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           )
         )
 
+        // to execute the command:
         // await commands.executeCommand('notebook.cell.execute')
         // await commands.executeCommand('notebook.cell.focusInOutput')
       } break
 
       case 'run': {
-        // await this.runCLI({ metadata: cell.metadata, document })
-
         const task = await RunmeTaskProvider.getRunmeTask(
           document.uri.fsPath,
           getAnnotations(cell.metadata).name,

@@ -9,6 +9,7 @@ import { getAnnotations, isWindows } from '../extension/utils'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
+const CODELENS_SECTION_NAME= 'runme.codelens'
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
@@ -42,6 +43,9 @@ const configurationSchema = {
         fontSize: z.number().optional(),
         fontFamily: z.string().optional(),
         rows: z.number().int()
+    },
+    codelens: {
+      enable: z.boolean().default(false)
     }
 }
 
@@ -63,6 +67,16 @@ const getRunmeTerminalConfigurationValue = <T>(configName: NotebookTerminalValue
         return parseResult.data as T
     }
 return defaultValue
+}
+
+const getCodeLensConfigurationValue = <T>(configName: keyof typeof configurationSchema.codelens, defaultValue: T) => {
+  const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+      return parseResult.data as T
+  }
+  return defaultValue
 }
 
 const getPortNumber = (): number => {
@@ -130,6 +144,10 @@ const getNotebookTerminalRows = (): number => {
   return getRunmeTerminalConfigurationValue<number>('rows', 10)
 }
 
+const getCodeLensEnabled = (): boolean => {
+  return getCodeLensConfigurationValue<boolean>('enable', true)
+}
+
 export {
     getPortNumber,
     getBinaryPath,
@@ -142,4 +160,5 @@ export {
     getNotebookTerminalFontFamily,
     getNotebookTerminalFontSize,
     getNotebookTerminalRows,
+    getCodeLensEnabled,
 }
