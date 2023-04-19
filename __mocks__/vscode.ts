@@ -31,6 +31,7 @@ export class Uri extends URI {
 
 export const workspace = {
   getConfiguration: vi.fn().mockReturnValue(new Map()),
+  onDidChangeConfiguration: vi.fn(),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
   openTextDocument: vi.fn().mockReturnValue({
     getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
@@ -223,4 +224,8 @@ export class EventEmitter<T> {
   }
 
   dispose() { }
+}
+
+export const languages = {
+  registerCodeLensProvider: vi.fn(),
 }
