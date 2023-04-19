@@ -314,12 +314,16 @@ jobs:
       - name: Publish to Open VSX Registry Linux X86 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
+        id: linux_x86
         continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
           extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@linux-x64.vsix
+      - name: Echo published file
+        run: |
+          echo 'Published file '${{ steps.linux_x86.outputs.vsixPath }}'
       # Linux arm64
       - name: Publish to Open VSX Registry Linux arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
