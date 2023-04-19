@@ -316,7 +316,6 @@ jobs:
         with:
           script: |
               const { default: publish } = await import('${{ github.workspace }}/.github/scripts/openvsxPublish.js')
-              const openVSXToken 
               await publish('linux-x64')
 
       # Linux X86
