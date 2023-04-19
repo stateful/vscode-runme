@@ -57,7 +57,12 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     protected kernel?: Kernel
   ) {
     this.register(
-      languages.registerCodeLensProvider('*', this)
+      languages.registerCodeLensProvider(
+        [
+          { language: 'markdown', scheme: 'file' },
+          { language: 'mdx', scheme: 'file' },
+        ]
+      , this)
     )
 
     const cmd: ActionCallback = this.codeLensActionCallback.bind(this)
