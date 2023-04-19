@@ -504,6 +504,7 @@
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "husky": "^8.0.3",
     "npm-run-all": "^4.1.5",
+    "ovsx": "^0.8.0",
     "semver": "^7.3.8",
     "tar-fs": "^2.1.1",
     "ts-loader": "^9.4.2",
@@ -518,8 +519,8 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.3-20230411173542-ee7abafe0a79.1",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.8.2-20230310150327-f6c75491ea13.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.3-20230411173542-ee7abafe0a79.1",
     "@protobuf-ts/grpc-transport": "^2.8.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",

@@ -309,6 +309,15 @@ jobs:
     
 
       # VSX Registry (only Stable releases)
+      - name: Publish to Open VSX (via Script)
+        uses: actions/github-script@v6
+        env:
+          pat: ${{ secrets.OPEN_VSX_TOKEN }}
+        with:
+          script: |
+              const { default: publish } = await import('${{ github.workspace }}/.github/scripts/openvsxPublish.js')
+              const openVSXToken 
+              await publish('linux-x64')
 
       # Linux X86
       - name: Publish to Open VSX Registry Linux X86 (Stable)
