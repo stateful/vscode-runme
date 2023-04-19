@@ -18,11 +18,11 @@ import {
   NotebookCellData,
 } from 'vscode'
 
-import { getAnnotations, processEnviron } from '../utils'
+import { getAnnotations, prepareCmdSeq, processEnviron } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
-import { getShellPath } from '../executors/utils'
+import { getShellPath, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -106,11 +106,14 @@ export class RunmeTaskProvider implements TaskProvider {
     const cwd = options.cwd || path.dirname(filePath)
     const isBackground = options.isBackground || background
 
+    const cellContent = 'value' in cell ? cell.value : cell.document.getText()
+    const commands = await parseCommandSeq(cellContent, prepareCmdSeq)
+
     const runOpts: RunProgramOptions = {
       programName: getShellPath() ?? 'sh',
       exec: {
-        type: 'script',
-        script: 'value' in cell ? cell.value : cell.document.getText(),
+        type: 'commands',
+        commands: commands ?? [''],
       },
       cwd,
       environment,
