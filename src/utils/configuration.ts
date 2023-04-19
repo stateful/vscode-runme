@@ -45,7 +45,7 @@ const configurationSchema = {
         rows: z.number().int()
     },
     codelens: {
-      enable: z.boolean().default(false)
+      enable: z.boolean().default(true)
     }
 }
 

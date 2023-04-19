@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { vi } from 'vitest'
 import { URI } from 'vscode-uri'
-import type { Disposable } from 'vscode'
+import type { Command, Disposable } from 'vscode'
 
 
 export const notebooks = {
@@ -228,4 +228,32 @@ export class EventEmitter<T> {
 
 export const languages = {
   registerCodeLensProvider: vi.fn(),
+}
+
+export class Position {
+  constructor(
+    public line: number,
+    public character: number
+  ) { }
+
+  with(line?: number, character?: number): Position {
+    return new Position(
+      line ?? this.line,
+      character ?? this.character,
+    )
+  }
+}
+
+export class Range {
+  constructor(
+    public start: Position,
+    public end: Position,
+  ) { }
+}
+
+export class CodeLens {
+  constructor(
+    public range: Range,
+    public command?: Command
+  ) { }
 }

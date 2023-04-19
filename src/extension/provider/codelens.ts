@@ -25,7 +25,7 @@ import { getCodeLensEnabled } from '../../utils/configuration'
 
 import { RunmeTaskProvider } from './runmeTask'
 
-const ActionCommand = 'runme.codelens.action' as const
+export const ActionCommand = 'runme.codelens.action' as const
 
 const ActionTypes = [
   'run',
@@ -107,7 +107,6 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           case 'run': {
             return new CodeLens(range, {
                 title: '$(play) Run Block',
-                tooltip: 'Test Tooltip',
                 command: ActionCommand,
                 arguments: args,
               })
@@ -116,7 +115,6 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           case 'open': {
             return new CodeLens(range, {
                 title: '$(notebook) Open in Notebook',
-                tooltip: 'Test Tooltip',
                 command: ActionCommand,
                 arguments: args,
               })

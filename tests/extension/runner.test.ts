@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter } from 'vscode'
+import { EventEmitter, NotebookCellKind, Position } from 'vscode'
 
 import {
   GrpcRunner,
@@ -11,6 +11,7 @@ import {
   RunProgramOptions
 } from '../../src/extension/runner'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
+import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
 
 
 vi.mock('../../src/extension/utils', () => ({
@@ -455,6 +456,63 @@ suite('grpc Runner', () => {
 
       expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
     })
+  })
+})
+
+suite('RunmeCodeLensProvider', () => {
+  test('returns nothing without runner', async () => {
+    const provider = new RunmeCodeLensProvider({} as any, vi.fn())
+
+    const lenses = await provider.provideCodeLenses({} as any, {} as any)
+
+    expect(lenses).toStrictEqual([])
+  })
+
+  test('returns serializer result normally', async () => {
+    const { runner } = createGrpcRunner()
+
+    const serializer = {
+      reviveNotebook: vi.fn(async () => ({
+        cells: [
+          {
+            kind: NotebookCellKind.Code,
+            textRange: {
+              start: 2,
+              end: 3,
+            }
+          }
+        ]
+      }))
+    } as any
+
+    const provider = new RunmeCodeLensProvider(
+      serializer,
+      vi.fn(),
+      runner
+    )
+
+    const lenses = await provider.provideCodeLenses(
+      {
+        getText: vi.fn().mockReturnValue(''),
+        positionAt: vi.fn((c) => new Position(1, c)),
+      } as any,
+      {} as any
+    )
+
+    expect(serializer.reviveNotebook).toBeCalledTimes(1)
+
+    expect(lenses).toHaveLength(2)
+
+    for (const lens of lenses) {
+      expect(lens.range.start.character).toStrictEqual(2)
+      expect(lens.range.end.character).toStrictEqual(3)
+
+      expect(lens.command).toBeTruthy()
+
+      expect(lens.command!.command).toStrictEqual(ActionCommand)
+
+      expect(lens.command!.tooltip).toBeUndefined()
+    }
   })
 })
 
