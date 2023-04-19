@@ -319,7 +319,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-x64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@linux-x64.vsix
       # Linux arm64
       - name: Publish to Open VSX Registry Linux arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
@@ -329,7 +329,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-arm64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@linux-arm64.vsix
       # MacOS x86_64
       - name: Publish to Open VSX Registry MacOS x86_64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
@@ -339,7 +339,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-x64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@darwin-x64.vsix
       # MacOS arm64
       - name: Publish to Open VSX Registry MacOS arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
@@ -349,7 +349,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-arm64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@darwin-arm64.vsix
       # Windows x64
       - name: Publish to Open VSX Registry Windows x64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
@@ -359,7 +359,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-x64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@win32-x64.vsix
       # Windows arm64
       - name: Publish to Open VSX Registry Windows arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
@@ -369,7 +369,7 @@ jobs:
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-arm64-${{ env.RELEASE_VERSION }}.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@win32-arm64.vsix
 
       # Release
       - name: Push Tags
