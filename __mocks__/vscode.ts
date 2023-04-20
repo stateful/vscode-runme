@@ -98,7 +98,8 @@ export const window = {
 export const tasks = {
   registerTaskProvider: vi.fn(),
   onDidEndTaskProcess: vi.fn(),
-  onDidStartTaskProcess: vi.fn()
+  onDidStartTaskProcess: vi.fn(),
+  executeTask: vi.fn()
 }
 
 export const commands = {

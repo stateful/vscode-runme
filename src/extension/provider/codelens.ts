@@ -103,6 +103,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       return ActionTypes.map((v) => {
         const args: ActionArguments = [document, token, cell, i, v]
 
+        /* c8 ignore start */
         switch (v) {
           case 'run': {
             return new CodeLens(range, {
@@ -120,6 +121,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
               })
           } break
         }
+        /* c8 ignore stop */
       })
     })
   }
