@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { vi } from 'vitest'
 import { URI } from 'vscode-uri'
-import type { Disposable } from 'vscode'
+import type { Command, Disposable } from 'vscode'
 
 
 export const notebooks = {
@@ -31,6 +31,7 @@ export class Uri extends URI {
 
 export const workspace = {
   getConfiguration: vi.fn().mockReturnValue(new Map()),
+  onDidChangeConfiguration: vi.fn(),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
   openTextDocument: vi.fn().mockReturnValue({
     getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
@@ -97,7 +98,8 @@ export const window = {
 export const tasks = {
   registerTaskProvider: vi.fn(),
   onDidEndTaskProcess: vi.fn(),
-  onDidStartTaskProcess: vi.fn()
+  onDidStartTaskProcess: vi.fn(),
+  executeTask: vi.fn()
 }
 
 export const commands = {
@@ -223,4 +225,36 @@ export class EventEmitter<T> {
   }
 
   dispose() { }
+}
+
+export const languages = {
+  registerCodeLensProvider: vi.fn(),
+}
+
+export class Position {
+  constructor(
+    public line: number,
+    public character: number
+  ) { }
+
+  with(line?: number, character?: number): Position {
+    return new Position(
+      line ?? this.line,
+      character ?? this.character,
+    )
+  }
+}
+
+export class Range {
+  constructor(
+    public start: Position,
+    public end: Position,
+  ) { }
+}
+
+export class CodeLens {
+  constructor(
+    public range: Range,
+    public command?: Command
+  ) { }
 }

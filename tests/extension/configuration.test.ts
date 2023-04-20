@@ -11,7 +11,8 @@ import {
   getTLSDir,
   DEFAULT_TLS_DIR,
   getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize
+  getNotebookTerminalFontSize,
+  getCodeLensEnabled
 } from '../../src/utils/configuration'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
@@ -140,6 +141,12 @@ suite('Configuration', () => {
       expect(
         getServerConfigurationValue<string | undefined>('binaryPath', undefined)
       ).toStrictEqual('/binary/path')
+    })
+
+    test('getCodeLensEnabled should return true by default', () => {
+      expect(
+        getCodeLensEnabled()
+      ).toStrictEqual(true)
     })
 
     suite('posix', () => {

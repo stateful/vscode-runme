@@ -11,16 +11,19 @@ export namespace Serializer {
     metadata?: Metadata
   }
 
+  type TextPosition = number
+
+  export type TextRange = {
+    start: TextPosition
+    end: TextPosition
+  }
+
   export type Cell = {
     metadata?: Metadata
     languageId?: string
     value: string
-    kind: NotebookCellKind.Markup
-  } | {
-    metadata?: Metadata
-    languageId?: string
-    value: string
-    kind: NotebookCellKind.Code
+    textRange?: Serializer.TextRange
+    kind: NotebookCellKind.Markup | NotebookCellKind.Code
   }
 
   export interface Wasm {

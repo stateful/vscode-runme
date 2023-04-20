@@ -135,6 +135,10 @@
         "title": "Try Runme",
         "category": "Runme",
         "description": "Walk through some interactive notebook examples."
+      },
+      {
+        "command": "runme.codelens.action",
+        "title": "Runme CodeLens Action"
       }
     ],
     "menus": {
@@ -165,6 +169,10 @@
         },
         {
           "command": "runme.expandTreeView",
+          "when": "false"
+        },
+        {
+          "command": "runme.codelens.action",
           "when": "false"
         }
       ],
@@ -351,6 +359,11 @@
             "type": "integer",
             "default": 10,
             "markdownDescription": "Default number of rows in notebook terminal"
+          },
+          "runme.codelens.enable": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Enable CodeLens support in markdown documents"
           }
         }
       }

@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter } from 'vscode'
+import { EventEmitter, NotebookCellKind, Position, tasks, commands } from 'vscode'
 
 import {
   GrpcRunner,
@@ -11,15 +11,19 @@ import {
   RunProgramOptions
 } from '../../src/extension/runner'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
-
+import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
+import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
 
 vi.mock('../../src/extension/utils', () => ({
-  getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863')
+  getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
+  getAnnotations: vi.fn().mockReturnValue({ })
 }))
 
 vi.mock('vscode', async () => ({
   ...await import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
 }))
+
+vi.mock('vscode-telemetry')
 
 vi.mock('@protobuf-ts/grpc-transport', () => ({
   GrpcTransport: class {
@@ -104,6 +108,14 @@ class MockedRunmeServer {
   onTransportReady = this._onTransportReady.event
   onClose = this._onClose.event
 }
+
+vi.mock('../../src/extension/provider/runmeTask', async () => {
+  return {
+    RunmeTaskProvider: {
+      getRunmeTask: vi.fn().mockResolvedValue({}),
+    }
+  }
+})
 
 beforeEach(() => {
   resetId()
@@ -455,6 +467,89 @@ suite('grpc Runner', () => {
 
       expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
     })
+  })
+})
+
+suite('RunmeCodeLensProvider', () => {
+  test('returns nothing without runner', async () => {
+    const provider = new RunmeCodeLensProvider({} as any, vi.fn())
+
+    const lenses = await provider.provideCodeLenses({} as any, {} as any)
+
+    expect(lenses).toStrictEqual([])
+  })
+
+  test('returns serializer result normally', async () => {
+    const serializer = {
+      reviveNotebook: vi.fn(async () => ({
+        cells: [
+          {
+            kind: NotebookCellKind.Code,
+            textRange: {
+              start: 2,
+              end: 3,
+            }
+          }
+        ]
+      }))
+    } as any
+
+    const provider = new RunmeCodeLensProvider(
+      serializer,
+      vi.fn(),
+      {} as any
+    )
+
+    const lenses = await provider.provideCodeLenses(
+      {
+        getText: vi.fn().mockReturnValue(''),
+        positionAt: vi.fn((c) => new Position(1, c)),
+      } as any,
+      {} as any
+    )
+
+    expect(serializer.reviveNotebook).toBeCalledTimes(1)
+
+    expect(lenses).toHaveLength(2)
+
+    for (const lens of lenses) {
+      expect(lens.range.start.character).toStrictEqual(2)
+      expect(lens.range.end.character).toStrictEqual(3)
+
+      expect(lens.command).toBeTruthy()
+
+      expect(lens.command!.command).toStrictEqual(ActionCommand)
+
+      expect(lens.command!.tooltip).toBeUndefined()
+    }
+  })
+
+  test('action callback for run command', async () => {
+    const provider = new RunmeCodeLensProvider(
+      {} as any,
+      vi.fn(),
+      {} as any
+    )
+
+    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, 0, 'run')
+
+    expect(RunmeTaskProvider.getRunmeTask).toBeCalledTimes(1)
+
+    expect(tasks.executeTask).toBeCalledTimes(1)
+    expect(tasks.executeTask).toBeCalledWith({})
+  })
+
+  test('action callback for open command', async () => {
+    const provider = new RunmeCodeLensProvider(
+      {} as any,
+      vi.fn(),
+      {} as any
+    )
+
+    const document = { uri: { fsPath: '' } }
+    await provider['codeLensActionCallback'](document as any, {} as any, {} as any, 0, 'open')
+
+    expect(commands.executeCommand).toBeCalledWith('vscode.openWith', document.uri, 'runme')
   })
 })
 

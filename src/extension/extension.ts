@@ -28,6 +28,7 @@ import { BOOTFILE } from './constants'
 import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
+import { RunmeCodeLensProvider } from './provider/codelens'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -68,6 +69,10 @@ export class RunmeExtension {
     const winSurvey = new survey.WinDefaultShell(context)
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
+    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+
+    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, runner, kernel)
+
     context.subscriptions.push(
       kernel,
       serializer,
@@ -91,12 +96,14 @@ export class RunmeExtension {
 
       stopBackgroundTaskProvider,
 
+      codeLensProvider,
+
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openTerminal(kernel, false)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
-        runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+        runCLI
       ),
       RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
