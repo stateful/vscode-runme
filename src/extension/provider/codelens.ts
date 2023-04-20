@@ -11,7 +11,6 @@ import {
   languages,
   commands,
   workspace,
-  window,
   tasks
 } from 'vscode'
 
@@ -149,9 +148,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   ) {
     switch (action) {
       case 'open': {
-        const notebook = await workspace.openNotebookDocument(document.uri)
-
-        await window.showNotebookDocument(notebook)
+        await commands.executeCommand('vscode.openWith', document.uri, Kernel.type)
 
         // TODO(mxs): surely there's a better way to do this
         // probably we need to bring this logic to `workspace.onDidOpenNotebookDocument`
