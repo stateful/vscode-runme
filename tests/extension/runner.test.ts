@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter, NotebookCellKind, Position, tasks, workspace, window } from 'vscode'
+import { EventEmitter, NotebookCellKind, Position, tasks, commands } from 'vscode'
 
 import {
   GrpcRunner,
@@ -22,6 +22,8 @@ vi.mock('../../src/extension/utils', () => ({
 vi.mock('vscode', async () => ({
   ...await import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
 }))
+
+vi.mock('vscode-telemetry')
 
 vi.mock('@protobuf-ts/grpc-transport', () => ({
   GrpcTransport: class {
@@ -547,8 +549,7 @@ suite('RunmeCodeLensProvider', () => {
     const document = { uri: { fsPath: '' } }
     await provider['codeLensActionCallback'](document as any, {} as any, {} as any, 0, 'open')
 
-    expect(workspace.openNotebookDocument).toBeCalledWith(document.uri)
-    expect(window.showNotebookDocument).toBeCalledWith({ uri: 'new notebook uri' })
+    expect(commands.executeCommand).toBeCalledWith('vscode.openWith', document.uri, 'runme')
   })
 })
 
