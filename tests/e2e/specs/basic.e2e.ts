@@ -67,7 +67,7 @@ describe('Runme VS Code Extension', async () => {
 
     beforeEach(async () => {
       const workbench = await browser.getWorkbench()
-      await browser.pause(1000)
+      await browser.pause(1500)
       await clearAllOutputs(workbench)
       await tryExecuteCommand(workbench, 'kill all terminals')
       await tryExecuteCommand(workbench, 'clear all notifications')
@@ -170,32 +170,42 @@ describe('Runme VS Code Extension', async () => {
       }
     })
 
-    // TODO: fails for some very strange reason
-    // it.skip('multiple lines environment variable', async () => {
-    //   const workbench = await browser.getWorkbench()
+    // note: can be inconsistent
+    it('multiple lines environment variable', async () => {
+      {
+        const cell = await notebook.getCell([
+          'echo "Auth token for service foo"',
+          'export SERVICE_FOO_TOKEN="foobar"',
+          'echo "Auth token for service bar"',
+          'export SERVICE_BAR_TOKEN="barfoo"'
+        ].join('\n'))
 
-    //   const cell = await notebook.getCell([
-    //     'echo "Auth token for service foo"',
-    //     'export SERVICE_FOO_TOKEN="foobar"',
-    //     'echo "Auth token for service bar"',
-    //     'export SERVICE_BAR_TOKEN="barfoo"'
-    //   ].join('\n'))
+        await cell.run(false)
 
-    //   await cell.run(false)
+        await browser.pause(1000)
+        await browser.keys(Key.Enter)
 
-    //   await waitForInputBox(workbench)
-    //   await browser.keys(Key.Enter)
+        await browser.pause(1000)
+        await browser.keys(Key.Enter)
 
-    //   await waitForInputBox(workbench)
-    //   await browser.keys(Key.Enter)
+        await cell.getStatusBar().waitForSuccess()
 
-    //   const text = await getTerminalText(workbench)
+        await cell.focus()
+      }
 
-    //   expect(text).toMatch([
-    //     'Auth token for service foo',
-    //     'Auth token for service bar'
-    //   ].join('\n'))
-    // })
+      {
+        const cell = await notebook.getCell('echo "SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN"')
+
+        await cell.run()
+
+        const outputs = await cell.getCellOutput(OutputType.ShellOutput)
+        expect(outputs).toHaveLength(1)
+        expect(outputs[0]).toStrictEqual([
+          'SERVICE_FOO_TOKEN: foobar',
+          'SERVICE_BAR_TOKEN: barfoo'
+        ].join('\n'))
+      }
+    })
 
     // note: can be inconsistent
     it('support changes to $PATH', async () => {
