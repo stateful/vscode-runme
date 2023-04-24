@@ -46,15 +46,15 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
       await this.elem.click()
     }
 
-    async run(waitForFinish = true) {
+    async run(waitForSuccess = true) {
         const runButton = await this.runButton$
 
         await runButton.click()
 
         await new Promise(cb => setTimeout(cb, 100))
 
-        if (waitForFinish) {
-          await runButton.$('.codicon-notebook-execute').waitForExist()
+        if (waitForSuccess) {
+          await this.getStatusBar().waitForSuccess()
         }
     }
 
@@ -94,11 +94,17 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
             if (row.error) {
                 throw row.error
             }
-            const text = !OutputType.Display ? await row.getText() : await row.getHTML(false)
+            let text = expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
+
+            if (expectedTerminal === OutputType.TerminalView) {
+              text = text.slice(0, text.length - 'Copy'.length)
+            }
+
             res.push(text)
         }
         await browser.switchToParentFrame()
         await browser.switchToParentFrame()
+        await this.focus()
         return res
     }
 

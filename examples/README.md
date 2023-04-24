@@ -8,7 +8,7 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```sh { background=false interactive=false }
+```sh { background=false interactive=true }
 echo "Hello World!"
 ```
 
