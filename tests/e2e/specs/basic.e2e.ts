@@ -1,4 +1,4 @@
-import { DefaultTreeItem, InputBox, QuickOpenBox, Workbench } from 'wdio-vscode-service'
+import { DefaultTreeItem, Workbench } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 import clipboard from 'clipboardy'
 
@@ -67,6 +67,7 @@ describe('Runme VS Code Extension', async () => {
 
     beforeEach(async () => {
       const workbench = await browser.getWorkbench()
+      await browser.pause(1000)
       await clearAllOutputs(workbench)
       await tryExecuteCommand(workbench, 'kill all terminals')
       await tryExecuteCommand(workbench, 'clear all notifications')
@@ -146,6 +147,7 @@ describe('Runme VS Code Extension', async () => {
       }
     })
 
+    // note: can be inconsistent
     it('single line environment variable', async () => {
       {
         const cell = await notebook.getCell('export DENO_ACCESS_TOKEN="<insert-token-here>"')
@@ -195,13 +197,13 @@ describe('Runme VS Code Extension', async () => {
     //   ].join('\n'))
     // })
 
-    // TODO: same issue as prior
-    it.skip('support changes to $PATH', async () => {
-      const workbench = await browser.getWorkbench()
+    // note: can be inconsistent
+    it('support changes to $PATH', async () => {
       const cell = await notebook.getCell('export PATH="/some/path:$PATH"\necho $PATH')
       await cell.run(false)
-      await waitForInputBox(workbench)
+      await browser.pause(1000)
       await browser.keys(Key.Enter)
+      await cell.focus()
       await cell.getStatusBar().waitForSuccess()
     })
 
@@ -325,17 +327,17 @@ async function tryExecuteCommand(workbench: Workbench, command: string) {
   }
 }
 
-async function getInputBox(workbench: Workbench) {
-  if ((await browser.getVSCodeChannel() === 'vscode' && await browser.getVSCodeVersion() >= '1.44.0')
-    || await browser.getVSCodeVersion() === 'insiders') {
-    return new InputBox(workbench.locatorMap)
-  }
-  return new QuickOpenBox(workbench.locatorMap)
-}
+// async function getInputBox(workbench: Workbench) {
+//   if ((await browser.getVSCodeChannel() === 'vscode' && await browser.getVSCodeVersion() >= '1.44.0')
+//     || await browser.getVSCodeVersion() === 'insiders') {
+//     return new InputBox(workbench.locatorMap)
+//   }
+//   return new QuickOpenBox(workbench.locatorMap)
+// }
 
-async function waitForInputBox(workbench: Workbench) {
-  return (await getInputBox(workbench)).wait()
-}
+// async function waitForInputBox(workbench: Workbench) {
+//   return (await getInputBox(workbench)).wait()
+// }
 
 async function clearAllOutputs(workbench: Workbench) {
   await tryExecuteCommand(workbench, 'notebook: clear all outputs')
