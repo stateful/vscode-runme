@@ -146,18 +146,14 @@ describe('Runme VS Code Extension', async () => {
       }
     })
 
-    it.skip('single line environment variable', async () => {
-      const workbench = await browser.getWorkbench()
-
+    it('single line environment variable', async () => {
       {
         const cell = await notebook.getCell('export DENO_ACCESS_TOKEN="<insert-token-here>"')
         await cell.run(false)
 
-        await waitForInputBox(workbench)
-
-        await notebook.wait(100)
-
         await browser.keys(['token', Key.Enter])
+
+        await cell.focus()
 
         await cell.getStatusBar().waitForSuccess()
       }
@@ -167,7 +163,8 @@ describe('Runme VS Code Extension', async () => {
         await cell.run()
 
         const output = await cell.getCellOutput(OutputType.ShellOutput)
-        expect(output[1]).toStrictEqual('DENO_ACCESS_TOKEN: token\n')
+        expect(output).toHaveLength(1)
+        expect(output[0]).toStrictEqual('DENO_ACCESS_TOKEN: token')
       }
     })
 
