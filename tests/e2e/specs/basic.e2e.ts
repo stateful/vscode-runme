@@ -117,7 +117,6 @@ describe('Runme VS Code Extension', async () => {
       expect(text).toMatch(/(added|changed) \d+ packages/)
     })
 
-    // TODO: fix in ci
     it('stdin example', async () => {
       const cell = await notebook.getCell('node ./scripts/stdin.js')
       await cell.run(false)
@@ -210,12 +209,14 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // TODO: fix in ci
-    it.skip('supports piping content to an environment variable', async () => {
+    it('supports piping content to an environment variable', async () => {
       {
         const cell = await notebook.getCell('export LICENSE=$(cat ../LICENSE)')
         await cell.run()
 
         await new Promise(cb => setTimeout(cb, 2000))
+
+        throw new Error('For ci testing purposes')
       }
 
       await clearAllOutputs(await browser.getWorkbench())
