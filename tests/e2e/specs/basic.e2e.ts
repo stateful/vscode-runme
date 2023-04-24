@@ -224,7 +224,6 @@ describe('Runme VS Code Extension', async () => {
         await cell.run()
 
         const outputs = await cell.getCellOutput(OutputType.ShellOutput)
-        console.log(outputs)
         expect(outputs).toHaveLength(1)
         expect(outputs[0]).toMatch('Apache License')
       }

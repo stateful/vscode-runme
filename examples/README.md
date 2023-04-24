@@ -91,7 +91,6 @@ Supports piping content into an environment variable:
 
 ```sh
 export LICENSE=$(cat ../LICENSE)
-echo $(cat ../LICENSE)
 ```
 
 verify:
