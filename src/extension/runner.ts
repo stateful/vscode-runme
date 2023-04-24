@@ -46,6 +46,7 @@ export interface RunProgramOptions {
   environment?: IRunnerEnvironment
   terminalDimensions?: TerminalDimensions
   background?: boolean
+  convertEol?: boolean
 }
 
 export interface IRunner extends Disposable {
@@ -339,7 +340,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly _onDidClose    = this.register(new EventEmitter<number | void>())
   readonly _onStdoutRaw   = this.register(new EventEmitter<Uint8Array>())
   readonly _onStderrRaw   = this.register(new EventEmitter<Uint8Array>())
-  readonly _onPid        = this.register(new EventEmitter<number|undefined>())
+  readonly _onPid         = this.register(new EventEmitter<number|undefined>())
 
   readonly onDidWrite = this._onDidWrite.event
   readonly onDidErr = this._onDidErr.event
@@ -390,11 +391,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid }) => {
       if(stdoutData.length > 0) {
-        this._onStdoutRaw.fire(stdoutData)
+        this.write('stdout', stdoutData)
       }
 
       if(stderrData.length > 0) {
-        this._onStderrRaw.fire(stderrData)
+        this.write('stderr', stderrData)
       }
 
       if(exitCode) {
@@ -430,6 +431,34 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
       this.error(error)
     })
+  }
+
+  private static readonly WRITE_LISTENER = {
+    'stdout': '_onStdoutRaw',
+    'stderr': '_onStderrRaw'
+  } as const
+
+  protected write(channel: 'stdout'|'stderr', bytes: Uint8Array): void {
+    if (this.convertEol() && !this.isPseudoterminal()) {
+      const newBytes = new Array(bytes.byteLength)
+
+      let i = 0
+      while (i < bytes.byteLength) {
+        const byte = bytes[i]
+
+        if (byte === 0x0A) {
+          newBytes[i] = 0x0D
+          i++
+        }
+
+        newBytes[i] = byte
+        i++
+      }
+
+      bytes = Buffer.from(newBytes)
+    }
+
+    return this[GrpcRunnerProgramSession.WRITE_LISTENER[channel]].fire(bytes)
   }
 
   protected async init(opts?: RunProgramOptions) {
@@ -680,6 +709,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   get numTerminalWindows() {
     return this.terminalWindows.size
+  }
+
+  protected convertEol() {
+    return this.opts.convertEol ?? true
   }
 }
 
