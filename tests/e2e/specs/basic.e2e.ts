@@ -256,7 +256,7 @@ describe('Runme VS Code Extension', async () => {
       }
     })
 
-    it('copy from result cell', async () => {
+    it('openssl command', async () => {
       const cell = await notebook.getCell('openssl rand -base64 32')
       await cell.run()
 
