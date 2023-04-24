@@ -118,7 +118,7 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // TODO: fix in ci
-    it.skip('stdin example', async () => {
+    it('stdin example', async () => {
       const cell = await notebook.getCell('node ./scripts/stdin.js')
       await cell.run(false)
 
@@ -130,12 +130,9 @@ describe('Runme VS Code Extension', async () => {
 
       {
         const terminalView = await bottomBar.openTerminalView()
+        await terminalView.wait(1000)
 
-        const terminalTextArea = await terminalView.textArea$
-        await terminalTextArea.setValue(answer1)
-        await browser.keys(Key.Enter)
-        await terminalTextArea.setValue(answer2)
-        await browser.keys(Key.Enter)
+        await browser.keys([answer1, Key.Enter, answer2, Key.Enter])
       }
 
       await cell.getStatusBar().waitForSuccess()
