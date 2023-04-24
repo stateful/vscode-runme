@@ -8,8 +8,8 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```sh
-$ echo "Hello World!"
+```sh { background=false interactive=true }
+echo "Hello World!"
 ```
 
 ## More Shell
@@ -68,7 +68,7 @@ Supports multiple lines where the export is just somewhere in between:
 
 ```sh
 echo "Auth token for service foo"
-export SERVICE_FOO_TOKEN=foobar
+export SERVICE_FOO_TOKEN="foobar"
 echo "Auth token for service bar"
 export SERVICE_BAR_TOKEN="barfoo"
 ```
