@@ -44,6 +44,9 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
      */
     async focus() {
       await this.elem.click()
+        .catch(() => {
+          // ci sometimes yaps about this
+        })
     }
 
     async run(waitForSuccess = true) {
