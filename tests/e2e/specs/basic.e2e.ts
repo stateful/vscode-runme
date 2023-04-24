@@ -275,18 +275,22 @@ describe('Runme VS Code Extension', async () => {
       expect(outputs[0]).toMatch(regex)
     })
 
-    // TODO: fails in ci, very likely due to CPU restrictions
     it.skip('Curl an image', async () => {
       // eslint-disable-next-line max-len
       const cell = await notebook.getCell('curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2>/dev/null')
       await cell.run()
 
-      const imageRegex = new RegExp('<img src="blob:vscode-webview:\/\/(.)+">')
+      await browser.waitUntil(async () => {
+        const imageRegex = new RegExp('<img src="blob:vscode-webview:\/\/(.)+">')
 
-      const outputs = await cell.getCellOutput(OutputType.Display)
+        const outputs = await cell.getCellOutput(OutputType.Display)
 
-      expect(outputs).toHaveLength(1)
-      expect(outputs[0]).toMatch(imageRegex)
+        if (outputs.length !== 1) {
+          return false
+        }
+
+        return outputs[0].match(imageRegex)
+      }, { timeout: 15000 })
     })
 
     it('terminal dimensions', async () => {
