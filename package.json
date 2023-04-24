@@ -541,7 +541,7 @@
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.1",
     "detect-port": "^1.5.1",
-    "filenamify": "^5.1.1",
+    "filenamify": "^6.0.0",
     "get-port": "^6.1.2",
     "got": "^12.5.3",
     "lit": "^2.6.1",
