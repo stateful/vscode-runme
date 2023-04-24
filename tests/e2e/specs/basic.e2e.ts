@@ -215,17 +215,16 @@ describe('Runme VS Code Extension', async () => {
         await cell.run()
 
         await new Promise(cb => setTimeout(cb, 2000))
-
-        throw new Error('For ci testing purposes')
       }
 
-      await clearAllOutputs(await browser.getWorkbench())
+      // await clearAllOutputs(await browser.getWorkbench())
 
       {
         const cell = await notebook.getCell('echo "LICENSE: $LICENSE"')
         await cell.run()
 
         const outputs = await cell.getCellOutput(OutputType.ShellOutput)
+        console.log(outputs)
         expect(outputs).toHaveLength(1)
         expect(outputs[0]).toMatch('Apache License')
       }
