@@ -216,6 +216,8 @@ describe('Runme VS Code Extension', async () => {
       {
         const cell = await notebook.getCell('export LICENSE=$(cat ../LICENSE)')
         await cell.run()
+
+        await new Promise(cb => setTimeout(cb, 2000))
       }
 
       await clearAllOutputs(await browser.getWorkbench())
