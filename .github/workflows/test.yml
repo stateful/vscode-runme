@@ -9,11 +9,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-          echo -n 'nvm "$@" && echo $NVM_BIN >> $GITHUB_PATH' >>  ~/.nvm/nvm.sh
-          sudo cp ~/.nvm/nvm.sh /usr/local/bin/nvm
-          sudo chmod +x /usr/local/bin/nvm
       - uses: coactions/setup-xvfb@v1
         with:
           run: |
