@@ -113,7 +113,7 @@ export async function executeRunner(
     cwd,
     background,
     tty: interactive,
-    mimeType: mimeType ?? 'text/plain',
+    mimeType: mimeType,
   })
 
   context.subscriptions.push(program)

@@ -118,7 +118,7 @@ export class RunmeTaskProvider implements TaskProvider {
       cwd,
       environment,
       tty: interactive,
-      mimeType: mimeType ?? 'text/plain',
+      mimeType: mimeType,
     }
 
     if (!environment) {

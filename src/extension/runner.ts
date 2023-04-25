@@ -443,7 +443,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     if (
       this.convertEol &&
       !this.isPseudoterminal() &&
-      this.opts.mimeType === 'text/plain'
+      (!this.opts.mimeType || this.opts.mimeType === 'text/plain')
     ) {
       const newBytes = new Array(bytes.byteLength)
 
