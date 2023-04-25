@@ -18,7 +18,10 @@ jobs:
         with:
           run: |
             npm i -g runme
-            npx runme2 configureNPM setup build test
+            npx runme run --filename=CONTRIBUTING.md configureNPM
+            npx runme run --filename=CONTRIBUTING.md setup
+            npx runme run --filename=CONTRIBUTING.md build
+            npx runme run --filename=CONTRIBUTING.md test
           working-directory: ${{ env.GITHUB_WORKSPACE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
