@@ -17,7 +17,6 @@ jobs:
             npx runme run --filename=CONTRIBUTING.md setup
             npx runme run --filename=CONTRIBUTING.md build
             npx runme run --filename=CONTRIBUTING.md test
-          working-directory: ${{ env.GITHUB_WORKSPACE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v3
