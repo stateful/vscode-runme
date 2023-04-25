@@ -9,20 +9,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          echo -n 'nvm "$@" && echo $NVM_BIN >> $GITHUB_PATH' >>  ~/.nvm/nvm.sh
+          sudo cp ~/.nvm/nvm.sh /usr/local/bin/nvm
+          sudo chmod +x /usr/local/bin/nvm
+      - uses: coactions/setup-xvfb@v1
         with:
-          node-version: 18
-      - name: 📦 Install Dependencies
-        run: npm install
+          run: |
+            npm i -g runme
+            npx runme2 configureNPM setup build test
+          working-directory: ${{ env.GITHUB_WORKSPACE }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: 🏗 Build Project
-        run: npm run build:dev
-      - name: 🧪 Run Tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: npm test
-          options: "-screen 0 1600x1200x24"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:

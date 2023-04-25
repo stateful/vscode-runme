@@ -57,6 +57,8 @@ To get the code base, have [git](https://git-scm.com/downloads) installed and ru
 
 ```sh
 git clone git@github.com:stateful/vscode-runme.git
+cd vscode-runme
+nvm install
 ```
 
 optionally install the GitHub CLI to streamline downloading the WASM binary:
@@ -69,15 +71,13 @@ brew install gh
 
 make sure to configure your local npm to pull from Buf's registry (for GRPC dependencies)
 
-```sh
+```sh { name=configureNPM }
 npm config set @buf:registry https://buf.build/gen/npm/v1
 ```
 
-then ensure to install all project dependencies:
+then ensure to install all project dependencies.
 
-```sh
-cd vscode-runme
-nvm install
+```sh { name=setup }
 GITHUB_REF_NAME=$(git branch --show-current) GITHUB_TOKEN=$(gh auth token) npm install --include=dev
 ```
 
@@ -93,7 +93,7 @@ DOWNLOAD_URL=$(node .github/scripts/getLastStableRelease) TYPE=tar npm run prepa
 
 To compile all extension files, run:
 
-```sh
+```sh { name=build }
 npm run build
 ```
 
@@ -101,7 +101,7 @@ npm run build
 
 To test the project, run:
 
-```sh
+```sh { name=test }
 npm run test
 ```
 
