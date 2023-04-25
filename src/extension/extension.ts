@@ -67,11 +67,12 @@ export class RunmeExtension {
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
     const winSurvey = new survey.WinDefaultShell(context)
+    const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
-    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, runner, kernel)
+    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, winCodeLensRunSurvey, runner, kernel)
 
     context.subscriptions.push(
       kernel,
@@ -79,6 +80,7 @@ export class RunmeExtension {
       server,
       treeViewer,
       winSurvey,
+      winCodeLensRunSurvey,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata: {

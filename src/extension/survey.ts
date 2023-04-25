@@ -148,3 +148,57 @@ export class WinDefaultShell implements Disposable {
     this.#disposables.forEach(d => d.dispose())
   }
 }
+
+export class SurveyWinCodeLensRun implements Disposable {
+  static readonly #id: string = 'runme.surveyWinCodeLensRun'
+
+  constructor(
+    protected context: ExtensionContext
+  ) { }
+
+  shouldPrompt() {
+    return isWindows()
+  }
+
+  async prompt(): Promise<void> {
+    if (
+      !this.context.globalState.get<boolean>(
+        SurveyWinCodeLensRun.#id,
+        false
+      ) ||
+      !this.shouldPrompt()
+    ) {
+      return
+    }
+
+    const option = await window.showInformationMessage(
+      // eslint-disable-next-line max-len
+      'Support for running scripts directly from markdown is currently not supported on Windows.\nPlease help us improve Runme on Windows: Click OK to share your interest in this feature.',
+      'OK',
+      'Don\'t ask again',
+      'Dismiss'
+    )
+
+    switch (option) {
+      case 'OK': {
+        TelemetryReporter.sendTelemetryEvent('survey.WinCodeLensRun', { })
+      } break
+
+      case 'Dismiss': {
+        return
+      }
+    }
+
+    await this.#done()
+  }
+
+  async #undo() {
+    await this.context.globalState.update(SurveyWinCodeLensRun.#id, false)
+  }
+
+  async #done() {
+    await this.context.globalState.update(SurveyWinCodeLensRun.#id, true)
+  }
+
+  dispose() { }
+}
