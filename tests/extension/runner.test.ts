@@ -482,6 +482,20 @@ suite('grpc Runner', () => {
       expect(writeListener).toBeCalledWith('test\r\n')
     })
 
+    test('onDidWrite replaces returns in complex string in non-interactive', async () => {
+      const { duplex, writeListener } = await createNewSession({
+        convertEol: true
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\nSERVICE_BAR_TOKEN: barfoo'),
+        stderrData: Buffer.from('')
+      })
+
+      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalledWith('SERVICE_FOO_TOKEN: foobar\r\nSERVICE_BAR_TOKEN: barfoo')
+    })
+
     test('onDidWrite replaces returns in non-interactive in stderr', async () => {
       const { duplex, errListener } = await createNewSession({
         convertEol: true

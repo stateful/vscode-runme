@@ -442,17 +442,15 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     if (this.convertEol() && !this.isPseudoterminal()) {
       const newBytes = new Array(bytes.byteLength)
 
-      let i = 0
-      while (i < bytes.byteLength) {
-        const byte = bytes[i]
+      let i = 0, j = 0
+      while (j < bytes.byteLength) {
+        const byte = bytes[j++]
 
         if (byte === 0x0A) {
-          newBytes[i] = 0x0D
-          i++
+          newBytes[i++] = 0x0D
         }
 
-        newBytes[i] = byte
-        i++
+        newBytes[i++] = byte
       }
 
       bytes = Buffer.from(newBytes)
