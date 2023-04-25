@@ -8,15 +8,19 @@ import {
   GrpcRunner,
   GrpcRunnerEnvironment,
   GrpcRunnerProgramSession,
+  IRunner,
   RunProgramOptions
 } from '../../src/extension/runner'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
 import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
+import { isWindows } from '../../src/extension/utils'
+import { SurveyWinCodeLensRun } from '../../src/extension/survey'
 
 vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
-  getAnnotations: vi.fn().mockReturnValue({ })
+  getAnnotations: vi.fn().mockReturnValue({ }),
+  isWindows: vi.fn().mockReturnValue(false),
 }))
 
 vi.mock('vscode', async () => ({
@@ -542,8 +546,13 @@ suite('grpc Runner', () => {
 })
 
 suite('RunmeCodeLensProvider', () => {
+  beforeEach(() => {
+    vi.mocked(tasks.executeTask).mockClear()
+    vi.mocked(isWindows).mockClear()
+  })
+
   test('returns nothing without runner', async () => {
-    const provider = new RunmeCodeLensProvider({} as any, vi.fn())
+    const provider = createCodeLensProvider()
 
     const lenses = await provider.provideCodeLenses({} as any, {} as any)
 
@@ -565,11 +574,7 @@ suite('RunmeCodeLensProvider', () => {
       }))
     } as any
 
-    const provider = new RunmeCodeLensProvider(
-      serializer,
-      vi.fn(),
-      {} as any
-    )
+    const provider = createCodeLensProvider(serializer, {} as any)
 
     const lenses = await provider.provideCodeLenses(
       {
@@ -596,26 +601,35 @@ suite('RunmeCodeLensProvider', () => {
   })
 
   test('action callback for run command', async () => {
-    const provider = new RunmeCodeLensProvider(
-      {} as any,
-      vi.fn(),
-      {} as any
-    )
+    const provider = createCodeLensProvider({}, {} as any)
 
     await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, 0, 'run')
 
     expect(RunmeTaskProvider.getRunmeTask).toBeCalledTimes(1)
 
+    expect(isWindows).toBeCalledTimes(1)
+
     expect(tasks.executeTask).toBeCalledTimes(1)
     expect(tasks.executeTask).toBeCalledWith({})
   })
 
+  test('action callback for run command on windows', async () => {
+    const provider = createCodeLensProvider({}, {} as any)
+
+    provider['surveyWinCodeLensRun']['prompt'] = vi.fn()
+
+    vi.mocked(isWindows).mockReturnValueOnce(true)
+
+    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, 0, 'run')
+
+    expect(isWindows).toBeCalledTimes(1)
+    expect(provider['surveyWinCodeLensRun']['prompt']).toBeCalledTimes(1)
+
+    expect(tasks.executeTask).toBeCalledTimes(0)
+  })
+
   test('action callback for open command', async () => {
-    const provider = new RunmeCodeLensProvider(
-      {} as any,
-      vi.fn(),
-      {} as any
-    )
+    const provider = createCodeLensProvider()
 
     const document = { uri: { fsPath: '' } }
     await provider['codeLensActionCallback'](document as any, {} as any, {} as any, 0, 'open')
@@ -670,4 +684,16 @@ async function createNewSession(options: Partial<RunProgramOptions> = {}, runner
     errListener,
     server,
   }
+}
+
+function createCodeLensProvider(
+  serializer = {} as any,
+  runner?: IRunner
+) {
+  return new RunmeCodeLensProvider(
+    serializer,
+    vi.fn(),
+    new SurveyWinCodeLensRun({} as any),
+    runner
+  )
 }

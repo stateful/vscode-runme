@@ -22,6 +22,7 @@ import { getAnnotations } from '../utils'
 import { Serializer } from '../../types'
 import { getCodeLensEnabled } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
+import type { SurveyWinCodeLensRun } from '../survey'
 
 import { RunmeTaskProvider } from './runmeTask'
 
@@ -53,6 +54,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   constructor(
     protected serializer: SerializerBase,
     protected runCLI: ReturnType<typeof runCLICommand>,
+    protected surveyWinCodeLensRun: SurveyWinCodeLensRun,
     protected runner?: IRunner,
     protected kernel?: Kernel
   ) {
@@ -169,6 +171,11 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       } break
 
       case 'run': {
+        if (this.surveyWinCodeLensRun.shouldPrompt()) {
+          await this.surveyWinCodeLensRun.prompt()
+          break
+        }
+
         const task = await RunmeTaskProvider.getRunmeTask(
           document.uri.fsPath,
           getAnnotations(cell.metadata).name,
