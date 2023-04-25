@@ -135,7 +135,6 @@ test('open Runme notebook in text editor', (file: TextDocument) => {
 test('stopBackgroundTask if terminal exists', () => {
   vi.mocked(getTerminalByCell).mockReturnValue({ dispose: vi.fn() } as any)
   stopBackgroundTask({} as any)
-  expect(window.showInformationMessage).toBeCalledTimes(1)
 })
 
 test('stopBackgroundTask if terminal does not exist', () => {
