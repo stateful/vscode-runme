@@ -439,7 +439,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   } as const
 
   protected write(channel: 'stdout'|'stderr', bytes: Uint8Array): void {
-    if (this.convertEol() && !this.isPseudoterminal()) {
+    if (this.convertEol && !this.isPseudoterminal()) {
       const newBytes = new Array(bytes.byteLength)
 
       let i = 0, j = 0
@@ -709,7 +709,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     return this.terminalWindows.size
   }
 
-  protected convertEol() {
+  protected get convertEol() {
     return this.opts.convertEol ?? true
   }
 }
