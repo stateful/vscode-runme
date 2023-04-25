@@ -118,6 +118,7 @@ export class RunmeTaskProvider implements TaskProvider {
       cwd,
       environment,
       tty: interactive,
+      convertEol: true,
     }
 
     if (!environment) {
