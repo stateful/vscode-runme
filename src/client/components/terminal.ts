@@ -548,8 +548,7 @@ export class TerminalView extends LitElement {
 
     const content = stripANSI(this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '')
 
-    return navigator.clipboard.writeText(content).then(
-      () => postClientMessage(ctx, ClientMessages.infoMessage, 'Copied result content to clipboard!'),
+    return navigator.clipboard.writeText(content).catch(
       (err) => postClientMessage(ctx, ClientMessages.infoMessage, `'Failed to copy to clipboard: ${err.message}!'`),
     )
   }
