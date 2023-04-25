@@ -68,7 +68,6 @@ export function stopBackgroundTask (cell: NotebookCell) {
     return showWarningMessage()
   }
   terminal.dispose()
-  return window.showInformationMessage(`${terminal?.name} task terminated!`)
 }
 
 export function runCLICommand(
