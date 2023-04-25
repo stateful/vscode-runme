@@ -21,6 +21,7 @@ import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 import { Serializer } from '../../types'
 import { getCodeLensEnabled } from '../../utils/configuration'
+import { RunmeExtension } from '../extension'
 
 import { RunmeTaskProvider } from './runmeTask'
 
@@ -67,7 +68,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     const cmd: ActionCallback = this.codeLensActionCallback.bind(this)
 
     this.register(
-      commands.registerCommand('runme.codelens.action', cmd),
+      RunmeExtension.registerCommand('runme.codelens.action', cmd)
     )
 
     this.register(
