@@ -192,10 +192,6 @@ export class SurveyWinCodeLensRun implements Disposable {
     await this.#done()
   }
 
-  async #undo() {
-    await this.context.globalState.update(SurveyWinCodeLensRun.#id, false)
-  }
-
   async #done() {
     await this.context.globalState.update(SurveyWinCodeLensRun.#id, true)
   }
