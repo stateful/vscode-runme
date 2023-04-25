@@ -467,6 +467,77 @@ suite('grpc Runner', () => {
 
       expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
     })
+
+    test('onDidWrite replaces returns in non-interactive', async () => {
+      const { duplex, writeListener } = await createNewSession({
+        convertEol: true
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from('test\n'),
+        stderrData: Buffer.from('')
+      })
+
+      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalledWith('test\r\n')
+    })
+
+    test('onDidWrite replaces returns in complex string in non-interactive', async () => {
+      const { duplex, writeListener } = await createNewSession({
+        convertEol: true
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\nSERVICE_BAR_TOKEN: barfoo'),
+        stderrData: Buffer.from('')
+      })
+
+      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalledWith('SERVICE_FOO_TOKEN: foobar\r\nSERVICE_BAR_TOKEN: barfoo')
+    })
+
+    test('onDidWrite replaces returns in non-interactive in stderr', async () => {
+      const { duplex, errListener } = await createNewSession({
+        convertEol: true
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from(''),
+        stderrData: Buffer.from('test\n')
+      })
+
+      expect(errListener).toBeCalledTimes(1)
+      expect(errListener).toBeCalledWith('test\r\n')
+    })
+
+    test('onDidWrite does not replaces returns in interactive', async () => {
+      const { duplex, writeListener } = await createNewSession({
+        convertEol: true,
+        tty: true,
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from('test\r\n'),
+        stderrData: Buffer.from('')
+      })
+
+      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalledWith('test\r\n')
+    })
+
+    test('onDidWrite does not replace return in non-interactive if flag is off', async () => {
+      const { duplex, writeListener } = await createNewSession({
+        convertEol: false,
+      })
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from('test\n'),
+        stderrData: Buffer.from('')
+      })
+
+      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalledWith('test\n')
+    })
   })
 })
 
