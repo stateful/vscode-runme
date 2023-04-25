@@ -162,7 +162,7 @@ export class SurveyWinCodeLensRun implements Disposable {
 
   async prompt(): Promise<void> {
     if (
-      !this.context.globalState.get<boolean>(
+      this.context.globalState.get<boolean>(
         SurveyWinCodeLensRun.#id,
         false
       ) ||
