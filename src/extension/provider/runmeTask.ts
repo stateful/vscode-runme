@@ -101,7 +101,7 @@ export class RunmeTaskProvider implements TaskProvider {
       path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath) :
       path.basename(filePath)
 
-    const { interactive, background, mimeType } = getAnnotations(cell.metadata)
+    const { interactive, background } = getAnnotations(cell.metadata)
 
     const cwd = options.cwd || path.dirname(filePath)
     const isBackground = options.isBackground || background
@@ -118,7 +118,7 @@ export class RunmeTaskProvider implements TaskProvider {
       cwd,
       environment,
       tty: interactive,
-      mimeType: mimeType,
+      convertEol: true,
     }
 
     if (!environment) {
