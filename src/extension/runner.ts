@@ -47,6 +47,7 @@ export interface RunProgramOptions {
   terminalDimensions?: TerminalDimensions
   background?: boolean
   convertEol?: boolean
+  mimeType?: string
 }
 
 export interface IRunner extends Disposable {
@@ -439,7 +440,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   } as const
 
   protected write(channel: 'stdout'|'stderr', bytes: Uint8Array): void {
-    if (this.convertEol && !this.isPseudoterminal()) {
+    if (
+      this.convertEol &&
+      !this.isPseudoterminal() &&
+      this.opts.mimeType === 'text/plain'
+    ) {
       const newBytes = new Array(bytes.byteLength)
 
       let i = 0, j = 0
