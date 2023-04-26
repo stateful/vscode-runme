@@ -1,4 +1,4 @@
-import vscode, { workspace } from 'vscode'
+import vscode, { commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 
 import {
@@ -13,6 +13,7 @@ import {
   hashDocumentUri,
   getGrpcHost,
   prepareCmdSeq,
+  openFileAsRunmeNotebook,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -37,6 +38,9 @@ vi.mock('vscode', () => ({
   },
   workspace: {
     getConfiguration: vi.fn()
+  },
+  commands: {
+    executeCommand: vi.fn()
   },
 }))
 vi.mock('vscode-telemetry')
@@ -299,5 +303,19 @@ suite('prepareCmdSeq', () => {
     expect(prepareCmdSeq('$ echo hi')).toStrictEqual([ 'echo hi' ])
     expect(prepareCmdSeq('  $  echo hi')).toStrictEqual([ 'echo hi' ])
     expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
+  })
+})
+
+suite('openFileAsRunmeNotebook', () => {
+  beforeEach(() => {
+    vi.mocked(commands.executeCommand).mockClear()
+  })
+
+  test('runs executecommand', async () => {
+    const uri = { } as any
+    await openFileAsRunmeNotebook(uri)
+
+    expect(commands.executeCommand).toBeCalledTimes(1)
+    expect(commands.executeCommand).toBeCalledWith('vscode.openWith', uri, 'runme')
   })
 })
