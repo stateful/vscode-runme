@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { getAnnotations, getTerminalByCell, replaceOutput } from '../utils'
+import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook, replaceOutput } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 
@@ -172,4 +172,8 @@ export async function tryIt (context: ExtensionContext) {
     const localMarkdown = Uri.joinPath(Uri.file(context.extensionPath), 'walkthroughs', 'welcome.md')
     return commands.executeCommand('vscode.openWith', localMarkdown, Kernel.type)
   }
+}
+
+export async function openFileInRunme (uri: Uri, selection?: Uri[]) {
+  await Promise.all((selection ?? [uri]).map(openFileAsRunmeNotebook))
 }

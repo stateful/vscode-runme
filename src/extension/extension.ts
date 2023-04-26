@@ -19,7 +19,8 @@ import {
   stopBackgroundTask,
   createNewRunmeNotebook,
   welcome,
-  tryIt
+  tryIt,
+  openFileInRunme
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -117,6 +118,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
       RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
+      RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner, kernel)),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
