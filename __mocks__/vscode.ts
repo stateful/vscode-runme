@@ -25,7 +25,7 @@ export class Uri extends URI {
   static parse = vi.fn(super.parse)
 
   static joinPath = vi.fn((uri: Uri, ...paths: string[]) => {
-    return Uri.file(path.join(uri.fsPath, ...paths))
+    return super.file(path.join(uri.fsPath, ...paths))
   })
 }
 

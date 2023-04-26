@@ -47,9 +47,18 @@ test('initializes all providers', async () => {
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config])
   } as any)
-  vi.mocked(Uri.joinPath).mockReturnValue('/foo/bar' as any)
+  const dummyFilePath = Uri.file('/foo/bar')
+  vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)
   RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
-  const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
+  const context: any = {
+    subscriptions: [],
+    extensionUri: { fsPath: '/foo/bar' },
+    environmentVariableCollection: {
+      prepend: vi.fn(),
+      append: vi.fn(),
+      replace: vi.fn(),
+    }
+  }
   const ext = new RunmeExtension()
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
