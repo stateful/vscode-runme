@@ -1,7 +1,7 @@
 import path from 'node:path'
 import os from 'node:os'
 
-import { NotebookCell, Uri, workspace } from 'vscode'
+import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -148,6 +148,15 @@ const getCodeLensEnabled = (): boolean => {
   return getCodeLensConfigurationValue<boolean>('enable', true)
 }
 
+const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
+  context.environmentVariableCollection.prepend(
+    'PATH',
+    path.dirname(
+      getBinaryPath(context.extensionUri, os.platform()).fsPath
+    ) + (isWindows() ? ';' : ':'),
+  )
+}
+
 export {
     getPortNumber,
     getBinaryPath,
@@ -161,4 +170,5 @@ export {
     getNotebookTerminalFontSize,
     getNotebookTerminalRows,
     getCodeLensEnabled,
+    registerExtensionEnvironmentVariables,
 }
