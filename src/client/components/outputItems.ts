@@ -62,11 +62,7 @@ export class ShellOutputItems extends LitElement {
       return
     }
 
-    return navigator.clipboard.writeText(this.content).then(
-      () => ctx.postMessage!(<ClientMessage<ClientMessages.infoMessage>>{
-        type: ClientMessages.infoMessage,
-        output: 'Copied result content to clipboard!'
-      }),
+    return navigator.clipboard.writeText(this.content).catch(
       (err) => ctx.postMessage!(<ClientMessage<ClientMessages.errorMessage>>{
         type: ClientMessages.errorMessage,
         output: `'Failed to copy to clipboard: ${err.message}!'`
