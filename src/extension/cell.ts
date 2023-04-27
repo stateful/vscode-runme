@@ -13,9 +13,19 @@ import {
 import { OutputType } from '../constants'
 import { CellOutputPayload, Serializer } from '../types'
 import { Mutex } from '../utils/sync'
+import {
+  getNotebookTerminalFontFamily,
+  getNotebookTerminalFontSize,
+  getNotebookTerminalRows
+} from '../utils/configuration'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
-import { ITerminalState, LocalBufferTermState, NotebookTerminalType, XTermState } from './terminal/terminalState'
+import {
+  ITerminalState,
+  LocalBufferTermState,
+  NotebookTerminalType,
+  XTermState
+} from './terminal/terminalState'
 
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
@@ -129,13 +139,20 @@ export class NotebookCellOutputManager {
         if (type === OutputType.terminal) {
           const editorSettings = workspace.getConfiguration('editor')
 
+          const terminalFontFamily = getNotebookTerminalFontFamily()
+            ?? editorSettings.get<string>('fontFamily', 'Arial')
+
+          const terminalFontSize = getNotebookTerminalFontSize()
+            ?? editorSettings.get<number>('fontSize', 10)
+
           const json: CellOutputPayload<OutputType.terminal> = {
             type: OutputType.terminal,
             output: {
               'runme.dev/uuid': cellId,
-              terminalFontFamily: editorSettings.get<string>('fontFamily', 'Arial'),
-              terminalFontSize: editorSettings.get<number>('fontSize', 10),
+              terminalFontFamily,
+              terminalFontSize,
               content: terminalState.serialize(),
+              initialRows: getNotebookTerminalRows(),
             }
           }
 
