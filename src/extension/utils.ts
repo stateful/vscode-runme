@@ -35,7 +35,6 @@ const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 export function getAnnotations(cell: vscode.NotebookCell): CellAnnotations
 export function getAnnotations(metadata?: Serializer.Metadata): CellAnnotations
 export function getAnnotations(raw: unknown): CellAnnotations | undefined {
-  const config = vscode.workspace.getConfiguration('runme.shell')
   const metadataFromCell = raw as vscode.NotebookCell
   let metadata = raw as Serializer.Metadata
 
@@ -44,8 +43,6 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   }
 
   const schema = {
-    interactive: config.get<boolean>('interactive'),
-    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
     ...metadata,
     name:
       metadata.name ||
@@ -59,7 +56,6 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
 }
 
 export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorResult {
-  const config = vscode.workspace.getConfiguration('runme.shell')
   let metadata = cell as Serializer.Metadata
 
   if (cell.metadata) {
@@ -67,8 +63,6 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
   }
 
   const schema = {
-    interactive: config.get<boolean>('interactive'),
-    closeTerminalOnSuccess: config.get<boolean>('closeTerminalOnSuccess'),
     ...metadata,
     name:
       metadata.name ||
