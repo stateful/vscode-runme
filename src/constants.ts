@@ -88,3 +88,4 @@ export const LANGUAGES = new Map([
 ].map(([, source, dest]) => [source, dest]))
 
 export const SERVER_ADDRESS = 'localhost'
+export const SERVER_PORT = 7863

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 
 import { getAnnotations, isWindows } from '../extension/utils'
+import { SERVER_PORT } from '../constants'
 
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME= 'runme.terminal'
@@ -16,12 +17,10 @@ type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
 const configurationSchema = {
     server: {
-        port: z
-            .number()
-            .positive()
-            .min(7070)
-            .max(9090)
-            .default(7863),
+        customAddress: z
+            .string()
+            .nonempty()
+            .optional(),
         binaryPath: z
             .string()
             .optional(),
@@ -80,7 +79,11 @@ const getCodeLensConfigurationValue = <T>(configName: keyof typeof configuration
 }
 
 const getPortNumber = (): number => {
-    return getServerConfigurationValue<number>('port', 7863)
+  return SERVER_PORT
+}
+
+const getCustomServerAddress = (): string|undefined => {
+  return getServerConfigurationValue<string|undefined>('customAddress', undefined)
 }
 
 const getTLSEnabled = (): boolean => {
@@ -171,4 +174,5 @@ export {
     getNotebookTerminalRows,
     getCodeLensEnabled,
     registerExtensionEnvironmentVariables,
+    getCustomServerAddress,
 }

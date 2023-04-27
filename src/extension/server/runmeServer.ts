@@ -11,7 +11,14 @@ import {
   HealthCheckResponse_ServingStatus
 } from '../grpc/healthTypes'
 import { SERVER_ADDRESS } from '../../constants'
-import { enableServerLogs, getBinaryPath, getPortNumber, getTLSDir, getTLSEnabled } from '../../utils/configuration'
+import {
+  enableServerLogs,
+  getBinaryPath,
+  getCustomServerAddress,
+  getPortNumber,
+  getTLSDir,
+  getTLSEnabled
+} from '../../utils/configuration'
 import { isPortAvailable } from '../utils'
 import { HealthClient } from '../grpc/client'
 
@@ -39,6 +46,7 @@ class RunmeServer implements Disposable {
     #disposables: Disposable[] = []
     #transport?: GrpcTransport
     #serverDisposables: Disposable[] = []
+    #forceExternalServer: boolean
 
     readonly #onClose = this.register(new EventEmitter<{ code: number|null }>())
     readonly #onTransportReady = this.register(new EventEmitter<{ transport: GrpcTransport }>())
@@ -49,7 +57,7 @@ class RunmeServer implements Disposable {
     constructor(
       extBasePath: Uri,
       options: IServerConfig,
-      protected readonly externalServer: boolean,
+      externalServer: boolean,
       protected readonly enableRunner = false
     ) {
       this.#port = getPortNumber()
@@ -59,6 +67,7 @@ class RunmeServer implements Disposable {
       this.#maxNumberOfIntents = options.maxNumberOfIntents
       this.#acceptsIntents = options.acceptsConnection?.intents || 50
       this.#acceptsInterval = options.acceptsConnection?.interval || 200
+      this.#forceExternalServer = externalServer
     }
 
     dispose() {
@@ -98,14 +107,22 @@ class RunmeServer implements Disposable {
     }
 
     address() {
-      return `${SERVER_ADDRESS}:${this.#port}`
+      return getCustomServerAddress() || `${SERVER_ADDRESS}:${this.#port}`
+    }
+
+    private get externalServer(): boolean {
+      return !!(getCustomServerAddress() || this.#forceExternalServer)
     }
 
     private static async getTLS(tlsDir: string) {
-      const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
-      const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
+      try {
+        const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
+        const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
 
-      return { certPEM, privKeyPEM }
+        return { certPEM, privKeyPEM }
+      } catch(e: any) {
+        throw new RunmeServerError('Unable to read TLS files', e)
+      }
     }
 
     protected async channelCredentials(): Promise<ChannelCredentials> {

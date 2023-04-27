@@ -296,11 +296,10 @@
             "default": 60000,
             "markdownDescription": "Timeout until Runme will cancel the clone process."
           },
-          "runme.server.port": {
-            "type": "number",
+          "runme.server.customAddress": {
+            "type": "string",
             "scope": "machine",
-            "default": 7863,
-            "markdownDescription": "Port used by Runme server. (It requires the GRPC interface enabled)"
+            "markdownDescription": "Custom runme server address. This address will be used instead of launching the server at start. Use this only if you know what you are doing!"
           },
           "runme.server.binaryPath": {
             "type": "string",
