@@ -197,6 +197,10 @@ test('supports multiline exports', async () => {
 })
 
 suite('parseCommandSeq', () => {
+  beforeEach(() => {
+    vi.mocked(window.showInputBox).mockReset()
+  })
+
   test('single-line export', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
@@ -204,9 +208,23 @@ suite('parseCommandSeq', () => {
       'export TEST="<placeholder>"'
     ].join('\n'))
 
-    expect(res).toBeTruthy
+    expect(res).toBeTruthy()
     expect(res).toHaveLength(1)
     expect(res?.[0]).toBe('export TEST="test value"')
+  })
+
+  test('single-line export with prompt disabled', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+
+    const res = await parseCommandSeq([
+      'export TEST="placeholder"'
+    ].join('\n'), false)
+
+    expect(window.showInputBox).toBeCalledTimes(0)
+
+    expect(res).toBeTruthy()
+    expect(res).toHaveLength(1)
+    expect(res![0]).toBe('export TEST="placeholder"')
   })
 
   test('single line export with cancelled prompt', async () => {
@@ -286,7 +304,7 @@ suite('parseCommandSeq', () => {
       'echo $TEST_MULTILINE'
     ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'), getCmdSeq)
+    const res = await parseCommandSeq(cmdLines.join('\n'), true, getCmdSeq)
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
