@@ -135,7 +135,7 @@ def hello():
 ## Curl an image
 
 ```sh { interactive=false, mimeType=image/png }
-curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2>/dev/null
+curl -s https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png
 ```
 
 ## Terminal Dimensions
