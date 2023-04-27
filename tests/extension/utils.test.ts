@@ -49,15 +49,9 @@ beforeAll(() => {
 afterAll(() => { process.env.PATH = PATH })
 
 test('isInteractive', () => {
-  // when set to false in configutaration
-  vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(false) } as any)
-  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(false)
-  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(false)
   expect(getAnnotations({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
-
-  vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({ get: vi.fn().mockReturnValue(true) } as any)
-  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(true)
-  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(true)
+  expect(getAnnotations({ metadata: { interactive: 'false' } } as any).interactive).toBe(false)
+  expect(getAnnotations({ metadata: { } } as any).interactive).toBe(true)
 })
 
 test('getTerminalByCell', () => {
@@ -260,8 +254,8 @@ suite('#getAnnotations', () => {
     expect(d).toStrictEqual(
       <CellAnnotations>{
         background: false,
-        closeTerminalOnSuccess: false,
-        interactive: false,
+        closeTerminalOnSuccess: true,
+        interactive: true,
         mimeType: 'text/plain',
         name: 'command-123',
         'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0'
@@ -279,8 +273,8 @@ suite('#getAnnotations', () => {
 
     expect(getAnnotations(hello)).toStrictEqual({
       background: false,
-      closeTerminalOnSuccess: false,
-      interactive: false,
+      closeTerminalOnSuccess: true,
+      interactive: true,
       mimeType: 'text/plain',
       name: 'echo-hello',
     })
