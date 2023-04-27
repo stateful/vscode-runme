@@ -139,6 +139,10 @@
       {
         "command": "runme.codelens.action",
         "title": "Runme CodeLens Action"
+      },
+      {
+        "command": "runme.file.openInRunme",
+        "title": "Open in Runme"
       }
     ],
     "menus": {
@@ -174,6 +178,10 @@
         {
           "command": "runme.codelens.action",
           "when": "false"
+        },
+        {
+          "command": "runme.file.openInRunme",
+          "when": "false"
         }
       ],
       "editor/title": [
@@ -204,6 +212,13 @@
           "command": "runme.expandTreeView",
           "when": "view == runme.launcher && !runme.launcher.isExpanded",
           "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "runme.file.openInRunme",
+          "when": "resourceLangId == markdown",
+          "group": "navigation@30"
         }
       ]
     },

@@ -11,6 +11,7 @@ import vscode, {
   NotebookCell,
   NotebookCellExecution,
   NotebookCellOutput,
+  commands,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -342,4 +343,8 @@ export function processEnviron(): string[] {
 
 export function isWindows(): boolean {
   return os.platform().startsWith('win')
+}
+
+export async function openFileAsRunmeNotebook(uri: Uri): Promise<void> {
+  return await commands.executeCommand('vscode.openWith', uri, Kernel.type)
 }

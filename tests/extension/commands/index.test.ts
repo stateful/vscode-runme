@@ -24,9 +24,10 @@ import {
   stopBackgroundTask,
   createNewRunmeNotebook,
   welcome,
-  tryIt
+  tryIt,
+  openFileInRunme
 } from '../../../src/extension/commands'
-import { getTerminalByCell, getAnnotations, replaceOutput } from '../../../src/extension/utils'
+import { getTerminalByCell, getAnnotations, replaceOutput, openFileAsRunmeNotebook } from '../../../src/extension/utils'
 import { getBinaryPath, isNotebookTerminalEnabledForCell } from '../../../src/utils/configuration'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
@@ -35,6 +36,7 @@ vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
   getTerminalByCell: vi.fn(),
   replaceOutput: vi.fn(),
+  openFileAsRunmeNotebook: vi.fn(),
 }))
 vi.mock('../../../src/utils/configuration', () => ({
   getBinaryPath: vi.fn(),
@@ -174,4 +176,30 @@ test('tryIt command in failure case', async () => {
   vi.mocked(workspace.fs.createDirectory).mockRejectedValue('ups')
   await tryIt({ extensionPath: '/foo/bar' } as any)
   expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(Object), 'runme')
+})
+
+beforeEach(() => {
+  vi.mocked(openFileAsRunmeNotebook).mockClear()
+})
+
+test('openFileInRunme command', async () => {
+  vi.mocked(openFileAsRunmeNotebook).mockClear()
+
+  const uri = { } as any
+  await openFileInRunme(uri)
+
+  expect(openFileAsRunmeNotebook).toHaveBeenCalledOnce()
+  expect(openFileAsRunmeNotebook).toBeCalledWith(uri, 0, [uri])
+})
+
+test('openFileInRunme command multiselect', async () => {
+  vi.mocked(openFileAsRunmeNotebook).mockClear()
+
+  const uri = { } as any
+  const uri2 = { } as any
+  await openFileInRunme(uri, [ uri, uri2 ])
+
+  expect(openFileAsRunmeNotebook).toBeCalledTimes(2)
+  expect(openFileAsRunmeNotebook).toBeCalledWith(uri, 0, [uri, uri2])
+  expect(openFileAsRunmeNotebook).toBeCalledWith(uri2, 1, [uri, uri2])
 })
