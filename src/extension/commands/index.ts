@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook, replaceOutput } from '../utils'
+import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 

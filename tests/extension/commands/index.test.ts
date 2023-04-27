@@ -27,7 +27,7 @@ import {
   tryIt,
   openFileInRunme
 } from '../../../src/extension/commands'
-import { getTerminalByCell, getAnnotations, replaceOutput, openFileAsRunmeNotebook } from '../../../src/extension/utils'
+import { getTerminalByCell, getAnnotations, openFileAsRunmeNotebook } from '../../../src/extension/utils'
 import { getBinaryPath, isNotebookTerminalEnabledForCell } from '../../../src/utils/configuration'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
