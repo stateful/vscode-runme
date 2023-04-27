@@ -3,7 +3,7 @@ import os from 'node:os'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext, NotebookCellExecution
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -17,16 +17,30 @@ function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
-export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean) {
+export function openIntegratedTerminal (cell: NotebookCell) {
+  const terminal = getTerminalByCell(cell)
+  if (!terminal) {
+    return showWarningMessage()
+  }
+
+  return terminal.show()
+}
+
+export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
+    if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
+      const outputs = await kernel.getCellOutputs(cell)
+
+      if (!forceShow) {
+        return await outputs.toggleTerminal()
+      } else {
+        return await outputs.showTerminal()
+      }
+    }
+
     const terminal = getTerminalByCell(cell)
     if (!terminal) {
       return showWarningMessage()
-    }
-
-    if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
-      const outputs = await kernel.getCellOutputs(cell)
-      return await outputs.toggleTerminal()
     }
 
     return terminal.show()

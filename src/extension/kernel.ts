@@ -18,11 +18,6 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import type { ClientMessage, Serializer } from '../types'
 import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
-import {
-  getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize,
-  getNotebookTerminalRows
-} from '../utils/configuration'
 import { postClientMessage } from '../utils/messaging'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'

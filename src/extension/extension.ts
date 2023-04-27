@@ -20,7 +20,8 @@ import {
   createNewRunmeNotebook,
   welcome,
   tryIt,
-  openFileInRunme
+  openFileInRunme,
+  openIntegratedTerminal
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -103,7 +104,7 @@ export class RunmeExtension {
       codeLensProvider,
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openTerminal(kernel, false)),
+      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',

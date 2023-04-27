@@ -25,7 +25,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
-import { openTerminal } from '../commands'
+import { toggleTerminal } from '../commands'
 import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
@@ -61,7 +61,7 @@ export async function executeRunner(
 
     if (terminal && terminal.runnerSession) {
       if (!terminal.runnerSession.hasExited()) {
-        openTerminal(kernel, true, exec)(exec.cell)
+        toggleTerminal(kernel, true, true)(exec.cell)
         return true
       } else {
         terminal.dispose()
