@@ -116,7 +116,7 @@ export class RunmeTaskProvider implements TaskProvider {
         const cwd = options.cwd || path.dirname(filePath)
 
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(cellContent, prepareCmdSeq)
+        const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
 
         const runOpts: RunProgramOptions = {
           programName: getShellPath() ?? 'sh',
