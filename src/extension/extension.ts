@@ -93,7 +93,7 @@ export class RunmeExtension {
         },
       }),
 
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider(kernel)),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),

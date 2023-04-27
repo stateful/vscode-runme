@@ -188,6 +188,10 @@ export class NotebookCellOutputManager {
     return terminalState
   }
 
+  getCellTerminalState(): ITerminalState|undefined {
+    return this.terminalState
+  }
+
   async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution> {
     await this.onFinish
 

@@ -20,7 +20,7 @@ import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -131,8 +131,6 @@ export async function executeRunner(
     terminalState?.write(data)
   }
 
-  program.onDidWrite(writeToTerminalStdout)
-
   program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
     'runme.dev/uuid': cellUUID,
     data
@@ -194,14 +192,17 @@ export async function executeRunner(
   terminalState = await kernel.registerCellTerminalState(exec.cell, revealNotebookTerminal ? 'xterm' : 'local')
 
   if (
-    revealNotebookTerminal &&
     MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
     !isVercelDeployScript(script)
   ) {
-    await outputs.showTerminal()
+    if (revealNotebookTerminal) {
+      program.registerTerminalWindow('notebook')
+      await program.setActiveTerminalWindow('notebook')
+    }
 
-    program.registerTerminalWindow('notebook')
-    await program.setActiveTerminalWindow('notebook')
+    program.onDidWrite(writeToTerminalStdout)
+
+    await outputs.showTerminal()
   } else {
     const output: Buffer[] = []
     const outputItems$ = new Subject<NotebookCellOutputItem>()
@@ -225,14 +226,12 @@ export async function executeRunner(
 
       if (item) {
         outputItems$.next(item)
-      } else {
-        await outputs.showTerminal()
       }
     }
 
     // debounce by 0.5s because human preception likely isn't as fast
     const sub = outputItems$.pipe(debounceTime(500)).subscribe((item) =>
-      replaceOutput(exec, [new NotebookCellOutput([item])])
+      outputs.replaceOutputs([new NotebookCellOutput([item])])
     )
 
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })

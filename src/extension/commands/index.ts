@@ -28,7 +28,7 @@ export function openIntegratedTerminal (cell: NotebookCell) {
 
 export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
-    if (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) {
+    if ((isNotebookTerminalEnabledForCell(cell) && notebookTerminal) || !getAnnotations(cell).interactive) {
       const outputs = await kernel.getCellOutputs(cell)
 
       if (!forceShow) {

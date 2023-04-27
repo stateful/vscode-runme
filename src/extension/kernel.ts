@@ -92,6 +92,10 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
+  async getTerminalState(cell: NotebookCell): Promise<ITerminalState|undefined> {
+    return (await this.getCellOutputs(cell)).getCellTerminalState()
+  }
+
   async registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
     return outputs.registerCellTerminalState(type)
