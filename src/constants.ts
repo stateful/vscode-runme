@@ -15,10 +15,9 @@ export enum OutputType {
 export enum ClientMessages {
   infoMessage = 'common:infoMessage',
   errorMessage = 'common:errorMessage',
-  update = 'deno:deploymentUpdate',
-  deployed = 'deno:finishedDeployment',
-  promote = 'deno:promoteDeployment',
-  prod = 'vercel:promotePreview',
+  denoUpdate = 'deno:deploymentUpdate',
+  denoPromote = 'deno:promoteDeployment',
+  vercelProd = 'vercel:promotePreview',
   mutateAnnotations = 'annotations:mutate',
   terminalStdout = 'terminal:stdout',
   terminalStderr = 'terminal:stderr',

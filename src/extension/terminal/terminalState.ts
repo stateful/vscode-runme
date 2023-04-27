@@ -1,15 +1,21 @@
 import { Terminal as XTerm } from 'xterm-headless'
 import { SerializeAddon } from 'xterm-addon-serialize'
 
-export type NotebookTerminalType = 'xterm'
+import { OutputType } from '../../constants'
+
+export type NotebookTerminalType = 'xterm'|'local'
 
 export interface ITerminalState {
   serialize(): string
   write(data: string | Uint8Array): void
   input(data: string, wasUserInput: boolean): void
+
+  readonly outputType: OutputType
 }
 
 export class XTermState implements ITerminalState {
+  readonly outputType = OutputType.terminal
+
   private xterm: XTerm
   private serializer: SerializeAddon
 
@@ -39,4 +45,19 @@ export class XTermState implements ITerminalState {
       console.error(e)
     }
   }
+}
+
+export class LocalBufferTermState implements ITerminalState {
+  readonly outputType = OutputType.outputItems
+
+  private output: Buffer[] = []
+
+  write(data: string | Uint8Array) {
+    this.output.push(Buffer.from(data))
+  }
+
+  // noop
+  input(): void { }
+
+  serialize(): string { return Buffer.concat(this.output).toString('base64') }
 }

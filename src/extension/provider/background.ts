@@ -2,43 +2,42 @@ import type vscode from 'vscode'
 import { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment, tasks } from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
+import { Kernel } from '../kernel'
 
-export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+export class ToggleTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
-  private _closeTerminalSubscription: vscode.Disposable
+  protected disposables: vscode.Disposable[] = [
+    this._onDidChangeCellStatusBarItems
+  ]
 
-  constructor() {
-    this._closeTerminalSubscription = window.onDidCloseTerminal(() =>
-      this.refreshStatusBarItems()
+  constructor(protected kernel: Kernel) {
+    this.disposables.push(
+      window.onDidCloseTerminal(this.refreshStatusBarItems.bind(this)),
+      tasks.onDidStartTaskProcess(this.refreshStatusBarItems.bind(this)),
+      tasks.onDidEndTaskProcess(this.refreshStatusBarItems.bind(this)),
     )
   }
 
   async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
-    /**
-     * don't show status item if we run it in non-interactive mode where there is no terminal to open
-     */
-    if (!getAnnotations(cell).interactive) {
-      return
-    }
+    const terminalState = await this.kernel.getTerminalState(cell)
 
-    const terminal = getTerminalByCell(cell)
-
-    if (!Boolean(terminal)) {
+    if (!terminalState) {
       return
     }
 
     const terminalButtonParts = [
       '$(terminal)',
-      'Open Terminal',
+      'Terminal',
     ]
 
     const item = new NotebookCellStatusBarItem(
       terminalButtonParts.join(' '),
       NotebookCellStatusBarAlignment.Right
     )
-    item.command = 'runme.openTerminal'
+    item.command = 'runme.toggleTerminal'
+
     return item
   }
 
@@ -47,8 +46,7 @@ export class ShowTerminalProvider implements vscode.NotebookCellStatusBarItemPro
   }
 
 	public dispose() {
-    this._onDidChangeCellStatusBarItems.dispose()
-    this._closeTerminalSubscription.dispose()
+    this.disposables.forEach(({ dispose }) => dispose())
 	}
 }
 

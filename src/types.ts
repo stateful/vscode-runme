@@ -41,6 +41,8 @@ export namespace Serializer {
     mimeType?: string
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
+    ['runme.dev/denoState']?: DenoState
+    ['runme.dev/vercelState']?: VercelState
   }
 }
 
@@ -55,20 +57,25 @@ export type CellOutputPayload<T extends OutputType> = T extends any
 
 export type CellOutput = CellOutputPayload<OutputType>
 
-interface DenoPayload {
+export interface DenoState {
+  promoted?: boolean
   deployed?: boolean
   project?: any
   deployments?: any[]
+  error?: any
+}
+
+export interface VercelState {
+  payload?: any
+  outputItems: string[]
+  type?: string
+  error?: any
 }
 
 interface Payload {
   [OutputType.error]: string
-  [OutputType.deno]?: DenoPayload
-  [OutputType.vercel]: {
-    type: string
-    payload?: any
-    outputItems: string[]
-  }
+  [OutputType.deno]?: DenoState
+  [OutputType.vercel]: VercelState
   [OutputType.outputItems]: OutputItemsPayload
   [OutputType.annotations]: {
     annotations?: CellAnnotations
@@ -88,13 +95,12 @@ export type ClientMessage <T extends ClientMessages> = T extends any ? {
   output: ClientMessagePayload[T]
 } : never
 export interface ClientMessagePayload {
-  [ClientMessages.deployed]: boolean
-  [ClientMessages.update]: DenoPayload
-  [ClientMessages.promote]: {
+  [ClientMessages.denoUpdate]: DenoState
+  [ClientMessages.denoPromote]: {
     id: string
     productionDeployment: string
   }
-  [ClientMessages.prod]: {
+  [ClientMessages.vercelProd]: {
     cellIndex: number
   }
   [ClientMessages.mutateAnnotations]: {

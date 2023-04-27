@@ -4,9 +4,10 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
+import { NotebookCellOutputManager } from '../cell'
 import { ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
-import { getAnnotations, replaceOutput } from '../utils'
+import { getAnnotations } from '../utils'
 
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
@@ -17,7 +18,8 @@ async function shellExecutor(
   exec: NotebookCellExecution,
   script: string,
   cwd: string,
-  env: Record<string, string>
+  env: Record<string, string>,
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   let postScript = script
   let prod = false
@@ -41,11 +43,13 @@ async function shellExecutor(
    */
   async function handleOutput(data: Buffer) {
     outputItems.push(data)
-    let item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
+    let item: NotebookCellOutputItem|undefined
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (isVercelDeployScript(script)) {
-      item = await handleVercelDeployOutput(
+      await handleVercelDeployOutput(
+        exec.cell,
+        outputs,
         outputItems,
         index,
         prod,
@@ -59,9 +63,13 @@ async function shellExecutor(
           mime
         }
       }, OutputType.outputItems)
+    } else {
+      item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
     }
 
-    replaceOutput(exec, [ new NotebookCellOutput([ item ]) ])
+    if (item) {
+      outputs.replaceOutputs([ new NotebookCellOutput([ item ]) ])
+    }
   }
 
   child.stdout.on('data', handleOutput)

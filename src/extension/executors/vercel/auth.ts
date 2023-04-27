@@ -8,7 +8,7 @@ import { NotebookCellExecution, NotebookCellOutputItem, NotebookCellOutput, wind
 import type { Argv } from 'yargs'
 
 import { renderError } from '../utils'
-import { replaceOutput } from '../../utils'
+import { NotebookCellOutputManager } from '../../cell'
 
 import { getAuthToken, getConfigFilePath } from './utils'
 
@@ -28,7 +28,8 @@ interface VercelCLILogin {
 
 export async function login (
   exec: NotebookCellExecution,
-  argv: Argv<VercelCLILogin>
+  argv: Argv<VercelCLILogin>,
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   const args = await argv.argv
   const method = (
@@ -39,12 +40,12 @@ export async function login (
   )
 
   if (!method) {
-    renderError(exec, 'Please select login method.')
+    renderError(outputs, 'Please select login method.')
     return false
   }
 
   if (!method.includes('GitHub') && method !== 'github') {
-    renderError(exec, 'Login method not supported.')
+    renderError(outputs, 'Login method not supported.')
     return false
   }
 
@@ -92,24 +93,24 @@ export async function login (
     await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
     server.close()
   } catch (err: any) {
-    replaceOutput(exec, new NotebookCellOutput([
+    outputs.replaceOutputs(new NotebookCellOutput([
       NotebookCellOutputItem.text(err.message)
     ]))
     return false
   }
 
   const { username } = await authPromise as any
-  replaceOutput(exec, new NotebookCellOutput([
+  outputs.replaceOutputs(new NotebookCellOutput([
     NotebookCellOutputItem.text(`Logged in as ${username}`)
   ]))
   return true
 }
 
-export async function logout (exec: NotebookCellExecution): Promise<boolean> {
+export async function logout (exec: NotebookCellExecution, outputs: NotebookCellOutputManager): Promise<boolean> {
   let token = await getAuthToken()
 
   if (!token) {
-    replaceOutput(exec, new NotebookCellOutput([
+    outputs.replaceOutputs(new NotebookCellOutput([
       NotebookCellOutputItem.text('Not currently logged in, so logout did nothing')
     ]))
     return true
@@ -127,9 +128,9 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
     })
   } catch (err: any) {
     if (err.status === 403) {
-      renderError(exec, 'Token is invalid so it cannot be revoked')
+      renderError(outputs, 'Token is invalid so it cannot be revoked')
     } else if (err.status !== 200) {
-      renderError(exec, `Failed revoking auth token: ${err.message}`)
+      renderError(outputs, `Failed revoking auth token: ${err.message}`)
     }
   }
 
@@ -140,11 +141,11 @@ export async function logout (exec: NotebookCellExecution): Promise<boolean> {
     const configFilePath = await getConfigFilePath()
     await fs.unlink(configFilePath)
   } catch (err: any) {
-    renderError(exec, `Failed during logout: ${err.message}`)
+    renderError(outputs, `Failed during logout: ${err.message}`)
     return false
   }
 
-  replaceOutput(exec, new NotebookCellOutput([
+  outputs.replaceOutputs(new NotebookCellOutput([
     NotebookCellOutputItem.text('Logged out!')
   ]))
   return true

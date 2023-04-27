@@ -10,6 +10,7 @@ import {
 import { getCmdShellSeq, getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
+import { NotebookCellOutputManager } from '../cell'
 
 import { retrieveShellCommand } from './utils'
 import { sh as inlineSh } from './shell'
@@ -31,7 +32,8 @@ export function closeTerminalByEnvID (id: string, kill?: boolean) {
 async function taskExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
-  doc: TextDocument
+  doc: TextDocument,
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   const cwd = path.dirname(doc.uri.fsPath)
   const cellText = await retrieveShellCommand(exec)
@@ -63,7 +65,7 @@ async function taskExecutor(
    */
   const isInteractive = getAnnotations(exec.cell).interactive
   if (!isInteractive) {
-    return inlineSh.call(this, exec, cmdLine, cwd, env)
+    return inlineSh.call(this, exec, cmdLine, cwd, env, outputs)
   }
 
   const taskExecution = new Task(

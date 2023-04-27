@@ -16,7 +16,7 @@ import {
 } from 'vscode'
 
 import {
-  openTerminal,
+  toggleTerminal,
   copyCellToClipboard,
   runCLICommand,
   openAsRunmeNotebook,
@@ -27,13 +27,13 @@ import {
   tryIt,
   openFileInRunme
 } from '../../../src/extension/commands'
-import { getTerminalByCell, getAnnotations, replaceOutput, openFileAsRunmeNotebook } from '../../../src/extension/utils'
+import { getTerminalByCell, getAnnotations, openFileAsRunmeNotebook } from '../../../src/extension/utils'
 import { getBinaryPath, isNotebookTerminalEnabledForCell } from '../../../src/utils/configuration'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
-  getAnnotations: vi.fn(),
+  getAnnotations: vi.fn(() => ({})),
   getTerminalByCell: vi.fn(),
   replaceOutput: vi.fn(),
   openFileAsRunmeNotebook: vi.fn(),
@@ -60,16 +60,20 @@ beforeEach(() => {
   vi.mocked(window.showWarningMessage).mockClear()
   vi.mocked(window.showInformationMessage).mockClear()
   vi.mocked(getAnnotations).mockClear()
+  vi.mocked(isNotebookTerminalEnabledForCell).mockReset()
+  vi.mocked(getTerminalByCell).mockReset()
 })
 
 test('openTerminal without notebook terminal', () => {
-  const func = openTerminal({} as any, false)
+  const func = toggleTerminal({ } as any, false)
 
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(false)
+  vi.mocked(getAnnotations).mockReturnValueOnce(({ interactive: true } as any))
   expect(func({} as any)).resolves.toBe(undefined)
   expect(window.showWarningMessage).toBeCalledTimes(1)
 
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(false)
+  vi.mocked(getAnnotations).mockReturnValueOnce(({ interactive: true } as any))
   vi.mocked(getTerminalByCell).mockReturnValue({ show: vi.fn().mockReturnValue('showed') } as any)
   expect(func({} as any)).resolves.toBe('showed')
 })
@@ -77,27 +81,22 @@ test('openTerminal without notebook terminal', () => {
 test('openTerminal with notebook terminal', async () => {
   vi.mocked(isNotebookTerminalEnabledForCell).mockReset()
 
-  const payload = { data: 'data' }
-
-  const execution = {
-    start: vi.fn(),
-    end: vi.fn(),
+  const outputs = {
+    toggleTerminal: vi.fn(),
+    showTerminal: vi.fn(),
   }
 
   const kernel = {
-    getCellTerminalOutputPayload: vi.fn().mockReturnValue(payload),
-    createCellExecution: vi.fn().mockResolvedValue(execution)
+    getCellOutputs: vi.fn().mockReturnValue(outputs)
   }
-  const func = openTerminal(kernel as any, true)
+  const func = toggleTerminal(kernel as any, true)
 
   vi.mocked(getTerminalByCell).mockReturnValueOnce({ show: () => { } } as any)
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(true)
+
   await func({} as any)
+  expect(outputs.toggleTerminal).toBeCalledTimes(1)
   expect(isNotebookTerminalEnabledForCell).toBeCalledTimes(1)
-  expect(kernel.createCellExecution).toBeCalledTimes(1)
-  expect(execution.start).toBeCalledTimes(1)
-  expect(execution.end).toBeCalledTimes(1)
-  expect(vi.mocked(replaceOutput)).toBeCalledWith(execution, payload)
 })
 
 test('copyCellToClipboard', () => {

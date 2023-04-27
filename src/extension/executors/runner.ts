@@ -16,16 +16,17 @@ import {
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
-import { ClientMessages, OutputType } from '../../constants'
-import { CellOutputPayload, ClientMessage } from '../../types'
+import { ClientMessages } from '../../constants'
+import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq, replaceOutput } from '../utils'
+import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
-import { openTerminal } from '../commands'
+import { toggleTerminal } from '../commands'
+import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
 import { getShellPath, parseCommandSeq } from './utils'
@@ -46,6 +47,7 @@ export async function executeRunner(
   messaging: NotebookRendererMessaging,
   cellUUID: string,
   execKey: 'bash' | 'sh',
+  outputs: NotebookCellOutputManager,
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager
 ) {
@@ -59,7 +61,7 @@ export async function executeRunner(
 
     if (terminal && terminal.runnerSession) {
       if (!terminal.runnerSession.hasExited()) {
-        openTerminal(kernel, true, exec)(exec.cell)
+        await toggleTerminal(kernel, true, true)(exec.cell)
         return true
       } else {
         terminal.dispose()
@@ -129,8 +131,6 @@ export async function executeRunner(
     terminalState?.write(data)
   }
 
-  program.onDidWrite(writeToTerminalStdout)
-
   program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
     'runme.dev/uuid': cellUUID,
     data
@@ -189,23 +189,20 @@ export async function executeRunner(
 
   const mime = mimeType || 'text/plain' as const
 
+  terminalState = await kernel.registerCellTerminalState(exec.cell, revealNotebookTerminal ? 'xterm' : 'local')
+
   if (
-    revealNotebookTerminal &&
     MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
     !isVercelDeployScript(script)
   ) {
-    terminalState = kernel.registerCellTerminalState(exec.cell, 'xterm')
-
-    const terminalOutput = kernel.getCellTerminalOutputPayload(exec.cell)
-
-    if (terminalOutput) {
-      await replaceOutput(exec, terminalOutput)
-    } else {
-      revealNotebookTerminal = false
+    if (revealNotebookTerminal) {
+      program.registerTerminalWindow('notebook')
+      await program.setActiveTerminalWindow('notebook')
     }
 
-    program.registerTerminalWindow('notebook')
-    await program.setActiveTerminalWindow('notebook')
+    program.onDidWrite(writeToTerminalStdout)
+
+    await outputs.showTerminal()
   } else {
     const output: Buffer[] = []
     const outputItems$ = new Subject<NotebookCellOutputItem>()
@@ -214,29 +211,27 @@ export async function executeRunner(
     const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
-      let item = new NotebookCellOutputItem(Buffer.concat(output), mime)
+      let item: NotebookCellOutputItem|undefined = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (isVercelDeployScript(script)) {
-        item = await handleVercelDeployOutput(
-          output, exec.cell.index, vercelProd, environmentManager
+        await handleVercelDeployOutput(
+          exec.cell, outputs, output, exec.cell.index, vercelProd, environmentManager
         )
+
+        item = undefined
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
-        item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
-          type: OutputType.outputItems,
-          output: {
-            content: Buffer.concat(output).toString('base64'),
-            mime
-          }
-        }, OutputType.outputItems)
+        item = undefined
       }
 
-      outputItems$.next(item)
+      if (item) {
+        outputItems$.next(item)
+      }
     }
 
     // debounce by 0.5s because human preception likely isn't as fast
     const sub = outputItems$.pipe(debounceTime(500)).subscribe((item) =>
-      replaceOutput(exec, [new NotebookCellOutput([item])])
+      outputs.replaceOutputs([new NotebookCellOutput([item])])
     )
 
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })
@@ -251,6 +246,9 @@ export async function executeRunner(
       program.close()
     })
   } else {
+    await outputs.replaceOutputs([ ])
+    await outputs.showTerminal()
+
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,

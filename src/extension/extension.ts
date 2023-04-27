@@ -5,13 +5,13 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
 import RunmeServerError from './server/runmeServerError'
-import { ShowTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
+import { ToggleTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
-  openTerminal,
+  toggleTerminal,
   runCLICommand,
   copyCellToClipboard,
   openAsRunmeNotebook,
@@ -20,7 +20,8 @@ import {
   createNewRunmeNotebook,
   welcome,
   tryIt,
-  openFileInRunme
+  openFileInRunme,
+  openIntegratedTerminal
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -48,7 +49,9 @@ export class RunmeExtension {
       kernel.useRunner(runner)
     }
 
-    const serializer = grpcSerializer ? new GrpcSerializer(context, server) : new WasmSerializer(context)
+    const serializer = grpcSerializer ?
+      new GrpcSerializer(context, server, kernel) :
+      new WasmSerializer(context, kernel)
 
     /**
      * Start the Runme server
@@ -90,20 +93,19 @@ export class RunmeExtension {
         },
       }),
 
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ShowTerminalProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider(kernel)),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
-      // notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new TerminalViewProvider(kernel)),
 
       stopBackgroundTaskProvider,
 
       codeLensProvider,
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openTerminal', openTerminal(kernel, !!grpcRunner)),
-      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openTerminal(kernel, false)),
+      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
+      RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand(
         'runme.runCliCommand',
         runCLI

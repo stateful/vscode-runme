@@ -2,6 +2,7 @@ import { NotebookCellExecution, TextDocument, window } from 'vscode'
 
 import { DENO_ACCESS_TOKEN_KEY } from '../constants'
 import type { Kernel } from '../kernel'
+import { NotebookCellOutputManager } from '../cell'
 
 import { bash } from './task'
 import { deploy } from './deno/deploy'
@@ -12,6 +13,7 @@ export async function deno (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
+  outputs: NotebookCellOutputManager,
   runScript?: () => Promise<boolean>,
   environment = ENV_STORE_MANAGER
 ): Promise<boolean> {
@@ -32,11 +34,11 @@ export async function deno (
     /**
      * run actual deno deployment as bash script
      */
-    runScript?.() ?? bash.call(this, exec, doc),
+    runScript?.() ?? bash.call(this, exec, doc, outputs),
     /**
      * fetch data and render custom output
      */
-    deploy.call(this, exec, environment)
+    deploy.call(this, exec, outputs, environment)
   ]).then(
     ([bashSuccess, deploySuccess]) => bashSuccess && deploySuccess
   )

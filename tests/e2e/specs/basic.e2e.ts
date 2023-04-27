@@ -111,7 +111,7 @@ describe('Runme VS Code Extension', async () => {
       const cell = await notebook.getCell('npm i -g webdriverio')
       await cell.run()
 
-      await cell.openTerminal()
+      // await cell.openTerminal()
 
       const text = (await cell.getCellOutput(OutputType.TerminalView))[0]
 

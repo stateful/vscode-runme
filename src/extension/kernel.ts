@@ -7,25 +7,18 @@ import {
   NotebookEditor,
   NotebookCell,
   NotebookCellKind,
-  NotebookCellExecution,
   WorkspaceEdit,
   NotebookEdit,
   NotebookDocument,
-  NotebookCellOutput,
-  NotebookCellOutputItem,
   env,
   Uri
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { CellOutputPayload, ClientMessage, Serializer } from '../types'
-import { ClientMessages, OutputType } from '../constants'
+import type { ClientMessage, Serializer } from '../types'
+import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
-import {
-  getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize,
-  getNotebookTerminalRows
-} from '../utils/configuration'
+import { postClientMessage } from '../utils/messaging'
 
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -33,7 +26,8 @@ import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron, isWi
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
-import { ITerminalState, NotebookTerminalType, XTermState } from './terminal/terminalState'
+import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
+import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -59,7 +53,7 @@ export class Kernel implements Disposable {
   protected environment?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
 
-  protected cellTerminalState = new WeakMap<NotebookCell, ITerminalState>()
+  protected cellManager = new NotebookCellManager(this.#controller)
 
   constructor(
     protected context: ExtensionContext,
@@ -83,6 +77,10 @@ export class Kernel implements Disposable {
     )
   }
 
+  registerNotebookCell(cell: NotebookCell) {
+    this.cellManager.registerCell(cell)
+  }
+
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
     return this.#experiments.get(key) || defaultValue
   }
@@ -94,50 +92,13 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
-  getCellTerminalState(cell: NotebookCell): ITerminalState | undefined {
-    return this.cellTerminalState.get(cell)
+  async getTerminalState(cell: NotebookCell): Promise<ITerminalState|undefined> {
+    return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
-  registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): ITerminalState {
-    let terminalState: ITerminalState
-
-    switch (type) {
-      case 'xterm': {
-        terminalState = new XTermState()
-      } break
-    }
-
-    this.cellTerminalState.set(cell, terminalState)
-
-    return terminalState
-  }
-
-  getCellTerminalOutputPayload(cell: NotebookCell): NotebookCellOutput | undefined {
-    const terminalState = this.getCellTerminalState(cell)
-    if (!terminalState) { return }
-
-    const cellId = getAnnotations(cell)['runme.dev/uuid']
-    if (!cellId) { throw new Error('Cannot open cell terminal with invalid UUID!') }
-
-    const editorSettings = workspace.getConfiguration('editor')
-
-    const terminalFontFamily = getNotebookTerminalFontFamily() ?? editorSettings.get<string>('fontFamily', 'Arial')
-    const terminalFontSize = getNotebookTerminalFontSize() ?? editorSettings.get<number>('fontSize', 10)
-
-    const json: CellOutputPayload<OutputType.terminal> = {
-      type: OutputType.terminal,
-      output: {
-        'runme.dev/uuid': cellId,
-        terminalFontFamily,
-        terminalFontSize,
-        content: terminalState.serialize(),
-        initialRows: getNotebookTerminalRows(),
-      }
-    }
-
-    return new NotebookCellOutput([
-      NotebookCellOutputItem.json(json, OutputType.terminal),
-    ])
+  async registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): Promise<ITerminalState> {
+    const outputs = await this.cellManager.getNotebookOutputs(cell)
+    return outputs.registerCellTerminalState(type)
   }
 
   async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
@@ -154,10 +115,11 @@ export class Kernel implements Disposable {
   }
 
 
-  async #handleOpenNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+  async #handleOpenNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
     }
+    getCells().forEach(cell => this.registerNotebookCell(cell))
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -217,8 +179,8 @@ export class Kernel implements Disposable {
       }
 
       return
-    } else if (message.type === ClientMessages.promote) {
-      const payload = message as ClientMessage<ClientMessages.promote>
+    } else if (message.type === ClientMessages.denoPromote) {
+      const payload = message
       const token = await this.getEnvironmentManager().get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
@@ -229,12 +191,11 @@ export class Kernel implements Disposable {
         payload.output.id,
         payload.output.productionDeployment
       )
-      this.messaging.postMessage(<ClientMessage<ClientMessages.deployed>>{
-        type: ClientMessages.deployed,
-        output: deployed,
+      postClientMessage(this.messaging, ClientMessages.denoUpdate, {
+        promoted: deployed.valueOf()
       })
-    } else if (message.type === ClientMessages.prod) {
-      const payload = message as ClientMessage<ClientMessages.prod>
+    } else if (message.type === ClientMessages.vercelProd) {
+      const payload = message as ClientMessage<ClientMessages.vercelProd>
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const cell = editor.notebook.cellAt(payload.output.cellIndex)
       if (cell.executionSummary?.success) {
@@ -312,13 +273,18 @@ export class Kernel implements Disposable {
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<NotebookCellExecution> {
-    return this.#controller.createNotebookCellExecution(cell)
+  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution> {
+    return await this.cellManager.createNotebookCellExecution(cell)
+  }
+
+  public async getCellOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
+    return await this.cellManager.getNotebookOutputs(cell)
   }
 
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
-    const runningCell = cell.document
-    const exec = await this.createCellExecution(cell)
+    const runningCell = await workspace.openTextDocument(cell.document.uri)
+    const runmeExec = await this.createCellExecution(cell)
+    const exec = runmeExec.underlyingExecution
 
     const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']
 
@@ -327,12 +293,13 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    exec.start(Date.now())
+    runmeExec.start(Date.now())
     let execKey = getKey(runningCell)
 
     let successfulCellExecution: boolean
 
     const environmentManager = this.getEnvironmentManager()
+    const outputs = await this.getCellOutputs(cell)
 
     if (
       this.runner &&
@@ -340,7 +307,7 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = async (execKey: 'sh' | 'bash' = 'bash') => await executeRunner(
+      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
         this,
         this.context,
         this.runner!,
@@ -349,6 +316,7 @@ export class Kernel implements Disposable {
         this.messaging,
         uuid,
         execKey,
+        outputs,
         this.environment,
         environmentManager
       )
@@ -362,17 +330,17 @@ export class Kernel implements Disposable {
         successfulCellExecution = await runScript(execKey)
       } else {
         successfulCellExecution = await executor[execKey].call(
-          this, exec, runningCell, runScript, environmentManager
+          this, exec, runningCell, outputs, runScript, environmentManager
         )
       }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey].call(this, exec, runningCell)
+      successfulCellExecution =  await executor[execKey].call(this, exec, runningCell, outputs)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
-    exec.end(successfulCellExecution)
+    runmeExec.end(successfulCellExecution)
   }
 
   useRunner(runner: IRunner) {
