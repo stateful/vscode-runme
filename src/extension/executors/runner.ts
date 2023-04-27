@@ -52,7 +52,7 @@ export async function executeRunner(
   environmentManager?: IEnvironmentManager
 ) {
   const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
+  const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
 
   // enforce background tasks as singleton instanes
   // to do this,
@@ -79,7 +79,7 @@ export async function executeRunner(
     RUNME_ID
   }
 
-  const commands = await parseCommandSeq(cellText, prepareCmdSeq)
+  const commands = await parseCommandSeq(cellText, promptEnv, prepareCmdSeq)
   if(!commands) { return false }
 
   if (commands.length === 0) {

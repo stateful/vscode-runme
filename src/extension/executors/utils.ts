@@ -60,7 +60,8 @@ export async function promptUserForVariable(
 
 export function getCommandExportExtractMatches(
   rawText: string,
-  supportsDirect = true
+  supportsDirect = true,
+  supportsPrompt = true,
 ): CommandExportExtractMatch[] {
   const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
@@ -83,7 +84,7 @@ export function getCommandExportExtractMatches(
     if (placeHolder.startsWith('$(') && placeHolder.endsWith(')')) {
       matchType = 'exec'
       value = placeHolder.slice(2, -1)
-    } else if (!placeHolder.includes('\n')) {
+    } else if (!placeHolder.includes('\n') && supportsPrompt) {
       matchType = 'prompt'
     } else if (supportsDirect) {
       matchType = 'direct'
@@ -109,12 +110,12 @@ export function getCommandExportExtractMatches(
  * @param exec NotebookCellExecution
  * @returns cell text if all operation to retrieve the cell text could be executed, undefined otherwise
  */
-export async function retrieveShellCommand (exec: NotebookCellExecution) {
+export async function retrieveShellCommand (exec: NotebookCellExecution, promptForEnv = true) {
   let cellText = exec.cell.document.getText()
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
   const rawText = exec.cell.document.getText()
 
-  const exportMatches = getCommandExportExtractMatches(rawText)
+  const exportMatches = getCommandExportExtractMatches(rawText, true, promptForEnv)
 
   const stateEnv = Object.fromEntries(ENV_STORE)
 
@@ -194,11 +195,12 @@ export function getShellPath(execKey?: string): string|undefined {
  */
 export async function parseCommandSeq(
   cellText: string,
+  promptForEnv = true,
   parseBlock?: (block: string) => string[]
 ): Promise<string[]|undefined> {
   parseBlock ??= (s) => s ? s.split('\n') : []
 
-  const exportMatches = getCommandExportExtractMatches(cellText, false)
+  const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
 
   type CommandBlock =
     |{
