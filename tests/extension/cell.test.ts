@@ -24,6 +24,9 @@ vi.mock('vscode', async () => {
 })
 vi.mock('vscode-telemetry')
 
+vi.mock('../../src/extension/grpc/client', () => ({}))
+vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+
 describe('NotebookCellManager', () => {
   it('can register cells', () => {
     const manager = new NotebookCellManager({} as any)
@@ -32,7 +35,10 @@ describe('NotebookCellManager', () => {
     manager.registerCell(cell)
     expect(manager.getNotebookOutputs(cell)).toBeTruthy()
 
-    expect(async () => manager.getNotebookOutputs({} as any)).rejects.toBeInstanceOf(Error)
+    const errorMock = vi.spyOn(console, 'error')
+
+    expect(manager.getNotebookOutputs({} as any)).resolves.toBeInstanceOf(NotebookCellOutputManager)
+    expect(errorMock.mock.calls[0][0]).toMatch('has not been registered')
   })
 })
 
