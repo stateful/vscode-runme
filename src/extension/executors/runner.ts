@@ -61,7 +61,7 @@ export async function executeRunner(
 
     if (terminal && terminal.runnerSession) {
       if (!terminal.runnerSession.hasExited()) {
-        toggleTerminal(kernel, true, true)(exec.cell)
+        await toggleTerminal(kernel, true, true)(exec.cell)
         return true
       } else {
         terminal.dispose()

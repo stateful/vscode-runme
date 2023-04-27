@@ -32,10 +32,12 @@ export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean, force
       const outputs = await kernel.getCellOutputs(cell)
 
       if (!forceShow) {
-        return await outputs.toggleTerminal()
+        await outputs.toggleTerminal()
       } else {
-        return await outputs.showTerminal()
+        await outputs.showTerminal()
       }
+
+      return
     }
 
     const terminal = getTerminalByCell(cell)
