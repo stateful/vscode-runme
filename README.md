@@ -59,6 +59,5 @@ Runme is in rapid development. Checkout our roadmap at [https://github.com/state
 We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
 
 - [Join our Discord](https://discord.gg/BQm8zRCBUY)
-- [Review the Roadmap](https://github.com/stateful/runme/projects)
 - [Submit an Issue](https://github.com/stateful/vscode-runme/issues)
 - [Contribute on Github](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
