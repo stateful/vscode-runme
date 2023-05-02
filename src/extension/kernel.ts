@@ -11,7 +11,7 @@ import {
   NotebookEdit,
   NotebookDocument,
   env,
-  Uri
+  Uri,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -28,6 +28,7 @@ import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
+import { SerializerBase } from './serializer'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -55,8 +56,10 @@ export class Kernel implements Disposable {
 
   protected cellManager = new NotebookCellManager(this.#controller)
 
+  protected serializer?: SerializerBase
+
   constructor(
-    protected context: ExtensionContext,
+    protected context: ExtensionContext
   ) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
@@ -92,6 +95,10 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
+  registerSerializer(serializer: SerializerBase) {
+    this.serializer = serializer
+  }
+
   async getTerminalState(cell: NotebookCell): Promise<ITerminalState|undefined> {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
@@ -107,6 +114,7 @@ export class Kernel implements Disposable {
     }
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
+
     TelemetryReporter.sendTelemetryEvent('notebook.save', {
       'notebook.hashedUri': hashed,
       'notebook.isReadme': isReadme.toString(),

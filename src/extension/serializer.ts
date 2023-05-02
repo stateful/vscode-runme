@@ -13,6 +13,8 @@ import {
   NotebookEdit,
   NotebookDocumentChangeEvent,
   Disposable,
+  NotebookDocument,
+  CancellationTokenSource,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -45,8 +47,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     this.disposables.push(
       workspace.onDidChangeNotebookDocument(
         this.handleNotebookChanged.bind(this)
+      ),
+      workspace.onDidSaveNotebookDocument(
+        this.handleNotebookSaved.bind(this)
       )
     )
+    kernel.registerSerializer(this)
   }
 
   public dispose() {
@@ -78,6 +84,33 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         workspace.applyEdit(edit)
       })
     })
+  }
+
+  protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
+    // update changes in metadata
+    const bytes = await workspace.fs.readFile(uri)
+    const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
+
+    const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
+      const updatedName: string|undefined = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
+      if (updatedName) {
+        const oldCell = cellAt(i)
+
+        return [
+            NotebookEdit.updateCellMetadata(i, {
+            ...oldCell.metadata || {},
+            'runme.dev/name': updatedName,
+          } as Serializer.Metadata)
+        ]
+      }
+
+      return []
+    })
+
+    const edit = new WorkspaceEdit()
+    edit.set(uri, notebookEdits)
+
+    await workspace.applyEdit(edit)
   }
 
   public static addCellUuid(

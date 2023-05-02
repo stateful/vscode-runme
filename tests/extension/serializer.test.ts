@@ -3,6 +3,7 @@ import { expect, vi, it, describe } from 'vitest'
 
 import { WasmSerializer } from '../../src/extension/serializer'
 import { canEditFile } from '../../src/extension/utils'
+import type { Kernel } from '../../src/extension/kernel'
 
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
@@ -20,6 +21,7 @@ vi.mock('vscode', () => ({
     workspace: {
         fs: { readFile: vi.fn().mockReturnValue(new Promise(() => {})) },
         onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+        onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     },
     commands: { executeCommand: vi.fn() }
 }))
@@ -29,6 +31,12 @@ vi.mock('../../src/extension/utils', () => ({
     initWasm: vi.fn()
 }))
 
+function newKernel(): Kernel {
+  return {
+    registerSerializer: vi.fn(),
+  } as unknown as Kernel
+}
+
 describe('WasmSerializer', () => {
     const context: any = {
         extensionUri: { fsPath: '/foo/bar' }
@@ -36,7 +44,7 @@ describe('WasmSerializer', () => {
 
     describe('serializeNotebook', () => {
         it('fails when notebook is not active', async () => {
-            const s = new WasmSerializer(context)
+            const s = new WasmSerializer(context, newKernel())
             await expect(() => s.serializeNotebook({} as any, {} as any))
                 .rejects.toThrow(/not active/)
         })
@@ -44,7 +52,7 @@ describe('WasmSerializer', () => {
         it('prevents saving if canEditFile returns false', async () => {
             // @ts-ignore readonly
             window.activeNotebookEditor = {} as any
-            const s = new WasmSerializer(context)
+            const s = new WasmSerializer(context, newKernel())
             await expect(() => s.serializeNotebook({} as any, {} as any))
                 .rejects.toThrow(/saving non version controlled notebooks is disabled/)
         })
@@ -53,7 +61,7 @@ describe('WasmSerializer', () => {
             // @ts-ignore readonly
             window.activeNotebookEditor = {} as any
             vi.mocked(canEditFile).mockResolvedValue(true)
-            const s = new WasmSerializer(context)
+            const s = new WasmSerializer(context, newKernel())
             // @ts-ignore readonly
             s['ready'] = Promise.reject('ups')
             await expect(() => s.serializeNotebook({} as any, {} as any)).rejects.toThrow(/ups/)
@@ -63,7 +71,7 @@ describe('WasmSerializer', () => {
             // @ts-ignore readonly
             window.activeNotebookEditor = {} as any
             vi.mocked(canEditFile).mockResolvedValue(true)
-            const s = new WasmSerializer(context)
+            const s = new WasmSerializer(context, newKernel())
             // @ts-ignore readonly
             s['ready'] = Promise.resolve()
             expect(Buffer.from(await s.serializeNotebook({} as any, {} as any)))
