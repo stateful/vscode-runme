@@ -58,7 +58,7 @@ test('initializes all providers', async () => {
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
 
-  expect(commands.executeCommand).toBeCalledWith('vscode.open', '/foo/bar')
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', '/foo/bar', 'runme')
   expect(workspace.fs.stat).toBeCalledWith('/foo/bar')
   expect(workspace.fs.delete).toBeCalledWith('/foo/bar')
 })
