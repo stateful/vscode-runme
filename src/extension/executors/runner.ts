@@ -20,7 +20,7 @@ import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCmdShellSeq, getTerminalByCell, prepareCmdSeq } from '../utils'
+import { getAnnotations, getCellRunmeId, getCmdShellSeq, getTerminalByCell, prepareCmdSeq } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -71,7 +71,7 @@ export async function executeRunner(
 
   const cwd = path.dirname(runningCell.uri.fsPath)
 
-  const RUNME_ID = `${runningCell.fileName}:${exec.cell.index}`
+  const RUNME_ID = getCellRunmeId(exec.cell)
 
   let cellText = exec.cell.document.getText()
 
