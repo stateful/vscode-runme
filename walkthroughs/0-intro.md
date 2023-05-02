@@ -18,7 +18,6 @@ The Runme team believes that even if you have textually excellent README.md, enc
 Runme is primary interface is a VS Code extension that provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart. It consists of two major parts:
 
 - A [CLI tool](https://github.com/stateful/runme) that understands markdown and allows you to discover and run code snippets within it
-
 - A VS Code extension that integrates these capabilities into VS Code and allows you to run markdown through a notebook UI
 
 ## 🤩 Markdown turned interactive
@@ -26,7 +25,7 @@ Runme is primary interface is a VS Code extension that provides developers with 
 - 🏃 Runme lets you craft dev-native markdown files and create an interactive runbook experience for VS Code.
 - 🙌 It is an open-source tool building on the developer norm of using README.md as an entry point to a code repository.
 - 📜 It lets you seamlessly turn your existing Markdown docs, such as README.md, into runnable notebooks.
-⏯ It enables static docs to become interactive for its readers and greatly improves their learning experience.
+   ⏯ It enables static docs to become interactive for its readers and greatly improves their learning experience.
 - 🙆 Runme is a human-centric approach to providing and consuming code repository documentation. It's designed to progressively bridge the widening developer experience gaps in a cloud-native age.
 
 Gaps in developer experience such as:
@@ -40,26 +39,12 @@ Gaps in developer experience such as:
 
 Runme’s purpose is to enable developers to achieve a functional local development environment quickly, starting with copy&paste, click to run commands, and many more features. While README.md is the most well-known, there are several other markdown files often found in a repo that you may encounter, including; BUILD.md, CONTRIBUTING.md, and many more. Runme supports most .md and .mdx files!
 
-Make sure to [get in touch](https://discord.gg/BQm8zRCBUY) with us if you are missing a feature or have other ideas. You can review development progress in [Runme's roadmap](https://github.com/stateful/runme/projects).
-
-👩‍💻 As a VS Code user, just click here to leverage Runme to run through this getting started guide.
-
-## 🛣 What's on the roadmap
-
-Review development progress in [Runme's roadmap](https://github.com/stateful/runme/projects)
-A few highlights of what's coming:
-
-- Just like code, test your documentation in Continiuous Integration
-- Switch back and forth between notebook and terminal UX seamlessly
-- Notebook UX tweaks and integrations for both authors and users
-- And more - tell us about your feature request [on Discord](https://discord.gg/stateful)
+Make sure to [get in touch](https://discord.gg/BQm8zRCBUY) with us if you are missing a feature or have other ideas.
 
 ## Known limitations
 
 - Be cautious with environment variables interleaved within code blocks. The stateful execution of the notebooks (shell/bash-only; no PowerShell on Windows yet) leverages a naive implementation where the VS Code extension prompts for ENV var values and attempts to expand them. In essence, it does not match an interactive bash/shell session (yet).
-
 - We continue experimenting with aspects of user/developer experience including the passing of information/variables from cell to cell, ENV var handling that more closely matches shell a session and more robust markdown handling.
-
 - Please [report any issues](https://github.com/stateful/runme/issues/new) you encounter to help us mature Runme.
 
 ## 💡 Telemetry for improvements
