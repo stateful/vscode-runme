@@ -144,7 +144,7 @@ export class RunmeExtension {
         const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
         const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
         await workspace.fs.delete(startupFileUri)
-        await commands.executeCommand('vscode.open', bootFileUri)
+        await commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
       }
     }
   }
