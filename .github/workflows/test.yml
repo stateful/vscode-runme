@@ -9,21 +9,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: 🧪 Setup and Test with Runme
+        uses: coactions/setup-xvfb@v1
         with:
-          node-version: 18
-      - name: 📦 Install Dependencies
-        run: npm install
+          run: |
+            npm i -g runme
+            npx runme run --filename=CONTRIBUTING.md configureNPM
+            npx runme run --filename=CONTRIBUTING.md setup
+            npx runme run --filename=CONTRIBUTING.md build
+            npx runme run --filename=CONTRIBUTING.md test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: 🏗 Build Project
-        run: npm run build:dev
-      - name: 🧪 Run Tests
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: npm test
-          options: "-screen 0 1600x1200x24"
-      - uses: actions/upload-artifact@v3
+      - name: 🔼 Upload Artifacts
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: screenshots
