@@ -103,27 +103,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const { interactive, background } = getAnnotations(cell.metadata)
 
-    const cwd = options.cwd || path.dirname(filePath)
     const isBackground = options.isBackground || background
-
-    const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-    const commands = await parseCommandSeq(cellContent, prepareCmdSeq)
-
-    const runOpts: RunProgramOptions = {
-      programName: getShellPath() ?? 'sh',
-      exec: {
-        type: 'commands',
-        commands: commands ?? [''],
-      },
-      cwd,
-      environment,
-      tty: interactive,
-      convertEol: true,
-    }
-
-    if (!environment) {
-      runOpts.envs = processEnviron()
-    }
 
     const name = `${command}`
 
@@ -133,6 +113,27 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
+        const cwd = options.cwd || path.dirname(filePath)
+
+        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
+        const commands = await parseCommandSeq(cellContent, prepareCmdSeq)
+
+        const runOpts: RunProgramOptions = {
+          programName: getShellPath() ?? 'sh',
+          exec: {
+            type: 'commands',
+            commands: commands ?? [''],
+          },
+          cwd,
+          environment,
+          tty: interactive,
+          convertEol: true,
+        }
+
+        if (!environment) {
+          runOpts.envs = processEnviron()
+        }
+
         const program = await runner.createProgramSession(runOpts)
 
         program.registerTerminalWindow('vscode')
