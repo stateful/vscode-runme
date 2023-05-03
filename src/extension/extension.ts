@@ -2,6 +2,8 @@
 import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
+import { registerExtensionEnvironmentVariables } from '../utils/configuration'
+
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
 import RunmeServerError from './server/runmeServerError'
@@ -77,6 +79,8 @@ export class RunmeExtension {
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
     const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, winCodeLensRunSurvey, runner, kernel)
+
+    registerExtensionEnvironmentVariables(context)
 
     context.subscriptions.push(
       kernel,

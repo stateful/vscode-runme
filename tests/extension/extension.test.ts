@@ -47,9 +47,18 @@ test('initializes all providers', async () => {
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config])
   } as any)
-  vi.mocked(Uri.joinPath).mockReturnValue('/foo/bar' as any)
+  const dummyFilePath = Uri.file('/foo/bar')
+  vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)
   RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
-  const context: any = { subscriptions: [], extensionUri: { fsPath: '/foo/bar' } }
+  const context: any = {
+    subscriptions: [],
+    extensionUri: { fsPath: '/foo/bar' },
+    environmentVariableCollection: {
+      prepend: vi.fn(),
+      append: vi.fn(),
+      replace: vi.fn(),
+    }
+  }
   const ext = new RunmeExtension()
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
@@ -58,7 +67,7 @@ test('initializes all providers', async () => {
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
 
-  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', '/foo/bar', 'runme')
-  expect(workspace.fs.stat).toBeCalledWith('/foo/bar')
-  expect(workspace.fs.delete).toBeCalledWith('/foo/bar')
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', dummyFilePath, 'runme')
+  expect(workspace.fs.stat).toBeCalledWith(dummyFilePath)
+  expect(workspace.fs.delete).toBeCalledWith(dummyFilePath)
 })

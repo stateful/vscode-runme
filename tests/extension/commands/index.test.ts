@@ -119,7 +119,7 @@ test('runCLICommand', async () => {
 
   await runCLICommand({} as any, false, {} as any, {} as any)(cell)
   expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
-    '/bin/runme run foo-bar --chdir="/foo/bar" --filename="README.md"'
+    'runme run foo-bar --chdir="/foo/bar" --filename="README.md"'
   )
 })
 

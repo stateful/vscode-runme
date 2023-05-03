@@ -1,5 +1,4 @@
 import path from 'node:path'
-import os from 'node:os'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
@@ -7,7 +6,7 @@ import {
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
-import { getBinaryPath, getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
+import { getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
@@ -78,8 +77,6 @@ export function runCLICommand(
 
     const envs: Record<string, string> = { }
 
-    const runmeExecutable = getBinaryPath(extensionBaseUri, os.platform()).fsPath
-
     if (grpcRunner) {
       envs['RUNME_SERVER_ADDR'] = server.address()
 
@@ -103,7 +100,7 @@ export function runCLICommand(
     })
 
     term.show(false)
-    term.sendText(`${runmeExecutable} run ${annotations.name} ${args.join(' ')}`)
+    term.sendText(`runme run ${annotations.name} ${args.join(' ')}`)
   }
 }
 
