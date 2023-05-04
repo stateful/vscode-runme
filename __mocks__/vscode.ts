@@ -222,6 +222,12 @@ export class EventEmitter<T> {
     this.listeners.forEach(l => l(data))
   }
 
+  async fireAsync(data: T) {
+    await Promise.all(
+      this.listeners.map(l => l(data))
+    )
+  }
+
   dispose() { }
 }
 
