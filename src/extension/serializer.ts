@@ -92,7 +92,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
 
     const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName: string|undefined = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
+      const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
       if (updatedName) {
         const oldCell = cellAt(i)
 
