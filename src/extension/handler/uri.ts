@@ -138,11 +138,7 @@ export class RunmeUriHandler implements UriHandler {
           /**
            * only close terminal if execution passed and desired by user
            */
-          if (e.exitCode === 0) {
-            resolve(true)
-          } else {
-            resolve(false)
-          }
+          return resolve(e.exitCode === 0)
         })
       })
     })
