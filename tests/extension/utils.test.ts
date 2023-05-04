@@ -42,6 +42,10 @@ vi.mock('vscode', async () => {
       env: {
         machineId: 'test-machine-id'
       },
+      NotebookCellKind: {
+        Markup: 1,
+        Code: 2,
+      }
     },
     workspace: {
       getConfiguration: vi.fn()
@@ -75,11 +79,13 @@ test('isInteractive', () => {
 test('getTerminalByCell', () => {
   expect(getTerminalByCell({
     metadata: { 'runme.dev/uuid': vscode.window.terminals[0].creationOptions['env'].RUNME_ID },
+    kind: 2,
   } as any))
     .toBeTruthy()
 
     expect(getTerminalByCell({
       metadata: { 'runme.dev/uuid': v4() },
+      kind: 2,
     } as any))
       .toBeUndefined()
 })
