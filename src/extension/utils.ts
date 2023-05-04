@@ -12,6 +12,7 @@ import vscode, {
   NotebookCellExecution,
   NotebookCellOutput,
   commands,
+  NotebookCellKind,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -104,6 +105,10 @@ export function getCellRunmeId(cell: vscode.NotebookCell) {
 }
 
 function getCellUUID(cell: vscode.NotebookCell): string {
+  if (cell.kind !== NotebookCellKind.Code) {
+    throw new Error('Cannot get cell UUID for non-code cell!')
+  }
+
   return getAnnotations(cell)['runme.dev/uuid']!
 }
 
