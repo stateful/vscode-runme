@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { DEFAULT_PROMPT_ENV } from './extension/constants'
+import { DEFAULT_PROMPT_ENV } from './constants'
 
 const cleanAnnotation = (value: string, character: string): string => {
     return value.trim().replaceAll(/[ ]{2,}/g, '').replaceAll(character, '')

@@ -89,3 +89,5 @@ export const LANGUAGES = new Map([
 
 export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
+
+export const DEFAULT_PROMPT_ENV = true

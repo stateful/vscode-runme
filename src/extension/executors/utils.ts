@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, window } from 'vscode'
 
-import { DEFAULT_PROMPT_ENV, ENV_STORE } from '../constants'
-import { OutputType } from '../../constants'
+import { ENV_STORE } from '../constants'
+import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 
