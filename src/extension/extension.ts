@@ -67,8 +67,10 @@ export class RunmeExtension {
         return window.showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
       }
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
-      // eslint-disable-next-line max-len
-      return window.showErrorMessage(`Failed to start Runme server, please try to reload the window. Reason: ${(e as any).message}`)
+      return window.showErrorMessage(
+        'Failed to start Runme server, please try to reload the window. ' +
+        `Reason: ${(e as any).message}`
+      )
     }
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
