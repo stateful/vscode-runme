@@ -63,7 +63,7 @@ export const AnnotationSchema = {
 export const SafeCellAnnotationsSchema = z.object({
     ...AnnotationSchema,
     background: falseyBoolean(false),
-    interactive: falseyBoolean(false),
+    interactive: falseyBoolean(true),
     closeTerminalOnSuccess: falseyBoolean(true),
 })
 

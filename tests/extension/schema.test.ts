@@ -93,7 +93,7 @@ suite('AnnotationSchema', () => {
         test('Should add safe defaults for invalid values', () => {
             const expectedOutput = {
                 background: false,
-                interactive: false,
+                interactive: true,
                 closeTerminalOnSuccess: true
             }
             const parseResult = SafeCellAnnotationsSchema.safeParse(
@@ -119,7 +119,7 @@ suite('AnnotationSchema', () => {
                 const { background, closeTerminalOnSuccess, interactive, mimeType, name } = parseResult.data
                 expect(background).toBeFalsy()
                 expect(closeTerminalOnSuccess).toBeTruthy()
-                expect(interactive).toBeFalsy()
+                expect(interactive).toBeTruthy()
                 expect(mimeType).toStrictEqual('text/plain')
                 expect(name).toBe('')
             }
@@ -151,7 +151,7 @@ suite('AnnotationSchema', () => {
                 const { background, closeTerminalOnSuccess, interactive, mimeType, name } = parseResult.data
                 expect(background).toBeFalsy()
                 expect(closeTerminalOnSuccess).toBeTruthy()
-                expect(interactive).toBeFalsy()
+                expect(interactive).toBeTruthy()
                 expect(mimeType).toStrictEqual('text/plain')
                 expect(name).toBe('')
             }
