@@ -32,9 +32,7 @@ vi.mock('../../src/extension/utils', () => ({
 }))
 
 function newKernel(): Kernel {
-  return {
-    registerSerializer: vi.fn(),
-  } as unknown as Kernel
+  return { } as unknown as Kernel
 }
 
 describe('WasmSerializer', () => {
