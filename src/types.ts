@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
+import type * as Grpc from './extension/grpc/serializerTypes'
 
 export namespace Serializer {
   export type Notebook = {
@@ -11,19 +12,10 @@ export namespace Serializer {
     metadata?: Metadata
   }
 
-  type TextPosition = number
-
-  export type TextRange = {
-    start: TextPosition
-    end: TextPosition
-  }
-
-  export type Cell = {
+  export type Cell = Omit<Grpc.Cell, 'kind'|'metadata'|'languageId'> & {
     metadata?: Metadata
+    kind: NotebookCellKind
     languageId?: string
-    value: string
-    textRange?: Serializer.TextRange
-    kind: NotebookCellKind.Markup | NotebookCellKind.Code
   }
 
   export interface Wasm {
