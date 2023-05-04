@@ -93,18 +93,17 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
     const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
       const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
-      if (updatedName) {
-        const oldCell = cellAt(i)
-
-        return [
-            NotebookEdit.updateCellMetadata(i, {
-            ...oldCell.metadata || {},
-            'runme.dev/name': updatedName,
-          } as Serializer.Metadata)
-        ]
+      if (!updatedName) {
+        return []
       }
 
-      return []
+      const oldCell = cellAt(i)
+      return [
+        NotebookEdit.updateCellMetadata(i, {
+          ...oldCell.metadata || {},
+          'runme.dev/name': updatedName,
+        } as Serializer.Metadata)
+      ]
     })
 
     const edit = new WorkspaceEdit()
