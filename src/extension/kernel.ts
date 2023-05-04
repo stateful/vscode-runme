@@ -28,7 +28,6 @@ import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
-import { SerializerBase } from './serializer'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -55,8 +54,6 @@ export class Kernel implements Disposable {
   protected runnerReadyListener?: Disposable
 
   protected cellManager = new NotebookCellManager(this.#controller)
-
-  protected serializer?: SerializerBase
 
   constructor(
     protected context: ExtensionContext
@@ -93,10 +90,6 @@ export class Kernel implements Disposable {
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
     this.runnerReadyListener?.dispose()
-  }
-
-  registerSerializer(serializer: SerializerBase) {
-    this.serializer = serializer
   }
 
   async getTerminalState(cell: NotebookCell): Promise<ITerminalState|undefined> {

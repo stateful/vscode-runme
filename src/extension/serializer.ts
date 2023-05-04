@@ -52,7 +52,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         this.handleNotebookSaved.bind(this)
       )
     )
-    kernel.registerSerializer(this)
   }
 
   public dispose() {
