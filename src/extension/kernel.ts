@@ -11,7 +11,7 @@ import {
   NotebookEdit,
   NotebookDocument,
   env,
-  Uri
+  Uri,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -56,7 +56,7 @@ export class Kernel implements Disposable {
   protected cellManager = new NotebookCellManager(this.#controller)
 
   constructor(
-    protected context: ExtensionContext,
+    protected context: ExtensionContext
   ) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
@@ -107,6 +107,7 @@ export class Kernel implements Disposable {
     }
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
+
     TelemetryReporter.sendTelemetryEvent('notebook.save', {
       'notebook.hashedUri': hashed,
       'notebook.isReadme': isReadme.toString(),
