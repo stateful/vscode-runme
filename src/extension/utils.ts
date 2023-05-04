@@ -93,9 +93,23 @@ export function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
     ?? undefined
 }
 
+export function getCellRunmeId(cell: vscode.NotebookCell) {
+  return getCellUUID(cell)
+}
+
+function getCellUUID(cell: vscode.NotebookCell): string {
+  if (cell.kind !== vscode.NotebookCellKind.Code) {
+    throw new Error('Cannot get cell UUID for non-code cell!')
+  }
+
+  return getAnnotations(cell)['runme.dev/uuid']!
+}
+
 export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
+  const RUNME_ID = getCellRunmeId(cell)
+
   return vscode.window.terminals.find((t) => {
-    return getTerminalRunmeId(t) === `${cell.document.fileName}:${cell.index}`
+    return getTerminalRunmeId(t) === RUNME_ID
   }) as RunmeTerminal | undefined
 }
 

@@ -1,5 +1,6 @@
 import vscode, { commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
+import { v4 } from 'uuid'
 
 import {
   getTerminalByCell,
@@ -21,28 +22,39 @@ import { CellAnnotations } from '../../src/types'
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
-vi.mock('vscode', () => ({
-  default: {
-    window: {
-      terminals: [
-        { creationOptions: { env: {} } },
-        { creationOptions: { env: { RUNME_ID: 'foobar:123' } } }
-      ]
+vi.mock('vscode', async () => {
+  const { v4 } = await vi.importActual('uuid') as typeof import('uuid')
+
+  const uuid1 = v4()
+  const uuid2 = v4()
+
+  return ({
+    default: {
+      window: {
+        terminals: [
+          { creationOptions: { env: { RUNME_ID: uuid1 } }, name: `echo hello (RUNME_ID: ${uuid1})` },
+          { creationOptions: { env: { RUNME_ID: uuid2 } }, name: `echo hi (RUNME_ID: ${uuid2})` }
+        ]
+      },
+      workspace: {
+        getConfiguration: vi.fn()
+      },
+      env: {
+        machineId: 'test-machine-id'
+      },
+      NotebookCellKind: {
+        Markup: 1,
+        Code: 2,
+      }
     },
     workspace: {
       getConfiguration: vi.fn()
     },
-    env: {
-      machineId: 'test-machine-id'
+    commands: {
+      executeCommand: vi.fn()
     },
-  },
-  workspace: {
-    getConfiguration: vi.fn()
-  },
-  commands: {
-    executeCommand: vi.fn()
-  },
-}))
+  })
+})
 vi.mock('vscode-telemetry')
 
 const PATH = process.env.PATH
@@ -59,10 +71,17 @@ test('isInteractive', () => {
 })
 
 test('getTerminalByCell', () => {
-  expect(getTerminalByCell({ document: { fileName: 'foo' }, index: 42} as any))
-    .toBe(undefined)
-  expect(getTerminalByCell({ document: { fileName: 'foobar' }, index: 123} as any))
-    .not.toBe(undefined)
+  expect(getTerminalByCell({
+    metadata: { 'runme.dev/uuid': vscode.window.terminals[0].creationOptions['env'].RUNME_ID },
+    kind: 2,
+  } as any))
+    .toBeTruthy()
+
+    expect(getTerminalByCell({
+      metadata: { 'runme.dev/uuid': v4() },
+      kind: 2,
+    } as any))
+      .toBeUndefined()
 })
 
 test('resetEnv', () => {
