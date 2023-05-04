@@ -14,6 +14,7 @@ import {
   getNotebookTerminalFontSize,
   getCodeLensEnabled
 } from '../../src/utils/configuration'
+import { SERVER_PORT } from '../../src/constants'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
@@ -100,9 +101,8 @@ suite('Configuration', () => {
     })
 
     test('Should use a valid specified port number', () => {
-        SETTINGS_MOCK.port = 8080
         const portNumber = getPortNumber()
-        expect(portNumber).toStrictEqual(8080)
+        expect(portNumber).toStrictEqual(SERVER_PORT)
     })
 
     test('Should disable server logs with an invalid value', () => {
