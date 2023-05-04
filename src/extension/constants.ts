@@ -13,3 +13,5 @@ export const ENV_STORE = new Map<string, string>(
 )
 
 export const BOOTFILE = '.runme_bootstrap'
+
+export const DEFAULT_PROMPT_ENV = true

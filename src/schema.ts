@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { DEFAULT_PROMPT_ENV } from './extension/constants'
+
 const cleanAnnotation = (value: string, character: string): string => {
     return value.trim().replaceAll(/[ ]{2,}/g, '').replaceAll(character, '')
 }
@@ -66,7 +68,7 @@ export const SafeCellAnnotationsSchema = z.object({
     background: falseyBoolean(false),
     interactive: falseyBoolean(true),
     closeTerminalOnSuccess: falseyBoolean(true),
-    promptEnv: falseyBoolean(true),
+    promptEnv: falseyBoolean(DEFAULT_PROMPT_ENV),
 })
 
 export const CellAnnotationsSchema = z.object({

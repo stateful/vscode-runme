@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, window } from 'vscode'
 
-import { ENV_STORE } from '../constants'
+import { DEFAULT_PROMPT_ENV, ENV_STORE } from '../constants'
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
@@ -110,7 +110,7 @@ export function getCommandExportExtractMatches(
  * @param exec NotebookCellExecution
  * @returns cell text if all operation to retrieve the cell text could be executed, undefined otherwise
  */
-export async function retrieveShellCommand (exec: NotebookCellExecution, promptForEnv = true) {
+export async function retrieveShellCommand (exec: NotebookCellExecution, promptForEnv = DEFAULT_PROMPT_ENV) {
   let cellText = exec.cell.document.getText()
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
   const rawText = exec.cell.document.getText()
@@ -195,7 +195,7 @@ export function getShellPath(execKey?: string): string|undefined {
  */
 export async function parseCommandSeq(
   cellText: string,
-  promptForEnv = true,
+  promptForEnv = DEFAULT_PROMPT_ENV,
   parseBlock?: (block: string) => string[]
 ): Promise<string[]|undefined> {
   parseBlock ??= (s) => s ? s.split('\n') : []
