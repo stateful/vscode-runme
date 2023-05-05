@@ -6,6 +6,12 @@ This project is a showcase for deploying apps with Begin and [Runme Extension](h
 
 This project is based on the HTML-first [Enhance](https://enhance.dev/) framework run. It requires [Node.js](https://nodejs.org/en/download) to be installed on your machine.
 
+Before you start make sure to install the dependencies of the project:
+
+```sh
+npm install
+```
+
 ### Development
 
 Start the project:
@@ -31,14 +37,39 @@ install, please run:
 curl -sS https://dl.begin.com/install.sh | sh
 ```
 
+Ensure you have the CLI installed:
+
+```sh
+begin version
+```
+
+If not, ensure that the CLI was added your `$PATH`:
+
+```sh
+export BEGIN_INSTALL="$HOME/.begin"
+export PATH="$BEGIN_INSTALL:$PATH"
+```
+
 Once installed successfully, you can log into your Begin account via:
 
 ```sh
 begin login
 ```
 
-then you can run a deployment via:
+If you haven't deployed the application before, create one first via:
+
+```sh
+begin create
+```
+
+The Begin CLI will store a new `appId` in your `.arc` file. Then you can run a deployment via:
 
 ```sh { background=true }
 begin deploy
+```
+
+In order to review the status of the deployment you can run:
+
+```sh
+begin deploy --status
 ```
