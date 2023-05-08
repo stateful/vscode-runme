@@ -3,7 +3,7 @@
   "version": "1.3.0-edge.0",
   "publisher": "stateful",
   "displayName": "Runme",
-  "description": "Run your README.md as an interactive notebook",
+  "description": "The next-gen Runner for dev workflows.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
