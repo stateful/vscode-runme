@@ -534,13 +534,13 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.3-20230411173542-ee7abafe0a79.1",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.8.2-20230310150327-f6c75491ea13.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.8.3-20230411173542-ee7abafe0a79.1",
     "@protobuf-ts/grpc-transport": "^2.8.2",
     "@protobuf-ts/runtime": "^2.8.2",
     "@protobuf-ts/runtime-rpc": "^2.8.2",
     "@vercel/client": "^12.3.2",
-    "@vercel/frameworks": "^1.2.4",
+    "@vercel/frameworks": "^1.3.3",
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.1",
     "clipboardy": "^3.0.0",
