@@ -281,6 +281,7 @@ suite('#getAnnotations', () => {
         interactive: true,
         mimeType: 'text/plain',
         name: 'command-123',
+        promptEnv: true,
         'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0'
       }
     )
@@ -300,6 +301,7 @@ suite('#getAnnotations', () => {
       interactive: true,
       mimeType: 'text/plain',
       name: 'echo-hello',
+      promptEnv: true,
     })
   })
 })

@@ -35,8 +35,10 @@ async function taskExecutor(
   doc: TextDocument,
   outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
+  const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
+
   const cwd = path.dirname(doc.uri.fsPath)
-  const cellText = await retrieveShellCommand(exec)
+  const cellText = await retrieveShellCommand(exec, promptEnv)
   if (typeof cellText !== 'string') {
     return false
   }
@@ -63,7 +65,6 @@ async function taskExecutor(
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
-  const isInteractive = getAnnotations(exec.cell).interactive
   if (!isInteractive) {
     return inlineSh.call(this, exec, cmdLine, cwd, env, outputs)
   }

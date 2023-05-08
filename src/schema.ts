@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { DEFAULT_PROMPT_ENV } from './constants'
+
 const cleanAnnotation = (value: string, character: string): string => {
     return value.trim().replaceAll(/[ ]{2,}/g, '').replaceAll(character, '')
 }
@@ -42,6 +44,7 @@ export const AnnotationSchema = {
     background: boolify(false),
     interactive: boolify(true),
     closeTerminalOnSuccess: boolify(true),
+    promptEnv: boolify(true),
     name: z.preprocess(
         (value) =>
             typeof value === 'string' ?
@@ -57,7 +60,7 @@ export const AnnotationSchema = {
             }
             return true
         }, 'mime type specification invalid format')
-        .default('text/plain')
+        .default('text/plain'),
 }
 
 export const SafeCellAnnotationsSchema = z.object({
@@ -65,6 +68,7 @@ export const SafeCellAnnotationsSchema = z.object({
     background: falseyBoolean(false),
     interactive: falseyBoolean(true),
     closeTerminalOnSuccess: falseyBoolean(true),
+    promptEnv: falseyBoolean(DEFAULT_PROMPT_ENV),
 })
 
 export const CellAnnotationsSchema = z.object({

@@ -88,6 +88,7 @@ export class Annotations extends LitElement {
     ['background', 'Run cell as background process (default: false)'],
     ['interactive', 'Run cell inside terminal to allow for interactive input (default: true)'],
     ['closeTerminalOnSuccess', 'Hide terminal after cell successful execution (default: true)'],
+    ['promptEnv', 'Prompt user input for exported environment variables (default: true)'],
     ['mimeType', 'Cell\'s ouput content MIME type (default: text/plain)'],
     ['name', 'Cell\'s canonical name for easy referencing in the CLI (default: auto-generated)'],
   ])
