@@ -1,6 +1,6 @@
 # Intro to BranchGPT
 
-[![](https://badgen.net/badge/Run%20this%20/Markdown/5B3ADF?icon=https://runme.dev/img/logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
+[![](https://badgen.net/badge/Run%20this%20/Demo/5B3ADF?icon=https://runme.dev/img/logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
 
 Install or download binary at https://github.com/stateful/runme/releases/tag/v1.1.0
 
