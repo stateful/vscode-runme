@@ -20,7 +20,14 @@ import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import { getAnnotations, getCellRunmeId, getCmdShellSeq, getTerminalByCell, prepareCmdSeq } from '../utils'
+import {
+  getAnnotations,
+  getCellRunmeId,
+  getCmdShellSeq,
+  getTerminalByCell,
+  getWorkspaceEnvs,
+  prepareCmdSeq
+} from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -73,11 +80,12 @@ export async function executeRunner(
 
   const RUNME_ID = getCellRunmeId(exec.cell)
 
-  let cellText = exec.cell.document.getText()
-
   const envs: Record<string, string> = {
-    RUNME_ID
+    RUNME_ID,
+    ...await getWorkspaceEnvs(runningCell.uri),
   }
+
+  let cellText = exec.cell.document.getText()
 
   const commands = await parseCommandSeq(cellText, promptEnv, prepareCmdSeq)
   if(!commands) { return false }

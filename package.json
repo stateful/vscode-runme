@@ -366,6 +366,16 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "Enable CodeLens support in markdown documents"
+          },
+          "runme.env.workspaceFileOrder": {
+            "type": "array",
+            "default": [ ".env.local", ".env" ],
+            "markdownDescription": "List of workspace environment files to parse in order; variables defined in later files take priority"
+          },
+          "runme.env.loadWorkspaceFiles": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Load environment files from workspace into all scripts"
           }
         }
       }
@@ -545,6 +555,7 @@
     "@vscode/webview-ui-toolkit": "^1.2.1",
     "clipboardy": "^3.0.0",
     "detect-port": "^1.5.1",
+    "dotenv": "^16.0.3",
     "filenamify": "^6.0.0",
     "get-port": "^6.1.2",
     "got": "^12.5.3",
