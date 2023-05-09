@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "1.3.0-edge.0",
+  "version": "1.3.0",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "The next-gen Runner for dev workflows.",
