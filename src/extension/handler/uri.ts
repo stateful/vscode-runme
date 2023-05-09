@@ -132,7 +132,7 @@ export class RunmeUriHandler implements UriHandler {
             taskId !== executionId ||
             typeof e.exitCode === 'undefined'
           ) {
-            return
+            return resolve(false)
           }
 
           /**

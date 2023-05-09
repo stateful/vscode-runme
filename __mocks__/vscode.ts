@@ -92,7 +92,7 @@ export const tasks = {
   registerTaskProvider: vi.fn(),
   onDidEndTaskProcess: vi.fn(),
   onDidStartTaskProcess: vi.fn(),
-  executeTask: vi.fn()
+  executeTask: vi.fn().mockResolvedValue(undefined)
 }
 
 export const commands = {
@@ -255,3 +255,18 @@ export class CodeLens {
     public command?: Command
   ) { }
 }
+
+export enum TaskScope {
+  /**
+   * The task is a global task. Global tasks are currently not supported.
+   */
+  Global = 1,
+
+  /**
+   * The task is a workspace task
+   */
+  Workspace = 2
+}
+
+export const ShellExecution = vi.fn()
+export const Task = vi.fn()
