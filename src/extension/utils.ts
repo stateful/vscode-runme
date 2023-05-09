@@ -392,10 +392,13 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
   if (!workspaceFolder || !getEnvLoadWorkspaceFiles()) { return res }
 
   const envFiles = getEnvWorkspaceFileOrder()
+  console.log(envFiles)
 
   const envs = await Promise.all(
     envFiles.map(async (fileName) => {
       const dotEnvFile = Uri.joinPath(workspaceFolder.uri, fileName)
+
+      // console.log(dotEnvFile.fsPath)
 
       return await workspace.fs.stat(dotEnvFile)
         .then(async (f) => {

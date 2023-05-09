@@ -14,6 +14,7 @@ const CODELENS_SECTION_NAME = 'runme.codelens'
 const ENV_SECTION_NAME = 'runme.env'
 
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
+const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -49,7 +50,7 @@ const configurationSchema = {
       enable: z.boolean().default(true)
     },
     env: {
-      workspaceFileOrder: z.array(z.string()).default([ '.env.local', '.env' ]),
+      workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
       loadWorkspaceFiles: z.boolean().default(true),
     }
 }
@@ -177,7 +178,7 @@ const registerExtensionEnvironmentVariables = (context: ExtensionContext): void 
 }
 
 const getEnvWorkspaceFileOrder = (): string[] => {
-  return getEnvConfigurationValue('workspaceFileOrder', [])
+  return getEnvConfigurationValue('workspaceFileOrder', DEFAULT_WORKSPACE_FILE_ORDER)
 }
 
 const getEnvLoadWorkspaceFiles = (): boolean => {
