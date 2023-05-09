@@ -4,15 +4,23 @@
 
 Install or download binary at https://github.com/stateful/runme/releases/tag/v1.1.0
 
+On Windows, install via scoop (https://scoop.sh):
+
 ```sh
-$ npm install -g runme # install via node.js
-$ brew install stateful/tap/runme # install via homebrew on macOS
+$ scoop bucket add stateful https://github.com/stateful/scoop-bucket.git
+$ scoop install stateful/runme
+```
+
+On macOS, install via Homebrew (https://brew.sh):
+
+```sh
+$ brew install stateful/tap/runme
 ```
 
 Just enter some free-flow description and voilà, get some branch suggestions:
 
 ```sh
-$ npx runme branchGPT
+$ runme branchGPT
 ```
 
-_Read the docs on [runme.dev](https://www.runme.dev/docs/intro) to learn how to get most out of Runme notebooks!_
+*Read the docs on [runme.dev](https://www.runme.dev/docs/intro) to learn how to get most out of Runme notebooks!*
