@@ -145,8 +145,8 @@
         "title": "Open in Runme"
       },
       {
-        "command": "runme.authenticate",
-        "title": "Authenticate with GitHub",
+        "command": "runme.authenticateWithGitHub",
+        "title": "Authenticate Runme with GitHub",
         "category": "Runme",
         "description": "Give access to Runme to interact with GitHub API"
       }

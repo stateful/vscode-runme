@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import {
   NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext
+  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext, authentication
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -165,4 +165,12 @@ export async function tryIt (context: ExtensionContext) {
 
 export async function openFileInRunme (uri: Uri, selection?: Uri[]) {
   await Promise.all((selection ?? [uri]).map(openFileAsRunmeNotebook))
+}
+
+export async function authenticateWithGitHub() {
+  try {
+    await authentication.getSession('github', ['repo'], { createIfNone: true })
+  } catch (error) {
+    window.showErrorMessage('Failed to authenticate with GitHub')
+  }
 }
