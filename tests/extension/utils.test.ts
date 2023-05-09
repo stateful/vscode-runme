@@ -349,6 +349,10 @@ suite('getWorkspaceFolder', () => {
     workspace.workspaceFolders = []
   })
 
+  test('is empty if no workspace folder', async () => {
+    expect(await getWorkspaceEnvs()).toStrictEqual({ })
+  })
+
   test('identifies correct workspace', () => {
     const workspaceFolder1 = { uri: Uri.file('/foo/bar') }
     const workspaceFolder2 = { uri: Uri.file('/bar/foo') }
