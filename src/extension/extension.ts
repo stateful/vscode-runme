@@ -1,5 +1,5 @@
 
-import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri, authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
@@ -34,6 +34,9 @@ import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 
+import { Octokit } from 'octokit'
+import { parse } from 'yaml'
+
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
@@ -45,7 +48,7 @@ export class RunmeExtension {
       maxNumberOfIntents: 10,
     }, !grpcServer, grpcRunner)
 
-    let runner: IRunner|undefined
+    let runner: IRunner | undefined
     if (grpcRunner) {
       runner = new GrpcRunner(server)
       kernel.useRunner(runner)
@@ -137,6 +140,24 @@ export class RunmeExtension {
       window.registerTreeDataProvider('runme.launcher', treeViewer),
       RunmeExtension.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.authenticate', async () => {
+        const session = await authentication.getSession('github', ['repo'], { createIfNone: true });
+        const octokit = new Octokit({ auth: session.accessToken })
+        try {
+          const workflow = await octokit.rest.repos.getContent({
+            owner: 'stateful',
+            repo: 'vscode-extension',
+            path: '.github/workflows/release.yml'
+          })
+
+          const decodedContent = Buffer.from((workflow.data as any).content, 'base64').toString();
+          const parsed = parse(decodedContent)
+          console.log(parsed)
+        } catch (error) {
+          window.showErrorMessage('Failed to fetch workflow file')
+        }
+
+      }),
 
       /**
        * Uri handler

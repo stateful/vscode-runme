@@ -143,6 +143,12 @@
       {
         "command": "runme.file.openInRunme",
         "title": "Open in Runme"
+      },
+      {
+        "command": "runme.authenticate",
+        "title": "Authenticate with GitHub",
+        "category": "Runme",
+        "description": "Give access to Runme to interact with GitHub API"
       }
     ],
     "menus": {
@@ -549,6 +555,7 @@
     "get-port": "^6.1.2",
     "got": "^12.5.3",
     "lit": "^2.6.1",
+    "octokit": "^2.0.14",
     "preact": "^10.11.3",
     "undici": "^5.16.0",
     "uuid": "^9.0.0",
@@ -561,6 +568,7 @@
     "xterm-addon-unicode11": "^0.5.0",
     "xterm-addon-web-links": "^0.8.0",
     "xterm-headless": "^5.1.0",
+    "yaml": "^2.2.2",
     "yargs": "^17.6.2",
     "zod": "^3.20.2"
   }
