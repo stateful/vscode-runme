@@ -12,7 +12,7 @@ export class GitHubService {
     /**
      *  Dispatch a workflow
      */
-    async createWorkflowDispatch(dispatchOptions: IWorkflowDispatchOptions):Promise<void> {
+    async createWorkflowDispatch(dispatchOptions: IWorkflowDispatchOptions): Promise<void> {
         const { owner, repo, workflow_id, ref, inputs } = dispatchOptions
         await this.octokit.rest.actions.createWorkflowDispatch({
             owner,
@@ -35,7 +35,9 @@ export class GitHubService {
             repo,
             path: `.github/workflows/${name}.yml`
         })
-
+        if (!('content' in workflow.data)) {
+            throw new Error('Failed to get workflow file content')
+        }
         const decodedContent = Buffer.from((workflow.data as any).content, 'base64').toString()
         return parse(decodedContent)
     }
