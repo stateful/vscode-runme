@@ -74,6 +74,7 @@ export class NotebookCellOutputManager {
     [OutputType.annotations, false],
     [OutputType.deno, false],
     [OutputType.vercel, false],
+    [OutputType.github, false]
   ])
 
   protected mutex: Mutex = new Mutex()
@@ -180,6 +181,17 @@ export class NotebookCellOutputManager {
             NotebookCellOutputItem.json(json, OutputType.outputItems)
           ])
         }
+      }
+
+      case OutputType.github: {
+        const payload: CellOutputPayload<OutputType.github> = {
+          type: OutputType.github,
+          output: metadata['runme.dev/githubState'],
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(payload, OutputType.github)
+        ])
       }
 
       default: {

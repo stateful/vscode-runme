@@ -5,6 +5,7 @@ import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
+import { IWorkflowRun } from './extension/services/types'
 
 export namespace Serializer {
   export type Notebook = {
@@ -36,6 +37,7 @@ export namespace Serializer {
     ['runme.dev/uuid']?: string
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
+    ['runme.dev/githubState']?: GitHubState
   }
 }
 
@@ -65,6 +67,15 @@ export interface VercelState {
   error?: any
 }
 
+export interface GitHubState {
+  repo?: string
+  owner?: string
+  workflow_id?: string
+  content?: string
+  ref?: string
+  error?: any
+}
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
@@ -82,6 +93,7 @@ interface Payload {
     content?: string
     initialRows?: number
   }
+  [OutputType.github]?: GitHubState
 }
 
 export type ClientMessage <T extends ClientMessages> = T extends any ? {
@@ -128,6 +140,21 @@ export interface ClientMessagePayload {
   [ClientMessages.closeCellOutput]: {
     uuid: string
     outputType: OutputType
+  }
+  [ClientMessages.githubWorkflowDispatch]: {
+    inputs: Record<string, string>
+    repo: string
+    owner: string
+    workflow_id: string
+    ref: string
+  }
+  [ClientMessages.githubWorkflowDeploy]: {
+    itFailed: boolean
+    reason?: string
+    workflowRun?: IWorkflowRun
+  }
+  [ClientMessages.githubWorkflowStatusUpdate]: {
+    workflowRun?: IWorkflowRun
   }
 }
 

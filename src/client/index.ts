@@ -21,7 +21,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
 
       switch (payload.type) {
         case OutputType.vercel:
-          if(payload.output.error) {
+          if (payload.output.error) {
             renderError(payload.output.error)
             break
           }
@@ -31,7 +31,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           element.appendChild(vercelElem)
           break
         case OutputType.deno:
-          if(payload.output?.error) {
+          if (payload.output?.error) {
             renderError(payload.output.error)
             break
           }
@@ -83,6 +83,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.error:
           renderError(payload.output)
+          break
+        case OutputType.github:
+          const githubElement = document.createElement('github-output')
+          if (payload.output?.content) {
+            githubElement.setAttribute('state', JSON.stringify(payload.output))
+          }
+          element.appendChild(githubElement)
           break
         default: element.innerHTML = 'No renderer found!'
       }

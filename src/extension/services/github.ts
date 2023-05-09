@@ -1,7 +1,10 @@
 import { Octokit } from 'octokit'
 import { parse } from 'yaml'
 
-import { IWorkflowDispatchOptions, IWorkflowYamlContentRequest } from './types'
+import { IWorkflowDispatchOptions, IWorkflowRun, IWorkflowYamlContentRequest } from './types'
+
+
+export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'> & { run_id: number }
 
 export class GitHubService {
     private octokit: Octokit
@@ -12,8 +15,9 @@ export class GitHubService {
     /**
      *  Dispatch a workflow
      */
-    async createWorkflowDispatch(dispatchOptions: IWorkflowDispatchOptions): Promise<void> {
+    async createWorkflowDispatch(dispatchOptions: IWorkflowDispatchOptions): Promise<IWorkflowRun | undefined> {
         const { owner, repo, workflow_id, ref, inputs } = dispatchOptions
+        const creationDate = new Date().toISOString()
         await this.octokit.rest.actions.createWorkflowDispatch({
             owner,
             repo,
@@ -22,6 +26,42 @@ export class GitHubService {
             inputs
         })
 
+        // Since a workflow dispatch is only a webhook, there is no way to get the run id.
+        // We need to iterate until we find a runner
+        let runFound = false
+        let maxIterations = 10
+        let workflowRun
+        while (!runFound || maxIterations === 0) {
+            maxIterations--
+            const runs = await this.octokit.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id,
+                created: `>=${creationDate}`
+            })
+
+            if (runs.data.total_count) {
+                runFound = true
+                workflowRun = runs.data.workflow_runs[0]
+            }
+        }
+
+        return workflowRun as unknown as IWorkflowRun
+    }
+
+    /**
+     * Get a Workflow Run
+     */
+    async getWorkflowRun({ owner, repo, run_id }: WorkflowRunFilter): Promise<IWorkflowRun | undefined> {
+        const workflowRun = await this.octokit.rest.actions.getWorkflowRun({
+            owner,
+            repo,
+            run_id
+        })
+
+        if (workflowRun.data) {
+            return workflowRun.data as unknown as IWorkflowRun
+        }
     }
 
     /**
@@ -33,7 +73,7 @@ export class GitHubService {
         const workflow = await this.octokit.rest.repos.getContent({
             owner,
             repo,
-            path: `.github/workflows/${name}.yml`
+            path: `.github/workflows/${name}`
         })
         if (!('content' in workflow.data)) {
             throw new Error('Failed to get workflow file content')

@@ -91,7 +91,7 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
 }
 
-export function getTerminalRunmeId(t: vscode.Terminal): string|undefined {
+export function getTerminalRunmeId(t: vscode.Terminal): string | undefined {
   return (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID
     ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1]
     ?? undefined
@@ -127,9 +127,18 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
   return text.indexOf('deployctl deploy') > -1
 }
 
+export function isGitHubLink(runningCell: vscode.TextDocument) {
+  const text = runningCell.getText()
+  return text.includes('.github/workflows')
+
+}
+
 export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
   if (isDenoScript(runningCell)) {
     return 'deno'
+  }
+  if (isGitHubLink(runningCell)) {
+    return 'github'
   }
   // if (text.startsWith('vercel ')) {
   //   return 'vercel'

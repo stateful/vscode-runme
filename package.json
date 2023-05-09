@@ -258,7 +258,8 @@
           "stateful.runme/output-items",
           "stateful.runme/annotations",
           "stateful.runme/terminal",
-          "stateful.runme/error"
+          "stateful.runme/error",
+          "stateful.runme/github-stdout"
         ],
         "requiresMessaging": "optional"
       }

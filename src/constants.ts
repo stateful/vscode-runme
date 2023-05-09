@@ -9,7 +9,8 @@ export enum OutputType {
   outputItems = 'stateful.runme/output-items',
   annotations = 'stateful.runme/annotations',
   terminal = 'stateful.runme/terminal',
-  error = 'stateful.runme/error'
+  error = 'stateful.runme/error',
+  github = 'stateful.runme/github-stdout'
 }
 
 export enum ClientMessages {
@@ -28,6 +29,9 @@ export enum ClientMessages {
   terminalOpen = 'terminal:open',
   openLink = 'terminal:openLink',
   activeThemeChanged = 'theme:changed',
+  githubWorkflowDispatch = 'github:workflowDispatch',
+  githubWorkflowDeploy = 'github:workflowDeploy',
+  githubWorkflowStatusUpdate = 'github:workflowStatusUpdate'
 }
 
 // [pretty print, languageId, destination]
