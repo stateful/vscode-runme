@@ -1,6 +1,7 @@
 # Deploying a Dockerized React App to Kubernetes Cluster
 
 ## Prerequisites
+
 * Tutorial was done on macOS.
 * Tutorial assumes you have Homebrew installed on you computer. If not, you can install here: https://brew.sh
 * Tutorial assumes you have Docker installed on your computer. If not, you can install it here: https://docs.docker.com/docker-for-mac/install/
@@ -8,34 +9,36 @@
 ## Step 1: Dockerize app
 
 ### Build Docker image
-```sh
+
+```sh { name=docker-build }
 $ docker build -t runme/demo .
 ```
 
 ### Run image locally to make sure it works
-```sh { interactive=false }
-$ docker run -d -p 3000:3000 runme/demo:latest
+
+```sh { name=docker-run interactive=false }
+$ export RUNME_CID=$(docker run -d -p 3000:3000 runme/demo:latest)
+$ echo "Container running with ID $RUNME_CID"
 ```
 
 ### Open Application
 
 And see it running:
 
-```sh
+```sh { name=open-app interactive=false }
 open http://localhost:3000
 ```
 
 then stop the container:
 
-```sh { interactive=false }
-$ docker ps | grep runme/demo:latest
+```sh { name=docker-inspect interactive=false mimeType=text/x-json promptEnv=false }
+$ docker inspect $RUNME_CID | jq ".[0].State"
 ```
 
 Stop the container via:
 
-```sh
-$ export RUNME_CID=<container-id>
-$ docker stop $RUNME_CID
+```sh { name=docker-stop interactive=false }
+$ docker stop $RUNME_CID > /dev/null && echo "Stopped container with ID $RUNME_CID"
 ```
 
 ## Step 2: Deploy application to Kubernetes Cluster with Linkerd
