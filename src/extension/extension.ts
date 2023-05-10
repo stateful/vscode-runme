@@ -23,7 +23,8 @@ import {
   welcome,
   tryIt,
   openFileInRunme,
-  openIntegratedTerminal
+  openIntegratedTerminal,
+  authenticateWithGitHub
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -45,7 +46,7 @@ export class RunmeExtension {
       maxNumberOfIntents: 10,
     }, !grpcServer, grpcRunner)
 
-    let runner: IRunner|undefined
+    let runner: IRunner | undefined
     if (grpcRunner) {
       runner = new GrpcRunner(server)
       kernel.useRunner(runner)
@@ -137,7 +138,7 @@ export class RunmeExtension {
       window.registerTreeDataProvider('runme.launcher', treeViewer),
       RunmeExtension.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
-
+      RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
       /**
        * Uri handler
        */
