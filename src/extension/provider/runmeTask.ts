@@ -18,7 +18,7 @@ import {
   NotebookCellData,
 } from 'vscode'
 
-import { getAnnotations, prepareCmdSeq, processEnviron } from '../utils'
+import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
@@ -118,6 +118,12 @@ export class RunmeTaskProvider implements TaskProvider {
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
         const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
 
+        const envs: Record<string, string> = {
+          ...await getWorkspaceEnvs(Uri.file(filePath))
+        }
+
+        if (!environment) { Object.assign(envs, process.env) }
+
         const runOpts: RunProgramOptions = {
           programName: getShellPath() ?? 'sh',
           exec: {
@@ -128,10 +134,7 @@ export class RunmeTaskProvider implements TaskProvider {
           environment,
           tty: interactive,
           convertEol: true,
-        }
-
-        if (!environment) {
-          runOpts.envs = processEnviron()
+          envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
         }
 
         const program = await runner.createProgramSession(runOpts)

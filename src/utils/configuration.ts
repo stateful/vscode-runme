@@ -9,9 +9,12 @@ import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
 
 const SERVER_SECTION_NAME = 'runme.server'
-const TERMINAL_SECTION_NAME= 'runme.terminal'
-const CODELENS_SECTION_NAME= 'runme.codelens'
+const TERMINAL_SECTION_NAME = 'runme.terminal'
+const CODELENS_SECTION_NAME = 'runme.codelens'
+const ENV_SECTION_NAME = 'runme.env'
+
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
+const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -45,6 +48,10 @@ const configurationSchema = {
     },
     codelens: {
       enable: z.boolean().default(true)
+    },
+    env: {
+      workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
+      loadWorkspaceFiles: z.boolean().default(true),
     }
 }
 
@@ -72,6 +79,16 @@ const getCodeLensConfigurationValue = <T>(configName: keyof typeof configuration
   const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+      return parseResult.data as T
+  }
+  return defaultValue
+}
+
+const getEnvConfigurationValue = <T>(configName: keyof typeof configurationSchema.env, defaultValue: T) => {
+  const configurationSection = workspace.getConfiguration(ENV_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.env[configName].safeParse(configurationValue)
   if (parseResult.success) {
       return parseResult.data as T
   }
@@ -160,6 +177,14 @@ const registerExtensionEnvironmentVariables = (context: ExtensionContext): void 
   )
 }
 
+const getEnvWorkspaceFileOrder = (): string[] => {
+  return getEnvConfigurationValue('workspaceFileOrder', DEFAULT_WORKSPACE_FILE_ORDER)
+}
+
+const getEnvLoadWorkspaceFiles = (): boolean => {
+  return getEnvConfigurationValue('loadWorkspaceFiles', true)
+}
+
 export {
     getPortNumber,
     getBinaryPath,
@@ -175,4 +200,6 @@ export {
     getCodeLensEnabled,
     registerExtensionEnvironmentVariables,
     getCustomServerAddress,
+    getEnvWorkspaceFileOrder,
+    getEnvLoadWorkspaceFiles,
 }

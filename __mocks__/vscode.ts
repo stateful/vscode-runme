@@ -19,7 +19,6 @@ export const notebooks = {
   }),
 }
 
-
 export class Uri extends URI {
   static file = vi.fn(super.file)
   static parse = vi.fn(super.parse)
@@ -51,13 +50,7 @@ export const workspace = {
     onDidCreate: vi.fn(),
     onDidDelete: vi.fn()
   }),
-  workspaceFolders: [
-    {
-      uri: {
-        fsPath: '/runme/workspace',
-      },
-    },
-  ],
+  workspaceFolders: [ { uri: { fsPath: '/runme/workspace' } } ],
   findFiles: vi.fn().mockReturnValue([
     {
       path: 'runme/workspace/README.md',

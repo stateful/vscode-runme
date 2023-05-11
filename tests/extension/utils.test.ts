@@ -1,4 +1,4 @@
-import vscode, { commands, workspace } from 'vscode'
+import vscode, { FileType, Uri, commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 import { v4 } from 'uuid'
 
@@ -15,6 +15,8 @@ import {
   getGrpcHost,
   prepareCmdSeq,
   openFileAsRunmeNotebook,
+  getWorkspaceFolder,
+  getWorkspaceEnvs,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -24,11 +26,13 @@ vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 vi.mock('vscode', async () => {
   const { v4 } = await vi.importActual('uuid') as typeof import('uuid')
+  const mocked = await vi.importActual('../../__mocks__/vscode') as any
 
   const uuid1 = v4()
   const uuid2 = v4()
 
   return ({
+    ...mocked,
     default: {
       window: {
         terminals: [
@@ -37,7 +41,9 @@ vi.mock('vscode', async () => {
         ]
       },
       workspace: {
-        getConfiguration: vi.fn()
+        getConfiguration: vi.fn(),
+        workspaceFolders: [],
+        fs: mocked.workspace.fs,
       },
       env: {
         machineId: 'test-machine-id'
@@ -48,7 +54,9 @@ vi.mock('vscode', async () => {
       }
     },
     workspace: {
-      getConfiguration: vi.fn()
+      getConfiguration: vi.fn(),
+      fs: mocked.workspace.fs,
+      workspaceFolders: [],
     },
     commands: {
       executeCommand: vi.fn()
@@ -332,5 +340,68 @@ suite('openFileAsRunmeNotebook', () => {
 
     expect(commands.executeCommand).toBeCalledTimes(1)
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', uri, 'runme')
+  })
+})
+
+suite('getWorkspaceFolder', () => {
+  beforeEach(() => {
+    // @ts-ignore
+    workspace.workspaceFolders = []
+  })
+
+  test('is empty if no workspace folder', async () => {
+    expect(await getWorkspaceEnvs()).toStrictEqual({ })
+  })
+
+  test('identifies correct workspace', () => {
+    const workspaceFolder1 = { uri: Uri.file('/foo/bar') }
+    const workspaceFolder2 = { uri: Uri.file('/bar/foo') }
+    const workspaceFolder3 = { uri: Uri.file('/bar/baz') }
+
+    // @ts-ignore
+    workspace.workspaceFolders = [
+      workspaceFolder1,
+      workspaceFolder2,
+      workspaceFolder3,
+    ]
+
+    expect(getWorkspaceFolder()).toBe(workspaceFolder1)
+    expect(getWorkspaceFolder(Uri.file('/bar/baz/.env'))).toBe(workspaceFolder3)
+  })
+})
+
+suite('getWorkspaceEnvs', () => {
+  beforeEach(() => {
+    // @ts-ignore
+    workspace.workspaceFolders = []
+
+    vi.mocked(workspace.fs.stat).mockReset()
+    vi.mocked(workspace.fs.readFile).mockReset()
+  })
+
+  test('identifies env files', async () => {
+    const workspaceFolder = { uri: Uri.file('/foo/bar') }
+
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
+    vi.mocked(workspace.fs.readFile).mockImplementation(async (uri) => {
+      if (uri.fsPath === '/foo/bar/.env') {
+        return Buffer.from('SECRET_1=secret1_override\nSECRET_2=secret2\n')
+      } else if (uri.fsPath === '/foo/bar/.env.local') {
+        return Buffer.from('SECRET_1=secret1\nSECRET_3=secret3')
+      }
+
+      return Buffer.from([])
+    })
+
+    // @ts-ignore
+    workspace.workspaceFolders = [
+      workspaceFolder,
+    ]
+
+    expect(await getWorkspaceEnvs(workspaceFolder.uri)).toStrictEqual({
+      SECRET_1: 'secret1_override',
+      SECRET_2: 'secret2',
+      SECRET_3: 'secret3',
+    })
   })
 })

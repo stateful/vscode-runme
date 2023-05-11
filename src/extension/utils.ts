@@ -12,14 +12,16 @@ import vscode, {
   NotebookCellExecution,
   NotebookCellOutput,
   commands,
+  WorkspaceFolder,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
+import dotenv from 'dotenv'
 
 import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { SERVER_ADDRESS } from '../constants'
-import { getPortNumber } from '../utils/configuration'
+import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
 
 import type executor from './executors'
 import { Kernel } from './kernel'
@@ -359,4 +361,55 @@ export function isWindows(): boolean {
 
 export async function openFileAsRunmeNotebook(uri: Uri): Promise<void> {
   return await commands.executeCommand('vscode.openWith', uri, Kernel.type)
+}
+
+/**
+ * Replacement for `workspace.getWorkspaceFolder`, which has issues
+ *
+ * If `uri` is undefined, this returns the first (default) workspace folder
+ */
+export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
+  if (!uri) {
+    return workspace.workspaceFolders?.[0]
+  }
+
+  let testPath = uri.fsPath
+  do {
+    for (const workspaceFolder of workspace.workspaceFolders ?? [ ]) {
+      if (testPath === workspaceFolder.uri.fsPath) {
+        return workspaceFolder
+      }
+    }
+
+    testPath = path.dirname(testPath)
+  } while (testPath !== path.dirname(testPath))
+}
+
+export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string>> {
+  const res: Record<string, string> = { }
+  const workspaceFolder = getWorkspaceFolder(uri)
+
+  if (!workspaceFolder || !getEnvLoadWorkspaceFiles()) { return res }
+
+  const envFiles = getEnvWorkspaceFileOrder()
+
+  const envs = await Promise.all(
+    envFiles.map(async (fileName) => {
+      const dotEnvFile = Uri.joinPath(workspaceFolder.uri, fileName)
+
+      return await workspace.fs.stat(dotEnvFile)
+        .then(async (f) => {
+          if (f.type !== FileType.File) { return { } }
+
+          const bytes = await workspace.fs.readFile(dotEnvFile)
+          return dotenv.parse(Buffer.from(bytes))
+        }, () => { return { } })
+    })
+  )
+
+  for (const env of envs) {
+    Object.assign(res, env)
+  }
+
+  return res
 }
