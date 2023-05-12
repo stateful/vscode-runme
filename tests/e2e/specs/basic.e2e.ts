@@ -354,5 +354,6 @@ async function tryExecuteCommand(workbench: Workbench, command: string) {
 // }
 
 async function clearAllOutputs(workbench: Workbench) {
-  await tryExecuteCommand(workbench, 'notebook: clear all outputs')
+  await tryExecuteCommand(workbench, 'Notebook: Clear Cell Outputs')
+  await tryExecuteCommand(workbench, 'Notebook: Clear All Outputs')
 }
