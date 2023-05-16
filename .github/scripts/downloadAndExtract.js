@@ -62,6 +62,14 @@ const cleanCliDownload = async (cliDownloadFolder) => {
 }
 
 const downloadBinary = async (downloadUrl, type, binaryDestination, binaryName) => {
+  if (!type) {
+    type = path.extname(downloadUrl) === '.zip'
+      ? 'zip'
+      : path.extname(downloadUrl) === '.gz'
+        ? 'tar'
+        : 'unknown'
+  }
+
   if (!VALID_FORMATS.includes(type)) {
     throw new Error(`Invalid type ${type}, it must be zip or tar file`)
   }
