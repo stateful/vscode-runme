@@ -22,7 +22,7 @@ const SCHEMA = {
   type: {
     type: 'string',
     short: 'f',
-    default: 'tar',
+    default: process.env.TYPE,
     description: 'The compressed file format (zip, tar)'
   },
   binaryDestination: {
