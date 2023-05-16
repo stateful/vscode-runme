@@ -503,7 +503,7 @@
     "test": "run-s test:*",
     "test:lint": "eslint src tests --ext ts",
     "test:lint:fix": "eslint src tests --ext ts --fix",
-    "test:unit": "vitest -c ./vitest.conf.ts --run",
+    "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
     "pretest:e2e": "npm run download:binary",
     "watch": "npm run build:dev -- --watch",
