@@ -508,7 +508,7 @@
     "pretest:e2e": "npm run download:binary",
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
-    "download:binary": "npm run prepare-binary -- -f tar",
+    "download:binary": "npm run prepare-binary",
     "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme"
   },
   "devDependencies": {
