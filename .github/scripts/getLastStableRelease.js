@@ -1,7 +1,7 @@
 import os from 'node:os'
 
 
-const getLastStableRelease = async () => {
+export const getLastStableRelease = async () => {
   const branch = process.env.GITHUB_REF_NAME ?? 'main'
   const suffix = branch === 'main' ? '/latest' : ''
 
@@ -22,11 +22,14 @@ const getLastStableRelease = async () => {
   const ext = os.platform() === 'win32' ? 'zip' : 'tar.gz'
   const binary = `${os.platform().replace('win32', 'windows')}_${arch === 'x64' ? 'x86_64' : arch}.${ext}`
   const downloadUrl = `https://download.stateful.com/runme/${tag_name.replace('v', '')}/runme_${binary}`
+  return downloadUrl
+}
+
+/**
+ * execute if called directly
+ */
+if (process.argv[1] && process.argv[1].endsWith('getLastStableRelease.js')) {
+  const downloadUrl = await getLastStableRelease()
   // This console log is important since it's being exported to a ENV VAR
   console.log(downloadUrl)
 }
-
-
-await getLastStableRelease()
-
-

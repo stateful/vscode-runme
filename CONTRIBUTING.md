@@ -86,7 +86,7 @@ This should also download the Runme CLI WASM file. If an error happened follow t
 ```sh { interactive=false }
 export GITHUB_REF_NAME=$(git branch --show-current)
 GITHUB_TOKEN=$(gh auth token) npm run download:wasm
-DOWNLOAD_URL=$(node .github/scripts/getLastStableRelease) TYPE=tar npm run prepare-binary
+npm run prepare-binary -- -f tar
 ```
 
 ### Build Project
