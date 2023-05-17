@@ -24,17 +24,13 @@ export type WorkflowRunStatus = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'>
 export type OnWorkflowStatusUpdate = (workflowRun: IWorkflowRun | undefined) => void
 
 export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>): Promise<string> {
-    try {
-        const githubService = await getService()
-        const { owner, repo, path } = options
-        return githubService.getWorkflowYamlFile({
-            owner,
-            repo,
-            name: path
-        })
-    } catch (error) {
-        throw error
-    }
+    const githubService = await getService()
+    const { owner, repo, path } = options
+    return githubService.getWorkflowYamlFile({
+        owner,
+        repo,
+        name: path
+    })
 }
 
 export async function deployWorkflow(options: IWorkflowDispatchOptions): Promise<IWorkflowRunResult> {
@@ -53,16 +49,11 @@ export async function deployWorkflow(options: IWorkflowDispatchOptions): Promise
 }
 
 export async function getService() {
-    try {
-        const session = await authentication.getSession('github', ['repo'])
-        if (!session) {
-            throw new Error('Missing a valid GitHub session')
-        }
-        return new GitHubService(session.accessToken)
-    } catch (error) {
-        throw error
+    const session = await authentication.getSession('github', ['repo'])
+    if (!session) {
+        throw new Error('Missing a valid GitHub session')
     }
-
+    return new GitHubService(session.accessToken)
 }
 
 
@@ -96,7 +87,7 @@ export function parseGitHubURL(workflowUrl: string): IGitHubURLParts {
     const parts = workflowUrl.split('/')
     const owner = parts[3]
     const repo = parts[4]
-    const ref = parts[5] === 'actions' && parts[6] === 'workflows' ? 'main' :parts[6]
+    const ref = parts[5] === 'actions' && parts[6] === 'workflows' ? 'main' : parts[6]
     const path = parts[parts.length - 1]
     if (!owner || !repo || !ref || !path) {
         throw new Error('Invalid GitHub URL')
