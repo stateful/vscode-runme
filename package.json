@@ -508,8 +508,8 @@
     "pretest:e2e": "npm run download:binary",
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
-    "download:binary": "DOWNLOAD_URL=$(node .github/scripts/getLastStableRelease) TYPE=tar npm run prepare-binary",
-    "prepare-binary": "node .github/scripts/downloadAndExtract.js -d $DOWNLOAD_URL -f $TYPE -b bin -n runme"
+    "download:binary": "npm run prepare-binary",
+    "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme"
   },
   "devDependencies": {
     "@octokit/rest": "^19.0.8",
