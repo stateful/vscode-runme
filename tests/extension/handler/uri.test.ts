@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 // @ts-expect-error mock feature
-import { commands, window, Uri, terminal, workspace } from 'vscode'
+import { commands, window, Uri, terminal, workspace, tasks } from 'vscode'
 import got from 'got'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import {
-  getProjectDir, waitForProjectCheckout, getSuggestedProjectName, writeBootstrapFile, parseParams, getTargetDirName
+  getProjectDir, getSuggestedProjectName, writeBootstrapFile, parseParams, getTargetDirName
 } from '../../../src/extension/handler/utils'
 
 vi.mock('vscode')
@@ -161,24 +161,35 @@ describe('RunmeUriHandler', () => {
       handler = new RunmeUriHandler({} as any)
       progress.report.mockClear()
       terminal.dispose.mockClear()
+      vi.mocked(tasks.onDidEndTaskProcess).mockReset()
     })
 
-    it('should return false if waitForProjectCheckout fails', async () => {
-      vi.mocked(waitForProjectCheckout).mockImplementation(
-        async (_, __, ___, resolve) => resolve(false))
+    it('should return false if executeTask fails', async () => {
+      vi.mocked(tasks.executeTask).mockResolvedValue({ _id: 'id' } as any)
+      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) => x({
+        execution: {
+          _id: 'id'
+        },
+        exitCode: 1
+      } as any))
+
       await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
-      expect(terminal.sendText).toBeCalledWith('git clone /foo/bar "/bar/foo"')
-      expect(terminal.dispose).toBeCalledTimes(1)
-      expect(progress.report).toBeCalledTimes(1)
+
+      expect(window.showErrorMessage).toBeCalledTimes(1)
     })
 
     it('should finish clone process', async () => {
-      vi.mocked(Uri.parse).mockReturnValue('some url' as any)
-      vi.mocked(waitForProjectCheckout).mockImplementation(
-        async (_, __, ___, resolve) => resolve(true))
+      vi.mocked(tasks.executeTask).mockResolvedValue({ _id: 'id' } as any)
+      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) => x({
+        execution: {
+          _id: 'id'
+        },
+        exitCode: 0
+      } as any))
+
       await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
+
       expect(progress.report).toBeCalledWith({ increment: 100 })
-      expect(terminal.dispose).toBeCalledTimes(1)
       expect(commands.executeCommand).toBeCalledWith(
         'vscode.openFolder',
         { 'fsPath': '/bar/foo' },
