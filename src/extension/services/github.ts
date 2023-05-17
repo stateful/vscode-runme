@@ -46,7 +46,7 @@ export class GitHubService {
             }
         }
 
-        return workflowRun as unknown as IWorkflowRun
+        return { ...workflowRun, workflow_id } as unknown as IWorkflowRun
     }
 
     /**

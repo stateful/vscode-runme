@@ -74,6 +74,7 @@ export interface GitHubState {
   content?: string
   ref?: string
   error?: any
+  cellId?: string
 }
 
 interface Payload {
@@ -147,14 +148,18 @@ export interface ClientMessagePayload {
     owner: string
     workflow_id: string
     ref: string
+    cellId: string
   }
   [ClientMessages.githubWorkflowDeploy]: {
     itFailed: boolean
     reason?: string
     workflowRun?: IWorkflowRun
+    workflowId: string
+    cellId: string
   }
   [ClientMessages.githubWorkflowStatusUpdate]: {
     workflowRun?: IWorkflowRun
+    cellId: string
   }
 }
 

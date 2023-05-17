@@ -147,7 +147,7 @@ export function getKey(runningCell: vscode.TextDocument): keyof typeof executor 
 }
 
 /**
- * treat cells like like a series of individual commands
+ * treat cells like a series of individual commands
  * which need to be executed in sequence
  */
 export function getCmdSeq(cellText: string): string[] {

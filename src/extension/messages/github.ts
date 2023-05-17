@@ -16,7 +16,9 @@ export default async function handleGitHubMessage({ messaging, message }: IGitHu
         postClientMessage(messaging, ClientMessages.githubWorkflowDeploy, {
             itFailed,
             reason,
-            workflowRun
+            workflowRun,
+            workflowId: message.output.workflow_id,
+            cellId: message.output.cellId
         })
         if (!workflowRun) {
             return
@@ -27,7 +29,8 @@ export default async function handleGitHubMessage({ messaging, message }: IGitHu
             run_id: Number(workflowRun.id),
             onStatusUpdate: (workflowRun) => {
                 postClientMessage(messaging, ClientMessages.githubWorkflowStatusUpdate, {
-                    workflowRun
+                    workflowRun,
+                    cellId: message.output.cellId
                 })
             }
         })

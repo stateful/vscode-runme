@@ -12,9 +12,12 @@ import { IWorkflowRun } from '../../../extension/services/types'
 import './workflowRun'
 
 interface IWorkflow {
-  on: any
+  on: {
+    workflow_dispatch?: {
+      inputs: Record<string, string>
+    }
+  }
   name: string
-  jobs: any
 }
 
 type Event = {
@@ -31,7 +34,7 @@ enum DeploymentStatus {
 }
 
 @customElement(RENDERERS.GitHubWorkflowViewer)
-export class WorkflowViewer extends LitElement{
+export class WorkflowViewer extends LitElement {
 
   @property()
   protected isTriggeringWorkflow = false
@@ -47,13 +50,13 @@ export class WorkflowViewer extends LitElement{
 
   @property({ type: Object })
   state: GitHubState = {}
-  
+
   protected disposables: Disposable[] = []
 
   private inputs: Record<string, string> = {}
 
   static styles = unsafeCSS(require('!!raw-loader!./styles/workflowViewer.css').default)
-  
+
   private renderSelect(group: string, groupLabel: string, options: string[]) {
     return html`
     <div class="dropdown-container">
@@ -99,7 +102,7 @@ export class WorkflowViewer extends LitElement{
     const { owner, repo, workflow_id, ref } = this.state
     ctx.postMessage(<ClientMessage<ClientMessages.githubWorkflowDispatch>>{
       type: ClientMessages.githubWorkflowDispatch,
-      output: { inputs: this.inputs, owner, repo, workflow_id, ref: ref ?? 'main' },
+      output: { inputs: this.inputs, owner, repo, workflow_id, ref: ref ?? 'main', cellId: this.state.cellId },
     })
   }
 
@@ -108,13 +111,20 @@ export class WorkflowViewer extends LitElement{
     const ctx = getContext()
     this.disposables.push(onClientMessage(ctx, (e) => {
       if (e.type === ClientMessages.githubWorkflowDeploy) {
-        const { itFailed, reason, workflowRun } = e.output
+        const { itFailed, reason, workflowRun, cellId } = e.output
+        // Ensure we only render changes for this workflow run
+        if (cellId !== this.state.cellId) {
+          return
+        }
         this.isTriggeringWorkflow = false
         this.deploymentStatus = itFailed ? DeploymentStatus.error : DeploymentStatus.triggered
         this.reason = reason
         this.workflowRun = workflowRun
       } else if (e.type === ClientMessages.githubWorkflowStatusUpdate) {
-        const { workflowRun } = e.output
+        const { workflowRun, cellId } = e.output
+        if (cellId !== this.state.cellId) {
+          return
+        }
         this.workflowRun = workflowRun
       }
     })
@@ -123,7 +133,12 @@ export class WorkflowViewer extends LitElement{
 
   private getWorkflowForm() {
     const { on: { workflow_dispatch } } = this.state.content as unknown as IWorkflow
-    if (workflow_dispatch) {
+
+    if (workflow_dispatch === null) {
+      return html`<div>Deploy workflow from: ${this.state.ref}</div>`
+    }
+
+    if (workflow_dispatch?.inputs) {
       const yamlDefinition = Object.entries(workflow_dispatch.inputs)
       const inputs = yamlDefinition.filter((p: unknown) => typeof p === 'object')
       return inputs.map((option: any) => {
@@ -166,7 +181,7 @@ export class WorkflowViewer extends LitElement{
 
   private getFooter() {
     return html`
-      <div class="run-action-footer ${this.isTriggeringWorkflow ? 'deploying': ''}">
+      <div class="run-action-footer ${this.isTriggeringWorkflow ? 'deploying' : ''}">
         ${when(
       this.isTriggeringWorkflow,
       () => html`<vscode-progress-ring></vscode-progress-ring><p>Triggering workflow...</p>`,

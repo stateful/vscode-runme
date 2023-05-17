@@ -14,6 +14,7 @@ export interface IWorkflowYamlContentRequest {
 
 export interface IWorkflowRun {
     id: number
+    workflowId: number
     cancel_url: string
     display_title: string
     head_branch: string
