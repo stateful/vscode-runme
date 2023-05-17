@@ -6,6 +6,7 @@ import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Disposable, Uri, EventEmitter } from 'vscode'
 
+import getLogger from '../logger'
 import {
   HealthCheckRequest,
   HealthCheckResponse_ServingStatus
@@ -33,6 +34,8 @@ export interface IServerConfig {
       interval: number
     }
 }
+
+const log = getLogger('RunmeServer')
 
 class RunmeServer implements Disposable {
     #port: number
@@ -195,7 +198,7 @@ class RunmeServer implements Disposable {
 
         process.on('close', (code) => {
             if (this.#loggingEnabled) {
-                console.log(`[Runme] Server process #${this.#process?.pid} closed with code ${code}`)
+                log.info(`Server process #${this.#process?.pid} closed with code ${code}`)
             }
             this.#onClose.fire({ code })
 
@@ -204,12 +207,12 @@ class RunmeServer implements Disposable {
 
 
         process.stderr.once('data', () => {
-            console.log(`[Runme] Server process #${this.#process?.pid} started on port ${this.#port}`)
+            log.info(`Server process #${this.#process?.pid} started on port ${this.#port}`)
         })
 
         process.stderr.on('data', (data) => {
             if (this.#loggingEnabled) {
-                console.log(data.toString())
+                log.info(data.toString())
             }
         })
 

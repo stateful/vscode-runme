@@ -20,6 +20,7 @@ import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
+import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron, isWindows } from './utils'
@@ -35,6 +36,8 @@ enum ConfirmationItems {
   Skip = 'Skip Prompt and run all',
   Cancel = 'Cancel'
 }
+
+const log = getLogger('Kernel')
 
 export class Kernel implements Disposable {
   static readonly type = 'runme' as const
@@ -146,7 +149,7 @@ export class Kernel implements Disposable {
           }
 
           if (cell.metadata?.['runme.dev/uuid'] === undefined) {
-            console.error(`[Runme] Cell with index ${cell.index} lacks uuid`)
+            log.error(`Cell with index ${cell.index} lacks uuid`)
             continue
           }
 
@@ -215,7 +218,7 @@ export class Kernel implements Disposable {
       return
     }
 
-    console.error(`[Runme] Unknown kernel event type: ${message.type}`)
+    log.error(`Unknown kernel event type: ${message.type}`)
   }
 
   private async _executeAll(cells: NotebookCell[]) {
@@ -323,7 +326,7 @@ export class Kernel implements Disposable {
       )
         .catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
-          console.error('[Runme] Internal failure executing runner', e.message)
+          log.error('Internal failure executing runner', e.message)
           return false
         })
 
@@ -364,7 +367,7 @@ export class Kernel implements Disposable {
           this.environment = env
         } catch (e: any) {
           window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
-          console.error('[Runme] Failed to create gRPC Runner environment', e)
+          log.error('Failed to create gRPC Runner environment', e)
         }
       })
     }

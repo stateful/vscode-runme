@@ -23,6 +23,7 @@ import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { SERVER_ADDRESS } from '../constants'
 import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
 
+import getLogger from './logger'
 import type executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
@@ -31,6 +32,7 @@ import { ENV_STORE, DEFAULT_ENV } from './constants'
 declare var globalThis: any
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
+const log = getLogger()
 
 /**
  * Annotations are stored as subset of metadata
@@ -280,7 +282,7 @@ export async function initWasm(wasmUri: Uri) {
       go.run(result.instance)
     },
     (err: Error) => {
-      console.error(`[Runme] failed initializing WASM file: ${err.message}`)
+      log.error(`failed initializing WASM file: ${err.message}`)
       return err
     }
   )

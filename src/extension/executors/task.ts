@@ -6,6 +6,7 @@ import {
   ShellExecution
 } from 'vscode'
 
+import getLogger from '../logger'
 // import { ExperimentalTerminal } from "../terminal"
 import { getCmdShellSeq, getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
@@ -17,6 +18,7 @@ import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
+const log = getLogger('taskExecutor')
 
 export function closeTerminalByEnvID (id: string, kill?: boolean) {
   const terminal = window.terminals.find(t => getTerminalRunmeId(t) === id)
@@ -99,7 +101,7 @@ async function taskExecutor(
         closeTerminalByEnvID(RUNME_ID)
         resolve(0)
       } catch (err: any) {
-        console.error(`[Runme] Failed to terminate task: ${(err as Error).message}`)
+        log.error(`Failed to terminate task: ${(err as Error).message}`)
         resolve(1)
       }
     }))
