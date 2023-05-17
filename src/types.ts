@@ -73,6 +73,7 @@ interface Payload {
   [OutputType.annotations]: {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
+    cellIndex?: number
   }
   [OutputType.terminal]: {
     ['runme.dev/uuid']: string
@@ -124,6 +125,9 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
+  [ClientMessages.closeCellOutput]: {
+    cellIndex: number
+  }
 }
 
 export interface OutputItemsPayload {

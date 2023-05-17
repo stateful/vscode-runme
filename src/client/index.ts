@@ -60,6 +60,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.annotations:
           const annoElem = document.createElement('edit-annotations')
+          annoElem.setAttribute('cellIndex', (payload.output.cellIndex || '').toString())
           annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
           annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
           element.appendChild(annoElem)

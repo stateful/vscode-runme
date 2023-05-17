@@ -6,7 +6,8 @@ import { ClientMessages } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
 import { getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
-import '@vscode/webview-ui-toolkit/dist/data-grid/index'
+
+import './closeCellButton'
 
 type AnnotationsMutation = Partial<CellAnnotations>
 type AnnotationsKey = keyof typeof AnnotationSchema
@@ -37,6 +38,7 @@ export class Annotations extends LitElement {
       align-items: flex-start;
       gap: 1rem;
       width: 94%;
+      position: relative;
     }
 
     .annotation-container h4 {
@@ -99,6 +101,9 @@ export class Annotations extends LitElement {
 
   @property({ type: Object, reflect: true })
   validationErrors?: CellAnnotationsErrorResult
+
+  @property({ type: Number })
+  cellIndex?: number
 
   #desc(id: string): string {
     return this.#descriptions.get(id) || id
@@ -247,9 +252,11 @@ export class Annotations extends LitElement {
       </div>`
     })
 
-    return html`<section class="annotation-container ${errorCount ? 'has-errors' : ''}">
+    return html`
+    <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
       <h4>Configure cell's execution behavior:</h4>
       ${markup}
+      <close-cell-button cellIndex="${this.cellIndex}" />
       ${when(
       errorCount,
       () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,

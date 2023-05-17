@@ -94,7 +94,8 @@ export class NotebookCellOutputManager {
           type: OutputType.annotations,
           output: {
             annotations: getAnnotations(cell),
-            validationErrors: validateAnnotations(cell)
+            validationErrors: validateAnnotations(cell),
+            cellIndex: cell.index
           },
         }
 
