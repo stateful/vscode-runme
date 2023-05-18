@@ -135,6 +135,7 @@ export class RunmeTaskProvider implements TaskProvider {
           tty: interactive,
           convertEol: true,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+          storeLastOutput: true,
         }
 
         const program = await runner.createProgramSession(runOpts)
