@@ -23,7 +23,7 @@ function color (color: keyof typeof colors, text: string) {
   return `${colors[color]}${text}${colors.reset}`
 }
 
-function log (scope?: string, ...logParams: unknown[]) {
+function log (scope?: string, ...logParams: string[]) {
   const now = new Date()
   const scopeAddition = scope ? color('yellow', `[${scope}]`) : ''
   const prefix = util.format(
