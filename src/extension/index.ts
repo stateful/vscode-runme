@@ -19,6 +19,10 @@ export async function activate (context: ExtensionContext) {
     log.info(`Failed to initialize the extension: ${err.message}`)
   }
 
+  log.error('I am an error message')
+  getLogger('Kernel').info('info message with scope')
+  getLogger('Kernel').error('error message with scope')
+
   TelemetryReporter.sendTelemetryEvent('activate')
 }
 
