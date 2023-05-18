@@ -16,7 +16,7 @@ export async function activate (context: ExtensionContext) {
     await ext.initialize(context)
     log.info('Extension successfully activated')
   } catch (err: any) {
-    log.info(`Failed to initialize the extension: ${err.message}`)
+    log.error(`Failed to initialize the extension: ${err.message}`)
   }
 
   TelemetryReporter.sendTelemetryEvent('activate')
