@@ -134,7 +134,7 @@ export class WinDefaultShell implements Disposable {
       unlinkSync(tmpfile)
     } catch (err) {
       if (err instanceof Error) {
-        log.info(`Failed to remove temporary default shell: ${err.message}`)
+        log.error(`Failed to remove temporary default shell: ${err.message}`)
       }
     }
   }
