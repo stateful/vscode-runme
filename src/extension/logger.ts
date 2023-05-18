@@ -30,7 +30,7 @@ function log (scope?: string, logLevel: LogLevel = DEFAULT_LOG_LEVEL, ...logPara
   const prefix = util.format(
     `${color('green' ,'[%s]')} ${color('yellow', '%s')} Runme%s:`,
     now.toISOString(),
-    logLevel ?? '',
+    (logLevel && logLevel.toUpperCase()) ?? '',
     scopeAddition
   )
   console.log(prefix, ...logParams)
