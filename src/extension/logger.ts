@@ -2,9 +2,10 @@ import util from 'node:util'
 
 import { window } from 'vscode'
 
+import { stripANSI } from '../utils/ansi'
+
 const outputChannel = window.createOutputChannel('Runme')
 
-const COLOR_REGEXP = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g
 const DEFAULT_LOG_LEVEL: LogLevel = 'info'
 
 /**
@@ -34,7 +35,7 @@ function log (scope?: string, logLevel: LogLevel = DEFAULT_LOG_LEVEL, ...logPara
     scopeAddition
   )
   console.log(prefix, ...logParams)
-  outputChannel.appendLine([prefix, ...logParams].join(' ').replace(COLOR_REGEXP, ''))
+  outputChannel.appendLine(stripANSI([prefix, ...logParams].join(' ')))
 }
 
 export default function getLogger (scope?: string) {
