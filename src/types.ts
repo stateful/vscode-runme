@@ -73,7 +73,7 @@ interface Payload {
   [OutputType.annotations]: {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
-    cellIndex?: number
+    uuid?: string
   }
   [OutputType.terminal]: {
     ['runme.dev/uuid']: string
@@ -81,7 +81,6 @@ interface Payload {
     terminalFontSize: number
     content?: string
     initialRows?: number
-    cellIndex?: number
   }
 }
 
@@ -127,7 +126,7 @@ export interface ClientMessagePayload {
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
   [ClientMessages.closeCellOutput]: {
-    cellIndex: number
+    uuid: string
     outputType: OutputType
   }
 }
@@ -135,7 +134,7 @@ export interface ClientMessagePayload {
 export interface OutputItemsPayload {
   content: string
   mime: string
-  cellIndex?: number
+  uuid: string
 }
 
 export interface RunmeTaskDefinition extends TaskDefinition {

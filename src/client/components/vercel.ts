@@ -4,7 +4,7 @@ import { when } from 'lit/directives/when.js'
 
 import { ClientMessages, OutputType } from '../../constants'
 import type { ClientMessage } from '../../types'
-import { getContext } from '../utils'
+import { closeOutput, getContext } from '../utils'
 
 import './closeCellButton'
 
@@ -106,7 +106,12 @@ export class VercelOutput extends LitElement {
           👌 Promoted
         `)}
       </div>
-      <close-cell-button cellIndex="${this.content.payload.index}" outputType="${OutputType.vercel}" />
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: this.content.payload.uuid,
+          outputType: OutputType.vercel
+        })
+      }}" />
     </section>`
   }
 

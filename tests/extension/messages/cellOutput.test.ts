@@ -24,27 +24,23 @@ suite('Handle CellOutput messages', () => {
             metadata: {},
         } as unknown as NotebookCell
         const kernel = new Kernel({} as any)
-        const toggleOutput = vi.fn().mockImplementation(() => { })
-        const toggleTerminal = vi.fn().mockImplementation(() => { })
+        const showOutput = vi.fn().mockImplementation(() => { })
+        const showTerminal = vi.fn().mockImplementation(() => { })
         kernel.getCellOutputs = vi.fn().mockResolvedValue({
-            toggleOutput,
-            toggleTerminal
+            showTerminal,
+            showOutput,
         })
 
         return {
-            toggleOutput,
-            toggleTerminal,
+            showTerminal,
+            showOutput,
             kernel,
             cell
         }
     }
 
     const expectOutput = async (type: OutputType) => {
-        const { kernel, cell, toggleOutput, toggleTerminal } = mockOutput(type)
-        const outputCaller = [OutputType.terminal, OutputType.outputItems]
-            .includes(type) ?
-            toggleTerminal :
-            toggleOutput
+        const { kernel, cell, showOutput, showTerminal } = mockOutput(type)
         await handleCellOutputMessage({
             kernel,
             cell,
@@ -52,14 +48,18 @@ suite('Handle CellOutput messages', () => {
             message: {
                 type: ClientMessages.closeCellOutput,
                 output: {
-                    cellIndex: 1,
+                    uuid: 'a17249e7-4b5f-4b40-8037-10902dd446c9',
                     outputType: type
                 }
             }
         })
-        expect(outputCaller).toBeCalledTimes(1)
-        if (outputCaller instanceof toggleOutput) {
-            expect(outputCaller).toBeCalledWith(type)
+        if ([OutputType.terminal, OutputType.outputItems]
+            .includes(type)) {
+            expect(showTerminal).toBeCalledTimes(1)
+            expect(showTerminal).toBeCalledWith(false)
+        } else {
+            expect(showOutput).toBeCalledTimes(1)
+            expect(showOutput).toBeCalledWith(type, false)
         }
     }
 

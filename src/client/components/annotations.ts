@@ -4,7 +4,7 @@ import { when } from 'lit/directives/when.js'
 
 import { ClientMessages, OutputType } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
-import { getContext } from '../utils'
+import { closeOutput, getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
 
 import './closeCellButton'
@@ -102,9 +102,6 @@ export class Annotations extends LitElement {
   @property({ type: Object, reflect: true })
   validationErrors?: CellAnnotationsErrorResult
 
-  @property({ type: Number })
-  cellIndex?: number
-
   #desc(id: string): string {
     return this.#descriptions.get(id) || id
   }
@@ -192,7 +189,7 @@ export class Annotations extends LitElement {
       type="text"
       value="${text}"
       @change="${this.#onChange}"
-      @keyup="${ this.#onChange}"
+      @keyup="${this.#onChange}"
       placeholder=${placeHolder}
       size="50"
       class="annotation-item"
@@ -256,7 +253,12 @@ export class Annotations extends LitElement {
     <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
       <h4>Configure cell's execution behavior:</h4>
       ${markup}
-      <close-cell-button cellIndex="${this.cellIndex}" outputType="${OutputType.annotations}" />
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: (this.annotations && this.annotations['runme.dev/uuid']) || '',
+          outputType: OutputType.annotations
+        })
+      } }" />
       ${when(
       errorCount,
       () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,

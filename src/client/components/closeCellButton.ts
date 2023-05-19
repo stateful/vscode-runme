@@ -1,10 +1,5 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
-
-import { getContext } from '../utils'
-import { postClientMessage } from '../../utils/messaging'
-import { ClientMessages, OutputType } from '../../constants'
-
+import { customElement } from 'lit/decorators.js'
 @customElement('close-cell-button')
 export class CloseCellButton extends LitElement {
 
@@ -15,12 +10,18 @@ export class CloseCellButton extends LitElement {
             --tooltip-background: #343434;
         }
 
+        .close-button  .control { 
+            outline: none;
+        }
+
         .close-button {
             position: absolute;
             top: 5px;
             right: 5px;
-            border-radius: 5px;
-            border: solid 1px var(--vscode-focusBorder);
+        }
+
+        .close-button, .close-button:hover {
+            border: none;
         }
 
         @media (prefers-color-scheme: light) {
@@ -63,30 +64,32 @@ export class CloseCellButton extends LitElement {
             border-color: transparent transparent var(--tooltip-background) transparent;
         }
 
+        .tooltip .tooltiptext {
+            transition-delay: 1s;
+        }
+
         .tooltip:hover .tooltiptext {
             visibility: visible;
         }
+
+        .tooltip:not(:hover) .tooltiptext {
+            transition-delay: 0s;
+        }
     `
 
-    @property({ type: Number })
-    cellIndex?: number
-
-    @property()
-    outputType?: OutputType
-
-    private close() {
-        const ctx = getContext()
-        ctx.postMessage && postClientMessage(ctx, ClientMessages.closeCellOutput, {
-            cellIndex: this.cellIndex!,
-            outputType: this.outputType!
-        })
+    private onClose(e: Event) {
+        if (e.defaultPrevented) {
+            e.preventDefault()
+        }
+        const event = new CustomEvent('closed')
+        this.dispatchEvent(event)
     }
 
     render() {
         return html`
         <div class='close-button tooltip'>
             <span class="tooltiptext">Close</span>
-            <vscode-button appearance='icon' aria-label='Close' @click='${this.close}'>
+            <vscode-button class="control" appearance='icon' aria-label='Close' @click='${this.onClose}'>
                 <span class='icon icon-close'></span>
             </vscode-button>
         </div>

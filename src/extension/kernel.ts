@@ -27,7 +27,7 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
-import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
+import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 
 enum ConfirmationItems {
@@ -211,7 +211,10 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.openLink) {
       return env.openExternal(Uri.parse(message.output))
     } else if (message.type === ClientMessages.closeCellOutput) {
-      const cell = editor.notebook.cellAt(message.output.cellIndex)
+      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      if (!cell) {
+        return
+      }
       return handleCellOutputMessage({
         message,
         cell,
