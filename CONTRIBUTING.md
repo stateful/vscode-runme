@@ -75,18 +75,34 @@ make sure to configure your local npm to pull from Buf's registry (for GRPC depe
 npm config set @buf:registry https://buf.build/gen/npm/v1
 ```
 
-then ensure to install all project dependencies.
+then ensure to install all project dependencies. Note GitHub token is required to auto-dowload the latest `runme` binary. The branch ref name is optional, if it's not `main` pre-release binaries are being considered.
 
-```sh { name=setup }
-GITHUB_REF_NAME=$(git branch --show-current) GITHUB_TOKEN=$(gh auth token) npm install --include=dev
+```sh { name=setup promptEnv=false }
+$ export GITHUB_REF_NAME=$(git branch --show-current)
+$ export GITHUB_TOKEN=$(gh auth token)
+$ npm install --include=dev
 ```
 
-This should also download the Runme CLI WASM file. If an error happened follow the error instructions and re-run the download, via:
+Similarly a Runme WASM binary needs to be downloaded. If an error happened follow the error instructions and re-run the download, via:
 
-```sh { interactive=false }
-export GITHUB_REF_NAME=$(git branch --show-current)
-GITHUB_TOKEN=$(gh auth token) npm run download:wasm
-npm run prepare-binary -- -f tar
+```sh { interactive=true promptEnv=false }
+$ export GITHUB_REF_NAME=$(git branch --show-current)
+$ GITHUB_TOKEN=$(gh auth token) npm run download:wasm
+$ npm run prepare-binary -- -f tar
+```
+
+### Dev against Project
+
+Make sure to install all recommended extensions please:
+
+```sh { interactive=false mimeType=text/x-json }
+cat .vscode/extensions.json | grep -v '\/\/' | jq .
+```
+
+Then just run the watcher and you're off to the races.
+
+```sh { name=npm-watch background=true }
+npm run watch
 ```
 
 ### Build Project
