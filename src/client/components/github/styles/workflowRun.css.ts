@@ -1,3 +1,7 @@
+import { css } from 'lit'
+
+/* eslint-disable */
+export default /*css*/css`
 .workflow-run {
     display: flex;
     flex-direction: row;
@@ -134,3 +138,4 @@
         border-color: var(--vscode-settings-rowHoverBackground);
     }
 }
+`

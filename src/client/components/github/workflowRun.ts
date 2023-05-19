@@ -1,11 +1,16 @@
-import { LitElement, html, unsafeCSS } from 'lit'
+import { LitElement, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+
+import styles from './styles/workflowRun.css'
 
 @customElement('github-workflow-run')
 export class WorkflowRun extends LitElement {
 
     @property()
     status?: string
+
+    @property()
+    conclusion?: string
 
     @property()
     runNumber?: string
@@ -22,12 +27,16 @@ export class WorkflowRun extends LitElement {
     @property()
     githubUserName?: string
 
-    static styles = unsafeCSS(require('!!raw-loader!./styles/workflowRun.css').default)
+    static styles = styles
 
     render() {
         return html`
         <div class="workflow-run action-notice">
-            <div class="icon icon-${this.status?.toLowerCase()}"></div>
+            <div class="icon icon-${
+                this.conclusion ? 
+                this.conclusion.toLowerCase() : 
+                this.status?.toLowerCase()
+            }"></div>
             <div>${this.displayTitle} #${this.runNumber}: Manually run by
                 <img class="avatar-user" src="${this.avatarUrl}" />
                 ${this.githubUserName}

@@ -21,6 +21,7 @@ export interface IWorkflowRun {
     html_url: string
     name: string
     status: string
+    conclusion: string
     workflow_id: string
     logs_url: string
     jobs_url: string

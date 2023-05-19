@@ -3,8 +3,6 @@ import { authentication } from 'vscode'
 import { GitHubService } from '../../services'
 import { IWorkflowDispatchOptions, IWorkflowRun } from '../../services/types'
 
-const WORKFLOW_RUN_PROGRESS_STATUS = ['in_progress', 'queued', 'requested', 'waiting', 'pending']
-
 export type IGitHubURLParts = {
     owner: string
     repo: string
@@ -68,7 +66,8 @@ export async function checkWorkflowRunStatus({ owner, repo, run_id, onStatusUpda
                 repo,
                 run_id
             })
-            if (workflowRun?.status && !WORKFLOW_RUN_PROGRESS_STATUS.includes(workflowRun?.status)) {
+
+            if (workflowRun?.status === 'completed') {
                 checkStatus = false
             }
             onStatusUpdate(workflowRun)

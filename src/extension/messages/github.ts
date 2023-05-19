@@ -11,29 +11,29 @@ export interface IGitHubMessaging {
 }
 
 export default async function handleGitHubMessage({ messaging, message }: IGitHubMessaging): Promise<void> {
-    if (message.type === ClientMessages.githubWorkflowDispatch) {
-        const { itFailed, reason, workflowRun } = await deployWorkflow(message.output)
-        postClientMessage(messaging, ClientMessages.githubWorkflowDeploy, {
-            itFailed,
-            reason,
-            workflowRun,
-            workflowId: message.output.workflow_id,
-            cellId: message.output.cellId
-        })
-        if (!workflowRun) {
-            return
-        }
-        await checkWorkflowRunStatus({
-            owner: message.output.owner,
-            repo: message.output.repo,
-            run_id: Number(workflowRun.id),
-            onStatusUpdate: (workflowRun) => {
-                postClientMessage(messaging, ClientMessages.githubWorkflowStatusUpdate, {
-                    workflowRun,
-                    cellId: message.output.cellId
-                })
-            }
-        })
+    if (message.type !== ClientMessages.githubWorkflowDispatch) {
+        return
     }
-
+    const { itFailed, reason, workflowRun } = await deployWorkflow(message.output)
+    postClientMessage(messaging, ClientMessages.githubWorkflowDeploy, {
+        itFailed,
+        reason,
+        workflowRun,
+        workflowId: message.output.workflow_id,
+        cellId: message.output.cellId
+    })
+    if (!workflowRun) {
+        return
+    }
+    await checkWorkflowRunStatus({
+        owner: message.output.owner,
+        repo: message.output.repo,
+        run_id: Number(workflowRun.id),
+        onStatusUpdate: (workflowRun) => {
+            postClientMessage(messaging, ClientMessages.githubWorkflowStatusUpdate, {
+                workflowRun,
+                cellId: message.output.cellId
+            })
+        }
+    })
 }

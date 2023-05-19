@@ -1,15 +1,17 @@
-import { LitElement, html, unsafeCSS } from 'lit'
+import { LitElement, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable } from 'vscode'
 
 import type { ClientMessage, GitHubState } from '../../../types'
-import { getContext } from '../../utils'
-import { ClientMessages, RENDERERS } from '../../../constants'
+import { closeOutput, getContext } from '../../utils'
+import { ClientMessages, OutputType, RENDERERS } from '../../../constants'
 import { onClientMessage } from '../../../utils/messaging'
 import { IWorkflowRun } from '../../../extension/services/types'
 
 import './workflowRun'
+import '../closeCellButton'
+import styles from './styles/workflowViewer.css'
 
 interface IWorkflow {
   on: {
@@ -55,7 +57,7 @@ export class WorkflowViewer extends LitElement {
 
   private inputs: Record<string, string> = {}
 
-  static styles = unsafeCSS(require('!!raw-loader!./styles/workflowViewer.css').default)
+  static styles = styles
 
   private renderSelect(group: string, groupLabel: string, options: string[]) {
     return html`
@@ -170,6 +172,7 @@ export class WorkflowViewer extends LitElement {
               </div>
               <github-workflow-run
                 status="${this.workflowRun?.status}"
+                conclusion="${this.workflowRun?.conclusion}"
                 runNumber="${this.workflowRun?.run_number}"
                 htmlUrl="${this.workflowRun?.html_url}"
                 displayTitle="${this.workflowRun?.display_title}"
@@ -210,13 +213,26 @@ export class WorkflowViewer extends LitElement {
           ${workflowForm}
         </div>
         ${this.getFooter()}
+        <close-cell-button @closed="${() => {
+          return closeOutput({
+            uuid: this.state.cellId!,
+            outputType: OutputType.github
+          })
+        }}" />
       </div>
       `
     }
 
     return html`
-    <div class="message error-message"><h2>Error</h2>
+    <div class="message error-message">
+      <h2>Error</h2>
       <p>Unsupported GitHub Workflow, please ensure you are specifying an action with workflow_dispatch</p>
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: this.state.cellId!,
+          outputType: OutputType.github
+        })
+      }}" />
     </div>`
   }
 

@@ -27,7 +27,8 @@ class OctokitMock {
                 }),
                 getWorkflowRun: vi.fn().mockResolvedValue({
                     data: {
-                        status: 'success'
+                        status: 'completed',
+                        conclusio: 'success'
                     }
                 })
             }

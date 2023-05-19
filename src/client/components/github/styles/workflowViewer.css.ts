@@ -1,3 +1,7 @@
+import { css } from 'lit'
+
+/* eslint-disable */
+export default /*css*/css`
 :host {
     display: block;
     font-family: Arial;
@@ -15,7 +19,6 @@
 .github-workflow-item-container {
     border: 1px solid var(--vscode-focusBorder);
     border-radius: 5px;
-    width: 94%;
     position: relative;
 }
 
@@ -86,7 +89,6 @@
 .message {
     padding: 1rem;
     border-radius: 5px;
-    width: 100%;
 }
 
 .success-message {
@@ -96,3 +98,4 @@
 .error-message {
     color: var(--vscode-errorForeground)
 }
+`
