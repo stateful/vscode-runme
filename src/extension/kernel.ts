@@ -30,7 +30,7 @@ import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
-import { deployWorkflow, checkWorkflowRunStatus } from './executors/github/workflows'
+import handleGitHubMessage from './messages/github'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -226,25 +226,7 @@ export class Kernel implements Disposable {
         outputType: message.output.outputType
       })
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
-      const { itFailed, reason, workflowRun } = await deployWorkflow(message.output)
-      postClientMessage(this.messaging, ClientMessages.githubWorkflowDeploy, {
-        itFailed,
-        reason,
-        workflowRun
-      })
-
-      if (workflowRun) {
-        await checkWorkflowRunStatus({
-          owner: message.output.owner,
-          repo: message.output.repo,
-          run_id: Number(workflowRun.id),
-          onStatusUpdate: (workflowRun) => {
-            postClientMessage(this.messaging, ClientMessages.githubWorkflowStatusUpdate, {
-              workflowRun
-            })
-          }
-        })
-      }
+      await handleGitHubMessage({ messaging: this.messaging, message})
     } else if (
       message.type.startsWith('terminal:')
     ) {

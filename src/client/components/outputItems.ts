@@ -5,11 +5,11 @@ import '@vscode/webview-ui-toolkit/dist/button/index'
 
 import { closeOutput, getContext } from '../utils'
 import { ClientMessage } from '../../types'
-import { ClientMessages, OutputType } from '../../constants'
+import { ClientMessages, RENDERERS, OutputType } from '../../constants'
 
 import './closeCellButton'
 
-@customElement('shell-output-items')
+@customElement(RENDERERS.ShellOutputItems)
 export class ShellOutputItems extends LitElement {
   // Define scoped styles right with your component, in plain CSS
   static styles = css`

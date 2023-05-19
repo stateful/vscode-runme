@@ -96,3 +96,13 @@ export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
 
 export const DEFAULT_PROMPT_ENV = true
+
+export enum RENDERERS  {
+  VercelOutput = 'vercel-output',
+  DenoOutput = 'deno-output',
+  ShellOutput = 'shell-output',
+  ShellOutputItems = 'shell-output-items',
+  EditAnnotations = 'edit-annotations',
+  TerminalView = 'terminal-view',
+  GitHubWorkflowViewer = 'github-workflow-viewer',
+}

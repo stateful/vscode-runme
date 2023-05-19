@@ -35,6 +35,10 @@ const baseConfig: Partial<Configuration> = {
           fullySpecified: false
         }
       },
+      {
+        test: /\.css$/i,
+        use: ['raw-loader'],
+      }
     ],
   }
 }

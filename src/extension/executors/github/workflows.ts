@@ -23,7 +23,7 @@ export type WorkflowRunStatus = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'>
 
 export type OnWorkflowStatusUpdate = (workflowRun: IWorkflowRun | undefined) => void
 
-export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>) {
+export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>): Promise<string> {
     try {
         const githubService = await getService()
         const { owner, repo, path } = options
@@ -96,7 +96,10 @@ export function parseGitHubURL(workflowUrl: string): IGitHubURLParts {
     const parts = workflowUrl.split('/')
     const owner = parts[3]
     const repo = parts[4]
-    const ref = parts[6]
+    const ref = parts[5] === 'actions' && parts[6] === 'workflows' ? 'main' :parts[6]
     const path = parts[parts.length - 1]
+    if (!owner || !repo || !ref || !path) {
+        throw new Error('Invalid GitHub URL')
+    }
     return { owner, repo, path, ref }
 }

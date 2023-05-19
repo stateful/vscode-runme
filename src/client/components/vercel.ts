@@ -2,13 +2,13 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages, OutputType } from '../../constants'
+import { ClientMessages, RENDERERS, OutputType } from '../../constants'
 import type { ClientMessage } from '../../types'
 import { closeOutput, getContext } from '../utils'
 
 import './closeCellButton'
 
-@customElement('vercel-output')
+@customElement(RENDERERS.VercelOutput)
 export class VercelOutput extends LitElement {
   #isPromoting = false
   #promoted = false

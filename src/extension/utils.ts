@@ -129,8 +129,8 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
 
 export function isGitHubLink(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
-  return text.includes('.github/workflows')
-
+  const isWorkflowUrl = text.includes('.github/workflows') || text.includes('actions/workflows')
+  return text.startsWith('https://github.com') && isWorkflowUrl
 }
 
 export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {

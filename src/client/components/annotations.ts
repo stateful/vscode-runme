@@ -2,7 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages, OutputType } from '../../constants'
+import { ClientMessages, RENDERERS, OutputType } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
 import { closeOutput, getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
@@ -20,7 +20,7 @@ type Target = {
   }
 }
 
-@customElement('edit-annotations')
+@customElement(RENDERERS.EditAnnotations)
 export class Annotations extends LitElement {
   // Define scoped styles right with your component, in plain CSS
   static styles = css`

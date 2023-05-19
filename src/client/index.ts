@@ -1,6 +1,6 @@
 import type { ActivationFunction, RendererContext } from 'vscode-notebook-renderer'
 
-import { OutputType } from '../constants'
+import { OutputType, RENDERERS } from '../constants'
 import type { CellOutput } from '../types'
 
 import { setContext } from './utils'
@@ -26,7 +26,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             break
           }
 
-          const vercelElem = document.createElement('vercel-output')
+          const vercelElem = document.createElement(RENDERERS.VercelOutput)
           vercelElem.setAttribute('content', JSON.stringify(payload.output))
           element.appendChild(vercelElem)
           break
@@ -37,7 +37,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           }
 
           const deno = payload.output || {}
-          const denoElem = document.createElement('deno-output')
+          const denoElem = document.createElement(RENDERERS.DenoOutput)
 
           denoElem.setAttribute('state', JSON.stringify(deno))
 
@@ -48,25 +48,25 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           /**
            * shell output
            */
-          const shellElem = document.createElement('shell-output')
+          const shellElem = document.createElement(RENDERERS.ShellOutput)
           shellElem.innerHTML = content
           element.appendChild(shellElem)
           /**
            * output items, e.g. copy to clipboard
            */
-          const outputItemElem = document.createElement('shell-output-items')
+          const outputItemElem = document.createElement(RENDERERS.ShellOutputItems)
           outputItemElem.setAttribute('uuid', payload.output.uuid)
           outputItemElem.setAttribute('content', content)
           element.appendChild(outputItemElem)
           break
         case OutputType.annotations:
-          const annoElem = document.createElement('edit-annotations')
+          const annoElem = document.createElement(RENDERERS.EditAnnotations)
           annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
           annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
           element.appendChild(annoElem)
           break
         case OutputType.terminal:
-          const terminalElement = document.createElement('terminal-view')
+          const terminalElement = document.createElement(RENDERERS.TerminalView)
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
@@ -85,7 +85,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           renderError(payload.output)
           break
         case OutputType.github:
-          const githubElement = document.createElement('github-output')
+          const githubElement = document.createElement(RENDERERS.GitHubWorkflowViewer)
           if (payload.output?.content) {
             githubElement.setAttribute('state', JSON.stringify(payload.output))
           }

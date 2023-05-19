@@ -237,6 +237,26 @@ describe('NotebookCellOutputManager', () => {
     expect(result[0].items[0].mime).toBe(OutputType.deno)
   })
 
+  it('supports github type', async () => {
+    const cell = mockCell([ { items: [ ] } ])
+
+    const { controller, replaceOutput } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    await outputs.showOutput(OutputType.github)
+
+    expect(replaceOutput).toHaveBeenCalledOnce()
+    const result = replaceOutput.mock.calls[0][0]
+
+    expect(result).toHaveLength(1)
+    expect(result[0].items).toHaveLength(1)
+    expect(result[0].items[0].mime).toBe(OutputType.github)
+  })
+
   it('does not update cells if refreshing non present type', async () => {
     const cell = mockCell([ { items: [ ] } ])
 

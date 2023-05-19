@@ -65,6 +65,7 @@ export const workspace = {
       path: 'runme/workspace/src/RUNME.md',
     }
   ]),
+  applyEdit: vi.fn()
 }
 
 export const terminal = {
@@ -273,3 +274,14 @@ export enum TaskScope {
 
 export const ShellExecution = vi.fn()
 export const Task = vi.fn()
+export const authentication = {
+  getSession: vi.fn()
+}
+
+export class WorkspaceEdit {
+  set() {}
+}
+
+export class NotebookEdit {
+  static updateCellMetadata = vi.fn()
+}
