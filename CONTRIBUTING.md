@@ -61,7 +61,7 @@ cd vscode-runme
 nvm install
 ```
 
-optionally install the GitHub CLI to streamline downloading the WASM binary:
+optionally install the GitHub CLI to streamline downloading binaries:
 
 ```sh
 # macOS
