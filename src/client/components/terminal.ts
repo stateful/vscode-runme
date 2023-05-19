@@ -7,10 +7,12 @@ import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 
 import { FitAddon, type ITerminalDimensions } from '../fitAddon'
-import { ClientMessages } from '../../constants'
-import { getContext } from '../utils'
+import { ClientMessages, OutputType } from '../../constants'
+import { closeOutput, getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 import { stripANSI } from '../../utils/ansi'
+
+import './closeCellButton'
 
 interface IWindowSize {
   width: number
@@ -52,6 +54,7 @@ export class TerminalView extends LitElement {
       user-select: none;
       -ms-user-select: none;
       -webkit-user-select: none;
+      border-radius: 5px;
     }
 
     .xterm.focus,
@@ -248,6 +251,7 @@ export class TerminalView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      position:relative;
     }
 
     .xterm-drag-handle {
@@ -440,11 +444,13 @@ export class TerminalView extends LitElement {
     window.addEventListener('mouseup', onMouseUp)
     window.addEventListener('mousemove', onMouseMove)
 
-    this.disposables.push({dispose: () => {
-      dragHandle.removeEventListener('mousedown', onMouseDown)
-      window.removeEventListener('mouseup', onMouseUp)
-      window.removeEventListener('mousemove', onMouseMove)
-    }})
+    this.disposables.push({
+      dispose: () => {
+        dragHandle.removeEventListener('mousedown', onMouseDown)
+        window.removeEventListener('mouseup', onMouseUp)
+        window.removeEventListener('mousemove', onMouseMove)
+      }
+    })
 
     return dragHandle
   }
@@ -521,6 +527,12 @@ export class TerminalView extends LitElement {
   render() {
     return html`<section>
       <div id="terminal"></div>
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: this.uuid!,
+          outputType: OutputType.terminal
+        })
+      }}" />
       <div class="button-group">
         <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
           <svg
@@ -556,8 +568,8 @@ export class TerminalView extends LitElement {
 
 function convertXTermDimensions(dimensions: ITerminalDimensions): TerminalDimensions
 function convertXTermDimensions(dimensions: undefined): undefined
-function convertXTermDimensions(dimensions: ITerminalDimensions|undefined): TerminalDimensions|undefined
-function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions|undefined {
+function convertXTermDimensions(dimensions: ITerminalDimensions | undefined): TerminalDimensions | undefined
+function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions | undefined {
   if (!dimensions) { return undefined }
 
   const { rows, cols } = dimensions

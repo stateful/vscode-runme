@@ -2,9 +2,11 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
 import type { ClientMessage } from '../../types'
-import { getContext } from '../utils'
+import { closeOutput, getContext } from '../utils'
+
+import './closeCellButton'
 
 @customElement('vercel-output')
 export class VercelOutput extends LitElement {
@@ -26,6 +28,7 @@ export class VercelOutput extends LitElement {
       flex-direction: row;
       gap: 50px;
       align-items: flex-start;
+      position:relative;
     }
 
     img {
@@ -103,6 +106,12 @@ export class VercelOutput extends LitElement {
           👌 Promoted
         `)}
       </div>
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: this.content.payload.uuid,
+          outputType: OutputType.vercel
+        })
+      }}" />
     </section>`
   }
 

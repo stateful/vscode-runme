@@ -55,6 +55,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
            * output items, e.g. copy to clipboard
            */
           const outputItemElem = document.createElement('shell-output-items')
+          outputItemElem.setAttribute('uuid', payload.output.uuid)
           outputItemElem.setAttribute('content', content)
           element.appendChild(outputItemElem)
           break

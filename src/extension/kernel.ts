@@ -28,7 +28,8 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
-import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution } from './cell'
+import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
+import { handleCellOutputMessage } from './messages/cellOutput'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -95,7 +96,7 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
-  async getTerminalState(cell: NotebookCell): Promise<ITerminalState|undefined> {
+  async getTerminalState(cell: NotebookCell): Promise<ITerminalState | undefined> {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
@@ -212,6 +213,17 @@ export class Kernel implements Disposable {
       return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.openLink) {
       return env.openExternal(Uri.parse(message.output))
+    } else if (message.type === ClientMessages.closeCellOutput) {
+      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      if (!cell) {
+        return
+      }
+      return handleCellOutputMessage({
+        message,
+        cell,
+        kernel: this,
+        outputType: message.output.outputType
+      })
     } else if (
       message.type.startsWith('terminal:')
     ) {
@@ -311,7 +323,7 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = (execKey: 'sh'|'bash' = 'bash') => executeRunner(
+      const runScript = (execKey: 'sh' | 'bash' = 'bash') => executeRunner(
         this,
         this.context,
         this.runner!,
@@ -341,7 +353,7 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution =  await executor[execKey].call(this, exec, runningCell, outputs)
+      successfulCellExecution = await executor[execKey].call(this, exec, runningCell, outputs)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     runmeExec.end(successfulCellExecution)

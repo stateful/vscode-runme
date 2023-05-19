@@ -73,6 +73,7 @@ interface Payload {
   [OutputType.annotations]: {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
+    uuid?: string
   }
   [OutputType.terminal]: {
     ['runme.dev/uuid']: string
@@ -124,11 +125,16 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
+  [ClientMessages.closeCellOutput]: {
+    uuid: string
+    outputType: OutputType
+  }
 }
 
 export interface OutputItemsPayload {
   content: string
   mime: string
+  uuid: string
 }
 
 export interface RunmeTaskDefinition extends TaskDefinition {

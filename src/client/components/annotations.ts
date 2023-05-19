@@ -2,11 +2,12 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
-import { getContext } from '../utils'
+import { closeOutput, getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
-import '@vscode/webview-ui-toolkit/dist/data-grid/index'
+
+import './closeCellButton'
 
 type AnnotationsMutation = Partial<CellAnnotations>
 type AnnotationsKey = keyof typeof AnnotationSchema
@@ -36,7 +37,8 @@ export class Annotations extends LitElement {
       flex-direction: column;
       align-items: flex-start;
       gap: 1rem;
-      width: 94%;
+      width: inherited;
+      position: relative;
     }
 
     .annotation-container h4 {
@@ -187,7 +189,7 @@ export class Annotations extends LitElement {
       type="text"
       value="${text}"
       @change="${this.#onChange}"
-      @keyup="${ this.#onChange}"
+      @keyup="${this.#onChange}"
       placeholder=${placeHolder}
       size="50"
       class="annotation-item"
@@ -247,9 +249,16 @@ export class Annotations extends LitElement {
       </div>`
     })
 
-    return html`<section class="annotation-container ${errorCount ? 'has-errors' : ''}">
+    return html`
+    <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
       <h4>Configure cell's execution behavior:</h4>
       ${markup}
+      <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: (this.annotations && this.annotations['runme.dev/uuid']) || '',
+          outputType: OutputType.annotations
+        })
+      } }" />
       ${when(
       errorCount,
       () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,

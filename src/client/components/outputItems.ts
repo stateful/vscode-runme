@@ -3,9 +3,11 @@ import { customElement, property } from 'lit/decorators.js'
 
 import '@vscode/webview-ui-toolkit/dist/button/index'
 
-import { getContext } from '../utils'
+import { closeOutput, getContext } from '../utils'
 import { ClientMessage } from '../../types'
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
+
+import './closeCellButton'
 
 @customElement('shell-output-items')
 export class ShellOutputItems extends LitElement {
@@ -37,9 +39,18 @@ export class ShellOutputItems extends LitElement {
   @property({ type: String })
   content = ''
 
+  @property({ type: String })
+  uuid?: string
+
   // Render the UI as a function of component state
   render() {
     return html`<section class="output-items">
+    <close-cell-button @closed="${() => {
+        return closeOutput({
+          uuid: this.uuid!,
+          outputType: OutputType.outputItems
+        })
+      }}" />
       <vscode-button appearance="secondary" @click="${this.#copy}">
         <svg
           class="icon" width="16" height="16" viewBox="0 0 16 16"
@@ -55,7 +66,7 @@ export class ShellOutputItems extends LitElement {
     </span>`
   }
 
-  #copy () {
+  #copy() {
     const ctx = getContext()
 
     if (!ctx.postMessage) {

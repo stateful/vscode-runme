@@ -15,6 +15,7 @@ export enum OutputType {
 export enum ClientMessages {
   infoMessage = 'common:infoMessage',
   errorMessage = 'common:errorMessage',
+  closeCellOutput = 'common:closeCellOutput',
   denoUpdate = 'deno:deploymentUpdate',
   denoPromote = 'deno:promoteDeployment',
   vercelProd = 'vercel:promotePreview',
@@ -26,7 +27,7 @@ export enum ClientMessages {
   terminalFocus = 'terminal:focus',
   terminalOpen = 'terminal:open',
   openLink = 'terminal:openLink',
-  activeThemeChanged = 'theme:changed'
+  activeThemeChanged = 'theme:changed',
 }
 
 // [pretty print, languageId, destination]
