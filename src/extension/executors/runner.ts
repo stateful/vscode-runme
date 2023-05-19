@@ -229,6 +229,7 @@ export async function executeRunner(
 
         item = undefined
       } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
+        await outputs.showTerminal()
         item = undefined
       }
 
@@ -255,7 +256,6 @@ export async function executeRunner(
     })
   } else {
     await outputs.replaceOutputs([ ])
-    await outputs.showTerminal()
 
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
