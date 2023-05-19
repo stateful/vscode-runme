@@ -55,6 +55,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
            * output items, e.g. copy to clipboard
            */
           const outputItemElem = document.createElement('shell-output-items')
+          outputItemElem.setAttribute('cellIndex', (payload.output.cellIndex || '').toString())
           outputItemElem.setAttribute('content', content)
           element.appendChild(outputItemElem)
           break
@@ -67,6 +68,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.terminal:
           const terminalElement = document.createElement('terminal-view')
+          terminalElement.setAttribute('cellIndex', (payload.output.cellIndex || '').toString())
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())

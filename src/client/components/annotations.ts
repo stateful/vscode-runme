@@ -2,7 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
 import { getContext } from '../utils'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
@@ -37,7 +37,7 @@ export class Annotations extends LitElement {
       flex-direction: column;
       align-items: flex-start;
       gap: 1rem;
-      width: 94%;
+      width: inherited;
       position: relative;
     }
 
@@ -256,7 +256,7 @@ export class Annotations extends LitElement {
     <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
       <h4>Configure cell's execution behavior:</h4>
       ${markup}
-      <close-cell-button cellIndex="${this.cellIndex}" />
+      <close-cell-button cellIndex="${this.cellIndex}" outputType="${OutputType.annotations}" />
       ${when(
       errorCount,
       () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,

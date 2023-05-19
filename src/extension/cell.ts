@@ -154,6 +154,7 @@ export class NotebookCellOutputManager {
               terminalFontSize,
               content: terminalState.serialize(),
               initialRows: getNotebookTerminalRows(),
+              cellIndex: cell.index
             }
           }
 
@@ -166,6 +167,7 @@ export class NotebookCellOutputManager {
             output: {
               content: terminalState.serialize(),
               mime: 'text/plain',
+              cellIndex: cell.index
             }
           }
 

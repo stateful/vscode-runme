@@ -81,6 +81,7 @@ interface Payload {
     terminalFontSize: number
     content?: string
     initialRows?: number
+    cellIndex?: number
   }
 }
 
@@ -127,12 +128,14 @@ export interface ClientMessagePayload {
   [ClientMessages.openLink]: string
   [ClientMessages.closeCellOutput]: {
     cellIndex: number
+    outputType: OutputType
   }
 }
 
 export interface OutputItemsPayload {
   content: string
   mime: string
+  cellIndex?: number
 }
 
 export interface RunmeTaskDefinition extends TaskDefinition {

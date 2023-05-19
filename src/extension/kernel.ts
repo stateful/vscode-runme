@@ -16,7 +16,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages, OutputType } from '../constants'
+import { ClientMessages } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
@@ -216,7 +216,7 @@ export class Kernel implements Disposable {
         message,
         cell,
         kernel: this,
-        outputType: OutputType.annotations
+        outputType: message.output.outputType
       })
     } else if (
       message.type.startsWith('terminal:')

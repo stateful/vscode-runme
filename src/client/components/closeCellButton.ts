@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 
 import { getContext } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
 
 @customElement('close-cell-button')
 export class CloseCellButton extends LitElement {
@@ -62,7 +62,7 @@ export class CloseCellButton extends LitElement {
             border-style: solid;
             border-color: transparent transparent var(--tooltip-background) transparent;
         }
-        
+
         .tooltip:hover .tooltiptext {
             visibility: visible;
         }
@@ -71,10 +71,14 @@ export class CloseCellButton extends LitElement {
     @property({ type: Number })
     cellIndex?: number
 
+    @property()
+    outputType?: OutputType
+
     private close() {
         const ctx = getContext()
         ctx.postMessage && postClientMessage(ctx, ClientMessages.closeCellOutput, {
-            cellIndex: this.cellIndex!
+            cellIndex: this.cellIndex!,
+            outputType: this.outputType!
         })
     }
 

@@ -7,10 +7,12 @@ import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 
 import { FitAddon, type ITerminalDimensions } from '../fitAddon'
-import { ClientMessages } from '../../constants'
+import { ClientMessages, OutputType } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 import { stripANSI } from '../../utils/ansi'
+
+import './closeCellButton'
 
 interface IWindowSize {
   width: number
@@ -52,6 +54,7 @@ export class TerminalView extends LitElement {
       user-select: none;
       -ms-user-select: none;
       -webkit-user-select: none;
+      border-radius: 5px;
     }
 
     .xterm.focus,
@@ -248,6 +251,7 @@ export class TerminalView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      position:relative;
     }
 
     .xterm-drag-handle {
@@ -288,6 +292,9 @@ export class TerminalView extends LitElement {
 
   @property({ type: Number })
   lastLine?: number // TODO: Get the last line of the terminal and store it.
+
+  @property({ type: Number })
+  cellIndex?: number
 
   constructor() {
     super()
@@ -521,6 +528,7 @@ export class TerminalView extends LitElement {
   render() {
     return html`<section>
       <div id="terminal"></div>
+      <close-cell-button cellIndex="${this.cellIndex}" outputType="${OutputType.terminal}" />
       <div class="button-group">
         <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
           <svg
