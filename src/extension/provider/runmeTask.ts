@@ -18,6 +18,7 @@ import {
   NotebookCellData,
 } from 'vscode'
 
+import getLogger from '../logger'
 import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
@@ -26,6 +27,7 @@ import { getShellPath, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
+const log = getLogger('RunmeTaskProvider')
 
 export interface RunmeTask extends Task {
   definition: Required<RunmeTaskDefinition>
@@ -43,7 +45,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
     if(!this.runner) {
-      console.error('Tasks only supported with gRPC runner enabled')
+      log.error('Tasks only supported with gRPC runner enabled')
       return []
     }
 
@@ -61,7 +63,7 @@ export class RunmeTaskProvider implements TaskProvider {
       mdContent = (await workspace.fs.readFile(current))
     } catch (err: any) {
       if (err.code !== 'FileNotFound') {
-        console.log(err)
+        log.error(`${err.message}`)
       }
       return []
     }

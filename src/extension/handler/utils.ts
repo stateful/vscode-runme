@@ -2,9 +2,11 @@ import url from 'node:url'
 
 import { workspace, window, Uri, ExtensionContext } from 'vscode'
 
+import getLogger from '../logger'
 import { BOOTFILE } from '../constants'
 
 const config = workspace.getConfiguration('runme.checkout')
+const log = getLogger('RunmeUriHandler')
 
 /**
  * Get the project directory from the settings object.
@@ -86,7 +88,7 @@ export async function writeBootstrapFile(targetDirUri: Uri, fileToOpen: string) 
     Uri.joinPath(targetDirUri, BOOTFILE),
     enc.encode(fileToOpen)
   )
-  console.log(`[Runme] Created temporary bootstrap file to open ${fileToOpen}`)
+  log.info(`Created temporary bootstrap file to open ${fileToOpen}`)
 }
 
 /**

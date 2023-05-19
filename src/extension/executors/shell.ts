@@ -8,10 +8,12 @@ import { NotebookCellOutputManager } from '../cell'
 import { ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
+import getLogger from '../logger'
 
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
+const log = getLogger('shellExecutor')
 
 async function shellExecutor(
   this: Kernel,
@@ -30,7 +32,7 @@ async function shellExecutor(
   }
   const outputItems: Buffer[] = []
   const child = spawn(postScript, { cwd, shell: true, env })
-  console.log(`[Runme] Started process on pid ${child.pid}`)
+  log.info(`Started process on pid ${child.pid}`)
   /**
    * this needs more work / specification
    */

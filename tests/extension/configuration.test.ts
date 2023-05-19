@@ -40,6 +40,7 @@ beforeEach(() => {
     const mocked = await import('../../__mocks__/vscode')
 
     return ({
+      ...mocked,
       workspace: {
         getConfiguration: vi.fn().mockReturnValue({
           get: (configurationName) => {

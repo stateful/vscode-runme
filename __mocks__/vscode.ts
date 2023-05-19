@@ -74,6 +74,9 @@ export const terminal = {
 }
 
 export const window = {
+  createOutputChannel: vi.fn().mockReturnValue({
+    appendLine: vi.fn()
+  }),
   showWarningMessage: vi.fn(),
   showInformationMessage: vi.fn(),
   showErrorMessage: vi.fn(),

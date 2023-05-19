@@ -20,6 +20,9 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
 import { isWindows } from './utils'
+import getLogger from './logger'
+
+const log = getLogger('WinDefaultShell')
 
 export class WinDefaultShell implements Disposable {
   static readonly #id: string = 'runme.surveyWinDefaultShell'
@@ -85,7 +88,7 @@ export class WinDefaultShell implements Disposable {
       unlinkSync(tmpfile)
     } catch (err) {
       if (err instanceof Error) {
-        console.log(err.message)
+        log.error(`Failed to remove temporary default shell: ${err.message}`)
       }
     }
     // eslint-disable-next-line max-len
@@ -131,7 +134,7 @@ export class WinDefaultShell implements Disposable {
       unlinkSync(tmpfile)
     } catch (err) {
       if (err instanceof Error) {
-        console.log(err.message)
+        log.error(`Failed to remove temporary default shell: ${err.message}`)
       }
     }
   }

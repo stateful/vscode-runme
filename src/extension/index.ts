@@ -2,25 +2,27 @@ import type { ExtensionContext } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeExtension } from './extension'
+import getLogger from './logger'
 
 declare const INSTRUMENTATION_KEY: string
 
 const ext = new RunmeExtension()
+const log = getLogger()
 
 export async function activate (context: ExtensionContext) {
   TelemetryReporter.configure(context, INSTRUMENTATION_KEY)
-  console.log('[Runme] Activating Extension')
+  log.info('Activating Extension')
   try {
     await ext.initialize(context)
-    console.log('[Runme] Extension successfully activated')
+    log.info('Extension successfully activated')
   } catch (err: any) {
-    console.log(`[Runme] Failed to initialize the extension: ${err.message}`)
+    log.error(`Failed to initialize the extension: ${err.message}`)
   }
 
   TelemetryReporter.sendTelemetryEvent('activate')
 }
 
 export function deactivate () {
-  console.log('[Runme] Deactivating Extension')
+  log.info('Deactivating Extension')
   TelemetryReporter.sendTelemetryEvent('deactivate')
 }

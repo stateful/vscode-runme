@@ -8,12 +8,15 @@ import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
 import { TelemetryReporter } from 'vscode-telemetry'
 
+import getLogger from '../logger'
+
 import {
   getProjectDir, getTargetDirName, getSuggestedProjectName, writeBootstrapFile,
   parseParams
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
+const log = getLogger('RunmeUriHandler')
 
 export class RunmeUriHandler implements UriHandler {
   #context: ExtensionContext
@@ -22,7 +25,7 @@ export class RunmeUriHandler implements UriHandler {
   }
 
   async handleUri(uri: Uri) {
-    console.log(`[Runme] triggered RunmeUriHandler with ${uri}`)
+    log.info(`triggered RunmeUriHandler with ${uri}`)
     const params = new URLSearchParams(uri.query)
     const command = params.get('command')
 
@@ -152,7 +155,7 @@ export class RunmeUriHandler implements UriHandler {
       .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
 
     progress.report({ increment: 50, message: 'Opening project...' })
-    console.log(`[Runme] Attempt to open folder ${targetDirUri.fsPath}`)
+    log.info(`Attempt to open folder ${targetDirUri.fsPath}`)
     await commands.executeCommand('vscode.openFolder', targetDirUri, {
       forceNewWindow: true
     })

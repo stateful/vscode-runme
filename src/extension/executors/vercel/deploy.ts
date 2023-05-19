@@ -10,6 +10,7 @@ import { OutputType } from '../../../constants'
 import type { Kernel } from '../../kernel'
 import type { VercelState } from '../../../types'
 import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
+import getLogger from '../../logger'
 
 import { listTeams, getUser, getProject, getProjects, createProject, cancelDeployment, VercelProject } from './api'
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
@@ -20,6 +21,7 @@ const LINK_OPTIONS = [
   'Link Project to existing Vercel project',
   'Create a new Vercel Project'
 ]
+const log = getLogger('Vercel - deploy')
 
 export async function deploy (
   this: Kernel,
@@ -131,7 +133,7 @@ export async function deploy (
     /**
      * deploy application
      */
-    console.log(`[Runme] Deploy project "${deployParams.name}"`)
+    log.info(`Deploy project "${deployParams.name}"`)
     let deploymentId: string | null = null
     let deployCanceled = false
     this.context.subscriptions.push(exec.token.onCancellationRequested(async () => {
