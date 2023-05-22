@@ -126,6 +126,7 @@ export async function executeRunner(
     background,
     tty: interactive,
     convertEol: (!mimeType || mimeType === 'text/plain'),
+    storeLastOutput: true,
   })
 
   context.subscriptions.push(program)

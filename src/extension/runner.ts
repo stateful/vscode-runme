@@ -47,6 +47,7 @@ export interface RunProgramOptions {
   terminalDimensions?: TerminalDimensions
   background?: boolean
   convertEol?: boolean
+  storeLastOutput?: boolean
 }
 
 export interface IRunner extends Disposable {
@@ -688,7 +689,18 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   static runOptionsToExecuteRequest(
-    { programName, args, cwd, environment, exec, tty, envs, terminalDimensions, background }: RunProgramOptions
+    {
+      programName,
+      args,
+      cwd,
+      environment,
+      exec,
+      tty,
+      envs,
+      terminalDimensions,
+      background,
+      storeLastOutput
+    }: RunProgramOptions
   ): ExecuteRequest {
     if(environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -705,6 +717,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...exec?.type === 'commands' && { commands: exec.commands },
       ...exec?.type === 'script' && { script: exec.script },
       ...terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) },
+      storeLastOutput,
     })
   }
 
