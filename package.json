@@ -554,7 +554,7 @@
   },
   "dependencies": {
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.0-20230505202852-f6db652602f5.1",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.0-20230419234326-3a45ee6262e7.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.0-20230522162609-549daeeacece.1",
     "@protobuf-ts/grpc-transport": "^2.9.0",
     "@protobuf-ts/runtime": "^2.9.0",
     "@protobuf-ts/runtime-rpc": "^2.9.0",
