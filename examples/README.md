@@ -1,3 +1,8 @@
+---
+sidebar_position: 1
+title: Examples
+---
+
 # Runme Examples
 
 This `README.md` contains some examples for testing this extension.
