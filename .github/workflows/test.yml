@@ -9,6 +9,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
+      - name: 👷 Install Dependencies
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🧪 Setup and Test with Runme
         uses: coactions/setup-xvfb@v1
         with:
