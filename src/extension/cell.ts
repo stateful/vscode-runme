@@ -13,7 +13,7 @@ import {
 } from 'vscode'
 
 import { OutputType } from '../constants'
-import { CellOutputPayload, Serializer } from '../types'
+import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
 import { Mutex } from '../utils/sync'
 import {
   getNotebookTerminalFontFamily,
@@ -67,6 +67,12 @@ interface ICellOption {
   uuid: string
 }
 
+interface ICellState {
+  type: OutputType
+  // TODO: Define a better abstraction for integration states.
+  state: GitHubState | DenoState | VercelState
+}
+
 export class NotebookCellOutputManager {
   protected outputs: readonly NotebookCellOutput[] = []
 
@@ -76,6 +82,8 @@ export class NotebookCellOutputManager {
     [OutputType.vercel, false],
     [OutputType.github, false]
   ])
+
+  protected cellState?: ICellState
 
   protected mutex: Mutex = new Mutex()
   protected withLock = this.mutex.withLock.bind(this.mutex)
@@ -126,7 +134,7 @@ export class NotebookCellOutputManager {
       case OutputType.vercel: {
         const json: CellOutputPayload<OutputType.vercel> = {
           type: OutputType.vercel,
-          output: metadata['runme.dev/vercelState'] ?? {
+          output: this.cellState?.state as VercelState ?? {
             outputItems: [],
           },
         }
@@ -186,7 +194,7 @@ export class NotebookCellOutputManager {
       case OutputType.github: {
         const payload: CellOutputPayload<OutputType.github> = {
           type: OutputType.github,
-          output: metadata['runme.dev/githubState'],
+          output: this.cellState?.state
         }
 
         return new NotebookCellOutput([
@@ -373,6 +381,10 @@ export class NotebookCellOutputManager {
     } finally {
       exec.end(true)
     }
+  }
+
+  setState(state: ICellState) {
+    this.cellState = state
   }
 }
 

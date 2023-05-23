@@ -106,3 +106,7 @@ export enum RENDERERS  {
   TerminalView = 'terminal-view',
   GitHubWorkflowViewer = 'github-workflow-viewer',
 }
+
+export enum AuthenticationProviders {
+  GitHub = 'github'
+}

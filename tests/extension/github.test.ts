@@ -11,7 +11,6 @@ import { expect, suite, vi, test } from 'vitest'
 import * as CellManager from '../../src/extension/cell'
 import { github } from '../../src/extension/executors/github'
 import { Kernel } from '../../src/extension/kernel'
-import { workspace } from '../../__mocks__/vscode'
 
 vi.mock('vscode', async () => {
     const vscode = await import('../../__mocks__/vscode')
@@ -144,9 +143,10 @@ suite('When a valid session is stablished', () => {
                 label: ''
             }
         }
+        const outputSpy = vi.spyOn(outputs, 'setState')
         vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
         const executionResult = await github.call(kernel, exec, cell.document, outputs)
-        expect(workspace.applyEdit).toBeCalledTimes(1)
+        expect(outputSpy).toBeCalledTimes(1)
         expect(executionResult).toBe(true)
     })
 
@@ -169,9 +169,10 @@ suite('When a valid session is stablished', () => {
                 label: ''
             }
         }
+        const outputSpy = vi.spyOn(outputs, 'setState')
         vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
         const executionResult = await github.call(kernel, exec, cell.document, outputs)
-        expect(workspace.applyEdit).toBeCalled()
+        expect(outputSpy).toBeCalledTimes(1)
         expect(executionResult).toBe(true)
     })
 })
