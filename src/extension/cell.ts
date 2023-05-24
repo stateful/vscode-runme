@@ -252,7 +252,7 @@ export class NotebookCellOutputManager {
         'Please select a kernel (top right: "Select Kernel") to continue.')
       return
     }
-    return window.showInformationMessage(
+    return await window.showInformationMessage(
       'Please select a notebook kernel first to continue.',
       'Select Kernel'
     ).then(option => {
@@ -263,12 +263,12 @@ export class NotebookCellOutputManager {
     })
   }
 
-  private newCellExecution(): NotebookCellExecution|undefined {
+  private async newCellExecution(): Promise<NotebookCellExecution | undefined> {
     try {
       return this.controller.createNotebookCellExecution(this.cell)
     } catch(e: any) {
       if (e.message.toString().includes('controller is NOT associated')) {
-        this.handleNotebookKernelSelection()
+        await this.handleNotebookKernelSelection()
         return undefined
       }
 
@@ -279,8 +279,8 @@ export class NotebookCellOutputManager {
   async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution|undefined> {
     await this.onFinish
 
-    return await this.withLock(() => {
-      const execution = this.newCellExecution()
+    return await this.withLock(async () => {
+      const execution = await this.newCellExecution()
       if (!execution) { return undefined }
 
       this.execution = execution
@@ -412,7 +412,7 @@ export class NotebookCellOutputManager {
       return
     }
 
-    const exec = this.newCellExecution()
+    const exec = await this.newCellExecution()
     if (!exec) { return }
 
     exec.start(Date.now())

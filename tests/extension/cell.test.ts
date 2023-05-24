@@ -1,4 +1,4 @@
-import { NotebookCell, NotebookCellExecution, NotebookController } from 'vscode'
+import { NotebookCell, NotebookCellExecution, NotebookController, commands, window } from 'vscode'
 import { describe, expect, it, vi } from 'vitest'
 
 import { OutputType } from '../../src/constants'
@@ -88,12 +88,14 @@ describe('NotebookCellOutputManager', () => {
     createExecution.mockReturnValue(exec1)
 
     const runmeExec = await outputs.createNotebookCellExecution()
-    runmeExec.start()
+    expect(runmeExec).toBeTruthy()
+
+    runmeExec!.start()
 
     await outputs.toggleOutput(OutputType.annotations)
     expect(vi.mocked(exec1.replaceOutput)).toBeCalledTimes(1)
 
-    runmeExec.end(undefined)
+    runmeExec!.end(undefined)
 
     createExecution.mockReturnValue(mockCellExecution(cell))
     await outputs.toggleOutput(OutputType.annotations)
@@ -112,7 +114,9 @@ describe('NotebookCellOutputManager', () => {
     )
 
     const runmeExec = await outputs.createNotebookCellExecution()
-    runmeExec.start()
+    expect(runmeExec).toBeTruthy()
+
+    runmeExec!.start()
 
     expect(createExecution).toHaveBeenCalledTimes(1)
 
@@ -121,10 +125,73 @@ describe('NotebookCellOutputManager', () => {
     await new Promise(r => setTimeout(r, 100))
     expect(createExecution).toHaveBeenCalledTimes(1)
 
-    runmeExec.end(undefined)
+    runmeExec!.end(undefined)
 
     await new Promise(r => setTimeout(r, 100))
     expect(createExecution).toHaveBeenCalledTimes(2)
+  })
+
+  it('fails to create new execution if execution fails', async () => {
+    vi.mocked(commands.executeCommand).mockClear()
+
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    createExecution.mockImplementationOnce(() => { throw new Error('controller is NOT associated') })
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce({} as any)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    const runmeExec = await outputs.createNotebookCellExecution()
+    expect(runmeExec).toBeUndefined()
+
+    expect(commands.executeCommand).toBeCalledWith('_notebook.selectKernel')
+  })
+
+  it('fails to create new execution if execution fails and user doesn\'t select kernel', async () => {
+    vi.mocked(commands.executeCommand).mockClear()
+
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    createExecution.mockImplementationOnce(() => { throw new Error('controller is NOT associated') })
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    const runmeExec = await outputs.createNotebookCellExecution()
+    expect(runmeExec).toBeUndefined()
+
+    expect(commands.executeCommand).not.toBeCalled()
+  })
+
+  it('fails to create new execution if notebook selection command does not exist', async () => {
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    createExecution.mockImplementationOnce(() => { throw new Error('controller is NOT associated') })
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce({} as any)
+
+    vi.mocked(commands.getCommands).mockResolvedValueOnce([])
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    const runmeExec = await outputs.createNotebookCellExecution()
+    expect(runmeExec).toBeUndefined()
+
+    expect(window.showWarningMessage).toBeCalledWith('Please select a kernel (top right: "Select Kernel") to continue.')
   })
 
   it('creates a new execution if none exists', async () => {
