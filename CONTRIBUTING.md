@@ -65,7 +65,7 @@ optionally install jq and the GitHub CLI to streamline downloading binaries:
 
 ```sh
 # macOS
-brew install gh jq
+$ brew install gh jq
 # other platforms: https://github.com/cli/cli#installation
 ```
 
@@ -79,7 +79,7 @@ $ jq -r ".recommendations[]" .vscode/extensions.json \
 make sure to configure your local npm to pull from Buf's registry (for GRPC dependencies)
 
 ```sh { name=configureNPM }
-npm config set @buf:registry https://buf.build/gen/npm/v1
+$ npm config set @buf:registry https://buf.build/gen/npm/v1
 ```
 
 then ensure to install all project dependencies. Note GitHub token is required to auto-dowload the latest `runme` binary. The branch ref name is optional, if it's not `main` pre-release binaries are being considered.
