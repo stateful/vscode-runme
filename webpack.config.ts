@@ -34,7 +34,7 @@ const baseConfig: Partial<Configuration> = {
         resolve: {
           fullySpecified: false
         }
-      },
+      }
     ],
   }
 }

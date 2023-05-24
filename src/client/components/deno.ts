@@ -5,12 +5,12 @@ import '@vscode/webview-ui-toolkit/dist/button/index'
 
 import { getContext } from '../utils'
 import { Deployment, Project } from '../../utils/deno/api_types'
-import { ClientMessages } from '../../constants'
+import { ClientMessages, RENDERERS } from '../../constants'
 import type { ClientMessage, DenoState } from '../../types'
 
 import './spinner'
 
-@customElement('deno-output')
+@customElement(RENDERERS.DenoOutput)
 export class DenoOutput extends LitElement {
   #isPromoting = false
 

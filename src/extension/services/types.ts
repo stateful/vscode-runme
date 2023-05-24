@@ -11,3 +11,25 @@ export interface IWorkflowYamlContentRequest {
     repo: string
     name: string
 }
+
+export interface IWorkflowRun {
+    id: number
+    workflowId: number
+    cancel_url: string
+    display_title: string
+    head_branch: string
+    html_url: string
+    name: string
+    status: string
+    conclusion: string
+    workflow_id: string
+    logs_url: string
+    jobs_url: string
+    run_attempt: number
+    run_number: number
+    run_started_at: string
+    actor: {
+        login: string
+        avatar_url: string
+    }
+}

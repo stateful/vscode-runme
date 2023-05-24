@@ -7,7 +7,7 @@ import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 
 import { FitAddon, type ITerminalDimensions } from '../fitAddon'
-import { ClientMessages, OutputType } from '../../constants'
+import { ClientMessages, RENDERERS, OutputType } from '../../constants'
 import { closeOutput, getContext } from '../utils'
 import { onClientMessage, postClientMessage } from '../../utils/messaging'
 import { stripANSI } from '../../utils/ansi'
@@ -44,7 +44,7 @@ const ANSI_COLORS = [
   'brightWhite',
 ] satisfies (keyof ITheme)[]
 
-@customElement('terminal-view')
+@customElement(RENDERERS.TerminalView)
 export class TerminalView extends LitElement {
   static styles = css`
     .xterm {

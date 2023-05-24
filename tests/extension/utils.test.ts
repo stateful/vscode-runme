@@ -17,6 +17,10 @@ import {
   openFileAsRunmeNotebook,
   getWorkspaceFolder,
   getWorkspaceEnvs,
+  isGitHubLink,
+  isDenoScript,
+  getCmdSeq,
+  validateAnnotations
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -75,7 +79,7 @@ afterAll(() => { process.env.PATH = PATH })
 test('isInteractive', () => {
   expect(getAnnotations({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
   expect(getAnnotations({ metadata: { interactive: 'false' } } as any).interactive).toBe(false)
-  expect(getAnnotations({ metadata: { } } as any).interactive).toBe(true)
+  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(true)
 })
 
 test('getTerminalByCell', () => {
@@ -85,11 +89,11 @@ test('getTerminalByCell', () => {
   } as any))
     .toBeTruthy()
 
-    expect(getTerminalByCell({
-      metadata: { 'runme.dev/uuid': v4() },
-      kind: 2,
-    } as any))
-      .toBeUndefined()
+  expect(getTerminalByCell({
+    metadata: { 'runme.dev/uuid': v4() },
+    kind: 2,
+  } as any))
+    .toBeUndefined()
 })
 
 test('resetEnv', () => {
@@ -323,8 +327,8 @@ suite('#getGrpcHost', () => {
 
 suite('prepareCmdSeq', () => {
   test('should eliminate trailing dollar signs', () => {
-    expect(prepareCmdSeq('$ echo hi')).toStrictEqual([ 'echo hi' ])
-    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual([ 'echo hi' ])
+    expect(prepareCmdSeq('$ echo hi')).toStrictEqual(['echo hi'])
+    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual(['echo hi'])
     expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
   })
 })
@@ -335,7 +339,7 @@ suite('openFileAsRunmeNotebook', () => {
   })
 
   test('runs executecommand', async () => {
-    const uri = { } as any
+    const uri = {} as any
     await openFileAsRunmeNotebook(uri)
 
     expect(commands.executeCommand).toBeCalledTimes(1)
@@ -350,7 +354,7 @@ suite('getWorkspaceFolder', () => {
   })
 
   test('is empty if no workspace folder', async () => {
-    expect(await getWorkspaceEnvs()).toStrictEqual({ })
+    expect(await getWorkspaceEnvs()).toStrictEqual({})
   })
 
   test('identifies correct workspace', () => {
@@ -403,5 +407,118 @@ suite('getWorkspaceEnvs', () => {
       SECRET_2: 'secret2',
       SECRET_3: 'secret3',
     })
+  })
+})
+
+suite('isGitHubLink', () => {
+  test('Only accepts secure (https) links', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('http://github.com/stateful/vscode-runme/actions/workflows/release.yml')
+    }
+    expect(isGitHubLink(cell)).toBe(false)
+  })
+
+  test('Only accepts github.com links', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('http://gitmango.com/stateful/vscode-runme/actions/workflows/release.yml')
+    }
+    expect(isGitHubLink(cell)).toBe(false)
+  })
+
+  test('Only accepts github.com workflow links', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('http://github.com/stateful/vscode-runme')
+    }
+    expect(isGitHubLink(cell)).toBe(false)
+  })
+
+  test('Only accepts complete github.com workflow links', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('http://github.com/stateful/vscode-runme/actions/workflows')
+    }
+    expect(isGitHubLink(cell)).toBe(false)
+  })
+
+  test('Accepts an action workflow link', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('https://github.com/stateful/vscode-runme/actions/workflows/release.yml')
+    }
+    expect(isGitHubLink(cell)).toBe(true)
+  })
+
+  test('Accepts a source code action workflow link', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('https://github.com/stateful/vscode-runme/blob/main/.github/workflows/release.yml')
+    }
+    expect(isGitHubLink(cell)).toBe(true)
+  })
+
+})
+
+
+suite('isDenoScript', () => {
+  test('Rejects invalid deno command', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('deno deploy')
+    }
+    expect(isDenoScript(cell)).toBe(false)
+  })
+
+  test('Accepts only deno deploy script', () => {
+    const cell: any = {
+      getText: vi.fn()
+        .mockReturnValue('deployctl deploy')
+    }
+    expect(isDenoScript(cell)).toBe(true)
+  })
+})
+
+suite('getCmdSeq', () => {
+  test('Rejects invalid deno command', () => {
+    const cellText = `export DENO_INSTALL="$HOME/.deno"
+    export PATH="$DENO_INSTALL/bin:$PATH"
+  `
+    const result = getCmdSeq(cellText)
+    expect(result).toStrictEqual(['export DENO_INSTALL="$HOME/.deno"', 'export PATH="$DENO_INSTALL/bin:$PATH"'])
+  })
+})
+
+suite('validateAnnotations', () => {
+  test('it should fail for invalid annotations values', () => {
+    const cell: any = {
+      metadata: {
+        background: 'invalid',
+        interactive: 'invalid',
+        closeTerminalOnSuccess: 'invalid',
+        promptEnv: 'invalid',
+        mimeType: 'application/'
+      },
+      document: { uri: { fsPath: '/foo/bar/README.md' } }
+    }
+    const result = validateAnnotations(cell)
+    expect(result.hasErrors).toBe(true)
+    expect(result.errors && Object.entries(result.errors).length).toBe(5)
+  })
+
+  test('it should pass for valid annotations values', () => {
+    const cell: any = {
+      metadata: {
+        background: false,
+        interactive: true,
+        closeTerminalOnSuccess: true,
+        promptEnv: false,
+        mimeType: 'text/plain'
+      },
+      document: { uri: { fsPath: '/foo/bar/README.md' } }
+    }
+    const result = validateAnnotations(cell)
+    expect(result.hasErrors).toBe(false)
   })
 })

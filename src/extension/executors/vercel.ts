@@ -108,7 +108,11 @@ export async function handleVercelDeployOutput(
     payload: { status, projectName, index, prod }
   }
 
-  updateCellMetadata(cell, { 'runme.dev/vercelState': vercelState })
+  outputs.setState({
+    type: OutputType.vercel,
+    state: vercelState
+  })
+
   await outputs.showOutput(OutputType.vercel)
 }
 
