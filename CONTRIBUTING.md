@@ -61,12 +61,19 @@ cd vscode-runme
 nvm install
 ```
 
-optionally install the GitHub CLI to streamline downloading binaries:
+optionally install jq and the GitHub CLI to streamline downloading binaries:
 
 ```sh
 # macOS
-brew install gh
+brew install gh jq
 # other platforms: https://github.com/cli/cli#installation
+```
+
+the recommended extensions are actually strongly encouraged (otherwise your watcher will hang) - easily install them:
+
+```sh
+$ jq -r ".recommendations[]" .vscode/extensions.json \
+    | xargs -n 1 code --force --install-extension
 ```
 
 make sure to configure your local npm to pull from Buf's registry (for GRPC dependencies)

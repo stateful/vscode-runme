@@ -1,9 +1,7 @@
 {
-  // See http://go.microsoft.com/fwlink/?LinkId=827846
-  // for the documentation about the extensions.json format
   "recommendations": [
-    "stateful.runme",
     "dbaeumer.vscode-eslint",
+    "stateful.runme",
     "amodio.tsl-problem-matcher",
     "editorconfig.editorconfig"
   ]
