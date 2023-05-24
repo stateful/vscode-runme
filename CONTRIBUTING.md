@@ -2,6 +2,8 @@
 
 **Thank you for your interest in `vscode-runme`. Your contributions are highly welcome.**
 
+[![](https://badgen.net/badge/Complete/Onboarding/5B3ADF?icon=https://runme.dev/img/logo.svg)](https://runme.dev/api/runme?repository=git%40github.com%3Astateful%2Fvscode-runme.git&fileToOpen=CONTRIBUTING.md)
+
 There are multiple ways of getting involved:
 
 - [Report a bug](#report-a-bug)
@@ -28,7 +30,7 @@ To request a new feature you should open an [issue](../../issues/new) and summar
 This is an outline of what the workflow for code contributions looks like
 
 - Check the list of open [issues](../../issues). Either assign an existing issue to yourself, or
-   create a new one that you would like work on and discuss your ideas and use cases.
+  create a new one that you would like work on and discuss your ideas and use cases.
 
 It is always best to discuss your plans beforehand, to ensure that your contribution is in line with our goals.
 
