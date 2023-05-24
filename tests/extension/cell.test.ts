@@ -146,7 +146,7 @@ describe('NotebookCellOutputManager', () => {
 
   it('toggles based on output status if present', async () => {
     const cell = mockCell([
-      { items: [ { mime: OutputType.annotations } ] },
+      { items: [{ mime: OutputType.annotations }] },
     ])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
@@ -161,7 +161,7 @@ describe('NotebookCellOutputManager', () => {
   })
 
   it('toggles based on output status if not present', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -178,7 +178,7 @@ describe('NotebookCellOutputManager', () => {
   })
 
   it('supports annotation type', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -198,7 +198,7 @@ describe('NotebookCellOutputManager', () => {
   })
 
   it('supports vercel type', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -207,6 +207,7 @@ describe('NotebookCellOutputManager', () => {
       controller,
     )
 
+    const outputSpy = vi.spyOn(outputs, 'getCellState')
     await outputs.showOutput(OutputType.vercel)
 
     expect(replaceOutput).toHaveBeenCalledOnce()
@@ -215,10 +216,12 @@ describe('NotebookCellOutputManager', () => {
     expect(result).toHaveLength(1)
     expect(result[0].items).toHaveLength(1)
     expect(result[0].items[0].mime).toBe(OutputType.vercel)
+    expect(outputSpy).toHaveBeenCalledWith(OutputType.vercel)
+    expect(outputSpy).toHaveBeenCalledOnce()
   })
 
   it('supports deno type', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -238,7 +241,7 @@ describe('NotebookCellOutputManager', () => {
   })
 
   it('supports github type', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -247,6 +250,7 @@ describe('NotebookCellOutputManager', () => {
       controller,
     )
 
+    const outputSpy = vi.spyOn(outputs, 'getCellState')
     await outputs.showOutput(OutputType.github)
 
     expect(replaceOutput).toHaveBeenCalledOnce()
@@ -255,10 +259,33 @@ describe('NotebookCellOutputManager', () => {
     expect(result).toHaveLength(1)
     expect(result[0].items).toHaveLength(1)
     expect(result[0].items[0].mime).toBe(OutputType.github)
+    expect(outputSpy).toHaveBeenCalledWith(OutputType.github)
+    expect(outputSpy).toHaveBeenCalledOnce()
+  })
+
+  it('returns empty state for Output type mismatch', async () => {
+    const cell = mockCell([{ items: [] }])
+
+    const { controller } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(
+      cell,
+      controller,
+    )
+
+    outputs.setState({
+      type: OutputType.vercel,
+      state: {
+        payload: 'vercel',
+        outputItems: []
+      }
+    })
+    await outputs.showOutput(OutputType.github)
+    expect(outputs.getCellState(OutputType.github)).toBeUndefined()
   })
 
   it('does not update cells if refreshing non present type', async () => {
-    const cell = mockCell([ { items: [ ] } ])
+    const cell = mockCell([{ items: [] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
@@ -272,7 +299,7 @@ describe('NotebookCellOutputManager', () => {
   })
 
   it('does update cells if refreshing present type', async () => {
-    const cell = mockCell([ { items: [ { mime: OutputType.annotations } ] } ])
+    const cell = mockCell([{ items: [{ mime: OutputType.annotations }] }])
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 

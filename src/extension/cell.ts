@@ -134,7 +134,7 @@ export class NotebookCellOutputManager {
       case OutputType.vercel: {
         const json: CellOutputPayload<OutputType.vercel> = {
           type: OutputType.vercel,
-          output: this.cellState?.state as VercelState ?? {
+          output: this.getCellState(type) ?? {
             outputItems: [],
           },
         }
@@ -194,7 +194,7 @@ export class NotebookCellOutputManager {
       case OutputType.github: {
         const payload: CellOutputPayload<OutputType.github> = {
           type: OutputType.github,
-          output: this.cellState?.state
+          output: this.getCellState(type)
         }
 
         return new NotebookCellOutput([
@@ -385,6 +385,13 @@ export class NotebookCellOutputManager {
 
   setState(state: ICellState) {
     this.cellState = state
+  }
+
+  getCellState<T>(type: OutputType): T | undefined {
+    if (this.cellState?.type !== type) {
+      this.cellState = undefined
+    }
+    return this.cellState?.state as T
   }
 }
 
