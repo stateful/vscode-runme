@@ -17,6 +17,13 @@ export enum ClientMessages {
   infoMessage = 'common:infoMessage',
   errorMessage = 'common:errorMessage',
   closeCellOutput = 'common:closeCellOutput',
+  displayPrompt = 'common:displayPrompt',
+  displayPicker = 'common:displayPicker',
+  onPrompt = 'common:onPrompt',
+  onPickerOption = 'common:onPickerOption',
+  setState = 'common:setState',
+  getState = 'common:getState',
+  onGetState = 'common:onGetState',
   denoUpdate = 'deno:deploymentUpdate',
   denoPromote = 'deno:promoteDeployment',
   vercelProd = 'vercel:promotePreview',
@@ -110,3 +117,5 @@ export enum RENDERERS  {
 export enum AuthenticationProviders {
   GitHub = 'github'
 }
+export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
+export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'

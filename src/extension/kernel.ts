@@ -12,11 +12,12 @@ import {
   NotebookDocument,
   env,
   Uri,
+  commands,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages } from '../constants'
+import { ClientMessages, NOTEBOOK_AVAILABLE_CATEGORIES, NOTEBOOK_HAS_CATEGORIES } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
@@ -59,6 +60,7 @@ export class Kernel implements Disposable {
   protected runnerReadyListener?: Disposable
 
   protected cellManager = new NotebookCellManager(this.#controller)
+  protected category?: string
 
   constructor(
     protected context: ExtensionContext
@@ -78,12 +80,15 @@ export class Kernel implements Disposable {
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
-      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
+      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this))
     )
   }
 
   registerNotebookCell(cell: NotebookCell) {
     this.cellManager.registerCell(cell)
+  }
+  setCategory(category: string) {
+    this.category = category
   }
 
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
@@ -125,7 +130,16 @@ export class Kernel implements Disposable {
     if (notebookType !== Kernel.type) {
       return
     }
-    getCells().forEach(cell => this.registerNotebookCell(cell))
+    const availableCategories: string[] = []
+    getCells().forEach((cell) => {
+      const annotations = getAnnotations(cell)
+      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
+        availableCategories.push(annotations.category)
+      }
+      this.registerNotebookCell(cell)
+    })
+    await this.context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, availableCategories)
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.length)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -226,7 +240,43 @@ export class Kernel implements Disposable {
         outputType: message.output.outputType
       })
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
-      await handleGitHubMessage({ messaging: this.messaging, message})
+      await handleGitHubMessage({ messaging: this.messaging, message })
+    } else if (message.type === ClientMessages.displayPrompt) {
+      const answer = await window.showInputBox({
+        password: message.output.isSecret,
+        placeHolder: message.output.placeholder,
+        title: message.output.title,
+      })
+      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      if (!cell || message.output.uuid !== cell.metadata?.['runme.dev/uuid']) {
+        return
+      }
+      postClientMessage(this.messaging, ClientMessages.onPrompt, {
+        answer,
+        uuid: message.output.uuid
+      })
+
+    } else if (message.type === ClientMessages.getState) {
+      const value = await this.context.globalState.get<string>(message.output.state)
+      if (!value) {
+        return
+      }
+      postClientMessage(this.messaging, ClientMessages.onGetState, {
+        state: message.output.state,
+        value,
+        uuid: message.output.uuid
+      })
+    } else if (message.type === ClientMessages.setState) {
+      await this.context.globalState.update(message.output.state, message.output.value)
+    } else if (message.type === ClientMessages.displayPicker) {
+      const selectedOption = await window.showQuickPick(message.output.options, {
+        title: message.output.title,
+        ignoreFocusOut: true
+      })
+      postClientMessage(this.messaging, ClientMessages.onPickerOption, {
+        option: selectedOption,
+        uuid: message.output.uuid
+      })
     } else if (
       message.type.startsWith('terminal:')
     ) {
@@ -246,8 +296,14 @@ export class Kernel implements Disposable {
     let cellsExecuted = 0
 
     for (const cell of cells) {
+      const annotations = getAnnotations(cell)
+      if (totalCellsToExecute > 1 &&
+        (this.category && annotations.category !== this.category) ||
+        (annotations.excludeFromRunAll)
+      ) {
+        continue
+      }
       if (showConfirmPrompt) {
-        const annotations = getAnnotations(cell)
         const cellText = cell.document.getText()
         const cellLabel = (
           annotations.name ||
@@ -279,6 +335,7 @@ export class Kernel implements Disposable {
       await this._doExecuteCell(cell)
       cellsExecuted++
     }
+    this.category = undefined
 
     TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
       'cells.total': totalNotebookCells?.toString(),

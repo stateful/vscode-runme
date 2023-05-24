@@ -1,8 +1,20 @@
 import path from 'node:path'
 
 import {
-  NotebookCell, Uri, window, env, NotebookDocument, TextDocument, ViewColumn,
-  workspace, NotebookData, commands, NotebookCellData, NotebookCellKind, ExtensionContext, authentication
+  NotebookCell,
+  Uri,
+  window,
+  env,
+  NotebookDocument,
+  TextDocument,
+  ViewColumn,
+  workspace,
+  NotebookData,
+  commands,
+  NotebookCellData,
+  NotebookCellKind,
+  ExtensionContext,
+  authentication,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -11,6 +23,7 @@ import { Kernel } from '../kernel'
 import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
+import { NOTEBOOK_AVAILABLE_CATEGORIES } from '../../constants'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -25,7 +38,38 @@ export function openIntegratedTerminal (cell: NotebookCell) {
   return terminal.show()
 }
 
-export function toggleTerminal (kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
+export async function displayCategoriesSelector(context: ExtensionContext, kernel: Kernel) {
+  const categories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES)
+  if (!categories?.length) {
+    return
+  }
+  const category = await window.showQuickPick(categories, {
+    title: 'Select a category to run.',
+    ignoreFocusOut: true,
+    placeHolder: 'Select a category',
+  })
+  if (!category) {
+    return
+  }
+  kernel.setCategory(category)
+
+  await commands.executeCommand('notebook.execute')
+}
+
+export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
+
+  const annotations = getAnnotations(cell)
+  const category = annotations.category
+  if (!category) {
+    return
+  }
+
+  kernel.setCategory(category)
+
+  await commands.executeCommand('notebook.execute')
+}
+
+export function toggleTerminal(kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
     if ((isNotebookTerminalEnabledForCell(cell) && notebookTerminal) || !getAnnotations(cell).interactive) {
       const outputs = await kernel.getCellOutputs(cell)

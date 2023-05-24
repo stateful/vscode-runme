@@ -13,6 +13,7 @@ import vscode, {
   NotebookCellOutput,
   commands,
   WorkspaceFolder,
+  ExtensionContext,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -20,7 +21,7 @@ import dotenv from 'dotenv'
 
 import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
-import { SERVER_ADDRESS } from '../constants'
+import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
 import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
 
 import getLogger from './logger'
@@ -427,4 +428,8 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
   }
 
   return res
+}
+
+export async function getNotebookCategories(context: ExtensionContext) {
+  return context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES)
 }

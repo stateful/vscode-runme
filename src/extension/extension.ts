@@ -24,7 +24,9 @@ import {
   tryIt,
   openFileInRunme,
   openIntegratedTerminal,
-  authenticateWithGitHub
+  authenticateWithGitHub,
+  displayCategoriesSelector,
+  runCellsByCategory
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -122,6 +124,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+      RunmeExtension.registerCommand('runme.runCategory', ()=> displayCategoriesSelector(context, kernel)),
+      RunmeExtension.registerCommand('runme.runCellCategory', (cell)=> runCellsByCategory(cell, kernel)),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),

@@ -2,12 +2,14 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessages, RENDERERS, OutputType } from '../../constants'
-import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../types'
-import { closeOutput, getContext } from '../utils'
-import { CellAnnotationsSchema, AnnotationSchema } from '../../schema'
+import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../../types'
+import { CellAnnotationsSchema, AnnotationSchema } from '../../../schema'
+import { ClientMessages, NOTEBOOK_AVAILABLE_CATEGORIES, OutputType, RENDERERS } from '../../../constants'
+import { closeOutput, getContext } from '../../utils'
+import { postClientMessage, onClientMessage } from '../../../utils/messaging'
 
-import './closeCellButton'
+import '../closeCellButton'
+import './categorySelector'
 
 type AnnotationsMutation = Partial<CellAnnotations>
 type AnnotationsKey = keyof typeof AnnotationSchema
@@ -93,6 +95,8 @@ export class Annotations extends LitElement {
     ['promptEnv', 'Prompt user input for exported environment variables (default: true)'],
     ['mimeType', 'Cell\'s ouput content MIME type (default: text/plain)'],
     ['name', 'Cell\'s canonical name for easy referencing in the CLI (default: auto-generated)'],
+    ['category', 'Execute this code cell within a category'],
+    ['excludeFromRunAll', 'Prevent executing this cell during the "Run All" operation']
   ])
 
   // Declare reactive properties
@@ -101,6 +105,9 @@ export class Annotations extends LitElement {
 
   @property({ type: Object, reflect: true })
   validationErrors?: CellAnnotationsErrorResult
+
+  @property()
+  categories: string[] = []
 
   #desc(id: string): string {
     return this.#descriptions.get(id) || id
@@ -210,6 +217,84 @@ export class Annotations extends LitElement {
       </p>`
   }
 
+  private getCellId() {
+    return (this.annotations && this.annotations['runme.dev/uuid']) || ''
+  }
+
+  protected createNewCategoryClick() {
+    const ctx = getContext()
+    ctx.postMessage && postClientMessage(ctx, ClientMessages.displayPrompt, {
+      placeholder: 'Category name',
+      isSecret: false,
+      title: 'New cell execution category',
+      uuid: this.getCellId()
+    })
+  }
+
+  protected onSelectCategory() {
+    const ctx = getContext()
+    ctx.postMessage && postClientMessage(ctx, ClientMessages.displayPicker, {
+      title: 'Select execution category',
+      options: this.categories,
+      uuid: this.getCellId()
+    })
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback()
+    const ctx = getContext()
+    const uuid = this.getCellId()
+    ctx.postMessage && postClientMessage(ctx, ClientMessages.getState, {
+      state: NOTEBOOK_AVAILABLE_CATEGORIES,
+      uuid
+    })
+    onClientMessage(ctx, (e) => {
+      switch (e.type) {
+        case ClientMessages.onPrompt:
+          const answer = e.output.answer
+          if (!answer || e.output.uuid !== uuid) {
+            return
+          }
+          if (this.categories && !this.categories.includes(answer)) {
+            this.categories.push(answer)
+          }
+          ctx.postMessage && postClientMessage(ctx, ClientMessages.setState, {
+            state: NOTEBOOK_AVAILABLE_CATEGORIES,
+            value: this.categories!,
+            uuid
+          })
+          return this.setCategory(answer)
+        case ClientMessages.onGetState:
+          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES) {
+            this.categories = e.output.value as unknown as string[]
+            this.requestUpdate()
+          }
+          break
+        case ClientMessages.onPickerOption:
+          const selectedCategory = e.output.option
+          if (!selectedCategory || !this.annotations || e.output.uuid !== uuid) {
+            return
+          }
+          return this.setCategory(selectedCategory)
+        default: return
+      }
+    })
+  }
+
+  private setCategory(category: string) {
+    if (this.annotations) {
+      this.annotations.category = category
+      this.requestUpdate()
+      return this.#dispatch({ 'runme.dev/uuid': this.annotations['runme.dev/uuid'], category })
+    }
+  }
+
+  private onCategoryChange(e: { detail: string }) {
+    this.setCategory(e.detail)
+  }
+
+
+
   // Render the UI as a function of component state
   render() {
     let errorCount = 0
@@ -233,7 +318,18 @@ export class Annotations extends LitElement {
       )}
         ${when(
         typeof value === 'string',
-        () => this.renderTextField(key, value as string, key),
+        () => key !== 'category' ?
+          this.renderTextField(key, value as string, key) :
+          html`<category-selector
+            categories="${this.categories}"
+            createNewCategoryText="Add ${key}"
+            selectedCategory="${value}"
+            description="${this.#desc(key)}"
+            identifier="${key}"
+            @onChange="${this.onCategoryChange}"
+            @onCreateNewCategory=${this.createNewCategoryClick}
+            @onSelectCategory=${this.onSelectCategory}
+          />`,
         () => html``
       )}
       ${when(
@@ -260,10 +356,13 @@ export class Annotations extends LitElement {
         })
       } }"></close-cell-button>
       ${when(
-      errorCount,
-      () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,
-      () => html``
-    )}
+        errorCount,
+        () => html`
+        <p class="error-item">
+          This configuration block contains errors, using the default values instead
+        </p>`,
+        () => html``
+      )}
     </section>`
   }
 
