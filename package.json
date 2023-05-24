@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "publisher": "stateful",
   "displayName": "Runme",
-  "description": "The next-gen Runner for dev workflows.",
+  "description": "Execute commands inside your runbooks, docs, and READMEs.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
@@ -29,7 +29,7 @@
   "keywords": [
     "runme",
     "readme",
-    "README.md",
+    "runbooks",
     "jupyter",
     "documentation",
     "terminal",
