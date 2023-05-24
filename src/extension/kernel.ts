@@ -292,7 +292,7 @@ export class Kernel implements Disposable {
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution> {
+  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution|undefined> {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
 
@@ -303,6 +303,12 @@ export class Kernel implements Disposable {
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await workspace.openTextDocument(cell.document.uri)
     const runmeExec = await this.createCellExecution(cell)
+
+    if (!runmeExec) {
+      log.warn('Unable to create execution')
+      return
+    }
+
     const exec = runmeExec.underlyingExecution
 
     const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']

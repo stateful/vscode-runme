@@ -1,4 +1,6 @@
 import {
+  commands,
+  window,
   Disposable,
   NotebookCell,
   NotebookCellExecution,
@@ -28,6 +30,8 @@ import {
   NotebookTerminalType,
   XTermState
 } from './terminal/terminalState'
+
+const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
@@ -237,11 +241,48 @@ export class NotebookCellOutputManager {
     return this.terminalState
   }
 
-  async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution> {
+  private async handleNotebookKernelSelection() {
+    // cmd may go away https://github.com/microsoft/vscode/issues/126534#issuecomment-864053106
+    const selectionCommandAvailable = await commands
+      .getCommands()
+      .then(cmds => cmds.includes(NOTEBOOK_SELECTION_COMMAND))
+
+    if (!(selectionCommandAvailable)) {
+      window.showWarningMessage(
+        'Please select a kernel (top right: "Select Kernel") to continue.')
+      return
+    }
+    return window.showInformationMessage(
+      'Please select a notebook kernel first to continue.',
+      'Select Kernel'
+    ).then(option => {
+      if (!option) {
+        return
+      }
+      commands.executeCommand(NOTEBOOK_SELECTION_COMMAND)
+    })
+  }
+
+  private newCellExecution(): NotebookCellExecution|undefined {
+    try {
+      return this.controller.createNotebookCellExecution(this.cell)
+    } catch(e: any) {
+      if (e.message.toString().includes('controller is NOT associated')) {
+        this.handleNotebookKernelSelection()
+        return undefined
+      }
+
+      throw e
+    }
+  }
+
+  async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution|undefined> {
     await this.onFinish
 
     return await this.withLock(() => {
-      const execution = this.controller.createNotebookCellExecution(this.cell)
+      const execution = this.newCellExecution()
+      if (!execution) { return undefined }
+
       this.execution = execution
 
       const wrapper = new RunmeNotebookCellExecution(execution)
@@ -371,7 +412,9 @@ export class NotebookCellOutputManager {
       return
     }
 
-    const exec = this.controller.createNotebookCellExecution(this.cell)
+    const exec = this.newCellExecution()
+    if (!exec) { return }
+
     exec.start(Date.now())
 
     try {
