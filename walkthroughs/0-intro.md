@@ -5,7 +5,7 @@ Thank you for interest in Runme 💟!
 Runme strives to provide a great experience right out of the box. Please continue to learn how to get the most out of our docs via Runme. Please don't be surprised if Runme's docs prompt you to use Runme. Learning by using is very effective.
 
 <div>
-  <img width="15" src="https://runme.dev/img/logo.svg" />
+  <img width="15" src="https://runme.dev/runme_logo.svg" />
   <a href="command:runme.try">Give Runme a try</a>
 </div>
 

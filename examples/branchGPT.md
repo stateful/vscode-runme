@@ -1,6 +1,6 @@
 # Enter BranchGPT
 
-[![](https://badgen.net/badge/Run%20this%20/Demo/5B3ADF?icon=https://runme.dev/img/logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
+[![](https://badgen.net/badge/Run%20this%20/Demo/5B3ADF?icon=https://runme.dev/runme_logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
 
 A humerous attempt to use GPT3/3.5/4 and Git Merge Commit to suggest new branch names.
 

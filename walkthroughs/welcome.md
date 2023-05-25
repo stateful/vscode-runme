@@ -1,4 +1,4 @@
-# ![Runme](https://runme.dev/img/logo.svg "Runme") Welcome to Runme
+# ![Runme](https://runme.dev/runme_logo.svg "Runme") Welcome to Runme
 
 Runme is primary a VS Code extension that provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart.
 
