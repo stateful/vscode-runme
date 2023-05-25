@@ -11,7 +11,9 @@ import {
   languages,
   commands,
   workspace,
-  tasks
+  tasks,
+  EndOfLine,
+  Position
 } from 'vscode'
 
 import { SerializerBase } from '../serializer'
@@ -86,20 +88,30 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       return []
     }
 
-    const contentBytes = Buffer.from(document.getText())
+    const contentString = document.getText()
+    const contentBytes = Buffer.from(contentString, 'utf-8')
+
+    const eol = {
+      [EndOfLine.CRLF]: '\r\n',
+      [EndOfLine.LF]: '\n',
+    }[document.eol]
+
     const { cells } = await this.serializer['reviveNotebook'](contentBytes, token)
 
     return cells.flatMap((cell, i) => {
       if (cell.kind !== NotebookCellKind.Code || !cell.textRange) { return [] }
 
-      let start = document.positionAt(cell.textRange.start)
-      let end = document.positionAt(cell.textRange.end)
+      const { start } = cell.textRange
 
-      start = start.with(start.line - 1)
-      end = end.with(end.line - 1)
+      const lines = contentBytes.subarray(0, start).toString('utf-8').split(eol)
+
+      const line = lines.length - 2
+      const offset = 0
+
+      const pos = new Position(line, offset)
 
       const range = new Range(
-        start, end
+        pos, pos
       )
 
       return ActionTypes.map((v) => {
