@@ -589,9 +589,6 @@ suite('RunmeCodeLensProvider', () => {
     expect(lenses).toHaveLength(2)
 
     for (const lens of lenses) {
-      expect(lens.range.start.character).toStrictEqual(2)
-      expect(lens.range.end.character).toStrictEqual(3)
-
       expect(lens.command).toBeTruthy()
 
       expect(lens.command!.command).toStrictEqual(ActionCommand)

@@ -285,3 +285,17 @@ export class WorkspaceEdit {
 export class NotebookEdit {
   static updateCellMetadata = vi.fn()
 }
+
+/**
+ * Represents an end of line character sequence in a {@link TextDocument document}.
+ */
+export enum EndOfLine {
+  /**
+   * The line feed `\n` character.
+   */
+  LF = 1,
+  /**
+   * The carriage return line feed `\r\n` sequence.
+   */
+  CRLF = 2
+}
