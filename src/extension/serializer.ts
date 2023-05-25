@@ -195,10 +195,17 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       console.error(`Error guessing snippet languages: ${err}`)
     }
 
+    notebook.metadata ??= {}
+    notebook.metadata['runme.dev/frontmatter'] = notebook.frontmatter
+
     const notebookData = new NotebookData(SerializerBase.revive(notebook))
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
+    } else {
+      notebookData.metadata = {}
     }
+
+    notebookData.metadata['']
 
     return notebookData
   }
