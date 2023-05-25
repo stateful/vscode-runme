@@ -205,6 +205,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       notebookData.metadata = {}
     }
 
+    notebookData.metadata['']
+
     return notebookData
   }
 
