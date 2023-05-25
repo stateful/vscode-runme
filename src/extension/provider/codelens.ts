@@ -99,9 +99,10 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     const { cells } = await this.serializer['reviveNotebook'](contentBytes, token)
 
     return cells.flatMap((cell, i) => {
-      if (cell.kind !== NotebookCellKind.Code || !cell.textRange) { return [] }
+      const textRange = (cell.metadata as Serializer.Metadata)['runme.dev/textRange']
+      if (cell.kind !== NotebookCellKind.Code || !textRange) { return [] }
 
-      const { start } = cell.textRange
+      const { start } = textRange
 
       const lines = contentBytes.subarray(0, start).toString('utf-8').split(eol)
 

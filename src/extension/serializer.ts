@@ -263,6 +263,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         cell.metadata = SerializerBase.addCellUuid(elem.metadata)
       }
 
+      cell.metadata ??= {}
+      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] = elem.textRange
+
       accu.push(cell)
 
       return accu

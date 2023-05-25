@@ -40,6 +40,7 @@ export namespace Serializer {
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState
     ['runme.dev/frontmatter']?: Grpc.Frontmatter
+    ['runme.dev/textRange']?: Grpc.Cell['textRange']
   }
 }
 
