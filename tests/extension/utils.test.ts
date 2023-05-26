@@ -89,11 +89,16 @@ test('getTerminalByCell', () => {
   } as any))
     .toBeTruthy()
 
-  expect(getTerminalByCell({
-    metadata: { 'runme.dev/uuid': v4() },
-    kind: 2,
-  } as any))
-    .toBeUndefined()
+    expect(getTerminalByCell({
+      metadata: { 'runme.dev/uuid': v4() },
+      kind: 2,
+    } as any))
+      .toBeUndefined()
+
+    expect(getTerminalByCell({
+      kind: 1,
+    } as any))
+      .toBeUndefined()
 })
 
 test('resetEnv', () => {

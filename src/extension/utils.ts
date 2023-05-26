@@ -110,6 +110,10 @@ function getCellUUID(cell: vscode.NotebookCell): string {
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
+  if (cell.kind !== vscode.NotebookCellKind.Code) {
+    return undefined
+  }
+
   const RUNME_ID = getCellRunmeId(cell)
 
   return vscode.window.terminals.find((t) => {
