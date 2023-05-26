@@ -9,17 +9,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: 👷 Install Dependencies
-        run: npm ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: 🧪 Setup and Test with Runme
         uses: coactions/setup-xvfb@v1
         with:
-          run: npx runme run configureNPM setup build test
+          run: |
+            npm i -g runme
+            npx runme run --filename=CONTRIBUTING.md configureNPM
+            npx runme run --filename=CONTRIBUTING.md setup
+            npx runme run --filename=CONTRIBUTING.md build
+            npx runme run --filename=CONTRIBUTING.md test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUNME_PROJECT: ${{ github.workspace }}
       - name: 🔼 Upload Artifacts
         uses: actions/upload-artifact@v3
         if: failure()
