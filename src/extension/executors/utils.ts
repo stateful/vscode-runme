@@ -1,11 +1,20 @@
 import cp from 'node:child_process'
 import path from 'node:path'
 
-import { NotebookCellOutput, NotebookCellExecution, NotebookCellOutputItem, window } from 'vscode'
+import {
+  NotebookCellOutput,
+  NotebookCellExecution,
+  NotebookCellOutputItem,
+  window,
+  NotebookData,
+  NotebookCell,
+  NotebookCellData,
+  NotebookDocument,
+} from 'vscode'
 
 import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
-import type { CellOutputPayload } from '../../types'
+import type { CellOutputPayload, Serializer } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -181,10 +190,37 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
  *
  * @param execKey Used as fallback in case `$SHELL` is not present
  */
-export function getShellPath(): string|undefined
-export function getShellPath(execKey: 'bash'|'sh'): string
-export function getShellPath(execKey?: string): string|undefined {
+export function getSystemShellPath(): string|undefined
+export function getSystemShellPath(execKey: 'bash'|'sh'): string
+export function getSystemShellPath(execKey?: 'bash'|'sh'): string|undefined
+export function getSystemShellPath(execKey?: string): string|undefined {
   return process.env.SHELL ?? execKey
+}
+
+export function getCellShellPath(
+  cell: NotebookCell|NotebookCellData|Serializer.Cell,
+  notebook: NotebookData|Serializer.Notebook|NotebookDocument,
+  execKey?: 'bash'|'sh'
+): string|undefined {
+  const notebookMetadata = notebook.metadata as Serializer.Metadata|undefined
+
+  const frontmatter = notebookMetadata?.['runme.dev/frontmatter']
+
+  if (frontmatter?.shell) {
+    return frontmatter.shell
+  }
+
+  if (!execKey && 'document' in cell) {
+    if (cell.document.languageId === 'bash') {
+      execKey = 'bash'
+    }
+
+    if (cell.document.languageId === 'sh') {
+      execKey = 'sh'
+    }
+  }
+
+  return getSystemShellPath(execKey)
 }
 
 /**

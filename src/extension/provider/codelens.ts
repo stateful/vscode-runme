@@ -13,7 +13,9 @@ import {
   workspace,
   tasks,
   EndOfLine,
-  Position
+  Position,
+  NotebookData,
+  NotebookCellData
 } from 'vscode'
 
 import { SerializerBase } from '../serializer'
@@ -40,7 +42,8 @@ type ActionType = (typeof ActionTypes)[number]
 type ActionArguments = [
   document: TextDocument,
   token: CancellationToken,
-  cell: Serializer.Cell,
+  notebook: NotebookData,
+  cell: NotebookCellData,
   index: number,
   action: ActionType
 ]
@@ -96,7 +99,8 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       [EndOfLine.LF]: '\n',
     }[document.eol]
 
-    const { cells } = await this.serializer['reviveNotebook'](contentBytes, token)
+    const notebook = await this.serializer.deserializeNotebook(contentBytes, token)
+    const { cells } = notebook
 
     return cells.flatMap((cell, i) => {
       const textRange = (cell.metadata as Serializer.Metadata)['runme.dev/textRange']
@@ -116,7 +120,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       )
 
       return ActionTypes.map((v) => {
-        const args: ActionArguments = [document, token, cell, i, v]
+        const args: ActionArguments = [document, token, notebook, cell, i, v]
 
         /* c8 ignore start */
         switch (v) {
@@ -158,7 +162,8 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   protected async codeLensActionCallback(
     document: TextDocument,
     token: CancellationToken,
-    cell: Serializer.Cell,
+    notebook: NotebookData,
+    cell: NotebookCellData,
     index: number,
     action: ActionType
   ) {
@@ -192,6 +197,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
         const task = await RunmeTaskProvider.getRunmeTask(
           document.uri.fsPath,
           getAnnotations(cell.metadata).name,
+          notebook,
           cell,
           {},
           this.runner!,

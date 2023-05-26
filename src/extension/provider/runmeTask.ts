@@ -16,6 +16,7 @@ import {
   CustomExecution,
   NotebookCell,
   NotebookCellData,
+  NotebookData,
 } from 'vscode'
 
 import getLogger from '../logger'
@@ -23,7 +24,7 @@ import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
-import { getShellPath, parseCommandSeq } from '../executors/utils'
+import { getCellShellPath, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -77,6 +78,7 @@ export class RunmeTaskProvider implements TaskProvider {
       .map(async (cell) => await RunmeTaskProvider.getRunmeTask(
         current.fsPath,
         `${getAnnotations(cell.metadata).name}`,
+        notebook,
         cell,
         {},
         this.runner!,
@@ -94,6 +96,7 @@ export class RunmeTaskProvider implements TaskProvider {
   static async getRunmeTask (
     filePath: string,
     command: string,
+    notebook: NotebookData|Serializer.Notebook,
     cell: NotebookCell|NotebookCellData|Serializer.Cell,
     options: TaskOptions = {},
     runner: IRunner,
@@ -127,7 +130,7 @@ export class RunmeTaskProvider implements TaskProvider {
         if (!environment) { Object.assign(envs, process.env) }
 
         const runOpts: RunProgramOptions = {
-          programName: getShellPath() ?? 'sh',
+          programName: getCellShellPath(cell, notebook) ?? 'sh',
           exec: {
             type: 'commands',
             commands: commands ?? [''],
