@@ -43,17 +43,23 @@ async function getGitHubToken () {
 
 async function downloadWasm (token) {
   const octokit = new Octokit({ auth: token })
-  const wasmReleaseDefined = Boolean(process.env.RUNME_VERSION)
+
+  let releaseArg = process.env.RUNME_VERSION
+  if (releaseArg && !releaseArg.startsWith("v")) {
+    releaseArg = "v" + releaseArg
+  }
+
+  const wasmReleaseDefined = Boolean(releaseArg)
   const releases = await octokit.repos.listReleases({ owner, repo })
   const release = wasmReleaseDefined
-    ? releases.data.find((r) => r.tag_name === process.env.RUNME_VERSION)
+    ? releases.data.find((r) => r.tag_name === releaseArg)
     : releases.data.filter(
         (r) => r.prerelease === (process.env.GITHUB_REF_NAME !== "main")
       )[0]
 
   if (wasmReleaseDefined && !release) {
     throw new Error(
-      `No release found with tag name "${process.env.RUNME_VERSION}", ` +
+      `No release found with tag name "${releaseArg}", ` +
       `available releases: ${releases.data.map((r) => r.tag_name).join(', ')}`
     )
   }
