@@ -1,5 +1,6 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { when } from 'lit/directives/when.js'
 
 export interface ISelectedCategory {
     name: string
@@ -94,6 +95,9 @@ export class CategorySelector extends LitElement {
     @property({ type: String })
     createNewCategoryText: string | undefined
 
+    @property({ type: String })
+    selectCategoryText: string | undefined
+
     @property()
     selectedCategory: string | undefined
 
@@ -102,8 +106,6 @@ export class CategorySelector extends LitElement {
 
     @property()
     identifier: string | undefined
-
-
 
 
     private onCreateNewCategory(e: Event) {
@@ -148,12 +150,14 @@ export class CategorySelector extends LitElement {
                 }
                 </div>
                 <div class="row">
+                ${when(this.categories.length, 
+                    () => html`
                     <vscode-button 
-                    style="color: var(--vscode-button-foreground);
-                    background-color:var(--vscode-button-background);"
-                    @click="${this.onSelectCategory}">
-                        Select category
-                    </vscode-button>
+                        style="color: var(--vscode-button-foreground);
+                        background-color:var(--vscode-button-background);"
+                        @click="${this.onSelectCategory}">
+                        ${this.selectCategoryText}
+                    </vscode-button>`, () => html``)}
                     <vscode-button appearance="secondary"
                             style="color: var(--vscode-button-foreground);"
                             @click="${this.onCreateNewCategory}">

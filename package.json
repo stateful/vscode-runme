@@ -200,6 +200,14 @@
         {
           "command": "runme.file.openInRunme",
           "when": "false"
+        },
+        {
+          "command": "runme.runCategory",
+          "when": "false"
+        },
+        {
+          "command": "runme.runCellCategory",
+          "when": "false"
         }
       ],
       "editor/title": [

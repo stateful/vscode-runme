@@ -43,8 +43,8 @@ export class RunmeExtension {
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
     const server = new RunmeServer(context.extensionUri, {
-        retryOnFailure: true,
-        maxNumberOfIntents: 10,
+      retryOnFailure: true,
+      maxNumberOfIntents: 10,
     }, !grpcServer, grpcRunner)
 
     let runner: IRunner | undefined
@@ -123,9 +123,9 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
-      RunmeExtension.registerCommand('runme.runCategory', (notebook) =>
-        displayCategoriesSelector(context, notebook, kernel)
-      ),
+      RunmeExtension.registerCommand('runme.runCategory', (notebook) => {
+        return displayCategoriesSelector({ context, kernel, notebookToolbarCommand: notebook })
+      }),
       RunmeExtension.registerCommand('runme.runCellCategory', (cell) => runCellsByCategory(cell, kernel)),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
@@ -164,8 +164,8 @@ export class RunmeExtension {
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {
     return commands.registerCommand(command, (...wrappedArgs: any[]) => {
-        TelemetryReporter.sendTelemetryEvent('extension.command', { command })
-        return callback(...wrappedArgs, thisArg)
+      TelemetryReporter.sendTelemetryEvent('extension.command', { command })
+      return callback(...wrappedArgs, thisArg)
     }, thisArg)
   }
 }
