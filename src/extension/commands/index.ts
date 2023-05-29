@@ -60,7 +60,7 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
   const annotations = getAnnotations(cell)
   const category = annotations.category
   if (!category) {
-    return
+    return window.showInformationMessage('This cell doesn\'t have a category')
   }
 
   kernel.setCategory(category)
