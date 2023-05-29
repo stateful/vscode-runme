@@ -195,7 +195,7 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.onGetState]: {
     state: string
-    value: string
+    value: string | string[]
     uuid: string
   }
 }

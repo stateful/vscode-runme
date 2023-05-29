@@ -1,4 +1,4 @@
-import vscode, { FileType, Uri, commands, workspace } from 'vscode'
+import vscode, { ExtensionContext, FileType, Uri, commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 import { v4 } from 'uuid'
 
@@ -20,7 +20,9 @@ import {
   isGitHubLink,
   isDenoScript,
   getCmdSeq,
-  validateAnnotations
+  validateAnnotations,
+  setNotebookCategories,
+  getNotebookCategories
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -298,6 +300,8 @@ suite('#getAnnotations', () => {
         interactive: true,
         mimeType: 'text/plain',
         name: 'command-123',
+        category: '',
+        excludeFromRunAll: false,
         promptEnv: true,
         'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0'
       }
@@ -319,6 +323,8 @@ suite('#getAnnotations', () => {
       mimeType: 'text/plain',
       name: 'echo-hello',
       promptEnv: true,
+      excludeFromRunAll: false,
+      category: ''
     })
   })
 })
@@ -525,5 +531,86 @@ suite('validateAnnotations', () => {
     }
     const result = validateAnnotations(cell)
     expect(result.hasErrors).toBe(false)
+  })
+})
+
+suite('setNotebookCategories', () => {
+  test('should set notebook categories', async () => {
+    const contextMock: ExtensionContext = {
+      globalState: {
+        get: vi.fn().mockReturnValue({
+          notebook1: ['shell scripts', 'node.js examples'],
+          notebook2: ['more shell scripts']
+        }),
+        update: vi.fn().mockResolvedValue({}),
+
+      }
+    } as any
+    const uriMock = {
+      path: 'notebook1'
+    } as any
+
+    await setNotebookCategories(contextMock, uriMock, ['shell scripts', 'node.js examples'])
+    expect(contextMock.globalState.update).toHaveBeenCalledWith('notebookAvailableCategories',
+      {
+        'notebook1': ['shell scripts', 'node.js examples'],
+        'notebook2': ['more shell scripts']
+      })
+  })
+
+  test('should set a new categories object when empty', async () => {
+    const contextMock: ExtensionContext = {
+      globalState: {
+        get: vi.fn().mockReturnValue(undefined),
+        update: vi.fn().mockResolvedValue({}),
+      }
+    } as any
+    const uriMock = {
+      path: 'notebook1'
+    } as any
+
+    await setNotebookCategories(contextMock, uriMock, ['shell scripts', 'node.js examples'])
+    expect(contextMock.globalState.update).toHaveBeenCalledWith('notebookAvailableCategories',
+      {
+        'notebook1': ['shell scripts', 'node.js examples'],
+      })
+  })
+})
+
+suite('getNotebookCategories', () => {
+  test('should get notebook categories', async () => {
+    const contextMock: ExtensionContext = {
+      globalState: {
+        get: vi.fn().mockReturnValue({
+          notebook1: ['shell scripts', 'node.js examples'],
+          notebook2: ['more shell scripts']
+        }),
+      }
+    } as any
+    const uriMock = {
+      path: 'notebook1'
+    } as any
+
+    const categories = await getNotebookCategories(contextMock, uriMock)
+    expect(contextMock.globalState.get).toHaveBeenCalledWith('notebookAvailableCategories')
+    expect(categories).toStrictEqual(['shell scripts', 'node.js examples'])
+  })
+
+  test('should get empty categories array for non-existent notebook state', async () => {
+    const contextMock: ExtensionContext = {
+      globalState: {
+        get: vi.fn().mockReturnValue({
+          notebook1: ['shell scripts', 'node.js examples'],
+          notebook2: ['more shell scripts']
+        }),
+      }
+    } as any
+    const uriMock = {
+      path: 'notebook3'
+    } as any
+
+    const categories = await getNotebookCategories(contextMock, uriMock)
+    expect(contextMock.globalState.get).toHaveBeenCalledWith('notebookAvailableCategories')
+    expect(categories).toStrictEqual([])
   })
 })

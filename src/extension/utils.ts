@@ -430,15 +430,29 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 
   return res
 }
-export async function setNotebookCategories(context: ExtensionContext, uri: Uri, categories: string[]) {
-  const nbsCategories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
-  nbsCategories[uri.path] = categories
 
-  await context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, nbsCategories)
+/**
+ * Stores the specified notebook cell categories in the global state.
+ * @param context
+ * @param uri
+ * @param categories
+ */
+export async function setNotebookCategories(context: ExtensionContext, uri: Uri, categories: string[]): Promise<void> {
+  const notebooksCategoryState = context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
+  notebooksCategoryState[uri.path] = categories
+  return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
 }
 
-export async function getNotebookCategories(context: ExtensionContext, uri: Uri) {
-  const notebooksCategories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) as any
-
-  return notebooksCategories[uri.path]
+/**
+ * Get the notebook cell categories from the global state
+ * @param context 
+ * @param uri 
+ * @returns 
+ */
+export async function getNotebookCategories(context: ExtensionContext, uri: Uri): Promise<string[]> {
+  const notebooksCategories = context.globalState.get<Record<string, string[]>>(NOTEBOOK_AVAILABLE_CATEGORIES)
+  if (!notebooksCategories) {
+    return []
+  }
+  return notebooksCategories[uri.path] || []
 }
