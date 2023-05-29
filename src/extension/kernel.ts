@@ -121,10 +121,19 @@ export class Kernel implements Disposable {
     return outputs.registerCellTerminalState(type)
   }
 
-  async #handleSaveNotebook({ uri, isUntitled, notebookType }: NotebookDocument) {
+  async #handleSaveNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
     }
+    const availableCategories: string[] = []
+    getCells().forEach((cell) => {
+      const annotations = getAnnotations(cell)
+      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
+        availableCategories.push(annotations.category)
+      }
+    })
+    setNotebookCategories(this.context, uri, availableCategories)
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.length)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
 
@@ -164,7 +173,7 @@ export class Kernel implements Disposable {
       return
     }
     const { uri } = notebookDocument
-   const categories = await  getNotebookCategories(this.context,uri )
+    const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
   }
 
@@ -319,10 +328,9 @@ export class Kernel implements Disposable {
   }
 
   private async _executeAll(cells: NotebookCell[]) {
-    const totalNotebookCells = (
-      cells[0] &&
-      cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length
-    ) || 0
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, false)
+    const totalNotebookCells =
+      (cells[0] && cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length) || 0
     const totalCellsToExecute = cells.length
     let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
     let cellsExecuted = 0
@@ -368,6 +376,9 @@ export class Kernel implements Disposable {
       cellsExecuted++
     }
     this.category = undefined
+    const uri = cells[0] && cells[0].notebook.uri
+    const categories = await getNotebookCategories(this.context, uri)
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
 
     TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
       'cells.total': totalNotebookCells?.toString(),
