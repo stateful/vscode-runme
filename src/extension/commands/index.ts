@@ -20,10 +20,9 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { getAnnotations, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
+import { getAnnotations, getNotebookCategories, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
-import { NOTEBOOK_AVAILABLE_CATEGORIES } from '../../constants'
 
 function showWarningMessage () {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -38,9 +37,9 @@ export function openIntegratedTerminal (cell: NotebookCell) {
   return terminal.show()
 }
 
-export async function displayCategoriesSelector(context: ExtensionContext, kernel: Kernel) {
-  const categories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES)
-  if (!categories?.length) {
+export async function displayCategoriesSelector(context: ExtensionContext, nbEditor: any, kernel: Kernel) {
+  const categories = await getNotebookCategories(context, nbEditor.notebookEditor.notebookUri)
+  if (!categories) {
     return
   }
   const category = await window.showQuickPick(categories, {
