@@ -265,7 +265,7 @@ export class Annotations extends LitElement {
           })
           return this.setCategory(answer)
         case ClientMessages.onGetState:
-          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES) {
+          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.uuid === uuid) {
             this.categories = e.output.value as unknown as string[]
             this.requestUpdate()
           }
@@ -323,6 +323,7 @@ export class Annotations extends LitElement {
           html`<category-selector
             categories="${this.categories}"
             createNewCategoryText="Add ${key}"
+            selectCategoryText="Select ${key}"
             selectedCategory="${value}"
             description="${this.#desc(key)}"
             identifier="${key}"

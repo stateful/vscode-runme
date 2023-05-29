@@ -1,4 +1,4 @@
-import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions } from 'vscode'
+import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions, Uri, ExtensionContext } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -6,6 +6,7 @@ import { SafeCellAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
 import { IWorkflowRun } from './extension/services/types'
+import { Kernel } from './extension/kernel'
 
 export namespace Serializer {
   export type Notebook = {
@@ -152,11 +153,11 @@ export interface ClientMessagePayload {
     answer: string | undefined
     uuid: string
   }
-  [ClientMessages.onPickerOption]:{
+  [ClientMessages.onPickerOption]: {
     option: string | undefined
     uuid: string
   }
-  [ClientMessages.displayPicker]:{
+  [ClientMessages.displayPicker]: {
     options: string[]
     title: string
     uuid: string
@@ -232,4 +233,15 @@ export interface DisposableAsync {
 
 export interface RunmeTerminal extends Terminal {
   runnerSession?: IRunnerProgramSession
+}
+
+export interface NotebookToolbarCommand {
+  context: ExtensionContext
+  kernel: Kernel
+  notebookToolbarCommand: {
+    ui: boolean
+    notebookEditor: {
+      notebookUri: Uri
+    }
+  }
 }
