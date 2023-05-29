@@ -29,7 +29,6 @@ import type executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV } from './constants'
 
-
 declare var globalThis: any
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
@@ -50,9 +49,7 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
 
   const schema = {
     ...metadata,
-    name:
-      metadata.name ||
-      metadata['runme.dev/name'],
+    name: metadata.name || metadata['runme.dev/name'],
   }
 
   const parseResult = SafeCellAnnotationsSchema.safeParse(schema)
@@ -70,9 +67,7 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
   const schema = {
     ...metadata,
-    name:
-      metadata.name ||
-      metadata['runme.dev/name'],
+    name: metadata.name || metadata['runme.dev/name'],
   }
 
   const parseResult = CellAnnotationsSchema.safeParse(schema)
@@ -81,21 +76,20 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
     return {
       hasErrors: true,
       errors: fieldErrors,
-      originalAnnotations: schema as unknown as CellAnnotations
+      originalAnnotations: schema as unknown as CellAnnotations,
     }
   }
 
   return {
     hasErrors: false,
-    originalAnnotations: schema as unknown as CellAnnotations
+    originalAnnotations: schema as unknown as CellAnnotations,
   }
-
 }
 
 export function getTerminalRunmeId(t: vscode.Terminal): string | undefined {
-  return (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID
-    ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1]
-    ?? undefined
+  return (
+    (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1] ?? undefined
+  )
 }
 
 export function getCellRunmeId(cell: vscode.NotebookCell) {
@@ -123,7 +117,7 @@ export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | un
 }
 
 export function resetEnv() {
-  [...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
+  ;[...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
   Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
 }
 
@@ -188,16 +182,15 @@ export function getCmdSeq(cellText: string): string[] {
  * - Removes trailing `$` characters
  */
 export function prepareCmdSeq(cellText: string): string[] {
-  return cellText.split('\n')
-    .map(l => {
-      const stripped = l.trimStart()
+  return cellText.split('\n').map((l) => {
+    const stripped = l.trimStart()
 
-      if (stripped.startsWith('$')) {
-        return stripped.slice(1).trimStart()
-      }
+    if (stripped.startsWith('$')) {
+      return stripped.slice(1).trimStart()
+    }
 
-      return l
-    })
+    return l
+  })
 }
 
 /**
@@ -207,8 +200,7 @@ export function prepareCmdSeq(cellText: string): string[] {
  * packages command sequence into single callable script
  */
 export function getCmdShellSeq(cellText: string, os: string): string {
-  const trimmed = getCmdSeq(cellText)
-    .join('; ')
+  const trimmed = getCmdSeq(cellText).join('; ')
 
   if (['darwin'].find((entry) => entry === os)) {
     return `set -e -o pipefail; ${trimmed}`
@@ -336,7 +328,8 @@ export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<st
         }
         return `**/${entry}/**`
       }
-    }).filter((entry: string | undefined) => entry)
+    })
+    .filter((entry: string | undefined) => entry)
 
   return [...new Set(entries)]
 }
@@ -391,7 +384,7 @@ export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
 
   let testPath = uri.fsPath
   do {
-    for (const workspaceFolder of workspace.workspaceFolders ?? [ ]) {
+    for (const workspaceFolder of workspace.workspaceFolders ?? []) {
       if (testPath === workspaceFolder.uri.fsPath) {
         return workspaceFolder
       }
@@ -402,10 +395,12 @@ export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
 }
 
 export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string>> {
-  const res: Record<string, string> = { }
+  const res: Record<string, string> = {}
   const workspaceFolder = getWorkspaceFolder(uri)
 
-  if (!workspaceFolder || !getEnvLoadWorkspaceFiles()) { return res }
+  if (!workspaceFolder || !getEnvLoadWorkspaceFiles()) {
+    return res
+  }
 
   const envFiles = getEnvWorkspaceFileOrder()
 
@@ -413,13 +408,19 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
     envFiles.map(async (fileName) => {
       const dotEnvFile = Uri.joinPath(workspaceFolder.uri, fileName)
 
-      return await workspace.fs.stat(dotEnvFile)
-        .then(async (f) => {
-          if (f.type !== FileType.File) { return { } }
+      return await workspace.fs.stat(dotEnvFile).then(
+        async (f) => {
+          if (f.type !== FileType.File) {
+            return {}
+          }
 
           const bytes = await workspace.fs.readFile(dotEnvFile)
           return dotenv.parse(Buffer.from(bytes))
-        }, () => { return { } })
+        },
+        () => {
+          return {}
+        }
+      )
     })
   )
 
@@ -429,7 +430,15 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 
   return res
 }
+export async function setNotebookCategories(context: ExtensionContext, uri: Uri, categories: string[]) {
+  const nbsCategories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
+  nbsCategories[uri.path] = categories
 
-export async function getNotebookCategories(context: ExtensionContext) {
-  return context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES)
+  await context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, nbsCategories)
+}
+
+export async function getNotebookCategories(context: ExtensionContext, uri: Uri) {
+  const notebooksCategories = await context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) as any
+
+  return notebooksCategories[uri.path]
 }

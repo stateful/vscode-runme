@@ -17,14 +17,22 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages, NOTEBOOK_AVAILABLE_CATEGORIES, NOTEBOOK_HAS_CATEGORIES } from '../constants'
+import { ClientMessages, NOTEBOOK_HAS_CATEGORIES } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
-import { resetEnv, getKey, getAnnotations, hashDocumentUri, processEnviron, isWindows } from './utils'
+import {
+  resetEnv,
+  getKey,
+  getAnnotations,
+  hashDocumentUri,
+  processEnviron,
+  isWindows,
+  setNotebookCategories,
+} from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
@@ -32,6 +40,7 @@ import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
+import { getNotebookCategories } from './utils'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -80,7 +89,8 @@ export class Kernel implements Disposable {
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
-      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this))
+      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
+      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this))
     )
   }
 
@@ -125,8 +135,8 @@ export class Kernel implements Disposable {
     })
   }
 
-
-  async #handleOpenNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
+  async #handleOpenNotebook(notebookDocument: NotebookDocument) {
+    const { uri, isUntitled, notebookType, getCells } = notebookDocument
     if (notebookType !== Kernel.type) {
       return
     }
@@ -138,8 +148,7 @@ export class Kernel implements Disposable {
       }
       this.registerNotebookCell(cell)
     })
-    await this.context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, availableCategories)
-    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.length)
+    setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -149,8 +158,24 @@ export class Kernel implements Disposable {
     })
   }
 
+  async #handleActiveNotebook(listener: NotebookEditor | undefined) {
+    const notebookDocument = listener?.notebook
+    if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
+      return
+    }
+    const { uri } = notebookDocument
+   const categories = await  getNotebookCategories(this.context,uri )
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
+  }
+
   // eslint-disable-next-line max-len
-  async #handleRendererMessage({ editor, message }: { editor: NotebookEditor, message: ClientMessage<ClientMessages> }) {
+  async #handleRendererMessage({
+    editor,
+    message,
+  }: {
+    editor: NotebookEditor
+    message: ClientMessage<ClientMessages>
+  }) {
     if (message.type === ClientMessages.mutateAnnotations) {
       const payload =
         message as ClientMessage<ClientMessages.mutateAnnotations>
@@ -255,23 +280,30 @@ export class Kernel implements Disposable {
         answer,
         uuid: message.output.uuid
       })
-
     } else if (message.type === ClientMessages.getState) {
-      const value = await this.context.globalState.get<string>(message.output.state)
-      if (!value) {
+      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      if(!cell) {
+        return
+      }
+      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
+      if (!categories) {
         return
       }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
-        value,
+        value: categories,
         uuid: message.output.uuid
       })
     } else if (message.type === ClientMessages.setState) {
-      await this.context.globalState.update(message.output.state, message.output.value)
+      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      if(!cell) {
+        return
+      }
+      await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
     } else if (message.type === ClientMessages.displayPicker) {
       const selectedOption = await window.showQuickPick(message.output.options, {
         title: message.output.title,
-        ignoreFocusOut: true
+        ignoreFocusOut: true,
       })
       postClientMessage(this.messaging, ClientMessages.onPickerOption, {
         option: selectedOption,
@@ -390,17 +422,17 @@ export class Kernel implements Disposable {
       !isWindows()
     ) {
       const runScript = (execKey: 'sh' | 'bash' = 'bash') => executeRunner(
-        this,
-        this.context,
-        this.runner!,
-        exec,
-        runningCell,
-        this.messaging,
-        uuid,
-        execKey,
-        outputs,
-        this.environment,
-        environmentManager
+          this,
+          this.context,
+          this.runner!,
+          exec,
+          runningCell,
+          this.messaging,
+          uuid,
+          execKey,
+          outputs,
+          this.environment,
+          environmentManager
       )
         .catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
