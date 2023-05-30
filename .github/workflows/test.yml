@@ -20,8 +20,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUNME_PROJECT: ${{ github.workspace }}
-          # FIXME: remove explicit version after 1.2.2 is released
-          RUNME_VERSION: 1.2.2-rc.0
       - name: 🔼 Upload Artifacts
         uses: actions/upload-artifact@v3
         if: failure()
