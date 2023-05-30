@@ -210,14 +210,8 @@ export function getCellShellPath(
     return frontmatter.shell
   }
 
-  if (!execKey && 'document' in cell) {
-    if (cell.document.languageId === 'bash') {
-      execKey = 'bash'
-    }
-
-    if (cell.document.languageId === 'sh') {
-      execKey = 'sh'
-    }
+  if (!execKey && 'document' in cell && (cell.document.languageId === 'sh' || cell.document.languageId === 'bash')) {
+    return getSystemShellPath(cell.document.languageId)
   }
 
   return getSystemShellPath(execKey)
