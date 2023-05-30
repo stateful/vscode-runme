@@ -10,12 +10,16 @@ import {
   NotebookCell,
   NotebookCellData,
   NotebookDocument,
+  Uri,
+  workspace,
+  FileType
 } from 'vscode'
 
 import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
+import { getWorkspaceFolder } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -215,6 +219,57 @@ export function getCellShellPath(
   }
 
   return getSystemShellPath(execKey)
+}
+
+export async function getCellCwd(
+  cell: NotebookCell | NotebookCellData,
+  notebook?: NotebookData,
+  notebookFile?: Uri
+): Promise<string | undefined> {
+  let res: string|undefined
+
+  const getParent = (p?: string) => p ? path.dirname(p) : undefined
+
+  const candidates = [
+    getParent(getWorkspaceFolder(notebookFile)?.uri.fsPath),
+    getParent(notebookFile?.fsPath),
+    (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
+    (cell?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
+  ]
+
+  for (let candidate of candidates) {
+    candidate = resolveOrAbsolute(res, candidate)
+
+    if (candidate) {
+      const folderExists = await workspace.fs.stat(
+        Uri.file(candidate)).then(
+          (f) => f.type === FileType.Directory,
+          () => false,
+        )
+
+      if (!folderExists) { continue }
+
+      res = candidate
+    }
+  }
+
+  return res
+}
+
+function resolveOrAbsolute(parent?: string, child?: string): string|undefined {
+	if (!child) {
+		return parent
+	}
+
+	if (path.isAbsolute(child)) {
+		return child
+	}
+
+	if (parent) {
+		return path.join(parent, child)
+	}
+
+	return child
 }
 
 /**
