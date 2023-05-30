@@ -1,6 +1,8 @@
 import url from 'node:url'
+import path from 'node:path'
+import fs from 'node:fs/promises'
 
-import { window } from 'vscode'
+import { window, Uri } from 'vscode'
 import { expect, vi, test, suite, beforeEach } from 'vitest'
 
 import { ENV_STORE } from '../../../src/extension/constants'
@@ -8,28 +10,29 @@ import {
   retrieveShellCommand,
   parseCommandSeq,
   getCellShellPath,
-  getSystemShellPath
+  getSystemShellPath,
+  getCellCwd
 } from '../../../src/extension/executors/utils'
-import { getCmdSeq } from '../../../src/extension/utils'
+import { getCmdSeq, getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 vi.mock('vscode-telemetry', () => ({}))
 
-vi.mock('vscode', () => ({
-  window: {
-    showInputBox: vi.fn(),
-    showErrorMessage: vi.fn()
-  },
-  workspace: {
-    getConfiguration: vi.fn()
-  }
-}))
+vi.mock('vscode')
 
 vi.mock('../../../src/extension/utils', () => ({
   replaceOutput: vi.fn(),
   // TODO: this should use importActual
-  getCmdSeq: vi.fn((cellText: string) => cellText.trim().split('\n').filter(x => x))
+  getCmdSeq: vi.fn((cellText: string) => cellText.trim().split('\n').filter(x => x)),
+  getWorkspaceFolder: vi.fn(),
+  getAnnotations: vi.fn(),
+}))
+
+vi.mock('node:fs/promises', () => ({
+  default: {
+    stat: vi.fn(),
+  }
 }))
 
 beforeEach(() => {
@@ -338,5 +341,111 @@ suite('getCellShellPath', () => {
   test('fallback to system shell', () => {
     const shellPath = getCellShellPath({ } as any, { } as any)
     expect(shellPath).toStrictEqual(getSystemShellPath())
+  })
+})
+
+suite('getCellCwd', () => {
+  const projectRoot = '/project'
+  const mdFilePath = '/project/folder/DOC.md'
+
+  const testGetCellCwd = async (
+    frontmatter?: string,
+    annotation?: string,
+    existingFolders?: string[],
+    disableMdFile = false
+  ) => {
+    const mdFile = disableMdFile ? undefined : mdFilePath
+
+    vi.mocked(getWorkspaceFolder).mockReturnValueOnce({
+      uri: Uri.file(projectRoot),
+    } as any)
+
+    vi.mocked(getAnnotations).mockReturnValueOnce({
+      cwd: annotation
+    } as any)
+
+    vi.mocked(fs.stat).mockImplementation((async (p: string) => ({
+      isDirectory: () => existingFolders?.includes(path.normalize(p)),
+    })) as any)
+
+    const cwd = await getCellCwd(
+      { } as any,
+      {
+        metadata: {
+          'runme.dev/frontmatter': {
+            cwd: frontmatter
+          }
+        }
+      } as any,
+      mdFile ? Uri.file(mdFile) : undefined,
+    )
+
+    vi.mocked(fs.stat).mockReset()
+
+    return cwd
+  }
+
+  test('falls back when cwd doesnt exist', async () => {
+    const files = ['/project/folder']
+
+    expect(
+      await testGetCellCwd(undefined, './non_existant', files)
+    ).toStrictEqual('/project/folder')
+  })
+
+  test('no notebook file', async () => {
+    expect(
+      await testGetCellCwd(undefined, undefined, undefined, true)
+    ).toStrictEqual(undefined)
+  })
+
+  test('no frontmatter', async () => {
+    const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt']
+
+    expect(
+      await testGetCellCwd(undefined, undefined, files)
+    ).toStrictEqual(path.dirname(mdFilePath))
+
+    expect(
+      await testGetCellCwd(undefined, '../', files)
+    ).toStrictEqual(path.dirname(path.dirname(mdFilePath)) + '/')
+
+    expect(
+      await testGetCellCwd(undefined, '/opt', files)
+    ).toStrictEqual('/opt')
+  })
+
+  test('absolute frontmatter', async () => {
+    const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt', '/']
+    const frntmtr = '/tmp'
+
+    expect(
+      await testGetCellCwd(frntmtr, undefined, files)
+    ).toStrictEqual('/tmp')
+
+    expect(
+      await testGetCellCwd(frntmtr, '../', files)
+    ).toStrictEqual('/')
+
+    expect(
+      await testGetCellCwd(frntmtr, '/opt', files)
+    ).toStrictEqual('/opt')
+  })
+
+  test('relative frontmatter', async () => {
+    const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt', '/']
+    const frntmtr = '../'
+
+    expect(
+      await testGetCellCwd(frntmtr, undefined, files)
+    ).toStrictEqual(path.dirname(path.dirname(mdFilePath)) + '/')
+
+    expect(
+      await testGetCellCwd(frntmtr, '../', files)
+    ).toStrictEqual('/')
+
+    expect(
+      await testGetCellCwd(frntmtr, '/opt', files)
+    ).toStrictEqual('/opt')
   })
 })

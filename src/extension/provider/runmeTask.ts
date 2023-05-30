@@ -24,7 +24,7 @@ import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
-import { getCellShellPath, parseCommandSeq } from '../executors/utils'
+import { getCellCwd, getCellShellPath, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -118,7 +118,7 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        const cwd = options.cwd || path.dirname(filePath)
+        const cwd = options.cwd || await getCellCwd(cell, notebook, Uri.file(filePath))
 
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
         const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)

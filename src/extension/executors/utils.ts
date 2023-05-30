@@ -1,5 +1,6 @@
 import cp from 'node:child_process'
 import path from 'node:path'
+import fs from 'node:fs/promises'
 
 import {
   NotebookCellOutput,
@@ -9,13 +10,15 @@ import {
   NotebookData,
   NotebookCell,
   NotebookCellData,
-  NotebookDocument,
+  Uri,
+  NotebookDocument
 } from 'vscode'
 
 import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
+import { getAnnotations, getWorkspaceFolder } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -215,6 +218,59 @@ export function getCellShellPath(
   }
 
   return getSystemShellPath(execKey)
+}
+
+export async function getCellCwd(
+  cell: NotebookCell | NotebookCellData | Serializer.Cell,
+  notebook?: NotebookData | NotebookDocument | Serializer.Notebook,
+  notebookFile?: Uri
+): Promise<string | undefined> {
+  let res: string|undefined
+
+  const getParent = (p?: string) => p ? path.dirname(p) : undefined
+
+  const candidates = [
+    getWorkspaceFolder(notebookFile)?.uri.fsPath,
+    getParent(notebookFile?.fsPath),
+    // TODO: support windows here
+    (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
+    getAnnotations(cell.metadata as Serializer.Metadata|undefined).cwd,
+  ]
+
+  for (let candidate of candidates) {
+    if (!candidate) { continue }
+    candidate = resolveOrAbsolute(res, candidate)
+
+    if (candidate) {
+      const folderExists = await fs.stat(
+        candidate).then(
+          (f) => f.isDirectory(),
+          () => false,
+        )
+
+      if (!folderExists) { continue }
+
+      res = candidate
+    }
+  }
+
+  return res
+}
+
+function resolveOrAbsolute(parent?: string, child?: string): string|undefined {
+	if (!child) {
+		return parent
+	}
+
+	if (path.isAbsolute(child)) {
+		return child
+	}
+
+	if (parent) {
+		return path.join(parent, child)
+	}
+
+	return child
 }
 
 /**
