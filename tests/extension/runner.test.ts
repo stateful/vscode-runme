@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter, NotebookCellKind, Position, tasks, commands } from 'vscode'
+import { EventEmitter, NotebookCellKind, Position, tasks, commands, EndOfLine } from 'vscode'
 
 import {
   GrpcRunner,
@@ -560,16 +560,43 @@ suite('RunmeCodeLensProvider', () => {
   })
 
   test('returns serializer result normally', async () => {
+    const textParts = [
+      '```sh\n',
+      'echo "Hello World!"\n```',
+      '\n\n',
+      '🔥'.repeat(20),
+      '🔥'.repeat(20),
+      '🔥'.repeat(20),
+      '🔥'.repeat(20),
+      '\n\n',
+      '```sh\n',
+      'echo "Hello World!"',
+      '\n```',
+    ]
+
+    const block1Start = textParts.slice(0, 1).join('')
+    const block1End = textParts.slice(0, 2).join('')
+
+    const block2Start = textParts.slice(0, 9).join('')
+    const block2End = textParts.slice(0, 10).join('')
+
     const serializer = {
       reviveNotebook: vi.fn(async () => ({
         cells: [
           {
             kind: NotebookCellKind.Code,
             textRange: {
-              start: 2,
-              end: 3,
+              start: Buffer.from(block1Start, 'utf-8').length,
+              end: Buffer.from(block1End, 'utf-8').length,
             }
-          }
+          },
+          {
+            kind: NotebookCellKind.Code,
+            textRange: {
+              start: Buffer.from(block2Start, 'utf-8').length,
+              end: Buffer.from(block2End, 'utf-8').length,
+            }
+          },
         ]
       }))
     } as any
@@ -578,7 +605,8 @@ suite('RunmeCodeLensProvider', () => {
 
     const lenses = await provider.provideCodeLenses(
       {
-        getText: vi.fn().mockReturnValue(''),
+        eol: EndOfLine.LF,
+        getText: vi.fn().mockReturnValue(textParts.join('')),
         positionAt: vi.fn((c) => new Position(1, c)),
       } as any,
       {} as any
@@ -586,18 +614,37 @@ suite('RunmeCodeLensProvider', () => {
 
     expect(serializer.reviveNotebook).toBeCalledTimes(1)
 
-    expect(lenses).toHaveLength(2)
+    expect(lenses).toHaveLength(4)
 
-    for (const lens of lenses) {
-      expect(lens.range.start.character).toStrictEqual(2)
-      expect(lens.range.end.character).toStrictEqual(3)
+    lenses.forEach((lens, i) => {
+      switch (i) {
+        case 0: {
+          const line = block1Start.split('\n').length - 2
+
+          expect(lens.range.start.line).toStrictEqual(line)
+          expect(lens.range.start.character).toStrictEqual(0)
+
+          expect(lens.range.end.line).toStrictEqual(line)
+          expect(lens.range.end.character).toStrictEqual(0)
+        } break
+
+        case 2: {
+          const line = block2Start.split('\n').length - 2
+
+          expect(lens.range.start.line).toStrictEqual(line)
+          expect(lens.range.start.character).toStrictEqual(0)
+
+          expect(lens.range.end.line).toStrictEqual(line)
+          expect(lens.range.end.character).toStrictEqual(0)
+        } break
+      }
 
       expect(lens.command).toBeTruthy()
 
       expect(lens.command!.command).toStrictEqual(ActionCommand)
 
       expect(lens.command!.tooltip).toBeUndefined()
-    }
+    })
   })
 
   test('action callback for run command', async () => {
