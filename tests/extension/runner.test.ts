@@ -581,20 +581,24 @@ suite('RunmeCodeLensProvider', () => {
     const block2End = textParts.slice(0, 10).join('')
 
     const serializer = {
-      reviveNotebook: vi.fn(async () => ({
+      deserializeNotebook: vi.fn(async () => ({
         cells: [
           {
             kind: NotebookCellKind.Code,
-            textRange: {
-              start: Buffer.from(block1Start, 'utf-8').length,
-              end: Buffer.from(block1End, 'utf-8').length,
+            metadata: {
+              'runme.dev/textRange': {
+                start: Buffer.from(block1Start, 'utf-8').length,
+                end: Buffer.from(block1End, 'utf-8').length,
+              }
             }
           },
           {
             kind: NotebookCellKind.Code,
-            textRange: {
-              start: Buffer.from(block2Start, 'utf-8').length,
-              end: Buffer.from(block2End, 'utf-8').length,
+            metadata: {
+              'runme.dev/textRange': {
+                start: Buffer.from(block2Start, 'utf-8').length,
+                end: Buffer.from(block2End, 'utf-8').length,
+              }
             }
           },
         ]
@@ -612,7 +616,7 @@ suite('RunmeCodeLensProvider', () => {
       {} as any
     )
 
-    expect(serializer.reviveNotebook).toBeCalledTimes(1)
+    expect(serializer.deserializeNotebook).toBeCalledTimes(1)
 
     expect(lenses).toHaveLength(4)
 
@@ -650,7 +654,7 @@ suite('RunmeCodeLensProvider', () => {
   test('action callback for run command', async () => {
     const provider = createCodeLensProvider({}, {} as any)
 
-    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, 0, 'run')
+    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, {} as any, 0, 'run')
 
     expect(RunmeTaskProvider.getRunmeTask).toBeCalledTimes(1)
 
@@ -667,7 +671,7 @@ suite('RunmeCodeLensProvider', () => {
 
     vi.mocked(isWindows).mockReturnValueOnce(true)
 
-    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, 0, 'run')
+    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, {} as any, 0, 'run')
 
     expect(isWindows).toBeCalledTimes(1)
     expect(provider['surveyWinCodeLensRun']['prompt']).toBeCalledTimes(1)
@@ -679,7 +683,7 @@ suite('RunmeCodeLensProvider', () => {
     const provider = createCodeLensProvider()
 
     const document = { uri: { fsPath: '' } }
-    await provider['codeLensActionCallback'](document as any, {} as any, {} as any, 0, 'open')
+    await provider['codeLensActionCallback'](document as any, {} as any, {} as any, {} as any, 0, 'open')
 
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', document.uri, 'runme')
   })

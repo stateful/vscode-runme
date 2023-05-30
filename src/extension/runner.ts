@@ -21,7 +21,7 @@ import {
   Winsize,
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
-import { getShellPath } from './executors/utils'
+import { getSystemShellPath } from './executors/utils'
 import RunmeServer from './server/runmeServer'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
@@ -274,7 +274,7 @@ export class GrpcRunner implements IRunner {
       .map(([key, val]) => `export ${key}=${val ?? ''}`)
 
     const program = await this.createProgramSession({
-      programName: shellPath ?? getShellPath() ?? 'sh',
+      programName: shellPath ?? getSystemShellPath() ?? 'sh',
       environment,
       exec: {
         type: 'commands',

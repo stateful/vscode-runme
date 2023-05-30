@@ -4,7 +4,12 @@ import { window } from 'vscode'
 import { expect, vi, test, suite, beforeEach } from 'vitest'
 
 import { ENV_STORE } from '../../../src/extension/constants'
-import { retrieveShellCommand, parseCommandSeq } from '../../../src/extension/executors/utils'
+import {
+  retrieveShellCommand,
+  parseCommandSeq,
+  getCellShellPath,
+  getSystemShellPath
+} from '../../../src/extension/executors/utils'
 import { getCmdSeq } from '../../../src/extension/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -321,5 +326,17 @@ suite('parseCommandSeq', () => {
       ],
       'echo $TEST_MULTILINE'
     ])
+  })
+})
+
+suite('getCellShellPath', () => {
+  test('respects frontmatter', () => {
+    const shellPath = getCellShellPath({ } as any, { metadata: { 'runme.dev/frontmatter': { shell: 'fish' }} } as any)
+    expect(shellPath).toStrictEqual('fish')
+  })
+
+  test('fallback to system shell', () => {
+    const shellPath = getCellShellPath({ } as any, { } as any)
+    expect(shellPath).toStrictEqual(getSystemShellPath())
   })
 })
