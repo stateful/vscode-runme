@@ -90,6 +90,7 @@ export const window = {
   onDidCloseTerminal: vi.fn(),
   withProgress: vi.fn(),
   onDidChangeActiveColorTheme: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  showInputBox: vi.fn(),
 }
 
 export const tasks = {

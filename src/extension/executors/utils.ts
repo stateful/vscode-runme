@@ -238,6 +238,7 @@ export async function getCellCwd(
   ]
 
   for (let candidate of candidates) {
+    if (!candidate) { continue }
     candidate = resolveOrAbsolute(res, candidate)
 
     if (candidate) {
