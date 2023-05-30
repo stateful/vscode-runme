@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import {
   NotebookCellOutputItem,
   NotebookCellOutput,
@@ -37,7 +35,7 @@ import { toggleTerminal } from '../commands'
 import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
-import { getCellShellPath, parseCommandSeq } from './utils'
+import { getCellShellPath, parseCommandSeq, getCellCwd } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 import type { IEnvironmentManager } from '.'
@@ -78,7 +76,7 @@ export async function executeRunner(
     }
   }
 
-  const cwd = path.dirname(runningCell.uri.fsPath)
+  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
 
   const RUNME_ID = getCellRunmeId(exec.cell)
 

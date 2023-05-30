@@ -9,10 +9,10 @@ import {
   NotebookData,
   NotebookCell,
   NotebookCellData,
-  NotebookDocument,
   Uri,
   workspace,
-  FileType
+  FileType,
+  NotebookDocument
 } from 'vscode'
 
 import { ENV_STORE } from '../constants'
@@ -222,8 +222,8 @@ export function getCellShellPath(
 }
 
 export async function getCellCwd(
-  cell: NotebookCell | NotebookCellData,
-  notebook?: NotebookData,
+  cell: NotebookCell | NotebookCellData | Serializer.Cell,
+  notebook?: NotebookData | NotebookDocument,
   notebookFile?: Uri
 ): Promise<string | undefined> {
   let res: string|undefined
@@ -231,7 +231,7 @@ export async function getCellCwd(
   const getParent = (p?: string) => p ? path.dirname(p) : undefined
 
   const candidates = [
-    getParent(getWorkspaceFolder(notebookFile)?.uri.fsPath),
+    getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
     (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
     (cell?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
