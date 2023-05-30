@@ -61,6 +61,10 @@ export const AnnotationSchema = {
             return true
         }, 'mime type specification invalid format')
         .default('text/plain'),
+    cwd: z
+      .string()
+      .nonempty()
+      .optional()
 }
 
 export const SafeCellAnnotationsSchema = z.object({

@@ -1,5 +1,6 @@
 import cp from 'node:child_process'
 import path from 'node:path'
+import fs from 'node:fs/promises'
 
 import {
   NotebookCellOutput,
@@ -10,8 +11,6 @@ import {
   NotebookCell,
   NotebookCellData,
   Uri,
-  workspace,
-  FileType,
   NotebookDocument
 } from 'vscode'
 
@@ -19,7 +18,7 @@ import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
-import { getWorkspaceFolder } from '../utils'
+import { getAnnotations, getWorkspaceFolder } from '../utils'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -233,17 +232,18 @@ export async function getCellCwd(
   const candidates = [
     getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
+    // TODO: support windows here
     (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
-    (cell?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
+    getAnnotations(cell.metadata as Serializer.Metadata|undefined).cwd,
   ]
 
   for (let candidate of candidates) {
     candidate = resolveOrAbsolute(res, candidate)
 
     if (candidate) {
-      const folderExists = await workspace.fs.stat(
-        Uri.file(candidate)).then(
-          (f) => f.type === FileType.Directory,
+      const folderExists = await fs.stat(
+        candidate).then(
+          (f) => f.isDirectory(),
           () => false,
         )
 
