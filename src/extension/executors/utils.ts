@@ -223,7 +223,7 @@ export function getCellShellPath(
 
 export async function getCellCwd(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
-  notebook?: NotebookData | NotebookDocument,
+  notebook?: NotebookData | NotebookDocument | Serializer.Notebook,
   notebookFile?: Uri
 ): Promise<string | undefined> {
   let res: string|undefined
