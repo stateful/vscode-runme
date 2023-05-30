@@ -11,6 +11,7 @@ export namespace Serializer {
   export type Notebook = {
     cells: Cell[]
     metadata?: Metadata
+    frontmatter?: Grpc.Frontmatter
   }
 
   export type Cell = Omit<Grpc.Cell, 'kind'|'metadata'|'languageId'> & {
@@ -38,6 +39,7 @@ export namespace Serializer {
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState
+    ['runme.dev/frontmatter']?: Grpc.Frontmatter
   }
 }
 
