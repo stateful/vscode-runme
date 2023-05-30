@@ -585,16 +585,20 @@ suite('RunmeCodeLensProvider', () => {
         cells: [
           {
             kind: NotebookCellKind.Code,
-            textRange: {
-              start: Buffer.from(block1Start, 'utf-8').length,
-              end: Buffer.from(block1End, 'utf-8').length,
+            metadata: {
+              'runme.dev/textRange': {
+                start: Buffer.from(block1Start, 'utf-8').length,
+                end: Buffer.from(block1End, 'utf-8').length,
+              }
             }
           },
           {
             kind: NotebookCellKind.Code,
-            textRange: {
-              start: Buffer.from(block2Start, 'utf-8').length,
-              end: Buffer.from(block2End, 'utf-8').length,
+            metadata: {
+              'runme.dev/textRange': {
+                start: Buffer.from(block2Start, 'utf-8').length,
+                end: Buffer.from(block2End, 'utf-8').length,
+              }
             }
           },
         ]
