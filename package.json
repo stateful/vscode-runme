@@ -257,7 +257,8 @@
       "notebook/cell/execute": [
         {
           "command": "runme.runCellCategory",
-          "group": "navigation"
+          "group": "navigation",
+          "when": "notebookType == runme && notebookHasCategories"
         }
       ]
     },

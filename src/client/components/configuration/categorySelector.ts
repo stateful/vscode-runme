@@ -12,32 +12,19 @@ export class CategorySelector extends LitElement {
     .category-selector-form {
         display: flex;
         align-items:flex-end;
-        max-width:650px;
+        max-width:630px;
     }
 
     :host([appearance="secondary"]) {
         background: red;
     }
 
-    .category-item {
-        min-width: 200px;
+    label {
+        font-size:var(--notebook-cell-output-font-size);
     }
 
-    .dropdown-container {
-        box-sizing: border-box;
-        display: flex;
-        flex-flow: row nowrap;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-    .dropdown-container label {
-        display: block;
-        color: var(--vscode-foreground);
-        cursor: pointer;
-        padding: 0.4rem;
-        font-size: var(--vscode-font-size);
-        line-height: normal;
-        margin-bottom: 2px;
+    .category-item {
+        min-width: 200px;
     }
 
     .category-item::part(control) {
@@ -58,6 +45,7 @@ export class CategorySelector extends LitElement {
     }
     .row {
         width: 100%;
+        margin-right:0.5rem;
     }
     .category-item::part(control) {
         background-color: var(--theme-input-background);
@@ -81,12 +69,26 @@ export class CategorySelector extends LitElement {
         color: var(--vscode-foreground);
     }
 
-    @media only screen and (max-width: 600px) {
-        .category-selector-form {
-            flex-direction:column;
-        }
+    .category-button {
+        color: var(--vscode-button-foreground);
+        margin-bottom: 0.2rem;
+        margin-right: 0.5rem;
     }
 
+    .primary {
+        background-color:var(--vscode-button-background);
+    }
+
+    @media only screen and (max-width: 630px) {
+        .category-selector-form {
+            flex-direction:column;
+            margin-left:0.5rem;
+        }
+
+        .category-button {
+            margin-top:0.5rem;
+        }
+    }
     `
 
     @property({ type: String })
@@ -153,15 +155,15 @@ export class CategorySelector extends LitElement {
                 ${when(this.categories.length, 
                     () => html`
                     <vscode-button 
-                        style="color: var(--vscode-button-foreground);
-                        background-color:var(--vscode-button-background);"
+                        class="category-button primary"
                         @click="${this.onSelectCategory}">
-                        ${this.selectCategoryText}
+                        <label>${this.selectCategoryText}</label>
                     </vscode-button>`, () => html``)}
-                    <vscode-button appearance="secondary"
-                            style="color: var(--vscode-button-foreground);"
-                            @click="${this.onCreateNewCategory}">
-                        ${this.createNewCategoryText}
+                    <vscode-button
+                        appearance="secondary"
+                        class="category-button"
+                        @click="${this.onCreateNewCategory}">
+                        <label>${this.createNewCategoryText}</label>
                     </vscode-button>
                 </div>
             </div>    
