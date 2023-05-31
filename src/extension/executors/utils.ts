@@ -207,7 +207,7 @@ export function getCellShellPath(
 ): string|undefined {
   const notebookMetadata = notebook.metadata as Serializer.Metadata|undefined
 
-  const frontmatter = notebookMetadata?.['runme.dev/frontmatter']
+  const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
 
   if (frontmatter?.shell) {
     return frontmatter.shell
@@ -233,7 +233,7 @@ export async function getCellCwd(
     getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
     // TODO: support windows here
-    (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatter']?.cwd,
+    (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatterParsed']?.cwd,
     getAnnotations(cell.metadata as Serializer.Metadata|undefined).cwd,
   ]
 

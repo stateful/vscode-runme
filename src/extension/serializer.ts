@@ -196,7 +196,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     notebook.metadata ??= {}
-    notebook.metadata['runme.dev/frontmatter'] = notebook.frontmatter
+    notebook.metadata['runme.dev/frontmatterParsed'] = notebook.frontmatter
 
     const notebookData = new NotebookData(SerializerBase.revive(notebook))
     if (notebook.metadata) {
