@@ -334,7 +334,9 @@ suite('parseCommandSeq', () => {
 
 suite('getCellShellPath', () => {
   test('respects frontmatter', () => {
-    const shellPath = getCellShellPath({ } as any, { metadata: { 'runme.dev/frontmatter': { shell: 'fish' }} } as any)
+    const shellPath = getCellShellPath({ } as any, {
+      metadata: { 'runme.dev/frontmatterParsed': { shell: 'fish' }
+    } } as any)
     expect(shellPath).toStrictEqual('fish')
   })
 
@@ -372,7 +374,7 @@ suite('getCellCwd', () => {
       { } as any,
       {
         metadata: {
-          'runme.dev/frontmatter': {
+          'runme.dev/frontmatterParsed': {
             cwd: frontmatter
           }
         }
