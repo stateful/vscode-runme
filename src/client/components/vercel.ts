@@ -111,7 +111,7 @@ export class VercelOutput extends LitElement {
           uuid: this.content.payload.uuid,
           outputType: OutputType.vercel
         })
-      }}" />
+      }}"></close-cell-button>
     </section>`
   }
 

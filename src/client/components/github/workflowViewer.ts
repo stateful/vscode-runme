@@ -218,7 +218,7 @@ export class WorkflowViewer extends LitElement {
             uuid: this.state.cellId!,
             outputType: OutputType.github
           })
-        }}" />
+        }}"></close-cell-button>
       </div>
       `
     }
@@ -232,7 +232,7 @@ export class WorkflowViewer extends LitElement {
           uuid: this.state.cellId!,
           outputType: OutputType.github
         })
-      }}" />
+      }}"></close-cell-button>
     </div>`
   }
 

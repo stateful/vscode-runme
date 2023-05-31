@@ -50,7 +50,7 @@ export class ShellOutputItems extends LitElement {
           uuid: this.uuid!,
           outputType: OutputType.outputItems
         })
-      }}" />
+      }}"></close-cell-button>
       <vscode-button appearance="secondary" @click="${this.#copy}">
         <svg
           class="icon" width="16" height="16" viewBox="0 0 16 16"
