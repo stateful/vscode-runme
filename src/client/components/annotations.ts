@@ -258,7 +258,7 @@ export class Annotations extends LitElement {
           uuid: (this.annotations && this.annotations['runme.dev/uuid']) || '',
           outputType: OutputType.annotations
         })
-      } }" />
+      } }"></close-cell-button>
       ${when(
       errorCount,
       () => html`<p class="error-item">This configuration block contains errors, using the default values instead</p>`,

@@ -532,7 +532,7 @@ export class TerminalView extends LitElement {
           uuid: this.uuid!,
           outputType: OutputType.terminal
         })
-      }}" />
+      }}"></close-cell-button>
       <div class="button-group">
         <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
           <svg
