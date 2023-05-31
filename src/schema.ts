@@ -45,6 +45,7 @@ export const AnnotationSchema = {
     interactive: boolify(true),
     closeTerminalOnSuccess: boolify(true),
     promptEnv: boolify(true),
+    excludeFromRunAll: boolify(false),
     name: z.preprocess(
         (value) =>
             typeof value === 'string' ?
@@ -62,9 +63,16 @@ export const AnnotationSchema = {
         }, 'mime type specification invalid format')
         .default('text/plain'),
     cwd: z
-      .string()
-      .nonempty()
-      .optional()
+        .string()
+        .nonempty()
+        .optional(),
+    category: z
+        .preprocess(
+            (value) =>
+                typeof value === 'string' ?
+                    cleanAnnotation(value, ',') :
+                    value,
+            z.string().default('')),
 }
 
 export const SafeCellAnnotationsSchema = z.object({

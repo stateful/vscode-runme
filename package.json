@@ -149,7 +149,19 @@
         "title": "Authenticate Runme with GitHub",
         "category": "Runme",
         "description": "Give access to Runme to interact with GitHub API"
-      }
+      },
+      {
+        "command": "runme.runCategory",
+        "category": "Runme",
+        "title": "Run by Category",
+        "icon": "$(group-by-ref-type)"
+      },
+      {
+        "command": "runme.runCellCategory",
+        "category": "Runme",
+        "title": "Run cells with the same Category",
+        "icon": "$(group-by-ref-type)"
+      } 
     ],
     "menus": {
       "commandPalette": [
@@ -188,6 +200,14 @@
         {
           "command": "runme.file.openInRunme",
           "when": "false"
+        },
+        {
+          "command": "runme.runCategory",
+          "when": "false"
+        },
+        {
+          "command": "runme.runCellCategory",
+          "when": "false"
         }
       ],
       "editor/title": [
@@ -225,6 +245,20 @@
           "command": "runme.file.openInRunme",
           "when": "resourceLangId == markdown",
           "group": "navigation@30"
+        }
+      ],
+      "notebook/toolbar": [
+        {
+          "command": "runme.runCategory",
+          "when": "notebookType == runme && notebookHasCategories",
+          "group": "navigation"
+        }
+      ],
+      "notebook/cell/execute": [
+        {
+          "command": "runme.runCellCategory",
+          "group": "navigation",
+          "when": "notebookType == runme && notebookHasCategories"
         }
       ]
     },

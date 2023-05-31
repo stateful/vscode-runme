@@ -12,6 +12,7 @@ vi.mock('../../src/extension/utils', () => ({
   resetEnv: vi.fn(),
   getKey: vi.fn().mockReturnValue('foobar'),
   getAnnotations: vi.fn((cell) => cell.metadata),
+  getNotebookCategories: vi.fn().mockResolvedValue([])
 }))
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() },
@@ -19,7 +20,7 @@ vi.mock('../../src/extension/executors/index.js', () => ({
 }))
 vi.mock('../../src/extension/runner', () => ({}))
 
-const getCells = (cnt: number) => ([...new Array(cnt)]).map((_, i) => ({
+const getCells = (cnt: number, metadata: Record<string, any> = {}) => ([...new Array(cnt)]).map((_, i) => ({
   document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },
   notebook: {
     getCells: vi.fn().mockReturnValue(
@@ -27,7 +28,8 @@ const getCells = (cnt: number) => ([...new Array(cnt)]).map((_, i) => ({
     )
   },
   metadata: {
-    'runme.dev/name': `Cell #${i}`
+    'runme.dev/name': `Cell #${i}`,
+    ...metadata
   }
 }) as any as NotebookCell)
 
@@ -119,7 +121,52 @@ suite('_executeAll', async () => {
       { 'cells.executed': '10', 'cells.total': '10' }
     )
   })
+
+  test('does not runs any cells for non-existent cell category', async () => {
+    window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
+    const k = new Kernel({} as any)
+    k.setCategory('shell scripts')
+    k['_doExecuteCell'] = vi.fn()
+    await k['_executeAll'](getCells(10).slice(0, 5))
+    expect(k['_doExecuteCell']).toBeCalledTimes(0)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '0', 'cells.total': '10' }
+    )
+  })
+
+  test('does runs cells for specific cell category', async () => {
+    window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
+    const k = new Kernel({} as any)
+    k.setCategory('shell scripts')
+    k['_doExecuteCell'] = vi.fn()
+    const cellsFromCategory = getCells(2, { category: 'shell scripts' }).concat(getCells(5))
+    await k['_executeAll'](cellsFromCategory)
+    expect(k['_doExecuteCell']).toBeCalledTimes(2)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '2', 'cells.total': '10' }
+    )
+  })
+
+  test('does runs cells for specific cell category and skip cells with excludeFromRunAll', async () => {
+    window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
+    const k = new Kernel({} as any)
+    k.setCategory('shell scripts')
+    k['_doExecuteCell'] = vi.fn()
+    const cellsFromCategory = getCells(2, { category: 'shell scripts', excludeFromRunAll: true })
+      .concat(getCells(1, { category: 'shell scripts' }))
+      .concat(getCells(1))
+    await k['_executeAll'](cellsFromCategory)
+    expect(k['_doExecuteCell']).toBeCalledTimes(1)
+    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
+      'cells.executeAll',
+      { 'cells.executed': '1', 'cells.total': '10' }
+    )
+  })
 })
+
+
 
 test('_doExecuteCell', async () => {
   const k = new Kernel({} as any)
@@ -129,7 +176,7 @@ test('_doExecuteCell', async () => {
     end: vi.fn(),
     underlyingExecution: vi.fn(),
   })
-  k.getCellOutputs = vi.fn().mockResolvedValue({ })
+  k.getCellOutputs = vi.fn().mockResolvedValue({})
 
   await k['_doExecuteCell']({
     document: { uri: { fsPath: '/foo/bar' } },

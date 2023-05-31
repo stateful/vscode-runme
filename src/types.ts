@@ -1,4 +1,4 @@
-import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions } from 'vscode'
+import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions, Uri, ExtensionContext } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -6,6 +6,7 @@ import { SafeCellAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
 import { IWorkflowRun } from './extension/services/types'
+import { Kernel } from './extension/kernel'
 
 export namespace Serializer {
   export type Notebook = {
@@ -14,7 +15,7 @@ export namespace Serializer {
     frontmatter?: Grpc.Frontmatter
   }
 
-  export type Cell = Omit<Grpc.Cell, 'kind'|'metadata'|'languageId'> & {
+  export type Cell = Omit<Grpc.Cell, 'kind' | 'metadata' | 'languageId'> & {
     metadata?: Metadata
     kind: NotebookCellKind
     languageId?: string
@@ -50,8 +51,8 @@ export interface ICellOutput<T extends OutputType> {
 }
 
 export type CellOutputPayload<T extends OutputType> = T extends any
-    ? ICellOutput<T>
-    : never
+  ? ICellOutput<T>
+  : never
 
 export type CellOutput = CellOutputPayload<OutputType>
 
@@ -100,7 +101,7 @@ interface Payload {
   [OutputType.github]?: GitHubState
 }
 
-export type ClientMessage <T extends ClientMessages> = T extends any ? {
+export type ClientMessage<T extends ClientMessages> = T extends any ? {
   type: T
   output: ClientMessagePayload[T]
 } : never
@@ -120,11 +121,11 @@ export interface ClientMessagePayload {
   [ClientMessages.errorMessage]: string
   [ClientMessages.terminalStdout]: {
     ['runme.dev/uuid']: string
-    data: Uint8Array|string
+    data: Uint8Array | string
   }
   [ClientMessages.terminalStderr]: {
     ['runme.dev/uuid']: string
-    data: Uint8Array|string
+    data: Uint8Array | string
   }
   [ClientMessages.terminalStdin]: {
     ['runme.dev/uuid']: string
@@ -145,6 +146,25 @@ export interface ClientMessagePayload {
     uuid: string
     outputType: OutputType
   }
+  [ClientMessages.displayPrompt]: {
+    placeholder: string
+    isSecret: boolean
+    title: string
+    uuid: string
+  }
+  [ClientMessages.onPrompt]: {
+    answer: string | undefined
+    uuid: string
+  }
+  [ClientMessages.onPickerOption]: {
+    option: string | undefined
+    uuid: string
+  }
+  [ClientMessages.displayPicker]: {
+    options: string[]
+    title: string
+    uuid: string
+  }
   [ClientMessages.githubWorkflowDispatch]: {
     inputs: Record<string, string>
     repo: string
@@ -163,6 +183,20 @@ export interface ClientMessagePayload {
   [ClientMessages.githubWorkflowStatusUpdate]: {
     workflowRun?: IWorkflowRun
     cellId: string
+  }
+  [ClientMessages.setState]: {
+    state: string
+    value: string[]
+    uuid: string
+  }
+  [ClientMessages.getState]: {
+    state: string
+    uuid: string
+  }
+  [ClientMessages.onGetState]: {
+    state: string
+    value: string | string[]
+    uuid: string
   }
 }
 
@@ -202,4 +236,15 @@ export interface DisposableAsync {
 
 export interface RunmeTerminal extends Terminal {
   runnerSession?: IRunnerProgramSession
+}
+
+export interface NotebookToolbarCommand {
+  context: ExtensionContext
+  kernel: Kernel
+  notebookToolbarCommand: {
+    ui: boolean
+    notebookEditor: {
+      notebookUri: Uri
+    }
+  }
 }

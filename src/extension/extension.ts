@@ -1,4 +1,3 @@
-
 import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -24,7 +23,9 @@ import {
   tryIt,
   openFileInRunme,
   openIntegratedTerminal,
-  authenticateWithGitHub
+  authenticateWithGitHub,
+  displayCategoriesSelector,
+  runCellsByCategory
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -122,6 +123,10 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+      RunmeExtension.registerCommand('runme.runCategory', (notebook) => {
+        return displayCategoriesSelector({ context, kernel, notebookToolbarCommand: notebook })
+      }),
+      RunmeExtension.registerCommand('runme.runCellCategory', (cell) => runCellsByCategory(cell, kernel)),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
