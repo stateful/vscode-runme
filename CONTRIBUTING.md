@@ -130,6 +130,12 @@ To test the project, run:
 npm run test
 ```
 
+### Release
+
+```sh
+https://github.com/stateful/vscode-runme/actions/workflows/release.yml
+```
+
 ### Commit messages
 
 Your commit messages ideally can answer two questions: what changed and why. The subject line should feature the “what” and the body of the commit should describe the “why”.
