@@ -34,7 +34,6 @@ export class Annotations extends LitElement {
     .annotation-container {
       padding: 1rem;
       border: 1px solid var(--vscode-focusBorder);
-      border-radius: 5px;
       display: flex;
       flex-direction: column;
       align-items: flex-start;

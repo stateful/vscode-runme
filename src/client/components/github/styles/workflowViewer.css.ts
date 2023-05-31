@@ -18,7 +18,6 @@ export default /*css*/css`
 
 .github-workflow-item-container {
     border: 1px solid var(--vscode-focusBorder);
-    border-radius: 5px;
     position: relative;
 }
 

@@ -75,6 +75,10 @@ export class CategorySelector extends LitElement {
         margin-right: 0.5rem;
     }
 
+    .category-button label {
+        cursor: pointer;
+    }
+
     .primary {
         background-color:var(--vscode-button-background);
     }

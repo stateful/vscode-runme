@@ -23,7 +23,6 @@ export class VercelOutput extends LitElement {
     section {
       padding: 10px;
       border: 1px solid #444;
-      border-radius: 5px;
       display: flex;
       flex-direction: row;
       gap: 50px;
