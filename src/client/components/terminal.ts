@@ -54,7 +54,6 @@ export class TerminalView extends LitElement {
       user-select: none;
       -ms-user-select: none;
       -webkit-user-select: none;
-      border-radius: 5px;
     }
 
     .xterm.focus,
