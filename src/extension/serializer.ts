@@ -13,8 +13,8 @@ import {
   NotebookEdit,
   NotebookDocumentChangeEvent,
   Disposable,
-  NotebookDocument,
   CancellationTokenSource,
+  NotebookDocumentWillSaveEvent,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -48,8 +48,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       workspace.onDidChangeNotebookDocument(
         this.handleNotebookChanged.bind(this)
       ),
-      workspace.onDidSaveNotebookDocument(
-        this.handleNotebookSaved.bind(this)
+      workspace.onWillSaveNotebookDocument(
+        this.handleNotebookWillSave.bind(this)
       )
     )
   }
@@ -85,30 +85,44 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     })
   }
 
-  protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
-    // update changes in metadata
-    const bytes = await workspace.fs.readFile(uri)
-    const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
+  protected async handleNotebookWillSave({ notebook, waitUntil }: NotebookDocumentWillSaveEvent) {
+    const { uri, cellAt } = notebook
 
-    const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
-      if (!updatedName) {
+    const handle = async () => {
+      // update changes in metadata
+      const bytes = await workspace.fs.readFile(uri)
+      const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
+
+      const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
+        const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
+        if (!updatedName) {
+          return []
+        }
+
+        const oldCell = cellAt(i)
+        const oldMetadata = oldCell.metadata as Serializer.Metadata
+
+        if (oldMetadata['runme.dev/name'] !== updatedName) {
+          return [
+            NotebookEdit.updateCellMetadata(i, {
+              ...oldCell.metadata || {},
+              'runme.dev/name': updatedName,
+            } as Serializer.Metadata)
+          ]
+        }
+
         return []
+      })
+
+      if (notebookEdits.length > 0) {
+        const edit = new WorkspaceEdit()
+        edit.set(uri, notebookEdits)
+
+        await workspace.applyEdit(edit)
       }
+    }
 
-      const oldCell = cellAt(i)
-      return [
-        NotebookEdit.updateCellMetadata(i, {
-          ...oldCell.metadata || {},
-          'runme.dev/name': updatedName,
-        } as Serializer.Metadata)
-      ]
-    })
-
-    const edit = new WorkspaceEdit()
-    edit.set(uri, notebookEdits)
-
-    await workspace.applyEdit(edit)
+    waitUntil(handle())
   }
 
   public static addCellUuid(
