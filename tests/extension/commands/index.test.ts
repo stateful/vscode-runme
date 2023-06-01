@@ -13,6 +13,7 @@ import {
   ViewColumn,
   NotebookCellData,
   Uri,
+  ExtensionContext,
 } from 'vscode'
 
 import {
@@ -25,7 +26,8 @@ import {
   createNewRunmeNotebook,
   welcome,
   tryIt,
-  openFileInRunme
+  openFileInRunme,
+  addToRecommendedExtensions
 } from '../../../src/extension/commands'
 import { getTerminalByCell, getAnnotations, openFileAsRunmeNotebook } from '../../../src/extension/utils'
 import {
@@ -33,6 +35,7 @@ import {
   getCLIUseIntegratedRunme,
   isNotebookTerminalEnabledForCell
 } from '../../../src/utils/configuration'
+import { RecommendExtensionMessage } from '../../../src/extension/messaging'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('vscode-telemetry')
@@ -70,7 +73,7 @@ beforeEach(() => {
 })
 
 test('openTerminal without notebook terminal', () => {
-  const func = toggleTerminal({ } as any, false)
+  const func = toggleTerminal({} as any, false)
 
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(false)
   vi.mocked(getAnnotations).mockReturnValueOnce(({ interactive: true } as any))
@@ -123,7 +126,7 @@ suite('runCliCommand', () => {
   test('runs command when not dirty, using index', async () => {
     const cell: any = {
       metadata: { name: 'foobar' },
-      document: { uri: { fsPath: '/foo/bar/README.md' }},
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
       kind: 1
     }
 
@@ -148,7 +151,7 @@ suite('runCliCommand', () => {
   test('uses integrated runme if config set', async () => {
     const cell: any = {
       metadata: { name: 'foobar' },
-      document: { uri: { fsPath: '/foo/bar/README.md' }},
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
       kind: 1
     }
 
@@ -169,7 +172,7 @@ suite('runCliCommand', () => {
   test('prompts user when dirty and fails if cancelled or closed', async () => {
     const cell: any = {
       metadata: { name: 'foobar' },
-      document: { uri: { fsPath: '/foo/bar/README.md' }},
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
       kind: 1
     }
 
@@ -205,12 +208,12 @@ suite('runCliCommand', () => {
 
 test('open markdown as Runme notebook', (file: NotebookDocument) => {
   openAsRunmeNotebook(file)
-  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined})
+  expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined })
 })
 
 test('open Runme notebook in text editor', (file: TextDocument) => {
   openSplitViewAsMarkdownText(file)
-  expect(window.showTextDocument).toBeCalledWith(file, {viewColumn: ViewColumn.Beside})
+  expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside })
 })
 
 test('stopBackgroundTask if terminal exists', () => {
@@ -264,7 +267,7 @@ beforeEach(() => {
 test('openFileInRunme command', async () => {
   vi.mocked(openFileAsRunmeNotebook).mockClear()
 
-  const uri = { } as any
+  const uri = {} as any
   await openFileInRunme(uri)
 
   expect(openFileAsRunmeNotebook).toHaveBeenCalledOnce()
@@ -274,11 +277,23 @@ test('openFileInRunme command', async () => {
 test('openFileInRunme command multiselect', async () => {
   vi.mocked(openFileAsRunmeNotebook).mockClear()
 
-  const uri = { } as any
-  const uri2 = { } as any
-  await openFileInRunme(uri, [ uri, uri2 ])
+  const uri = {} as any
+  const uri2 = {} as any
+  await openFileInRunme(uri, [uri, uri2])
 
   expect(openFileAsRunmeNotebook).toBeCalledTimes(2)
   expect(openFileAsRunmeNotebook).toBeCalledWith(uri, 0, [uri, uri2])
   expect(openFileAsRunmeNotebook).toBeCalledWith(uri2, 1, [uri, uri2])
+})
+
+test('addToRecommendedExtensions command', async () => {
+  const recommendExtensionSpy = vi.spyOn(RecommendExtensionMessage.prototype, 'display')
+  const contextMock: ExtensionContext = {
+    globalState: {
+      get: vi.fn().mockReturnValue(undefined),
+      update: vi.fn().mockResolvedValue({}),
+    }
+  } as any
+  await addToRecommendedExtensions(contextMock)
+  expect(recommendExtensionSpy).toHaveBeenCalledOnce()
 })

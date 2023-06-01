@@ -112,7 +112,7 @@ export const LANGUAGES = new Map([
  * For example, the vscode language id for all bash-like shells is
  * "shellscript," so this object maps "shellscript" -> "sh"
  */
-export const VSCODE_LANGUAGEID_MAP: Record<string, string|undefined> = {
+export const VSCODE_LANGUAGEID_MAP: Record<string, string | undefined> = {
   'shellscript': 'sh',
   'javascriptreact': 'jsx',
   'typescriptreact': 'tsx',
@@ -1042,3 +1042,8 @@ export const SUPPORTED_FILE_EXTENSIONS = [
   'sh', 'bash', 'ksh', 'zsh', 'fish', 'bat', 'cmd', 'pwsh',
   ...Object.keys(LANGUAGE_PREFIXES),
 ]
+
+export const EXTENSION_NAME = 'stateful.runme'
+export enum TELEMETRY_EVENTS {
+  RecommendExtension = 'runme.recommendExtension'
+}

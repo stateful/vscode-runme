@@ -25,7 +25,8 @@ import {
   getNotebookCategories,
   getNamespacedMid,
   bootFile,
-  isShellLanguage
+  isShellLanguage,
+  fileOrDirectoryExists
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -98,16 +99,16 @@ test('getTerminalByCell', () => {
   } as any))
     .toBeTruthy()
 
-    expect(getTerminalByCell({
-      metadata: { 'runme.dev/uuid': v4() },
-      kind: 2,
-    } as any))
-      .toBeUndefined()
+  expect(getTerminalByCell({
+    metadata: { 'runme.dev/uuid': v4() },
+    kind: 2,
+  } as any))
+    .toBeUndefined()
 
-    expect(getTerminalByCell({
-      kind: 1,
-    } as any))
-      .toBeUndefined()
+  expect(getTerminalByCell({
+    kind: 1,
+  } as any))
+    .toBeUndefined()
 })
 
 test('resetEnv', () => {
@@ -659,5 +660,28 @@ suite('bootFile', () => {
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.objectContaining({
       path: '/foo/bar/foo/Settings.md'
     }), 'runme')
+  })
+})
+
+suite('fileOrDirectoryExists', () => {
+  test('should return false when file does not exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.Unknown } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(false)
+  })
+
+  test('should return true when file does exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(true)
+  })
+
+  test('should return true when directory does exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.Directory } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(true)
   })
 })

@@ -534,3 +534,12 @@ export async function bootFile() {
   log.info(`Open file defined in "runme.flag.startFile" setting: ${startupFileUriConfig.fsPath}`)
   return commands.executeCommand('vscode.openWith', startupFileUriConfig, Kernel.type)
 }
+
+export async function fileOrDirectoryExists(path: Uri): Promise<boolean> {
+  return workspace.fs.stat(path).then(
+    async (file) => {
+      return file.type === FileType.File || file.type === FileType.Directory
+    },
+    () => false
+  )
+}
