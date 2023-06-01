@@ -265,7 +265,7 @@
     "notebooks": [
       {
         "type": "runme",
-        "displayName": "Run your README.md",
+        "displayName": "Run your Markdown",
         "selector": [
           {
             "filenamePattern": "*.md"
