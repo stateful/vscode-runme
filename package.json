@@ -93,6 +93,11 @@
         "title": "Prompt to participate in Windows Default Shell survey"
       },
       {
+        "command": "runme.surveyActiveUserFeedback",
+        "category": "Runme",
+        "title": "Prompt to participate in Feedback survey"
+      },
+      {
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
         "title": "Open markdown as Runme",

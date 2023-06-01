@@ -77,7 +77,7 @@ export class RunmeExtension {
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
-    const winSurvey = new survey.WinDefaultShell(context)
+    const activeUsersSurvey = new survey.SurveyActiveUserFeedback(context)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
@@ -92,7 +92,7 @@ export class RunmeExtension {
       serializer,
       server,
       treeViewer,
-      winSurvey,
+      activeUsersSurvey,
       winCodeLensRunSurvey,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
