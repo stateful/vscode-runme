@@ -81,7 +81,7 @@ export class Kernel implements Disposable {
 
     this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
-    this.#controller.description = 'Run your README.md'
+    this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
     this.messaging.postMessage({ from: 'kernel' })
