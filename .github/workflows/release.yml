@@ -112,21 +112,21 @@ jobs:
       
       - name: Compile New Version (Edge)
         run: |
-          RELEASE_VERSION=$(npx semver $CURRENT_VERSION -i pre${{ github.event.inputs.releaseType }} --preid edge)
+          RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i pre${{ github.event.inputs.releaseType }} --preid edge)"
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Bump to $RELEASE_VERSION"
         if: ${{ github.event.inputs.releaseChannel == 'edge' && !contains(env.CURRENT_VERSION, 'edge') }}
       
       - name: Compile New Version (Edge)
         run: |
-          RELEASE_VERSION=$(npx semver $CURRENT_VERSION -i prerelease)
+          RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i prerelease)"
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Bump to $RELEASE_VERSION"
         if: ${{ github.event.inputs.releaseChannel == 'edge' && contains(env.CURRENT_VERSION, 'edge') }}
       
       - name: Compile New Version (Stable)
         run: |
-          RELEASE_VERSION=$(npx semver $CURRENT_VERSION -i github.event.inputs.releaseType)
+          RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i github.event.inputs.releaseType)"
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Bump to $RELEASE_VERSION"
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
