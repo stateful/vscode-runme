@@ -1,6 +1,7 @@
 import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
+import { Serializer } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
 
 import { Kernel } from './kernel'
@@ -87,6 +88,15 @@ export class RunmeExtension {
 
     registerExtensionEnvironmentVariables(context)
 
+    const omitKeys: Serializer.Metadata = {
+      ['runme.dev/name']: undefined,
+      ['runme.dev/uuid']: undefined,
+      ['runme.dev/textRange']: undefined,
+    }
+    const transientCellMetadata = Object.fromEntries(
+      Object.keys(omitKeys).map((k) => [k, true])
+    )
+
     context.subscriptions.push(
       kernel,
       serializer,
@@ -96,10 +106,7 @@ export class RunmeExtension {
       winCodeLensRunSurvey,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
-        transientCellMetadata: {
-          inputCollapsed: true,
-          outputCollapsed: true,
-        },
+        transientCellMetadata
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider(kernel)),
