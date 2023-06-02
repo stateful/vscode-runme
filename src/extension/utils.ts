@@ -465,6 +465,5 @@ export async function getNotebookCategories(context: ExtensionContext, uri: Uri)
  */
 export function getNamespacedMid(namespace: string) {
   const ns = uuidv5(namespace, uuidv5.URL)
-  console.log(env.machineId)
   return uuidv5(env.machineId, ns)
 }
