@@ -1,6 +1,8 @@
 import path from 'node:path'
 import { mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 
+import { fetch } from 'undici'
+import vscode from 'vscode'
 import {
   Disposable,
   NotebookDocument,
@@ -19,29 +21,49 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Kernel } from './kernel'
-import { isWindows } from './utils'
+import { getNamespacedMid, isWindows } from './utils'
 import getLogger from './logger'
 
 const log = getLogger('WinDefaultShell')
 
-export class WinDefaultShell implements Disposable {
+abstract class Survey implements Disposable {
+  private readonly id: string
+  protected readonly tempDir: Uri
+  protected readonly context: ExtensionContext
+  protected readonly disposables: Disposable[] = []
+
+  constructor(context: ExtensionContext, id: string) {
+    this.id = id
+    this.tempDir = context.globalStorageUri
+    this.context = context
+  }
+
+  dispose() {
+    this.disposables.forEach(d => d.dispose())
+  }
+
+  protected async undo() {
+    await this.context.globalState.update(this.id, false)
+  }
+
+  protected async done() {
+    await this.context.globalState.update(this.id, true)
+  }
+}
+
+export class WinDefaultShell extends Survey {
   static readonly #id: string = 'runme.surveyWinDefaultShell'
-  readonly #tempDir: Uri
-  readonly #context: ExtensionContext
-  readonly #disposables: Disposable[] = []
 
   constructor(context: ExtensionContext) {
-    commands.registerCommand(WinDefaultShell.#id, this.#prompt.bind(this))
-
-    this.#tempDir = context.globalStorageUri
-    this.#context = context
+    super(context, WinDefaultShell.#id)
+    commands.registerCommand(WinDefaultShell.#id, this.prompt.bind(this))
 
     // Only prompt on Windows
     if (!isWindows()) {
       return
     }
 
-    this.#disposables.push(
+    this.disposables.push(
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
     )
   }
@@ -49,7 +71,7 @@ export class WinDefaultShell implements Disposable {
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
     if (
       notebookType !== Kernel.type ||
-      this.#context.globalState.get<boolean>(
+      this.context.globalState.get<boolean>(
         WinDefaultShell.#id,
         false
       )
@@ -61,10 +83,10 @@ export class WinDefaultShell implements Disposable {
     await commands.executeCommand(WinDefaultShell.#id, false)
   }
 
-  async #prompt(runDirect = true) {
+  async prompt(runDirect = true) {
     // reset done when run from command palette
     if (runDirect) {
-      await this.#undo()
+      await this.undo()
     }
 
     const option = await window.showInformationMessage(
@@ -73,17 +95,17 @@ export class WinDefaultShell implements Disposable {
       'Don\'t ask again',
       'Dismiss'
     )
-    if (option === 'Dismiss') {
+    if (option === 'Dismiss' || option === undefined) {
       return
     } else if (option !== 'OK') {
-      await this.#done()
+      await this.done()
       return
     }
 
-    mkdirSync(this.#tempDir.fsPath, { recursive: true })
+    mkdirSync(this.tempDir.fsPath, { recursive: true })
 
     const name = 'Runme Windows Shell'
-    const tmpfile = path.join(this.#tempDir.fsPath, 'defaultShell')
+    const tmpfile = path.join(this.tempDir.fsPath, 'defaultShell')
     try {
       unlinkSync(tmpfile)
     } catch (err) {
@@ -110,7 +132,7 @@ export class WinDefaultShell implements Disposable {
 
     const exitCode = await new Promise<number>((resolve) => {
       tasks.executeTask(taskExecution).then((execution) => {
-        this.#disposables.push(tasks.onDidEndTaskProcess((e) => {
+        this.disposables.push(tasks.onDidEndTaskProcess((e) => {
           const taskId = (e.execution as any)['_id']
           const executionId = (execution as any)['_id']
 
@@ -130,25 +152,13 @@ export class WinDefaultShell implements Disposable {
     try {
       const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
       TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', { output, exitCode: exitCode.toString() })
-      await this.#done()
+      await this.done()
       unlinkSync(tmpfile)
     } catch (err) {
       if (err instanceof Error) {
         log.error(`Failed to remove temporary default shell: ${err.message}`)
       }
     }
-  }
-
-  async #undo() {
-    await this.#context.globalState.update(WinDefaultShell.#id, false)
-  }
-
-  async #done() {
-    await this.#context.globalState.update(WinDefaultShell.#id, true)
-  }
-
-  dispose() {
-    this.#disposables.forEach(d => d.dispose())
   }
 }
 
@@ -200,4 +210,81 @@ export class SurveyWinCodeLensRun implements Disposable {
   }
 
   dispose() { }
+}
+
+export class SurveyActiveUserFeedback extends Survey {
+  static readonly #id: string = 'runme.surveyActiveUserFeedback'
+  readonly #mid: string
+  #displayed: boolean = false
+
+  constructor(
+    protected context: ExtensionContext
+  ) {
+    super(context, SurveyActiveUserFeedback.#id)
+    this.#mid = getNamespacedMid(SurveyActiveUserFeedback.#id)
+
+    commands.registerCommand(SurveyActiveUserFeedback.#id, this.prompt.bind(this))
+
+    this.disposables.push(
+      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
+    )
+  }
+
+  async #handleOpenNotebook({ notebookType }: NotebookDocument) {
+    if (
+      notebookType !== Kernel.type ||
+      this.context.globalState.get<boolean>(SurveyActiveUserFeedback.#id, false) ||
+      // display only once per session
+      this.#displayed
+    ) {
+      return
+    }
+
+    try {
+      const response = await fetch(`https://runme.dev/api/survey?name=feedback&mid=${vscode.env.machineId}`)
+      if (response.status === 404) {
+        // no match, try again next session
+        this.#displayed = true
+        return
+      } else if (response.status !== 200) {
+        throw new Error(`http status ${response.status}: ${response.statusText}`)
+      }
+    } catch (err) {
+      this.#displayed = true // try again next session
+      if (err instanceof Error) {
+        log.error(`Failed to fetch survey route: ${err.message}`)
+      }
+      return
+    }
+
+    await new Promise<void>(resolve => setTimeout(resolve, 2000))
+    await commands.executeCommand(SurveyActiveUserFeedback.#id, false)
+  }
+
+  async prompt(runDirect = true) {
+    // reset done when run from command palette
+    if (runDirect) {
+      this.#displayed = false
+      await this.undo()
+    }
+
+    const option = await window.showInformationMessage(
+      'We\'d love to hear how we can improve Runme for you. Please click OK to open the feedback form. Takes <1min.',
+      'OK',
+      'Don\'t ask again',
+      'Dismiss'
+    )
+    this.#displayed = true
+    if (option === 'Dismiss' || option === undefined) {
+      return
+    } else if (option !== 'OK') {
+      TelemetryReporter.sendTelemetryEvent('survey.ActiveUserFeedback', { never: 'true' })
+      await this.done()
+      return
+    }
+
+    TelemetryReporter.sendTelemetryEvent('survey.ActiveUserFeedback', { never: 'false' })
+    await commands.executeCommand('vscode.open', Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`))
+    await this.done()
+  }
 }

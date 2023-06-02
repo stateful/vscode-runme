@@ -22,7 +22,8 @@ import {
   getCmdSeq,
   validateAnnotations,
   setNotebookCategories,
-  getNotebookCategories
+  getNotebookCategories,
+  getNamespacedMid
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -613,4 +614,10 @@ suite('getNotebookCategories', () => {
     expect(contextMock.globalState.get).toHaveBeenCalledWith('notebookAvailableCategories')
     expect(categories).toStrictEqual([])
   })
+})
+
+test('getNamespacedMid', () => {
+  expect(
+    getNamespacedMid('1836968c0b13822b48750c44bbb356d8ae45bebbd8f990c63b2641092a23ba89')
+  ).toBe('af4f113b-0bd0-5d95-ac4c-4d354a9cb84a')
 })

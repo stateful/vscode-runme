@@ -7,6 +7,7 @@ import vscode, {
   FileType,
   Uri,
   workspace,
+  env,
   NotebookDocument,
   NotebookCell,
   NotebookCellExecution,
@@ -455,4 +456,14 @@ export async function getNotebookCategories(context: ExtensionContext, uri: Uri)
     return []
   }
   return notebooksCategories[uri.path] || []
+}
+
+/**
+ * Get vscode machineID as UUID hashed using a namespace
+ * @param namespace string to init UUID
+ * @returns uuid as string
+ */
+export function getNamespacedMid(namespace: string) {
+  const ns = uuidv5(namespace, uuidv5.URL)
+  return uuidv5(env.machineId, ns)
 }

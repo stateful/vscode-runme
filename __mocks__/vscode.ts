@@ -111,6 +111,7 @@ export enum ViewColumn {
 }
 
 export const env = {
+  machineId: 'test_machine_id',
   clipboard: {
     writeText: vi.fn()
   },
