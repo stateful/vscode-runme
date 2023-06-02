@@ -543,3 +543,7 @@ export async function fileOrDirectoryExists(path: Uri): Promise<boolean> {
     () => false
   )
 }
+
+export function isMultiRootWorkspace(): boolean {
+  return (workspace.workspaceFolders && workspace.workspaceFolders.length > 1) || false
+}

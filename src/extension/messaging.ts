@@ -5,7 +5,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { EXTENSION_NAME, TELEMETRY_EVENTS } from '../constants'
 
-import { fileOrDirectoryExists, getDefaultWorkspace } from './utils'
+import { fileOrDirectoryExists, getDefaultWorkspace, isMultiRootWorkspace } from './utils'
 
 export abstract class DisplayableMessage {
     abstract dispose(): void
@@ -47,8 +47,13 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
             let promptUser = skipPrompSettings ||
                 this.context.globalState.get(TELEMETRY_EVENTS.RecommendExtension, true)
             // Multi-root workspace not supported atm
+            const isMultiRoot = isMultiRootWorkspace()
+            if (isMultiRoot && skipPrompSettings) {
+                window.showInformationMessage('Multi-root workspace are not supported')
+                return
+            }
             const workspaceRoot = getDefaultWorkspace()
-            if (!workspaceRoot) {
+            if (!workspaceRoot || isMultiRoot) {
                 return
             }
             const extensionsFile = Uri.parse(join(workspaceRoot, '.vscode/extensions.json'))
@@ -94,17 +99,12 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
                 await workspace.fs.createDirectory(folderUri)
             }
 
-            if (!extensionfileOrDirectoryExists) {
-                const recommendations = [EXTENSION_NAME]
-                await workspace.fs.writeFile(extensionsFile, Buffer.from(JSON.stringify({
-                    recommendations
-                })))
-            } else {
-                extensionRecommendations.push(EXTENSION_NAME)
-                await workspace.fs.writeFile(extensionsFile, Buffer.from(JSON.stringify({
-                    recommendations: extensionRecommendations
-                })))
-            }
+            const recommendations = extensionfileOrDirectoryExists
+                ? extensionRecommendations.push(EXTENSION_NAME) && extensionRecommendations
+                : [EXTENSION_NAME]
+            await workspace.fs.writeFile(extensionsFile, Buffer.from(JSON.stringify({
+                recommendations
+            }, null, 2)))
 
             window.showInformationMessage('Runme added successfully to the recommended extensions')
             TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, { added: 'true', error: 'false' })

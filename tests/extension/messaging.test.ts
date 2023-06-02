@@ -120,7 +120,7 @@ suite('RecommendExtensionMessage', () => {
         vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
             getText: vi.fn().mockReturnValue(JSON.stringify({
                 recommendations: ['microsoft.docker']
-            }))
+            }, null, 2))
         })
         vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Yes' as any)
         await recommendExtension.display()
@@ -129,7 +129,7 @@ suite('RecommendExtensionMessage', () => {
         expect((writeFileCalls[0] as Uri).path).toStrictEqual('/runme/workspace/.vscode/extensions.json')
         expect((writeFileCalls[1] as Buffer).toString('utf-8')).toStrictEqual(JSON.stringify({
             recommendations: ['stateful.runme']
-        }))
+        }, null, 2))
         expect(window.showInformationMessage)
             .toHaveBeenCalledWith('Runme added successfully to the recommended extensions')
         expect(TelemetryReporter.sendTelemetryEvent)
@@ -142,7 +142,7 @@ suite('RecommendExtensionMessage', () => {
         vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
             getText: vi.fn().mockReturnValue(JSON.stringify({
                 recommendations: ['microsoft.docker']
-            }))
+            }, null, 2))
         })
         vi.mocked(window.showInformationMessage).mockResolvedValueOnce('No' as any)
         await recommendExtension.display()
@@ -170,7 +170,7 @@ suite('RecommendExtensionMessage', () => {
         vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
             getText: vi.fn().mockReturnValue(JSON.stringify({
                 recommendations: ['microsoft.docker']
-            }))
+            }, null, 2))
         })
         vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Don\'t ask again' as any)
         const spy = vi.spyOn(contextMock.globalState, 'update')
@@ -179,5 +179,30 @@ suite('RecommendExtensionMessage', () => {
         expect(TelemetryReporter.sendTelemetryEvent)
             .toBeCalledWith('runme.recommendExtension', { added: 'false', error: 'false' })
         expect(spy).toHaveBeenCalledWith('runme.recommendExtension', false)
+    })
+
+    test('Should not prompt for multi-root workspaces when using the command palette', async () => {
+        const recommendExtension = new RecommendExtensionMessage(contextMock, {
+            'runme.recommendExtension': true
+        })
+        // @ts-expect-error
+        workspace.workspaceFolders = [
+            { uri: Uri.file('/Users/user/Projects/project1') },
+            { uri: Uri.file('/Users/user/Projects/project2') }
+        ]
+        await recommendExtension.display()
+        expect(window.showInformationMessage).toHaveBeenCalledWith('Multi-root workspace are not supported')
+    })
+
+    test('Should not prompt for multi-root workspaces', async () => {
+        const recommendExtension = new RecommendExtensionMessage(contextMock)
+        // @ts-expect-error
+        workspace.workspaceFolders = [
+            { uri: Uri.file('/Users/user/Projects/project1') },
+            { uri: Uri.file('/Users/user/Projects/project2') }
+        ]
+        await recommendExtension.display()
+        expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
     })
 })

@@ -24,9 +24,14 @@ import {
   setNotebookCategories,
   getNotebookCategories,
   getNamespacedMid,
+<<<<<<< HEAD
   bootFile,
   isShellLanguage,
   fileOrDirectoryExists
+=======
+  fileOrDirectoryExists,
+  isMultiRootWorkspace
+>>>>>>> e27bb6e (Save json file properly, validate multi-root workspace)
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -683,5 +688,30 @@ suite('fileOrDirectoryExists', () => {
     const path = Uri.parse('.vscode-mango')
     const exists = await fileOrDirectoryExists(path)
     expect(exists).toBe(true)
+  })
+})
+
+suite('isMultiRootWorkspace', () => {
+  test('should return true when there are multiple workspace folders', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = [
+      { uri: Uri.file('/Users/user/Projects/project1') },
+      { uri: Uri.file('/Users/user/Projects/project2') }
+    ]
+    expect(isMultiRootWorkspace()).toStrictEqual(true)
+  })
+
+  test('should return false when there is one workspace folder', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = [
+      { uri: Uri.file('/Users/user/Projects/project1') }
+    ]
+    expect(isMultiRootWorkspace()).toStrictEqual(false)
+  })
+
+  test('should return false when workspaceFolders are not defined', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = undefined
+    expect(isMultiRootWorkspace()).toStrictEqual(false)
   })
 })
