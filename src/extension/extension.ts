@@ -36,7 +36,6 @@ import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
-import { MessagingBuilder, RecommendExtensionMessage } from './messaging'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -82,8 +81,6 @@ export class RunmeExtension {
     const activeUsersSurvey = new survey.SurveyActiveUserFeedback(context)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
-    const messageBuilder = new MessagingBuilder([new RecommendExtensionMessage(context)])
-    messageBuilder.activate()
 
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
@@ -107,7 +104,6 @@ export class RunmeExtension {
       treeViewer,
       activeUsersSurvey,
       winCodeLensRunSurvey,
-      messageBuilder,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata

@@ -24,14 +24,10 @@ import {
   setNotebookCategories,
   getNotebookCategories,
   getNamespacedMid,
-<<<<<<< HEAD
   bootFile,
   isShellLanguage,
-  fileOrDirectoryExists
-=======
   fileOrDirectoryExists,
   isMultiRootWorkspace
->>>>>>> e27bb6e (Save json file properly, validate multi-root workspace)
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
