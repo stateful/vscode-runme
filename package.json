@@ -313,6 +313,11 @@
             "default": true,
             "markdownDescription": "If enabled, Runme's save restriction on non checked-in files will be lifted."
           },
+          "runme.flags.startFile": {
+            "type": "string",
+            "scope": "window",
+            "markdownDescription": "Relative path to a file within the workspace to open within a Runme notebook view, when VS Code starts (e.g. `./CONTRIBUTING.md`)."
+          },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "machine",

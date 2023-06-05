@@ -28,7 +28,7 @@ import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } fro
 import getLogger from './logger'
 import type executor from './executors'
 import { Kernel } from './kernel'
-import { ENV_STORE, DEFAULT_ENV } from './constants'
+import { ENV_STORE, DEFAULT_ENV, BOOTFILE } from './constants'
 
 declare var globalThis: any
 
@@ -446,9 +446,9 @@ export async function setNotebookCategories(context: ExtensionContext, uri: Uri,
 
 /**
  * Get the notebook cell categories from the global state
- * @param context 
- * @param uri 
- * @returns 
+ * @param context
+ * @param uri
+ * @returns
  */
 export async function getNotebookCategories(context: ExtensionContext, uri: Uri): Promise<string[]> {
   const notebooksCategories = context.globalState.get<Record<string, string[]>>(NOTEBOOK_AVAILABLE_CATEGORIES)
@@ -466,4 +466,42 @@ export async function getNotebookCategories(context: ExtensionContext, uri: Uri)
 export function getNamespacedMid(namespace: string) {
   const ns = uuidv5(namespace, uuidv5.URL)
   return uuidv5(env.machineId, ns)
+}
+
+/**
+ * Opens a start-up file either defined within a `.runme_bootstrap` file or
+ * set as Runme configuration
+ */
+export async function bootFile() {
+  if (!workspace.workspaceFolders?.length || !workspace.workspaceFolders[0]) {
+    return
+  }
+
+  const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
+  const hasStartupFile = await workspace.fs.stat(startupFileUri).then(() => true, () => false)
+  if (hasStartupFile) {
+    const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
+    const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
+    await workspace.fs.delete(startupFileUri)
+    log.info(`Open file defined in "${BOOTFILE}" file: ${bootFileUri.fsPath}`)
+    return commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
+  }
+
+  /**
+   * if config is set, open file path directly
+   */
+  const config = workspace.getConfiguration('runme.flags')
+  const startupFilePath = config.get<string | undefined>('startFile')
+  if (!startupFilePath) {
+    return
+  }
+
+  const startupFileUriConfig = Uri.joinPath(workspace.workspaceFolders[0].uri, startupFilePath)
+  const hasStartupFileConfig = await workspace.fs.stat(startupFileUriConfig).then(() => true, () => false)
+  if (!hasStartupFileConfig) {
+    return
+  }
+
+  log.info(`Open file defined in "runme.flag.startFile" setting: ${startupFileUriConfig.fsPath}`)
+  return commands.executeCommand('vscode.openWith', startupFileUriConfig, Kernel.type)
 }
