@@ -232,6 +232,7 @@ export class EventEmitter<T> {
 
 export const languages = {
   registerCodeLensProvider: vi.fn(),
+  getLanguages: vi.fn().mockResolvedValue([]),
 }
 
 export class Position {

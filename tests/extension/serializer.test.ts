@@ -31,6 +31,7 @@ vi.mock('vscode', () => ({
       updateCellMetadata: (i: number, metadata: any) => ({ i, metadata, type: 'updateCellMetadata' }),
     },
     CancellationTokenSource: vi.fn(),
+    NotebookData: class {}
 }))
 
 vi.mock('../../src/extension/utils', () => ({
@@ -134,7 +135,7 @@ describe('WasmSerializer', () => {
             const s = new WasmSerializer(context, newKernel())
             // @ts-ignore readonly
             s['ready'] = Promise.resolve()
-            expect(Buffer.from(await s.serializeNotebook({} as any, {} as any)))
+            expect(Buffer.from(await s.serializeNotebook({ cells: [] } as any, {} as any)))
                 .toEqual(Buffer.from('Hello World!'))
         })
     })
