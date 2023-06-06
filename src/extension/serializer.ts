@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
+import { VSCODE_LANGUAGEID_MAP } from '../constants'
 
 import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
@@ -135,6 +136,18 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   ): Promise<Uint8Array> {
     await this.preSaveCheck()
 
+    const transformedCells = data.cells.map(cell => {
+      return {
+        ...cell,
+        languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
+      }
+    })
+
+    const metadata = data.metadata
+
+    data = new NotebookData(transformedCells)
+    data.metadata = metadata
+
     let encoded: Uint8Array
     try {
       encoded = await this.saveNotebook(data, token)
@@ -184,7 +197,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           ) {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
-              elem.languageId = guessed
+              if (guessed) {
+                elem.languageId = guessed
+              }
               return elem
             })
           }

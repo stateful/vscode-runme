@@ -32,6 +32,7 @@ import {
   processEnviron,
   isWindows,
   setNotebookCategories,
+  isShellLanguage,
 } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
@@ -80,7 +81,6 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
 
-    this.#controller.supportedLanguages = Object.keys(executor)
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
@@ -452,18 +452,18 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = (execKey: 'sh' | 'bash' = 'bash') => executeRunner(
-        this,
-        this.context,
-        this.runner!,
-        exec,
-        runningCell,
-        this.messaging,
-        uuid,
-        execKey,
-        outputs,
-        this.environment,
-        environmentManager
+      const runScript = (execKey: string = 'sh') => executeRunner(
+          this,
+          this.context,
+          this.runner!,
+          exec,
+          runningCell,
+          this.messaging,
+          uuid,
+          execKey,
+          outputs,
+          this.environment,
+          environmentManager
       )
         .catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
@@ -471,18 +471,22 @@ export class Kernel implements Disposable {
           return false
         })
 
-      if (execKey === 'bash' || execKey === 'sh') {
+      if (isShellLanguage(execKey)) {
         successfulCellExecution = await runScript(execKey)
-      } else {
-        successfulCellExecution = await executor[execKey].call(
+      } else if (execKey in executor) {
+        successfulCellExecution = await executor[execKey as keyof typeof executor].call(
           this, exec, runningCell, outputs, runScript, environmentManager
         )
+      } else {
+        window.showErrorMessage('Cell language is not executable')
+
+        successfulCellExecution = false
       }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey].call(this, exec, runningCell, outputs)
+      successfulCellExecution = await executor[execKey as keyof typeof executor]?.call(this, exec, runningCell, outputs)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
     runmeExec.end(successfulCellExecution)

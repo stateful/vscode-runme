@@ -194,8 +194,8 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
  * @param execKey Used as fallback in case `$SHELL` is not present
  */
 export function getSystemShellPath(): string|undefined
-export function getSystemShellPath(execKey: 'bash'|'sh'): string
-export function getSystemShellPath(execKey?: 'bash'|'sh'): string|undefined
+export function getSystemShellPath(execKey: string|undefined): string|undefined
+export function getSystemShellPath(execKey: string): string
 export function getSystemShellPath(execKey?: string): string|undefined {
   return process.env.SHELL ?? execKey
 }
@@ -203,7 +203,7 @@ export function getSystemShellPath(execKey?: string): string|undefined {
 export function getCellShellPath(
   cell: NotebookCell|NotebookCellData|Serializer.Cell,
   notebook: NotebookData|Serializer.Notebook|NotebookDocument,
-  execKey?: 'bash'|'sh'
+  execKey?: string
 ): string|undefined {
   const notebookMetadata = notebook.metadata as Serializer.Metadata|undefined
 

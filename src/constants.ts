@@ -106,6 +106,20 @@ export const LANGUAGES = new Map([
   ['YAML', 'yaml', undefined],
 ].map(([, source, dest]) => [source, dest]))
 
+/**
+ * Map from vscode language id to how it should be represented in markdown
+ *
+ * For example, the vscode language id for all bash-like shells is
+ * "shellscript," so this object maps "shellscript" -> "sh"
+ */
+export const VSCODE_LANGUAGEID_MAP: Record<string, string|undefined> = {
+  'shellscript': 'sh',
+  'javascriptreact': 'jsx',
+  'typescriptreact': 'tsx',
+  'javascript': 'js',
+  'typescript': 'ts',
+}
+
 export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
 

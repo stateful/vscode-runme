@@ -53,7 +53,7 @@ export async function executeRunner(
   runningCell: TextDocument,
   messaging: NotebookRendererMessaging,
   cellUUID: string,
-  execKey: 'bash' | 'sh',
+  execKey: string,
   outputs: NotebookCellOutputManager,
   environment?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager

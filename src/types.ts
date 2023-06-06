@@ -296,3 +296,5 @@ export interface IApiMessage<T extends ClientMessage<ClientMessages>> {
   message: T
   editor: NotebookEditor
 }
+
+export type ShellType = 'sh' | 'powershell' | 'cmd' | 'fish'
