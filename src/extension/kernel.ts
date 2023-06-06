@@ -549,4 +549,8 @@ export class Kernel implements Disposable {
       return ENV_STORE_MANAGER
     }
   }
+
+  getSupportedLanguages() {
+    return this.#controller.supportedLanguages
+  }
 }
