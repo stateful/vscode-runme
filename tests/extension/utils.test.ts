@@ -24,7 +24,8 @@ import {
   setNotebookCategories,
   getNotebookCategories,
   getNamespacedMid,
-  bootFile
+  bootFile,
+  isShellLanguage
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -121,10 +122,22 @@ test('getKey', () => {
     getText: vi.fn().mockReturnValue('foobar'),
     languageId: 'barfoo'
   } as any)).toBe('barfoo')
+
   expect(getKey({
     getText: vi.fn().mockReturnValue('deployctl deploy foobar'),
     languageId: 'something else'
   } as any)).toBe('deno')
+
+  expect(getKey({
+    getText: vi.fn().mockReturnValue(''),
+    languageId: 'shellscript'
+  } as any)).toBe('sh')
+})
+
+test('isShellLanguage', () => {
+  for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
+    expect(isShellLanguage(shell)).toBeTruthy()
+  }
 })
 
 suite('getCmdShellSeq', () => {

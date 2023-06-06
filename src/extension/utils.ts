@@ -156,6 +156,7 @@ export function isShellLanguage(languageId: string): ShellType | undefined {
     case 'bash':
     case 'zsh':
     case 'ksh':
+    case 'shell':
       return 'sh'
 
     case 'bat':
