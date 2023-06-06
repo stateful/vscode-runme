@@ -16,9 +16,10 @@ import {
 
 import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
-import type { CellOutputPayload, Serializer } from '../../types'
+import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
+import { CommandMode } from '../grpc/runnerTypes'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
@@ -206,8 +207,8 @@ export async function retrieveShellCommand(
  * @param execKey Used as fallback in case `$SHELL` is not present
  */
 export function getSystemShellPath(): string | undefined
-export function getSystemShellPath(execKey: string | undefined): string | undefined
 export function getSystemShellPath(execKey: string): string
+export function getSystemShellPath(execKey?: string): string | undefined
 export function getSystemShellPath(execKey?: string): string | undefined {
   return process.env.SHELL ?? execKey
 }
@@ -234,6 +235,62 @@ export function getCellShellPath(
   }
 
   return getSystemShellPath(execKey)
+}
+
+export function isShellLanguage(languageId: string): ShellType | undefined {
+  switch (languageId.toLowerCase()) {
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+    case 'ksh':
+    case 'shell':
+    case 'shellscript':
+      return 'sh'
+
+    case 'bat':
+    case 'cmd':
+      return 'cmd'
+
+    case 'powershell':
+    case 'pwsh':
+      return 'powershell'
+
+    case 'fish':
+      return 'fish'
+
+    default:
+      return undefined
+  }
+}
+
+export function getCellProgram(
+  cell: NotebookCell | NotebookCellData | Serializer.Cell,
+  notebook: NotebookData | Serializer.Notebook | NotebookDocument,
+  execKey: string
+): { programName: string; commandMode: CommandMode } {
+  let result: { programName: string; commandMode: CommandMode }
+  const { program } = getAnnotations(cell.metadata)
+
+  if (isShellLanguage(execKey)) {
+    const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
+
+    result = {
+      programName: shellPath,
+      commandMode: CommandMode.INLINE_SHELL,
+    }
+  } else {
+    // TODO(mxs): make this configurable!!
+    result = {
+      programName: '',
+      commandMode: CommandMode.TEMP_FILE,
+    }
+  }
+
+  if (program) {
+    result.programName = program
+  }
+
+  return result
 }
 
 export async function getCellCwd(

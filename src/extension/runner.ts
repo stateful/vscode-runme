@@ -6,12 +6,14 @@ import {
   type Disposable,
   type TerminalDimensions,
   EventEmitter,
+  window,
 } from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
 
 import {
+  CommandMode,
   CreateSessionRequest,
   ExecuteRequest,
   ExecuteResponse,
@@ -51,6 +53,9 @@ export interface RunProgramOptions {
   background?: boolean
   convertEol?: boolean
   storeLastOutput?: boolean
+  languageId?: string
+  fileExtension?: string
+  commandMode?: CommandMode
 }
 
 export interface IRunner extends Disposable {
@@ -407,6 +412,17 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.responses.onError((error) => {
       if (error instanceof RpcError) {
+        if (error.message.includes('invalid LanguageId')) {
+          window.showErrorMessage(
+            // eslint-disable-next-line max-len
+            'Unable to automatically execute cell. To execute this cell, set the "program" field in the configuration foldout!'
+          )
+        }
+
+        if (error.message.includes('invalid ProgramName')) {
+          window.showErrorMessage(`Unable to locate program "${this.opts.programName}"`)
+        }
+
         console.error(
           'RpcError occurred!',
           {
@@ -712,6 +728,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     terminalDimensions,
     background,
     storeLastOutput,
+    fileExtension,
+    languageId,
+    commandMode,
   }: RunProgramOptions): ExecuteRequest {
     if (environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -729,6 +748,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...(exec?.type === 'script' && { script: exec.script }),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
       storeLastOutput,
+      fileExtension,
+      languageId,
+      commandMode,
     })
   }
 

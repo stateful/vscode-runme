@@ -24,7 +24,6 @@ import {
   getNotebookCategories,
   getNamespacedMid,
   bootFile,
-  isShellLanguage,
   fileOrDirectoryExists,
   isMultiRootWorkspace,
   convertEnvList,
@@ -134,12 +133,6 @@ test('getKey', () => {
     getText: vi.fn().mockReturnValue(''),
     languageId: 'shellscript'
   } as any)).toBe('sh')
-})
-
-test('isShellLanguage', () => {
-  for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
-    expect(isShellLanguage(shell)).toBeTruthy()
-  }
 })
 
 suite('getCmdShellSeq', () => {
@@ -285,7 +278,8 @@ suite('#getAnnotations', () => {
         category: '',
         excludeFromRunAll: false,
         promptEnv: true,
-        'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0'
+        'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0',
+        program: '',
       }
     )
   })
@@ -306,7 +300,8 @@ suite('#getAnnotations', () => {
       name: 'echo-hello',
       promptEnv: true,
       excludeFromRunAll: false,
-      category: ''
+      category: '',
+      program: '',
     })
   })
 })

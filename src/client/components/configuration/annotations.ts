@@ -145,6 +145,11 @@ export class Annotations extends LitElement {
       description: "Cell's canonical name for easy referencing in the CLI.",
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
+    program: {
+      description: "Program with which to run this cell's script.",
+      // FIXME: update docs link
+      docs: '',
+    },
     category: {
       description: 'Execute this code cell within a category.',
       docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',

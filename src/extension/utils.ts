@@ -21,13 +21,7 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import {
-  CellAnnotations,
-  CellAnnotationsErrorResult,
-  RunmeTerminal,
-  Serializer,
-  ShellType,
-} from '../types'
+import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
   AuthenticationProviders,
@@ -165,31 +159,6 @@ export function getKey(runningCell: vscode.TextDocument): string {
   }
 
   return languageId
-}
-
-export function isShellLanguage(languageId: string): ShellType | undefined {
-  switch (languageId.toLowerCase()) {
-    case 'sh':
-    case 'bash':
-    case 'zsh':
-    case 'ksh':
-    case 'shell':
-      return 'sh'
-
-    case 'bat':
-    case 'cmd':
-      return 'cmd'
-
-    case 'powershell':
-    case 'pwsh':
-      return 'powershell'
-
-    case 'fish':
-      return 'fish'
-
-    default:
-      return undefined
-  }
 }
 
 /**

@@ -39,9 +39,9 @@ import {
   processEnviron,
   isWindows,
   setNotebookCategories,
-  isShellLanguage,
   getTerminalRunmeId,
 } from './utils'
+import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
@@ -494,7 +494,7 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = (execKey: string = 'sh') =>
+      const runScript = (key: string = execKey) =>
         executeRunner(
           this,
           this.context,
@@ -503,7 +503,7 @@ export class Kernel implements Disposable {
           runningCell,
           this.messaging,
           uuid,
-          execKey,
+          key,
           outputs,
           this.environment,
           environmentManager
@@ -513,9 +513,9 @@ export class Kernel implements Disposable {
           return false
         })
 
-      if (isShellLanguage(execKey)) {
+      if (isShellLanguage(execKey) || !(execKey in executor)) {
         successfulCellExecution = await runScript(execKey)
-      } else if (execKey in executor) {
+      } else {
         successfulCellExecution = await executor[execKey as keyof typeof executor].call(
           this,
           exec,
@@ -524,22 +524,23 @@ export class Kernel implements Disposable {
           runScript,
           environmentManager
         )
-      } else {
-        this.#shebangComingSoon.open()
-
-        successfulCellExecution = false
       }
-    } else {
+    } else if (execKey in executor) {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor]?.call(
+      successfulCellExecution = await executor[execKey as keyof typeof executor].call(
         this,
         exec,
         runningCell,
         outputs
       )
+    } else {
+      window.showErrorMessage('Cell language is not executable')
+
+      successfulCellExecution = false
     }
+
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
     })

@@ -17,6 +17,10 @@ This markdown file contains some custom examples to test the execution within a 
 echo "Hello World!"
 ```
 
+```javascript { name=echo-hello-js }
+console.log('Hello World!')
+```
+
 ## More Shell
 
 ```sh { interactive=false }
@@ -164,6 +168,6 @@ curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
 
 ```yaml
 config:
-  netsed:
+  nested:
     para: true
 ```

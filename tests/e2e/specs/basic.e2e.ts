@@ -83,6 +83,16 @@ describe('Runme VS Code Extension', async () => {
       ])
     })
 
+    it('basic hello world javascript execution', async () => {
+      const cell = await notebook.getCell('console.log(\'Hello World!\')')
+
+      await cell.run()
+
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
+        'Hello World!\n'
+      ])
+    })
+
     it('more shell example', async () => {
       const cell = await notebook.getCell('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
       await cell.run()

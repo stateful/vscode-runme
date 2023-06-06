@@ -11,9 +11,11 @@ import {
   parseCommandSeq,
   getCellShellPath,
   getSystemShellPath,
-  getCellCwd
+  getCellCwd,
+  isShellLanguage
 } from '../../../src/extension/executors/utils'
 import { getCmdSeq, getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
+import { getCellProgram } from '../../../src/extension/executors/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -32,6 +34,16 @@ vi.mock('../../../src/extension/utils', () => ({
 vi.mock('node:fs/promises', () => ({
   default: {
     stat: vi.fn(),
+  }
+}))
+
+const COMMAND_MODE_INLINE_SHELL = 1
+const COMMAND_MODE_TEMP_FILE = 2
+
+vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+  CommandMode: {
+    INLINE_SHELL: 1,
+    TEMP_FILE: 2,
   }
 }))
 
@@ -343,6 +355,54 @@ suite('getCellShellPath', () => {
   test('fallback to system shell', () => {
     const shellPath = getCellShellPath({ } as any, { } as any)
     expect(shellPath).toStrictEqual(getSystemShellPath())
+  })
+})
+
+suite('isShellLanguage', () => {
+  test('usual suspects', () => {
+    for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
+      expect(isShellLanguage(shell)).toBeTruthy()
+    }
+  })
+})
+
+suite('getCellProgram', () => {
+  test('is inline shell for shell types', async () => {
+    for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
+      vi.mocked(getAnnotations).mockReturnValueOnce({} as any)
+
+      expect(getCellProgram({ metadata: { } } as any, {} as any, shell)).toStrictEqual({
+        commandMode: COMMAND_MODE_INLINE_SHELL,
+        programName: getSystemShellPath()
+      })
+    }
+  })
+
+  test('is temp file for non-shell types', async () => {
+    vi.mocked(getAnnotations).mockReturnValueOnce({} as any)
+
+    expect(getCellProgram({ metadata: { } } as any, {} as any, 'python')).toStrictEqual({
+      commandMode: COMMAND_MODE_TEMP_FILE,
+      programName: ''
+    })
+  })
+
+  test('respects custom program in shell mode', async () => {
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ program: x.program })) as any)
+
+    expect(getCellProgram({ metadata: { program: 'fish' } } as any, {} as any, 'sh')).toStrictEqual({
+      commandMode: COMMAND_MODE_INLINE_SHELL,
+      programName: 'fish'
+    })
+  })
+
+  test('respects custom program in temp file mode', async () => {
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ program: x.program })) as any)
+
+    expect(getCellProgram({ metadata: { program: 'bun' } } as any, {} as any, 'javascript')).toStrictEqual({
+      commandMode: COMMAND_MODE_TEMP_FILE,
+      programName: 'bun'
+    })
   })
 })
 

@@ -74,6 +74,7 @@ export const AnnotationSchema = {
       return true
     }, 'mime type specification invalid format')
     .default('text/plain'),
+  program: z.string().optional().default(''),
   cwd: z.string().nonempty().optional(),
   category: z.preprocess(
     (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
