@@ -13,11 +13,12 @@ import {
   env,
   Uri,
   commands,
+  languages,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages, NOTEBOOK_HAS_CATEGORIES } from '../constants'
+import { ClientMessages, DEFAULT_LANGUAGEID, NOTEBOOK_HAS_CATEGORIES } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
@@ -84,6 +85,15 @@ export class Kernel implements Disposable {
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
+
+    languages.getLanguages().then(l => {
+      this.#controller.supportedLanguages = [
+        // TODO(mxs): smartly select default language depending on user shell
+        //            e.g., use powershell/bat for respective shells
+        DEFAULT_LANGUAGEID,
+        ...l.filter(x => x !== DEFAULT_LANGUAGEID),
+      ]
+    })
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(

@@ -120,6 +120,8 @@ export const VSCODE_LANGUAGEID_MAP: Record<string, string|undefined> = {
   'typescript': 'ts',
 }
 
+export const DEFAULT_LANGUAGEID = 'shellscript'
+
 export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
 
