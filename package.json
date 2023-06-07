@@ -425,6 +425,11 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "Load environment files from workspace into all scripts"
+          },
+          "runme.cli.useIntegratedRunme": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Whether to use full path to integrated runme executable when running CLI commands. This is mostly useful for development purposes."
           }
         }
       }

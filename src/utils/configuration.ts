@@ -12,6 +12,7 @@ const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME = 'runme.terminal'
 const CODELENS_SECTION_NAME = 'runme.codelens'
 const ENV_SECTION_NAME = 'runme.env'
+const CLI_SECTION_NAME = 'runme.cli'
 
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
@@ -52,6 +53,9 @@ const configurationSchema = {
     env: {
       workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
       loadWorkspaceFiles: z.boolean().default(true),
+    },
+    cli: {
+      useIntegratedRunme: z.boolean().default(false),
     }
 }
 
@@ -89,6 +93,16 @@ const getEnvConfigurationValue = <T>(configName: keyof typeof configurationSchem
   const configurationSection = workspace.getConfiguration(ENV_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.env[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+      return parseResult.data as T
+  }
+  return defaultValue
+}
+
+const getCLIConfigurationValue = <T>(configName: keyof typeof configurationSchema.cli, defaultValue: T) => {
+  const configurationSection = workspace.getConfiguration(CLI_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.cli[configName].safeParse(configurationValue)
   if (parseResult.success) {
       return parseResult.data as T
   }
@@ -185,6 +199,10 @@ const getEnvLoadWorkspaceFiles = (): boolean => {
   return getEnvConfigurationValue('loadWorkspaceFiles', true)
 }
 
+const getCLIUseIntegratedRunme = (): boolean => {
+  return getCLIConfigurationValue('useIntegratedRunme', false)
+}
+
 export {
     getPortNumber,
     getBinaryPath,
@@ -202,4 +220,5 @@ export {
     getCustomServerAddress,
     getEnvWorkspaceFileOrder,
     getEnvLoadWorkspaceFiles,
+    getCLIUseIntegratedRunme,
 }
