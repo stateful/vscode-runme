@@ -18,7 +18,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages, DEFAULT_LANGUAGEID, NOTEBOOK_HAS_CATEGORIES } from '../constants'
+import { ClientMessages, DEFAULT_LANGUAGEID, NOTEBOOK_HAS_CATEGORIES, SUPPORTED_FILE_EXTENSIONS } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
@@ -92,6 +92,11 @@ export class Kernel implements Disposable {
         //            e.g., use powershell/bat for respective shells
         DEFAULT_LANGUAGEID,
         ...l.filter(x => x !== DEFAULT_LANGUAGEID),
+
+        // need to include file extensions since people often use file
+        // extension to tag code blocks
+        // TODO(mxs): should allow users to select their own
+        ...SUPPORTED_FILE_EXTENSIONS,
       ]
     })
 
