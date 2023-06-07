@@ -116,8 +116,6 @@ export const VSCODE_LANGUAGEID_MAP: Record<string, string|undefined> = {
   'shellscript': 'sh',
   'javascriptreact': 'jsx',
   'typescriptreact': 'tsx',
-  'javascript': 'js',
-  'typescript': 'ts',
 }
 
 export const DEFAULT_LANGUAGEID = 'shellscript'
