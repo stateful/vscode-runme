@@ -48,7 +48,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       workspace.onDidChangeNotebookDocument(
         this.handleNotebookChanged.bind(this)
       ),
-      // TODO(mxs): https://github.com/stateful/vscode-runme/issues/566#issuecomment-1574128419
       // workspace.onDidSaveNotebookDocument(
       //   this.handleNotebookSaved.bind(this)
       // )
