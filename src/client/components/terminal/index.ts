@@ -23,10 +23,24 @@ interface IWindowSize {
   height: number
 }
 
+enum MessageOptions {
+  OpenLink = 'Open link',
+  CopyToClipboard = 'Copy to clipboard',
+  Cancel = 'Cancel'
+}
+
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
-const LISTEN_TO_EVENTS = ['terminal:', 'theme:', 'common:apiRequest', 'common:apiResponse', 'common:onOkCancelMessage']
+const LISTEN_TO_EVENTS = [
+  'terminal:',
+  'theme:',
+  ClientMessages.apiRequest,
+  ClientMessages.apiResponse,
+  ClientMessages.onOptionsMessage,
+  ClientMessages.optionsMessage,
+  ClientMessages.onCopyTextToClipboard
+]
 
 const ANSI_COLORS = [
   'black',
@@ -387,17 +401,30 @@ export class TerminalView extends LitElement {
             }
             const { data: { createCellExecution: { htmlUrl } } } = e.output.data
             this.shareUrl = htmlUrl
-            await this.#copyAndDisplayOpenDialog()
+            await this.#displayShareDialog()
 
           } break
 
-          case ClientMessages.onOkCancelMessage: {
+          case ClientMessages.onOptionsMessage: {
             if (e.output.uuid !== this.uuid) { return }
             const answer = e.output.option
+            this.isLoading = false
 
-            if (answer === 'Yes') {
-              await postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+            switch (answer) {
+              case MessageOptions.OpenLink: {
+                return postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+              }
+              case MessageOptions.CopyToClipboard: {
+                return postClientMessage(ctx, ClientMessages.copyTextToClipboard, {
+                  uuid: this.uuid!,
+                  text: this.shareUrl!
+                })
+              }
             }
+          } break
+          case ClientMessages.onCopyTextToClipboard: {
+            if (e.output.uuid !== this.uuid) { return }
+            return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
           }
         }
       }),
@@ -562,20 +589,12 @@ export class TerminalView extends LitElement {
     })
   }
 
-  async #copyAndDisplayOpenDialog(): Promise<boolean | void> {
+  async #displayShareDialog(): Promise<boolean | void> {
     const ctx = getContext()
     if (!ctx.postMessage || !this.shareUrl) { return }
-    await navigator.clipboard.writeText(this.shareUrl).then(() => {
-      this.shareText = 'Copied!'
-      this.isCellShared = true
-    }).catch(
-      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `Failed to copy to clipboard: ${err.message}!`),
-    )
-
-    return postClientMessage(ctx, ClientMessages.okCancelMessage, {
-      title: 'Share link copied to the clipboard, do you want to open it?',
-      okText: 'Yes',
-      cancelText: 'No',
+    return postClientMessage(ctx, ClientMessages.optionsMessage, {
+      title: 'Share link created',
+      options: Object.values(MessageOptions),
       uuid: this.uuid!
     })
   }
@@ -583,7 +602,7 @@ export class TerminalView extends LitElement {
   async #shareCellOutput(): Promise<boolean | void | undefined> {
     const ctx = getContext()
     if (!ctx.postMessage) { return }
-    if (this.isCellShared) { return this.#copyAndDisplayOpenDialog() }
+    if (this.isCellShared) { return this.#displayShareDialog() }
     try {
       this.isLoading = true
       const contentWithAnsi = this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''

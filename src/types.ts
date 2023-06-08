@@ -220,17 +220,23 @@ export interface ClientMessagePayload {
     uuid: string
     hasErrors?: boolean
   }
-  [ClientMessages.okCancelMessage]: {
+  [ClientMessages.optionsMessage]: {
     title: string
     uuid: string
-    okText?: string
-    cancelText?: string
+    options: any[]
   }
-  [ClientMessages.onOkCancelMessage]: {
+  [ClientMessages.onOptionsMessage]: {
     uuid: string
     option: string | undefined
   }
   [ClientMessages.openExternalLink]: string
+  [ClientMessages.copyTextToClipboard]: {
+    uuid: string
+    text: string
+  }
+  [ClientMessages.onCopyTextToClipboard]: {
+    uuid: string
+  }
 }
 
 export interface OutputItemsPayload {

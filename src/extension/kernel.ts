@@ -325,13 +325,15 @@ export class Kernel implements Disposable {
         message,
         editor
       })
-    } else if (message.type === ClientMessages.okCancelMessage) {
-      const answer = await window.showInformationMessage(message.output.title,
-        message.output.okText || 'Ok',
-        message.output.cancelText || 'Cancel')
-
-      return postClientMessage(this.messaging, ClientMessages.onOkCancelMessage, {
+    } else if (message.type === ClientMessages.optionsMessage) {
+      const answer = await window.showInformationMessage(message.output.title, ...message.output.options)
+      return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
         option: answer,
+        uuid: message.output.uuid
+      })
+    } else if (message.type === ClientMessages.copyTextToClipboard) {
+      await env.clipboard.writeText(message.output.text)
+      return postClientMessage(this.messaging, ClientMessages.onCopyTextToClipboard, {
         uuid: message.output.uuid
       })
     } else if (message.type === ClientMessages.openExternalLink) {

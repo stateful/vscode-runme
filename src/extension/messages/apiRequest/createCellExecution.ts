@@ -9,9 +9,10 @@ import { postClientMessage } from '../../../utils/messaging'
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.apiRequest>>
 
 export default async function createCellExecution(requestMessage: APIRequestMessage): Promise<void | boolean> {
+    const { messaging, message, editor } = requestMessage
+
     try {
 
-        const { messaging, message, editor } = requestMessage
         const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
         if (!cell) {
             throw new Error('Cell not found')
