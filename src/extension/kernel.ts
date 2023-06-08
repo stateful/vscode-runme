@@ -41,6 +41,7 @@ import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecut
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
+import handleApiMessage from './messages/apiRequest'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -257,9 +258,9 @@ export class Kernel implements Disposable {
         return this._doExecuteCell(cell)
       }
     } else if (message.type === ClientMessages.infoMessage) {
-      return window.showInformationMessage(message.output as string)
+      return window.showInformationMessage(message.output as string,)
     } else if (message.type === ClientMessages.errorMessage) {
-      return window.showInformationMessage(message.output as string)
+      return window.showErrorMessage(message.output as string)
     } else if (message.type === ClientMessages.openLink) {
       return env.openExternal(Uri.parse(message.output))
     } else if (message.type === ClientMessages.closeCellOutput) {
@@ -291,7 +292,7 @@ export class Kernel implements Disposable {
       })
     } else if (message.type === ClientMessages.getState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
-      if(!cell) {
+      if (!cell) {
         return
       }
       const categories = await getNotebookCategories(this.context, cell.notebook.uri)
@@ -305,7 +306,7 @@ export class Kernel implements Disposable {
       })
     } else if (message.type === ClientMessages.setState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
-      if(!cell) {
+      if (!cell) {
         return
       }
       await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
@@ -318,6 +319,25 @@ export class Kernel implements Disposable {
         option: selectedOption,
         uuid: message.output.uuid
       })
+    } else if (message.type === ClientMessages.apiRequest) {
+      return handleApiMessage({
+        messaging: this.messaging,
+        message,
+        editor
+      })
+    } else if (message.type === ClientMessages.optionsMessage) {
+      const answer = await window.showInformationMessage(message.output.title, ...message.output.options)
+      return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
+        option: answer,
+        uuid: message.output.uuid
+      })
+    } else if (message.type === ClientMessages.copyTextToClipboard) {
+      await env.clipboard.writeText(message.output.text)
+      return postClientMessage(this.messaging, ClientMessages.onCopyTextToClipboard, {
+        uuid: message.output.uuid
+      })
+    } else if (message.type === ClientMessages.openExternalLink) {
+      return env.openExternal(Uri.parse(message.output))
     } else if (
       message.type.startsWith('terminal:')
     ) {
@@ -392,7 +412,7 @@ export class Kernel implements Disposable {
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution|undefined> {
+  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution | undefined> {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
 
@@ -433,17 +453,17 @@ export class Kernel implements Disposable {
       !isWindows()
     ) {
       const runScript = (execKey: 'sh' | 'bash' = 'bash') => executeRunner(
-          this,
-          this.context,
-          this.runner!,
-          exec,
-          runningCell,
-          this.messaging,
-          uuid,
-          execKey,
-          outputs,
-          this.environment,
-          environmentManager
+        this,
+        this.context,
+        this.runner!,
+        exec,
+        runningCell,
+        this.messaging,
+        uuid,
+        execKey,
+        outputs,
+        this.environment,
+        environmentManager
       )
         .catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)

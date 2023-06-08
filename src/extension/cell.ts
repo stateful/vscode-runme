@@ -20,7 +20,8 @@ import { Mutex } from '../utils/sync'
 import {
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
-  getNotebookTerminalRows
+  getNotebookTerminalRows,
+  isRunmeApiEnable
 } from '../utils/configuration'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -172,7 +173,10 @@ export class NotebookCellOutputManager {
               terminalFontFamily,
               terminalFontSize,
               content: terminalState.serialize(),
-              initialRows: getNotebookTerminalRows()
+              initialRows: getNotebookTerminalRows(),
+              annotations: getAnnotations(cell),
+              input: cell.document.getText(),
+              enableShareButton: isRunmeApiEnable()
             }
           }
 
@@ -266,7 +270,7 @@ export class NotebookCellOutputManager {
   private async newCellExecution(): Promise<NotebookCellExecution | undefined> {
     try {
       return this.controller.createNotebookCellExecution(this.cell)
-    } catch(e: any) {
+    } catch (e: any) {
       if (e.message.toString().includes('controller is NOT associated')) {
         await this.handleNotebookKernelSelection()
         return undefined
@@ -276,7 +280,7 @@ export class NotebookCellOutputManager {
     }
   }
 
-  async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution|undefined> {
+  async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution | undefined> {
     await this.onFinish
 
     return await this.withLock(async () => {
