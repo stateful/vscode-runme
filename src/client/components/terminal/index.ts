@@ -5,14 +5,18 @@ import { ITheme, Terminal as XTermJS } from 'xterm'
 import { SerializeAddon } from 'xterm-addon-serialize'
 import { Unicode11Addon } from 'xterm-addon-unicode11'
 import { WebLinksAddon } from 'xterm-addon-web-links'
+import { when } from 'lit/directives/when.js'
 
-import { FitAddon, type ITerminalDimensions } from '../fitAddon'
-import { ClientMessages, RENDERERS, OutputType } from '../../constants'
-import { closeOutput, getContext } from '../utils'
-import { onClientMessage, postClientMessage } from '../../utils/messaging'
-import { stripANSI } from '../../utils/ansi'
+import { FitAddon, type ITerminalDimensions } from '../../fitAddon'
+import { ClientMessages, RENDERERS, OutputType } from '../../../constants'
+import { closeOutput, getContext } from '../../utils'
+import { onClientMessage, postClientMessage } from '../../../utils/messaging'
+import { stripANSI } from '../../../utils/ansi'
+import { APIMethod, CellAnnotations } from '../../../types'
 
-import './closeCellButton'
+import '../closeCellButton'
+import '../copyButton'
+import './share'
 
 interface IWindowSize {
   width: number
@@ -22,7 +26,7 @@ interface IWindowSize {
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
-const LISTEN_TO_EVENTS = ['terminal:', 'theme:']
+const LISTEN_TO_EVENTS = ['terminal:', 'theme:', 'common:apiRequest', 'common:apiResponse', 'common:onOkCancelMessage']
 
 const ANSI_COLORS = [
   'black',
@@ -46,6 +50,11 @@ const ANSI_COLORS = [
 
 @customElement(RENDERERS.TerminalView)
 export class TerminalView extends LitElement {
+
+  protected copyText = 'Copy'
+  protected shareText = 'Share'
+
+
   static styles = css`
     .xterm {
       cursor: text;
@@ -292,6 +301,21 @@ export class TerminalView extends LitElement {
   @property({ type: Number })
   lastLine?: number // TODO: Get the last line of the terminal and store it.
 
+  @property({ type: Object, reflect: true })
+  annotations?: CellAnnotations
+
+  @property({ type: String })
+  input?: string
+
+  @property()
+  isLoading: boolean = false
+
+  @property()
+  isCellShared: boolean = false
+
+  @property()
+  shareUrl?: string
+
   constructor() {
     super()
     this.windowSize = {
@@ -340,7 +364,7 @@ export class TerminalView extends LitElement {
     window.addEventListener('resize', this.#onResizeWindow.bind(this))
 
     this.disposables.push(
-      onClientMessage(ctx, (e) => {
+      onClientMessage(ctx, async (e) => {
         if (!LISTEN_TO_EVENTS.some(event => e.type.startsWith(event))) { return }
 
         switch (e.type) {
@@ -355,6 +379,26 @@ export class TerminalView extends LitElement {
               this.terminal!.write(data)
             }
           } break
+          case ClientMessages.apiResponse: {
+            if (e.output.uuid !== this.uuid) { return }
+            this.isLoading = false
+            if (e.output.hasErrors) {
+              return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
+            }
+            const { data: { createCellExecution: { htmlUrl } } } = e.output.data
+            this.shareUrl = htmlUrl
+            await this.#copyAndDisplayOpenDialog()
+
+          } break
+
+          case ClientMessages.onOkCancelMessage: {
+            if (e.output.uuid !== this.uuid) { return }
+            const answer = e.output.option
+
+            if (answer === 'Yes') {
+              await postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+            }
+          }
         }
       }),
       this.terminal.onData((data) => postClientMessage(ctx, ClientMessages.terminalStdin, {
@@ -518,6 +562,50 @@ export class TerminalView extends LitElement {
     })
   }
 
+  async #copyAndDisplayOpenDialog(): Promise<boolean | void> {
+    const ctx = getContext()
+    if (!ctx.postMessage || !this.shareUrl) { return }
+    await navigator.clipboard.writeText(this.shareUrl).then(() => {
+      this.shareText = 'Copied!'
+      this.isCellShared = true
+    }).catch(
+      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `Failed to copy to clipboard: ${err.message}!`),
+    )
+
+    return postClientMessage(ctx, ClientMessages.okCancelMessage, {
+      title: 'Share link copied to the clipboard, do you want to open it?',
+      okText: 'Yes',
+      cancelText: 'No',
+      uuid: this.uuid!
+    })
+  }
+
+  async #shareCellOutput(): Promise<boolean | void | undefined> {
+    const ctx = getContext()
+    if (!ctx.postMessage) { return }
+    if (this.isCellShared) { return this.#copyAndDisplayOpenDialog() }
+    try {
+      this.isLoading = true
+      const contentWithAnsi = this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
+      const terminalContents = new TextEncoder().encode(contentWithAnsi)
+
+      await postClientMessage(ctx, ClientMessages.apiRequest, {
+        data: {
+          stdout: JSON.stringify([...terminalContents], null, 2),
+          input: encodeURIComponent(this.input!),
+          metadata: this.annotations
+
+        },
+        uuid: this.uuid!,
+        method: APIMethod.CreateCellExecution
+      })
+    } catch (error) {
+      this.isLoading = false
+      postClientMessage(ctx, ClientMessages.infoMessage, `Failed to share output: ${(error as any).message}`)
+    }
+
+  }
+
   #onWebLinkClick(event: MouseEvent, uri: string): void {
     postClientMessage(getContext(), ClientMessages.openLink, uri)
   }
@@ -533,18 +621,22 @@ export class TerminalView extends LitElement {
         })
       }}"></close-cell-button>
       <div class="button-group">
-        <vscode-button appearance="secondary" @click="${this.#copy.bind(this)}">
-          <svg
-            class="icon" width="16" height="16" viewBox="0 0 16 16"
-            xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-          >
-            <path fill-rule="evenodd" clip-rule="evenodd"
-              d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"/>
-            <path fill-rule="evenodd" clip-rule="evenodd"
-              d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"/>
-          </svg>
-          Copy
-        </vscode-button>
+      <copy-button copyText="${this.copyText}" @onCopy="${async () => {
+        return this.#copy()
+      }}"></copy-button>
+      ${when(this.isLoading,
+        () => html`
+          <share-cell 
+            disabled
+            shareText="${this.shareText}"
+            @onShare="${this.#shareCellOutput}">
+          </share-cell>`,
+        () => html`
+          <share-cell
+            shareText="${this.shareText}"
+            @onShare="${this.#shareCellOutput}">
+          </share-cell>`)
+      }
       </div>
     </section>`
   }
@@ -556,11 +648,12 @@ export class TerminalView extends LitElement {
   #copy() {
     const ctx = getContext()
     if (!ctx.postMessage) { return }
-
     const content = stripANSI(this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '')
-
-    return navigator.clipboard.writeText(content).catch(
-      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `'Failed to copy to clipboard: ${err.message}!'`),
+    return navigator.clipboard.writeText(content).then(() => {
+      this.copyText = 'Copied!'
+      this.requestUpdate()
+    }).catch(
+      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `Failed to copy to clipboard: ${err.message}!`),
     )
   }
 }

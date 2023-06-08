@@ -24,6 +24,11 @@ export enum ClientMessages {
   setState = 'common:setState',
   getState = 'common:getState',
   onGetState = 'common:onGetState',
+  apiRequest = 'common:apiRequest',
+  apiResponse = 'common:apiResponse',
+  okCancelMessage = 'common:okCancelMessage',
+  openExternalLink = 'common:openExternalLink',
+  onOkCancelMessage = 'common:onOkCancelMessage',
   denoUpdate = 'deno:deploymentUpdate',
   denoPromote = 'deno:promoteDeployment',
   vercelProd = 'vercel:promotePreview',
@@ -104,7 +109,7 @@ export const SERVER_PORT = 7863
 
 export const DEFAULT_PROMPT_ENV = true
 
-export enum RENDERERS  {
+export enum RENDERERS {
   VercelOutput = 'vercel-output',
   DenoOutput = 'deno-output',
   ShellOutput = 'shell-output',

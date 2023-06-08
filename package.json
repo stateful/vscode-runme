@@ -425,6 +425,11 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "Load environment files from workspace into all scripts"
+          },
+          "runme.cloud.apiUrl": {
+            "type": "string",
+            "default": "https://app.runme.dev/graphql",
+            "markdownDescription": "Runme Cloud API URL"
           }
         }
       }
@@ -553,6 +558,7 @@
   },
   "devDependencies": {
     "@octokit/rest": "^19.0.8",
+    "@types/isomorphic-fetch": "^0.0.36",
     "@types/node": "^20.1.5",
     "@types/split2": "^4.2.0",
     "@types/uuid": "^9.0.1",
@@ -594,6 +600,7 @@
     "webpack-cli": "^5.1.1"
   },
   "dependencies": {
+    "@apollo/client": "^3.7.15",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.0-20230505202852-f6db652602f5.1",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.0-20230522162609-549daeeacece.1",
     "@protobuf-ts/grpc-transport": "^2.9.0",
@@ -604,11 +611,15 @@
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "clipboardy": "^3.0.0",
+    "clsx": "^1.2.1",
+    "cross-fetch": "^3.1.6",
     "detect-port": "^1.5.1",
     "dotenv": "^16.0.3",
     "filenamify": "^6.0.0",
     "get-port": "^6.1.2",
     "got": "^12.6.0",
+    "graphql": "^16.6.0",
+    "isomorphic-fetch": "^3.0.0",
     "lit": "^2.7.4",
     "octokit": "^2.0.14",
     "preact": "^10.14.1",

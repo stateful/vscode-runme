@@ -12,67 +12,72 @@ const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME = 'runme.terminal'
 const CODELENS_SECTION_NAME = 'runme.codelens'
 const ENV_SECTION_NAME = 'runme.env'
+const CLOUD_SECTION_NAME = 'runme.cloud'
 
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
+const DEFAULT_RUNME_CLOUD_API_URL = 'https://app.runme.dev/graphql'
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
 const configurationSchema = {
-    server: {
-        customAddress: z
-            .string()
-            .nonempty()
-            .optional(),
-        binaryPath: z
-            .string()
-            .optional(),
-        enableLogger: z
-            .boolean()
-            .default(false),
-        enableTLS: z
-            .boolean()
-            .default(true),
-        tlsDir: z
-            .string()
-            .nonempty()
-            .default(DEFAULT_TLS_DIR),
-    },
-    notebookTerminal: {
-        backgroundTask: z.boolean().default(true),
-        nonInteractive: z.boolean().default(false),
-        interactive: z.boolean().default(true),
-        fontSize: z.number().optional(),
-        fontFamily: z.string().optional(),
-        rows: z.number().int()
-    },
-    codelens: {
-      enable: z.boolean().default(true)
-    },
-    env: {
-      workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
-      loadWorkspaceFiles: z.boolean().default(true),
-    }
+  server: {
+    customAddress: z
+      .string()
+      .nonempty()
+      .optional(),
+    binaryPath: z
+      .string()
+      .optional(),
+    enableLogger: z
+      .boolean()
+      .default(false),
+    enableTLS: z
+      .boolean()
+      .default(true),
+    tlsDir: z
+      .string()
+      .nonempty()
+      .default(DEFAULT_TLS_DIR),
+  },
+  notebookTerminal: {
+    backgroundTask: z.boolean().default(true),
+    nonInteractive: z.boolean().default(false),
+    interactive: z.boolean().default(true),
+    fontSize: z.number().optional(),
+    fontFamily: z.string().optional(),
+    rows: z.number().int()
+  },
+  codelens: {
+    enable: z.boolean().default(true)
+  },
+  env: {
+    workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
+    loadWorkspaceFiles: z.boolean().default(true),
+  },
+  cloud: {
+    apiUrl: z.string().default(DEFAULT_RUNME_CLOUD_API_URL)
+  }
 }
 
 const getServerConfigurationValue = <T>(configName: keyof typeof configurationSchema.server, defaultValue: T) => {
-    const configurationSection = workspace.getConfiguration(SERVER_SECTION_NAME)
-    const configurationValue = configurationSection.get<T>(configName)!
-    const parseResult = configurationSchema.server[configName].safeParse(configurationValue)
-    if (parseResult.success) {
-        return parseResult.data as T
-    }
-    return defaultValue
+  const configurationSection = workspace.getConfiguration(SERVER_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.server[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
+  }
+  return defaultValue
 }
 
 const getRunmeTerminalConfigurationValue = <T>(configName: NotebookTerminalValue, defaultValue: T) => {
-    const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
-    const configurationValue = configurationSection.get<T>(configName)!
-    const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
-    if (parseResult.success) {
-        return parseResult.data as T
-    }
-return defaultValue
+  const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
+  }
+  return defaultValue
 }
 
 const getCodeLensConfigurationValue = <T>(configName: keyof typeof configurationSchema.codelens, defaultValue: T) => {
@@ -80,7 +85,7 @@ const getCodeLensConfigurationValue = <T>(configName: keyof typeof configuration
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
   if (parseResult.success) {
-      return parseResult.data as T
+    return parseResult.data as T
   }
   return defaultValue
 }
@@ -90,7 +95,17 @@ const getEnvConfigurationValue = <T>(configName: keyof typeof configurationSchem
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.env[configName].safeParse(configurationValue)
   if (parseResult.success) {
-      return parseResult.data as T
+    return parseResult.data as T
+  }
+  return defaultValue
+}
+
+const getCloudConfigurationValue = <T>(configName: keyof typeof configurationSchema.cloud, defaultValue: T) => {
+  const configurationSection = workspace.getConfiguration(CLOUD_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.cloud[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
   }
   return defaultValue
 }
@@ -99,12 +114,12 @@ const getPortNumber = (): number => {
   return SERVER_PORT
 }
 
-const getCustomServerAddress = (): string|undefined => {
-  return getServerConfigurationValue<string|undefined>('customAddress', undefined)
+const getCustomServerAddress = (): string | undefined => {
+  return getServerConfigurationValue<string | undefined>('customAddress', undefined)
 }
 
 const getTLSEnabled = (): boolean => {
-  if(isWindows()) {
+  if (isWindows()) {
     // disable on windows until we figure out file permissions
     return false
   }
@@ -117,37 +132,37 @@ const getTLSDir = (): string => {
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
-    const userPath = getServerConfigurationValue<string | undefined>('binaryPath', undefined)
+  const userPath = getServerConfigurationValue<string | undefined>('binaryPath', undefined)
 
-    const isWin = platform.toLowerCase().startsWith('win')
-    const binName = isWin ? 'runme.exe' : 'runme'
-    const bundledPath = Uri.joinPath(extensionBaseUri, 'bin', binName)
+  const isWin = platform.toLowerCase().startsWith('win')
+  const binName = isWin ? 'runme.exe' : 'runme'
+  const bundledPath = Uri.joinPath(extensionBaseUri, 'bin', binName)
 
-    if (userPath) {
-        if (path.isAbsolute(userPath)) {
-            return Uri.file(userPath)
-        } else if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
-            return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
-        }
+  if (userPath) {
+    if (path.isAbsolute(userPath)) {
+      return Uri.file(userPath)
+    } else if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
+      return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
     }
+  }
 
-    return bundledPath
+  return bundledPath
 }
 
 const enableServerLogs = (): boolean => {
-    return getServerConfigurationValue<boolean>('enableLogger', false)
+  return getServerConfigurationValue<boolean>('enableLogger', false)
 }
 
 const isNotebookTerminalFeatureEnabled = (featureName: keyof typeof configurationSchema.notebookTerminal): boolean => {
-    return getRunmeTerminalConfigurationValue(featureName, false)
+  return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
-const getNotebookTerminalFontSize = (): number|undefined => {
-  return getRunmeTerminalConfigurationValue<number|undefined>('fontSize', undefined)
+const getNotebookTerminalFontSize = (): number | undefined => {
+  return getRunmeTerminalConfigurationValue<number | undefined>('fontSize', undefined)
 }
 
-const getNotebookTerminalFontFamily = (): string|undefined => {
-  return getRunmeTerminalConfigurationValue<string|undefined>('fontFamily', undefined)
+const getNotebookTerminalFontFamily = (): string | undefined => {
+  return getRunmeTerminalConfigurationValue<string | undefined>('fontFamily', undefined)
 }
 
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
@@ -185,21 +200,26 @@ const getEnvLoadWorkspaceFiles = (): boolean => {
   return getEnvConfigurationValue('loadWorkspaceFiles', true)
 }
 
+const getCloudApiUrl = (): string => {
+  return getCloudConfigurationValue('apiUrl', DEFAULT_RUNME_CLOUD_API_URL)
+}
+
 export {
-    getPortNumber,
-    getBinaryPath,
-    enableServerLogs,
-    getServerConfigurationValue,
-    isNotebookTerminalFeatureEnabled,
-    isNotebookTerminalEnabledForCell,
-    getTLSEnabled,
-    getTLSDir,
-    getNotebookTerminalFontFamily,
-    getNotebookTerminalFontSize,
-    getNotebookTerminalRows,
-    getCodeLensEnabled,
-    registerExtensionEnvironmentVariables,
-    getCustomServerAddress,
-    getEnvWorkspaceFileOrder,
-    getEnvLoadWorkspaceFiles,
+  getPortNumber,
+  getBinaryPath,
+  enableServerLogs,
+  getServerConfigurationValue,
+  isNotebookTerminalFeatureEnabled,
+  isNotebookTerminalEnabledForCell,
+  getTLSEnabled,
+  getTLSDir,
+  getNotebookTerminalFontFamily,
+  getNotebookTerminalFontSize,
+  getNotebookTerminalRows,
+  getCodeLensEnabled,
+  registerExtensionEnvironmentVariables,
+  getCustomServerAddress,
+  getEnvWorkspaceFileOrder,
+  getEnvLoadWorkspaceFiles,
+  getCloudApiUrl,
 }

@@ -1,4 +1,13 @@
-import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions, Uri, ExtensionContext } from 'vscode'
+import {
+  NotebookCellKind,
+  TaskDefinition,
+  type Terminal,
+  TerminalDimensions,
+  Uri,
+  ExtensionContext,
+  NotebookRendererMessaging,
+  NotebookEditor
+} from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -97,6 +106,8 @@ interface Payload {
     terminalFontSize: number
     content?: string
     initialRows?: number
+    annotations: CellAnnotations
+    input: string
   }
   [OutputType.github]?: GitHubState
 }
@@ -198,6 +209,28 @@ export interface ClientMessagePayload {
     value: string | string[]
     uuid: string
   }
+  [ClientMessages.apiRequest]: {
+    data: any
+    uuid: string
+    hasErrors?: boolean
+    method: APIMethod
+  }
+  [ClientMessages.apiResponse]: {
+    data: any
+    uuid: string
+    hasErrors?: boolean
+  }
+  [ClientMessages.okCancelMessage]: {
+    title: string
+    uuid: string
+    okText?: string
+    cancelText?: string
+  }
+  [ClientMessages.onOkCancelMessage]: {
+    uuid: string
+    option: string | undefined
+  }
+  [ClientMessages.openExternalLink]: string
 }
 
 export interface OutputItemsPayload {
@@ -247,4 +280,14 @@ export interface NotebookToolbarCommand {
       notebookUri: Uri
     }
   }
+}
+
+export enum APIMethod {
+  CreateCellExecution = 'createCellExecution'
+}
+
+export interface IApiMessage<T extends ClientMessage<ClientMessages>> {
+  messaging: NotebookRendererMessaging
+  message: T
+  editor: NotebookEditor
 }
