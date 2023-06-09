@@ -18,12 +18,21 @@ import {
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
-import { getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
+import {
+  getBinaryPath,
+  getCLIUseIntegratedRunme,
+  getTLSDir,
+  getTLSEnabled,
+  isNotebookTerminalEnabledForCell
+} from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import { getAnnotations, getNotebookCategories, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
+import getLogger from '../logger'
+
+const log = getLogger('Commands')
 
 function showWarningMessage() {
   return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
@@ -116,12 +125,38 @@ export function runCLICommand(
   server: RunmeServer,
   kernel: Kernel
 ) {
-  return async function (cell: { metadata?: any, document: TextDocument }) {
+  return async function (cell: NotebookCell) {
+    if (cell.notebook.isDirty) {
+      const option = await window.showInformationMessage(
+        'You have unsaved changes. Save and run in CLI?',
+        'Save',
+        'Cancel'
+      )
+
+      if (option === 'Cancel' || !option) {
+        return
+      }
+
+      await cell.notebook.save()
+    }
+
     const cwd = path.dirname(cell.document.uri.fsPath)
+
+    const index = cell.notebook.getCells()
+      .filter(x => x.kind === NotebookCellKind.Code)
+      .indexOf(cell)
+
+    if (index < 0) {
+      window.showErrorMessage('Internal error identifying cell index')
+      log.error(`Failed getting code cell index for cell at index ${cell.index}`)
+
+      return
+    }
 
     const args = [
       `--chdir="${cwd}"`,
-      `--filename="${path.basename(cell.document.uri.fsPath)}"`
+      `--filename="${path.basename(cell.document.uri.fsPath)}"`,
+      `--index=${index}`
     ]
 
     const envs: Record<string, string> = {}
@@ -148,8 +183,10 @@ export function runCLICommand(
       env: envs,
     })
 
+    const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri, process.platform).fsPath : 'runme'
+
     term.show(false)
-    term.sendText(`runme run ${annotations.name} ${args.join(' ')}`)
+    term.sendText(`${runmeExec} run ${args.join(' ')}`)
   }
 }
 

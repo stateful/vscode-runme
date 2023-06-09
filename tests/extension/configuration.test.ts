@@ -12,7 +12,8 @@ import {
   DEFAULT_TLS_DIR,
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
-  getCodeLensEnabled
+  getCodeLensEnabled,
+  getCLIUseIntegratedRunme
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
 
@@ -148,6 +149,10 @@ suite('Configuration', () => {
       expect(
         getCodeLensEnabled()
       ).toStrictEqual(true)
+    })
+
+    test('getCLIUseIntegratexRunme should return false by default', () => {
+      expect(getCLIUseIntegratedRunme()).toStrictEqual(false)
     })
 
     suite('posix', () => {
