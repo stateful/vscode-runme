@@ -2,8 +2,7 @@
   "root": true,
   "extends": [
     "plugin:import/typescript",
-    "prettier",
-    "prettier/@typescript-eslint"
+    "prettier"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
@@ -40,7 +39,7 @@
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
-    "quotes": [2, "single"],
+    "quotes": ["error", "single", { "avoidEscape": true }],
     "semi": [
       "error",
       "never"

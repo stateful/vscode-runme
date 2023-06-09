@@ -7,27 +7,28 @@ import xdg from 'xdg-app-paths'
 
 import { VERCEL_DIR } from './constants'
 
-export async function getConfigFilePath () {
-  return path.join(
-    `${xdg('com.vercel.cli').dataDirs()[0]}.cli`, 'auth.json')
+export async function getConfigFilePath() {
+  return path.join(`${xdg('com.vercel.cli').dataDirs()[0]}.cli`, 'auth.json')
 }
 
-export async function getAuthToken () {
+export async function getAuthToken() {
   const authFilePath = await getConfigFilePath()
 
   try {
-    const canRead = await fs.access(authFilePath).then(() => true, () => false)
+    const canRead = await fs.access(authFilePath).then(
+      () => true,
+      () => false
+    )
     if (canRead) {
-      return JSON.parse(
-        (await fs.readFile(authFilePath, 'utf-8')).toString()
-      ).token as string
+      return JSON.parse((await fs.readFile(authFilePath, 'utf-8')).toString())
+        .token as string
     }
   } catch (err: any) {
     return
   }
 }
 
-export async function quickPick <T>(
+export async function quickPick<T>(
   title: string,
   items: string[],
   onSelect?: (selection: readonly vscode.QuickPickItem[]) => any
@@ -56,16 +57,23 @@ export async function quickPick <T>(
 /**
  * update gitignore
  */
-export async function updateGitIgnore (cwd: string, orgSlug: string, projectName: string) {
+export async function updateGitIgnore(
+  cwd: string,
+  orgSlug: string,
+  projectName: string
+) {
   let isGitIgnoreUpdated = false
   try {
     const gitIgnorePath = path.join(cwd, '.gitignore')
-    let gitIgnore = await fs.readFile(gitIgnorePath, 'utf8').catch(() => null) ?? ''
+    let gitIgnore =
+      (await fs.readFile(gitIgnorePath, 'utf8').catch(() => null)) ?? ''
     const EOL = gitIgnore.includes('\r\n') ? '\r\n' : os.EOL
     let contentModified = false
 
     if (!gitIgnore.split(EOL).includes(VERCEL_DIR)) {
-      gitIgnore += `${gitIgnore.endsWith(EOL) || gitIgnore.length === 0 ? '' : EOL}${VERCEL_DIR}${EOL}`
+      gitIgnore += `${
+        gitIgnore.endsWith(EOL) || gitIgnore.length === 0 ? '' : EOL
+      }${VERCEL_DIR}${EOL}`
       contentModified = true
     }
 
@@ -76,7 +84,9 @@ export async function updateGitIgnore (cwd: string, orgSlug: string, projectName
 
     vscode.window.showInformationMessage(
       `Linked to ${orgSlug}/${projectName} ` +
-      `(created ${VERCEL_DIR}${isGitIgnoreUpdated ? ' and added it to .gitignore' : ''})`
+        `(created ${VERCEL_DIR}${
+          isGitIgnoreUpdated ? ' and added it to .gitignore' : ''
+        })`
     )
   } catch (error) {
     // ignore errors since this is non-critical
@@ -86,8 +96,14 @@ export async function updateGitIgnore (cwd: string, orgSlug: string, projectName
 /**
  * create Vercel project file
  */
-export async function createVercelFile (cwd: string, orgId: string, projectId: string) {
+export async function createVercelFile(
+  cwd: string,
+  orgId: string,
+  projectId: string
+) {
   const vercelConfigPath = path.resolve(cwd, VERCEL_DIR, 'project.json')
-  await fs.mkdir(path.dirname(vercelConfigPath)).catch(() => { /* ignore */ })
+  await fs.mkdir(path.dirname(vercelConfigPath)).catch(() => {
+    /* ignore */
+  })
   await fs.writeFile(vercelConfigPath, JSON.stringify({ projectId, orgId }))
 }

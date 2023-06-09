@@ -1,6 +1,8 @@
 import vscode from 'vscode'
 
-export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvider {
+export class ThumbsUpProvider
+  implements vscode.NotebookCellStatusBarItemProvider
+{
   provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): vscode.NotebookCellStatusBarItem | undefined {
@@ -19,7 +21,8 @@ export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvide
 }
 
 export class ThumbsDownProvider
-  implements vscode.NotebookCellStatusBarItemProvider {
+  implements vscode.NotebookCellStatusBarItemProvider
+{
   provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): vscode.NotebookCellStatusBarItem | undefined {
@@ -32,7 +35,7 @@ export class ThumbsDownProvider
       vscode.NotebookCellStatusBarAlignment.Right
     )
     item.command = 'marquee.open'
-    item.tooltip = 'Didn\'t work'
+    item.tooltip = "Didn't work"
     return item
   }
 }

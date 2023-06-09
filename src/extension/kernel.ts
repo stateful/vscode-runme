@@ -22,7 +22,10 @@ import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
 import getLogger from './logger'
-import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
+import executor, {
+  type IEnvironmentManager,
+  ENV_STORE_MANAGER,
+} from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   resetEnv,
@@ -37,7 +40,12 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
-import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
+import {
+  NotebookCellManager,
+  NotebookCellOutputManager,
+  RunmeNotebookCellExecution,
+  getCellByUuId,
+} from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
@@ -46,7 +54,7 @@ enum ConfirmationItems {
   Yes = 'Yes',
   No = 'No',
   Skip = 'Skip Prompt and run all',
-  Cancel = 'Cancel'
+  Cancel = 'Cancel',
 }
 
 const log = getLogger('Kernel')
@@ -71,11 +79,12 @@ export class Kernel implements Disposable {
   protected cellManager = new NotebookCellManager(this.#controller)
   protected category?: string
 
-  constructor(
-    protected context: ExtensionContext
-  ) {
+  constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
+    this.#experiments.set(
+      'grpcSerializer',
+      config.get<boolean>('grpcSerializer', true)
+    )
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
 
@@ -86,11 +95,17 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      this.messaging.onDidReceiveMessage(
+        this.#handleRendererMessage.bind(this)
+      ),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
-      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
-      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this))
+      window.onDidChangeActiveColorTheme(
+        this.#handleActiveColorThemeMessage.bind(this)
+      ),
+      window.onDidChangeActiveNotebookEditor(
+        this.#handleActiveNotebook.bind(this)
+      )
     )
   }
 
@@ -112,28 +127,45 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
-  async getTerminalState(cell: NotebookCell): Promise<ITerminalState | undefined> {
+  async getTerminalState(
+    cell: NotebookCell
+  ): Promise<ITerminalState | undefined> {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
-  async registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): Promise<ITerminalState> {
+  async registerCellTerminalState(
+    cell: NotebookCell,
+    type: NotebookTerminalType
+  ): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
     return outputs.registerCellTerminalState(type)
   }
 
-  async #handleSaveNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
+  async #handleSaveNotebook({
+    uri,
+    isUntitled,
+    notebookType,
+    getCells,
+  }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
     }
     const availableCategories: string[] = []
     getCells().forEach((cell) => {
       const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
+      if (
+        annotations.category !== '' &&
+        !availableCategories.includes(annotations.category)
+      ) {
         availableCategories.push(annotations.category)
       }
     })
     setNotebookCategories(this.context, uri, availableCategories)
-    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.length)
+    await commands.executeCommand(
+      'setContext',
+      NOTEBOOK_HAS_CATEGORIES,
+      !!availableCategories.length
+    )
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
 
@@ -152,7 +184,10 @@ export class Kernel implements Disposable {
     const availableCategories: string[] = []
     getCells().forEach((cell) => {
       const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
+      if (
+        annotations.category !== '' &&
+        !availableCategories.includes(annotations.category)
+      ) {
         availableCategories.push(annotations.category)
       }
       this.registerNotebookCell(cell)
@@ -174,7 +209,11 @@ export class Kernel implements Disposable {
     }
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
-    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
+    await commands.executeCommand(
+      'setContext',
+      NOTEBOOK_HAS_CATEGORIES,
+      !!categories.length
+    )
   }
 
   // eslint-disable-next-line max-len
@@ -186,15 +225,15 @@ export class Kernel implements Disposable {
     message: ClientMessage<ClientMessages>
   }) {
     if (message.type === ClientMessages.mutateAnnotations) {
-      const payload =
-        message as ClientMessage<ClientMessages.mutateAnnotations>
+      const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
       let editCell: NotebookCell | undefined = undefined
       for (const document of workspace.notebookDocuments) {
         for (const cell of document.getCells()) {
           if (
             cell.kind !== NotebookCellKind.Code ||
-            cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
+            cell.document.uri.fsPath !== editor.notebook.uri.fsPath
+          ) {
             continue
           }
 
@@ -235,7 +274,9 @@ export class Kernel implements Disposable {
       return
     } else if (message.type === ClientMessages.denoPromote) {
       const payload = message
-      const token = await this.getEnvironmentManager().get(DENO_ACCESS_TOKEN_KEY)
+      const token = await this.getEnvironmentManager().get(
+        DENO_ACCESS_TOKEN_KEY
+      )
       if (!token) {
         return
       }
@@ -246,7 +287,7 @@ export class Kernel implements Disposable {
         payload.output.productionDeployment
       )
       postClientMessage(this.messaging, ClientMessages.denoUpdate, {
-        promoted: deployed.valueOf()
+        promoted: deployed.valueOf(),
       })
     } else if (message.type === ClientMessages.vercelProd) {
       const payload = message as ClientMessage<ClientMessages.vercelProd>
@@ -271,7 +312,7 @@ export class Kernel implements Disposable {
         message,
         cell,
         kernel: this,
-        outputType: message.output.outputType
+        outputType: message.output.outputType,
       })
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
       await handleGitHubMessage({ messaging: this.messaging, message })
@@ -287,40 +328,48 @@ export class Kernel implements Disposable {
       }
       postClientMessage(this.messaging, ClientMessages.onPrompt, {
         answer,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.getState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
-      if(!cell) {
+      if (!cell) {
         return
       }
-      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
+      const categories = await getNotebookCategories(
+        this.context,
+        cell.notebook.uri
+      )
       if (!categories) {
         return
       }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
         value: categories,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.setState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
-      if(!cell) {
+      if (!cell) {
         return
       }
-      await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
+      await setNotebookCategories(
+        this.context,
+        cell.notebook.uri,
+        message.output.value
+      )
     } else if (message.type === ClientMessages.displayPicker) {
-      const selectedOption = await window.showQuickPick(message.output.options, {
-        title: message.output.title,
-        ignoreFocusOut: true,
-      })
+      const selectedOption = await window.showQuickPick(
+        message.output.options,
+        {
+          title: message.output.title,
+          ignoreFocusOut: true,
+        }
+      )
       postClientMessage(this.messaging, ClientMessages.onPickerOption, {
         option: selectedOption,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
-    } else if (
-      message.type.startsWith('terminal:')
-    ) {
+    } else if (message.type.startsWith('terminal:')) {
       return
     }
 
@@ -330,30 +379,40 @@ export class Kernel implements Disposable {
   private async _executeAll(cells: NotebookCell[]) {
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, false)
     const totalNotebookCells =
-      (cells[0] && cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length) || 0
+      (cells[0] &&
+        cells[0].notebook
+          .getCells()
+          .filter((cell) => cell.kind === NotebookCellKind.Code).length) ||
+      0
     const totalCellsToExecute = cells.length
-    let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
+    let showConfirmPrompt =
+      totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
     let cellsExecuted = 0
 
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
-      if (totalCellsToExecute > 1 &&
-        (this.category && annotations.category !== this.category) ||
-        (annotations.excludeFromRunAll)
+      if (
+        (totalCellsToExecute > 1 &&
+          this.category &&
+          annotations.category !== this.category) ||
+        annotations.excludeFromRunAll
       ) {
         continue
       }
       if (showConfirmPrompt) {
         const cellText = cell.document.getText()
-        const cellLabel = (
-          annotations.name ||
-            cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
-        )
+        const cellLabel =
+          annotations.name || cellText.length > 20
+            ? `${cellText.slice(0, 20)}...`
+            : cellText
 
-        const answer = await window.showQuickPick(Object.values(ConfirmationItems), {
-          title: `Are you sure you like to run "${cellLabel}"?`,
-          ignoreFocusOut: true
-        }) as ConfirmationItems | undefined
+        const answer = (await window.showQuickPick(
+          Object.values(ConfirmationItems),
+          {
+            title: `Are you sure you like to run "${cellLabel}"?`,
+            ignoreFocusOut: true,
+          }
+        )) as ConfirmationItems | undefined
 
         if (answer === ConfirmationItems.No) {
           continue
@@ -378,7 +437,11 @@ export class Kernel implements Disposable {
     this.category = undefined
     const uri = cells[0] && cells[0].notebook.uri
     const categories = await getNotebookCategories(this.context, uri)
-    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
+    await commands.executeCommand(
+      'setContext',
+      NOTEBOOK_HAS_CATEGORIES,
+      !!categories.length
+    )
 
     TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
       'cells.total': totalNotebookCells?.toString(),
@@ -387,16 +450,22 @@ export class Kernel implements Disposable {
   }
 
   #handleActiveColorThemeMessage(): void {
-    this.messaging.postMessage(<ClientMessage<ClientMessages.activeThemeChanged>>{
+    this.messaging.postMessage(<
+      ClientMessage<ClientMessages.activeThemeChanged>
+    >{
       type: ClientMessages.activeThemeChanged,
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution|undefined> {
+  public async createCellExecution(
+    cell: NotebookCell
+  ): Promise<RunmeNotebookCellExecution | undefined> {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
 
-  public async getCellOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
+  public async getCellOutputs(
+    cell: NotebookCell
+  ): Promise<NotebookCellOutputManager> {
     return await this.cellManager.getNotebookOutputs(cell)
   }
 
@@ -432,7 +501,8 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = (execKey: 'sh' | 'bash' = 'bash') => executeRunner(
+      const runScript = (execKey: 'sh' | 'bash' = 'bash') =>
+        executeRunner(
           this,
           this.context,
           this.runner!,
@@ -444,9 +514,10 @@ export class Kernel implements Disposable {
           outputs,
           this.environment,
           environmentManager
-      )
-        .catch((e) => {
-          window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
+        ).catch((e) => {
+          window.showErrorMessage(
+            `Internal failure executing runner: ${e.message}`
+          )
           log.error('Internal failure executing runner', e.message)
           return false
         })
@@ -455,16 +526,28 @@ export class Kernel implements Disposable {
         successfulCellExecution = await runScript(execKey)
       } else {
         successfulCellExecution = await executor[execKey].call(
-          this, exec, runningCell, outputs, runScript, environmentManager
+          this,
+          exec,
+          runningCell,
+          outputs,
+          runScript,
+          environmentManager
         )
       }
     } else {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey].call(this, exec, runningCell, outputs)
+      successfulCellExecution = await executor[execKey].call(
+        this,
+        exec,
+        runningCell,
+        outputs
+      )
     }
-    TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
+    TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
+      'cell.success': successfulCellExecution?.toString(),
+    })
     runmeExec.end(successfulCellExecution)
   }
 
@@ -484,10 +567,14 @@ export class Kernel implements Disposable {
             processEnviron()
           )
 
-          if (this.runner !== runner) { return }
+          if (this.runner !== runner) {
+            return
+          }
           this.environment = env
         } catch (e: any) {
-          window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
+          window.showErrorMessage(
+            `Failed to create environment for gRPC Runner: ${e.message}`
+          )
           log.error('Failed to create gRPC Runner environment', e)
         }
       })
@@ -503,13 +590,21 @@ export class Kernel implements Disposable {
     if (this.runner) {
       return {
         get: async (key) => {
-          if (!this.environment) { return undefined }
-          return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
+          if (!this.environment) {
+            return undefined
+          }
+          return (
+            await this.runner?.getEnvironmentVariables(this.environment)
+          )?.[key]
         },
         set: async (key, val) => {
-          if (!this.environment) { return undefined }
-          await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
-        }
+          if (!this.environment) {
+            return undefined
+          }
+          await this.runner?.setEnvironmentVariables(this.environment, {
+            [key]: val,
+          })
+        },
       }
     } else {
       return ENV_STORE_MANAGER

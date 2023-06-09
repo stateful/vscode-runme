@@ -11,16 +11,22 @@ import {
   NotebookEdit,
   NotebookEditor,
   workspace,
-  WorkspaceEdit
+  WorkspaceEdit,
 } from 'vscode'
 
 import { OutputType } from '../constants'
-import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
+import {
+  CellOutputPayload,
+  DenoState,
+  GitHubState,
+  Serializer,
+  VercelState,
+} from '../types'
 import { Mutex } from '../utils/sync'
 import {
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
-  getNotebookTerminalRows
+  getNotebookTerminalRows,
 } from '../utils/configuration'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -28,7 +34,7 @@ import {
   ITerminalState,
   LocalBufferTermState,
   NotebookTerminalType,
-  XTermState
+  XTermState,
 } from './terminal/terminalState'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
@@ -36,13 +42,13 @@ const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
 
-  constructor(
-    protected controller: NotebookController
-  ) { }
+  constructor(protected controller: NotebookController) {}
 
   registerCell(cell: NotebookCell): NotebookCellOutputManager {
     const existing = this.#data.get(cell)
-    if (existing) { return existing }
+    if (existing) {
+      return existing
+    }
 
     const outputs = new NotebookCellOutputManager(cell, this.controller)
     this.#data.set(cell, outputs)
@@ -55,7 +61,9 @@ export class NotebookCellManager {
     return outputs.createNotebookCellExecution()
   }
 
-  async getNotebookOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
+  async getNotebookOutputs(
+    cell: NotebookCell
+  ): Promise<NotebookCellOutputManager> {
     const outputs = this.#data.get(cell)
     if (!outputs) {
       console.error(`cell at index ${cell.index} has not been registered!`)
@@ -84,7 +92,7 @@ export class NotebookCellOutputManager {
     [OutputType.annotations, false],
     [OutputType.deno, false],
     [OutputType.vercel, false],
-    [OutputType.github, false]
+    [OutputType.github, false],
   ])
 
   protected cellState?: ICellState
@@ -101,9 +109,11 @@ export class NotebookCellOutputManager {
   constructor(
     protected cell: NotebookCell,
     protected controller: NotebookController
-  ) { }
+  ) {}
 
-  protected generateOutputUnsafe(type: OutputType): NotebookCellOutput | undefined {
+  protected generateOutputUnsafe(
+    type: OutputType
+  ): NotebookCellOutput | undefined {
     const cell = this.cell
     const metadata = cell.metadata as Serializer.Metadata
 
@@ -114,7 +124,7 @@ export class NotebookCellOutputManager {
           output: {
             annotations: getAnnotations(cell),
             validationErrors: validateAnnotations(cell),
-            uuid: cell.metadata['runme.dev/uuid']
+            uuid: cell.metadata['runme.dev/uuid'],
           },
         }
 
@@ -130,9 +140,10 @@ export class NotebookCellOutputManager {
           output: metadata['runme.dev/denoState'],
         }
 
-        return new NotebookCellOutput([
-          NotebookCellOutputItem.json(payload, OutputType.deno)
-        ], { deno: { deploy: true } })
+        return new NotebookCellOutput(
+          [NotebookCellOutputItem.json(payload, OutputType.deno)],
+          { deno: { deploy: true } }
+        )
       }
 
       case OutputType.vercel: {
@@ -144,26 +155,32 @@ export class NotebookCellOutputManager {
         }
 
         return new NotebookCellOutput([
-          NotebookCellOutputItem.json(json, OutputType.vercel)
+          NotebookCellOutputItem.json(json, OutputType.vercel),
         ])
       }
 
       case OutputType.outputItems:
       case OutputType.terminal: {
         const terminalState = this.terminalState
-        if (!terminalState) { return }
+        if (!terminalState) {
+          return
+        }
 
         const cellId = getAnnotations(cell)['runme.dev/uuid']
-        if (!cellId) { throw new Error('Cannot open cell terminal with invalid UUID!') }
+        if (!cellId) {
+          throw new Error('Cannot open cell terminal with invalid UUID!')
+        }
 
         if (type === OutputType.terminal) {
           const editorSettings = workspace.getConfiguration('editor')
 
-          const terminalFontFamily = getNotebookTerminalFontFamily()
-            ?? editorSettings.get<string>('fontFamily', 'Arial')
+          const terminalFontFamily =
+            getNotebookTerminalFontFamily() ??
+            editorSettings.get<string>('fontFamily', 'Arial')
 
-          const terminalFontSize = getNotebookTerminalFontSize()
-            ?? editorSettings.get<number>('fontSize', 10)
+          const terminalFontSize =
+            getNotebookTerminalFontSize() ??
+            editorSettings.get<number>('fontSize', 10)
 
           const json: CellOutputPayload<OutputType.terminal> = {
             type: OutputType.terminal,
@@ -172,8 +189,8 @@ export class NotebookCellOutputManager {
               terminalFontFamily,
               terminalFontSize,
               content: terminalState.serialize(),
-              initialRows: getNotebookTerminalRows()
-            }
+              initialRows: getNotebookTerminalRows(),
+            },
           }
 
           return new NotebookCellOutput([
@@ -185,12 +202,12 @@ export class NotebookCellOutputManager {
             output: {
               content: terminalState.serialize(),
               mime: 'text/plain',
-              uuid: cellId
-            }
+              uuid: cellId,
+            },
           }
 
           return new NotebookCellOutput([
-            NotebookCellOutputItem.json(json, OutputType.outputItems)
+            NotebookCellOutputItem.json(json, OutputType.outputItems),
           ])
         }
       }
@@ -198,11 +215,11 @@ export class NotebookCellOutputManager {
       case OutputType.github: {
         const payload: CellOutputPayload<OutputType.github> = {
           type: OutputType.github,
-          output: this.getCellState(type)
+          output: this.getCellState(type),
         }
 
         return new NotebookCellOutput([
-          NotebookCellOutputItem.json(payload, OutputType.github)
+          NotebookCellOutputItem.json(payload, OutputType.github),
         ])
       }
 
@@ -216,21 +233,25 @@ export class NotebookCellOutputManager {
     let terminalState: ITerminalState
 
     switch (type) {
-      case 'xterm': {
-        terminalState = new XTermState()
-      } break
-
-      case 'local': {
-        const _terminalState = new LocalBufferTermState()
-        const _write = _terminalState.write
-
-        _terminalState.write = (data) => {
-          _write.call(_terminalState, data)
-          this.refreshOutput(OutputType.outputItems)
+      case 'xterm':
+        {
+          terminalState = new XTermState()
         }
+        break
 
-        terminalState = _terminalState
-      } break
+      case 'local':
+        {
+          const _terminalState = new LocalBufferTermState()
+          const _write = _terminalState.write
+
+          _terminalState.write = (data) => {
+            _write.call(_terminalState, data)
+            this.refreshOutput(OutputType.outputItems)
+          }
+
+          terminalState = _terminalState
+        }
+        break
     }
 
     this.terminalState = terminalState
@@ -245,28 +266,31 @@ export class NotebookCellOutputManager {
     // cmd may go away https://github.com/microsoft/vscode/issues/126534#issuecomment-864053106
     const selectionCommandAvailable = await commands
       .getCommands()
-      .then(cmds => cmds.includes(NOTEBOOK_SELECTION_COMMAND))
+      .then((cmds) => cmds.includes(NOTEBOOK_SELECTION_COMMAND))
 
-    if (!(selectionCommandAvailable)) {
+    if (!selectionCommandAvailable) {
       window.showWarningMessage(
-        'Please select a kernel (top right: "Select Kernel") to continue.')
+        'Please select a kernel (top right: "Select Kernel") to continue.'
+      )
       return
     }
-    return await window.showInformationMessage(
-      'Please select a notebook kernel first to continue.',
-      'Select Kernel'
-    ).then(option => {
-      if (!option) {
-        return
-      }
-      commands.executeCommand(NOTEBOOK_SELECTION_COMMAND)
-    })
+    return await window
+      .showInformationMessage(
+        'Please select a notebook kernel first to continue.',
+        'Select Kernel'
+      )
+      .then((option) => {
+        if (!option) {
+          return
+        }
+        commands.executeCommand(NOTEBOOK_SELECTION_COMMAND)
+      })
   }
 
   private async newCellExecution(): Promise<NotebookCellExecution | undefined> {
     try {
       return this.controller.createNotebookCellExecution(this.cell)
-    } catch(e: any) {
+    } catch (e: any) {
       if (e.message.toString().includes('controller is NOT associated')) {
         await this.handleNotebookKernelSelection()
         return undefined
@@ -276,12 +300,16 @@ export class NotebookCellOutputManager {
     }
   }
 
-  async createNotebookCellExecution(): Promise<RunmeNotebookCellExecution|undefined> {
+  async createNotebookCellExecution(): Promise<
+    RunmeNotebookCellExecution | undefined
+  > {
     await this.onFinish
 
     return await this.withLock(async () => {
       const execution = await this.newCellExecution()
-      if (!execution) { return undefined }
+      if (!execution) {
+        return undefined
+      }
 
       this.execution = execution
 
@@ -310,9 +338,12 @@ export class NotebookCellOutputManager {
     })
   }
 
-  protected hasOutputTypeUnsafe(type: OutputType, outputs?: readonly NotebookCellOutput[]): boolean {
+  protected hasOutputTypeUnsafe(
+    type: OutputType,
+    outputs?: readonly NotebookCellOutput[]
+  ): boolean {
     outputs ??= this.cell.outputs
-    return outputs.some(x => x.items.some(y => y.mime === type))
+    return outputs.some((x) => x.items.some((y) => y.mime === type))
   }
 
   async replaceOutputs(outputs: NotebookOutputs) {
@@ -325,9 +356,15 @@ export class NotebookCellOutputManager {
     await this.showOutput(type, () => !this.hasOutputTypeUnsafe(type))
   }
 
-  async showOutput(type: OutputType, shown: boolean | (() => boolean | Promise<boolean>) = true) {
+  async showOutput(
+    type: OutputType,
+    shown: boolean | (() => boolean | Promise<boolean>) = true
+  ) {
     await this.refreshOutputInternal(async () => {
-      this.enabledOutputs.set(type, typeof shown === 'function' ? await shown() : shown)
+      this.enabledOutputs.set(
+        type,
+        typeof shown === 'function' ? await shown() : shown
+      )
     })
   }
 
@@ -339,7 +376,7 @@ export class NotebookCellOutputManager {
 
   async showTerminal(shown: boolean | (() => boolean) = true) {
     await this.refreshOutputInternal(async () => {
-      this.terminalEnabled = (typeof shown === 'function' ? shown() : shown)
+      this.terminalEnabled = typeof shown === 'function' ? shown() : shown
     })
   }
 
@@ -351,10 +388,12 @@ export class NotebookCellOutputManager {
    */
   async refreshOutput(type?: OutputType | OutputType[]) {
     await this.refreshOutputInternal(() => {
-      if (type === undefined) { return }
+      if (type === undefined) {
+        return
+      }
 
       const typeSet = Array.isArray(type) ? type : [type]
-      return typeSet.some(t => this.hasOutputTypeUnsafe(t))
+      return typeSet.some((t) => this.hasOutputTypeUnsafe(t))
     })
   }
 
@@ -370,7 +409,9 @@ export class NotebookCellOutputManager {
    * where the user can prevent refreshing if a certain output type is not
    * present.
    */
-  protected async refreshOutputInternal(mutater?: () => Promise<boolean | void> | boolean | void) {
+  protected async refreshOutputInternal(
+    mutater?: () => Promise<boolean | void> | boolean | void
+  ) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
         for (const key of [...this.enabledOutputs.keys()]) {
@@ -383,37 +424,47 @@ export class NotebookCellOutputManager {
           this.terminalEnabled = this.hasOutputTypeUnsafe(terminalOutput)
         }
 
-        if (!(await mutater?.() ?? true)) {
+        if (!((await mutater?.()) ?? true)) {
           return
         }
 
-        let terminalCellOutput = this.terminalEnabled && terminalOutput && this.generateOutputUnsafe(terminalOutput)
+        let terminalCellOutput =
+          this.terminalEnabled &&
+          terminalOutput &&
+          this.generateOutputUnsafe(terminalOutput)
 
         await replaceOutput(exec, [
-          ...[...this.enabledOutputs.entries()]
-            .flatMap(([type, enabled]) => {
-              if (!enabled) { return [] }
+          ...[...this.enabledOutputs.entries()].flatMap(([type, enabled]) => {
+            if (!enabled) {
+              return []
+            }
 
-              const output = this.generateOutputUnsafe(type)
-              if (!output) { return [] }
+            const output = this.generateOutputUnsafe(type)
+            if (!output) {
+              return []
+            }
 
-              return [output]
-            }),
-          ...terminalCellOutput ? [terminalCellOutput] : [],
+            return [output]
+          }),
+          ...(terminalCellOutput ? [terminalCellOutput] : []),
           ...this.outputs,
         ])
       })
     })
   }
 
-  protected async getExecutionUnsafe(cb: (exec: NotebookCellExecution) => Promise<void> | void) {
+  protected async getExecutionUnsafe(
+    cb: (exec: NotebookCellExecution) => Promise<void> | void
+  ) {
     if (this.execution) {
       await cb?.(this.execution)
       return
     }
 
     const exec = await this.newCellExecution()
-    if (!exec) { return }
+    if (!exec) {
+      return
+    }
 
     exec.start(Date.now())
 
@@ -438,7 +489,9 @@ export class NotebookCellOutputManager {
   }
 }
 
-function outputsAsArray(outputs: NotebookOutputs): readonly NotebookCellOutput[] {
+function outputsAsArray(
+  outputs: NotebookOutputs
+): readonly NotebookCellOutput[] {
   return Array.isArray(outputs) ? outputs : [outputs]
 }
 
@@ -452,9 +505,7 @@ export class RunmeNotebookCellExecution implements Disposable {
 
   private _hasEnded = false
 
-  constructor(
-    private exec: NotebookCellExecution,
-  ) { }
+  constructor(private exec: NotebookCellExecution) {}
 
   onEnd(cb: OnEndCallback) {
     this._onEnd = cb
@@ -470,7 +521,7 @@ export class RunmeNotebookCellExecution implements Disposable {
     this._hasEnded = true
   }
 
-  dispose() { }
+  dispose() {}
 
   get hasEnded() {
     return this._hasEnded
@@ -481,7 +532,10 @@ export class RunmeNotebookCellExecution implements Disposable {
   }
 }
 
-export async function updateCellMetadata(cell: NotebookCell, meta: Partial<Serializer.Metadata>) {
+export async function updateCellMetadata(
+  cell: NotebookCell,
+  meta: Partial<Serializer.Metadata>
+) {
   const edit = new WorkspaceEdit()
 
   const notebookEdit = NotebookEdit.updateCellMetadata(cell.index, {
@@ -493,13 +547,16 @@ export async function updateCellMetadata(cell: NotebookCell, meta: Partial<Seria
   await workspace.applyEdit(edit)
 }
 
-export async function getCellByUuId(options: ICellOption): Promise<NotebookCell | undefined> {
+export async function getCellByUuId(
+  options: ICellOption
+): Promise<NotebookCell | undefined> {
   const { editor, uuid } = options
   for (const document of workspace.notebookDocuments) {
     for (const cell of document.getCells()) {
       if (
         cell.kind !== NotebookCellKind.Code ||
-        cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
+        cell.document.uri.fsPath !== editor.notebook.uri.fsPath
+      ) {
         continue
       }
 

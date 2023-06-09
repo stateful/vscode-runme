@@ -20,10 +20,19 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
+import {
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+  RunmeTerminal,
+  Serializer,
+} from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
-import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
+import {
+  getEnvLoadWorkspaceFiles,
+  getEnvWorkspaceFileOrder,
+  getPortNumber,
+} from '../utils/configuration'
 
 import getLogger from './logger'
 import type executor from './executors'
@@ -59,7 +68,9 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   }
 }
 
-export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorResult {
+export function validateAnnotations(
+  cell: NotebookCell
+): CellAnnotationsErrorResult {
   let metadata = cell as Serializer.Metadata
 
   if (cell.metadata) {
@@ -89,7 +100,9 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
 export function getTerminalRunmeId(t: vscode.Terminal): string | undefined {
   return (
-    (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1] ?? undefined
+    (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID ??
+    /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1] ??
+    undefined
   )
 }
 
@@ -105,7 +118,9 @@ function getCellUUID(cell: vscode.NotebookCell): string {
   return getAnnotations(cell)['runme.dev/uuid']!
 }
 
-export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
+export function getTerminalByCell(
+  cell: vscode.NotebookCell
+): RunmeTerminal | undefined {
   if (cell.kind !== vscode.NotebookCellKind.Code) {
     return undefined
   }
@@ -129,11 +144,14 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
 
 export function isGitHubLink(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
-  const isWorkflowUrl = text.includes('.github/workflows') || text.includes('actions/workflows')
+  const isWorkflowUrl =
+    text.includes('.github/workflows') || text.includes('actions/workflows')
   return text.startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
+export function getKey(
+  runningCell: vscode.TextDocument
+): keyof typeof executor {
   if (isDenoScript(runningCell)) {
     return 'deno'
   }
@@ -224,22 +242,28 @@ export function normalizeLanguage(l?: string) {
 
 export async function verifyCheckedInFile(filePath: string) {
   const fileDir = path.dirname(filePath)
-  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => fileDir.includes(ws.uri.fsPath))
+  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) =>
+    fileDir.includes(ws.uri.fsPath)
+  )
 
   if (!workspaceFolder) {
     return false
   }
 
-  const hasGitDirectory = await vscode.workspace.fs.stat(workspaceFolder.uri).then(
-    (stat) => stat.type === FileType.Directory,
-    () => false
-  )
+  const hasGitDirectory = await vscode.workspace.fs
+    .stat(workspaceFolder.uri)
+    .then(
+      (stat) => stat.type === FileType.Directory,
+      () => false
+    )
   if (!hasGitDirectory) {
     return false
   }
 
   const isCheckedIn = await util
-    .promisify(cp.exec)(`git ls-files --error-unmatch ${filePath}`, { cwd: workspaceFolder.uri.fsPath })
+    .promisify(cp.exec)(`git ls-files --error-unmatch ${filePath}`, {
+      cwd: workspaceFolder.uri.fsPath,
+    })
     .then(
       () => true,
       () => false
@@ -308,7 +332,9 @@ export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
   )
 }
 
-export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<string | undefined> {
+export function mapGitIgnoreToGlobFolders(
+  gitignoreContents: string[]
+): Array<string | undefined> {
   const entries = gitignoreContents
     .filter((entry: string) => entry)
     .map((entry: string) => entry.replace(/\s/g, ''))
@@ -395,7 +421,9 @@ export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
   } while (testPath !== path.dirname(testPath))
 }
 
-export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string>> {
+export async function getWorkspaceEnvs(
+  uri?: Uri
+): Promise<Record<string, string>> {
   const res: Record<string, string> = {}
   const workspaceFolder = getWorkspaceFolder(uri)
 
@@ -438,20 +466,34 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
  * @param uri
  * @param categories
  */
-export async function setNotebookCategories(context: ExtensionContext, uri: Uri, categories: string[]): Promise<void> {
-  const notebooksCategoryState = context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
+export async function setNotebookCategories(
+  context: ExtensionContext,
+  uri: Uri,
+  categories: string[]
+): Promise<void> {
+  const notebooksCategoryState =
+    context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) ||
+    ({} as any)
   notebooksCategoryState[uri.path] = categories
-  return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
+  return context.globalState.update(
+    NOTEBOOK_AVAILABLE_CATEGORIES,
+    notebooksCategoryState
+  )
 }
 
 /**
  * Get the notebook cell categories from the global state
- * @param context 
- * @param uri 
- * @returns 
+ * @param context
+ * @param uri
+ * @returns
  */
-export async function getNotebookCategories(context: ExtensionContext, uri: Uri): Promise<string[]> {
-  const notebooksCategories = context.globalState.get<Record<string, string[]>>(NOTEBOOK_AVAILABLE_CATEGORIES)
+export async function getNotebookCategories(
+  context: ExtensionContext,
+  uri: Uri
+): Promise<string[]> {
+  const notebooksCategories = context.globalState.get<Record<string, string[]>>(
+    NOTEBOOK_AVAILABLE_CATEGORIES
+  )
   if (!notebooksCategories) {
     return []
   }

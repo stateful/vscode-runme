@@ -11,7 +11,7 @@ import {
   NotebookCell,
   NotebookCellData,
   Uri,
-  NotebookDocument
+  NotebookDocument,
 } from 'vscode'
 
 import { ENV_STORE } from '../constants'
@@ -24,21 +24,27 @@ const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
  * for understanding post into https://jex.im/regulex/
  */
-const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
+const EXPORT_EXTRACT_REGEX =
+  /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
 
-export function renderError (outputs: NotebookCellOutputManager, output: string) {
-  return outputs.replaceOutputs(new NotebookCellOutput([
-    NotebookCellOutputItem.json(
-      <CellOutputPayload<OutputType.error>>{
-        type: OutputType.error,
-        output
-      },
-      OutputType.error
-    )
-  ]))
+export function renderError(
+  outputs: NotebookCellOutputManager,
+  output: string
+) {
+  return outputs.replaceOutputs(
+    new NotebookCellOutput([
+      NotebookCellOutputItem.json(
+        <CellOutputPayload<OutputType.error>>{
+          type: OutputType.error,
+          output,
+        },
+        OutputType.error
+      ),
+    ])
+  )
 }
 
-export function populateEnvVar (value: string, env = process.env) {
+export function populateEnvVar(value: string, env = process.env) {
   for (const m of value.match(ENV_VAR_REGEXP) || []) {
     const envVar = m.slice(1) // slice out '$'
     value = value.replace(m, env[envVar] || '')
@@ -48,7 +54,7 @@ export function populateEnvVar (value: string, env = process.env) {
 }
 
 export interface CommandExportExtractMatch {
-  type: 'exec'|'prompt'|'direct'
+  type: 'exec' | 'prompt' | 'direct'
   key: string
   value: string
   match: string
@@ -59,25 +65,26 @@ export interface CommandExportExtractMatch {
 export async function promptUserForVariable(
   key: string,
   placeHolder: string,
-  hasStringValue: boolean,
+  hasStringValue: boolean
 ): Promise<string | undefined> {
   return await window.showInputBox({
     title: `Set Environment Variable "${key}"`,
     ignoreFocusOut: true,
     placeHolder,
-    prompt: 'Your shell script wants to set some environment variables, please enter them here.',
-    ...(hasStringValue ? { value: placeHolder } : {})
+    prompt:
+      'Your shell script wants to set some environment variables, please enter them here.',
+    ...(hasStringValue ? { value: placeHolder } : {}),
   })
 }
 
 export function getCommandExportExtractMatches(
   rawText: string,
   supportsDirect = true,
-  supportsPrompt = true,
+  supportsPrompt = true
 ): CommandExportExtractMatch[] {
   const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
-  const matchStr = (rawText.endsWith('\n') ? rawText : `${rawText}\n`)
+  const matchStr = rawText.endsWith('\n') ? rawText : `${rawText}\n`
 
   let match: RegExpExecArray | null
 
@@ -87,7 +94,7 @@ export function getCommandExportExtractMatches(
     const e = match[0]
 
     const [key, ph] = e.trim().slice('export '.length).split('=')
-    const hasStringValue = ph.startsWith('"') || ph.startsWith('\'')
+    const hasStringValue = ph.startsWith('"') || ph.startsWith("'")
     const placeHolder = hasStringValue ? ph.slice(1, -1) : ph
 
     let matchType: CommandExportExtractMatch['type']
@@ -107,7 +114,10 @@ export function getCommandExportExtractMatches(
     result.push({
       type: matchType,
       regexpMatch: match,
-      key, value, match: e, hasStringValue,
+      key,
+      value,
+      match: e,
+      hasStringValue,
     })
   }
 
@@ -122,12 +132,19 @@ export function getCommandExportExtractMatches(
  * @param exec NotebookCellExecution
  * @returns cell text if all operation to retrieve the cell text could be executed, undefined otherwise
  */
-export async function retrieveShellCommand (exec: NotebookCellExecution, promptForEnv = DEFAULT_PROMPT_ENV) {
+export async function retrieveShellCommand(
+  exec: NotebookCellExecution,
+  promptForEnv = DEFAULT_PROMPT_ENV
+) {
   let cellText = exec.cell.document.getText()
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
   const rawText = exec.cell.document.getText()
 
-  const exportMatches = getCommandExportExtractMatches(rawText, true, promptForEnv)
+  const exportMatches = getCommandExportExtractMatches(
+    rawText,
+    true,
+    promptForEnv
+  )
 
   const stateEnv = Object.fromEntries(ENV_STORE)
 
@@ -138,13 +155,17 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
        */
       const expressionProcess = cp.spawn(value, {
         cwd,
-        env: {...process.env, ...stateEnv },
-        shell: true
+        env: { ...process.env, ...stateEnv },
+        shell: true,
       })
       const [isError, data] = await new Promise<[number, string]>((resolve) => {
         let data = ''
-        expressionProcess.stdout.on('data', (payload) => { data += payload.toString() })
-        expressionProcess.stderr.on('data', (payload) => { data += payload.toString() })
+        expressionProcess.stdout.on('data', (payload) => {
+          data += payload.toString()
+        })
+        expressionProcess.stderr.on('data', (payload) => {
+          data += payload.toString()
+        })
         expressionProcess.on('close', (code) => {
           data = data.trim()
           if (code && code > 0) {
@@ -156,7 +177,9 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
       })
 
       if (isError) {
-        window.showErrorMessage(`Failed to evaluate expression "${value}": ${data}`)
+        window.showErrorMessage(
+          `Failed to evaluate expression "${value}": ${data}`
+        )
         return undefined
       }
 
@@ -167,8 +190,8 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
        * VS Code, see https://github.com/microsoft/vscode/issues/98098
        */
       stateEnv[key] = populateEnvVar(
-        await promptUserForVariable(key, value, hasStringValue) ?? '',
-        {...process.env, ...stateEnv }
+        (await promptUserForVariable(key, value, hasStringValue)) ?? '',
+        { ...process.env, ...stateEnv }
       )
     } else {
       stateEnv[key] = populateEnvVar(value)
@@ -193,19 +216,19 @@ export async function retrieveShellCommand (exec: NotebookCellExecution, promptF
  *
  * @param execKey Used as fallback in case `$SHELL` is not present
  */
-export function getSystemShellPath(): string|undefined
-export function getSystemShellPath(execKey: 'bash'|'sh'): string
-export function getSystemShellPath(execKey?: 'bash'|'sh'): string|undefined
-export function getSystemShellPath(execKey?: string): string|undefined {
+export function getSystemShellPath(): string | undefined
+export function getSystemShellPath(execKey: 'bash' | 'sh'): string
+export function getSystemShellPath(execKey?: 'bash' | 'sh'): string | undefined
+export function getSystemShellPath(execKey?: string): string | undefined {
   return process.env.SHELL ?? execKey
 }
 
 export function getCellShellPath(
-  cell: NotebookCell|NotebookCellData|Serializer.Cell,
-  notebook: NotebookData|Serializer.Notebook|NotebookDocument,
-  execKey?: 'bash'|'sh'
-): string|undefined {
-  const notebookMetadata = notebook.metadata as Serializer.Metadata|undefined
+  cell: NotebookCell | NotebookCellData | Serializer.Cell,
+  notebook: NotebookData | Serializer.Notebook | NotebookDocument,
+  execKey?: 'bash' | 'sh'
+): string | undefined {
+  const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
 
   const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
 
@@ -213,7 +236,11 @@ export function getCellShellPath(
     return frontmatter.shell
   }
 
-  if (!execKey && 'document' in cell && (cell.document.languageId === 'sh' || cell.document.languageId === 'bash')) {
+  if (
+    !execKey &&
+    'document' in cell &&
+    (cell.document.languageId === 'sh' || cell.document.languageId === 'bash')
+  ) {
     return getSystemShellPath(cell.document.languageId)
   }
 
@@ -225,30 +252,35 @@ export async function getCellCwd(
   notebook?: NotebookData | NotebookDocument | Serializer.Notebook,
   notebookFile?: Uri
 ): Promise<string | undefined> {
-  let res: string|undefined
+  let res: string | undefined
 
-  const getParent = (p?: string) => p ? path.dirname(p) : undefined
+  const getParent = (p?: string) => (p ? path.dirname(p) : undefined)
 
   const candidates = [
     getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
     // TODO: support windows here
-    (notebook?.metadata as Serializer.Metadata|undefined)?.['runme.dev/frontmatterParsed']?.cwd,
-    getAnnotations(cell.metadata as Serializer.Metadata|undefined).cwd,
+    (notebook?.metadata as Serializer.Metadata | undefined)?.[
+      'runme.dev/frontmatterParsed'
+    ]?.cwd,
+    getAnnotations(cell.metadata as Serializer.Metadata | undefined).cwd,
   ]
 
   for (let candidate of candidates) {
-    if (!candidate) { continue }
+    if (!candidate) {
+      continue
+    }
     candidate = resolveOrAbsolute(res, candidate)
 
     if (candidate) {
-      const folderExists = await fs.stat(
-        candidate).then(
-          (f) => f.isDirectory(),
-          () => false,
-        )
+      const folderExists = await fs.stat(candidate).then(
+        (f) => f.isDirectory(),
+        () => false
+      )
 
-      if (!folderExists) { continue }
+      if (!folderExists) {
+        continue
+      }
 
       res = candidate
     }
@@ -257,20 +289,23 @@ export async function getCellCwd(
   return res
 }
 
-function resolveOrAbsolute(parent?: string, child?: string): string|undefined {
-	if (!child) {
-		return parent
-	}
+function resolveOrAbsolute(
+  parent?: string,
+  child?: string
+): string | undefined {
+  if (!child) {
+    return parent
+  }
 
-	if (path.isAbsolute(child)) {
-		return child
-	}
+  if (path.isAbsolute(child)) {
+    return child
+  }
 
-	if (parent) {
-		return path.join(parent, child)
-	}
+  if (parent) {
+    return path.join(parent, child)
+  }
 
-	return child
+  return child
 }
 
 /**
@@ -283,42 +318,61 @@ export async function parseCommandSeq(
   cellText: string,
   promptForEnv = DEFAULT_PROMPT_ENV,
   parseBlock?: (block: string) => string[]
-): Promise<string[]|undefined> {
-  parseBlock ??= (s) => s ? s.split('\n') : []
+): Promise<string[] | undefined> {
+  parseBlock ??= (s) => (s ? s.split('\n') : [])
 
-  const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
+  const exportMatches = getCommandExportExtractMatches(
+    cellText,
+    false,
+    promptForEnv
+  )
 
   type CommandBlock =
-    |{
-      type: 'block'
-      content: string
-    }
-    |{
-      type: 'single'
-      content: string
-    }
+    | {
+        type: 'block'
+        content: string
+      }
+    | {
+        type: 'single'
+        content: string
+      }
 
   const parsedCommandBlocks: CommandBlock[] = []
 
   let offset = 0
 
-  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+  for (const {
+    hasStringValue,
+    key,
+    match,
+    type,
+    value,
+    regexpMatch,
+  } of exportMatches) {
     let userValue: string
 
-    switch(type) {
-      case 'prompt': {
-        const userInput = await promptUserForVariable(key, value, hasStringValue)
+    switch (type) {
+      case 'prompt':
+        {
+          const userInput = await promptUserForVariable(
+            key,
+            value,
+            hasStringValue
+          )
 
-        if(userInput === undefined) {
-          return undefined
+          if (userInput === undefined) {
+            return undefined
+          }
+
+          userValue = userInput
         }
+        break
 
-        userValue = userInput
-      } break
-
-      case 'direct': {
-        userValue = value
-      } break
+      case 'direct':
+        {
+          userValue = value
+        }
+        break
 
       default: {
         continue
@@ -328,13 +382,18 @@ export async function parseCommandSeq(
     const prior = cellText.slice(offset, regexpMatch.index)
     parsedCommandBlocks.push({ type: 'block', content: prior })
 
-    parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+    parsedCommandBlocks.push({
+      type: 'single',
+      content: `export ${key}="${userValue}"`,
+    })
 
     offset = regexpMatch.index + match.length
   }
 
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
-  return parsedCommandBlocks
-    .flatMap(({ type, content }) => (type === 'block' && parseBlock?.(content)) || (content ? [content] : []))
+  return parsedCommandBlocks.flatMap(
+    ({ type, content }) =>
+      (type === 'block' && parseBlock?.(content)) || (content ? [content] : [])
+  )
 }

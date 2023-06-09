@@ -1,6 +1,10 @@
 import { spawn } from 'node:child_process'
 
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import {
+  NotebookCellOutput,
+  NotebookCellOutputItem,
+  NotebookCellExecution,
+} from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
@@ -21,7 +25,7 @@ async function shellExecutor(
   script: string,
   cwd: string,
   env: Record<string, string>,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   let postScript = script
   let prod = false
@@ -37,7 +41,7 @@ async function shellExecutor(
    * this needs more work / specification
    */
   const annotations = getAnnotations(exec.cell)
-  const mime = annotations?.mimeType || 'text/plain' as const
+  const mime = annotations?.mimeType || ('text/plain' as const)
   const index = exec.cell.index
 
   /**
@@ -45,7 +49,7 @@ async function shellExecutor(
    */
   async function handleOutput(data: Buffer) {
     outputItems.push(data)
-    let item: NotebookCellOutputItem|undefined
+    let item: NotebookCellOutputItem | undefined
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (isVercelDeployScript(script)) {
@@ -55,46 +59,56 @@ async function shellExecutor(
         outputItems,
         index,
         prod,
-        { get: (key) => env[key], set: (key, val = '') => { ENV_STORE.set(key, val) } }
+        {
+          get: (key) => env[key],
+          set: (key, val = '') => {
+            ENV_STORE.set(key, val)
+          },
+        }
       )
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
-      item = NotebookCellOutputItem.json(<CellOutputPayload<OutputType.outputItems>>{
-        type: OutputType.outputItems,
-        output: {
-          content: Buffer.concat(outputItems).toString('base64'),
-          mime
-        }
-      }, OutputType.outputItems)
+      item = NotebookCellOutputItem.json(
+        <CellOutputPayload<OutputType.outputItems>>{
+          type: OutputType.outputItems,
+          output: {
+            content: Buffer.concat(outputItems).toString('base64'),
+            mime,
+          },
+        },
+        OutputType.outputItems
+      )
     } else {
       item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
     }
 
     if (item) {
-      outputs.replaceOutputs([ new NotebookCellOutput([ item ]) ])
+      outputs.replaceOutputs([new NotebookCellOutput([item])])
     }
   }
 
   child.stdout.on('data', handleOutput)
   child.stderr.on('data', handleOutput)
-  return !Boolean(await new Promise<number>((resolve) => {
-    /**
-     * register cancellation handler
-     * ToDo(Christian): maybe better to kill with SIGINT signal but that doesn't stop the
-     * prcoess afterall
-     */
-    exec.token.onCancellationRequested(() => {
-      child.stdin.destroy()
-      child.stdout.off('data', handleOutput)
-      child.stderr.off('data', handleOutput)
+  return !Boolean(
+    await new Promise<number>((resolve) => {
+      /**
+       * register cancellation handler
+       * ToDo(Christian): maybe better to kill with SIGINT signal but that doesn't stop the
+       * prcoess afterall
+       */
+      exec.token.onCancellationRequested(() => {
+        child.stdin.destroy()
+        child.stdout.off('data', handleOutput)
+        child.stderr.off('data', handleOutput)
 
-      if (child.pid) {
-        process.kill(child.pid, 'SIGHUP')
-      }
-      resolve(child.kill('SIGHUP') ? 0 : 1)
+        if (child.pid) {
+          process.kill(child.pid, 'SIGHUP')
+        }
+        resolve(child.kill('SIGHUP') ? 0 : 1)
+      })
+
+      child.on('exit', resolve)
     })
-
-    child.on('exit', resolve)
-  }))
+  )
 }
 
 export const sh = shellExecutor

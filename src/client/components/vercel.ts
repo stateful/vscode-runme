@@ -17,7 +17,7 @@ export class VercelOutput extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: Arial
+      font-family: Arial;
     }
 
     section {
@@ -27,7 +27,7 @@ export class VercelOutput extends LitElement {
       flex-direction: row;
       gap: 50px;
       align-items: flex-start;
-      position:relative;
+      position: relative;
     }
 
     img {
@@ -51,9 +51,13 @@ export class VercelOutput extends LitElement {
       return html`⚠️ Ups! Something went wrong displaying the result!`
     }
 
-    const errorMessages = this.content.outputItems.filter((item: string) => item.startsWith('Error: '))
+    const errorMessages = this.content.outputItems.filter((item: string) =>
+      item.startsWith('Error: ')
+    )
     const hasFailed = errorMessages.length > 0
-    const deployUrl = this.content.outputItems.find((item: string) => item.indexOf('vercel.app') > -1)
+    const deployUrl = this.content.outputItems.find(
+      (item: string) => item.indexOf('vercel.app') > -1
+    )
     if (!deployUrl) {
       if (hasFailed) {
         return errorMessages.map((error: string) => html`<div>${error}</div>`)
@@ -69,9 +73,8 @@ export class VercelOutput extends LitElement {
       this.requestUpdate()
     }
 
-    return html`
-    <section>
-      <img src="https://www.svgrepo.com/show/354512/vercel.svg">
+    return html` <section>
+      <img src="https://www.svgrepo.com/show/354512/vercel.svg" />
       <div>
         <h4>Deployment</h4>
         <vscode-link href="${deployUrl}">${deployUrl}</vscode-link>
@@ -80,41 +83,58 @@ export class VercelOutput extends LitElement {
       </div>
       <div>
         <h4>Stage</h4>
-        ${when(hasFailed,
+        ${when(
+          hasFailed,
           () => html`⚠️ Deploy Failed`,
-          () => when(deployed,
-            () => ((supportsMessaging && this.#promoted) ? 'production' : 'preview'),
-            () => html`pending <vscode-spinner />`
-          )
+          () =>
+            when(
+              deployed,
+              () =>
+                supportsMessaging && this.#promoted ? 'production' : 'preview',
+              () => html`pending <vscode-spinner />`
+            )
         )}
         <h4>Status</h4>
-        ${when(hasFailed,
+        ${when(
+          hasFailed,
           () => errorMessages.map((error: string) => html`<div>${error}</div>`),
-          () => when(!deployed, () => html`${this.content.payload.status.toLowerCase()}`)
+          () =>
+            when(
+              !deployed,
+              () => html`${this.content.payload.status.toLowerCase()}`
+            )
         )}
-        ${when(deployed && supportsMessaging && !this.#promoted, () => html`
-          <vscode-button
-            class="btnPromote"
-            @click="${() => {this.#promote()}}"
-            .disabled=${this.#isPromoting}
-          >
-            🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
-          </vscode-button>
-        `)}
-        ${when(deployed && supportsMessaging && this.#promoted, () => html`
-          👌 Promoted
-        `)}
+        ${when(
+          deployed && supportsMessaging && !this.#promoted,
+          () => html`
+            <vscode-button
+              class="btnPromote"
+              @click="${() => {
+                this.#promote()
+              }}"
+              .disabled=${this.#isPromoting}
+            >
+              🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
+            </vscode-button>
+          `
+        )}
+        ${when(
+          deployed && supportsMessaging && this.#promoted,
+          () => html` 👌 Promoted `
+        )}
       </div>
-      <close-cell-button @closed="${() => {
-        return closeOutput({
-          uuid: this.content.payload.uuid,
-          outputType: OutputType.vercel
-        })
-      }}"></close-cell-button>
+      <close-cell-button
+        @closed="${() => {
+          return closeOutput({
+            uuid: this.content.payload.uuid,
+            outputType: OutputType.vercel,
+          })
+        }}"
+      ></close-cell-button>
     </section>`
   }
 
-  #promote () {
+  #promote() {
     const ctx = getContext()
     if (!ctx.postMessage) {
       return
@@ -124,7 +144,7 @@ export class VercelOutput extends LitElement {
     this.requestUpdate()
     ctx.postMessage(<ClientMessage<ClientMessages.vercelProd>>{
       type: ClientMessages.vercelProd,
-      output: { cellIndex: this.content.payload.index }
+      output: { cellIndex: this.content.payload.index },
     })
   }
 }

@@ -9,7 +9,7 @@ import { ENV_STORE_MANAGER, type IEnvironmentManager } from '..'
 import { postClientMessage } from '../../../utils/messaging'
 import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
 
-export async function deploy (
+export async function deploy(
   this: Kernel,
   exec: NotebookCellExecution,
   outputs: NotebookCellOutputManager,
@@ -22,7 +22,9 @@ export async function deploy (
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() =>
-      reject(new Error('Canceled by user'))))
+      reject(new Error('Canceled by user'))
+    )
+  )
 
   try {
     if (!token) {
@@ -31,7 +33,7 @@ export async function deploy (
 
     const denoState: DenoState = {
       ...exec.cell.metadata['runme.dev/denoState'],
-      error: undefined
+      error: undefined,
     }
 
     updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
@@ -50,7 +52,7 @@ export async function deploy (
     let created = start
     while (created <= start && iteration < 30) {
       // lookup project name if not available use most recent
-      const project = projects?.find(p => p.name === pname) || projects![0]
+      const project = projects?.find((p) => p.name === pname) || projects![0]
       const deployments = await denoAPI.getDeployments(project.id)
       if ((deployments || []).length > 0) {
         created = new Date(deployments![0].createdAt) ?? start
@@ -63,7 +65,7 @@ export async function deploy (
         deployed,
         deployments: deployments ?? undefined,
         project,
-        error: undefined
+        error: undefined,
       }
 
       updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
@@ -71,7 +73,11 @@ export async function deploy (
 
       // keep going slower after 20 loops
       const timeout = 1000 + Math.max(0, iteration - 20) * 1000
-      const wait = new Promise<void>(resolve => { setTimeout(() => { resolve() }, timeout) })
+      const wait = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve()
+        }, timeout)
+      })
       await Promise.race([wait, cancel])
       iteration++
     }

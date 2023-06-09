@@ -7,7 +7,8 @@ import { RENDERERS } from '../../constants'
 export class ShellOutput extends LitElement {
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
-    :host {}
+    :host {
+    }
   `
 
   // Render the UI as a function of component state
