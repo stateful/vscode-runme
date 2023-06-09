@@ -20,7 +20,7 @@ export interface IWorkflowRunResult {
 export type WorkflowRunStatus = Pick<
   IWorkflowDispatchOptions,
   'owner' | 'repo'
-> & { run_id: number, onStatusUpdate: OnWorkflowStatusUpdate }
+> & { run_id: number; onStatusUpdate: OnWorkflowStatusUpdate }
 
 export type OnWorkflowStatusUpdate = (
   workflowRun: IWorkflowRun | undefined
