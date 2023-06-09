@@ -63,9 +63,7 @@ export class WinDefaultShell extends Survey {
       return
     }
 
-    this.disposables.push(
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
-    )
+    this.disposables.push(workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)))
   }
 
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
@@ -217,23 +215,15 @@ export class SurveyActiveUserFeedback extends Survey {
     super(context, SurveyActiveUserFeedback.#id)
     this.#mid = getNamespacedMid(SurveyActiveUserFeedback.#id)
 
-    commands.registerCommand(
-      SurveyActiveUserFeedback.#id,
-      this.prompt.bind(this)
-    )
+    commands.registerCommand(SurveyActiveUserFeedback.#id, this.prompt.bind(this))
 
-    this.disposables.push(
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
-    )
+    this.disposables.push(workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)))
   }
 
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
     if (
       notebookType !== Kernel.type ||
-      this.context.globalState.get<boolean>(
-        SurveyActiveUserFeedback.#id,
-        false
-      ) ||
+      this.context.globalState.get<boolean>(SurveyActiveUserFeedback.#id, false) ||
       // display only once per session
       this.#displayed
     ) {
@@ -249,9 +239,7 @@ export class SurveyActiveUserFeedback extends Survey {
         this.#displayed = true
         return
       } else if (response.status !== 200) {
-        throw new Error(
-          `http status ${response.status}: ${response.statusText}`
-        )
+        throw new Error(`http status ${response.status}: ${response.statusText}`)
       }
     } catch (err) {
       this.#displayed = true // try again next session

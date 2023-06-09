@@ -24,13 +24,9 @@ const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
  * for understanding post into https://jex.im/regulex/
  */
-const EXPORT_EXTRACT_REGEX =
-  /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
+const EXPORT_EXTRACT_REGEX = /(\n*)export \w+=(("[^"]*")|('[^']*')|(.+(?=(\n|;))))/gim
 
-export function renderError(
-  outputs: NotebookCellOutputManager,
-  output: string
-) {
+export function renderError(outputs: NotebookCellOutputManager, output: string) {
   return outputs.replaceOutputs(
     new NotebookCellOutput([
       NotebookCellOutputItem.json(
@@ -71,8 +67,7 @@ export async function promptUserForVariable(
     title: `Set Environment Variable "${key}"`,
     ignoreFocusOut: true,
     placeHolder,
-    prompt:
-      'Your shell script wants to set some environment variables, please enter them here.',
+    prompt: 'Your shell script wants to set some environment variables, please enter them here.',
     ...(hasStringValue ? { value: placeHolder } : {}),
   })
 }
@@ -140,11 +135,7 @@ export async function retrieveShellCommand(
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
   const rawText = exec.cell.document.getText()
 
-  const exportMatches = getCommandExportExtractMatches(
-    rawText,
-    true,
-    promptForEnv
-  )
+  const exportMatches = getCommandExportExtractMatches(rawText, true, promptForEnv)
 
   const stateEnv = Object.fromEntries(ENV_STORE)
 
@@ -177,9 +168,7 @@ export async function retrieveShellCommand(
       })
 
       if (isError) {
-        window.showErrorMessage(
-          `Failed to evaluate expression "${value}": ${data}`
-        )
+        window.showErrorMessage(`Failed to evaluate expression "${value}": ${data}`)
         return undefined
       }
 
@@ -260,9 +249,7 @@ export async function getCellCwd(
     getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
     // TODO: support windows here
-    (notebook?.metadata as Serializer.Metadata | undefined)?.[
-      'runme.dev/frontmatterParsed'
-    ]?.cwd,
+    (notebook?.metadata as Serializer.Metadata | undefined)?.['runme.dev/frontmatterParsed']?.cwd,
     getAnnotations(cell.metadata as Serializer.Metadata | undefined).cwd,
   ]
 
@@ -289,10 +276,7 @@ export async function getCellCwd(
   return res
 }
 
-function resolveOrAbsolute(
-  parent?: string,
-  child?: string
-): string | undefined {
+function resolveOrAbsolute(parent?: string, child?: string): string | undefined {
   if (!child) {
     return parent
   }
@@ -321,11 +305,7 @@ export async function parseCommandSeq(
 ): Promise<string[] | undefined> {
   parseBlock ??= (s) => (s ? s.split('\n') : [])
 
-  const exportMatches = getCommandExportExtractMatches(
-    cellText,
-    false,
-    promptForEnv
-  )
+  const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
 
   type CommandBlock =
     | {
@@ -341,24 +321,13 @@ export async function parseCommandSeq(
 
   let offset = 0
 
-  for (const {
-    hasStringValue,
-    key,
-    match,
-    type,
-    value,
-    regexpMatch,
-  } of exportMatches) {
+  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
     let userValue: string
 
     switch (type) {
       case 'prompt':
         {
-          const userInput = await promptUserForVariable(
-            key,
-            value,
-            hasStringValue
-          )
+          const userInput = await promptUserForVariable(key, value, hasStringValue)
 
           if (userInput === undefined) {
             return undefined
@@ -393,7 +362,6 @@ export async function parseCommandSeq(
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
   return parsedCommandBlocks.flatMap(
-    ({ type, content }) =>
-      (type === 'block' && parseBlock?.(content)) || (content ? [content] : [])
+    ({ type, content }) => (type === 'block' && parseBlock?.(content)) || (content ? [content] : [])
   )
 }

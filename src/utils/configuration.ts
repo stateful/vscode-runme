@@ -38,9 +38,7 @@ const configurationSchema = {
     enable: z.boolean().default(true),
   },
   env: {
-    workspaceFileOrder: z
-      .array(z.string())
-      .default(DEFAULT_WORKSPACE_FILE_ORDER),
+    workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
     loadWorkspaceFiles: z.boolean().default(true),
   },
 }
@@ -51,8 +49,7 @@ const getServerConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(SERVER_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult =
-    configurationSchema.server[configName].safeParse(configurationValue)
+  const parseResult = configurationSchema.server[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -65,10 +62,7 @@ const getRunmeTerminalConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult =
-    configurationSchema.notebookTerminal[configName].safeParse(
-      configurationValue
-    )
+  const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -81,8 +75,7 @@ const getCodeLensConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult =
-    configurationSchema.codelens[configName].safeParse(configurationValue)
+  const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -95,8 +88,7 @@ const getEnvConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(ENV_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult =
-    configurationSchema.env[configName].safeParse(configurationValue)
+  const parseResult = configurationSchema.env[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -108,10 +100,7 @@ const getPortNumber = (): number => {
 }
 
 const getCustomServerAddress = (): string | undefined => {
-  return getServerConfigurationValue<string | undefined>(
-    'customAddress',
-    undefined
-  )
+  return getServerConfigurationValue<string | undefined>('customAddress', undefined)
 }
 
 const getTLSEnabled = (): boolean => {
@@ -128,10 +117,7 @@ const getTLSDir = (): string => {
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
-  const userPath = getServerConfigurationValue<string | undefined>(
-    'binaryPath',
-    undefined
-  )
+  const userPath = getServerConfigurationValue<string | undefined>('binaryPath', undefined)
 
   const isWin = platform.toLowerCase().startsWith('win')
   const binName = isWin ? 'runme.exe' : 'runme'
@@ -140,10 +126,7 @@ const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
   if (userPath) {
     if (path.isAbsolute(userPath)) {
       return Uri.file(userPath)
-    } else if (
-      workspace.workspaceFolders &&
-      workspace.workspaceFolders.length > 0
-    ) {
+    } else if (workspace.workspaceFolders && workspace.workspaceFolders.length > 0) {
       return Uri.joinPath(workspace.workspaceFolders[0].uri, userPath)
     }
   }
@@ -162,17 +145,11 @@ const isNotebookTerminalFeatureEnabled = (
 }
 
 const getNotebookTerminalFontSize = (): number | undefined => {
-  return getRunmeTerminalConfigurationValue<number | undefined>(
-    'fontSize',
-    undefined
-  )
+  return getRunmeTerminalConfigurationValue<number | undefined>('fontSize', undefined)
 }
 
 const getNotebookTerminalFontFamily = (): string | undefined => {
-  return getRunmeTerminalConfigurationValue<string | undefined>(
-    'fontFamily',
-    undefined
-  )
+  return getRunmeTerminalConfigurationValue<string | undefined>('fontFamily', undefined)
 }
 
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
@@ -193,9 +170,7 @@ const getCodeLensEnabled = (): boolean => {
   return getCodeLensConfigurationValue<boolean>('enable', true)
 }
 
-const registerExtensionEnvironmentVariables = (
-  context: ExtensionContext
-): void => {
+const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
   context.environmentVariableCollection.prepend(
     'PATH',
     path.dirname(getBinaryPath(context.extensionUri, os.platform()).fsPath) +
@@ -204,10 +179,7 @@ const registerExtensionEnvironmentVariables = (
 }
 
 const getEnvWorkspaceFileOrder = (): string[] => {
-  return getEnvConfigurationValue(
-    'workspaceFileOrder',
-    DEFAULT_WORKSPACE_FILE_ORDER
-  )
+  return getEnvConfigurationValue('workspaceFileOrder', DEFAULT_WORKSPACE_FILE_ORDER)
 }
 
 const getEnvLoadWorkspaceFiles = (): boolean => {

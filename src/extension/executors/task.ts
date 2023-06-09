@@ -80,9 +80,7 @@ async function taskExecutor(
   const taskExecution = new Task(
     { type: 'shell', name: `Runme Task (${RUNME_ID})` },
     TaskScope.Workspace,
-    cellText.length > LABEL_LIMIT
-      ? `${cellText.slice(0, LABEL_LIMIT)}...`
-      : cellText,
+    cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText,
     'exec',
     new ShellExecution(cmdLine, { cwd, env })
     // experimental only
@@ -95,12 +93,8 @@ async function taskExecutor(
   taskExecution.presentationOptions = {
     focus: true,
     // why doesn't this work with Slient?
-    reveal: annotations.background
-      ? TaskRevealKind.Never
-      : TaskRevealKind.Always,
-    panel: annotations.background
-      ? TaskPanelKind.Dedicated
-      : TaskPanelKind.Shared,
+    reveal: annotations.background ? TaskRevealKind.Never : TaskRevealKind.Always,
+    panel: annotations.background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
   }
   const execution = await tasks.executeTask(taskExecution)
 

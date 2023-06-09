@@ -52,32 +52,24 @@ export class RunmeFile extends TreeItem {
   }
 }
 
-export class RunmeLauncherProvider
-  implements TreeDataProvider<RunmeFile>, Disposable
-{
+export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Disposable {
   #disposables: Disposable[] = []
 
   private filesTree: Map<string, TreeFile> = new Map()
-  private defaultItemState: TreeItemCollapsibleState =
-    TreeItemCollapsibleState.Collapsed
+  private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
 
   constructor(private workspaceRoot?: string | undefined) {
-    const watcher = workspace.createFileSystemWatcher(
-      '**/*.md',
-      false,
-      true,
-      false
-    )
+    const watcher = workspace.createFileSystemWatcher('**/*.md', false, true, false)
     this.#disposables.push(
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
       watcher.onDidDelete((file) => this.#onFileChange(file))
     )
   }
 
-  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> =
-    new EventEmitter<RunmeFile | undefined>()
-  readonly onDidChangeTreeData: Event<RunmeFile | undefined> =
-    this._onDidChangeTreeData.event
+  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> = new EventEmitter<
+    RunmeFile | undefined
+  >()
+  readonly onDidChangeTreeData: Event<RunmeFile | undefined> = this._onDidChangeTreeData.event
 
   getTreeItem(element: RunmeFile): TreeItem {
     return element
@@ -110,14 +102,10 @@ export class RunmeLauncherProvider
               contextValue: 'folder',
             })
         )
-        .sort((a: RunmeFile, b: RunmeFile) =>
-          a.label.length > b.label.length ? 1 : -1
-        )
+        .sort((a: RunmeFile, b: RunmeFile) => (a.label.length > b.label.length ? 1 : -1))
     }
 
-    const { files, folderPath } = this.filesTree.get(
-      element.label as string
-    ) || { files: [] }
+    const { files, folderPath } = this.filesTree.get(element.label as string) || { files: [] }
     return files.map(
       (file) =>
         new RunmeFile(file, {
@@ -148,34 +136,20 @@ export class RunmeLauncherProvider
     this._onDidChangeTreeData.fire(undefined)
   }
 
-  public static async openFile({
-    file,
-    folderPath,
-  }: {
-    file: string
-    folderPath: string
-  }) {
+  public static async openFile({ file, folderPath }: { file: string; folderPath: string }) {
     const doc = Uri.file(`${folderPath}/${file}`)
     await commands.executeCommand('vscode.openWith', doc, Kernel.type)
   }
 
   async collapseAll() {
     this.defaultItemState = TreeItemCollapsibleState.Collapsed
-    await commands.executeCommand(
-      'setContext',
-      'runme.launcher.isExpanded',
-      false
-    )
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
     this.refresh()
   }
 
   async expandAll() {
     this.defaultItemState = TreeItemCollapsibleState.Expanded
-    await commands.executeCommand(
-      'setContext',
-      'runme.launcher.isExpanded',
-      true
-    )
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
     this.refresh()
   }
 
@@ -184,20 +158,15 @@ export class RunmeLauncherProvider
 
     if (this.workspaceRoot) {
       const gitIgnoreUri = Uri.parse(join(this.workspaceRoot, '.gitignore'))
-      const hasGitDirectory =
-        (await getPathType(gitIgnoreUri)) === FileType.File
+      const hasGitDirectory = (await getPathType(gitIgnoreUri)) === FileType.File
 
       if (hasGitDirectory) {
         try {
           const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
-          const patterns = mapGitIgnoreToGlobFolders(
-            ignoreList.getText().split('\n')
-          )
+          const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
           excludePatterns = patterns.join(',')
         } catch (err: unknown) {
-          console.error(
-            `Failed to read .gitignore file: ${(err as Error).message}`
-          )
+          console.error(`Failed to read .gitignore file: ${(err as Error).message}`)
         }
       }
     }
@@ -221,8 +190,7 @@ export class RunmeLauncherProvider
     const info = basename(file.path)
     const folderPath = dirname(file.path)
     let folderName =
-      folderPath.replace(resolve(this.workspaceRoot || '', '..'), '') +
-        nameTweaker || rootFolder
+      folderPath.replace(resolve(this.workspaceRoot || '', '..'), '') + nameTweaker || rootFolder
     folderName = folderName.startsWith('/')
       ? folderName.substring(1, folderName.length)
       : folderName

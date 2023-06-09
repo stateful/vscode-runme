@@ -133,9 +133,7 @@ export class WorkflowViewer extends LitElement {
             return
           }
           this.isTriggeringWorkflow = false
-          this.deploymentStatus = itFailed
-            ? DeploymentStatus.error
-            : DeploymentStatus.triggered
+          this.deploymentStatus = itFailed ? DeploymentStatus.error : DeploymentStatus.triggered
           this.reason = reason
           this.workflowRun = workflowRun
         } else if (e.type === ClientMessages.githubWorkflowStatusUpdate) {
@@ -160,12 +158,9 @@ export class WorkflowViewer extends LitElement {
 
     if (workflow_dispatch?.inputs) {
       const yamlDefinition = Object.entries(workflow_dispatch.inputs)
-      const inputs = yamlDefinition.filter(
-        (p: unknown) => typeof p === 'object'
-      )
+      const inputs = yamlDefinition.filter((p: unknown) => typeof p === 'object')
       return inputs.map((option: any) => {
-        const [key, { type, options, description, default: defaultValue }] =
-          option
+        const [key, { type, options, description, default: defaultValue }] = option
         // Set the default values of the form
         this.inputs[key] = defaultValue
         return html`<div class="row">
@@ -191,10 +186,7 @@ export class WorkflowViewer extends LitElement {
         return html`
           <div class="message success-message">
             <h2>Workflow triggered!</h2>
-            <p>
-              The workflow is now running, the status will be updated
-              automatically here.
-            </p>
+            <p>The workflow is now running, the status will be updated automatically here.</p>
           </div>
           <github-workflow-run
             status="${this.workflowRun?.status}"
@@ -212,9 +204,7 @@ export class WorkflowViewer extends LitElement {
   }
 
   private getFooter() {
-    return html` <div
-      class="run-action-footer ${this.isTriggeringWorkflow ? 'deploying' : ''}"
-    >
+    return html` <div class="run-action-footer ${this.isTriggeringWorkflow ? 'deploying' : ''}">
       ${when(
         this.isTriggeringWorkflow,
         () =>
@@ -236,11 +226,7 @@ export class WorkflowViewer extends LitElement {
     const workflowForm = this.getWorkflowForm()
     if (workflowForm) {
       return html`
-        <div
-          class="github-workflow-item-container ${this.isTriggeringWorkflow
-            ? 'fade'
-            : ''}"
-        >
+        <div class="github-workflow-item-container ${this.isTriggeringWorkflow ? 'fade' : ''}">
           ${this.getWorkflowRunStatus()}
           ${when(
             this.deploymentStatus === DeploymentStatus.error,
@@ -267,8 +253,8 @@ export class WorkflowViewer extends LitElement {
     return html` <div class="message error-message">
       <h2>Error</h2>
       <p>
-        Unsupported GitHub Workflow, please ensure you are specifying an action
-        with workflow_dispatch
+        Unsupported GitHub Workflow, please ensure you are specifying an action with
+        workflow_dispatch
       </p>
       <close-cell-button
         @closed="${() => {

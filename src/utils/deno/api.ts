@@ -41,8 +41,7 @@ export class API {
   }
 
   static fromToken(token: string) {
-    const endpoint =
-      process.env['DEPLOY_API_ENDPOINT'] ?? 'https://dash.deno.com'
+    const endpoint = process.env['DEPLOY_API_ENDPOINT'] ?? 'https://dash.deno.com'
     return new API(`Bearer ${token}`, endpoint)
   }
 
@@ -92,10 +91,7 @@ export class API {
     }
   }
 
-  async promoteDeployment(
-    id: string,
-    productionDeployment: string
-  ): Promise<Boolean> {
+  async promoteDeployment(id: string, productionDeployment: string): Promise<Boolean> {
     try {
       ;(await this.#requestJson(`/projects/${id}`, {
         method: 'PATCH',
@@ -104,9 +100,7 @@ export class API {
 
       return true
     } catch (err: any) {
-      console.error(
-        `[Runme]: Deno API Error - couldn't promote deployment: ${err.message}`
-      )
+      console.error(`[Runme]: Deno API Error - couldn't promote deployment: ${err.message}`)
       return false
     }
   }
@@ -125,9 +119,7 @@ export class API {
   async getDeployments(id: string): Promise<Deployment[] | null> {
     try {
       return (
-        await this.#requestJson<[Deployment[] | null, {}]>(
-          `/projects/${id}/deployments?limit=10`
-        )
+        await this.#requestJson<[Deployment[] | null, {}]>(`/projects/${id}/deployments?limit=10`)
       )[0]
     } catch (err) {
       if (err instanceof APIError && err.code === 'deploymentsNotFound') {

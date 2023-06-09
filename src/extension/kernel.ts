@@ -22,10 +22,7 @@ import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
 import getLogger from './logger'
-import executor, {
-  type IEnvironmentManager,
-  ENV_STORE_MANAGER,
-} from './executors'
+import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   resetEnv,
@@ -81,10 +78,7 @@ export class Kernel implements Disposable {
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    this.#experiments.set(
-      'grpcSerializer',
-      config.get<boolean>('grpcSerializer', true)
-    )
+    this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
 
@@ -95,17 +89,11 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(
-        this.#handleRendererMessage.bind(this)
-      ),
+      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
-      window.onDidChangeActiveColorTheme(
-        this.#handleActiveColorThemeMessage.bind(this)
-      ),
-      window.onDidChangeActiveNotebookEditor(
-        this.#handleActiveNotebook.bind(this)
-      )
+      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
+      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this))
     )
   }
 
@@ -127,9 +115,7 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
   }
 
-  async getTerminalState(
-    cell: NotebookCell
-  ): Promise<ITerminalState | undefined> {
+  async getTerminalState(cell: NotebookCell): Promise<ITerminalState | undefined> {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
@@ -141,22 +127,14 @@ export class Kernel implements Disposable {
     return outputs.registerCellTerminalState(type)
   }
 
-  async #handleSaveNotebook({
-    uri,
-    isUntitled,
-    notebookType,
-    getCells,
-  }: NotebookDocument) {
+  async #handleSaveNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
     }
     const availableCategories: string[] = []
     getCells().forEach((cell) => {
       const annotations = getAnnotations(cell)
-      if (
-        annotations.category !== '' &&
-        !availableCategories.includes(annotations.category)
-      ) {
+      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
         availableCategories.push(annotations.category)
       }
     })
@@ -184,10 +162,7 @@ export class Kernel implements Disposable {
     const availableCategories: string[] = []
     getCells().forEach((cell) => {
       const annotations = getAnnotations(cell)
-      if (
-        annotations.category !== '' &&
-        !availableCategories.includes(annotations.category)
-      ) {
+      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
         availableCategories.push(annotations.category)
       }
       this.registerNotebookCell(cell)
@@ -209,11 +184,7 @@ export class Kernel implements Disposable {
     }
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
-    await commands.executeCommand(
-      'setContext',
-      NOTEBOOK_HAS_CATEGORIES,
-      !!categories.length
-    )
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
   }
 
   // eslint-disable-next-line max-len
@@ -242,10 +213,7 @@ export class Kernel implements Disposable {
             continue
           }
 
-          if (
-            cell.metadata?.['runme.dev/uuid'] ===
-            payload.output.annotations['runme.dev/uuid']
-          ) {
+          if (cell.metadata?.['runme.dev/uuid'] === payload.output.annotations['runme.dev/uuid']) {
             editCell = cell
             break
           }
@@ -262,10 +230,7 @@ export class Kernel implements Disposable {
           ...editCell.metadata,
           ...payload.output.annotations,
         }
-        const notebookEdit = NotebookEdit.updateCellMetadata(
-          editCell.index,
-          newMetadata
-        )
+        const notebookEdit = NotebookEdit.updateCellMetadata(editCell.index, newMetadata)
 
         edit.set(editCell.notebook.uri, [notebookEdit])
         await workspace.applyEdit(edit)
@@ -274,9 +239,7 @@ export class Kernel implements Disposable {
       return
     } else if (message.type === ClientMessages.denoPromote) {
       const payload = message
-      const token = await this.getEnvironmentManager().get(
-        DENO_ACCESS_TOKEN_KEY
-      )
+      const token = await this.getEnvironmentManager().get(DENO_ACCESS_TOKEN_KEY)
       if (!token) {
         return
       }
@@ -335,10 +298,7 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      const categories = await getNotebookCategories(
-        this.context,
-        cell.notebook.uri
-      )
+      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
       if (!categories) {
         return
       }
@@ -352,19 +312,12 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      await setNotebookCategories(
-        this.context,
-        cell.notebook.uri,
-        message.output.value
-      )
+      await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
     } else if (message.type === ClientMessages.displayPicker) {
-      const selectedOption = await window.showQuickPick(
-        message.output.options,
-        {
-          title: message.output.title,
-          ignoreFocusOut: true,
-        }
-      )
+      const selectedOption = await window.showQuickPick(message.output.options, {
+        title: message.output.title,
+        ignoreFocusOut: true,
+      })
       postClientMessage(this.messaging, ClientMessages.onPickerOption, {
         option: selectedOption,
         uuid: message.output.uuid,
@@ -380,21 +333,17 @@ export class Kernel implements Disposable {
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, false)
     const totalNotebookCells =
       (cells[0] &&
-        cells[0].notebook
-          .getCells()
-          .filter((cell) => cell.kind === NotebookCellKind.Code).length) ||
+        cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code)
+          .length) ||
       0
     const totalCellsToExecute = cells.length
-    let showConfirmPrompt =
-      totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
+    let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
     let cellsExecuted = 0
 
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
       if (
-        (totalCellsToExecute > 1 &&
-          this.category &&
-          annotations.category !== this.category) ||
+        (totalCellsToExecute > 1 && this.category && annotations.category !== this.category) ||
         annotations.excludeFromRunAll
       ) {
         continue
@@ -402,17 +351,12 @@ export class Kernel implements Disposable {
       if (showConfirmPrompt) {
         const cellText = cell.document.getText()
         const cellLabel =
-          annotations.name || cellText.length > 20
-            ? `${cellText.slice(0, 20)}...`
-            : cellText
+          annotations.name || cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
 
-        const answer = (await window.showQuickPick(
-          Object.values(ConfirmationItems),
-          {
-            title: `Are you sure you like to run "${cellLabel}"?`,
-            ignoreFocusOut: true,
-          }
-        )) as ConfirmationItems | undefined
+        const answer = (await window.showQuickPick(Object.values(ConfirmationItems), {
+          title: `Are you sure you like to run "${cellLabel}"?`,
+          ignoreFocusOut: true,
+        })) as ConfirmationItems | undefined
 
         if (answer === ConfirmationItems.No) {
           continue
@@ -437,11 +381,7 @@ export class Kernel implements Disposable {
     this.category = undefined
     const uri = cells[0] && cells[0].notebook.uri
     const categories = await getNotebookCategories(this.context, uri)
-    await commands.executeCommand(
-      'setContext',
-      NOTEBOOK_HAS_CATEGORIES,
-      !!categories.length
-    )
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
 
     TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
       'cells.total': totalNotebookCells?.toString(),
@@ -450,9 +390,7 @@ export class Kernel implements Disposable {
   }
 
   #handleActiveColorThemeMessage(): void {
-    this.messaging.postMessage(<
-      ClientMessage<ClientMessages.activeThemeChanged>
-    >{
+    this.messaging.postMessage(<ClientMessage<ClientMessages.activeThemeChanged>>{
       type: ClientMessages.activeThemeChanged,
     })
   }
@@ -463,9 +401,7 @@ export class Kernel implements Disposable {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
 
-  public async getCellOutputs(
-    cell: NotebookCell
-  ): Promise<NotebookCellOutputManager> {
+  public async getCellOutputs(cell: NotebookCell): Promise<NotebookCellOutputManager> {
     return await this.cellManager.getNotebookOutputs(cell)
   }
 
@@ -515,9 +451,7 @@ export class Kernel implements Disposable {
           this.environment,
           environmentManager
         ).catch((e) => {
-          window.showErrorMessage(
-            `Internal failure executing runner: ${e.message}`
-          )
+          window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
           log.error('Internal failure executing runner', e.message)
           return false
         })
@@ -538,12 +472,7 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey].call(
-        this,
-        exec,
-        runningCell,
-        outputs
-      )
+      successfulCellExecution = await executor[execKey].call(this, exec, runningCell, outputs)
     }
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
@@ -572,9 +501,7 @@ export class Kernel implements Disposable {
           }
           this.environment = env
         } catch (e: any) {
-          window.showErrorMessage(
-            `Failed to create environment for gRPC Runner: ${e.message}`
-          )
+          window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
           log.error('Failed to create gRPC Runner environment', e)
         }
       })
@@ -593,9 +520,7 @@ export class Kernel implements Disposable {
           if (!this.environment) {
             return undefined
           }
-          return (
-            await this.runner?.getEnvironmentVariables(this.environment)
-          )?.[key]
+          return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
         },
         set: async (key, val) => {
           if (!this.environment) {

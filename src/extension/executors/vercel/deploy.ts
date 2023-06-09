@@ -3,11 +3,7 @@ import path from 'node:path'
 
 import sanitize from 'filenamify'
 import frameworkList, { Framework } from '@vercel/frameworks'
-import {
-  createDeployment,
-  VercelClientOptions,
-  DeploymentOptions,
-} from '@vercel/client'
+import { createDeployment, VercelClientOptions, DeploymentOptions } from '@vercel/client'
 import { TextDocument, NotebookCellExecution, window } from 'vscode'
 
 import { OutputType } from '../../../constants'
@@ -25,19 +21,11 @@ import {
   cancelDeployment,
   VercelProject,
 } from './api'
-import {
-  getAuthToken,
-  quickPick,
-  updateGitIgnore,
-  createVercelFile,
-} from './utils'
+import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
 import { VERCEL_DIR } from './constants'
 
 const REPLACEMENT = '-'
-const LINK_OPTIONS = [
-  'Link Project to existing Vercel project',
-  'Create a new Vercel Project',
-]
+const LINK_OPTIONS = ['Link Project to existing Vercel project', 'Create a new Vercel Project']
 const log = getLogger('Vercel - deploy')
 
 export async function deploy(
@@ -93,18 +81,12 @@ export async function deploy(
         user.username,
         ...teams.map((t) => t.slug),
       ])) as string
-      const org =
-        scope === user.username ? user : teams.find((t) => t.slug === scope)
+      const org = scope === user.username ? user : teams.find((t) => t.slug === scope)
       const orgSlug =
-        scope === user.username
-          ? user.username
-          : teams.find((t) => t.slug === scope)?.slug
+        scope === user.username ? user.username : teams.find((t) => t.slug === scope)?.slug
 
       if (linkProject) {
-        const { projects } = await getProjects(
-          scope === user.username ? undefined : scope,
-          headers
-        )
+        const { projects } = await getProjects(scope === user.username ? undefined : scope, headers)
         const projectToLink = await quickPick<VercelProject>(
           'To which existing project do you want to link?',
           projects.map((p) => p.name),
@@ -133,9 +115,7 @@ export async function deploy(
           .toLowerCase()
         const project = await createProject(sanitizedName, headers)
         deployParams.name = project.name
-        window.showInformationMessage(
-          `Created new project ${orgSlug}/${project.name}`
-        )
+        window.showInformationMessage(`Created new project ${orgSlug}/${project.name}`)
         await createVercelFile(cwd, org?.id!, project.id)
         await updateGitIgnore(cwd, orgSlug!, project.name)
       }
@@ -156,9 +136,7 @@ export async function deploy(
        * get project information (e.g. name to be able to deploy)
        */
       const { projectId } = JSON.parse(
-        (
-          await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))
-        ).toString()
+        (await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString()
       )
       const project = await getProject(projectId, headers)
       deployParams.name = project.name

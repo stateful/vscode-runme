@@ -2,9 +2,7 @@ import vscode from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 
-export class PidStatusProvider
-  implements vscode.NotebookCellStatusBarItemProvider
-{
+export class PidStatusProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {

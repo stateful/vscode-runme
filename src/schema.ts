@@ -26,10 +26,7 @@ const falseyBoolean = (defaultValue: boolean) =>
     return defaultValue
   }, z.boolean())
 
-const boolify = (
-  defaultValue: boolean,
-  invalidTypeError: string = 'expected a boolean value'
-) =>
+const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a boolean value') =>
   z.preprocess((subject) => {
     if (!subject) {
       return defaultValue
@@ -54,8 +51,7 @@ export const AnnotationSchema = {
   promptEnv: boolify(true),
   excludeFromRunAll: boolify(false),
   name: z.preprocess(
-    (value) =>
-      typeof value === 'string' ? cleanAnnotation(value, ',') : value,
+    (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
     z.string().default('')
   ),
   mimeType: z
@@ -70,8 +66,7 @@ export const AnnotationSchema = {
     .default('text/plain'),
   cwd: z.string().nonempty().optional(),
   category: z.preprocess(
-    (value) =>
-      typeof value === 'string' ? cleanAnnotation(value, ',') : value,
+    (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
     z.string().default('')
   ),
 }

@@ -35,9 +35,7 @@ import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
 
 function showWarningMessage() {
-  return window.showWarningMessage(
-    "Couldn't find terminal! Was it already closed?"
-  )
+  return window.showWarningMessage("Couldn't find terminal! Was it already closed?")
 }
 
 export function openIntegratedTerminal(cell: NotebookCell) {
@@ -92,11 +90,7 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
   await commands.executeCommand('notebook.execute')
 }
 
-export function toggleTerminal(
-  kernel: Kernel,
-  notebookTerminal: boolean,
-  forceShow = false
-) {
+export function toggleTerminal(kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
     if (
       (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) ||
@@ -144,10 +138,7 @@ export function runCLICommand(
   return async function (cell: { metadata?: any; document: TextDocument }) {
     const cwd = path.dirname(cell.document.uri.fsPath)
 
-    const args = [
-      `--chdir="${cwd}"`,
-      `--filename="${path.basename(cell.document.uri.fsPath)}"`,
-    ]
+    const args = [`--chdir="${cwd}"`, `--filename="${path.basename(cell.document.uri.fsPath)}"`]
 
     const envs: Record<string, string> = {}
 
@@ -212,11 +203,7 @@ export async function createNewRunmeNotebook() {
 }
 
 export async function welcome() {
-  commands.executeCommand(
-    'workbench.action.openWalkthrough',
-    'stateful.runme#runme.welcome',
-    false
-  )
+  commands.executeCommand('workbench.action.openWalkthrough', 'stateful.runme#runme.welcome', false)
 }
 
 export async function tryIt(context: ExtensionContext) {
@@ -229,26 +216,15 @@ export async function tryIt(context: ExtensionContext) {
     await workspace.fs.createDirectory(projectUri)
     const enc = new TextEncoder()
     const newNotebookUri = Uri.joinPath(projectUri, 'Welcome to Runme.md')
-    await workspace.fs.writeFile(
-      newNotebookUri,
-      enc.encode(fileContent.toString())
-    )
-    await commands.executeCommand(
-      'vscode.openWith',
-      newNotebookUri,
-      Kernel.type
-    )
+    await workspace.fs.writeFile(newNotebookUri, enc.encode(fileContent.toString()))
+    await commands.executeCommand('vscode.openWith', newNotebookUri, Kernel.type)
   } catch (err) {
     const localMarkdown = Uri.joinPath(
       Uri.file(context.extensionPath),
       'walkthroughs',
       'welcome.md'
     )
-    return commands.executeCommand(
-      'vscode.openWith',
-      localMarkdown,
-      Kernel.type
-    )
+    return commands.executeCommand('vscode.openWith', localMarkdown, Kernel.type)
   }
 }
 

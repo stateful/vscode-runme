@@ -3,10 +3,7 @@ import { NotebookRendererMessaging } from 'vscode'
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { postClientMessage } from '../../utils/messaging'
-import {
-  checkWorkflowRunStatus,
-  deployWorkflow,
-} from '../executors/github/workflows'
+import { checkWorkflowRunStatus, deployWorkflow } from '../executors/github/workflows'
 
 export interface IGitHubMessaging {
   messaging: NotebookRendererMessaging

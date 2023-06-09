@@ -89,8 +89,7 @@ export class VercelOutput extends LitElement {
           () =>
             when(
               deployed,
-              () =>
-                supportsMessaging && this.#promoted ? 'production' : 'preview',
+              () => (supportsMessaging && this.#promoted ? 'production' : 'preview'),
               () => html`pending <vscode-spinner />`
             )
         )}
@@ -98,11 +97,7 @@ export class VercelOutput extends LitElement {
         ${when(
           hasFailed,
           () => errorMessages.map((error: string) => html`<div>${error}</div>`),
-          () =>
-            when(
-              !deployed,
-              () => html`${this.content.payload.status.toLowerCase()}`
-            )
+          () => when(!deployed, () => html`${this.content.payload.status.toLowerCase()}`)
         )}
         ${when(
           deployed && supportsMessaging && !this.#promoted,
@@ -118,10 +113,7 @@ export class VercelOutput extends LitElement {
             </vscode-button>
           `
         )}
-        ${when(
-          deployed && supportsMessaging && this.#promoted,
-          () => html` 👌 Promoted `
-        )}
+        ${when(deployed && supportsMessaging && this.#promoted, () => html` 👌 Promoted `)}
       </div>
       <close-cell-button
         @closed="${() => {

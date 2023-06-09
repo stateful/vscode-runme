@@ -1,8 +1,6 @@
 import vscode from 'vscode'
 
-export class ThumbsUpProvider
-  implements vscode.NotebookCellStatusBarItemProvider
-{
+export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): vscode.NotebookCellStatusBarItem | undefined {
@@ -20,9 +18,7 @@ export class ThumbsUpProvider
   }
 }
 
-export class ThumbsDownProvider
-  implements vscode.NotebookCellStatusBarItemProvider
-{
+export class ThumbsDownProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): vscode.NotebookCellStatusBarItem | undefined {

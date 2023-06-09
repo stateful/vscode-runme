@@ -11,9 +11,7 @@ export interface ICellOutputMessage {
   outputType: OutputType
 }
 
-export async function handleCellOutputMessage(
-  options: ICellOutputMessage
-): Promise<void> {
+export async function handleCellOutputMessage(options: ICellOutputMessage): Promise<void> {
   const { message, cell, kernel, outputType } = options
   if (message.type === ClientMessages.closeCellOutput) {
     const outputs = await kernel.getCellOutputs(cell)

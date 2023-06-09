@@ -71,9 +71,7 @@ export class RunmeUriHandler implements UriHandler {
 
   private async _setupProject(fileToOpen: string, repository?: string | null) {
     if (!repository) {
-      return window.showErrorMessage(
-        'No project to setup was provided in the url'
-      )
+      return window.showErrorMessage('No project to setup was provided in the url')
     }
 
     const suggestedProjectName = getSuggestedProjectName(repository)
@@ -90,9 +88,7 @@ export class RunmeUriHandler implements UriHandler {
 
     const targetDirUri = Uri.joinPath(
       projectDirUri,
-      ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split(
-        '/'
-      )
+      ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/')
     )
     window.showInformationMessage('Setting up a new project using Runme...')
     return window.withProgress(
@@ -101,17 +97,14 @@ export class RunmeUriHandler implements UriHandler {
         cancellable: false,
         title: `Setting up project from repository ${repository}`,
       },
-      (progress) =>
-        this._cloneProject(progress, targetDirUri, repository, fileToOpen)
+      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen)
     )
   }
 
   private async _setupFile(fileToOpen: string) {
     const fileName = path.basename(Uri.parse(fileToOpen).fsPath)
     if (!fileName.endsWith('.md')) {
-      return window.showErrorMessage(
-        'Parameter "fileToOpen" from URL is not a markdown file!'
-      )
+      return window.showErrorMessage('Parameter "fileToOpen" from URL is not a markdown file!')
     }
 
     /**
@@ -128,10 +121,7 @@ export class RunmeUriHandler implements UriHandler {
       await workspace.fs.createDirectory(projectUri)
 
       const enc = new TextEncoder()
-      await workspace.fs.writeFile(
-        Uri.joinPath(projectUri, fileName),
-        enc.encode(fileContent)
-      )
+      await workspace.fs.writeFile(Uri.joinPath(projectUri, fileName), enc.encode(fileContent))
       await writeBootstrapFile(projectUri, fileName)
       await commands.executeCommand('vscode.openFolder', projectUri, {
         forceNewWindow: true,

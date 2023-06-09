@@ -21,11 +21,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 
-import {
-  DeserializeRequest,
-  SerializeRequest,
-  Notebook,
-} from './grpc/serializerTypes'
+import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
@@ -46,9 +42,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   constructor(protected context: ExtensionContext, protected kernel: Kernel) {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
-      workspace.onDidChangeNotebookDocument(
-        this.handleNotebookChanged.bind(this)
-      )
+      workspace.onDidChangeNotebookDocument(this.handleNotebookChanged.bind(this))
       // TODO(mxs): https://github.com/stateful/vscode-runme/issues/566#issuecomment-1574128419
       // workspace.onDidSaveNotebookDocument(
       //   this.handleNotebookSaved.bind(this)
@@ -89,15 +83,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
     // update changes in metadata
     const bytes = await workspace.fs.readFile(uri)
-    const deserialized = await this.deserializeNotebook(
-      bytes,
-      new CancellationTokenSource().token
-    )
+    const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
 
     const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName = (
-        updatedCell.metadata as Serializer.Metadata | undefined
-      )?.['runme.dev/name']
+      const updatedName = (updatedCell.metadata as Serializer.Metadata | undefined)?.[
+        'runme.dev/name'
+      ]
       if (!updatedName) {
         return []
       }
@@ -181,11 +172,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const cells = notebook.cells ?? []
       notebook.cells = await Promise.all(
         cells.map((elem) => {
-          if (
-            elem.kind === NotebookCellKind.Code &&
-            elem.value &&
-            (elem.languageId || '') === ''
-          ) {
+          if (elem.kind === NotebookCellKind.Code && elem.value && (elem.languageId || '') === '') {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               elem.languageId = guessed
@@ -223,19 +210,15 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         "Runme's authoring features are in early stages and require hardening. " +
         "We wouldn't want you to loose important data. Please version track your file first " +
         'or disable this restriction in the VS Code settings.'
-      window
-        .showErrorMessage(errorMessage, 'Open Runme Settings')
-        .then((openSettings) => {
-          if (openSettings) {
-            return commands.executeCommand(
-              'workbench.action.openSettings',
-              'runme.flags.disableSaveRestriction'
-            )
-          }
-        })
-      throw new Error(
-        'saving non version controlled notebooks is disabled by default.'
-      )
+      window.showErrorMessage(errorMessage, 'Open Runme Settings').then((openSettings) => {
+        if (openSettings) {
+          return commands.executeCommand(
+            'workbench.action.openSettings',
+            'runme.flags.disableSaveRestriction'
+          )
+        }
+      })
+      throw new Error('saving non version controlled notebooks is disabled by default.')
     }
 
     const err = await this.ready
@@ -255,11 +238,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           elem.languageId || DEFAULT_LANG_ID
         )
       } else {
-        cell = new NotebookCellData(
-          NotebookCellKind.Markup,
-          elem.value,
-          'markdown'
-        )
+        cell = new NotebookCellData(NotebookCellKind.Markup, elem.value, 'markdown')
       }
 
       if (cell.kind === NotebookCellKind.Code) {
@@ -268,8 +247,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       }
 
       cell.metadata ??= {}
-      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] =
-        elem.textRange
+      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] = elem.textRange
 
       accu.push(cell)
 
@@ -279,16 +257,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public static normalize(source: string): string {
     const lines = source.split('\n')
-    const normed = lines.filter(
-      (l) => !(l.trim().startsWith('```') || l.trim().endsWith('```'))
-    )
+    const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
     return normed.join('\n')
   }
 
   protected printCell(content: string, languageId = 'markdown') {
-    return new NotebookData([
-      new NotebookCellData(NotebookCellKind.Markup, content, languageId),
-    ])
+    return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
   }
 }
 
@@ -297,11 +271,7 @@ export class WasmSerializer extends SerializerBase {
 
   constructor(protected context: ExtensionContext, kernel: Kernel) {
     super(context, kernel)
-    const wasmUri = Uri.joinPath(
-      this.context.extensionUri,
-      'wasm',
-      'runme.wasm'
-    )
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     this.ready = initWasm(wasmUri)
   }
 
@@ -342,11 +312,7 @@ export class GrpcSerializer extends SerializerBase {
 
   private serverReadyListener: Disposable | undefined
 
-  constructor(
-    protected context: ExtensionContext,
-    protected server: RunmeServer,
-    kernel: Kernel
-  ) {
+  constructor(protected context: ExtensionContext, protected server: RunmeServer, kernel: Kernel) {
     super(context, kernel)
 
     this.ready = new Promise((resolve) => {
