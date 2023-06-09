@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "1.5.2-edge.1",
+  "version": "1.5.2",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "Execute commands inside your runbooks, docs, and READMEs.",
