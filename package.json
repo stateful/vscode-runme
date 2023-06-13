@@ -433,7 +433,7 @@
           },
           "runme.app.apiUrl": {
             "type": "string",
-            "default": "https://app.runme.dev/graphql",
+            "default": "",
             "markdownDescription": "Runme App API URL"
           },
           "runme.app.enableShare": {

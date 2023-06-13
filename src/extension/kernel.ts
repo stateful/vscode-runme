@@ -41,7 +41,7 @@ import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecut
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
-import handleApiMessage from './messages/apiRequest'
+import { handleCloudApiMessage } from './messages/cloudApiRequest'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -319,8 +319,8 @@ export class Kernel implements Disposable {
         option: selectedOption,
         uuid: message.output.uuid
       })
-    } else if (message.type === ClientMessages.apiRequest) {
-      return handleApiMessage({
+    } else if (message.type === ClientMessages.cloudApiRequest) {
+      return handleCloudApiMessage({
         messaging: this.messaging,
         message,
         editor

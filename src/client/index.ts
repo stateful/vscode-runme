@@ -70,8 +70,6 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
-          terminalElement.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
-          terminalElement.setAttribute('input', payload.output.input)
           if (payload.output.enableShareButton) {
             terminalElement.setAttribute('enableShareButton', payload.output.enableShareButton.toString())
           }

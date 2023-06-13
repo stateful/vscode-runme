@@ -21,7 +21,7 @@ import {
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
   getNotebookTerminalRows,
-  isRunmeApiEnable
+  isRunmeApiEnabled
 } from '../utils/configuration'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -174,9 +174,7 @@ export class NotebookCellOutputManager {
               terminalFontSize,
               content: terminalState.serialize(),
               initialRows: getNotebookTerminalRows(),
-              annotations: getAnnotations(cell),
-              input: cell.document.getText(),
-              enableShareButton: isRunmeApiEnable()
+              enableShareButton: isRunmeApiEnabled()
             }
           }
 

@@ -12,7 +12,7 @@ import { ClientMessages, RENDERERS, OutputType } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
-import { APIMethod, CellAnnotations } from '../../../types'
+import { APIMethod } from '../../../types'
 
 import '../closeCellButton'
 import '../copyButton'
@@ -35,8 +35,8 @@ const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
 const LISTEN_TO_EVENTS = [
   'terminal:',
   'theme:',
-  ClientMessages.apiRequest,
-  ClientMessages.apiResponse,
+  ClientMessages.cloudApiRequest,
+  ClientMessages.cloudApiResponse,
   ClientMessages.onOptionsMessage,
   ClientMessages.optionsMessage,
   ClientMessages.onCopyTextToClipboard
@@ -315,14 +315,8 @@ export class TerminalView extends LitElement {
   @property({ type: Number })
   lastLine?: number // TODO: Get the last line of the terminal and store it.
 
-  @property({ type: Object, reflect: true })
-  annotations?: CellAnnotations
-
-  @property({ type: String })
-  input?: string
-
   @property()
-  isLoading: boolean = false
+  isCloudApiLoading: boolean = false
 
   @property()
   shareUrl?: string
@@ -356,7 +350,7 @@ export class TerminalView extends LitElement {
       convertEol: true,
       allowProposedApi: true,
       fontFamily: this.terminalFontFamily,
-      drawBoldTextInBrightColors: false,
+      drawBoldTextInBrightColors: false
     })
 
     if (this.initialContent) {
@@ -393,9 +387,9 @@ export class TerminalView extends LitElement {
               this.terminal!.write(data)
             }
           } break
-          case ClientMessages.apiResponse: {
+          case ClientMessages.cloudApiResponse: {
             if (e.output.uuid !== this.uuid) { return }
-            this.isLoading = false
+            this.isCloudApiLoading = false
             if (e.output.hasErrors) {
               return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
             }
@@ -407,7 +401,7 @@ export class TerminalView extends LitElement {
           case ClientMessages.onOptionsMessage: {
             if (e.output.uuid !== this.uuid) { return }
             const answer = e.output.option
-            this.isLoading = false
+            this.isCloudApiLoading = false
             switch (answer) {
               case MessageOptions.OpenLink: {
                 return postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
@@ -601,22 +595,18 @@ export class TerminalView extends LitElement {
     const ctx = getContext()
     if (!ctx.postMessage) { return }
     try {
-      this.isLoading = true
+      this.isCloudApiLoading = true
       const contentWithAnsi = this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
       const terminalContents = new TextEncoder().encode(contentWithAnsi)
-
-      await postClientMessage(ctx, ClientMessages.apiRequest, {
+      await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
         data: {
-          stdout: JSON.stringify([...terminalContents], null, 2),
-          input: encodeURIComponent(this.input!),
-          metadata: this.annotations
-
+          stdout: JSON.stringify([...terminalContents], null, 2)
         },
         uuid: this.uuid!,
         method: APIMethod.CreateCellExecution
       })
     } catch (error) {
-      this.isLoading = false
+      this.isCloudApiLoading = false
       postClientMessage(ctx, ClientMessages.infoMessage, `Failed to share output: ${(error as any).message}`)
     }
 
@@ -643,8 +633,8 @@ export class TerminalView extends LitElement {
       ${when(this.enableShareButton, () =>
         html`
         <share-cell 
-          ?disabled=${this.isLoading}
-          shareText="${this.isLoading ? 'Generating link ...' : this.shareText}"
+          ?disabled=${this.isCloudApiLoading}
+          shareText="${this.isCloudApiLoading ? 'Generating link ...' : this.shareText}"
           @onShare="${this.#shareCellOutput}">
         </share-cell>`, () => html``)}
       </div>

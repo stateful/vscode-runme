@@ -4,7 +4,7 @@ import { NotebookEditor, NotebookRendererMessaging } from 'vscode'
 import { ClientMessages } from '../../../constants'
 import { APIMethod, ClientMessage } from '../../../types'
 
-import createCellExecution from './createCellExecution'
+import saveCellExecution from './saveCellExecution'
 
 
 export interface IApiMessage {
@@ -13,12 +13,12 @@ export interface IApiMessage {
     editor: NotebookEditor
 }
 
-export default async function handleApiMessage({ messaging, message, editor }: IApiMessage): Promise<void | boolean> {
-    if (message.type !== ClientMessages.apiRequest) {
+export async function handleCloudApiMessage({ messaging, message, editor }: IApiMessage): Promise<void | boolean> {
+    if (message.type !== ClientMessages.cloudApiRequest) {
         throw new Error('Only API Request messages are supported!')
     }
     switch (message.output.method) {
-        case APIMethod.CreateCellExecution: return createCellExecution({ messaging, message, editor })
+        case APIMethod.CreateCellExecution: return saveCellExecution({ messaging, message, editor })
         default: throw new Error('Method not implemented')
     }
 }

@@ -106,8 +106,6 @@ interface Payload {
     terminalFontSize: number
     content?: string
     initialRows?: number
-    annotations: CellAnnotations
-    input: string
     enableShareButton: boolean
   }
   [OutputType.github]?: GitHubState
@@ -210,13 +208,13 @@ export interface ClientMessagePayload {
     value: string | string[]
     uuid: string
   }
-  [ClientMessages.apiRequest]: {
+  [ClientMessages.cloudApiRequest]: {
     data: any
     uuid: string
     hasErrors?: boolean
     method: APIMethod
   }
-  [ClientMessages.apiResponse]: {
+  [ClientMessages.cloudApiResponse]: {
     data: any
     uuid: string
     hasErrors?: boolean

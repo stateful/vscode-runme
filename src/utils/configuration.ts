@@ -223,7 +223,7 @@ const getRunmeApiUrl = (): string => {
   return getCloudConfigurationValue('apiUrl', DEFAULT_RUNME_APP_API_URL)
 }
 
-const isRunmeApiEnable = (): boolean => {
+const isRunmeApiEnabled = (): boolean => {
   return getCloudConfigurationValue('enableShare', false)
 }
 
@@ -246,5 +246,5 @@ export {
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,
   getRunmeApiUrl,
-  isRunmeApiEnable,
+  isRunmeApiEnabled,
 }
