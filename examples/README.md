@@ -151,3 +151,11 @@ echo Rows: \$(tput lines)
 echo Columns: \$(tput cols)
 "
 ```
+
+## Inspect JSON files
+
+With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON files interactively in Runme notebooks, e.g.:
+
+```sh
+curl "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
+```
