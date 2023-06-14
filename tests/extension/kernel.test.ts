@@ -1,5 +1,5 @@
-import { test, expect, vi, suite } from 'vitest'
-import { window, NotebookCell } from 'vscode'
+import { test, expect, vi, suite, beforeEach } from 'vitest'
+import { window, NotebookCell, workspace } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
 import { resetEnv } from '../../src/extension/utils'
@@ -8,12 +8,16 @@ import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
-vi.mock('../../src/extension/utils', () => ({
-  resetEnv: vi.fn(),
-  getKey: vi.fn().mockReturnValue('foobar'),
-  getAnnotations: vi.fn((cell) => cell.metadata),
-  getNotebookCategories: vi.fn().mockResolvedValue([])
-}))
+vi.mock('../../src/extension/utils', async () => {
+  return ({
+    resetEnv: vi.fn(),
+    getKey: vi.fn(cell => cell.languageId),
+    getAnnotations: vi.fn((cell) => cell.metadata),
+    getNotebookCategories: vi.fn().mockResolvedValue([]),
+    isWindows: () => false,
+    isShellLanguage: () => false,
+  })
+})
 vi.mock('../../src/extension/executors/index.js', () => ({
   default: { foobar: vi.fn() },
   ENV_STORE_MANAGER: {}
@@ -167,28 +171,75 @@ suite('_executeAll', async () => {
 })
 
 
+suite('_doExecuteCell', () => {
+  beforeEach(() => {
+    vi.mocked(workspace.openTextDocument).mockReset()
+    vi.mocked(TelemetryReporter.sendTelemetryEvent).mockClear()
+  })
 
-test('_doExecuteCell', async () => {
+  test('calls proper executor if present', async () => {
+    const k = new Kernel({} as any)
+
+    k.createCellExecution = vi.fn().mockResolvedValue({
+      start: vi.fn(),
+      end: vi.fn(),
+      underlyingExecution: vi.fn(),
+    })
+    k.getCellOutputs = vi.fn().mockResolvedValue({})
+
+    vi.mocked(workspace.openTextDocument).mockResolvedValueOnce({
+      languageId: 'foobar'
+    } as any)
+
+    await k['_doExecuteCell']({
+      document: { uri: { fsPath: '/foo/bar' } },
+      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+    } as any)
+    // @ts-expect-error mocked out
+    expect(executors.foobar).toBeCalledTimes(1)
+    expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+      'cell.startExecute'
+    )
+    expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+      'cell.endExecute',
+      { 'cell.success': undefined }
+    )
+  })
+
+  test('shows error window if language is not supported', async () => {
+    const k = new Kernel({} as any)
+    k['runner'] = {} as any
+
+    k.createCellExecution = vi.fn().mockResolvedValue({
+      start: vi.fn(),
+      end: vi.fn(),
+      underlyingExecution: vi.fn(),
+    })
+    k.getCellOutputs = vi.fn().mockResolvedValue({})
+
+    vi.mocked(workspace.openTextDocument).mockResolvedValueOnce({
+      languageId: 'barfoo'
+    } as any)
+
+    await k['_doExecuteCell']({
+      document: { uri: { fsPath: '/foo/bar' } },
+      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+    } as any)
+
+    expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+      'cell.startExecute'
+    )
+    expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
+      'cell.endExecute',
+      { 'cell.success': 'false' }
+    )
+
+    expect(window.showErrorMessage).toHaveBeenCalledWith('Cell language is not executable')
+  })
+})
+
+test('supportedLanguages', async () => {
   const k = new Kernel({} as any)
 
-  k.createCellExecution = vi.fn().mockResolvedValue({
-    start: vi.fn(),
-    end: vi.fn(),
-    underlyingExecution: vi.fn(),
-  })
-  k.getCellOutputs = vi.fn().mockResolvedValue({})
-
-  await k['_doExecuteCell']({
-    document: { uri: { fsPath: '/foo/bar' } },
-    metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
-  } as any)
-  // @ts-expect-error mocked out
-  expect(executors.foobar).toBeCalledTimes(1)
-  expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
-    'cell.startExecute'
-  )
-  expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
-    'cell.endExecute',
-    { success: undefined }
-  )
+  expect(k.getSupportedLanguages()![0]).toStrictEqual('shellscript')
 })

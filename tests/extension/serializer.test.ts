@@ -1,10 +1,11 @@
-import { NotebookDocument, NotebookEdit, window, workspace } from 'vscode'
+import { NotebookData, NotebookDocument, NotebookEdit, window, workspace } from 'vscode'
 import { expect, vi, it, describe, beforeEach } from 'vitest'
 
-import { WasmSerializer } from '../../src/extension/serializer'
+import { SerializerBase, WasmSerializer } from '../../src/extension/serializer'
 import { canEditFile } from '../../src/extension/utils'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
+import { Serializer } from '../../src/types'
 
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
@@ -31,6 +32,15 @@ vi.mock('vscode', () => ({
       updateCellMetadata: (i: number, metadata: any) => ({ i, metadata, type: 'updateCellMetadata' }),
     },
     CancellationTokenSource: vi.fn(),
+    NotebookData: class {
+      constructor(public cells: any[]) { }
+    }
+}))
+
+vi.mock('../../src/extension/languages', () => ({
+  default: {
+    fromContext: vi.fn(),
+  },
 }))
 
 vi.mock('../../src/extension/utils', () => ({
@@ -46,6 +56,56 @@ describe('SerializerBase', () => {
   const context: any = {
     extensionUri: { fsPath: '/foo/bar' }
   }
+
+  it('serializeNotebook transforms languages', async () => {
+    const TestSerializer = class extends SerializerBase {
+      protected ready: Promise<void | Error> = Promise.resolve()
+
+      protected async saveNotebook(data: NotebookData): Promise<Uint8Array> {
+        return data as any
+      }
+
+      protected async reviveNotebook(content: Uint8Array): Promise<Serializer.Notebook> {
+        return content as any
+      }
+
+      protected async preSaveCheck() { }
+    }
+
+    const serializer = new TestSerializer({} as any, {} as any)
+
+    const processed = await serializer['serializeNotebook']({
+      cells: [
+        {
+          languageId: 'shellscript'
+        },
+        {
+          languageId: 'javascriptreact'
+        },
+        {
+          languageId: 'typescriptreact'
+        },
+        {
+          languageId: 'python',
+        }
+      ]
+    } as any, {} as any) as any
+
+    expect(processed.cells).toStrictEqual([
+      {
+        languageId: 'sh'
+      },
+      {
+        languageId: 'jsx'
+      },
+      {
+        languageId: 'tsx'
+      },
+      {
+        languageId: 'python',
+      }
+    ])
+  })
 
   describe('handleNotebookSaved', () => {
     const _onDidSaveNotebookDocument = new EventEmitter<NotebookDocument>()
@@ -134,7 +194,7 @@ describe('WasmSerializer', () => {
             const s = new WasmSerializer(context, newKernel())
             // @ts-ignore readonly
             s['ready'] = Promise.resolve()
-            expect(Buffer.from(await s.serializeNotebook({} as any, {} as any)))
+            expect(Buffer.from(await s.serializeNotebook({ cells: [] } as any, {} as any)))
                 .toEqual(Buffer.from('Hello World!'))
         })
     })

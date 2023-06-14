@@ -20,13 +20,12 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
+import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer, ShellType } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
 import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
 
 import getLogger from './logger'
-import type executor from './executors'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV, BOOTFILE } from './constants'
 
@@ -133,17 +132,47 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
   return text.startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
+export function getKey(runningCell: vscode.TextDocument): string {
   if (isDenoScript(runningCell)) {
     return 'deno'
   }
+
   if (isGitHubLink(runningCell)) {
     return 'github'
   }
-  // if (text.startsWith('vercel ')) {
-  //   return 'vercel'
-  // }
-  return runningCell.languageId as keyof typeof executor
+
+  const { languageId } = runningCell
+
+  if (languageId === 'shellscript') {
+    return 'sh'
+  }
+
+  return languageId
+}
+
+export function isShellLanguage(languageId: string): ShellType | undefined {
+  switch (languageId.toLowerCase()) {
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+    case 'ksh':
+    case 'shell':
+      return 'sh'
+
+    case 'bat':
+    case 'cmd':
+      return 'cmd'
+
+    case 'powershell':
+    case 'pwsh':
+      return 'powershell'
+
+    case 'fish':
+      return 'fish'
+
+    default:
+      return undefined
+  }
 }
 
 /**

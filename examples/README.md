@@ -159,3 +159,11 @@ With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON file
 ```sh
 curl "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
 ```
+
+## YAML
+
+```yaml
+config:
+  netsed:
+    para: true
+```
