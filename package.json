@@ -435,6 +435,16 @@
             "type": "boolean",
             "default": false,
             "markdownDescription": "Whether to use full path to integrated runme executable when running CLI commands. This is mostly useful for development purposes."
+          },
+          "runme.app.apiUrl": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Runme App API URL"
+          },
+          "runme.app.enableShare": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "Enable share button in notebook terminal"
           }
         }
       }
@@ -604,6 +614,7 @@
     "webpack-cli": "^5.1.1"
   },
   "dependencies": {
+    "@apollo/client": "^3.7.15",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.0-20230505202852-f6db652602f5.1",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.0-20230522162609-549daeeacece.1",
     "@protobuf-ts/grpc-transport": "^2.9.0",
@@ -614,11 +625,14 @@
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "clipboardy": "^3.0.0",
+    "clsx": "^1.2.1",
+    "cross-fetch": "^3.1.6",
     "detect-port": "^1.5.1",
     "dotenv": "^16.0.3",
     "filenamify": "^6.0.0",
     "get-port": "^6.1.2",
     "got": "^12.6.0",
+    "graphql": "^16.6.0",
     "lit": "^2.7.4",
     "octokit": "^2.0.14",
     "preact": "^10.14.1",
