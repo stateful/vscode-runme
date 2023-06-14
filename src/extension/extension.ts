@@ -1,4 +1,4 @@
-import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
+import { workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Serializer } from '../types'
@@ -9,7 +9,7 @@ import RunmeServer from './server/runmeServer'
 import RunmeServerError from './server/runmeServerError'
 import { ToggleTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, resetEnv } from './utils'
+import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -31,7 +31,6 @@ import {
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
-import { BOOTFILE } from './constants'
 import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
@@ -157,16 +156,7 @@ export class RunmeExtension {
       window.registerUriHandler(uriHandler)
     )
 
-    if (workspace.workspaceFolders?.length && workspace.workspaceFolders[0]) {
-      const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
-      const hasStartupFile = await workspace.fs.stat(startupFileUri).then(() => true, () => false)
-      if (hasStartupFile) {
-        const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
-        const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
-        await workspace.fs.delete(startupFileUri)
-        await commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
-      }
-    }
+    await bootFile()
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {

@@ -5,6 +5,7 @@ import {
 } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
 import { RunmeExtension } from '../../src/extension/extension'
+import { bootFile } from '../../src/extension/utils'
 import RunmeServer from '../../src/extension/server/runmeServer'
 import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 
@@ -38,6 +39,15 @@ vi.mock('../../src/extension/grpc/client', () => {
   })
 })
 
+vi.mock('../../src/extension/utils', async () => ({
+  getDefaultWorkspace: vi.fn(),
+  resetEnv: vi.fn(),
+  initWasm: vi.fn(),
+  getNamespacedMid: vi.fn(),
+  isWindows: vi.fn().mockReturnValue(false),
+  bootFile: vi.fn().mockResolvedValue(undefined)
+}))
+
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 test('initializes all providers', async () => {
@@ -66,8 +76,5 @@ test('initializes all providers', async () => {
   expect(commands.registerCommand).toBeCalledTimes(23)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
-
-  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', dummyFilePath, 'runme')
-  expect(workspace.fs.stat).toBeCalledWith(dummyFilePath)
-  expect(workspace.fs.delete).toBeCalledWith(dummyFilePath)
+  expect(bootFile).toBeCalledTimes(1)
 })

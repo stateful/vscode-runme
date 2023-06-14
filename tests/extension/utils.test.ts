@@ -23,7 +23,8 @@ import {
   validateAnnotations,
   setNotebookCategories,
   getNotebookCategories,
-  getNamespacedMid
+  getNamespacedMid,
+  bootFile
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -78,6 +79,10 @@ beforeAll(() => {
   ENV_STORE.delete('PATH')
 })
 afterAll(() => { process.env.PATH = PATH })
+beforeEach(() => {
+  vi.mocked(workspace.getConfiguration).mockClear()
+  vi.mocked(commands.executeCommand).mockClear()
+})
 
 test('isInteractive', () => {
   expect(getAnnotations({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
@@ -620,4 +625,26 @@ test('getNamespacedMid', () => {
   expect(
     getNamespacedMid('1836968c0b13822b48750c44bbb356d8ae45bebbd8f990c63b2641092a23ba89')
   ).toBe('af4f113b-0bd0-5d95-ac4c-4d354a9cb84a')
+})
+
+suite('bootFile', () => {
+  test('should prefer boot file before settings', async () => {
+    await bootFile()
+    expect(workspace.getConfiguration).toBeCalledTimes(0)
+  })
+
+  test('should load file defined in settings', async () => {
+    vi.mocked(workspace.getConfiguration).mockReturnValue({
+      get: () => '/foo/Settings.md'
+    } as any)
+    vi.mocked(workspace.fs.stat).mockImplementation(
+      async (uri) => uri.path.endsWith('Settings.md')
+        ? true
+        : Promise.reject(new Error('not existing')) as any
+    )
+    await bootFile()
+    expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.objectContaining({
+      path: '/foo/bar/foo/Settings.md'
+    }), 'runme')
+  })
 })
