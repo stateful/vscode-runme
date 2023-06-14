@@ -107,6 +107,8 @@ export class RunmeExtension {
       ['runme.dev/name']: undefined,
       ['runme.dev/uuid']: undefined,
       ['runme.dev/textRange']: undefined,
+      // ['runme.dev/originalLanguageId']: undefined,
+      // ['runme.dev/originalDocumentLanguageId']: undefined,
     }
     const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))
 

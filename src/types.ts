@@ -51,6 +51,8 @@ export namespace Serializer {
     ['runme.dev/githubState']?: GitHubState
     ['runme.dev/frontmatterParsed']?: Grpc.Frontmatter
     ['runme.dev/textRange']?: Grpc.Cell['textRange']
+    ['runme.dev/originalLanguageId']?: string
+    ['runme.dev/originalDocumentLanguageId']?: string
   }
 }
 

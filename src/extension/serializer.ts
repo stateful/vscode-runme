@@ -131,10 +131,20 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     await this.preSaveCheck()
 
     const transformedCells = data.cells.map((cell) => {
-      return {
+      const newCell = {
         ...cell,
         languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
       }
+
+      const metadata = cell.metadata as Serializer.Metadata | undefined
+
+      if (metadata && metadata['runme.dev/originalLanguageId'] !== undefined) {
+        if (metadata['runme.dev/originalLanguageId'] === cell.languageId) {
+          newCell.languageId = metadata['runme.dev/originalDocumentLanguageId'] ?? ''
+        }
+      }
+
+      return newCell
     })
 
     const metadata = data.metadata
@@ -183,17 +193,23 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     try {
       const cells = notebook.cells ?? []
       notebook.cells = await Promise.all(
-        cells.map((elem) => {
+        cells.map(async (elem) => {
+          ;(elem.metadata as Serializer.Metadata)['runme.dev/originalDocumentLanguageId'] =
+            elem.languageId
+
           if (elem.kind === NotebookCellKind.Code && elem.value && (elem.languageId || '') === '') {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               if (guessed) {
-                elem.languageId = guessed
+                elem.languageId = guessed || 'sh'
               }
               return elem
             })
           }
-          return Promise.resolve(elem)
+
+          ;(elem.metadata as Serializer.Metadata)['runme.dev/originalLanguageId'] = elem.languageId
+
+          return elem
         })
       )
     } catch (err: any) {
