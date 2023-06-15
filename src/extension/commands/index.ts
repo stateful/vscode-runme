@@ -31,6 +31,7 @@ import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
+import { RecommendExtensionMessage } from '../messaging'
 
 const log = getLogger('Commands')
 
@@ -259,4 +260,10 @@ export async function authenticateWithGitHub() {
   } catch (error) {
     window.showErrorMessage('Failed to authenticate with GitHub')
   }
+}
+
+export async function addToRecommendedExtensions(context: ExtensionContext) {
+  return new RecommendExtensionMessage(context, {
+    'runme.recommendExtension': true
+  }).display()
 }

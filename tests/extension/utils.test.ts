@@ -25,7 +25,9 @@ import {
   getNotebookCategories,
   getNamespacedMid,
   bootFile,
-  isShellLanguage
+  isShellLanguage,
+  fileOrDirectoryExists,
+  isMultiRootWorkspace
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -98,16 +100,16 @@ test('getTerminalByCell', () => {
   } as any))
     .toBeTruthy()
 
-    expect(getTerminalByCell({
-      metadata: { 'runme.dev/uuid': v4() },
-      kind: 2,
-    } as any))
-      .toBeUndefined()
+  expect(getTerminalByCell({
+    metadata: { 'runme.dev/uuid': v4() },
+    kind: 2,
+  } as any))
+    .toBeUndefined()
 
-    expect(getTerminalByCell({
-      kind: 1,
-    } as any))
-      .toBeUndefined()
+  expect(getTerminalByCell({
+    kind: 1,
+  } as any))
+    .toBeUndefined()
 })
 
 test('resetEnv', () => {
@@ -659,5 +661,53 @@ suite('bootFile', () => {
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.objectContaining({
       path: '/foo/bar/foo/Settings.md'
     }), 'runme')
+  })
+})
+
+suite('fileOrDirectoryExists', () => {
+  test('should return false when file does not exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.Unknown } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(false)
+  })
+
+  test('should return true when file does exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(true)
+  })
+
+  test('should return true when directory does exists', async () => {
+    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.Directory } as any)
+    const path = Uri.parse('.vscode-mango')
+    const exists = await fileOrDirectoryExists(path)
+    expect(exists).toBe(true)
+  })
+})
+
+suite('isMultiRootWorkspace', () => {
+  test('should return true when there are multiple workspace folders', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = [
+      { uri: Uri.file('/Users/user/Projects/project1') },
+      { uri: Uri.file('/Users/user/Projects/project2') }
+    ]
+    expect(isMultiRootWorkspace()).toStrictEqual(true)
+  })
+
+  test('should return false when there is one workspace folder', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = [
+      { uri: Uri.file('/Users/user/Projects/project1') }
+    ]
+    expect(isMultiRootWorkspace()).toStrictEqual(false)
+  })
+
+  test('should return false when workspaceFolders are not defined', () => {
+    // @ts-expect-error
+    workspace.workspaceFolders = undefined
+    expect(isMultiRootWorkspace()).toStrictEqual(false)
   })
 })

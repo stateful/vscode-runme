@@ -26,7 +26,8 @@ import {
   openIntegratedTerminal,
   authenticateWithGitHub,
   displayCategoriesSelector,
-  runCellsByCategory
+  runCellsByCategory,
+  addToRecommendedExtensions
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -153,7 +154,12 @@ export class RunmeExtension {
       /**
        * Uri handler
        */
-      window.registerUriHandler(uriHandler)
+      window.registerUriHandler(uriHandler),
+
+      /**
+       * Runme Message Display commands
+       */
+      RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () => addToRecommendedExtensions(context))
     )
 
     await bootFile()

@@ -166,7 +166,12 @@
         "category": "Runme",
         "title": "Run cells with the same Category",
         "icon": "$(group-by-ref-type)"
-      }
+      },
+      {
+        "command": "runme.addToRecommendedExtensions",
+        "title": "Add Runme to recommended extensions",
+        "category": "Runme"
+      } 
     ],
     "menus": {
       "commandPalette": [
