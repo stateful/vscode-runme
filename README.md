@@ -1,6 +1,6 @@
 # [Runme](http://runme.dev) for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
 
-This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code notebooks (with the click of a `play` button). Annotating markdown code blocks repo maintainers can enhance the interactive runbook-like experience of their markdown notebooks while they will continue to render properly in markdown viewers.
+This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code notebooks (with the click of a `play` button). Annotating markdown code blocks repo maintainers can enhance the interactive runbook-like experience of their markdown notebooks while they will continue to render properly in markdown viewers. Runme is open source and licensed under APL2.0.
 
 > 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
 
@@ -12,14 +12,8 @@ Please visit Runme's documentation to learn about its purpose, all its features,
 
 - [https://docs.runme.dev/](https://docs.runme.dev/)
 
-This project is open source licensed under APL2.0 and its code can be found in the following repos:
-
-- [stateful/vscode-runme](https://github.com/stateful/vscode-runme)
-- [stateful/runme](https://github.com/stateful/runme)
-- [stateful/docs.runme.dev](https://github.com/stateful/docs.runme.dev)
-
 Feel free to submit any issues you may have via the
-[issue tracker](https://github.com/stateful/vscode-runme/issues) or [tell us about it on Discord](https://discord.gg/stateful).
+[issue tracker](https://github.com/stateful/vscode-runme/issues) or [tell us about it on Discord](https://discord.gg/runme).
 
 # Installation
 
@@ -51,7 +45,7 @@ Check the complete list of configuration options at https://docs.runme.dev/confi
 
 Runme is in rapid development. Please be aware of following known limitations:
 
-- Only shell is currently supported on macOS, Linux, and Windows ([WSL]([url](https://learn.microsoft.com/en-us/windows/wsl/))). PowerShell is not supported yet
+- Only shell is currently supported on macOS, Linux, and Windows ([WSL](<[url](https://learn.microsoft.com/en-us/windows/wsl/)>)). PowerShell is not supported yet
 - Be aware of edge cases. Let us know when you hit any snags. We appreciate it!
 
 We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
