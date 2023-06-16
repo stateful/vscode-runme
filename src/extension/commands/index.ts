@@ -141,7 +141,7 @@ export function runCLICommand(
   server: RunmeServer,
   kernel: Kernel
 ) {
-  return async function (cell: { metadata?: any; document: TextDocument }) {
+  return async function (cell: { metadata?: any, document: TextDocument }) {
     const cwd = path.dirname(cell.document.uri.fsPath)
 
     const args = [

@@ -144,7 +144,7 @@ export class RunmeUriHandler implements UriHandler {
   }
 
   private async _cloneProject(
-    progress: Progress<{ message?: string; increment?: number }>,
+    progress: Progress<{ message?: string, increment?: number }>,
     targetDirUri: Uri,
     repository: string,
     fileToOpen: string
