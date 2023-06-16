@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "1.5.3",
+  "version": "1.5.4-edge.0",
   "publisher": "stateful",
   "displayName": "Runme",
   "description": "Execute commands inside your runbooks, docs, and READMEs.",
@@ -171,7 +171,7 @@
         "command": "runme.addToRecommendedExtensions",
         "title": "Add Runme to recommended extensions",
         "category": "Runme"
-      } 
+      }
     ],
     "menus": {
       "commandPalette": [
