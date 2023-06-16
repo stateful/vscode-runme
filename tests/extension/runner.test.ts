@@ -568,8 +568,12 @@ suite('grpc Runner', () => {
     test('grpc program failure gives info message', async () => {
       const { duplex } = await createNewSession()
 
-      duplex._onError.fire(new RpcError('unable to infer file program'))
+      duplex._onError.fire(new RpcError('invalid LanguageId'))
+      expect(window.showErrorMessage).toBeCalledTimes(1)
 
+      vi.mocked(window.showErrorMessage).mockClear()
+
+      duplex._onError.fire(new RpcError('invalid ProgramName'))
       expect(window.showErrorMessage).toBeCalledTimes(1)
     })
   })
