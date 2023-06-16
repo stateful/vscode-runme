@@ -21,7 +21,9 @@ export async function deploy(
   const pname = await environment?.get(DENO_PROJECT_NAME_KEY)
 
   const cancel = new Promise<void>((_, reject) =>
-    exec.token.onCancellationRequested(() => reject(new Error('Canceled by user')))
+    exec.token.onCancellationRequested(() =>
+      reject(new Error('Canceled by user'))
+    )
   )
 
   try {

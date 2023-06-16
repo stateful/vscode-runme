@@ -50,8 +50,11 @@ type ActionCallback = (...arg: ActionArguments) => void
 export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   private disposables: Disposable[] = []
 
-  private _onDidChangeCodeLenses: EventEmitter<void> = this.register(new EventEmitter<void>())
-  public readonly onDidChangeCodeLenses: Event<void> = this._onDidChangeCodeLenses.event
+  private _onDidChangeCodeLenses: EventEmitter<void> = this.register(
+    new EventEmitter<void>()
+  )
+  public readonly onDidChangeCodeLenses: Event<void> =
+    this._onDidChangeCodeLenses.event
 
   constructor(
     protected serializer: SerializerBase,
@@ -74,11 +77,18 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
     this.register(RunmeExtension.registerCommand('runme.codelens.action', cmd))
 
-    this.register(workspace.onDidChangeConfiguration(() => this._onDidChangeCodeLenses.fire()))
+    this.register(
+      workspace.onDidChangeConfiguration(() =>
+        this._onDidChangeCodeLenses.fire()
+      )
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async provideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[]> {
+  async provideCodeLenses(
+    document: TextDocument,
+    token: CancellationToken
+  ): Promise<CodeLens[]> {
     if (!this.runner || !getCodeLensEnabled()) {
       return []
     }
@@ -91,11 +101,16 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
       [EndOfLine.LF]: '\n',
     }[document.eol]
 
-    const notebook = await this.serializer.deserializeNotebook(contentBytes, token)
+    const notebook = await this.serializer.deserializeNotebook(
+      contentBytes,
+      token
+    )
     const { cells } = notebook
 
     return cells.flatMap((cell, i) => {
-      const textRange = (cell.metadata as Serializer.Metadata)['runme.dev/textRange']
+      const textRange = (cell.metadata as Serializer.Metadata)[
+        'runme.dev/textRange'
+      ]
       if (cell.kind !== NotebookCellKind.Code || !textRange) {
         return []
       }
@@ -169,7 +184,11 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     switch (action) {
       case 'open':
         {
-          await commands.executeCommand('vscode.openWith', document.uri, Kernel.type)
+          await commands.executeCommand(
+            'vscode.openWith',
+            document.uri,
+            Kernel.type
+          )
 
           // TODO(mxs): surely there's a better way to do this
           // probably we need to bring this logic to `workspace.onDidOpenNotebookDocument`
@@ -178,7 +197,9 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           await commands.executeCommand('notebook.focusTop')
 
           await Promise.all(
-            Array.from({ length: index }, () => commands.executeCommand('notebook.focusNextEditor'))
+            Array.from({ length: index }, () =>
+              commands.executeCommand('notebook.focusNextEditor')
+            )
           )
 
           // to execute the command:

@@ -57,7 +57,9 @@ export interface ICellOutput<T extends OutputType> {
   output: Payload[T]
 }
 
-export type CellOutputPayload<T extends OutputType> = T extends any ? ICellOutput<T> : never
+export type CellOutputPayload<T extends OutputType> = T extends any
+  ? ICellOutput<T>
+  : never
 
 export type CellOutput = CellOutputPayload<OutputType>
 

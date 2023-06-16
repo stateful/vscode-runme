@@ -19,7 +19,8 @@ interface IWindowSize {
   height: number
 }
 
-const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
+const vscodeCSS = (...identifiers: string[]) =>
+  `--vscode-${identifiers.join('-')}`
 const terminalCSS = (id: string) => vscodeCSS('terminal', id)
 const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
 const LISTEN_TO_EVENTS = ['terminal:', 'theme:']
@@ -134,15 +135,21 @@ export class TerminalView extends LitElement {
     }
 
     .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb {
-      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'background'))});
+      background-color: var(
+        ${unsafeCSS(vscodeCSS('scrollbarSlider', 'background'))}
+      );
     }
 
     .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb:hover {
-      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'hoverBackground'))});
+      background-color: var(
+        ${unsafeCSS(vscodeCSS('scrollbarSlider', 'hoverBackground'))}
+      );
     }
 
     .xterm:hover .xterm-viewport::-webkit-scrollbar-thumb:active {
-      background-color: var(${unsafeCSS(vscodeCSS('scrollbarSlider', 'activeBackground'))});
+      background-color: var(
+        ${unsafeCSS(vscodeCSS('scrollbarSlider', 'activeBackground'))}
+      );
     }
 
     .xterm .xterm-scroll-area {
@@ -410,7 +417,9 @@ export class TerminalView extends LitElement {
     ctx.postMessage &&
       postClientMessage(ctx, ClientMessages.terminalOpen, {
         'runme.dev/uuid': this.uuid!,
-        terminalDimensions: convertXTermDimensions(this.fitAddon?.proposeDimensions()),
+        terminalDimensions: convertXTermDimensions(
+          this.fitAddon?.proposeDimensions()
+        ),
       })
 
     if (this.lastLine) {
@@ -492,15 +501,25 @@ export class TerminalView extends LitElement {
 
     const terminalTheme: ITheme = {
       foreground: foregroundColor,
-      cursor: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'foreground')) || foregroundColor,
-      cursorAccent: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'background')),
-      selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
-      selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
+      cursor:
+        this.#getThemeHexColor(vscodeCSS('terminalCursor', 'foreground')) ||
+        foregroundColor,
+      cursorAccent: this.#getThemeHexColor(
+        vscodeCSS('terminalCursor', 'background')
+      ),
+      selectionForeground: this.#getThemeHexColor(
+        terminalCSS('selectionForeground')
+      ),
+      selectionBackground: this.#getThemeHexColor(
+        terminalCSS('selectionBackground')
+      ),
       selectionInactiveBackground: this.#getThemeHexColor(
         terminalCSS('inactiveSelectionBackground')
       ),
       ...Object.fromEntries(
-        ANSI_COLORS.map((k) => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
+        ANSI_COLORS.map(
+          (k) => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const
+        )
       ),
     }
     this.terminal!.options.theme = terminalTheme
@@ -508,7 +527,10 @@ export class TerminalView extends LitElement {
 
   #getThemeHexColor(variableName: string): string | undefined {
     const terminalContainer = this.shadowRoot?.querySelector('#terminal')
-    return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
+    return (
+      getComputedStyle(terminalContainer!).getPropertyValue(variableName) ??
+      undefined
+    )
   }
 
   async #onResizeWindow(): Promise<void> {
@@ -586,7 +608,11 @@ export class TerminalView extends LitElement {
               clip-rule="evenodd"
               d="M4 4l1-1h5.414L14 6.586V14l-1 1H5l-1-1V4zm9 3l-3-3H5v10h8V7z"
             />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z" />
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3 1L2 2v10l1 1V2h6.414l-1-1H3z"
+            />
           </svg>
           Copy
         </vscode-button>
@@ -623,12 +649,16 @@ export class TerminalView extends LitElement {
   }
 }
 
-function convertXTermDimensions(dimensions: ITerminalDimensions): TerminalDimensions
+function convertXTermDimensions(
+  dimensions: ITerminalDimensions
+): TerminalDimensions
 function convertXTermDimensions(dimensions: undefined): undefined
 function convertXTermDimensions(
   dimensions: ITerminalDimensions | undefined
 ): TerminalDimensions | undefined
-function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions | undefined {
+function convertXTermDimensions(
+  dimensions?: ITerminalDimensions
+): TerminalDimensions | undefined {
   if (!dimensions) {
     return undefined
   }

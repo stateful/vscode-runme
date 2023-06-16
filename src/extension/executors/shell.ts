@@ -1,6 +1,10 @@
 import { spawn } from 'node:child_process'
 
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import {
+  NotebookCellOutput,
+  NotebookCellOutputItem,
+  NotebookCellExecution,
+} from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
@@ -49,12 +53,19 @@ async function shellExecutor(
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (isVercelDeployScript(script)) {
-      await handleVercelDeployOutput(exec.cell, outputs, outputItems, index, prod, {
-        get: (key) => env[key],
-        set: (key, val = '') => {
-          ENV_STORE.set(key, val)
-        },
-      })
+      await handleVercelDeployOutput(
+        exec.cell,
+        outputs,
+        outputItems,
+        index,
+        prod,
+        {
+          get: (key) => env[key],
+          set: (key, val = '') => {
+            ENV_STORE.set(key, val)
+          },
+        }
+      )
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
       item = NotebookCellOutputItem.json(
         <CellOutputPayload<OutputType.outputItems>>{

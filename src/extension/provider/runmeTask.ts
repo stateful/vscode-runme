@@ -24,10 +24,17 @@ import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
-import { getCellCwd, getCellShellPath, parseCommandSeq } from '../executors/utils'
+import {
+  getCellCwd,
+  getCellShellPath,
+  parseCommandSeq,
+} from '../executors/utils'
 import { Kernel } from '../kernel'
 
-type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
+type TaskOptions = Pick<
+  RunmeTaskDefinition,
+  'closeTerminalOnSuccess' | 'isBackground' | 'cwd'
+>
 const log = getLogger('RunmeTaskProvider')
 
 export interface RunmeTask extends Task {
@@ -77,7 +84,8 @@ export class RunmeTaskProvider implements TaskProvider {
     return await Promise.all(
       notebook.cells
         .filter(
-          (cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code
+          (cell: Serializer.Cell): cell is Serializer.Cell =>
+            cell.kind === NotebookCellKind.Code
         )
         .map(
           async (cell) =>
@@ -126,10 +134,16 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
+        const cwd =
+          options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
-        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
+        const cellContent =
+          'value' in cell ? cell.value : cell.document.getText()
+        const commands = await parseCommandSeq(
+          cellContent,
+          undefined,
+          prepareCmdSeq
+        )
 
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),

@@ -20,7 +20,12 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
+import {
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+  RunmeTerminal,
+  Serializer,
+} from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
 import {
@@ -63,7 +68,9 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   }
 }
 
-export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorResult {
+export function validateAnnotations(
+  cell: NotebookCell
+): CellAnnotationsErrorResult {
   let metadata = cell as Serializer.Metadata
 
   if (cell.metadata) {
@@ -111,7 +118,9 @@ function getCellUUID(cell: vscode.NotebookCell): string {
   return getAnnotations(cell)['runme.dev/uuid']!
 }
 
-export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
+export function getTerminalByCell(
+  cell: vscode.NotebookCell
+): RunmeTerminal | undefined {
   if (cell.kind !== vscode.NotebookCellKind.Code) {
     return undefined
   }
@@ -135,11 +144,14 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
 
 export function isGitHubLink(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
-  const isWorkflowUrl = text.includes('.github/workflows') || text.includes('actions/workflows')
+  const isWorkflowUrl =
+    text.includes('.github/workflows') || text.includes('actions/workflows')
   return text.startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): keyof typeof executor {
+export function getKey(
+  runningCell: vscode.TextDocument
+): keyof typeof executor {
   if (isDenoScript(runningCell)) {
     return 'deno'
   }
@@ -238,10 +250,12 @@ export async function verifyCheckedInFile(filePath: string) {
     return false
   }
 
-  const hasGitDirectory = await vscode.workspace.fs.stat(workspaceFolder.uri).then(
-    (stat) => stat.type === FileType.Directory,
-    () => false
-  )
+  const hasGitDirectory = await vscode.workspace.fs
+    .stat(workspaceFolder.uri)
+    .then(
+      (stat) => stat.type === FileType.Directory,
+      () => false
+    )
   if (!hasGitDirectory) {
     return false
   }
@@ -318,7 +332,9 @@ export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
   )
 }
 
-export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<string | undefined> {
+export function mapGitIgnoreToGlobFolders(
+  gitignoreContents: string[]
+): Array<string | undefined> {
   const entries = gitignoreContents
     .filter((entry: string) => entry)
     .map((entry: string) => entry.replace(/\s/g, ''))
@@ -405,7 +421,9 @@ export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
   } while (testPath !== path.dirname(testPath))
 }
 
-export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string>> {
+export async function getWorkspaceEnvs(
+  uri?: Uri
+): Promise<Record<string, string>> {
   const res: Record<string, string> = {}
   const workspaceFolder = getWorkspaceFolder(uri)
 
@@ -454,9 +472,13 @@ export async function setNotebookCategories(
   categories: string[]
 ): Promise<void> {
   const notebooksCategoryState =
-    context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
+    context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) ||
+    ({} as any)
   notebooksCategoryState[uri.path] = categories
-  return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
+  return context.globalState.update(
+    NOTEBOOK_AVAILABLE_CATEGORIES,
+    notebooksCategoryState
+  )
 }
 
 /**

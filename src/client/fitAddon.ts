@@ -75,7 +75,10 @@ export class FitAddon implements ITerminalAddon {
     const core = (this._terminal as any)._core
 
     // Force a full render
-    if (this._terminal.rows !== dims.rows || this._terminal.cols !== dims.cols) {
+    if (
+      this._terminal.rows !== dims.rows ||
+      this._terminal.cols !== dims.cols
+    ) {
       core._renderService.clear()
       this._terminal.resize(dims.cols, dims.rows)
     }
@@ -103,9 +106,16 @@ export class FitAddon implements ITerminalAddon {
     const scrollbarWidth =
       this._terminal.options.scrollback === 0 ? 0 : core.viewport.scrollBarWidth
 
-    const parentElementStyle = window.getComputedStyle(this._terminal.element.parentElement)
-    const parentElementHeight = parseInt(parentElementStyle.getPropertyValue('height'))
-    const parentElementWidth = Math.max(0, parseInt(parentElementStyle.getPropertyValue('width')))
+    const parentElementStyle = window.getComputedStyle(
+      this._terminal.element.parentElement
+    )
+    const parentElementHeight = parseInt(
+      parentElementStyle.getPropertyValue('height')
+    )
+    const parentElementWidth = Math.max(
+      0,
+      parseInt(parentElementStyle.getPropertyValue('width'))
+    )
     const elementStyle = window.getComputedStyle(this._terminal.element)
     const elementPadding = {
       top: parseInt(elementStyle.getPropertyValue('padding-top')),
@@ -116,7 +126,8 @@ export class FitAddon implements ITerminalAddon {
     const elementPaddingVer = elementPadding.top + elementPadding.bottom
     const elementPaddingHor = elementPadding.right + elementPadding.left
     const availableHeight = parentElementHeight - elementPaddingVer
-    const availableWidth = parentElementWidth - elementPaddingHor - scrollbarWidth
+    const availableWidth =
+      parentElementWidth - elementPaddingHor - scrollbarWidth
 
     const { width: cellWidth, height: cellHeight } = this.getCellSize()
 
@@ -136,7 +147,8 @@ export class FitAddon implements ITerminalAddon {
         renderer._charSizeService.width +
         Math.round(renderer._optionsService.rawOptions.letterSpacing),
       height: Math.floor(
-        renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight
+        renderer._charSizeService.height *
+          renderer._optionsService.rawOptions.lineHeight
       ),
     }
   }

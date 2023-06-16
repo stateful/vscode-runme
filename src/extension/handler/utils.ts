@@ -83,7 +83,9 @@ export async function getTargetDirName(
     await workspace.fs.createDirectory(orgDir)
   }
 
-  const amendedSuggestedName = !index ? suggestedName : `${suggestedName}_${index}`
+  const amendedSuggestedName = !index
+    ? suggestedName
+    : `${suggestedName}_${index}`
   const fullTargetDir = Uri.joinPath(targetDir, amendedSuggestedName)
   const isExisting = await workspace.fs.stat(fullTargetDir).then(
     () => true,
@@ -96,9 +98,15 @@ export async function getTargetDirName(
   return amendedSuggestedName
 }
 
-export async function writeBootstrapFile(targetDirUri: Uri, fileToOpen: string) {
+export async function writeBootstrapFile(
+  targetDirUri: Uri,
+  fileToOpen: string
+) {
   const enc = new TextEncoder()
-  await workspace.fs.writeFile(Uri.joinPath(targetDirUri, BOOTFILE), enc.encode(fileToOpen))
+  await workspace.fs.writeFile(
+    Uri.joinPath(targetDirUri, BOOTFILE),
+    enc.encode(fileToOpen)
+  )
   log.info(`Created temporary bootstrap file to open ${fileToOpen}`)
 }
 
@@ -123,7 +131,11 @@ export function getSuggestedProjectName(repository: string) {
    * for "https://provider.com/org/project.git"
    */
   if (repository.startsWith('http') && repository.endsWith(DOT_GIT_ANNEX)) {
-    return repository.split('/').slice(-2).join('/').slice(0, -DOT_GIT_ANNEX_LENGTH)
+    return repository
+      .split('/')
+      .slice(-2)
+      .join('/')
+      .slice(0, -DOT_GIT_ANNEX_LENGTH)
   }
 
   window.showErrorMessage(
@@ -146,7 +158,8 @@ export function parseParams(params: URLSearchParams) {
     if (repository) {
       repository = (
         repository.startsWith(GIT_SCHEMA)
-          ? GIT_SCHEMA + Uri.parse(repository.slice(GIT_SCHEMA.length)).toString()
+          ? GIT_SCHEMA +
+            Uri.parse(repository.slice(GIT_SCHEMA.length)).toString()
           : Uri.parse(repository).toString()
       ).replace(FILE_PROTOCOL, '')
     }

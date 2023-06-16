@@ -1,4 +1,9 @@
-import { NotebookCellExecution, TextDocument, authentication, window } from 'vscode'
+import {
+  NotebookCellExecution,
+  TextDocument,
+  authentication,
+  window,
+} from 'vscode'
 
 import type { Kernel } from '../kernel'
 import { NotebookCellOutputManager } from '../cell'
@@ -32,7 +37,9 @@ export async function github(
     await outputs.showOutput(OutputType.github)
     return true
   } catch (error: any) {
-    window.showErrorMessage(`Failed to get GitHub workflow file, reason: ${error.message}`)
+    window.showErrorMessage(
+      `Failed to get GitHub workflow file, reason: ${error.message}`
+    )
     return false
   }
 }

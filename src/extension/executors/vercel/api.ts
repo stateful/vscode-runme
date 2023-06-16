@@ -23,12 +23,18 @@ export interface VercelUser {
   }
 }
 
-export function getProject(nameOrId: string, headers = {}): Promise<VercelProject> {
+export function getProject(
+  nameOrId: string,
+  headers = {}
+): Promise<VercelProject> {
   return got(`https://api.vercel.com/v9/projects/${nameOrId}`, {
     headers,
   }).json()
 }
-export function getProjects(teamId?: string, headers = {}): Promise<VercelProjects> {
+export function getProjects(
+  teamId?: string,
+  headers = {}
+): Promise<VercelProjects> {
   return got('https://api.vercel.com/v9/projects', {
     headers,
     searchParams: teamId ? { teamId } : {},
@@ -40,7 +46,10 @@ export function getUser(headers = {}): Promise<VercelUser> {
 export function listTeams(headers = {}): Promise<VercelTeams> {
   return got('https://api.vercel.com/v2/teams', { headers }).json()
 }
-export function createProject(projectName: string, headers = {}): Promise<VercelProject> {
+export function createProject(
+  projectName: string,
+  headers = {}
+): Promise<VercelProject> {
   return got('https://api.vercel.com/v9/projects', {
     headers,
     method: 'POST',

@@ -7,7 +7,10 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Disposable, Uri, EventEmitter } from 'vscode'
 
 import getLogger from '../logger'
-import { HealthCheckRequest, HealthCheckResponse_ServingStatus } from '../grpc/healthTypes'
+import {
+  HealthCheckRequest,
+  HealthCheckResponse_ServingStatus,
+} from '../grpc/healthTypes'
 import { SERVER_ADDRESS } from '../../constants'
 import {
   enableServerLogs,
@@ -49,7 +52,9 @@ class RunmeServer implements Disposable {
   #forceExternalServer: boolean
 
   readonly #onClose = this.register(new EventEmitter<{ code: number | null }>())
-  readonly #onTransportReady = this.register(new EventEmitter<{ transport: GrpcTransport }>())
+  readonly #onTransportReady = this.register(
+    new EventEmitter<{ transport: GrpcTransport }>()
+  )
 
   readonly onClose = this.#onClose.event
   readonly onTransportReady = this.#onTransportReady.event
@@ -193,7 +198,9 @@ class RunmeServer implements Disposable {
 
     process.on('close', (code) => {
       if (this.#loggingEnabled) {
-        log.info(`Server process #${this.#process?.pid} closed with code ${code}`)
+        log.info(
+          `Server process #${this.#process?.pid} closed with code ${code}`
+        )
       }
       this.#onClose.fire({ code })
 
@@ -201,7 +208,9 @@ class RunmeServer implements Disposable {
     })
 
     process.stderr.once('data', () => {
-      log.info(`Server process #${this.#process?.pid} started on port ${this.#port}`)
+      log.info(
+        `Server process #${this.#process?.pid} started on port ${this.#port}`
+      )
     })
 
     process.stderr.on('data', (data) => {
@@ -236,7 +245,11 @@ class RunmeServer implements Disposable {
               }
             }
           } catch (err: any) {
-            reject(new RunmeServerError(`Server failed, reason: ${(err as Error).message}`))
+            reject(
+              new RunmeServerError(
+                `Server failed, reason: ${(err as Error).message}`
+              )
+            )
           }
         }
 
@@ -249,7 +262,11 @@ class RunmeServer implements Disposable {
         })
       }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timed out listening for server ready message')), 10000)
+        setTimeout(
+          () =>
+            reject(new Error('Timed out listening for server ready message')),
+          10000
+        )
       ),
     ])
   }
@@ -271,7 +288,9 @@ class RunmeServer implements Disposable {
       iter++
     }
 
-    throw new RunmeServerError(`Server did not accept connections after ${iter * INTERVAL}ms`)
+    throw new RunmeServerError(
+      `Server did not accept connections after ${iter * INTERVAL}ms`
+    )
   }
 
   /**
@@ -295,10 +314,16 @@ class RunmeServer implements Disposable {
       addr = await this.start()
     } catch (e) {
       if (this.#retryOnFailure && this.#maxNumberOfIntents > intent) {
-        console.error(`Failed to start runme server, retrying. Error: ${(e as Error).message}`)
+        console.error(
+          `Failed to start runme server, retrying. Error: ${
+            (e as Error).message
+          }`
+        )
         return this.launch(intent + 1)
       }
-      throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
+      throw new RunmeServerError(
+        `Cannot start server. Error: ${(e as Error).message}`
+      )
     }
 
     await this.connect()

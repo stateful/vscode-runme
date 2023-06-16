@@ -2,7 +2,11 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../../types'
+import type {
+  ClientMessage,
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+} from '../../../types'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../../schema'
 import {
   ClientMessages,
@@ -95,13 +99,28 @@ export class Annotations extends LitElement {
 
   readonly #descriptions = new Map<string, string>([
     ['background', 'Run cell as background process (default: false)'],
-    ['interactive', 'Run cell inside terminal to allow for interactive input (default: true)'],
-    ['closeTerminalOnSuccess', 'Hide terminal after cell successful execution (default: true)'],
-    ['promptEnv', 'Prompt user input for exported environment variables (default: true)'],
+    [
+      'interactive',
+      'Run cell inside terminal to allow for interactive input (default: true)',
+    ],
+    [
+      'closeTerminalOnSuccess',
+      'Hide terminal after cell successful execution (default: true)',
+    ],
+    [
+      'promptEnv',
+      'Prompt user input for exported environment variables (default: true)',
+    ],
     ['mimeType', "Cell's output content MIME type (default: text/plain)"],
-    ['name', "Cell's canonical name for easy referencing in the CLI (default: auto-generated)"],
+    [
+      'name',
+      "Cell's canonical name for easy referencing in the CLI (default: auto-generated)",
+    ],
     ['category', 'Execute this code cell within a category'],
-    ['excludeFromRunAll', 'Prevent executing this cell during the "Run All" operation'],
+    [
+      'excludeFromRunAll',
+      'Prevent executing this cell during the "Run All" operation',
+    ],
   ])
 
   // Declare reactive properties
@@ -155,14 +174,20 @@ export class Annotations extends LitElement {
       if (this.validationErrors && !this.validationErrors?.errors) {
         this.validationErrors.errors = {}
       }
-      if (this.validationErrors?.errors && !this.validationErrors.errors[propName]) {
+      if (
+        this.validationErrors?.errors &&
+        !this.validationErrors.errors[propName]
+      ) {
         this.validationErrors.errors[propName] = fieldErrors[propName]
       }
       // Re-render the form
       return this.requestUpdate()
     }
 
-    if (this.validationErrors?.errors && this.validationErrors.errors[propName]) {
+    if (
+      this.validationErrors?.errors &&
+      this.validationErrors.errors[propName]
+    ) {
       delete this.validationErrors.errors[propName]
       this.requestUpdate()
     }
@@ -226,7 +251,9 @@ export class Annotations extends LitElement {
   }
 
   renderCurrentValueError(value: string) {
-    return html`<p class="error-item current-value-error">Received value: ${value}</p>`
+    return html`<p class="error-item current-value-error">
+      Received value: ${value}
+    </p>`
   }
 
   private getCellId() {
@@ -281,14 +308,21 @@ export class Annotations extends LitElement {
             })
           return this.setCategory(answer)
         case ClientMessages.onGetState:
-          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.uuid === uuid) {
+          if (
+            e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES &&
+            e.output.uuid === uuid
+          ) {
             this.categories = e.output.value as unknown as string[]
             this.requestUpdate()
           }
           break
         case ClientMessages.onPickerOption:
           const selectedCategory = e.output.option
-          if (!selectedCategory || !this.annotations || e.output.uuid !== uuid) {
+          if (
+            !selectedCategory ||
+            !this.annotations ||
+            e.output.uuid !== uuid
+          ) {
             return
           }
           return this.setCategory(selectedCategory)
@@ -329,7 +363,9 @@ export class Annotations extends LitElement {
         ? this.validationErrors.errors[key as keyof CellAnnotations] || []
         : []
       const originalValue = errors.length
-        ? this.validationErrors?.originalAnnotations[key as keyof CellAnnotations]
+        ? this.validationErrors?.originalAnnotations[
+            key as keyof CellAnnotations
+          ]
         : value
       errorCount += errors.length
       return html`<div class="row ${errors.length ? 'error-container' : ''}">
@@ -369,13 +405,16 @@ export class Annotations extends LitElement {
       </div>`
     })
 
-    return html` <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
+    return html` <section
+      class="annotation-container ${errorCount ? 'has-errors' : ''}"
+    >
       <h4>Configure cell's execution behavior:</h4>
       ${markup}
       <close-cell-button
         @closed="${() => {
           return closeOutput({
-            uuid: (this.annotations && this.annotations['runme.dev/uuid']) || '',
+            uuid:
+              (this.annotations && this.annotations['runme.dev/uuid']) || '',
             outputType: OutputType.annotations,
           })
         }}"
@@ -383,7 +422,8 @@ export class Annotations extends LitElement {
       ${when(
         errorCount,
         () => html` <p class="error-item">
-          This configuration block contains errors, using the default values instead
+          This configuration block contains errors, using the default values
+          instead
         </p>`,
         () => html``
       )}

@@ -145,7 +145,10 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
    *
    * @param window Type of terminal window
    */
-  registerTerminalWindow(window: TerminalWindow, initialDimensions?: TerminalDimensions): void
+  registerTerminalWindow(
+    window: TerminalWindow,
+    initialDimensions?: TerminalDimensions
+  ): void
 
   /**
    * The "active" terminal window is the one whose dimensions are used for the
@@ -170,7 +173,9 @@ export class GrpcRunner implements IRunner {
 
   constructor(protected server: RunmeServer) {
     this.disposables.push(
-      server.onTransportReady(({ transport }) => this.initRunnerClient(transport))
+      server.onTransportReady(({ transport }) =>
+        this.initRunnerClient(transport)
+      )
     )
 
     this.disposables.push(server.onClose(() => this.deinitRunnerClient()))
@@ -183,17 +188,23 @@ export class GrpcRunner implements IRunner {
 
   private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
-    this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
+    this.client = new RunnerServiceClient(
+      transport ?? (await this.server.transport())
+    )
     this._onReady.fire()
   }
 
-  protected static assertClient(client: RunnerServiceClient | undefined): asserts client {
+  protected static assertClient(
+    client: RunnerServiceClient | undefined
+  ): asserts client {
     if (!client) {
       throw new Error('Client is not active!')
     }
   }
 
-  async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
+  async createProgramSession(
+    opts: RunProgramOptions
+  ): Promise<IRunnerProgramSession> {
     GrpcRunner.assertClient(this.client)
 
     const session = new GrpcRunnerProgramSession(this.client, opts)
@@ -203,7 +214,10 @@ export class GrpcRunner implements IRunner {
     return session
   }
 
-  async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
+  async createEnvironment(
+    envs?: string[],
+    metadata?: { [index: string]: string }
+  ) {
     GrpcRunner.assertClient(this.client)
 
     const request = CreateSessionRequest.create({
@@ -247,7 +261,9 @@ export class GrpcRunner implements IRunner {
 
     const id = environment.getSessionId()
 
-    const { session } = await this.client.getSession(GetSessionRequest.create({ id })).response
+    const { session } = await this.client.getSession(
+      GetSessionRequest.create({ id })
+    ).response
 
     if (!session) {
       return undefined
@@ -268,7 +284,9 @@ export class GrpcRunner implements IRunner {
     variables: Record<string, string | undefined>,
     shellPath?: string
   ): Promise<boolean> {
-    const commands = Object.entries(variables).map(([key, val]) => `export ${key}=${val ?? ''}`)
+    const commands = Object.entries(variables).map(
+      ([key, val]) => `export ${key}=${val ?? ''}`
+    )
 
     const program = await this.createProgramSession({
       programName: shellPath ?? getSystemShellPath() ?? 'sh',
@@ -360,7 +378,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   pid = new Promise<number | undefined>(this._onPid.event)
 
-  constructor(private readonly client: RunnerServiceClient, protected opts: RunProgramOptions) {
+  constructor(
+    private readonly client: RunnerServiceClient,
+    protected opts: RunProgramOptions
+  ) {
     this.session = client.execute()
 
     this.register(
@@ -382,24 +403,26 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.register(this._onDidClose.event(() => this.dispose()))
     this.register(this._onInternalErr.event(() => this.dispose()))
 
-    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid }) => {
-      if (stdoutData.length > 0) {
-        this.write('stdout', stdoutData)
-      }
+    this.session.responses.onMessage(
+      ({ stderrData, stdoutData, exitCode, pid }) => {
+        if (stdoutData.length > 0) {
+          this.write('stdout', stdoutData)
+        }
 
-      if (stderrData.length > 0) {
-        this.write('stderr', stderrData)
-      }
+        if (stderrData.length > 0) {
+          this.write('stderr', stderrData)
+        }
 
-      if (exitCode) {
-        this._close({ type: 'exit', code: exitCode.value })
-        this.dispose()
-      }
+        if (exitCode) {
+          this._close({ type: 'exit', code: exitCode.value })
+          this.dispose()
+        }
 
-      if (pid) {
-        this._onPid.fire(Number(pid.pid))
+        if (pid) {
+          this._onPid.fire(Number(pid.pid))
+        }
       }
-    })
+    )
 
     this.session.responses.onComplete(() => {
       if (!this.hasExited()) {
@@ -479,7 +502,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       this._onPid.fire(undefined)
     }
 
-    await this.session.requests.send(GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts))
+    await this.session.requests.send(
+      GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts)
+    )
   }
 
   setRunOptions(opts: RunProgramOptions): void {
@@ -547,7 +572,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     )
   }
 
-  registerTerminalWindow(window: TerminalWindow, initialDimensions?: TerminalDimensions): void {
+  registerTerminalWindow(
+    window: TerminalWindow,
+    initialDimensions?: TerminalDimensions
+  ): void {
     this.terminalWindows.set(window, {
       dimensions: initialDimensions,
       opened: false,
@@ -562,7 +590,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     const terminalWindowState = this.terminalWindows.get(window)
 
     if (!terminalWindowState) {
-      console.error(`Attempted to set active terminal window to unregistered window '${window}'`)
+      console.error(
+        `Attempted to set active terminal window to unregistered window '${window}'`
+      )
       return
     }
 
@@ -573,16 +603,23 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }
   }
 
-  open(initialDimensions?: TerminalDimensions, terminalWindow: TerminalWindow = 'vscode'): void {
+  open(
+    initialDimensions?: TerminalDimensions,
+    terminalWindow: TerminalWindow = 'vscode'
+  ): void {
     const terminalWindowState = this.terminalWindows.get(terminalWindow)
 
     if (!terminalWindowState) {
-      console.error(`Attempted to open unregistered terminal window '${terminalWindow}'!`)
+      console.error(
+        `Attempted to open unregistered terminal window '${terminalWindow}'!`
+      )
       return
     }
 
     if (terminalWindowState.opened) {
-      console.warn(`Attempted to open terminal window '${terminalWindow}' that has already opened!`)
+      console.warn(
+        `Attempted to open terminal window '${terminalWindow}' that has already opened!`
+      )
       return
     }
 
@@ -645,7 +682,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.requests.send(
       ExecuteRequest.create({
-        stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
+        stop: this.isPseudoterminal()
+          ? ExecuteStop.INTERRUPT
+          : ExecuteStop.KILL,
       })
     )
   }
@@ -668,7 +707,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     const terminalWindowState = this.terminalWindows.get(terminalWindow)
 
     if (!terminalWindowState) {
-      throw new Error(`Tried to set dimensions for unregistered terminal window ${terminalWindow}`)
+      throw new Error(
+        `Tried to set dimensions for unregistered terminal window ${terminalWindow}`
+      )
     }
 
     // removed this functionality in favor of preferring notebook terminal
@@ -746,7 +787,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 }
 
 export class GrpcRunnerEnvironment implements IRunnerEnvironment {
-  constructor(private readonly client: RunnerServiceClient, private readonly session: Session) {}
+  constructor(
+    private readonly client: RunnerServiceClient,
+    private readonly session: Session
+  ) {}
 
   getRunmeSession(): Session {
     return this.session
@@ -765,7 +809,10 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   }
 }
 
-function terminalDimensionsToWinsize({ rows, columns }: TerminalDimensions): Winsize {
+function terminalDimensionsToWinsize({
+  rows,
+  columns,
+}: TerminalDimensions): Winsize {
   return Winsize.create({
     cols: columns,
     rows,

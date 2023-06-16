@@ -1,4 +1,12 @@
-import { workspace, notebooks, commands, ExtensionContext, tasks, window, Uri } from 'vscode'
+import {
+  workspace,
+  notebooks,
+  commands,
+  ExtensionContext,
+  tasks,
+  window,
+  Uri,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Serializer } from '../types'
@@ -78,7 +86,9 @@ export class RunmeExtension {
         TelemetryReporter.sendTelemetryErrorEvent('extension.server', {
           data: e.message,
         })
-        return window.showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
+        return window.showErrorMessage(
+          `Failed to start Runme server. Reason: ${e.message}`
+        )
       }
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', {
         data: (e as Error).message,
@@ -95,7 +105,12 @@ export class RunmeExtension {
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
-    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+    const runCLI = runCLICommand(
+      context.extensionUri,
+      !!grpcRunner,
+      server,
+      kernel
+    )
 
     const codeLensProvider = new RunmeCodeLensProvider(
       serializer,
@@ -112,7 +127,9 @@ export class RunmeExtension {
       ['runme.dev/uuid']: undefined,
       ['runme.dev/textRange']: undefined,
     }
-    const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))
+    const transientCellMetadata = Object.fromEntries(
+      Object.keys(omitKeys).map((k) => [k, true])
+    )
 
     context.subscriptions.push(
       kernel,
@@ -134,8 +151,14 @@ export class RunmeExtension {
         Kernel.type,
         new BackgroundTaskProvider()
       ),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new CopyProvider()
+      ),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        stopBackgroundTaskProvider
+      ),
       notebooks.registerNotebookCellStatusBarItemProvider(
         Kernel.type,
         new AnnotationsProvider(kernel)
@@ -146,16 +169,31 @@ export class RunmeExtension {
       codeLensProvider,
 
       commands.registerCommand('runme.resetEnv', resetEnv),
-      RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
-      RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
+      RunmeExtension.registerCommand(
+        'runme.openIntegratedTerminal',
+        openIntegratedTerminal
+      ),
+      RunmeExtension.registerCommand(
+        'runme.toggleTerminal',
+        toggleTerminal(kernel, !!grpcRunner)
+      ),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),
-      RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
-      RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
+      RunmeExtension.registerCommand(
+        'runme.copyCellToClipboard',
+        copyCellToClipboard
+      ),
+      RunmeExtension.registerCommand(
+        'runme.stopBackgroundTask',
+        stopBackgroundTask
+      ),
       RunmeExtension.registerCommand(
         'runme.openSplitViewAsMarkdownText',
         openSplitViewAsMarkdownText
       ),
-      RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
+      RunmeExtension.registerCommand(
+        'runme.openAsRunmeNotebook',
+        openAsRunmeNotebook
+      ),
       RunmeExtension.registerCommand('runme.runCategory', (notebook) => {
         return displayCategoriesSelector({
           context,
@@ -169,7 +207,10 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
-      RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
+      RunmeExtension.registerCommand(
+        'runme.openRunmeFile',
+        RunmeLauncherProvider.openFile
+      ),
       RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
       RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
@@ -177,7 +218,10 @@ export class RunmeExtension {
         RunmeTaskProvider.id,
         new RunmeTaskProvider(context, serializer, runner, kernel)
       ),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new CliProvider()
+      ),
 
       /**
        * tree viewer items
@@ -187,8 +231,14 @@ export class RunmeExtension {
         'runme.collapseTreeView',
         treeViewer.collapseAll.bind(treeViewer)
       ),
-      RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
-      RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
+      RunmeExtension.registerCommand(
+        'runme.expandTreeView',
+        treeViewer.expandAll.bind(treeViewer)
+      ),
+      RunmeExtension.registerCommand(
+        'runme.authenticateWithGitHub',
+        authenticateWithGitHub
+      ),
       /**
        * Uri handler
        */
@@ -196,21 +246,37 @@ export class RunmeExtension {
     )
 
     if (workspace.workspaceFolders?.length && workspace.workspaceFolders[0]) {
-      const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
+      const startupFileUri = Uri.joinPath(
+        workspace.workspaceFolders[0].uri,
+        BOOTFILE
+      )
       const hasStartupFile = await workspace.fs.stat(startupFileUri).then(
         () => true,
         () => false
       )
       if (hasStartupFile) {
-        const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
-        const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
+        const bootFile = new TextDecoder().decode(
+          await workspace.fs.readFile(startupFileUri)
+        )
+        const bootFileUri = Uri.joinPath(
+          workspace.workspaceFolders[0].uri,
+          bootFile
+        )
         await workspace.fs.delete(startupFileUri)
-        await commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
+        await commands.executeCommand(
+          'vscode.openWith',
+          bootFileUri,
+          Kernel.type
+        )
       }
     }
   }
 
-  static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {
+  static registerCommand(
+    command: string,
+    callback: (...args: any[]) => any,
+    thisArg?: any
+  ) {
     return commands.registerCommand(
       command,
       (...wrappedArgs: any[]) => {

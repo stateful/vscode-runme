@@ -1,11 +1,16 @@
 import { Octokit } from 'octokit'
 import { parse } from 'yaml'
 
-import { IWorkflowDispatchOptions, IWorkflowRun, IWorkflowYamlContentRequest } from './types'
+import {
+  IWorkflowDispatchOptions,
+  IWorkflowRun,
+  IWorkflowYamlContentRequest,
+} from './types'
 
-export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'> & {
-  run_id: number
-}
+export type WorkflowRunFilter = Pick<
+  IWorkflowDispatchOptions,
+  'owner' | 'repo'
+> & { run_id: number }
 
 export class GitHubService {
   private octokit: Octokit
@@ -75,7 +80,9 @@ export class GitHubService {
    * Download the YAML content from a workflow file
    * @returns A workflow YAML file in JSON format
    */
-  async getWorkflowYamlFile(options: IWorkflowYamlContentRequest): Promise<string> {
+  async getWorkflowYamlFile(
+    options: IWorkflowYamlContentRequest
+  ): Promise<string> {
     const { owner, repo, name } = options
     const workflow = await this.octokit.rest.repos.getContent({
       owner,
@@ -85,7 +92,10 @@ export class GitHubService {
     if (!('content' in workflow.data)) {
       throw new Error('Failed to get workflow file content')
     }
-    const decodedContent = Buffer.from((workflow.data as any).content, 'base64').toString()
+    const decodedContent = Buffer.from(
+      (workflow.data as any).content,
+      'base64'
+    ).toString()
     return parse(decodedContent)
   }
 }

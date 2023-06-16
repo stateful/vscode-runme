@@ -59,7 +59,13 @@ export async function executeRunner(
   environmentManager?: IEnvironmentManager
 ) {
   const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
+  const {
+    interactive,
+    mimeType,
+    background,
+    closeTerminalOnSuccess,
+    promptEnv,
+  } = annotations
 
   // enforce background tasks as singleton instanes
   // to do this,
@@ -120,7 +126,8 @@ export async function executeRunner(
   }
 
   const program = await runner.createProgramSession({
-    programName: getCellShellPath(exec.cell, exec.cell.notebook, execKey) ?? execKey,
+    programName:
+      getCellShellPath(exec.cell, exec.cell.notebook, execKey) ?? execKey,
     environment,
     exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
@@ -151,47 +158,49 @@ export async function executeRunner(
     })
   )
 
-  messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
-    const { type, output } = message
+  messaging.onDidReceiveMessage(
+    ({ message }: { message: ClientMessage<ClientMessages> }) => {
+      const { type, output } = message
 
-    if (typeof output === 'object' && 'runme.dev/uuid' in output) {
-      const uuid = output['runme.dev/uuid']
-      if (uuid !== cellUUID) {
-        return
+      if (typeof output === 'object' && 'runme.dev/uuid' in output) {
+        const uuid = output['runme.dev/uuid']
+        if (uuid !== cellUUID) {
+          return
+        }
+      }
+
+      switch (type) {
+        case ClientMessages.terminalStdin:
+          {
+            const { input } = output
+
+            program.handleInput(input)
+            terminalState?.input(input, true)
+          }
+          break
+
+        case ClientMessages.terminalFocus:
+          {
+            program.setActiveTerminalWindow('notebook')
+          }
+          break
+
+        case ClientMessages.terminalResize:
+          {
+            const { terminalDimensions } = output
+            program.setDimensions(terminalDimensions, 'notebook')
+          }
+          break
+
+        case ClientMessages.terminalOpen:
+          {
+            const { terminalDimensions } = output
+            program.open(terminalDimensions, 'notebook')
+          }
+          break
       }
     }
-
-    switch (type) {
-      case ClientMessages.terminalStdin:
-        {
-          const { input } = output
-
-          program.handleInput(input)
-          terminalState?.input(input, true)
-        }
-        break
-
-      case ClientMessages.terminalFocus:
-        {
-          program.setActiveTerminalWindow('notebook')
-        }
-        break
-
-      case ClientMessages.terminalResize:
-        {
-          const { terminalDimensions } = output
-          program.setDimensions(terminalDimensions, 'notebook')
-        }
-        break
-
-      case ClientMessages.terminalOpen:
-        {
-          const { terminalDimensions } = output
-          program.open(terminalDimensions, 'notebook')
-        }
-        break
-    }
-  })
+  )
 
   program.onDidClose((code) => {
     if (!background) {
@@ -223,7 +232,10 @@ export async function executeRunner(
     revealNotebookTerminal ? 'xterm' : 'local'
   )
 
-  if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(script)) {
+  if (
+    MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
+    !isVercelDeployScript(script)
+  ) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
@@ -270,7 +282,9 @@ export async function executeRunner(
     // debounce by 0.5s because human preception likely isn't as fast
     const sub = outputItems$
       .pipe(debounceTime(500))
-      .subscribe((item) => outputs.replaceOutputs([new NotebookCellOutput([item])]))
+      .subscribe((item) =>
+        outputs.replaceOutputs([new NotebookCellOutput([item])])
+      )
 
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })
 
@@ -289,8 +303,9 @@ export async function executeRunner(
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
-      (cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText) +
-        ` (RUNME_ID: ${RUNME_ID})`,
+      (cellText.length > LABEL_LIMIT
+        ? `${cellText.slice(0, LABEL_LIMIT)}...`
+        : cellText) + ` (RUNME_ID: ${RUNME_ID})`,
       'exec',
       new CustomExecution(async () => program)
     )

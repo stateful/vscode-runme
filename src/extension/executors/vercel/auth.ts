@@ -102,16 +102,23 @@ export async function login(
       `https://api.vercel.com/registration/verify?token=${token}`
     ).json()) as any
     const configFilePath = await getConfigFilePath()
-    await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
+    await fs.writeFile(
+      configFilePath,
+      JSON.stringify({ token: verifyResponse.token })
+    )
     server.close()
   } catch (err: any) {
-    outputs.replaceOutputs(new NotebookCellOutput([NotebookCellOutputItem.text(err.message)]))
+    outputs.replaceOutputs(
+      new NotebookCellOutput([NotebookCellOutputItem.text(err.message)])
+    )
     return false
   }
 
   const { username } = (await authPromise) as any
   outputs.replaceOutputs(
-    new NotebookCellOutput([NotebookCellOutputItem.text(`Logged in as ${username}`)])
+    new NotebookCellOutput([
+      NotebookCellOutputItem.text(`Logged in as ${username}`),
+    ])
   )
   return true
 }
@@ -125,7 +132,9 @@ export async function logout(
   if (!token) {
     outputs.replaceOutputs(
       new NotebookCellOutput([
-        NotebookCellOutputItem.text('Not currently logged in, so logout did nothing'),
+        NotebookCellOutputItem.text(
+          'Not currently logged in, so logout did nothing'
+        ),
       ])
     )
     return true
@@ -160,6 +169,8 @@ export async function logout(
     return false
   }
 
-  outputs.replaceOutputs(new NotebookCellOutput([NotebookCellOutputItem.text('Logged out!')]))
+  outputs.replaceOutputs(
+    new NotebookCellOutput([NotebookCellOutputItem.text('Logged out!')])
+  )
   return true
 }

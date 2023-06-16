@@ -73,10 +73,11 @@ export class DenoOutput extends LitElement {
     }
 
     const project = this.project!
-    const prodDomainMapping = project.productionDeployment?.domainMappings.reduce((acc, curr) =>
-      // oldest is prod domain mapping
-      acc?.createdAt > curr.createdAt ? curr : acc
-    )
+    const prodDomainMapping =
+      project.productionDeployment?.domainMappings.reduce((acc, curr) =>
+        // oldest is prod domain mapping
+        acc?.createdAt > curr.createdAt ? curr : acc
+      )
     const deployment = this.deployments[0]
     return html`<section>
       <img src="https://www.svgrepo.com/show/378789/deno.svg" />
@@ -84,13 +85,17 @@ export class DenoOutput extends LitElement {
         <h4>Deployment</h4>
         ${this.deployed
           ? html`
-              <vscode-link href="https://${deployment.domainMappings[0].domain}">
+              <vscode-link
+                href="https://${deployment.domainMappings[0].domain}"
+              >
                 ${deployment.domainMappings[0].domain}
               </vscode-link>
             `
           : html`Pending`}
         <h4>Project</h4>
-        <vscode-link href="https://dash.deno.com/projects/${project.name}/deployments">
+        <vscode-link
+          href="https://dash.deno.com/projects/${project.name}/deployments"
+        >
           ${project.name}
         </vscode-link>
       </div>
@@ -116,7 +121,10 @@ export class DenoOutput extends LitElement {
           `
         )}
         ${when(
-          this.deployed && supportsMessaging && this.promoted && project.hasProductionDeployment,
+          this.deployed &&
+            supportsMessaging &&
+            this.promoted &&
+            project.hasProductionDeployment,
           () => html`
             <p>
               Promoted to 🚀:

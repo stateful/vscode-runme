@@ -16,7 +16,9 @@ export class ToggleTerminalProvider
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
-  protected disposables: vscode.Disposable[] = [this._onDidChangeCellStatusBarItems]
+  protected disposables: vscode.Disposable[] = [
+    this._onDidChangeCellStatusBarItems,
+  ]
 
   constructor(protected kernel: Kernel) {
     this.disposables.push(
@@ -55,7 +57,9 @@ export class ToggleTerminalProvider
   }
 }
 
-export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
+export class BackgroundTaskProvider
+  implements vscode.NotebookCellStatusBarItemProvider
+{
   async provideCellStatusBarItems(
     cell: vscode.NotebookCell
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
@@ -77,7 +81,10 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
       return
     }
 
-    const item = new NotebookCellStatusBarItem(text, NotebookCellStatusBarAlignment.Right)
+    const item = new NotebookCellStatusBarItem(
+      text,
+      NotebookCellStatusBarAlignment.Right
+    )
 
     if (terminal) {
       item.command = 'runme.openIntegratedTerminal'

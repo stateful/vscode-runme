@@ -96,7 +96,8 @@ export async function handleVercelDeployOutput(
   const status = (
     states.find((s) =>
       outputItems.find(
-        (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
+        (oi) =>
+          oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
       )
     ) || 'pending'
   ).replaceAll('Completing', 'complete')
