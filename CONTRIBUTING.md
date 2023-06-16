@@ -30,7 +30,7 @@ To request a new feature you should open an [issue](../../issues/new) and summar
 This is an outline of what the workflow for code contributions looks like
 
 - Check the list of open [issues](../../issues). Either assign an existing issue to yourself, or
-  create a new one that you would like work on and discuss your ideas and use cases.
+   create a new one that you would like work on and discuss your ideas and use cases.
 
 It is always best to discuss your plans beforehand, to ensure that your contribution is in line with our goals.
 
@@ -104,8 +104,8 @@ $ npm run prepare-binary -- -f tar
 
 Make sure to install all recommended extensions please:
 
-```sh { interactive=false mimeType=text/x-json }
-cat .vscode/extensions.json | grep -v '\/\/' | jq .
+```sh { interactive=false mimeType=text/plain }
+cat .vscode/extensions.json | grep -v '\/\/' | jq -r ".recommendations[]" | xargs code --install-extension
 ```
 
 Then just run the watcher and you're off to the races.

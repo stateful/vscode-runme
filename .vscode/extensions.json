@@ -3,6 +3,7 @@
     "dbaeumer.vscode-eslint",
     "stateful.runme",
     "amodio.tsl-problem-matcher",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode"
   ]
 }
