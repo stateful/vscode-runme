@@ -21,11 +21,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 
-import {
-  DeserializeRequest,
-  SerializeRequest,
-  Notebook,
-} from './grpc/serializerTypes'
+import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
@@ -43,12 +39,15 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
 
-  constructor(protected context: ExtensionContext, protected kernel: Kernel) {
+  constructor(
+    protected context: ExtensionContext,
+    protected kernel: Kernel
+  ) {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
       workspace.onDidChangeNotebookDocument(
         this.handleNotebookChanged.bind(this)
-      )
+      ),
       // TODO(mxs): https://github.com/stateful/vscode-runme/issues/566#issuecomment-1574128419
       // workspace.onDidSaveNotebookDocument(
       //   this.handleNotebookSaved.bind(this)
@@ -57,8 +56,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   }
 
   public dispose() {
-    this.disposables.forEach((d) => d.dispose())
+    this.disposables.forEach(d => d.dispose())
   }
+
 
   /**
    * Handle newly added cells (live edits) to have UUIDs
@@ -89,15 +89,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
     // update changes in metadata
     const bytes = await workspace.fs.readFile(uri)
-    const deserialized = await this.deserializeNotebook(
-      bytes,
-      new CancellationTokenSource().token
-    )
+    const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
 
     const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName = (
-        updatedCell.metadata as Serializer.Metadata | undefined
-      )?.['runme.dev/name']
+      const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
       if (!updatedName) {
         return []
       }
@@ -105,9 +100,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const oldCell = cellAt(i)
       return [
         NotebookEdit.updateCellMetadata(i, {
-          ...(oldCell.metadata || {}),
+          ...oldCell.metadata || {},
           'runme.dev/name': updatedName,
-        } as Serializer.Metadata),
+        } as Serializer.Metadata)
       ]
     })
 
@@ -117,11 +112,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     await workspace.applyEdit(edit)
   }
 
-  public static addCellUuid(metadata: Serializer.Metadata | undefined): {
+  public static addCellUuid(
+    metadata: Serializer.Metadata | undefined
+  ): {
     [key: string]: any
   } {
     return {
-      ...(metadata || {}),
+      ...metadata || {},
       ...{ 'runme.dev/uuid': uuidv4() },
     }
   }
@@ -214,14 +211,14 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   protected async preSaveCheck() {
     if (!window.activeNotebookEditor) {
-      throw new Error("Could't save notebook as it is not active!")
+      throw new Error('Could\'t save notebook as it is not active!')
     }
 
     if (!(await canEditFile(window.activeNotebookEditor.notebook))) {
       const errorMessage =
         'You are writing to a file that is not version controlled! ' +
-        "Runme's authoring features are in early stages and require hardening. " +
-        "We wouldn't want you to loose important data. Please version track your file first " +
+        'Runme\'s authoring features are in early stages and require hardening. ' +
+        'We wouldn\'t want you to loose important data. Please version track your file first ' +
         'or disable this restriction in the VS Code settings.'
       window
         .showErrorMessage(errorMessage, 'Open Runme Settings')
@@ -268,8 +265,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       }
 
       cell.metadata ??= {}
-      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] =
-        elem.textRange
+      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] = elem.textRange
 
       accu.push(cell)
 
@@ -340,7 +336,7 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
 
-  private serverReadyListener: Disposable | undefined
+  private serverReadyListener: Disposable|undefined
 
   constructor(
     protected context: ExtensionContext,
@@ -356,13 +352,11 @@ export class GrpcSerializer extends SerializerBase {
       })
     })
 
-    this.serverReadyListener = server.onTransportReady(({ transport }) =>
-      this.initParserClient(transport)
-    )
+    this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
   }
 
   private async initParserClient(transport?: GrpcTransport) {
-    this.client = initParserClient(transport ?? (await this.server.transport()))
+    this.client = initParserClient(transport ?? await this.server.transport())
   }
 
   protected async saveNotebook(
@@ -398,7 +392,7 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     // we can remove ugly casting once we switch to GRPC
-    return notebook as unknown as Serializer.Notebook
+    return (notebook as unknown) as Serializer.Notebook
   }
 
   public dispose(): void {

@@ -1,11 +1,4 @@
-import {
-  NotebookCellKind,
-  TaskDefinition,
-  type Terminal,
-  TerminalDimensions,
-  Uri,
-  ExtensionContext,
-} from 'vscode'
+import { NotebookCellKind, TaskDefinition, type Terminal, TerminalDimensions, Uri, ExtensionContext } from 'vscode'
 import { z } from 'zod'
 
 import { OutputType, ClientMessages } from './constants'
@@ -108,12 +101,10 @@ interface Payload {
   [OutputType.github]?: GitHubState
 }
 
-export type ClientMessage<T extends ClientMessages> = T extends any
-  ? {
-      type: T
-      output: ClientMessagePayload[T]
-    }
-  : never
+export type ClientMessage<T extends ClientMessages> = T extends any ? {
+  type: T
+  output: ClientMessagePayload[T]
+} : never
 export interface ClientMessagePayload {
   [ClientMessages.denoUpdate]: DenoState
   [ClientMessages.denoPromote]: {
@@ -231,6 +222,7 @@ export type allKeys<T> = T extends any ? keyof T : never
 export type CellAnnotationErrorKey = {
   [P in allKeys<CellAnnotations>]?: string[]
 }
+
 
 export type CellAnnotationsErrorResult = {
   hasErrors: boolean

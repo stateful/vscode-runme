@@ -25,7 +25,7 @@ import {
   getCmdShellSeq,
   getTerminalByCell,
   getWorkspaceEnvs,
-  prepareCmdSeq,
+  prepareCmdSeq
 } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
@@ -59,13 +59,7 @@ export async function executeRunner(
   environmentManager?: IEnvironmentManager
 ) {
   const annotations = getAnnotations(exec.cell)
-  const {
-    interactive,
-    mimeType,
-    background,
-    closeTerminalOnSuccess,
-    promptEnv,
-  } = annotations
+  const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
 
   // enforce background tasks as singleton instanes
   // to do this,
@@ -88,23 +82,20 @@ export async function executeRunner(
 
   const envs: Record<string, string> = {
     RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
+    ...await getWorkspaceEnvs(runningCell.uri),
   }
 
   let cellText = exec.cell.document.getText()
 
   const commands = await parseCommandSeq(cellText, promptEnv, prepareCmdSeq)
-  if (!commands) {
-    return false
-  }
+  if(!commands) { return false }
 
   if (commands.length === 0) {
     commands.push('')
   }
 
   let execution: RunProgramExecution = {
-    type: 'commands',
-    commands,
+    type: 'commands', commands
   }
 
   const script = getCmdShellSeq(cellText, PLATFORM_OS)
@@ -120,21 +111,19 @@ export async function executeRunner(
     }
 
     execution = {
-      type: 'script',
-      script: cmdParts.join(' '),
+      type: 'script', script: cmdParts.join(' ')
     }
   }
 
   const program = await runner.createProgramSession({
-    programName:
-      getCellShellPath(exec.cell, exec.cell.notebook, execKey) ?? execKey,
+    programName: getCellShellPath(exec.cell, exec.cell.notebook, execKey) ?? execKey,
     environment,
     exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     cwd,
     background,
     tty: interactive,
-    convertEol: !mimeType || mimeType === 'text/plain',
+    convertEol: (!mimeType || mimeType === 'text/plain'),
     storeLastOutput: true,
   })
 
@@ -142,76 +131,58 @@ export async function executeRunner(
 
   let terminalState: ITerminalState | undefined
 
-  const writeToTerminalStdout = (data: string | Uint8Array) => {
+  const writeToTerminalStdout = (data: string|Uint8Array) => {
     postClientMessage(messaging, ClientMessages.terminalStdout, {
       'runme.dev/uuid': cellUUID,
-      data,
+      data
     })
 
     terminalState?.write(data)
   }
 
-  program.onDidErr((data) =>
-    postClientMessage(messaging, ClientMessages.terminalStderr, {
-      'runme.dev/uuid': cellUUID,
-      data,
-    })
-  )
+  program.onDidErr((data) => postClientMessage(messaging, ClientMessages.terminalStderr, {
+    'runme.dev/uuid': cellUUID,
+    data
+  }))
 
-  messaging.onDidReceiveMessage(
-    ({ message }: { message: ClientMessage<ClientMessages> }) => {
-      const { type, output } = message
+  messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
+    const { type, output } = message
 
-      if (typeof output === 'object' && 'runme.dev/uuid' in output) {
-        const uuid = output['runme.dev/uuid']
-        if (uuid !== cellUUID) {
-          return
-        }
-      }
-
-      switch (type) {
-        case ClientMessages.terminalStdin:
-          {
-            const { input } = output
-
-            program.handleInput(input)
-            terminalState?.input(input, true)
-          }
-          break
-
-        case ClientMessages.terminalFocus:
-          {
-            program.setActiveTerminalWindow('notebook')
-          }
-          break
-
-        case ClientMessages.terminalResize:
-          {
-            const { terminalDimensions } = output
-            program.setDimensions(terminalDimensions, 'notebook')
-          }
-          break
-
-        case ClientMessages.terminalOpen:
-          {
-            const { terminalDimensions } = output
-            program.open(terminalDimensions, 'notebook')
-          }
-          break
-      }
+    if (typeof output === 'object' && 'runme.dev/uuid' in output) {
+      const uuid = output['runme.dev/uuid']
+      if (uuid !== cellUUID) { return }
     }
-  )
+
+    switch (type) {
+      case ClientMessages.terminalStdin: {
+        const { input } = output
+
+        program.handleInput(input)
+        terminalState?.input(input, true)
+      } break
+
+      case ClientMessages.terminalFocus: {
+        program.setActiveTerminalWindow('notebook')
+      } break
+
+      case ClientMessages.terminalResize: {
+        const { terminalDimensions } = output
+        program.setDimensions(terminalDimensions, 'notebook')
+      } break
+
+      case ClientMessages.terminalOpen: {
+        const { terminalDimensions } = output
+        program.open(terminalDimensions, 'notebook')
+      } break
+    }
+  })
 
   program.onDidClose((code) => {
-    if (!background) {
-      return
-    }
+    if (!background) { return }
 
-    const parts = ['Program exited']
+    const parts = [ 'Program exited' ]
 
-    if (code !== undefined) {
-      parts.push(`with code ${code}`)
-    }
+    if (code !== undefined) { parts.push(`with code ${code}`) }
 
     const text = parts.join(' ') + '.'
 
@@ -225,12 +196,9 @@ export async function executeRunner(
 
   let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
-  const mime = mimeType || ('text/plain' as const)
+  const mime = mimeType || 'text/plain' as const
 
-  terminalState = await kernel.registerCellTerminalState(
-    exec.cell,
-    revealNotebookTerminal ? 'xterm' : 'local'
-  )
+  terminalState = await kernel.registerCellTerminalState(exec.cell, revealNotebookTerminal ? 'xterm' : 'local')
 
   if (
     MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) &&
@@ -252,20 +220,12 @@ export async function executeRunner(
     const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
-      let item: NotebookCellOutputItem | undefined = new NotebookCellOutputItem(
-        Buffer.concat(output),
-        mime
-      )
+      let item: NotebookCellOutputItem|undefined = new NotebookCellOutputItem(Buffer.concat(output), mime)
 
       // hacky for now, maybe inheritence is a fitting pattern
       if (isVercelDeployScript(script)) {
         await handleVercelDeployOutput(
-          exec.cell,
-          outputs,
-          output,
-          exec.cell.index,
-          vercelProd,
-          environmentManager
+          exec.cell, outputs, output, exec.cell.index, vercelProd, environmentManager
         )
 
         item = undefined
@@ -280,11 +240,9 @@ export async function executeRunner(
     }
 
     // debounce by 0.5s because human preception likely isn't as fast
-    const sub = outputItems$
-      .pipe(debounceTime(500))
-      .subscribe((item) =>
-        outputs.replaceOutputs([new NotebookCellOutput([item])])
-      )
+    const sub = outputItems$.pipe(debounceTime(500)).subscribe((item) =>
+      outputs.replaceOutputs([new NotebookCellOutput([item])])
+    )
 
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })
 
@@ -298,7 +256,7 @@ export async function executeRunner(
       program.close()
     })
   } else {
-    await outputs.replaceOutputs([])
+    await outputs.replaceOutputs([ ])
 
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
@@ -313,18 +271,14 @@ export async function executeRunner(
     taskExecution.isBackground = background
     taskExecution.presentationOptions = {
       focus: revealNotebookTerminal ? false : true,
-      reveal: revealNotebookTerminal
-        ? TaskRevealKind.Never
-        : background
-        ? TaskRevealKind.Never
-        : TaskRevealKind.Always,
-      panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+      reveal: revealNotebookTerminal ? TaskRevealKind.Never : background ? TaskRevealKind.Never : TaskRevealKind.Always,
+      panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
     }
 
     const execution = await tasks.executeTask(taskExecution)
 
     context.subscriptions.push({
-      dispose: () => execution.terminate(),
+      dispose: () => execution.terminate()
     })
 
     exec.token.onCancellationRequested(() => {
@@ -341,14 +295,10 @@ export async function executeRunner(
       const taskId = (e.execution as any)['_id']
       const executionId = (execution as any)['_id']
 
-      if (taskId !== executionId) {
-        return
-      }
+      if (taskId !== executionId) { return }
 
       const terminal = getTerminalByCell(exec.cell)
-      if (!terminal) {
-        return
-      }
+      if (!terminal) { return }
 
       terminal.runnerSession = program
 
@@ -356,7 +306,7 @@ export async function executeRunner(
       Object.defineProperty(terminal, 'processId', {
         get: function () {
           return program.pid
-        },
+        }
       })
     })
 
@@ -375,8 +325,7 @@ export async function executeRunner(
         /**
          * we don't have an exit code
          */
-        typeof e.exitCode === 'undefined'
-      ) {
+        typeof e.exitCode === 'undefined') {
         return
       }
 
@@ -407,17 +356,13 @@ export async function executeRunner(
     // unexpected early return, likely an error
     if (exitReason) {
       switch (exitReason.type) {
-        case 'error':
-          {
-            reject(exitReason.error)
-          }
-          break
+        case 'error': {
+          reject(exitReason.error)
+        } break
 
-        case 'exit':
-          {
-            resolve(exitReason.code === 0)
-          }
-          break
+        case 'exit': {
+          resolve(exitReason.code === 0)
+        } break
 
         default: {
           resolve(false)
@@ -426,9 +371,13 @@ export async function executeRunner(
     }
 
     if (background && interactive) {
-      setTimeout(() => {
-        resolve(true)
-      }, BACKGROUND_TASK_HIDE_TIMEOUT)
+      setTimeout(
+        () => {
+          resolve(true)
+        },
+        BACKGROUND_TASK_HIDE_TIMEOUT
+      )
     }
   })
 }
+

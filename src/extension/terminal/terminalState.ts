@@ -3,7 +3,7 @@ import { SerializeAddon } from 'xterm-addon-serialize'
 
 import { OutputType } from '../../constants'
 
-export type NotebookTerminalType = 'xterm' | 'local'
+export type NotebookTerminalType = 'xterm'|'local'
 
 export interface ITerminalState {
   serialize(): string
@@ -57,9 +57,7 @@ export class LocalBufferTermState implements ITerminalState {
   }
 
   // noop
-  input(): void {}
+  input(): void { }
 
-  serialize(): string {
-    return Buffer.concat(this.output).toString('base64')
-  }
+  serialize(): string { return Buffer.concat(this.output).toString('base64') }
 }

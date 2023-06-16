@@ -18,26 +18,15 @@ import {
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
-import {
-  getTLSDir,
-  getTLSEnabled,
-  isNotebookTerminalEnabledForCell,
-} from '../../utils/configuration'
+import { getTLSDir, getTLSEnabled, isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import {
-  getAnnotations,
-  getNotebookCategories,
-  getTerminalByCell,
-  openFileAsRunmeNotebook,
-} from '../utils'
+import { getAnnotations, getNotebookCategories, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
 
 function showWarningMessage() {
-  return window.showWarningMessage(
-    "Couldn't find terminal! Was it already closed?"
-  )
+  return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
 }
 
 export function openIntegratedTerminal(cell: NotebookCell) {
@@ -49,15 +38,8 @@ export function openIntegratedTerminal(cell: NotebookCell) {
   return terminal.show()
 }
 
-export async function displayCategoriesSelector({
-  context,
-  notebookToolbarCommand,
-  kernel,
-}: NotebookToolbarCommand) {
-  const categories = await getNotebookCategories(
-    context,
-    notebookToolbarCommand.notebookEditor.notebookUri
-  )
+export async function displayCategoriesSelector({ context, notebookToolbarCommand, kernel }: NotebookToolbarCommand) {
+  const categories = await getNotebookCategories(context, notebookToolbarCommand.notebookEditor.notebookUri)
   if (!categories) {
     return
   }
@@ -92,16 +74,9 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
   await commands.executeCommand('notebook.execute')
 }
 
-export function toggleTerminal(
-  kernel: Kernel,
-  notebookTerminal: boolean,
-  forceShow = false
-) {
+export function toggleTerminal(kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
-    if (
-      (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) ||
-      !getAnnotations(cell).interactive
-    ) {
+    if ((isNotebookTerminalEnabledForCell(cell) && notebookTerminal) || !getAnnotations(cell).interactive) {
       const outputs = await kernel.getCellOutputs(cell)
 
       if (!forceShow) {
@@ -146,7 +121,7 @@ export function runCLICommand(
 
     const args = [
       `--chdir="${cwd}"`,
-      `--filename="${path.basename(cell.document.uri.fsPath)}"`,
+      `--filename="${path.basename(cell.document.uri.fsPath)}"`
     ]
 
     const envs: Record<string, string> = {}
@@ -180,13 +155,13 @@ export function runCLICommand(
 
 export function openAsRunmeNotebook(doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
-    viewColumn: ViewColumn.Active,
+    viewColumn: ViewColumn.Active
   })
 }
 
 export function openSplitViewAsMarkdownText(doc: TextDocument) {
   window.showTextDocument(doc, {
-    viewColumn: ViewColumn.Beside,
+    viewColumn: ViewColumn.Beside
   })
 }
 
@@ -203,7 +178,7 @@ export async function createNewRunmeNotebook() {
       new NotebookCellData(
         NotebookCellKind.Markup,
         '*Read the docs on [runme.dev](https://www.runme.dev/docs/intro)' +
-          ' to learn how to get most out of Runme notebooks!*',
+        ' to learn how to get most out of Runme notebooks!*',
         'markdown'
       ),
     ])
@@ -229,26 +204,11 @@ export async function tryIt(context: ExtensionContext) {
     await workspace.fs.createDirectory(projectUri)
     const enc = new TextEncoder()
     const newNotebookUri = Uri.joinPath(projectUri, 'Welcome to Runme.md')
-    await workspace.fs.writeFile(
-      newNotebookUri,
-      enc.encode(fileContent.toString())
-    )
-    await commands.executeCommand(
-      'vscode.openWith',
-      newNotebookUri,
-      Kernel.type
-    )
+    await workspace.fs.writeFile(newNotebookUri, enc.encode(fileContent.toString()))
+    await commands.executeCommand('vscode.openWith', newNotebookUri, Kernel.type)
   } catch (err) {
-    const localMarkdown = Uri.joinPath(
-      Uri.file(context.extensionPath),
-      'walkthroughs',
-      'welcome.md'
-    )
-    return commands.executeCommand(
-      'vscode.openWith',
-      localMarkdown,
-      Kernel.type
-    )
+    const localMarkdown = Uri.joinPath(Uri.file(context.extensionPath), 'walkthroughs', 'welcome.md')
+    return commands.executeCommand('vscode.openWith', localMarkdown, Kernel.type)
   }
 }
 

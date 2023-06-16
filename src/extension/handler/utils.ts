@@ -27,21 +27,17 @@ export async function getProjectDir(context: ExtensionContext) {
   }
 
   const projectDir = Uri.parse(url.pathToFileURL(projectDirPath).toString())
-  const isExisting = await workspace.fs.stat(projectDir).then(
-    () => true,
-    () => false
-  )
+  const isExisting = await workspace.fs.stat(projectDir)
+    .then(() => true, () => false)
   if (isExisting) {
     return projectDir
   }
 
-  const createDir =
-    (await window.showInformationMessage(
-      `A project directory (${projectDir}) was set up but doesn't exist. ` +
-        'Do you want to create it?',
-      'Yes',
-      'No'
-    )) === 'Yes'
+  const createDir = (await window.showInformationMessage(
+    `A project directory (${projectDir}) was set up but doesn't exist. ` +
+    'Do you want to create it?',
+    'Yes', 'No'
+  )) === 'Yes'
 
   if (!createDir) {
     return null
@@ -58,11 +54,7 @@ export async function getProjectDir(context: ExtensionContext) {
  * @param index index which increases if directory name exists (e.g. "foobar_1")
  * @returns a string with the name of the target directory
  */
-export async function getTargetDirName(
-  targetDir: Uri,
-  suggestedName: string,
-  index = 0
-): Promise<string> {
+export async function getTargetDirName(targetDir: Uri, suggestedName: string, index = 0): Promise<string> {
   /**
    * for now let's expect a suggested name mimicking the format "<org>/<project>"
    */
@@ -75,22 +67,14 @@ export async function getTargetDirName(
    */
   const [orgName] = suggestedName.split('/')
   const orgDir = Uri.joinPath(targetDir, orgName)
-  const isOrgDirExisting = await workspace.fs.stat(orgDir).then(
-    () => true,
-    () => false
-  )
+  const isOrgDirExisting = await workspace.fs.stat(orgDir).then(() => true, () => false)
   if (!isOrgDirExisting) {
     await workspace.fs.createDirectory(orgDir)
   }
 
-  const amendedSuggestedName = !index
-    ? suggestedName
-    : `${suggestedName}_${index}`
+  const amendedSuggestedName = !index ? suggestedName : `${suggestedName}_${index}`
   const fullTargetDir = Uri.joinPath(targetDir, amendedSuggestedName)
-  const isExisting = await workspace.fs.stat(fullTargetDir).then(
-    () => true,
-    () => false
-  )
+  const isExisting = await workspace.fs.stat(fullTargetDir).then(() => true, () => false)
   if (isExisting) {
     return getTargetDirName(targetDir, suggestedName, ++index)
   }
@@ -98,10 +82,7 @@ export async function getTargetDirName(
   return amendedSuggestedName
 }
 
-export async function writeBootstrapFile(
-  targetDirUri: Uri,
-  fileToOpen: string
-) {
+export async function writeBootstrapFile(targetDirUri: Uri, fileToOpen: string) {
   const enc = new TextEncoder()
   await workspace.fs.writeFile(
     Uri.joinPath(targetDirUri, BOOTFILE),
@@ -119,11 +100,7 @@ export function getSuggestedProjectName(repository: string) {
   /**
    * for "git@provider.com:org/project.git"
    */
-  if (
-    repository.startsWith('git@') &&
-    repository.endsWith(DOT_GIT_ANNEX) &&
-    repository.split(':').length === 2
-  ) {
+  if (repository.startsWith('git@') && repository.endsWith(DOT_GIT_ANNEX) && repository.split(':').length === 2) {
     return repository.slice(0, -DOT_GIT_ANNEX_LENGTH).split(':')[1]
   }
 
@@ -131,16 +108,12 @@ export function getSuggestedProjectName(repository: string) {
    * for "https://provider.com/org/project.git"
    */
   if (repository.startsWith('http') && repository.endsWith(DOT_GIT_ANNEX)) {
-    return repository
-      .split('/')
-      .slice(-2)
-      .join('/')
-      .slice(0, -DOT_GIT_ANNEX_LENGTH)
+    return repository.split('/').slice(-2).join('/').slice(0, -DOT_GIT_ANNEX_LENGTH)
   }
 
   window.showErrorMessage(
     'Invalid git url, expected following format "git@provider.com:org/project.git",' +
-      ` received "${repository}"`
+    ` received "${repository}"`
   )
   return
 }
@@ -150,16 +123,13 @@ const GIT_SCHEMA = 'git@'
 const DEFAULT_START_FILE = 'README.md'
 export function parseParams(params: URLSearchParams) {
   try {
-    const fileToOpen = Uri.parse(params.get('fileToOpen') || DEFAULT_START_FILE)
-      .toString()
-      .replace(FILE_PROTOCOL, '')
+    const fileToOpen = Uri.parse(params.get('fileToOpen') || DEFAULT_START_FILE).toString().replace(FILE_PROTOCOL, '')
     let repository = params.get('repository')
 
     if (repository) {
       repository = (
         repository.startsWith(GIT_SCHEMA)
-          ? GIT_SCHEMA +
-            Uri.parse(repository.slice(GIT_SCHEMA.length)).toString()
+          ? GIT_SCHEMA + Uri.parse(repository.slice(GIT_SCHEMA.length)).toString()
           : Uri.parse(repository).toString()
       ).replace(FILE_PROTOCOL, '')
     }

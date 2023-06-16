@@ -9,7 +9,7 @@ import { deploy } from './deno/deploy'
 
 import { ENV_STORE_MANAGER } from '.'
 
-export async function deno(
+export async function deno (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
@@ -25,9 +25,9 @@ export async function deno(
     const userInput = await window.showInputBox({
       title: 'Deno Access Token',
       prompt: 'Please enter a valid access token to run a Deno deployment.',
-      ignoreFocusOut: true,
+      ignoreFocusOut: true
     })
-    userInput && (await environment?.set(DENO_ACCESS_TOKEN_KEY, userInput))
+    userInput && await environment?.set(DENO_ACCESS_TOKEN_KEY, userInput)
   }
 
   return Promise.all([
@@ -38,6 +38,8 @@ export async function deno(
     /**
      * fetch data and render custom output
      */
-    deploy.call(this, exec, outputs, environment),
-  ]).then(([bashSuccess, deploySuccess]) => bashSuccess && deploySuccess)
+    deploy.call(this, exec, outputs, environment)
+  ]).then(
+    ([bashSuccess, deploySuccess]) => bashSuccess && deploySuccess
+  )
 }

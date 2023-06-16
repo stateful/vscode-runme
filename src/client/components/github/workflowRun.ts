@@ -5,46 +5,46 @@ import styles from './styles/workflowRun.css'
 
 @customElement('github-workflow-run')
 export class WorkflowRun extends LitElement {
-  @property()
-  status?: string
 
-  @property()
-  conclusion?: string
+    @property()
+    status?: string
 
-  @property()
-  runNumber?: string
+    @property()
+    conclusion?: string
 
-  @property()
-  htmlUrl?: string
+    @property()
+    runNumber?: string
 
-  @property()
-  displayTitle?: string
+    @property()
+    htmlUrl?: string
 
-  @property()
-  avatarUrl?: string
+    @property()
+    displayTitle?: string
 
-  @property()
-  githubUserName?: string
+    @property()
+    avatarUrl?: string
 
-  static styles = styles
+    @property()
+    githubUserName?: string
 
-  render() {
-    return html`
-      <div class="workflow-run action-notice">
-        <div
-          class="icon icon-${this.conclusion
-            ? this.conclusion.toLowerCase()
-            : this.status?.toLowerCase()}"
-        ></div>
-        <div>
-          ${this.displayTitle} #${this.runNumber}: Manually run by
-          <img class="avatar-user" src="${this.avatarUrl}" />
-          ${this.githubUserName}
+    static styles = styles
+
+    render() {
+        return html`
+        <div class="workflow-run action-notice">
+            <div class="icon icon-${
+                this.conclusion ? 
+                this.conclusion.toLowerCase() : 
+                this.status?.toLowerCase()
+            }"></div>
+            <div>${this.displayTitle} #${this.runNumber}: Manually run by
+                <img class="avatar-user" src="${this.avatarUrl}" />
+                ${this.githubUserName}
+            </div>
+            <div>
+                <vscode-link href="${this.htmlUrl}">Open workflow run</vscode-link>
+            </div>
         </div>
-        <div>
-          <vscode-link href="${this.htmlUrl}">Open workflow run</vscode-link>
-        </div>
-      </div>
     `
-  }
+    }
 }

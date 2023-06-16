@@ -13,27 +13,27 @@ import './closeCellButton'
 export class ShellOutputItems extends LitElement {
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
-    .output-items {
-      display: flex;
-      width: 101%;
-      justify-content: flex-end;
-    }
-    vscode-button {
-      background: transparent;
-      color: #ccc;
-      transform: scale(0.9);
-    }
-    vscode-button:hover {
-      background: var(--button-secondary-background);
-    }
-    vscode-button:focus {
-      outline: #007fd4 1px solid;
-    }
-    .icon {
-      width: 13px;
-      margin: 0 5px 0 -5px;
-      padding: 0;
-    }
+  .output-items {
+    display: flex;
+    width: 101%;
+    justify-content: flex-end;
+  }
+  vscode-button {
+    background: transparent;
+    color: #ccc;
+    transform: scale(.9);
+  }
+  vscode-button:hover {
+    background: var(--button-secondary-background);
+  }
+  vscode-button:focus {
+    outline: #007fd4 1px solid;
+  }
+  .icon {
+    width: 13px;
+    margin: 0 5px 0 -5px;
+    padding: 0;
+  }
   `
 
   @property({ type: String })
@@ -46,11 +46,11 @@ export class ShellOutputItems extends LitElement {
   render() {
     return html`<section class="output-items">
     <close-cell-button @closed="${() => {
-      return closeOutput({
-        uuid: this.uuid!,
-        outputType: OutputType.outputItems,
-      })
-    }}"></close-cell-button>
+        return closeOutput({
+          uuid: this.uuid!,
+          outputType: OutputType.outputItems
+        })
+      }}"></close-cell-button>
       <vscode-button appearance="secondary" @click="${this.#copy}">
         <svg
           class="icon" width="16" height="16" viewBox="0 0 16 16"
@@ -73,10 +73,10 @@ export class ShellOutputItems extends LitElement {
       return
     }
 
-    return navigator.clipboard.writeText(this.content).catch((err) =>
-      ctx.postMessage!(<ClientMessage<ClientMessages.errorMessage>>{
+    return navigator.clipboard.writeText(this.content).catch(
+      (err) => ctx.postMessage!(<ClientMessage<ClientMessages.errorMessage>>{
         type: ClientMessages.errorMessage,
-        output: `'Failed to copy to clipboard: ${err.message}!'`,
+        output: `'Failed to copy to clipboard: ${err.message}!'`
       })
     )
   }

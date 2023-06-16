@@ -15,12 +15,12 @@ import type { IEnvironmentManager } from '.'
 
 const DEFAULT_COMMAND = 'deploy'
 
-export async function vercel(
+export async function vercel (
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
   outputs: NotebookCellOutputManager,
-  runScript?: () => Promise<boolean>
+  runScript?: () => Promise<boolean>,
 ): Promise<boolean> {
   const command = doc.getText()
 
@@ -54,7 +54,7 @@ export async function vercel(
       .option('github', { type: 'boolean' })
       .option('gitlab', { type: 'boolean' })
       .option('bitbucket', { type: 'boolean' })
-    const vercelCommand = (await parsedArgv.argv)._[0] || DEFAULT_COMMAND
+    const vercelCommand = ((await parsedArgv.argv)._)[0] || DEFAULT_COMMAND
 
     /**
      * special commands handled by the kernel
@@ -73,10 +73,8 @@ export async function vercel(
      * other commands passed to the CLI
      */
     return runScript?.() ?? bash.call(this, exec, doc, outputs)
-  } catch (err: any) {
-    updateCellMetadata(exec.cell, {
-      'runme.dev/vercelState': { error: err.message, outputItems: [] },
-    })
+  } catch(err: any) {
+    updateCellMetadata(exec.cell, { 'runme.dev/vercelState': { error: err.message, outputItems: [] }})
     outputs.showOutput(OutputType.vercel)
 
     return false
@@ -89,29 +87,30 @@ export async function handleVercelDeployOutput(
   outputItems: Buffer[],
   index: number,
   prod: boolean,
-  environment?: IEnvironmentManager
+  environment?: IEnvironmentManager,
 ) {
-  const states = ['Queued', 'Building', 'Completing'].reverse()
+  const states = [
+    'Queued',
+    'Building',
+    'Completing',
+  ].reverse()
 
-  const status = (
-    states.find((s) =>
-      outputItems.find(
-        (oi) =>
-          oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
-      )
-    ) || 'pending'
-  ).replaceAll('Completing', 'complete')
+  const status = (states.find((s) =>
+    outputItems.find(
+      (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
+    )
+  ) || 'pending').replaceAll('Completing', 'complete')
   // should get this from API instead
   const projectName = await environment?.get('PROJECT_NAME')
 
   const vercelState: VercelState = {
     outputItems: outputItems.map((oi) => oi.toString()),
-    payload: { status, projectName, index, prod },
+    payload: { status, projectName, index, prod }
   }
 
   outputs.setState({
     type: OutputType.vercel,
-    state: vercelState,
+    state: vercelState
   })
 
   await outputs.showOutput(OutputType.vercel)

@@ -9,7 +9,7 @@ declare const INSTRUMENTATION_KEY: string
 const ext = new RunmeExtension()
 const log = getLogger()
 
-export async function activate(context: ExtensionContext) {
+export async function activate (context: ExtensionContext) {
   TelemetryReporter.configure(context, INSTRUMENTATION_KEY)
   log.info('Activating Extension')
   try {
@@ -22,7 +22,7 @@ export async function activate(context: ExtensionContext) {
   TelemetryReporter.sendTelemetryEvent('activate')
 }
 
-export function deactivate() {
+export function deactivate () {
   log.info('Deactivating Extension')
   TelemetryReporter.sendTelemetryEvent('deactivate')
 }

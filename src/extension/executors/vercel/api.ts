@@ -23,45 +23,37 @@ export interface VercelUser {
   }
 }
 
-export function getProject(
-  nameOrId: string,
-  headers = {}
-): Promise<VercelProject> {
-  return got(`https://api.vercel.com/v9/projects/${nameOrId}`, {
-    headers,
-  }).json()
+export function getProject (nameOrId: string, headers = {}): Promise<VercelProject> {
+  return got(`https://api.vercel.com/v9/projects/${nameOrId}`, { headers }).json()
 }
-export function getProjects(
-  teamId?: string,
-  headers = {}
-): Promise<VercelProjects> {
-  return got('https://api.vercel.com/v9/projects', {
-    headers,
-    searchParams: teamId ? { teamId } : {},
-  }).json()
+export function getProjects (teamId?: string, headers = {}): Promise<VercelProjects> {
+  return got(
+    'https://api.vercel.com/v9/projects',
+    {
+      headers,
+      searchParams: teamId ? { teamId } : {}
+    }
+  ).json()
 }
-export function getUser(headers = {}): Promise<VercelUser> {
+export function getUser (headers = {}): Promise<VercelUser> {
   return got('https://api.vercel.com/v2/user', { headers }).json()
 }
-export function listTeams(headers = {}): Promise<VercelTeams> {
+export function listTeams (headers = {}): Promise<VercelTeams> {
   return got('https://api.vercel.com/v2/teams', { headers }).json()
 }
-export function createProject(
-  projectName: string,
-  headers = {}
-): Promise<VercelProject> {
-  return got('https://api.vercel.com/v9/projects', {
-    headers,
-    method: 'POST',
-    json: {
-      name: projectName,
-      framework: null,
-    },
-  }).json()
+export function createProject (projectName: string, headers = {}): Promise<VercelProject> {
+  return got(
+    'https://api.vercel.com/v9/projects',
+    {
+      headers,
+      method: 'POST',
+      json: {
+        name: projectName,
+        framework: null
+      }
+    }
+  ).json()
 }
-export function cancelDeployment(id: string, headers = {}): Promise<void> {
-  return got(`https://api.vercel.com/v12/deployments/${id}/cancel`, {
-    headers,
-    method: 'PATCH',
-  }).json()
+export function cancelDeployment (id: string, headers = {}): Promise<void> {
+  return got(`https://api.vercel.com/v12/deployments/${id}/cancel`, { headers, method: 'PATCH' }).json()
 }

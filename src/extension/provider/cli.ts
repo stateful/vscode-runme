@@ -3,9 +3,7 @@ import vscode, { NotebookCellKind } from 'vscode'
 import { getAnnotations } from '../utils'
 
 export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
-  async provideCellStatusBarItems(
-    cell: vscode.NotebookCell
-  ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     if (cell.kind !== NotebookCellKind.Code) {
       return
     }

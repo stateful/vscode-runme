@@ -9,9 +9,4 @@ function initParserClient(transport: GrpcTransport): ParserServiceClient {
   return new ParserServiceClient(transport)
 }
 
-export {
-  ParserServiceClient,
-  RunnerServiceClient,
-  initParserClient,
-  HealthClient,
-}
+export { ParserServiceClient, RunnerServiceClient, initParserClient, HealthClient }
