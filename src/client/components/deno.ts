@@ -18,7 +18,7 @@ export class DenoOutput extends LitElement {
   static styles = css`
     :host {
       display: block;
-      font-family: Arial
+      font-family: Arial;
     }
 
     section {
@@ -75,17 +75,20 @@ export class DenoOutput extends LitElement {
     const project = this.project!
     const prodDomainMapping = project.productionDeployment?.domainMappings.reduce((acc, curr) =>
       // oldest is prod domain mapping
-      acc?.createdAt > curr.createdAt ? curr : acc)
+      acc?.createdAt > curr.createdAt ? curr : acc
+    )
     const deployment = this.deployments[0]
     return html`<section>
-      <img src="https://www.svgrepo.com/show/378789/deno.svg">
+      <img src="https://www.svgrepo.com/show/378789/deno.svg" />
       <div>
         <h4>Deployment</h4>
-        ${this.deployed ? html`
-          <vscode-link href="https://${deployment.domainMappings[0].domain}">
-            ${deployment.domainMappings[0].domain}
-          </vscode-link>
-        ` : html`Pending` }
+        ${this.deployed
+          ? html`
+              <vscode-link href="https://${deployment.domainMappings[0].domain}">
+                ${deployment.domainMappings[0].domain}
+              </vscode-link>
+            `
+          : html`Pending`}
         <h4>Project</h4>
         <vscode-link href="https://dash.deno.com/projects/${project.name}/deployments">
           ${project.name}
@@ -93,50 +96,58 @@ export class DenoOutput extends LitElement {
       </div>
       <div>
         <h4>Created At</h4>
-        ${this.deployed ? (new Date(deployment.createdAt)).toString() : 'Pending' }
+        ${this.deployed ? new Date(deployment.createdAt).toString() : 'Pending'}
         <h4>Status</h4>
-          ${this.deployed
-          ? ((supportsMessaging && this.promoted) ? 'Production' : 'Preview')
-            : html`Deploying <vscode-spinner />`}
-        ${when(this.deployed && supportsMessaging && !this.promoted, () => html`
-          <vscode-button
-            class="btnPromote"
-            @click="${() => this.#promote(deployment)}"
-            .disabled=${this.#isPromoting}
-          >
-            🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
-          </vscode-button>
-        `)}
-        ${when(this.deployed && supportsMessaging && this.promoted && project.hasProductionDeployment, () => html`
-          <p>
-            Promoted to 🚀:
-            <vscode-link href="https://${prodDomainMapping?.domain}">
-              ${prodDomainMapping?.domain}
-            </vscode-link>
-          </p>
-        `)}
+        ${this.deployed
+          ? supportsMessaging && this.promoted
+            ? 'Production'
+            : 'Preview'
+          : html`Deploying <vscode-spinner />`}
+        ${when(
+          this.deployed && supportsMessaging && !this.promoted,
+          () => html`
+            <vscode-button
+              class="btnPromote"
+              @click="${() => this.#promote(deployment)}"
+              .disabled=${this.#isPromoting}
+            >
+              🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
+            </vscode-button>
+          `
+        )}
+        ${when(
+          this.deployed && supportsMessaging && this.promoted && project.hasProductionDeployment,
+          () => html`
+            <p>
+              Promoted to 🚀:
+              <vscode-link href="https://${prodDomainMapping?.domain}">
+                ${prodDomainMapping?.domain}
+              </vscode-link>
+            </p>
+          `
+        )}
       </div>
     </section>`
   }
 
-  #promote (deployment: Deployment) {
+  #promote(deployment: Deployment) {
     const ctx = getContext()
     if (!ctx.postMessage) {
       return
     }
 
-    this.#isPromoting= true
+    this.#isPromoting = true
     this.requestUpdate()
     ctx.postMessage(<ClientMessage<ClientMessages.denoPromote>>{
       type: ClientMessages.denoPromote,
       output: {
         id: deployment.projectId,
         productionDeployment: deployment.id,
-      }
+      },
     })
   }
 
-  connectedCallback () {
+  connectedCallback() {
     super.connectedCallback()
     const ctx = getContext()
 

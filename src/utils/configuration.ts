@@ -23,23 +23,11 @@ type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
 const configurationSchema = {
   server: {
-    customAddress: z
-      .string()
-      .nonempty()
-      .optional(),
-    binaryPath: z
-      .string()
-      .optional(),
-    enableLogger: z
-      .boolean()
-      .default(false),
-    enableTLS: z
-      .boolean()
-      .default(true),
-    tlsDir: z
-      .string()
-      .nonempty()
-      .default(DEFAULT_TLS_DIR),
+    customAddress: z.string().nonempty().optional(),
+    binaryPath: z.string().optional(),
+    enableLogger: z.boolean().default(false),
+    enableTLS: z.boolean().default(true),
+    tlsDir: z.string().nonempty().default(DEFAULT_TLS_DIR),
   },
   notebookTerminal: {
     backgroundTask: z.boolean().default(true),
@@ -47,10 +35,10 @@ const configurationSchema = {
     interactive: z.boolean().default(true),
     fontSize: z.number().optional(),
     fontFamily: z.string().optional(),
-    rows: z.number().int()
+    rows: z.number().int(),
   },
   codelens: {
-    enable: z.boolean().default(true)
+    enable: z.boolean().default(true),
   },
   env: {
     workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
@@ -61,11 +49,14 @@ const configurationSchema = {
   },
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
-    enableShare: z.boolean().default(false)
-  }
+    enableShare: z.boolean().default(false),
+  },
 }
 
-const getServerConfigurationValue = <T>(configName: keyof typeof configurationSchema.server, defaultValue: T) => {
+const getServerConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.server,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(SERVER_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.server[configName].safeParse(configurationValue)
@@ -75,7 +66,10 @@ const getServerConfigurationValue = <T>(configName: keyof typeof configurationSc
   return defaultValue
 }
 
-const getRunmeTerminalConfigurationValue = <T>(configName: NotebookTerminalValue, defaultValue: T) => {
+const getRunmeTerminalConfigurationValue = <T>(
+  configName: NotebookTerminalValue,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
@@ -85,7 +79,10 @@ const getRunmeTerminalConfigurationValue = <T>(configName: NotebookTerminalValue
   return defaultValue
 }
 
-const getCodeLensConfigurationValue = <T>(configName: keyof typeof configurationSchema.codelens, defaultValue: T) => {
+const getCodeLensConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.codelens,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
@@ -95,7 +92,10 @@ const getCodeLensConfigurationValue = <T>(configName: keyof typeof configuration
   return defaultValue
 }
 
-const getEnvConfigurationValue = <T>(configName: keyof typeof configurationSchema.env, defaultValue: T) => {
+const getEnvConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.env,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(ENV_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.env[configName].safeParse(configurationValue)
@@ -105,7 +105,10 @@ const getEnvConfigurationValue = <T>(configName: keyof typeof configurationSchem
   return defaultValue
 }
 
-const getCloudConfigurationValue = <T>(configName: keyof typeof configurationSchema.app, defaultValue: T) => {
+const getCloudConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.app,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(APP_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.app[configName].safeParse(configurationValue)
@@ -115,7 +118,10 @@ const getCloudConfigurationValue = <T>(configName: keyof typeof configurationSch
   return defaultValue
 }
 
-const getCLIConfigurationValue = <T>(configName: keyof typeof configurationSchema.cli, defaultValue: T) => {
+const getCLIConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.cli,
+  defaultValue: T
+) => {
   const configurationSection = workspace.getConfiguration(CLI_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.cli[configName].safeParse(configurationValue)
@@ -168,7 +174,9 @@ const enableServerLogs = (): boolean => {
   return getServerConfigurationValue<boolean>('enableLogger', false)
 }
 
-const isNotebookTerminalFeatureEnabled = (featureName: keyof typeof configurationSchema.notebookTerminal): boolean => {
+const isNotebookTerminalFeatureEnabled = (
+  featureName: keyof typeof configurationSchema.notebookTerminal
+): boolean => {
   return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
@@ -183,11 +191,11 @@ const getNotebookTerminalFontFamily = (): string | undefined => {
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
   const { interactive, background } = getAnnotations(cell)
 
-  return interactive ?
-    background ?
-      isNotebookTerminalFeatureEnabled('backgroundTask') :
-      isNotebookTerminalFeatureEnabled('interactive') :
-    isNotebookTerminalFeatureEnabled('nonInteractive')
+  return interactive
+    ? background
+      ? isNotebookTerminalFeatureEnabled('backgroundTask')
+      : isNotebookTerminalFeatureEnabled('interactive')
+    : isNotebookTerminalFeatureEnabled('nonInteractive')
 }
 
 const getNotebookTerminalRows = (): number => {
@@ -201,9 +209,8 @@ const getCodeLensEnabled = (): boolean => {
 const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
   context.environmentVariableCollection.prepend(
     'PATH',
-    path.dirname(
-      getBinaryPath(context.extensionUri, os.platform()).fsPath
-    ) + (isWindows() ? ';' : ':'),
+    path.dirname(getBinaryPath(context.extensionUri, os.platform()).fsPath) +
+      (isWindows() ? ';' : ':')
   )
 }
 

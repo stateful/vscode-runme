@@ -39,7 +39,7 @@ abstract class Survey implements Disposable {
   }
 
   dispose() {
-    this.disposables.forEach(d => d.dispose())
+    this.disposables.forEach((d) => d.dispose())
   }
 
   protected async undo() {
@@ -63,23 +63,18 @@ export class WinDefaultShell extends Survey {
       return
     }
 
-    this.disposables.push(
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
-    )
+    this.disposables.push(workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)))
   }
 
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
     if (
       notebookType !== Kernel.type ||
-      this.context.globalState.get<boolean>(
-        WinDefaultShell.#id,
-        false
-      )
+      this.context.globalState.get<boolean>(WinDefaultShell.#id, false)
     ) {
       return
     }
 
-    await new Promise<void>(resolve => setTimeout(resolve, 2000))
+    await new Promise<void>((resolve) => setTimeout(resolve, 2000))
     await commands.executeCommand(WinDefaultShell.#id, false)
   }
 
@@ -92,7 +87,7 @@ export class WinDefaultShell extends Survey {
     const option = await window.showInformationMessage(
       'Please help us improve Runme on Windows: Click OK to share what default shell you are using.',
       'OK',
-      'Don\'t ask again',
+      "Don't ask again",
       'Dismiss'
     )
     if (option === 'Dismiss' || option === undefined) {
@@ -127,31 +122,33 @@ export class WinDefaultShell extends Survey {
     taskExecution.presentationOptions = {
       focus: false,
       reveal: TaskRevealKind.Never,
-      panel: TaskPanelKind.Dedicated
+      panel: TaskPanelKind.Dedicated,
     }
 
     const exitCode = await new Promise<number>((resolve) => {
       tasks.executeTask(taskExecution).then((execution) => {
-        this.disposables.push(tasks.onDidEndTaskProcess((e) => {
-          const taskId = (e.execution as any)['_id']
-          const executionId = (execution as any)['_id']
+        this.disposables.push(
+          tasks.onDidEndTaskProcess((e) => {
+            const taskId = (e.execution as any)['_id']
+            const executionId = (execution as any)['_id']
 
-          if (
-            taskId !== executionId ||
-            typeof e.exitCode === 'undefined'
-          ) {
-            return
-          }
+            if (taskId !== executionId || typeof e.exitCode === 'undefined') {
+              return
+            }
 
-          // non-zero exit code does not mean failure
-          resolve(e.exitCode)
-        }))
+            // non-zero exit code does not mean failure
+            resolve(e.exitCode)
+          })
+        )
       })
     })
 
     try {
       const output = readFileSync(tmpfile, { encoding: 'utf-8' }).trim()
-      TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', { output, exitCode: exitCode.toString() })
+      TelemetryReporter.sendTelemetryEvent('survey.WinDefaultShell', {
+        output,
+        exitCode: exitCode.toString(),
+      })
       await this.done()
       unlinkSync(tmpfile)
     } catch (err) {
@@ -165,9 +162,7 @@ export class WinDefaultShell extends Survey {
 export class SurveyWinCodeLensRun implements Disposable {
   static readonly #id: string = 'runme.surveyWinCodeLensRun'
 
-  constructor(
-    protected context: ExtensionContext
-  ) { }
+  constructor(protected context: ExtensionContext) {}
 
   shouldPrompt() {
     return isWindows()
@@ -175,10 +170,7 @@ export class SurveyWinCodeLensRun implements Disposable {
 
   async prompt(): Promise<void> {
     if (
-      this.context.globalState.get<boolean>(
-        SurveyWinCodeLensRun.#id,
-        false
-      ) ||
+      this.context.globalState.get<boolean>(SurveyWinCodeLensRun.#id, false) ||
       !this.shouldPrompt()
     ) {
       return
@@ -188,14 +180,16 @@ export class SurveyWinCodeLensRun implements Disposable {
       // eslint-disable-next-line max-len
       'Support for running scripts directly from markdown is currently not supported on Windows.\nPlease help us improve Runme on Windows: Click OK to share your interest in this feature.',
       'OK',
-      'Don\'t ask again',
+      "Don't ask again",
       'Dismiss'
     )
 
     switch (option) {
-      case 'OK': {
-        TelemetryReporter.sendTelemetryEvent('survey.WinCodeLensRun', { })
-      } break
+      case 'OK':
+        {
+          TelemetryReporter.sendTelemetryEvent('survey.WinCodeLensRun', {})
+        }
+        break
 
       case 'Dismiss': {
         return
@@ -209,7 +203,7 @@ export class SurveyWinCodeLensRun implements Disposable {
     await this.context.globalState.update(SurveyWinCodeLensRun.#id, true)
   }
 
-  dispose() { }
+  dispose() {}
 }
 
 export class SurveyActiveUserFeedback extends Survey {
@@ -217,17 +211,13 @@ export class SurveyActiveUserFeedback extends Survey {
   readonly #mid: string
   #displayed: boolean = false
 
-  constructor(
-    protected context: ExtensionContext
-  ) {
+  constructor(protected context: ExtensionContext) {
     super(context, SurveyActiveUserFeedback.#id)
     this.#mid = getNamespacedMid(SurveyActiveUserFeedback.#id)
 
     commands.registerCommand(SurveyActiveUserFeedback.#id, this.prompt.bind(this))
 
-    this.disposables.push(
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this))
-    )
+    this.disposables.push(workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)))
   }
 
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
@@ -241,7 +231,9 @@ export class SurveyActiveUserFeedback extends Survey {
     }
 
     try {
-      const response = await fetch(`https://runme.dev/api/survey?name=feedback&mid=${vscode.env.machineId}`)
+      const response = await fetch(
+        `https://runme.dev/api/survey?name=feedback&mid=${vscode.env.machineId}`
+      )
       if (response.status === 404) {
         // no match, try again next session
         this.#displayed = true
@@ -257,7 +249,7 @@ export class SurveyActiveUserFeedback extends Survey {
       return
     }
 
-    await new Promise<void>(resolve => setTimeout(resolve, 2000))
+    await new Promise<void>((resolve) => setTimeout(resolve, 2000))
     await commands.executeCommand(SurveyActiveUserFeedback.#id, false)
   }
 
@@ -269,9 +261,9 @@ export class SurveyActiveUserFeedback extends Survey {
     }
 
     const option = await window.showInformationMessage(
-      'We\'d love to hear how we can improve Runme for you. Please click OK to open the feedback form. Takes <1min.',
+      "We'd love to hear how we can improve Runme for you. Please click OK to open the feedback form. Takes <1min.",
       'OK',
-      'Don\'t ask again',
+      "Don't ask again",
       'Dismiss'
     )
     this.#displayed = true
@@ -284,7 +276,10 @@ export class SurveyActiveUserFeedback extends Survey {
     }
 
     TelemetryReporter.sendTelemetryEvent('survey.ActiveUserFeedback', { never: 'false' })
-    await commands.executeCommand('vscode.open', Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`))
+    await commands.executeCommand(
+      'vscode.open',
+      Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`)
+    )
     await this.done()
   }
 }

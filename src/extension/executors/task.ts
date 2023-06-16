@@ -1,9 +1,15 @@
 import path from 'node:path'
 
 import {
-  Task, TextDocument, NotebookCellExecution, TaskScope, tasks,
-  window, TaskRevealKind, TaskPanelKind,
-  ShellExecution
+  Task,
+  TextDocument,
+  NotebookCellExecution,
+  TaskScope,
+  tasks,
+  window,
+  TaskRevealKind,
+  TaskPanelKind,
+  ShellExecution,
 } from 'vscode'
 
 import getLogger from '../logger'
@@ -20,10 +26,10 @@ const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
 const log = getLogger('taskExecutor')
 
-export function closeTerminalByEnvID (id: string, kill?: boolean) {
-  const terminal = window.terminals.find(t => getTerminalRunmeId(t) === id)
+export function closeTerminalByEnvID(id: string, kill?: boolean) {
+  const terminal = window.terminals.find((t) => getTerminalRunmeId(t) === id)
   if (terminal) {
-    if(kill) {
+    if (kill) {
       terminal.dispose()
     } else {
       terminal.hide()
@@ -35,7 +41,7 @@ async function taskExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
 
@@ -54,7 +60,7 @@ async function taskExecutor(
     RUNME_TASK: 'true',
     // eslint-disable-next-line @typescript-eslint/naming-convention
     RUNME_ID,
-    ...stateEnv
+    ...stateEnv,
   }
 
   // skip empty scripts, eg env exports
@@ -74,9 +80,7 @@ async function taskExecutor(
   const taskExecution = new Task(
     { type: 'shell', name: `Runme Task (${RUNME_ID})` },
     TaskScope.Workspace,
-    cellText.length > LABEL_LIMIT
-      ? `${cellText.slice(0, LABEL_LIMIT)}...`
-      : cellText,
+    cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText,
     'exec',
     new ShellExecution(cmdLine, { cwd, env })
     // experimental only
@@ -90,21 +94,23 @@ async function taskExecutor(
     focus: true,
     // why doesn't this work with Slient?
     reveal: annotations.background ? TaskRevealKind.Never : TaskRevealKind.Always,
-    panel: annotations.background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
+    panel: annotations.background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
   }
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
-    this.context.subscriptions.push(exec.token.onCancellationRequested(() => {
-      try {
-        execution.terminate()
-        closeTerminalByEnvID(RUNME_ID)
-        resolve(0)
-      } catch (err: any) {
-        log.error(`Failed to terminate task: ${(err as Error).message}`)
-        resolve(1)
-      }
-    }))
+    this.context.subscriptions.push(
+      exec.token.onCancellationRequested(() => {
+        try {
+          execution.terminate()
+          closeTerminalByEnvID(RUNME_ID)
+          resolve(0)
+        } catch (err: any) {
+          log.error(`Failed to terminate task: ${(err as Error).message}`)
+          resolve(1)
+        }
+      })
+    )
 
     tasks.onDidEndTaskProcess((e) => {
       const taskId = (e.execution as any)['_id']
@@ -121,7 +127,8 @@ async function taskExecutor(
         /**
          * we don't have an exit code
          */
-        typeof e.exitCode === 'undefined') {
+        typeof e.exitCode === 'undefined'
+      ) {
         return
       }
 
@@ -137,16 +144,14 @@ async function taskExecutor(
   })
 
   if (annotations.background) {
-    const giveItTime = new Promise<boolean>(
-      (resolve) => setTimeout(() => {
+    const giveItTime = new Promise<boolean>((resolve) =>
+      setTimeout(() => {
         closeTerminalByEnvID(RUNME_ID)
         return resolve(true)
-      }, BACKGROUND_TASK_HIDE_TIMEOUT))
+      }, BACKGROUND_TASK_HIDE_TIMEOUT)
+    )
 
-    return Promise.race([
-      p.then((exitCode) => exitCode === 0),
-      giveItTime,
-    ])
+    return Promise.race([p.then((exitCode) => exitCode === 0), giveItTime])
   }
 
   /**
@@ -154,7 +159,7 @@ async function taskExecutor(
    * when extension terminates
    */
   this.context.subscriptions.push({
-    dispose: () => execution.terminate()
+    dispose: () => execution.terminate(),
   })
 
   return !Boolean(await p)

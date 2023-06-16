@@ -62,16 +62,25 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
         case OutputType.annotations:
           const annoElem = document.createElement(RENDERERS.EditAnnotations)
           annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
-          annoElem.setAttribute('validationErrors', JSON.stringify(payload.output.validationErrors ?? []))
+          annoElem.setAttribute(
+            'validationErrors',
+            JSON.stringify(payload.output.validationErrors ?? [])
+          )
           element.appendChild(annoElem)
           break
         case OutputType.terminal:
           const terminalElement = document.createElement(RENDERERS.TerminalView)
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
-          terminalElement.setAttribute('terminalFontSize', payload.output.terminalFontSize.toString())
+          terminalElement.setAttribute(
+            'terminalFontSize',
+            payload.output.terminalFontSize.toString()
+          )
           if (payload.output.enableShareButton) {
-            terminalElement.setAttribute('enableShareButton', payload.output.enableShareButton.toString())
+            terminalElement.setAttribute(
+              'enableShareButton',
+              payload.output.enableShareButton.toString()
+            )
           }
           if (payload.output.initialRows !== undefined) {
             terminalElement.setAttribute('initialRows', payload.output.initialRows.toString())
@@ -93,7 +102,8 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           }
           element.appendChild(githubElement)
           break
-        default: element.innerHTML = 'No renderer found!'
+        default:
+          element.innerHTML = 'No renderer found!'
       }
 
       function renderError(message: string) {
@@ -103,6 +113,6 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
     disposeOutputItem(/* outputId */) {
       // Do any teardown here. outputId is the cell output being deleted, or
       // undefined if we're clearing all outputs.
-    }
+    },
   }
 }

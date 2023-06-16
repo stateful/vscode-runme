@@ -4,7 +4,14 @@ import fs from 'node:fs/promises'
 
 import got from 'got'
 import getPort from 'get-port'
-import { NotebookCellExecution, NotebookCellOutputItem, NotebookCellOutput, window, env, Uri } from 'vscode'
+import {
+  NotebookCellExecution,
+  NotebookCellOutputItem,
+  NotebookCellOutput,
+  window,
+  env,
+  Uri,
+} from 'vscode'
 import type { Argv } from 'yargs'
 
 import { renderError } from '../utils'
@@ -17,7 +24,7 @@ const LOGIN_OPTIONS = [
   'Continue with GitLab',
   'Continue with Bitbucket',
   'Continue with Email',
-  'Continue with SAML Single Sign-On'
+  'Continue with SAML Single Sign-On',
 ]
 
 interface VercelCLILogin {
@@ -26,18 +33,17 @@ interface VercelCLILogin {
   bitbucket: boolean
 }
 
-export async function login (
+export async function login(
   exec: NotebookCellExecution,
   argv: Argv<VercelCLILogin>,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   const args = await argv.argv
-  const method = (
+  const method =
     (args.github && 'github') ||
     (args.gitlab && 'gitlab') ||
     (args.bitbucket && 'bitbucket') ||
-    await window.showQuickPick(LOGIN_OPTIONS)
-  )
+    (await window.showQuickPick(LOGIN_OPTIONS))
 
   if (!method) {
     renderError(outputs, 'Please select login method.')
@@ -77,7 +83,7 @@ export async function login (
 
     res.writeHead(301, {
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      'Location': `https://vercel.com/notifications/cli-login-success?email=${queryObject.email}`
+      Location: `https://vercel.com/notifications/cli-login-success?email=${queryObject.email}`,
     })
     res.end()
     return resolve(queryObject)
@@ -86,33 +92,42 @@ export async function login (
 
   try {
     // eslint-disable-next-line max-len
-    await env.openExternal(Uri.parse(`https://vercel.com/api/registration/login-with-github?mode=login&next=http%3A%2F%2Flocalhost%3A${port}`))
-    const { token } = await authPromise as any
-    const verifyResponse = await got(`https://api.vercel.com/registration/verify?token=${token}`).json() as any
+    await env.openExternal(
+      Uri.parse(
+        `https://vercel.com/api/registration/login-with-github?mode=login&next=http%3A%2F%2Flocalhost%3A${port}`
+      )
+    )
+    const { token } = (await authPromise) as any
+    const verifyResponse = (await got(
+      `https://api.vercel.com/registration/verify?token=${token}`
+    ).json()) as any
     const configFilePath = await getConfigFilePath()
     await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
     server.close()
   } catch (err: any) {
-    outputs.replaceOutputs(new NotebookCellOutput([
-      NotebookCellOutputItem.text(err.message)
-    ]))
+    outputs.replaceOutputs(new NotebookCellOutput([NotebookCellOutputItem.text(err.message)]))
     return false
   }
 
-  const { username } = await authPromise as any
-  outputs.replaceOutputs(new NotebookCellOutput([
-    NotebookCellOutputItem.text(`Logged in as ${username}`)
-  ]))
+  const { username } = (await authPromise) as any
+  outputs.replaceOutputs(
+    new NotebookCellOutput([NotebookCellOutputItem.text(`Logged in as ${username}`)])
+  )
   return true
 }
 
-export async function logout (exec: NotebookCellExecution, outputs: NotebookCellOutputManager): Promise<boolean> {
+export async function logout(
+  exec: NotebookCellExecution,
+  outputs: NotebookCellOutputManager
+): Promise<boolean> {
   let token = await getAuthToken()
 
   if (!token) {
-    outputs.replaceOutputs(new NotebookCellOutput([
-      NotebookCellOutputItem.text('Not currently logged in, so logout did nothing')
-    ]))
+    outputs.replaceOutputs(
+      new NotebookCellOutput([
+        NotebookCellOutputItem.text('Not currently logged in, so logout did nothing'),
+      ])
+    )
     return true
   }
 
@@ -124,7 +139,7 @@ export async function logout (exec: NotebookCellExecution, outputs: NotebookCell
     const headers = { Authorization: `Bearer ${token}` }
     await got('https://api.vercel.com/v3/user/tokens/current', {
       method: 'DELETE',
-      headers
+      headers,
     })
   } catch (err: any) {
     if (err.status === 403) {
@@ -145,8 +160,6 @@ export async function logout (exec: NotebookCellExecution, outputs: NotebookCell
     return false
   }
 
-  outputs.replaceOutputs(new NotebookCellOutput([
-    NotebookCellOutputItem.text('Logged out!')
-  ]))
+  outputs.replaceOutputs(new NotebookCellOutput([NotebookCellOutputItem.text('Logged out!')]))
   return true
 }

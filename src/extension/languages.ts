@@ -9,7 +9,9 @@ import { LANGUAGES } from '../constants'
 export default class Languages {
   private readonly modulOperations: ModelOperations
 
-  private static NODE_MODEL_JSON_FUNC = (basePath: string): () => Promise<{ [key: string]: any }> => {
+  private static NODE_MODEL_JSON_FUNC = (
+    basePath: string
+  ): (() => Promise<{ [key: string]: any }>) => {
     return async () => {
       return new Promise<any>((resolve, reject) => {
         fs.readFile(path.resolve(basePath, 'model', 'model.json'), (err, data) => {
@@ -23,7 +25,7 @@ export default class Languages {
     }
   }
 
-  private static NODE_WEIGHTS_FUNC = (basePath: string): () => Promise<ArrayBuffer> => {
+  private static NODE_WEIGHTS_FUNC = (basePath: string): (() => Promise<ArrayBuffer>) => {
     return async () => {
       return new Promise<ArrayBuffer>((resolve, reject) => {
         fs.readFile(path.resolve(basePath, 'model', 'group1-shard1of1.bin'), (err, data) => {
@@ -61,7 +63,12 @@ export default class Languages {
 
   public static biased(platform: string, results: ModelResult[]): string | undefined {
     let top = results.slice(0, 3)
-    const pstdev = Math.sqrt(stdev(top.map(r => r.confidence), true))
+    const pstdev = Math.sqrt(
+      stdev(
+        top.map((r) => r.confidence),
+        true
+      )
+    )
     // if it's tight at the top (< 1% variance) look for execs
     while (pstdev < 0.01 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {
       if (top.length <= 0) {
@@ -75,7 +82,7 @@ export default class Languages {
 
   public static normalizeSource(source: string): string {
     const lines = source.split('\n')
-    const normed = lines.filter(l => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+    const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
     return normed.join('\n')
   }
 }
@@ -83,6 +90,10 @@ export default class Languages {
 // https://www.w3resource.com/javascript-exercises/fundamental/javascript-fundamental-exercise-225.php
 const stdev = (arr: any[], usePopulation = false) => {
   const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length
-  return arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc: any, val: any) => acc + val, 0) /
+  return (
+    arr
+      .reduce((acc, val) => acc.concat((val - mean) ** 2), [])
+      .reduce((acc: any, val: any) => acc + val, 0) /
     (arr.length - (usePopulation ? 0 : 1))
+  )
 }

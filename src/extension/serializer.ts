@@ -40,15 +40,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
 
-  constructor(
-    protected context: ExtensionContext,
-    protected kernel: Kernel
-  ) {
+  constructor(protected context: ExtensionContext, protected kernel: Kernel) {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
-      workspace.onDidChangeNotebookDocument(
-        this.handleNotebookChanged.bind(this)
-      ),
+      workspace.onDidChangeNotebookDocument(this.handleNotebookChanged.bind(this))
       // workspace.onDidSaveNotebookDocument(
       //   this.handleNotebookSaved.bind(this)
       // )
@@ -56,9 +51,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   }
 
   public dispose() {
-    this.disposables.forEach(d => d.dispose())
+    this.disposables.forEach((d) => d.dispose())
   }
-
 
   /**
    * Handle newly added cells (live edits) to have UUIDs
@@ -92,7 +86,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
 
     const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName = (updatedCell.metadata as Serializer.Metadata|undefined)?.['runme.dev/name']
+      const updatedName = (updatedCell.metadata as Serializer.Metadata | undefined)?.[
+        'runme.dev/name'
+      ]
       if (!updatedName) {
         return []
       }
@@ -100,9 +96,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const oldCell = cellAt(i)
       return [
         NotebookEdit.updateCellMetadata(i, {
-          ...oldCell.metadata || {},
+          ...(oldCell.metadata || {}),
           'runme.dev/name': updatedName,
-        } as Serializer.Metadata)
+        } as Serializer.Metadata),
       ]
     })
 
@@ -112,13 +108,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     await workspace.applyEdit(edit)
   }
 
-  public static addCellUuid(
-    metadata: Serializer.Metadata | undefined
-  ): {
+  public static addCellUuid(metadata: Serializer.Metadata | undefined): {
     [key: string]: any
   } {
     return {
-      ...metadata || {},
+      ...(metadata || {}),
       ...{ 'runme.dev/uuid': uuidv4() },
     }
   }
@@ -136,7 +130,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   ): Promise<Uint8Array> {
     await this.preSaveCheck()
 
-    const transformedCells = data.cells.map(cell => {
+    const transformedCells = data.cells.map((cell) => {
       return {
         ...cell,
         languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
@@ -190,11 +184,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const cells = notebook.cells ?? []
       notebook.cells = await Promise.all(
         cells.map((elem) => {
-          if (
-            elem.kind === NotebookCellKind.Code &&
-            elem.value &&
-            (elem.languageId || '') === ''
-          ) {
+          if (elem.kind === NotebookCellKind.Code && elem.value && (elem.languageId || '') === '') {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               if (guessed) {
@@ -225,28 +215,24 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   protected async preSaveCheck() {
     if (!window.activeNotebookEditor) {
-      throw new Error('Could\'t save notebook as it is not active!')
+      throw new Error("Could't save notebook as it is not active!")
     }
 
     if (!(await canEditFile(window.activeNotebookEditor.notebook))) {
       const errorMessage =
         'You are writing to a file that is not version controlled! ' +
-        'Runme\'s authoring features are in early stages and require hardening. ' +
-        'We wouldn\'t want you to loose important data. Please version track your file first ' +
+        "Runme's authoring features are in early stages and require hardening. " +
+        "We wouldn't want you to loose important data. Please version track your file first " +
         'or disable this restriction in the VS Code settings.'
-      window
-        .showErrorMessage(errorMessage, 'Open Runme Settings')
-        .then((openSettings) => {
-          if (openSettings) {
-            return commands.executeCommand(
-              'workbench.action.openSettings',
-              'runme.flags.disableSaveRestriction'
-            )
-          }
-        })
-      throw new Error(
-        'saving non version controlled notebooks is disabled by default.'
-      )
+      window.showErrorMessage(errorMessage, 'Open Runme Settings').then((openSettings) => {
+        if (openSettings) {
+          return commands.executeCommand(
+            'workbench.action.openSettings',
+            'runme.flags.disableSaveRestriction'
+          )
+        }
+      })
+      throw new Error('saving non version controlled notebooks is disabled by default.')
     }
 
     const err = await this.ready
@@ -266,11 +252,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           elem.languageId || DEFAULT_LANG_ID
         )
       } else {
-        cell = new NotebookCellData(
-          NotebookCellKind.Markup,
-          elem.value,
-          'markdown'
-        )
+        cell = new NotebookCellData(NotebookCellKind.Markup, elem.value, 'markdown')
       }
 
       if (cell.kind === NotebookCellKind.Code) {
@@ -289,16 +271,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public static normalize(source: string): string {
     const lines = source.split('\n')
-    const normed = lines.filter(
-      (l) => !(l.trim().startsWith('```') || l.trim().endsWith('```'))
-    )
+    const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
     return normed.join('\n')
   }
 
   protected printCell(content: string, languageId = 'markdown') {
-    return new NotebookData([
-      new NotebookCellData(NotebookCellKind.Markup, content, languageId),
-    ])
+    return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
   }
 }
 
@@ -307,11 +285,7 @@ export class WasmSerializer extends SerializerBase {
 
   constructor(protected context: ExtensionContext, kernel: Kernel) {
     super(context, kernel)
-    const wasmUri = Uri.joinPath(
-      this.context.extensionUri,
-      'wasm',
-      'runme.wasm'
-    )
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     this.ready = initWasm(wasmUri)
   }
 
@@ -350,13 +324,9 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
 
-  private serverReadyListener: Disposable|undefined
+  private serverReadyListener: Disposable | undefined
 
-  constructor(
-    protected context: ExtensionContext,
-    protected server: RunmeServer,
-    kernel: Kernel
-  ) {
+  constructor(protected context: ExtensionContext, protected server: RunmeServer, kernel: Kernel) {
     super(context, kernel)
 
     this.ready = new Promise((resolve) => {
@@ -366,11 +336,13 @@ export class GrpcSerializer extends SerializerBase {
       })
     })
 
-    this.serverReadyListener = server.onTransportReady(({ transport }) => this.initParserClient(transport))
+    this.serverReadyListener = server.onTransportReady(({ transport }) =>
+      this.initParserClient(transport)
+    )
   }
 
   private async initParserClient(transport?: GrpcTransport) {
-    this.client = initParserClient(transport ?? await this.server.transport())
+    this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
   protected async saveNotebook(
@@ -406,7 +378,7 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     // we can remove ugly casting once we switch to GRPC
-    return (notebook as unknown) as Serializer.Notebook
+    return notebook as unknown as Serializer.Notebook
   }
 
   public dispose(): void {

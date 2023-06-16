@@ -12,22 +12,27 @@ import type { VercelState } from '../../../types'
 import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
 import getLogger from '../../logger'
 
-import { listTeams, getUser, getProject, getProjects, createProject, cancelDeployment, VercelProject } from './api'
+import {
+  listTeams,
+  getUser,
+  getProject,
+  getProjects,
+  createProject,
+  cancelDeployment,
+  VercelProject,
+} from './api'
 import { getAuthToken, quickPick, updateGitIgnore, createVercelFile } from './utils'
 import { VERCEL_DIR } from './constants'
 
 const REPLACEMENT = '-'
-const LINK_OPTIONS = [
-  'Link Project to existing Vercel project',
-  'Create a new Vercel Project'
-]
+const LINK_OPTIONS = ['Link Project to existing Vercel project', 'Create a new Vercel Project']
 const log = getLogger('Vercel - deploy')
 
-export async function deploy (
+export async function deploy(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   let token = await getAuthToken()
   const cwd = path.dirname(doc.uri.fsPath)
@@ -39,7 +44,7 @@ export async function deploy (
     if (!token) {
       token = await window.showInputBox({
         title: 'Vercel Access Token',
-        prompt: 'Please enter a valid access token to run a Vercel deployment.'
+        prompt: 'Please enter a valid access token to run a Vercel deployment.',
       })
     }
 
@@ -50,7 +55,7 @@ export async function deploy (
     const clientParams: VercelClientOptions = {
       token,
       path: cwd,
-      debug: false
+      debug: false,
     }
     const deployParams: DeploymentOptions = {}
     const headers = { Authorization: `Bearer ${token}` }
@@ -59,8 +64,10 @@ export async function deploy (
      * check if project is linked
      */
     const vercelConfigPath = path.resolve(cwd, VERCEL_DIR, 'project.json')
-    const hasVercelConfig = await fs.access(vercelConfigPath)
-      .then(() => true, () => false)
+    const hasVercelConfig = await fs.access(vercelConfigPath).then(
+      () => true,
+      () => false
+    )
     if (!hasVercelConfig) {
       const linkProject = await quickPick(
         'Project is not linked yet, what do you like to do?',
@@ -70,12 +77,13 @@ export async function deploy (
 
       const { teams } = await listTeams(headers)
       const { user } = await getUser(headers)
-      const scope = await quickPick(
-        'Which scope do you want to deploy to?',
-        [ user.username, ...teams.map((t) => t.slug) ]
-      ) as string
+      const scope = (await quickPick('Which scope do you want to deploy to?', [
+        user.username,
+        ...teams.map((t) => t.slug),
+      ])) as string
       const org = scope === user.username ? user : teams.find((t) => t.slug === scope)
-      const orgSlug = scope === user.username ? user.username : teams.find((t) => t.slug === scope)?.slug
+      const orgSlug =
+        scope === user.username ? user.username : teams.find((t) => t.slug === scope)?.slug
 
       if (linkProject) {
         const { projects } = await getProjects(scope === user.username ? undefined : scope, headers)
@@ -93,7 +101,7 @@ export async function deploy (
         const projectName = await window.showInputBox({
           title: 'Vercel Project Name',
           prompt: 'Enter a name for the new project!',
-          value: suggestion
+          value: suggestion,
         })
 
         if (!projectName) {
@@ -119,13 +127,15 @@ export async function deploy (
         (selection) => frameworkList.find((f) => f.name === selection[0].label)
       )
       deployParams.projectSettings = {
-        framework: framework.slug
+        framework: framework.slug,
       }
     } else {
       /**
        * get project information (e.g. name to be able to deploy)
        */
-      const { projectId } = JSON.parse((await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString())
+      const { projectId } = JSON.parse(
+        (await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString()
+      )
       const project = await getProject(projectId, headers)
       deployParams.name = project.name
     }
@@ -136,13 +146,15 @@ export async function deploy (
     log.info(`Deploy project "${deployParams.name}"`)
     let deploymentId: string | null = null
     let deployCanceled = false
-    this.context.subscriptions.push(exec.token.onCancellationRequested(async () => {
-      if (!deploymentId) {
-        return
-      }
-      await cancelDeployment(deploymentId, headers)
-      deployCanceled = true
-    }))
+    this.context.subscriptions.push(
+      exec.token.onCancellationRequested(async () => {
+        if (!deploymentId) {
+          return
+        }
+        await cancelDeployment(deploymentId, headers)
+        deployCanceled = true
+      })
+    )
     for await (const event of createDeployment(clientParams, deployParams)) {
       if (event.type === 'error') {
         throw Error(event.payload.message)
@@ -164,7 +176,9 @@ export async function deploy (
       }
     }
   } catch (err: any) {
-    updateCellMetadata(exec.cell, { 'runme.dev/vercelState': { error: err.message, outputItems: [] }})
+    updateCellMetadata(exec.cell, {
+      'runme.dev/vercelState': { error: err.message, outputItems: [] },
+    })
     outputs.showOutput(OutputType.vercel)
 
     return false

@@ -10,7 +10,7 @@ export enum OutputType {
   annotations = 'stateful.runme/annotations',
   terminal = 'stateful.runme/terminal',
   error = 'stateful.runme/error',
-  github = 'stateful.runme/github-stdout'
+  github = 'stateful.runme/github-stdout',
 }
 
 export enum ClientMessages {
@@ -45,66 +45,68 @@ export enum ClientMessages {
   activeThemeChanged = 'theme:changed',
   githubWorkflowDispatch = 'github:workflowDispatch',
   githubWorkflowDeploy = 'github:workflowDeploy',
-  githubWorkflowStatusUpdate = 'github:workflowStatusUpdate'
+  githubWorkflowStatusUpdate = 'github:workflowStatusUpdate',
 }
 
 // [pretty print, languageId, destination]
-export const LANGUAGES = new Map([
-  ['Assembly', 'asm', 'sh'],
-  ['Batchfile', 'bat', 'sh'],
-  ['C', 'c', undefined],
-  ['C#', 'cs', undefined],
-  ['C++', 'cpp', undefined],
-  ['Clojure', 'clj', undefined],
-  ['CMake', 'cmake', 'sh'],
-  ['COBOL', 'cbl', 'null'],
-  ['CoffeeScript', 'coffee', 'html'],
-  ['CSS', 'css', undefined],
-  ['CSV', 'csv', undefined],
-  ['Dart', 'dart', undefined],
-  ['DM', 'dm', undefined],
-  ['Dockerfile', 'dockerfile', 'sh'],
-  ['Elixir', 'ex', undefined],
-  ['Erlang', 'erl', undefined],
-  ['Fortran', 'f90', undefined],
-  ['Go', 'go', undefined],
-  ['Groovy', 'groovy', undefined],
-  ['Haskell', 'hs', undefined],
-  ['HTML', 'html', undefined],
-  ['INI', 'ini', undefined],
-  ['Java', 'java', undefined],
-  ['JavaScript', 'js', undefined],
-  ['JSON', 'json', undefined],
-  ['Julia', 'jl', undefined],
-  ['Kotlin', 'kt', undefined],
-  ['Lisp', 'lisp', undefined],
-  ['Lua', 'lua', undefined],
-  ['Makefile', 'makefile', 'sh'],
-  ['Markdown', 'md', undefined],
-  ['Matlab', 'matlab', undefined],
-  ['Objective-C', 'mm', undefined],
-  ['OCaml', 'ml', undefined],
-  ['Pascal', 'pas', undefined],
-  ['Perl', 'pm', undefined],
-  ['PHP', 'php', undefined],
-  ['PowerShell', 'ps1', undefined],
-  ['Prolog', 'prolog', undefined],
-  ['Python', 'py', undefined],
-  ['R', 'r', undefined],
-  ['Ruby', 'rb', undefined],
-  ['Rust', 'rs', undefined],
-  ['Scala', 'scala', undefined],
-  ['Shell', 'sh', 'sh'],
-  ['SQL', 'sql', undefined],
-  ['Swift', 'swift', undefined],
-  ['TeX', 'tex', undefined],
-  ['TOML', 'toml', undefined],
-  ['TypeScript', 'ts', undefined],
-  ['Verilog', 'v', undefined],
-  ['Visual Basic', 'vba', undefined],
-  ['XML', 'xml', undefined],
-  ['YAML', 'yaml', undefined],
-].map(([, source, dest]) => [source, dest]))
+export const LANGUAGES = new Map(
+  [
+    ['Assembly', 'asm', 'sh'],
+    ['Batchfile', 'bat', 'sh'],
+    ['C', 'c', undefined],
+    ['C#', 'cs', undefined],
+    ['C++', 'cpp', undefined],
+    ['Clojure', 'clj', undefined],
+    ['CMake', 'cmake', 'sh'],
+    ['COBOL', 'cbl', 'null'],
+    ['CoffeeScript', 'coffee', 'html'],
+    ['CSS', 'css', undefined],
+    ['CSV', 'csv', undefined],
+    ['Dart', 'dart', undefined],
+    ['DM', 'dm', undefined],
+    ['Dockerfile', 'dockerfile', 'sh'],
+    ['Elixir', 'ex', undefined],
+    ['Erlang', 'erl', undefined],
+    ['Fortran', 'f90', undefined],
+    ['Go', 'go', undefined],
+    ['Groovy', 'groovy', undefined],
+    ['Haskell', 'hs', undefined],
+    ['HTML', 'html', undefined],
+    ['INI', 'ini', undefined],
+    ['Java', 'java', undefined],
+    ['JavaScript', 'js', undefined],
+    ['JSON', 'json', undefined],
+    ['Julia', 'jl', undefined],
+    ['Kotlin', 'kt', undefined],
+    ['Lisp', 'lisp', undefined],
+    ['Lua', 'lua', undefined],
+    ['Makefile', 'makefile', 'sh'],
+    ['Markdown', 'md', undefined],
+    ['Matlab', 'matlab', undefined],
+    ['Objective-C', 'mm', undefined],
+    ['OCaml', 'ml', undefined],
+    ['Pascal', 'pas', undefined],
+    ['Perl', 'pm', undefined],
+    ['PHP', 'php', undefined],
+    ['PowerShell', 'ps1', undefined],
+    ['Prolog', 'prolog', undefined],
+    ['Python', 'py', undefined],
+    ['R', 'r', undefined],
+    ['Ruby', 'rb', undefined],
+    ['Rust', 'rs', undefined],
+    ['Scala', 'scala', undefined],
+    ['Shell', 'sh', 'sh'],
+    ['SQL', 'sql', undefined],
+    ['Swift', 'swift', undefined],
+    ['TeX', 'tex', undefined],
+    ['TOML', 'toml', undefined],
+    ['TypeScript', 'ts', undefined],
+    ['Verilog', 'v', undefined],
+    ['Visual Basic', 'vba', undefined],
+    ['XML', 'xml', undefined],
+    ['YAML', 'yaml', undefined],
+  ].map(([, source, dest]) => [source, dest])
+)
 
 /**
  * Map from vscode language id to how it should be represented in markdown
@@ -113,9 +115,9 @@ export const LANGUAGES = new Map([
  * "shellscript," so this object maps "shellscript" -> "sh"
  */
 export const VSCODE_LANGUAGEID_MAP: Record<string, string | undefined> = {
-  'shellscript': 'sh',
-  'javascriptreact': 'jsx',
-  'typescriptreact': 'tsx',
+  shellscript: 'sh',
+  javascriptreact: 'jsx',
+  typescriptreact: 'tsx',
 }
 
 export const DEFAULT_LANGUAGEID = 'shellscript'
@@ -136,7 +138,7 @@ export enum RENDERERS {
 }
 
 export enum AuthenticationProviders {
-  GitHub = 'github'
+  GitHub = 'github',
 }
 export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
 export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'
@@ -240,7 +242,7 @@ export const LANGUAGE_PREFIXES = {
   cpy: 'COBOL',
   css: 'CSS',
   csv: 'CSV',
-  capnp: 'Cap\'n Proto',
+  capnp: "Cap'n Proto",
   mss: 'CartoCSS',
   ceylon: 'Ceylon',
   chpl: 'Chapel',
@@ -719,7 +721,7 @@ export const LANGUAGE_PREFIXES = {
   pyp: 'Python',
   pyt: 'Python',
   pyw: 'Python',
-  rpy: 'Ren\'Py',
+  rpy: "Ren'Py",
   tac: 'Python',
   wsgi: 'Python',
   xpy: 'Python',
@@ -1035,15 +1037,22 @@ export const LANGUAGE_PREFIXES = {
   'rst.txt': 'reStructuredText',
   wisp: 'wisp',
   prg: 'xBase',
-  prw: 'xBase'
+  prw: 'xBase',
 }
 
 export const SUPPORTED_FILE_EXTENSIONS = [
-  'sh', 'bash', 'ksh', 'zsh', 'fish', 'bat', 'cmd', 'pwsh',
+  'sh',
+  'bash',
+  'ksh',
+  'zsh',
+  'fish',
+  'bat',
+  'cmd',
+  'pwsh',
   ...Object.keys(LANGUAGE_PREFIXES),
 ]
 
 export const EXTENSION_NAME = 'stateful.runme'
 export enum TELEMETRY_EVENTS {
-  RecommendExtension = 'runme.recommendExtension'
+  RecommendExtension = 'runme.recommendExtension',
 }

@@ -15,7 +15,7 @@ import {
   EndOfLine,
   Position,
   NotebookData,
-  NotebookCellData
+  NotebookCellData,
 } from 'vscode'
 
 import { SerializerBase } from '../serializer'
@@ -32,10 +32,7 @@ import { RunmeTaskProvider } from './runmeTask'
 
 export const ActionCommand = 'runme.codelens.action' as const
 
-const ActionTypes = [
-  'run',
-  'open',
-] as const satisfies readonly string[]
+const ActionTypes = ['run', 'open'] as const satisfies readonly string[]
 
 type ActionType = (typeof ActionTypes)[number]
 
@@ -54,7 +51,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   private disposables: Disposable[] = []
 
   private _onDidChangeCodeLenses: EventEmitter<void> = this.register(new EventEmitter<void>())
-	public readonly onDidChangeCodeLenses: Event<void> = this._onDidChangeCodeLenses.event
+  public readonly onDidChangeCodeLenses: Event<void> = this._onDidChangeCodeLenses.event
 
   constructor(
     protected serializer: SerializerBase,
@@ -68,21 +65,16 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
         [
           { language: 'markdown', scheme: 'file' },
           { language: 'mdx', scheme: 'file' },
-        ]
-      , this)
+        ],
+        this
+      )
     )
 
     const cmd: ActionCallback = this.codeLensActionCallback.bind(this)
 
-    this.register(
-      RunmeExtension.registerCommand('runme.codelens.action', cmd)
-    )
+    this.register(RunmeExtension.registerCommand('runme.codelens.action', cmd))
 
-    this.register(
-      workspace.onDidChangeConfiguration(() =>
-        this._onDidChangeCodeLenses.fire()
-      )
-    )
+    this.register(workspace.onDidChangeConfiguration(() => this._onDidChangeCodeLenses.fire()))
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -104,7 +96,9 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
     return cells.flatMap((cell, i) => {
       const textRange = (cell.metadata as Serializer.Metadata)['runme.dev/textRange']
-      if (cell.kind !== NotebookCellKind.Code || !textRange) { return [] }
+      if (cell.kind !== NotebookCellKind.Code || !textRange) {
+        return []
+      }
 
       const { start } = textRange
 
@@ -115,30 +109,32 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
       const pos = new Position(line, offset)
 
-      const range = new Range(
-        pos, pos
-      )
+      const range = new Range(pos, pos)
 
       return ActionTypes.map((v) => {
         const args: ActionArguments = [document, token, notebook, cell, i, v]
 
         /* c8 ignore start */
         switch (v) {
-          case 'run': {
-            return new CodeLens(range, {
+          case 'run':
+            {
+              return new CodeLens(range, {
                 title: '$(play) Run Block',
                 command: ActionCommand,
                 arguments: args,
               })
-          } break
+            }
+            break
 
-          case 'open': {
-            return new CodeLens(range, {
+          case 'open':
+            {
+              return new CodeLens(range, {
                 title: '$(notebook) Open in Notebook',
                 command: ActionCommand,
                 arguments: args,
               })
-          } break
+            }
+            break
         }
         /* c8 ignore stop */
       })
@@ -168,44 +164,46 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     action: ActionType
   ) {
     switch (action) {
-      case 'open': {
-        await commands.executeCommand('vscode.openWith', document.uri, Kernel.type)
+      case 'open':
+        {
+          await commands.executeCommand('vscode.openWith', document.uri, Kernel.type)
 
-        // TODO(mxs): surely there's a better way to do this
-        // probably we need to bring this logic to `workspace.onDidOpenNotebookDocument`
-        await new Promise(cb => setTimeout(cb, 200))
+          // TODO(mxs): surely there's a better way to do this
+          // probably we need to bring this logic to `workspace.onDidOpenNotebookDocument`
+          await new Promise((cb) => setTimeout(cb, 200))
 
-        await commands.executeCommand('notebook.focusTop')
+          await commands.executeCommand('notebook.focusTop')
 
-        await Promise.all(
-          Array.from(
-            {length: index}, () => commands.executeCommand('notebook.focusNextEditor')
+          await Promise.all(
+            Array.from({ length: index }, () => commands.executeCommand('notebook.focusNextEditor'))
           )
-        )
 
-        // to execute the command:
-        // await commands.executeCommand('notebook.cell.execute')
-        // await commands.executeCommand('notebook.cell.focusInOutput')
-      } break
-
-      case 'run': {
-        if (this.surveyWinCodeLensRun.shouldPrompt()) {
-          await this.surveyWinCodeLensRun.prompt()
-          break
+          // to execute the command:
+          // await commands.executeCommand('notebook.cell.execute')
+          // await commands.executeCommand('notebook.cell.focusInOutput')
         }
+        break
 
-        const task = await RunmeTaskProvider.getRunmeTask(
-          document.uri.fsPath,
-          getAnnotations(cell.metadata).name,
-          notebook,
-          cell,
-          {},
-          this.runner!,
-          this.kernel?.getRunnerEnvironment()
-        )
+      case 'run':
+        {
+          if (this.surveyWinCodeLensRun.shouldPrompt()) {
+            await this.surveyWinCodeLensRun.prompt()
+            break
+          }
 
-        await tasks.executeTask(task)
-      } break
+          const task = await RunmeTaskProvider.getRunmeTask(
+            document.uri.fsPath,
+            getAnnotations(cell.metadata).name,
+            notebook,
+            cell,
+            {},
+            this.runner!,
+            this.kernel?.getRunnerEnvironment()
+          )
+
+          await tasks.executeTask(task)
+        }
+        break
     }
   }
 }

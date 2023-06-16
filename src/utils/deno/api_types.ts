@@ -42,10 +42,7 @@ export interface ManifestEntrySymlink {
   target: string
 }
 
-export type ManifestEntry =
-  | ManifestEntryFile
-  | ManifestEntryDirectory
-  | ManifestEntrySymlink
+export type ManifestEntry = ManifestEntryFile | ManifestEntryDirectory | ManifestEntrySymlink
 
 export interface PushDeploymentRequest {
   url: string

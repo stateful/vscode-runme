@@ -7,7 +7,11 @@ import { registerExtensionEnvironmentVariables } from '../utils/configuration'
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
 import RunmeServerError from './server/runmeServerError'
-import { ToggleTerminalProvider, BackgroundTaskProvider, StopBackgroundTaskProvider } from './provider/background'
+import {
+  ToggleTerminalProvider,
+  BackgroundTaskProvider,
+  StopBackgroundTaskProvider,
+} from './provider/background'
 import { CopyProvider } from './provider/copy'
 import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
@@ -27,7 +31,7 @@ import {
   authenticateWithGitHub,
   displayCategoriesSelector,
   runCellsByCategory,
-  addToRecommendedExtensions
+  addToRecommendedExtensions,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -43,10 +47,15 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
-    const server = new RunmeServer(context.extensionUri, {
-      retryOnFailure: true,
-      maxNumberOfIntents: 10,
-    }, !grpcServer, grpcRunner)
+    const server = new RunmeServer(
+      context.extensionUri,
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 10,
+      },
+      !grpcServer,
+      grpcRunner
+    )
 
     let runner: IRunner | undefined
     if (grpcRunner) {
@@ -54,9 +63,9 @@ export class RunmeExtension {
       kernel.useRunner(runner)
     }
 
-    const serializer = grpcSerializer ?
-      new GrpcSerializer(context, server, kernel) :
-      new WasmSerializer(context, kernel)
+    const serializer = grpcSerializer
+      ? new GrpcSerializer(context, server, kernel)
+      : new WasmSerializer(context, kernel)
 
     /**
      * Start the Runme server
@@ -72,7 +81,7 @@ export class RunmeExtension {
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
       return window.showErrorMessage(
         'Failed to start Runme server, please try to reload the window. ' +
-        `Reason: ${(e as any).message}`
+          `Reason: ${(e as any).message}`
       )
     }
 
@@ -84,7 +93,13 @@ export class RunmeExtension {
 
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
-    const codeLensProvider = new RunmeCodeLensProvider(serializer, runCLI, winCodeLensRunSurvey, runner, kernel)
+    const codeLensProvider = new RunmeCodeLensProvider(
+      serializer,
+      runCLI,
+      winCodeLensRunSurvey,
+      runner,
+      kernel
+    )
 
     registerExtensionEnvironmentVariables(context)
 
@@ -93,9 +108,7 @@ export class RunmeExtension {
       ['runme.dev/uuid']: undefined,
       ['runme.dev/textRange']: undefined,
     }
-    const transientCellMetadata = Object.fromEntries(
-      Object.keys(omitKeys).map((k) => [k, true])
-    )
+    const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))
 
     context.subscriptions.push(
       kernel,
@@ -106,14 +119,23 @@ export class RunmeExtension {
       winCodeLensRunSurvey,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
-        transientCellMetadata
+        transientCellMetadata,
       }),
 
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new ToggleTerminalProvider(kernel)),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new BackgroundTaskProvider()),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new ToggleTerminalProvider(kernel)
+      ),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new BackgroundTaskProvider()
+      ),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new AnnotationsProvider(kernel)),
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new AnnotationsProvider(kernel)
+      ),
 
       stopBackgroundTaskProvider,
 
@@ -122,33 +144,41 @@ export class RunmeExtension {
       commands.registerCommand('runme.resetEnv', resetEnv),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
-      RunmeExtension.registerCommand(
-        'runme.runCliCommand',
-        runCLI
-      ),
+      RunmeExtension.registerCommand('runme.runCliCommand', runCLI),
       RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
-      RunmeExtension.registerCommand('runme.openSplitViewAsMarkdownText', openSplitViewAsMarkdownText),
+      RunmeExtension.registerCommand(
+        'runme.openSplitViewAsMarkdownText',
+        openSplitViewAsMarkdownText
+      ),
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       RunmeExtension.registerCommand('runme.runCategory', (notebook) => {
         return displayCategoriesSelector({ context, kernel, notebookToolbarCommand: notebook })
       }),
-      RunmeExtension.registerCommand('runme.runCellCategory', (cell) => runCellsByCategory(cell, kernel)),
+      RunmeExtension.registerCommand('runme.runCellCategory', (cell) =>
+        runCellsByCategory(cell, kernel)
+      ),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
-      RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
-      RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
+      RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
+      RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
-      tasks.registerTaskProvider(RunmeTaskProvider.id, new RunmeTaskProvider(context, serializer, runner, kernel)),
+      tasks.registerTaskProvider(
+        RunmeTaskProvider.id,
+        new RunmeTaskProvider(context, serializer, runner, kernel)
+      ),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
-      RunmeExtension.registerCommand('runme.collapseTreeView', treeViewer.collapseAll.bind(treeViewer)),
+      RunmeExtension.registerCommand(
+        'runme.collapseTreeView',
+        treeViewer.collapseAll.bind(treeViewer)
+      ),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
       /**
@@ -159,16 +189,22 @@ export class RunmeExtension {
       /**
        * Runme Message Display commands
        */
-      RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () => addToRecommendedExtensions(context))
+      RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
+        addToRecommendedExtensions(context)
+      )
     )
 
     await bootFile()
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {
-    return commands.registerCommand(command, (...wrappedArgs: any[]) => {
-      TelemetryReporter.sendTelemetryEvent('extension.command', { command })
-      return callback(...wrappedArgs, thisArg)
-    }, thisArg)
+    return commands.registerCommand(
+      command,
+      (...wrappedArgs: any[]) => {
+        TelemetryReporter.sendTelemetryEvent('extension.command', { command })
+        return callback(...wrappedArgs, thisArg)
+      },
+      thisArg
+    )
   }
 }

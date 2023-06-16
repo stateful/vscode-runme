@@ -18,7 +18,12 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import type { ClientMessage, Serializer } from '../types'
-import { ClientMessages, DEFAULT_LANGUAGEID, NOTEBOOK_HAS_CATEGORIES, SUPPORTED_FILE_EXTENSIONS } from '../constants'
+import {
+  ClientMessages,
+  DEFAULT_LANGUAGEID,
+  NOTEBOOK_HAS_CATEGORIES,
+  SUPPORTED_FILE_EXTENSIONS,
+} from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
@@ -39,7 +44,12 @@ import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
-import { NotebookCellManager, NotebookCellOutputManager, RunmeNotebookCellExecution, getCellByUuId } from './cell'
+import {
+  NotebookCellManager,
+  NotebookCellOutputManager,
+  RunmeNotebookCellExecution,
+  getCellByUuId,
+} from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
@@ -49,7 +59,7 @@ enum ConfirmationItems {
   Yes = 'Yes',
   No = 'No',
   Skip = 'Skip Prompt and run all',
-  Cancel = 'Cancel'
+  Cancel = 'Cancel',
 }
 
 const log = getLogger('Kernel')
@@ -74,9 +84,7 @@ export class Kernel implements Disposable {
   protected cellManager = new NotebookCellManager(this.#controller)
   protected category?: string
 
-  constructor(
-    protected context: ExtensionContext
-  ) {
+  constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
@@ -86,12 +94,12 @@ export class Kernel implements Disposable {
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
-    languages.getLanguages().then(l => {
+    languages.getLanguages().then((l) => {
       this.#controller.supportedLanguages = [
         // TODO(mxs): smartly select default language depending on user shell
         //            e.g., use powershell/bat for respective shells
         DEFAULT_LANGUAGEID,
-        ...l.filter(x => x !== DEFAULT_LANGUAGEID),
+        ...l.filter((x) => x !== DEFAULT_LANGUAGEID),
 
         // need to include file extensions since people often use file
         // extension to tag code blocks
@@ -132,7 +140,10 @@ export class Kernel implements Disposable {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
-  async registerCellTerminalState(cell: NotebookCell, type: NotebookTerminalType): Promise<ITerminalState> {
+  async registerCellTerminalState(
+    cell: NotebookCell,
+    type: NotebookTerminalType
+  ): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
     return outputs.registerCellTerminalState(type)
   }
@@ -149,7 +160,11 @@ export class Kernel implements Disposable {
       }
     })
     setNotebookCategories(this.context, uri, availableCategories)
-    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.length)
+    await commands.executeCommand(
+      'setContext',
+      NOTEBOOK_HAS_CATEGORIES,
+      !!availableCategories.length
+    )
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
 
@@ -202,15 +217,15 @@ export class Kernel implements Disposable {
     message: ClientMessage<ClientMessages>
   }) {
     if (message.type === ClientMessages.mutateAnnotations) {
-      const payload =
-        message as ClientMessage<ClientMessages.mutateAnnotations>
+      const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
       let editCell: NotebookCell | undefined = undefined
       for (const document of workspace.notebookDocuments) {
         for (const cell of document.getCells()) {
           if (
             cell.kind !== NotebookCellKind.Code ||
-            cell.document.uri.fsPath !== editor.notebook.uri.fsPath) {
+            cell.document.uri.fsPath !== editor.notebook.uri.fsPath
+          ) {
             continue
           }
 
@@ -219,10 +234,7 @@ export class Kernel implements Disposable {
             continue
           }
 
-          if (
-            cell.metadata?.['runme.dev/uuid'] ===
-            payload.output.annotations['runme.dev/uuid']
-          ) {
+          if (cell.metadata?.['runme.dev/uuid'] === payload.output.annotations['runme.dev/uuid']) {
             editCell = cell
             break
           }
@@ -239,10 +251,7 @@ export class Kernel implements Disposable {
           ...editCell.metadata,
           ...payload.output.annotations,
         }
-        const notebookEdit = NotebookEdit.updateCellMetadata(
-          editCell.index,
-          newMetadata
-        )
+        const notebookEdit = NotebookEdit.updateCellMetadata(editCell.index, newMetadata)
 
         edit.set(editCell.notebook.uri, [notebookEdit])
         await workspace.applyEdit(edit)
@@ -262,7 +271,7 @@ export class Kernel implements Disposable {
         payload.output.productionDeployment
       )
       postClientMessage(this.messaging, ClientMessages.denoUpdate, {
-        promoted: deployed.valueOf()
+        promoted: deployed.valueOf(),
       })
     } else if (message.type === ClientMessages.vercelProd) {
       const payload = message as ClientMessage<ClientMessages.vercelProd>
@@ -273,7 +282,7 @@ export class Kernel implements Disposable {
         return this._doExecuteCell(cell)
       }
     } else if (message.type === ClientMessages.infoMessage) {
-      return window.showInformationMessage(message.output as string,)
+      return window.showInformationMessage(message.output as string)
     } else if (message.type === ClientMessages.errorMessage) {
       return window.showErrorMessage(message.output as string)
     } else if (message.type === ClientMessages.openLink) {
@@ -287,7 +296,7 @@ export class Kernel implements Disposable {
         message,
         cell,
         kernel: this,
-        outputType: message.output.outputType
+        outputType: message.output.outputType,
       })
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
       await handleGitHubMessage({ messaging: this.messaging, message })
@@ -303,7 +312,7 @@ export class Kernel implements Disposable {
       }
       postClientMessage(this.messaging, ClientMessages.onPrompt, {
         answer,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.getState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
@@ -317,7 +326,7 @@ export class Kernel implements Disposable {
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
         value: categories,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.setState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
@@ -332,30 +341,31 @@ export class Kernel implements Disposable {
       })
       postClientMessage(this.messaging, ClientMessages.onPickerOption, {
         option: selectedOption,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.cloudApiRequest) {
       return handleCloudApiMessage({
         messaging: this.messaging,
         message,
-        editor
+        editor,
       })
     } else if (message.type === ClientMessages.optionsMessage) {
-      const answer = await window.showInformationMessage(message.output.title, ...message.output.options)
+      const answer = await window.showInformationMessage(
+        message.output.title,
+        ...message.output.options
+      )
       return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
         option: answer,
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.copyTextToClipboard) {
       await env.clipboard.writeText(message.output.text)
       return postClientMessage(this.messaging, ClientMessages.onCopyTextToClipboard, {
-        uuid: message.output.uuid
+        uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.openExternalLink) {
       return env.openExternal(Uri.parse(message.output))
-    } else if (
-      message.type.startsWith('terminal:')
-    ) {
+    } else if (message.type.startsWith('terminal:')) {
       return
     }
 
@@ -365,30 +375,31 @@ export class Kernel implements Disposable {
   private async _executeAll(cells: NotebookCell[]) {
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, false)
     const totalNotebookCells =
-      (cells[0] && cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code).length) || 0
+      (cells[0] &&
+        cells[0].notebook.getCells().filter((cell) => cell.kind === NotebookCellKind.Code)
+          .length) ||
+      0
     const totalCellsToExecute = cells.length
     let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
     let cellsExecuted = 0
 
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
-      if (totalCellsToExecute > 1 &&
-        (this.category && annotations.category !== this.category) ||
-        (annotations.excludeFromRunAll)
+      if (
+        (totalCellsToExecute > 1 && this.category && annotations.category !== this.category) ||
+        annotations.excludeFromRunAll
       ) {
         continue
       }
       if (showConfirmPrompt) {
         const cellText = cell.document.getText()
-        const cellLabel = (
-          annotations.name ||
-            cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
-        )
+        const cellLabel =
+          annotations.name || cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
 
-        const answer = await window.showQuickPick(Object.values(ConfirmationItems), {
+        const answer = (await window.showQuickPick(Object.values(ConfirmationItems), {
           title: `Are you sure you like to run "${cellLabel}"?`,
-          ignoreFocusOut: true
-        }) as ConfirmationItems | undefined
+          ignoreFocusOut: true,
+        })) as ConfirmationItems | undefined
 
         if (answer === ConfirmationItems.No) {
           continue
@@ -427,7 +438,9 @@ export class Kernel implements Disposable {
     })
   }
 
-  public async createCellExecution(cell: NotebookCell): Promise<RunmeNotebookCellExecution | undefined> {
+  public async createCellExecution(
+    cell: NotebookCell
+  ): Promise<RunmeNotebookCellExecution | undefined> {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
 
@@ -467,7 +480,8 @@ export class Kernel implements Disposable {
       // TODO(mxs): support windows shells
       !isWindows()
     ) {
-      const runScript = (execKey: string = 'sh') => executeRunner(
+      const runScript = (execKey: string = 'sh') =>
+        executeRunner(
           this,
           this.context,
           this.runner!,
@@ -479,8 +493,7 @@ export class Kernel implements Disposable {
           outputs,
           this.environment,
           environmentManager
-      )
-        .catch((e) => {
+        ).catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
           log.error('Internal failure executing runner', e.message)
           return false
@@ -490,7 +503,12 @@ export class Kernel implements Disposable {
         successfulCellExecution = await runScript(execKey)
       } else if (execKey in executor) {
         successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-          this, exec, runningCell, outputs, runScript, environmentManager
+          this,
+          exec,
+          runningCell,
+          outputs,
+          runScript,
+          environmentManager
         )
       } else {
         window.showErrorMessage('Cell language is not executable')
@@ -501,9 +519,16 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor]?.call(this, exec, runningCell, outputs)
+      successfulCellExecution = await executor[execKey as keyof typeof executor]?.call(
+        this,
+        exec,
+        runningCell,
+        outputs
+      )
     }
-    TelemetryReporter.sendTelemetryEvent('cell.endExecute', { 'cell.success': successfulCellExecution?.toString() })
+    TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
+      'cell.success': successfulCellExecution?.toString(),
+    })
     runmeExec.end(successfulCellExecution)
   }
 
@@ -523,7 +548,9 @@ export class Kernel implements Disposable {
             processEnviron()
           )
 
-          if (this.runner !== runner) { return }
+          if (this.runner !== runner) {
+            return
+          }
           this.environment = env
         } catch (e: any) {
           window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
@@ -542,13 +569,17 @@ export class Kernel implements Disposable {
     if (this.runner) {
       return {
         get: async (key) => {
-          if (!this.environment) { return undefined }
+          if (!this.environment) {
+            return undefined
+          }
           return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
         },
         set: async (key, val) => {
-          if (!this.environment) { return undefined }
+          if (!this.environment) {
+            return undefined
+          }
           await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
-        }
+        },
       }
     } else {
       return ENV_STORE_MANAGER

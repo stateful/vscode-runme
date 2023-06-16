@@ -63,7 +63,9 @@ export class FitAddon implements ITerminalAddon {
 
   public fit(overrideRows?: number): ITerminalDimensions | undefined {
     const dims = this.proposeDimensions()
-    if (overrideRows !== undefined && dims) { dims.rows = overrideRows }
+    if (overrideRows !== undefined && dims) {
+      dims.rows = overrideRows
+    }
 
     if (!dims || !this._terminal || isNaN(dims.cols) || isNaN(dims.rows)) {
       return undefined
@@ -98,8 +100,8 @@ export class FitAddon implements ITerminalAddon {
       return undefined
     }
 
-    const scrollbarWidth = this._terminal.options.scrollback === 0 ?
-      0 : core.viewport.scrollBarWidth
+    const scrollbarWidth =
+      this._terminal.options.scrollback === 0 ? 0 : core.viewport.scrollBarWidth
 
     const parentElementStyle = window.getComputedStyle(this._terminal.element.parentElement)
     const parentElementHeight = parseInt(parentElementStyle.getPropertyValue('height'))
@@ -109,7 +111,7 @@ export class FitAddon implements ITerminalAddon {
       top: parseInt(elementStyle.getPropertyValue('padding-top')),
       bottom: parseInt(elementStyle.getPropertyValue('padding-bottom')),
       right: parseInt(elementStyle.getPropertyValue('padding-right')),
-      left: parseInt(elementStyle.getPropertyValue('padding-left'))
+      left: parseInt(elementStyle.getPropertyValue('padding-left')),
     }
     const elementPaddingVer = elementPadding.top + elementPadding.bottom
     const elementPaddingHor = elementPadding.right + elementPadding.left
@@ -120,7 +122,7 @@ export class FitAddon implements ITerminalAddon {
 
     const geometry = {
       cols: Math.max(MINIMUM_COLS, Math.floor(availableWidth / cellWidth)),
-      rows: Math.max(MINIMUM_ROWS, Math.floor(availableHeight / cellHeight))
+      rows: Math.max(MINIMUM_ROWS, Math.floor(availableHeight / cellHeight)),
     }
 
     return geometry
@@ -130,8 +132,12 @@ export class FitAddon implements ITerminalAddon {
     const renderer = this.getCore()._renderService._renderer
 
     return {
-      width: renderer._charSizeService.width + Math.round(renderer._optionsService.rawOptions.letterSpacing),
-      height: Math.floor(renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight),
+      width:
+        renderer._charSizeService.width +
+        Math.round(renderer._optionsService.rawOptions.letterSpacing),
+      height: Math.floor(
+        renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight
+      ),
     }
   }
 
