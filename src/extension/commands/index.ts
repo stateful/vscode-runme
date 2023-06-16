@@ -23,10 +23,15 @@ import {
   getCLIUseIntegratedRunme,
   getTLSDir,
   getTLSEnabled,
-  isNotebookTerminalEnabledForCell
+  isNotebookTerminalEnabledForCell,
 } from '../../utils/configuration'
 import { Kernel } from '../kernel'
-import { getAnnotations, getNotebookCategories, getTerminalByCell, openFileAsRunmeNotebook } from '../utils'
+import {
+  getAnnotations,
+  getNotebookCategories,
+  getTerminalByCell,
+  openFileAsRunmeNotebook,
+} from '../utils'
 import RunmeServer from '../server/runmeServer'
 import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
@@ -36,7 +41,7 @@ import { RecommendExtensionMessage } from '../messaging'
 const log = getLogger('Commands')
 
 function showWarningMessage() {
-  return window.showWarningMessage('Couldn\'t find terminal! Was it already closed?')
+  return window.showWarningMessage("Couldn't find terminal! Was it already closed?")
 }
 
 export function openIntegratedTerminal(cell: NotebookCell) {
@@ -48,8 +53,15 @@ export function openIntegratedTerminal(cell: NotebookCell) {
   return terminal.show()
 }
 
-export async function displayCategoriesSelector({ context, notebookToolbarCommand, kernel }: NotebookToolbarCommand) {
-  const categories = await getNotebookCategories(context, notebookToolbarCommand.notebookEditor.notebookUri)
+export async function displayCategoriesSelector({
+  context,
+  notebookToolbarCommand,
+  kernel,
+}: NotebookToolbarCommand) {
+  const categories = await getNotebookCategories(
+    context,
+    notebookToolbarCommand.notebookEditor.notebookUri
+  )
   if (!categories) {
     return
   }
@@ -86,7 +98,10 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
 
 export function toggleTerminal(kernel: Kernel, notebookTerminal: boolean, forceShow = false) {
   return async function (cell: NotebookCell) {
-    if ((isNotebookTerminalEnabledForCell(cell) && notebookTerminal) || !getAnnotations(cell).interactive) {
+    if (
+      (isNotebookTerminalEnabledForCell(cell) && notebookTerminal) ||
+      !getAnnotations(cell).interactive
+    ) {
       const outputs = await kernel.getCellOutputs(cell)
 
       if (!forceShow) {
@@ -143,8 +158,9 @@ export function runCLICommand(
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
-    const index = cell.notebook.getCells()
-      .filter(x => x.kind === NotebookCellKind.Code)
+    const index = cell.notebook
+      .getCells()
+      .filter((x) => x.kind === NotebookCellKind.Code)
       .indexOf(cell)
 
     if (index < 0) {
@@ -157,7 +173,7 @@ export function runCLICommand(
     const args = [
       `--chdir="${cwd}"`,
       `--filename="${path.basename(cell.document.uri.fsPath)}"`,
-      `--index=${index}`
+      `--index=${index}`,
     ]
 
     const envs: Record<string, string> = {}
@@ -184,7 +200,9 @@ export function runCLICommand(
       env: envs,
     })
 
-    const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri, process.platform).fsPath : 'runme'
+    const runmeExec = getCLIUseIntegratedRunme()
+      ? getBinaryPath(extensionBaseUri, process.platform).fsPath
+      : 'runme'
 
     term.show(false)
     term.sendText(`${runmeExec} run ${args.join(' ')}`)
@@ -193,13 +211,13 @@ export function runCLICommand(
 
 export function openAsRunmeNotebook(doc: NotebookDocument) {
   window.showNotebookDocument(doc, {
-    viewColumn: ViewColumn.Active
+    viewColumn: ViewColumn.Active,
   })
 }
 
 export function openSplitViewAsMarkdownText(doc: TextDocument) {
   window.showTextDocument(doc, {
-    viewColumn: ViewColumn.Beside
+    viewColumn: ViewColumn.Beside,
   })
 }
 
@@ -216,7 +234,7 @@ export async function createNewRunmeNotebook() {
       new NotebookCellData(
         NotebookCellKind.Markup,
         '*Read the docs on [runme.dev](https://www.runme.dev/docs/intro)' +
-        ' to learn how to get most out of Runme notebooks!*',
+          ' to learn how to get most out of Runme notebooks!*',
         'markdown'
       ),
     ])
@@ -225,11 +243,7 @@ export async function createNewRunmeNotebook() {
 }
 
 export async function welcome() {
-  commands.executeCommand(
-    'workbench.action.openWalkthrough',
-    'stateful.runme#runme.welcome',
-    false
-  )
+  commands.executeCommand('workbench.action.openWalkthrough', 'stateful.runme#runme.welcome', false)
 }
 
 export async function tryIt(context: ExtensionContext) {
@@ -245,7 +259,11 @@ export async function tryIt(context: ExtensionContext) {
     await workspace.fs.writeFile(newNotebookUri, enc.encode(fileContent.toString()))
     await commands.executeCommand('vscode.openWith', newNotebookUri, Kernel.type)
   } catch (err) {
-    const localMarkdown = Uri.joinPath(Uri.file(context.extensionPath), 'walkthroughs', 'welcome.md')
+    const localMarkdown = Uri.joinPath(
+      Uri.file(context.extensionPath),
+      'walkthroughs',
+      'welcome.md'
+    )
     return commands.executeCommand('vscode.openWith', localMarkdown, Kernel.type)
   }
 }
@@ -264,6 +282,6 @@ export async function authenticateWithGitHub() {
 
 export async function addToRecommendedExtensions(context: ExtensionContext) {
   return new RecommendExtensionMessage(context, {
-    'runme.recommendExtension': true
+    'runme.recommendExtension': true,
   }).display()
 }

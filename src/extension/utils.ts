@@ -20,10 +20,20 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer, ShellType } from '../types'
+import {
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+  RunmeTerminal,
+  Serializer,
+  ShellType,
+} from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
-import { getEnvLoadWorkspaceFiles, getEnvWorkspaceFileOrder, getPortNumber } from '../utils/configuration'
+import {
+  getEnvLoadWorkspaceFiles,
+  getEnvWorkspaceFileOrder,
+  getPortNumber,
+} from '../utils/configuration'
 
 import getLogger from './logger'
 import { Kernel } from './kernel'
@@ -88,7 +98,9 @@ export function validateAnnotations(cell: NotebookCell): CellAnnotationsErrorRes
 
 export function getTerminalRunmeId(t: vscode.Terminal): string | undefined {
   return (
-    (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID ?? /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1] ?? undefined
+    (t.creationOptions as vscode.TerminalOptions).env?.RUNME_ID ??
+    /\(RUNME_ID: (.*)\)$/.exec(t.name)?.[1] ??
+    undefined
   )
 }
 
@@ -253,7 +265,9 @@ export function normalizeLanguage(l?: string) {
 
 export async function verifyCheckedInFile(filePath: string) {
   const fileDir = path.dirname(filePath)
-  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) => fileDir.includes(ws.uri.fsPath))
+  const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) =>
+    fileDir.includes(ws.uri.fsPath)
+  )
 
   if (!workspaceFolder) {
     return false
@@ -268,7 +282,9 @@ export async function verifyCheckedInFile(filePath: string) {
   }
 
   const isCheckedIn = await util
-    .promisify(cp.exec)(`git ls-files --error-unmatch ${filePath}`, { cwd: workspaceFolder.uri.fsPath })
+    .promisify(cp.exec)(`git ls-files --error-unmatch ${filePath}`, {
+      cwd: workspaceFolder.uri.fsPath,
+    })
     .then(
       () => true,
       () => false
@@ -467,8 +483,13 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
  * @param uri
  * @param categories
  */
-export async function setNotebookCategories(context: ExtensionContext, uri: Uri, categories: string[]): Promise<void> {
-  const notebooksCategoryState = context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
+export async function setNotebookCategories(
+  context: ExtensionContext,
+  uri: Uri,
+  categories: string[]
+): Promise<void> {
+  const notebooksCategoryState =
+    context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
   notebooksCategoryState[uri.path] = categories
   return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
 }
@@ -479,8 +500,13 @@ export async function setNotebookCategories(context: ExtensionContext, uri: Uri,
  * @param uri
  * @returns
  */
-export async function getNotebookCategories(context: ExtensionContext, uri: Uri): Promise<string[]> {
-  const notebooksCategories = context.globalState.get<Record<string, string[]>>(NOTEBOOK_AVAILABLE_CATEGORIES)
+export async function getNotebookCategories(
+  context: ExtensionContext,
+  uri: Uri
+): Promise<string[]> {
+  const notebooksCategories = context.globalState.get<Record<string, string[]>>(
+    NOTEBOOK_AVAILABLE_CATEGORIES
+  )
   if (!notebooksCategories) {
     return []
   }
@@ -507,7 +533,10 @@ export async function bootFile() {
   }
 
   const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
-  const hasStartupFile = await workspace.fs.stat(startupFileUri).then(() => true, () => false)
+  const hasStartupFile = await workspace.fs.stat(startupFileUri).then(
+    () => true,
+    () => false
+  )
   if (hasStartupFile) {
     const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
@@ -526,7 +555,10 @@ export async function bootFile() {
   }
 
   const startupFileUriConfig = Uri.joinPath(workspace.workspaceFolders[0].uri, startupFilePath)
-  const hasStartupFileConfig = await workspace.fs.stat(startupFileUriConfig).then(() => true, () => false)
+  const hasStartupFileConfig = await workspace.fs.stat(startupFileUriConfig).then(
+    () => true,
+    () => false
+  )
   if (!hasStartupFileConfig) {
     return
   }

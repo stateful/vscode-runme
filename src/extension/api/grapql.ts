@@ -1,21 +1,27 @@
 import { gql } from '@apollo/client'
 
 export interface CellExecutionMetadata {
-    mimeType: string
-    category: string
-    name: string
+  mimeType: string
+  category: string
+  name: string
 }
 
 export interface CellExecutionRequest {
-    stdout: any
-    input: any
-    exitCode: number
-    pid: number
-    metadata: CellExecutionMetadata
+  stdout: any
+  input: any
+  exitCode: number
+  pid: number
+  metadata: CellExecutionMetadata
 }
 
-export const createCellExecutionQuery = ({ input, exitCode, stdout, pid, metadata }: CellExecutionRequest) => {
-    return gql`mutation
+export const createCellExecutionQuery = ({
+  input,
+  exitCode,
+  stdout,
+  pid,
+  metadata,
+}: CellExecutionRequest) => {
+  return gql`mutation
         {
             createCellExecution(data: 
                 { 

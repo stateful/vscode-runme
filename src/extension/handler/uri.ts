@@ -1,8 +1,18 @@
 import path from 'node:path'
 
 import {
-  UriHandler, window, Uri, Progress, ProgressLocation, commands, workspace,
-  ExtensionContext, Task, TaskScope, ShellExecution, tasks
+  UriHandler,
+  window,
+  Uri,
+  Progress,
+  ProgressLocation,
+  commands,
+  workspace,
+  ExtensionContext,
+  Task,
+  TaskScope,
+  ShellExecution,
+  tasks,
 } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
@@ -11,8 +21,11 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import getLogger from '../logger'
 
 import {
-  getProjectDir, getTargetDirName, getSuggestedProjectName, writeBootstrapFile,
-  parseParams
+  getProjectDir,
+  getTargetDirName,
+  getSuggestedProjectName,
+  writeBootstrapFile,
+  parseParams,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
@@ -72,11 +85,14 @@ export class RunmeUriHandler implements UriHandler {
       ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/')
     )
     window.showInformationMessage('Setting up a new project using Runme...')
-    return window.withProgress({
-      location: ProgressLocation.Window,
-      cancellable: false,
-      title: `Setting up project from repository ${repository}`
-    }, (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen))
+    return window.withProgress(
+      {
+        location: ProgressLocation.Window,
+        cancellable: false,
+        title: `Setting up project from repository ${repository}`,
+      },
+      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen)
+    )
   }
 
   private async _setupFile(fileToOpen: string) {
@@ -102,15 +118,17 @@ export class RunmeUriHandler implements UriHandler {
       await workspace.fs.writeFile(Uri.joinPath(projectUri, fileName), enc.encode(fileContent))
       await writeBootstrapFile(projectUri, fileName)
       await commands.executeCommand('vscode.openFolder', projectUri, {
-        forceNewWindow: true
+        forceNewWindow: true,
       })
     } catch (err: unknown) {
-      return window.showErrorMessage(`Failed to set-up project from ${fileToOpen}: ${(err as Error).message}`)
+      return window.showErrorMessage(
+        `Failed to set-up project from ${fileToOpen}: ${(err as Error).message}`
+      )
     }
   }
 
   private async _cloneProject(
-    progress: Progress<{ message?: string, increment?: number }>,
+    progress: Progress<{ message?: string; increment?: number }>,
     targetDirUri: Uri,
     repository: string,
     fileToOpen: string
@@ -131,10 +149,7 @@ export class RunmeUriHandler implements UriHandler {
           const taskId = (e.execution as any)['_id']
           const executionId = (execution as any)['_id']
 
-          if (
-            taskId !== executionId ||
-            typeof e.exitCode === 'undefined'
-          ) {
+          if (taskId !== executionId || typeof e.exitCode === 'undefined') {
             return resolve(false)
           }
 
@@ -147,17 +162,20 @@ export class RunmeUriHandler implements UriHandler {
     })
 
     if (!success) {
-      window.showErrorMessage('Failed to checkout repository; see integrated terminal for more details/logs')
+      window.showErrorMessage(
+        'Failed to checkout repository; see integrated terminal for more details/logs'
+      )
       return
     }
 
-    await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen))
+    await workspace.fs
+      .stat(Uri.joinPath(targetDirUri, fileToOpen))
       .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
 
     progress.report({ increment: 50, message: 'Opening project...' })
     log.info(`Attempt to open folder ${targetDirUri.fsPath}`)
     await commands.executeCommand('vscode.openFolder', targetDirUri, {
-      forceNewWindow: true
+      forceNewWindow: true,
     })
     progress.report({ increment: 100 })
   }

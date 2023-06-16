@@ -1,10 +1,6 @@
 import { fetch, Response } from 'undici'
 
-import { Deployment ,
-  ManifestEntry,
-  Project,
-} from './api_types'
-
+import { Deployment, ManifestEntry, Project } from './api_types'
 
 export interface RequestOptions {
   method?: string
@@ -27,7 +23,8 @@ export class APIError extends Error {
     let error = `${this.name}: ${this.message}`
     if (this.xDenoRay !== null) {
       error += `\nx-deno-ray: ${this.xDenoRay}`
-      error += '\nIf you encounter this error frequently,' +
+      error +=
+        '\nIf you encounter this error frequently,' +
         ' contact us at deploy@deno.com with the above x-deno-ray.'
     }
     return error
@@ -44,20 +41,22 @@ export class API {
   }
 
   static fromToken(token: string) {
-    const endpoint = process.env['DEPLOY_API_ENDPOINT'] ??
-      'https://dash.deno.com'
+    const endpoint = process.env['DEPLOY_API_ENDPOINT'] ?? 'https://dash.deno.com'
     return new API(`Bearer ${token}`, endpoint)
   }
 
   async #request(path: string, opts: RequestOptions = {}): Promise<Response> {
     const url = `${this.#endpoint}/api${path}`
     const method = opts.method ?? 'GET'
-    const body = opts.body !== undefined
-      ? false /*opts.body instanceof FormData*/ ? opts.body : JSON.stringify(opts.body)
-      : undefined
+    const body =
+      opts.body !== undefined
+        ? false /*opts.body instanceof FormData*/
+          ? opts.body
+          : JSON.stringify(opts.body)
+        : undefined
     const headers = {
-      'Accept': 'application/json',
-      'Authorization': this.#authorization,
+      Accept: 'application/json',
+      Authorization: this.#authorization,
       ...(opts.body !== undefined
         ? false // opts.body instanceof FormData
           ? {}
@@ -92,12 +91,12 @@ export class API {
     }
   }
 
-  async promoteDeployment (id: string, productionDeployment: string): Promise<Boolean> {
+  async promoteDeployment(id: string, productionDeployment: string): Promise<Boolean> {
     try {
-      await this.#requestJson(`/projects/${id}`, {
+      ;(await this.#requestJson(`/projects/${id}`, {
         method: 'PATCH',
-        body: { productionDeployment }
-      }) as any
+        body: { productionDeployment },
+      })) as any
 
       return true
     } catch (err: any) {
@@ -119,7 +118,9 @@ export class API {
 
   async getDeployments(id: string): Promise<Deployment[] | null> {
     try {
-      return (await this.#requestJson<[Deployment[] | null, {}]>(`/projects/${id}/deployments?limit=10`))[0]
+      return (
+        await this.#requestJson<[Deployment[] | null, {}]>(`/projects/${id}/deployments?limit=10`)
+      )[0]
     } catch (err) {
       if (err instanceof APIError && err.code === 'deploymentsNotFound') {
         return null
@@ -130,7 +131,7 @@ export class API {
 
   async projectNegotiateAssets(
     id: string,
-    manifest: { entries: Record<string, ManifestEntry> },
+    manifest: { entries: Record<string, ManifestEntry> }
   ): Promise<string[]> {
     return await this.#requestJson(`/projects/${id}/assets/negotiate`, {
       method: 'POST',

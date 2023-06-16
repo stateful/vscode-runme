@@ -5,28 +5,27 @@ import { CopyIcon } from './icons/copy'
 
 @customElement('copy-button')
 export class CopyButton extends LitElement {
-
   @property({ type: String })
   copyText: string = 'Copy'
   /* eslint-disable */
   static styles = css`
     vscode-button {
-        background: transparent;
-        color: #ccc;
-        transform: scale(.9);
-      }
-      vscode-button:hover {
-        background: var(--button-secondary-background);
-      }
-      vscode-button:focus {
-        outline: #007fd4 1px solid;
-      }
-      .icon {
-        width: 13px;
-        margin: 0 5px 0 -5px;
-        padding: 0;
-      }
-    `
+      background: transparent;
+      color: #ccc;
+      transform: scale(0.9);
+    }
+    vscode-button:hover {
+      background: var(--button-secondary-background);
+    }
+    vscode-button:focus {
+      outline: #007fd4 1px solid;
+    }
+    .icon {
+      width: 13px;
+      margin: 0 5px 0 -5px;
+      padding: 0;
+    }
+  `
 
   private onCopy(e: Event) {
     if (e.defaultPrevented) {
@@ -38,10 +37,9 @@ export class CopyButton extends LitElement {
 
   render() {
     return html`
-        <vscode-button appearance="secondary" @click=${this.onCopy}>
-        ${CopyIcon}
-        ${this.copyText}
-        </vscode-button>
-        `
+      <vscode-button appearance="secondary" @click=${this.onCopy}>
+        ${CopyIcon} ${this.copyText}
+      </vscode-button>
+    `
   }
 }

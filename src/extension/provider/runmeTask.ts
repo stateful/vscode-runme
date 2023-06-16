@@ -37,7 +37,7 @@ export interface RunmeTask extends Task {
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
   static id = 'runme'
-  constructor (
+  constructor(
     private context: ExtensionContext,
     private serializer: SerializerBase,
     private runner?: IRunner,
@@ -45,15 +45,16 @@ export class RunmeTaskProvider implements TaskProvider {
   ) {}
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
-    if(!this.runner) {
+    if (!this.runner) {
       log.error('Tasks only supported with gRPC runner enabled')
       return []
     }
 
-    const current = (
-      window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') && window.activeNotebookEditor?.notebook.uri ||
-      workspace.workspaceFolders?.[0].uri && Uri.joinPath(workspace.workspaceFolders?.[0].uri, 'README.md')
-    )
+    const current =
+      (window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') &&
+        window.activeNotebookEditor?.notebook.uri) ||
+      (workspace.workspaceFolders?.[0].uri &&
+        Uri.joinPath(workspace.workspaceFolders?.[0].uri, 'README.md'))
 
     if (!current) {
       return []
@@ -61,7 +62,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
     let mdContent: Uint8Array
     try {
-      mdContent = (await workspace.fs.readFile(current))
+      mdContent = await workspace.fs.readFile(current)
     } catch (err: any) {
       if (err.code !== 'FileNotFound') {
         log.error(`${err.message}`)
@@ -73,17 +74,24 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const environment = this.kernel?.getRunnerEnvironment()
 
-    return await Promise.all(notebook.cells
-      .filter((cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code)
-      .map(async (cell) => await RunmeTaskProvider.getRunmeTask(
-        current.fsPath,
-        `${getAnnotations(cell.metadata).name}`,
-        notebook,
-        cell,
-        {},
-        this.runner!,
-        environment
-      )))
+    return await Promise.all(
+      notebook.cells
+        .filter(
+          (cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code
+        )
+        .map(
+          async (cell) =>
+            await RunmeTaskProvider.getRunmeTask(
+              current.fsPath,
+              `${getAnnotations(cell.metadata).name}`,
+              notebook,
+              cell,
+              {},
+              this.runner!,
+              environment
+            )
+        )
+    )
   }
 
   public resolveTask(task: Task): ProviderResult<Task> {
@@ -93,18 +101,18 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static async getRunmeTask (
+  static async getRunmeTask(
     filePath: string,
     command: string,
-    notebook: NotebookData|Serializer.Notebook,
-    cell: NotebookCell|NotebookCellData|Serializer.Cell,
+    notebook: NotebookData | Serializer.Notebook,
+    cell: NotebookCell | NotebookCellData | Serializer.Cell,
     options: TaskOptions = {},
     runner: IRunner,
-    environment?: IRunnerEnvironment,
+    environment?: IRunnerEnvironment
   ): Promise<Task> {
-    const source = workspace.workspaceFolders?.[0] ?
-      path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath) :
-      path.basename(filePath)
+    const source = workspace.workspaceFolders?.[0]
+      ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
+      : path.basename(filePath)
 
     const { interactive, background } = getAnnotations(cell.metadata)
 
@@ -118,16 +126,18 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        const cwd = options.cwd || await getCellCwd(cell, notebook, Uri.file(filePath))
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
         const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
 
         const envs: Record<string, string> = {
-          ...await getWorkspaceEnvs(Uri.file(filePath))
+          ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
 
-        if (!environment) { Object.assign(envs, process.env) }
+        if (!environment) {
+          Object.assign(envs, process.env)
+        }
 
         const runOpts: RunProgramOptions = {
           programName: getCellShellPath(cell, notebook) ?? 'sh',
@@ -157,7 +167,7 @@ export class RunmeTaskProvider implements TaskProvider {
       focus: true,
       // why doesn't this work with Silent?
       reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
-      panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared
+      panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
     }
 
     return task

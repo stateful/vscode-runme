@@ -16,10 +16,11 @@ export function setContext(c: RendererContext<void>) {
   context = c
 }
 
-export function closeOutput({ uuid, outputType }: { uuid: string, outputType: OutputType }) {
+export function closeOutput({ uuid, outputType }: { uuid: string; outputType: OutputType }) {
   const ctx = getContext()
-  ctx.postMessage && postClientMessage(ctx, ClientMessages.closeCellOutput, {
-    uuid,
-    outputType
-  })
+  ctx.postMessage &&
+    postClientMessage(ctx, ClientMessages.closeCellOutput, {
+      uuid,
+      outputType,
+    })
 }

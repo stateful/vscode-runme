@@ -26,7 +26,7 @@ interface IWindowSize {
 enum MessageOptions {
   OpenLink = 'Open link',
   CopyToClipboard = 'Copy to clipboard',
-  Cancel = 'Cancel'
+  Cancel = 'Cancel',
 }
 
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
@@ -39,7 +39,7 @@ const LISTEN_TO_EVENTS = [
   ClientMessages.cloudApiResponse,
   ClientMessages.onOptionsMessage,
   ClientMessages.optionsMessage,
-  ClientMessages.onCopyTextToClipboard
+  ClientMessages.onCopyTextToClipboard,
 ]
 
 const ANSI_COLORS = [
@@ -64,10 +64,8 @@ const ANSI_COLORS = [
 
 @customElement(RENDERERS.TerminalView)
 export class TerminalView extends LitElement {
-
   protected copyText = 'Copy'
   protected shareText = 'Share'
-
 
   static styles = css`
     .xterm {
@@ -81,70 +79,70 @@ export class TerminalView extends LitElement {
 
     .xterm.focus,
     .xterm:focus {
-        border: solid 1px var(--vscode-focusBorder);
+      border: solid 1px var(--vscode-focusBorder);
     }
 
     .xterm .xterm-helpers {
-        position: absolute;
-        top: 0;
-        /**
+      position: absolute;
+      top: 0;
+      /**
          * The z-index of the helpers must be higher than the canvases in order for
          * IMEs to appear on top.
          */
-        z-index: 5;
+      z-index: 5;
     }
 
     .xterm .xterm-helper-textarea {
-        padding: 0;
-        border: 0;
-        margin: 0;
-        /* Move textarea out of the screen to the far left, so that the cursor is not visible */
-        position: absolute;
-        opacity: 0;
-        left: -9999em;
-        top: 0;
-        width: 0;
-        height: 0;
-        z-index: -5;
-        /** Prevent wrapping so the IME appears against the textarea at the correct position */
-        white-space: nowrap;
-        overflow: hidden;
-        resize: none;
+      padding: 0;
+      border: 0;
+      margin: 0;
+      /* Move textarea out of the screen to the far left, so that the cursor is not visible */
+      position: absolute;
+      opacity: 0;
+      left: -9999em;
+      top: 0;
+      width: 0;
+      height: 0;
+      z-index: -5;
+      /** Prevent wrapping so the IME appears against the textarea at the correct position */
+      white-space: nowrap;
+      overflow: hidden;
+      resize: none;
     }
 
     .xterm .composition-view {
-        color: #FFF;
-        display: none;
-        position: absolute;
-        white-space: nowrap;
-        z-index: 1;
+      color: #fff;
+      display: none;
+      position: absolute;
+      white-space: nowrap;
+      z-index: 1;
     }
 
     .xterm .composition-view.active {
-        display: block;
+      display: block;
     }
 
     .xterm .xterm-viewport {
-        background-color: var(${unsafeCSS(terminalCSS('background'))}) !important;
-        border: solid 1px var(--vscode-terminal-border);
-        /* On OS X this is required in order for the scroll bar to appear fully opaque */
-        overflow-y: scroll;
-        cursor: default;
-        position: absolute;
-        right: 0;
-        left: 0;
-        top: 0;
-        bottom: 0;
+      background-color: var(${unsafeCSS(terminalCSS('background'))}) !important;
+      border: solid 1px var(--vscode-terminal-border);
+      /* On OS X this is required in order for the scroll bar to appear fully opaque */
+      overflow-y: scroll;
+      cursor: default;
+      position: absolute;
+      right: 0;
+      left: 0;
+      top: 0;
+      bottom: 0;
     }
 
     .xterm .xterm-screen {
-        position: relative;
+      position: relative;
     }
 
     .xterm .xterm-screen canvas {
-        position: absolute;
-        left: 0;
-        top: 0;
+      position: absolute;
+      left: 0;
+      top: 0;
     }
 
     .xterm-viewport::-webkit-scrollbar {
@@ -169,63 +167,73 @@ export class TerminalView extends LitElement {
     }
 
     .xterm .xterm-scroll-area {
-        visibility: hidden;
+      visibility: hidden;
     }
 
     .xterm-char-measure-element {
-        display: inline-block;
-        visibility: hidden;
-        position: absolute;
-        top: 0;
-        left: -9999em;
-        line-height: normal;
+      display: inline-block;
+      visibility: hidden;
+      position: absolute;
+      top: 0;
+      left: -9999em;
+      line-height: normal;
     }
 
     .xterm.enable-mouse-events {
-        /* When mouse events are enabled (eg. tmux), revert to the standard pointer cursor */
-        cursor: default;
+      /* When mouse events are enabled (eg. tmux), revert to the standard pointer cursor */
+      cursor: default;
     }
 
     .xterm.xterm-cursor-pointer,
     .xterm .xterm-cursor-pointer {
-        cursor: pointer;
+      cursor: pointer;
     }
 
     .xterm.column-select.focus {
-        /* Column selection mode */
-        cursor: crosshair;
+      /* Column selection mode */
+      cursor: crosshair;
     }
 
     .xterm .xterm-accessibility,
     .xterm .xterm-message {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        z-index: 10;
-        color: transparent;
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 10;
+      color: transparent;
     }
 
     .xterm .live-region {
-        position: absolute;
-        left: -9999px;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
     }
 
     .xterm-dim {
-        opacity: 0.5;
+      opacity: 0.5;
     }
 
-    .xterm-underline-1 { text-decoration: underline; }
-    .xterm-underline-2 { text-decoration: double underline; }
-    .xterm-underline-3 { text-decoration: wavy underline; }
-    .xterm-underline-4 { text-decoration: dotted underline; }
-    .xterm-underline-5 { text-decoration: dashed underline; }
+    .xterm-underline-1 {
+      text-decoration: underline;
+    }
+    .xterm-underline-2 {
+      text-decoration: double underline;
+    }
+    .xterm-underline-3 {
+      text-decoration: wavy underline;
+    }
+    .xterm-underline-4 {
+      text-decoration: dotted underline;
+    }
+    .xterm-underline-5 {
+      text-decoration: dashed underline;
+    }
 
     .xterm-strikethrough {
-        text-decoration: line-through;
+      text-decoration: line-through;
     }
 
     .xterm-screen .xterm-decoration-container .xterm-decoration {
@@ -234,22 +242,22 @@ export class TerminalView extends LitElement {
     }
 
     .xterm-decoration-overview-ruler {
-        z-index: 7;
-        position: absolute;
-        top: 0;
-        right: 0;
-        pointer-events: none;
+      z-index: 7;
+      position: absolute;
+      top: 0;
+      right: 0;
+      pointer-events: none;
     }
 
     .xterm-decoration-top {
-        z-index: 2;
-        position: relative;
+      z-index: 2;
+      position: relative;
     }
 
     vscode-button {
       background: transparent;
       color: #ccc;
-      transform: scale(.9);
+      transform: scale(0.9);
     }
     vscode-button:hover {
       background: var(--button-secondary-background);
@@ -273,7 +281,7 @@ export class TerminalView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 5px;
-      position:relative;
+      position: relative;
     }
 
     .xterm-drag-handle {
@@ -328,7 +336,7 @@ export class TerminalView extends LitElement {
     super()
     this.windowSize = {
       height: window.innerHeight,
-      width: window.innerWidth
+      width: window.innerWidth,
     }
   }
 
@@ -350,7 +358,7 @@ export class TerminalView extends LitElement {
       convertEol: true,
       allowProposedApi: true,
       fontFamily: this.terminalFontFamily,
-      drawBoldTextInBrightColors: false
+      drawBoldTextInBrightColors: false,
     })
 
     if (this.initialContent) {
@@ -373,57 +381,79 @@ export class TerminalView extends LitElement {
 
     this.disposables.push(
       onClientMessage(ctx, async (e) => {
-        if (!LISTEN_TO_EVENTS.some(event => e.type.startsWith(event))) { return }
+        if (!LISTEN_TO_EVENTS.some((event) => e.type.startsWith(event))) {
+          return
+        }
 
         switch (e.type) {
           case ClientMessages.activeThemeChanged:
             this.#updateTerminalTheme()
             break
           case ClientMessages.terminalStdout:
-          case ClientMessages.terminalStderr: {
-            const { 'runme.dev/uuid': uuid, data } = e.output
-            if (uuid !== this.uuid) { return }
-            if (e.type === ClientMessages.terminalStdout) {
-              this.terminal!.write(data)
+          case ClientMessages.terminalStderr:
+            {
+              const { 'runme.dev/uuid': uuid, data } = e.output
+              if (uuid !== this.uuid) {
+                return
+              }
+              if (e.type === ClientMessages.terminalStdout) {
+                this.terminal!.write(data)
+              }
             }
-          } break
-          case ClientMessages.cloudApiResponse: {
-            if (e.output.uuid !== this.uuid) { return }
-            this.isCloudApiLoading = false
-            if (e.output.hasErrors) {
-              return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
+            break
+          case ClientMessages.cloudApiResponse:
+            {
+              if (e.output.uuid !== this.uuid) {
+                return
+              }
+              this.isCloudApiLoading = false
+              if (e.output.hasErrors) {
+                return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
+              }
+              const {
+                data: {
+                  createCellExecution: { htmlUrl },
+                },
+              } = e.output.data
+              this.shareUrl = htmlUrl
+              await this.#displayShareDialog()
             }
-            const { data: { createCellExecution: { htmlUrl } } } = e.output.data
-            this.shareUrl = htmlUrl
-            await this.#displayShareDialog()
-          } break
+            break
 
-          case ClientMessages.onOptionsMessage: {
-            if (e.output.uuid !== this.uuid) { return }
-            const answer = e.output.option
-            this.isCloudApiLoading = false
-            switch (answer) {
-              case MessageOptions.OpenLink: {
-                return postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+          case ClientMessages.onOptionsMessage:
+            {
+              if (e.output.uuid !== this.uuid) {
+                return
               }
-              case MessageOptions.CopyToClipboard: {
-                return postClientMessage(ctx, ClientMessages.copyTextToClipboard, {
-                  uuid: this.uuid!,
-                  text: this.shareUrl!
-                })
+              const answer = e.output.option
+              this.isCloudApiLoading = false
+              switch (answer) {
+                case MessageOptions.OpenLink: {
+                  return postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+                }
+                case MessageOptions.CopyToClipboard: {
+                  return postClientMessage(ctx, ClientMessages.copyTextToClipboard, {
+                    uuid: this.uuid!,
+                    text: this.shareUrl!,
+                  })
+                }
               }
             }
-          } break
+            break
           case ClientMessages.onCopyTextToClipboard: {
-            if (e.output.uuid !== this.uuid) { return }
+            if (e.output.uuid !== this.uuid) {
+              return
+            }
             return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
           }
         }
       }),
-      this.terminal.onData((data) => postClientMessage(ctx, ClientMessages.terminalStdin, {
-        'runme.dev/uuid': this.uuid!,
-        input: data
-      }))
+      this.terminal.onData((data) =>
+        postClientMessage(ctx, ClientMessages.terminalStdin, {
+          'runme.dev/uuid': this.uuid!,
+          input: data,
+        })
+      )
     )
   }
 
@@ -437,8 +467,12 @@ export class TerminalView extends LitElement {
     super.firstUpdated(props)
     const terminalContainer = this.#getTerminalElement() as HTMLElement
 
-    window.addEventListener('focus', () => { this.#onFocusWindow() })
-    window.addEventListener('click', () => { this.#onFocusWindow(false) })
+    window.addEventListener('focus', () => {
+      this.#onFocusWindow()
+    })
+    window.addEventListener('click', () => {
+      this.#onFocusWindow(false)
+    })
 
     this.terminal!.open(terminalContainer)
     this.terminal!.focus()
@@ -448,12 +482,11 @@ export class TerminalView extends LitElement {
     terminalContainer.appendChild(this.#createResizeHandle())
 
     const ctx = getContext()
-    ctx.postMessage && postClientMessage(ctx, ClientMessages.terminalOpen, {
-      'runme.dev/uuid': this.uuid!,
-      terminalDimensions: convertXTermDimensions(
-        this.fitAddon?.proposeDimensions()
-      )
-    })
+    ctx.postMessage &&
+      postClientMessage(ctx, ClientMessages.terminalOpen, {
+        'runme.dev/uuid': this.uuid!,
+        terminalDimensions: convertXTermDimensions(this.fitAddon?.proposeDimensions()),
+      })
 
     if (this.lastLine) {
       this.terminal!.scrollToLine(this.lastLine)
@@ -461,7 +494,9 @@ export class TerminalView extends LitElement {
   }
 
   #resizeTerminal(rows?: number) {
-    if (rows !== undefined) { this.rows = rows }
+    if (rows !== undefined) {
+      this.rows = rows
+    }
     return this.fitAddon?.fit(this.rows)
   }
 
@@ -469,27 +504,33 @@ export class TerminalView extends LitElement {
     const dragHandle = document.createElement('div')
     dragHandle.setAttribute('class', 'xterm-drag-handle')
 
-    let dragState: {
-      initialClientY: number
-      initialRows: number
-    } | undefined
+    let dragState:
+      | {
+          initialClientY: number
+          initialRows: number
+        }
+      | undefined
 
     const onMouseDown = (e: MouseEvent) => {
       dragState = {
         initialClientY: e.clientY,
-        initialRows: this.rows
+        initialRows: this.rows,
       }
       e.preventDefault()
       this.terminal?.focus()
     }
 
     const onMouseUp = () => {
-      if (dragState === undefined) { return }
+      if (dragState === undefined) {
+        return
+      }
       dragState = undefined
     }
 
     const onMouseMove = (e: MouseEvent) => {
-      if (dragState === undefined || !this.fitAddon) { return }
+      if (dragState === undefined || !this.fitAddon) {
+        return
+      }
 
       const delta = e.clientY - dragState.initialClientY
 
@@ -511,7 +552,7 @@ export class TerminalView extends LitElement {
         dragHandle.removeEventListener('mousedown', onMouseDown)
         window.removeEventListener('mouseup', onMouseUp)
         window.removeEventListener('mousemove', onMouseMove)
-      }
+      },
     })
 
     return dragHandle
@@ -530,10 +571,12 @@ export class TerminalView extends LitElement {
       cursorAccent: this.#getThemeHexColor(vscodeCSS('terminalCursor', 'background')),
       selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
       selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
-      selectionInactiveBackground: this.#getThemeHexColor(terminalCSS('inactiveSelectionBackground')),
-      ...(Object.fromEntries(
-        ANSI_COLORS.map(k => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
-      )),
+      selectionInactiveBackground: this.#getThemeHexColor(
+        terminalCSS('inactiveSelectionBackground')
+      ),
+      ...Object.fromEntries(
+        ANSI_COLORS.map((k) => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
+      ),
     }
     this.terminal!.options.theme = terminalTheme
   }
@@ -544,7 +587,9 @@ export class TerminalView extends LitElement {
   }
 
   async #onResizeWindow(): Promise<void> {
-    if (!this.fitAddon) { return }
+    if (!this.fitAddon) {
+      return
+    }
 
     const { innerWidth } = window
 
@@ -559,11 +604,13 @@ export class TerminalView extends LitElement {
 
     if (proposedDimensions) {
       const ctx = getContext()
-      if (!ctx.postMessage) { return }
+      if (!ctx.postMessage) {
+        return
+      }
 
       await postClientMessage(ctx, ClientMessages.terminalResize, {
         'runme.dev/uuid': this.uuid!,
-        terminalDimensions: convertXTermDimensions(proposedDimensions)
+        terminalDimensions: convertXTermDimensions(proposedDimensions),
       })
     }
   }
@@ -574,42 +621,52 @@ export class TerminalView extends LitElement {
     }
 
     const ctx = getContext()
-    if (!ctx.postMessage) { return }
+    if (!ctx.postMessage) {
+      return
+    }
 
     await postClientMessage(ctx, ClientMessages.terminalFocus, {
-      'runme.dev/uuid': this.uuid!
+      'runme.dev/uuid': this.uuid!,
     })
   }
 
   async #displayShareDialog(): Promise<boolean | void> {
     const ctx = getContext()
-    if (!ctx.postMessage || !this.shareUrl) { return }
+    if (!ctx.postMessage || !this.shareUrl) {
+      return
+    }
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
       title: 'Share link created',
       options: Object.values(MessageOptions),
-      uuid: this.uuid!
+      uuid: this.uuid!,
     })
   }
 
   async #shareCellOutput(): Promise<boolean | void | undefined> {
     const ctx = getContext()
-    if (!ctx.postMessage) { return }
+    if (!ctx.postMessage) {
+      return
+    }
     try {
       this.isCloudApiLoading = true
-      const contentWithAnsi = this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
+      const contentWithAnsi =
+        this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
       const terminalContents = new TextEncoder().encode(contentWithAnsi)
       await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
         data: {
-          stdout: JSON.stringify([...terminalContents], null, 2)
+          stdout: JSON.stringify([...terminalContents], null, 2),
         },
         uuid: this.uuid!,
-        method: APIMethod.CreateCellExecution
+        method: APIMethod.CreateCellExecution,
       })
     } catch (error) {
       this.isCloudApiLoading = false
-      postClientMessage(ctx, ClientMessages.infoMessage, `Failed to share output: ${(error as any).message}`)
+      postClientMessage(
+        ctx,
+        ClientMessages.infoMessage,
+        `Failed to share output: ${(error as any).message}`
+      )
     }
-
   }
 
   #onWebLinkClick(event: MouseEvent, uri: string): void {
@@ -620,23 +677,32 @@ export class TerminalView extends LitElement {
   render() {
     return html`<section>
       <div id="terminal"></div>
-      <close-cell-button @closed="${() => {
-        return closeOutput({
-          uuid: this.uuid!,
-          outputType: OutputType.terminal
-        })
-      }}"></close-cell-button>
+      <close-cell-button
+        @closed="${() => {
+          return closeOutput({
+            uuid: this.uuid!,
+            outputType: OutputType.terminal,
+          })
+        }}"
+      ></close-cell-button>
       <div class="button-group">
-      <copy-button copyText="${this.copyText}" @onCopy="${async () => {
-        return this.#copy()
-      }}"></copy-button>
-      ${when(this.enableShareButton, () =>
-        html`
-        <share-cell 
-          ?disabled=${this.isCloudApiLoading}
-          shareText="${this.isCloudApiLoading ? 'Generating link ...' : this.shareText}"
-          @onShare="${this.#shareCellOutput}">
-        </share-cell>`, () => html``)}
+        <copy-button
+          copyText="${this.copyText}"
+          @onCopy="${async () => {
+            return this.#copy()
+          }}"
+        ></copy-button>
+        ${when(
+          this.enableShareButton,
+          () =>
+            html` <share-cell
+              ?disabled=${this.isCloudApiLoading}
+              shareText="${this.isCloudApiLoading ? 'Generating link ...' : this.shareText}"
+              @onShare="${this.#shareCellOutput}"
+            >
+            </share-cell>`,
+          () => html``
+        )}
       </div>
     </section>`
   }
@@ -647,22 +713,37 @@ export class TerminalView extends LitElement {
 
   #copy() {
     const ctx = getContext()
-    if (!ctx.postMessage) { return }
-    const content = stripANSI(this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '')
-    return navigator.clipboard.writeText(content).then(() => {
-      this.copyText = 'Copied!'
-      this.requestUpdate()
-    }).catch(
-      (err) => postClientMessage(ctx, ClientMessages.infoMessage, `Failed to copy to clipboard: ${err.message}!`),
+    if (!ctx.postMessage) {
+      return
+    }
+    const content = stripANSI(
+      this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
     )
+    return navigator.clipboard
+      .writeText(content)
+      .then(() => {
+        this.copyText = 'Copied!'
+        this.requestUpdate()
+      })
+      .catch((err) =>
+        postClientMessage(
+          ctx,
+          ClientMessages.infoMessage,
+          `Failed to copy to clipboard: ${err.message}!`
+        )
+      )
   }
 }
 
 function convertXTermDimensions(dimensions: ITerminalDimensions): TerminalDimensions
 function convertXTermDimensions(dimensions: undefined): undefined
-function convertXTermDimensions(dimensions: ITerminalDimensions | undefined): TerminalDimensions | undefined
+function convertXTermDimensions(
+  dimensions: ITerminalDimensions | undefined
+): TerminalDimensions | undefined
 function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions | undefined {
-  if (!dimensions) { return undefined }
+  if (!dimensions) {
+    return undefined
+  }
 
   const { rows, cols } = dimensions
   return { columns: cols, rows }

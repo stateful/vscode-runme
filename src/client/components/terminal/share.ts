@@ -6,7 +6,6 @@ import { ShareIcon } from '../icons/share'
 
 @customElement('share-cell')
 export class ShareCell extends LitElement {
-
   @property({ type: String })
   shareText: string = 'Copy'
 
@@ -16,22 +15,22 @@ export class ShareCell extends LitElement {
   /* eslint-disable */
   static styles = css`
     vscode-button {
-        background: transparent;
-        color: #ccc;
-        transform: scale(.9);
-      }
-      vscode-button:hover {
-        background: var(--button-secondary-background);
-      }
-      vscode-button:focus {
-        outline: #007fd4 1px solid;
-      }
-      .icon {
-        width: 13px;
-        margin: 0 5px 0 -5px;
-        padding: 0;
-      }
-    `
+      background: transparent;
+      color: #ccc;
+      transform: scale(0.9);
+    }
+    vscode-button:hover {
+      background: var(--button-secondary-background);
+    }
+    vscode-button:focus {
+      outline: #007fd4 1px solid;
+    }
+    .icon {
+      width: 13px;
+      margin: 0 5px 0 -5px;
+      padding: 0;
+    }
+  `
 
   private onShareClick(e: Event) {
     if (e.defaultPrevented) {
@@ -42,17 +41,18 @@ export class ShareCell extends LitElement {
   }
 
   render() {
-    return when(this.disabled, () => html`
-    <vscode-button disabled appearance="secondary" @click=${this.onShareClick}>
-      ${ShareIcon}
-      ${this.shareText}
-    </vscode-button>
-    `, () => html`
-    <vscode-button appearance="secondary" @click=${this.onShareClick}>
-      ${ShareIcon}
-      ${this.shareText}
-    </vscode-button>
-    `)
-
+    return when(
+      this.disabled,
+      () => html`
+        <vscode-button disabled appearance="secondary" @click=${this.onShareClick}>
+          ${ShareIcon} ${this.shareText}
+        </vscode-button>
+      `,
+      () => html`
+        <vscode-button appearance="secondary" @click=${this.onShareClick}>
+          ${ShareIcon} ${this.shareText}
+        </vscode-button>
+      `
+    )
   }
 }

@@ -1,36 +1,41 @@
 import type vscode from 'vscode'
-import { window, EventEmitter, NotebookCellStatusBarItem, NotebookCellStatusBarAlignment, tasks } from 'vscode'
+import {
+  window,
+  EventEmitter,
+  NotebookCellStatusBarItem,
+  NotebookCellStatusBarAlignment,
+  tasks,
+} from 'vscode'
 
 import { getAnnotations, getTerminalByCell } from '../utils'
 import { Kernel } from '../kernel'
 
-export class ToggleTerminalProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+export class ToggleTerminalProvider
+  implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable
+{
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
-  protected disposables: vscode.Disposable[] = [
-    this._onDidChangeCellStatusBarItems
-  ]
+  protected disposables: vscode.Disposable[] = [this._onDidChangeCellStatusBarItems]
 
   constructor(protected kernel: Kernel) {
     this.disposables.push(
       window.onDidCloseTerminal(this.refreshStatusBarItems.bind(this)),
       tasks.onDidStartTaskProcess(this.refreshStatusBarItems.bind(this)),
-      tasks.onDidEndTaskProcess(this.refreshStatusBarItems.bind(this)),
+      tasks.onDidEndTaskProcess(this.refreshStatusBarItems.bind(this))
     )
   }
 
-  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+  async provideCellStatusBarItems(
+    cell: vscode.NotebookCell
+  ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const terminalState = await this.kernel.getTerminalState(cell)
 
     if (!terminalState) {
       return
     }
 
-    const terminalButtonParts = [
-      '$(terminal)',
-      'Terminal',
-    ]
+    const terminalButtonParts = ['$(terminal)', 'Terminal']
 
     const item = new NotebookCellStatusBarItem(
       terminalButtonParts.join(' '),
@@ -45,13 +50,15 @@ export class ToggleTerminalProvider implements vscode.NotebookCellStatusBarItemP
     this._onDidChangeCellStatusBarItems.fire()
   }
 
-	public dispose() {
+  public dispose() {
     this.disposables.forEach(({ dispose }) => dispose())
-	}
+  }
 }
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
-  async provideCellStatusBarItems(cell: vscode.NotebookCell): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+  async provideCellStatusBarItems(
+    cell: vscode.NotebookCell
+  ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const annotations = getAnnotations(cell)
 
     const terminal = getTerminalByCell(cell)
@@ -70,10 +77,7 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
       return
     }
 
-    const item = new NotebookCellStatusBarItem(
-      text,
-      NotebookCellStatusBarAlignment.Right
-    )
+    const item = new NotebookCellStatusBarItem(text, NotebookCellStatusBarAlignment.Right)
 
     if (terminal) {
       item.command = 'runme.openIntegratedTerminal'
@@ -82,7 +86,9 @@ export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemP
     return item
   }
 }
-export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable {
+export class StopBackgroundTaskProvider
+  implements vscode.NotebookCellStatusBarItemProvider, vscode.Disposable
+{
   private _onDidChangeCellStatusBarItems = new EventEmitter<void>()
   onDidChangeCellStatusBarItems = this._onDidChangeCellStatusBarItems.event
 
@@ -102,7 +108,9 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
     )
   }
 
-  provideCellStatusBarItems(cell: vscode.NotebookCell): vscode.NotebookCellStatusBarItem | undefined {
+  provideCellStatusBarItems(
+    cell: vscode.NotebookCell
+  ): vscode.NotebookCellStatusBarItem | undefined {
     const annotations = getAnnotations(cell)
 
     /**
@@ -114,7 +122,9 @@ export class StopBackgroundTaskProvider implements vscode.NotebookCellStatusBarI
 
     const terminal = getTerminalByCell(cell)
 
-    if (!terminal || (terminal.runnerSession?.hasExited() !== undefined)) { return }
+    if (!terminal || terminal.runnerSession?.hasExited() !== undefined) {
+      return
+    }
 
     const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',

@@ -6,7 +6,7 @@ import {
   Uri,
   ExtensionContext,
   NotebookRendererMessaging,
-  NotebookEditor
+  NotebookEditor,
 } from 'vscode'
 import { z } from 'zod'
 
@@ -59,9 +59,7 @@ export interface ICellOutput<T extends OutputType> {
   output: Payload[T]
 }
 
-export type CellOutputPayload<T extends OutputType> = T extends any
-  ? ICellOutput<T>
-  : never
+export type CellOutputPayload<T extends OutputType> = T extends any ? ICellOutput<T> : never
 
 export type CellOutput = CellOutputPayload<OutputType>
 
@@ -111,10 +109,12 @@ interface Payload {
   [OutputType.github]?: GitHubState
 }
 
-export type ClientMessage<T extends ClientMessages> = T extends any ? {
-  type: T
-  output: ClientMessagePayload[T]
-} : never
+export type ClientMessage<T extends ClientMessages> = T extends any
+  ? {
+      type: T
+      output: ClientMessagePayload[T]
+    }
+  : never
 export interface ClientMessagePayload {
   [ClientMessages.denoUpdate]: DenoState
   [ClientMessages.denoPromote]: {
@@ -261,7 +261,6 @@ export type CellAnnotationErrorKey = {
   [P in allKeys<CellAnnotations>]?: string[]
 }
 
-
 export type CellAnnotationsErrorResult = {
   hasErrors: boolean
   errors?: CellAnnotationErrorKey
@@ -288,7 +287,7 @@ export interface NotebookToolbarCommand {
 }
 
 export enum APIMethod {
-  CreateCellExecution = 'createCellExecution'
+  CreateCellExecution = 'createCellExecution',
 }
 
 export interface IApiMessage<T extends ClientMessage<ClientMessages>> {

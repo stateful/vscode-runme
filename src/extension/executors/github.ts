@@ -10,10 +10,12 @@ export async function github(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   try {
-    await authentication.getSession(AuthenticationProviders.GitHub, ['repo'], { createIfNone: true })
+    await authentication.getSession(AuthenticationProviders.GitHub, ['repo'], {
+      createIfNone: true,
+    })
     const { owner, repo, path, ref } = parseGitHubURL(doc.getText())
     const json = await getYamlFileContents({ owner, repo, path })
     outputs.setState({
@@ -24,8 +26,8 @@ export async function github(
         owner,
         workflow_id: path,
         ref,
-        cellId: exec.cell.metadata['runme.dev/uuid']
-      }
+        cellId: exec.cell.metadata['runme.dev/uuid'],
+      },
     })
     await outputs.showOutput(OutputType.github)
     return true

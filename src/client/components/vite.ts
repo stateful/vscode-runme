@@ -8,7 +8,8 @@ const ADJUSTMENT_INTERVAL = 10
 export class ViteOutput extends LitElement {
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
-    :host {}
+    :host {
+    }
 
     iframe {
       width: 100%;
@@ -35,7 +36,7 @@ export class ViteOutput extends LitElement {
 
     const doc = iframe.contentWindow?.document!
     doc.open()
-    doc.write(/*html*/`
+    doc.write(/*html*/ `
       <html>
         <head>
           <title>Vite Output</title>
@@ -70,7 +71,7 @@ export class ViteOutput extends LitElement {
 
     const now = Date.now()
     const i: NodeJS.Timer = setInterval(() => {
-      if ((Date.now() - now) > ADJUSTMENT_TIMEOUT) {
+      if (Date.now() - now > ADJUSTMENT_TIMEOUT) {
         return clearInterval(i)
       }
 
