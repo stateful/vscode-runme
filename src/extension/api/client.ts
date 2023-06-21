@@ -1,13 +1,29 @@
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
 import fetch from 'cross-fetch'
+import { setContext } from '@apollo/client/link/context'
 
 import { getRunmeApiUrl } from '../../utils/configuration'
 
-export function InitializeClient({ uri }: { uri: string } = { uri: '' }) {
-  const graphQlApiUrl = getRunmeApiUrl()
+export function InitializeClient({
+  uri,
+  runmeToken,
+}: {
+  uri?: string | undefined
+  runmeToken: string
+}) {
+  const authLink = setContext((_, { headers }) => {
+    return {
+      headers: {
+        ...headers,
+        authorization: runmeToken ? `Bearer ${runmeToken}` : '',
+      },
+    }
+  })
+  const link = new HttpLink({ fetch, uri: uri || `${getRunmeApiUrl()}/graphql` })
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: new HttpLink({ fetch, uri: uri || graphQlApiUrl }),
+    credentials: 'include',
+    link: authLink.concat(link),
   })
 
   return client
