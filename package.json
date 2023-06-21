@@ -581,9 +581,15 @@
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
     "download:binary": "npm run prepare-binary",
-    "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme"
+    "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "4.0.1",
+    "@graphql-codegen/client-preset": "^4.0.1",
+    "@graphql-codegen/introspection": "4.0.0",
+    "@graphql-codegen/typescript": "4.0.1",
+    "@graphql-codegen/typescript-document-nodes": "4.0.1",
     "@octokit/rest": "^19.0.8",
     "@types/node": "^20.1.5",
     "@types/split2": "^4.2.0",

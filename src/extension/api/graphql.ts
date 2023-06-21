@@ -1,27 +1,11 @@
 import { gql } from '@apollo/client'
 
-export interface CellExecutionMetadata {
-  mimeType: string
-  category: string
-  name: string
-}
+import { MutationCreateCellExecutionArgs } from '../__generated__/graphql'
 
-export interface CellExecutionRequest {
-  stdout: any
-  input: any
-  exitCode: number
-  pid: number
-  metadata: CellExecutionMetadata
-}
+export const createCellExecutionQuery = ({ data }: MutationCreateCellExecutionArgs) => {
+  const { input, exitCode, stdout, pid, metadata } = data
 
-export const createCellExecutionQuery = ({
-  input,
-  exitCode,
-  stdout,
-  pid,
-  metadata,
-}: CellExecutionRequest) => {
-  return gql`mutation
+  return gql(`mutation
         {
             createCellExecution(data: 
                 { 
@@ -41,5 +25,5 @@ export const createCellExecutionQuery = ({
                 id
                 htmlUrl
             }
-        }`
+        }`)
 }

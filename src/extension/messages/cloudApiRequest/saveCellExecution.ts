@@ -6,7 +6,7 @@ import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
 import { getAnnotations, getTerminalByCell } from '../../utils'
-import { createCellExecutionQuery } from '../../api/grapql'
+import { createCellExecutionQuery } from '../../api/graphql'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
@@ -53,14 +53,16 @@ export default async function saveCellExecution(
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
     const result = await graphClient.mutate({
       mutation: createCellExecutionQuery({
-        ...message.output.data,
-        exitCode,
-        pid,
-        input: encodeURIComponent(cell.document.getText()),
-        metadata: {
-          mimeType: annotations.mimeType,
-          name: annotations.name,
-          category: annotations.category,
+        data: {
+          ...message.output.data,
+          exitCode,
+          pid,
+          input: encodeURIComponent(cell.document.getText()),
+          metadata: {
+            mimeType: annotations.mimeType,
+            name: annotations.name,
+            category: annotations.category,
+          },
         },
       }),
     })

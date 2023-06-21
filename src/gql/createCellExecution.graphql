@@ -1,0 +1,14 @@
+mutation CreateCellExecution($data: CellExecutionInput!) {
+  createCellExecution(data: $data) {
+    input
+    metadata {
+      category
+      mimeType
+      name
+    }
+    pid
+    stderr
+    stdout
+    exitCode
+  }
+}

@@ -4,6 +4,7 @@
     "stateful.runme",
     "amodio.tsl-problem-matcher",
     "editorconfig.editorconfig",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "graphql.vscode-graphql"
   ]
 }
