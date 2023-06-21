@@ -17,7 +17,7 @@ export default async function saveCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await authentication.getSession(AuthenticationProviders.GitHub, ['email'], {
+    const session = await authentication.getSession(AuthenticationProviders.GitHub, [], {
       createIfNone: true,
     })
 
