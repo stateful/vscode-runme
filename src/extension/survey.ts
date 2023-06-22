@@ -296,18 +296,10 @@ export class SurveyShebangComingSoon extends Survey {
   }
 
   open() {
-    if (this.context.globalState.get<boolean>(SurveyShebangComingSoon.#id, false)) {
-      return
-    }
-
-    commands.executeCommand(SurveyShebangComingSoon.#id, false)
+    commands.executeCommand(SurveyShebangComingSoon.#id)
   }
 
-  async prompt(runDirect = true): Promise<void> {
-    if (runDirect) {
-      await this.undo()
-    }
-
+  async prompt(): Promise<void> {
     const option = await window.showWarningMessage(
       'Not every language is executable... yet! Coming soon: Mix and match languages in Runme.',
       'Learn more',
