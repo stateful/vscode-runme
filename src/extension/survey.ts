@@ -49,6 +49,8 @@ abstract class Survey implements Disposable {
   protected async done() {
     await this.context.globalState.update(this.id, true)
   }
+
+  abstract prompt(runDirect: boolean): Promise<void>
 }
 
 export class WinDefaultShell extends Survey {
@@ -281,5 +283,44 @@ export class SurveyActiveUserFeedback extends Survey {
       Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`)
     )
     await this.done()
+  }
+}
+
+export class SurveyShebangComingSoon extends Survey {
+  static readonly #id: string = 'runme.surveyShebangComingSoon'
+
+  constructor(protected context: ExtensionContext) {
+    super(context, SurveyShebangComingSoon.#id)
+
+    commands.registerCommand(SurveyShebangComingSoon.#id, this.prompt.bind(this))
+  }
+
+  open() {
+    if (this.context.globalState.get<boolean>(SurveyShebangComingSoon.#id, false)) {
+      return
+    }
+
+    commands.executeCommand(SurveyShebangComingSoon.#id, false)
+  }
+
+  async prompt(runDirect = true): Promise<void> {
+    if (runDirect) {
+      await this.undo()
+    }
+
+    const option = await window.showWarningMessage(
+      'Not every language is executable... yet! Coming soon: Mix and match languages in Runme.',
+      'Learn more',
+      'Dismiss'
+    )
+    if (option === 'Dismiss' || option === undefined) {
+      return
+    }
+
+    TelemetryReporter.sendTelemetryEvent('survey.ShebangComingSoon', { never: 'false' })
+    await commands.executeCommand(
+      'vscode.open',
+      Uri.parse('https://runme.dev/spotlight/shebang-support')
+    )
   }
 }
