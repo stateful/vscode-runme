@@ -233,8 +233,6 @@ suite('_doExecuteCell', () => {
       'cell.endExecute',
       { 'cell.success': 'false' }
     )
-
-    expect(window.showErrorMessage).toHaveBeenCalledWith('Cell language is not executable')
   })
 })
 

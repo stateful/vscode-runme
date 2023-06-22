@@ -98,6 +98,11 @@
         "title": "Prompt to participate in Feedback survey"
       },
       {
+        "command": "runme.surveyShebangComingSoon",
+        "category": "Runme",
+        "title": "Prompt when a cell language is unsupported"
+      },
+      {
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
         "title": "Open markdown as Runme",

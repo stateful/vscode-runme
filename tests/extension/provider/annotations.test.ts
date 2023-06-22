@@ -37,7 +37,7 @@ describe('Runme Annotations', () => {
   const kernel = new Kernel({} as any)
   it('should register a command when initializing', () => {
     new AnnotationsProvider(kernel)
-    expect(commands.registerCommand).toBeCalledTimes(1)
+    expect(commands.registerCommand).toBeCalledTimes(2)
     expect(commands.registerCommand).toBeCalledWith('runme.toggleCellAnnotations', expect.anything(), undefined)
   })
 

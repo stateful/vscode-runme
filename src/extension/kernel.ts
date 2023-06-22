@@ -27,6 +27,7 @@ import {
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
+import * as survey from './survey'
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -54,6 +55,7 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
+import { SurveyShebangComingSoon } from './survey'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -68,6 +70,7 @@ export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
   readonly #experiments = new Map<string, boolean>()
+  readonly #shebangComingSoon: SurveyShebangComingSoon
 
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -90,6 +93,8 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
 
+    this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
+
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
@@ -110,6 +115,7 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.#disposables.push(
+      this.#shebangComingSoon,
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
@@ -511,7 +517,7 @@ export class Kernel implements Disposable {
           environmentManager
         )
       } else {
-        window.showErrorMessage('Cell language is not executable')
+        this.#shebangComingSoon.open()
 
         successfulCellExecution = false
       }
