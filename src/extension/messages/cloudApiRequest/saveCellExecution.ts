@@ -17,9 +17,13 @@ export default async function saveCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await authentication.getSession(AuthenticationProviders.GitHub, [], {
-      createIfNone: true,
-    })
+    const session = await authentication.getSession(
+      AuthenticationProviders.GitHub,
+      ['user:email'],
+      {
+        createIfNone: true,
+      }
+    )
 
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
