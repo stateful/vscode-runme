@@ -2,7 +2,7 @@
   "name": "runme",
   "version": "1.5.4-edge.0",
   "publisher": "stateful",
-  "displayName": "Runme",
+  "displayName": "Runme runs Markdown",
   "description": "Execute commands inside your runbooks, docs, and READMEs.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
