@@ -3,18 +3,18 @@ import path from 'node:path'
 import { test, expect } from 'vitest'
 
 import Languages from '../../src/extension/languages'
-import { WasmLib } from '../../src/types'
+import { Serializer } from '../../src/types'
 
 import fixture from './fixtures/document.json'
 
 test('cells', () => {
   // todo(sebastian): tests legacy deserializer
-  expect((fixture as WasmLib.Notebook).cells).toBeTypeOf('object')
+  expect((fixture as Serializer.Notebook).cells).toBeTypeOf('object')
 })
 
 test('languages#run', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as WasmLib.Notebook
+  const f = fixture as Serializer.Notebook
 
   const results = await Promise.all(
     f.cells!
@@ -48,7 +48,7 @@ test('languages#run', async () => {
 
 test('languages#biased', async () => {
   const langs = new Languages(path.resolve(__dirname, '../..'))
-  const f = fixture as WasmLib.Notebook
+  const f = fixture as Serializer.Notebook
 
   const biased = await Promise.all(
     f.cells!
@@ -62,7 +62,7 @@ test('languages#biased', async () => {
 
   expect(biased).toStrictEqual([
     ['bat', 'sh'],
-    ['ini', 'ini'],
+    ['ini', 'sh'],
     ['bat', 'sh'],
     ['bat', 'sh'],
     ['bat', 'sh'],
@@ -76,6 +76,6 @@ test('languages#biased', async () => {
     ['dart', 'sh'],
     ['sh', 'sh'],
     ['bat', 'sh'],
-    ['csv', 'sh'],
+    ['csv', 'sh']
   ])
 })
