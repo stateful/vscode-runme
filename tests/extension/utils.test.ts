@@ -8,7 +8,6 @@ import {
   getKey,
   getCmdShellSeq,
   normalizeLanguage,
-  canEditFile,
   getAnnotations,
   mapGitIgnoreToGlobFolders,
   hashDocumentUri,
@@ -209,45 +208,6 @@ suite('normalizeLanguage', () => {
   test('with sh', () => {
     const lang = normalizeLanguage('sh')
     expect(lang).toBe('sh')
-  })
-})
-
-suite('canEditFile', () => {
-  const verifyCheckedInFile = vi.fn().mockResolvedValue(false)
-  const notebook: any = {
-    isUntitled: false,
-    notebookType: 'runme',
-    uri: { fsPath: '/foo/bar' }
-  }
-
-  beforeEach(() => {
-    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValue(false)
-    } as any)
-  })
-
-  test('can not edit by default', async () => {
-    expect(await canEditFile(notebook, verifyCheckedInFile)).toBe(false)
-  })
-
-  test('can edit if ignore flag is enabled', async () => {
-    const notebookMock: any = JSON.parse(JSON.stringify(notebook))
-    vi.mocked(vscode.workspace.getConfiguration).mockReturnValue({
-      get: vi.fn().mockReturnValue(true)
-    } as any)
-    expect(await canEditFile(notebookMock, verifyCheckedInFile)).toBe(true)
-  })
-
-  test('can edit file if new', async () => {
-    const notebookMock: any = JSON.parse(JSON.stringify(notebook))
-    notebookMock.isUntitled = true
-    expect(await canEditFile(notebookMock, verifyCheckedInFile)).toBe(true)
-  })
-
-  test('can edit file if checked in', async () => {
-    const notebookMock: any = JSON.parse(JSON.stringify(notebook))
-    verifyCheckedInFile.mockResolvedValue(true)
-    expect(await canEditFile(notebookMock, verifyCheckedInFile)).toBe(true)
   })
 })
 

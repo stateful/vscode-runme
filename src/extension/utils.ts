@@ -8,7 +8,6 @@ import vscode, {
   Uri,
   workspace,
   env,
-  NotebookDocument,
   NotebookCell,
   NotebookCellExecution,
   NotebookCellOutput,
@@ -290,40 +289,6 @@ export async function verifyCheckedInFile(filePath: string) {
       () => false
     )
   return isCheckedIn
-}
-
-export async function canEditFile(
-  notebook: NotebookDocument,
-  // for testing purposes only
-  verifyCheckedInFileFn = verifyCheckedInFile
-): Promise<boolean> {
-  const config = vscode.workspace.getConfiguration('runme.flags')
-  const disableSaveRestriction = config.get<boolean>('disableSaveRestriction')
-  const currentDocumentPath = notebook.uri.fsPath
-  const isNewFile = notebook.isUntitled && notebook.notebookType === Kernel.type
-
-  /**
-   * allow serializing files if:
-   */
-  if (
-    /**
-     * the user has disabled this restriction
-     */
-    disableSaveRestriction ||
-    /**
-     * the user just created a new file
-     */
-    isNewFile ||
-    /**
-     * the user works on a checked in file
-     */
-    !currentDocumentPath ||
-    (await verifyCheckedInFileFn(currentDocumentPath))
-  ) {
-    return true
-  }
-
-  return false
 }
 
 export async function initWasm(wasmUri: Uri) {

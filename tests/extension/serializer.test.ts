@@ -2,7 +2,6 @@ import { NotebookData, NotebookDocument, NotebookEdit, window, workspace } from 
 import { expect, vi, it, describe, beforeEach } from 'vitest'
 
 import { SerializerBase, WasmSerializer } from '../../src/extension/serializer'
-import { canEditFile } from '../../src/extension/utils'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
@@ -44,7 +43,6 @@ vi.mock('../../src/extension/languages', () => ({
 }))
 
 vi.mock('../../src/extension/utils', () => ({
-    canEditFile: vi.fn().mockResolvedValue(false),
     initWasm: vi.fn()
 }))
 
@@ -163,34 +161,9 @@ describe('WasmSerializer', () => {
     }
 
     describe('serializeNotebook', () => {
-        it('fails when notebook is not active', async () => {
-            const s = new WasmSerializer(context, newKernel())
-            await expect(() => s.serializeNotebook({} as any, {} as any))
-                .rejects.toThrow(/not active/)
-        })
-
-        it('prevents saving if canEditFile returns false', async () => {
-            // @ts-ignore readonly
-            window.activeNotebookEditor = {} as any
-            const s = new WasmSerializer(context, newKernel())
-            await expect(() => s.serializeNotebook({} as any, {} as any))
-                .rejects.toThrow(/saving non version controlled notebooks is disabled/)
-        })
-
-        it('throws if wasm fails to laod', async () => {
-            // @ts-ignore readonly
-            window.activeNotebookEditor = {} as any
-            vi.mocked(canEditFile).mockResolvedValue(true)
-            const s = new WasmSerializer(context, newKernel())
-            // @ts-ignore readonly
-            s['ready'] = Promise.reject('ups')
-            await expect(() => s.serializeNotebook({} as any, {} as any)).rejects.toThrow(/ups/)
-        })
-
         it('uses Runme wasm to save the file', async () => {
             // @ts-ignore readonly
             window.activeNotebookEditor = {} as any
-            vi.mocked(canEditFile).mockResolvedValue(true)
             const s = new WasmSerializer(context, newKernel())
             // @ts-ignore readonly
             s['ready'] = Promise.resolve()
