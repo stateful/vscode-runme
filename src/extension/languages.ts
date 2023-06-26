@@ -69,8 +69,8 @@ export default class Languages {
         true
       )
     )
-    // if it's tight at the top (< 1% variance) look for execs
-    while (pstdev < 0.01 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {
+    // if it's narrow at the top (< 5% variance) look for execs
+    while (pstdev < 0.05 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {
       if (top.length <= 0) {
         top = results
         break
