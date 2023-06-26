@@ -644,7 +644,7 @@
     "detect-port": "^1.5.1",
     "dotenv": "^16.0.3",
     "filenamify": "^6.0.0",
-    "get-port": "^6.1.2",
+    "get-port": "^7.0.0",
     "got": "^12.6.0",
     "graphql": "^16.6.0",
     "lit": "^2.7.4",
