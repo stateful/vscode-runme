@@ -1,6 +1,4 @@
 import {
-  window,
-  commands,
   NotebookSerializer,
   ExtensionContext,
   Uri,
@@ -26,7 +24,7 @@ import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serialize
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { canEditFile, initWasm } from './utils'
+import { initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
 
@@ -128,8 +126,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken
   ): Promise<Uint8Array> {
-    await this.preSaveCheck()
-
     const transformedCells = data.cells.map((cell) => {
       return {
         ...cell,
@@ -211,34 +207,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     return notebookData
-  }
-
-  protected async preSaveCheck() {
-    if (!window.activeNotebookEditor) {
-      throw new Error("Could't save notebook as it is not active!")
-    }
-
-    if (!(await canEditFile(window.activeNotebookEditor.notebook))) {
-      const errorMessage =
-        'You are writing to a file that is not version controlled! ' +
-        "Runme's authoring features are in early stages and require hardening. " +
-        "We wouldn't want you to loose important data. Please version track your file first " +
-        'or disable this restriction in the VS Code settings.'
-      window.showErrorMessage(errorMessage, 'Open Runme Settings').then((openSettings) => {
-        if (openSettings) {
-          return commands.executeCommand(
-            'workbench.action.openSettings',
-            'runme.flags.disableSaveRestriction'
-          )
-        }
-      })
-      throw new Error('saving non version controlled notebooks is disabled by default.')
-    }
-
-    const err = await this.ready
-    if (err) {
-      throw err
-    }
   }
 
   protected static revive(notebook: Serializer.Notebook) {
