@@ -150,7 +150,10 @@ export class CategorySelector extends LitElement {
             readonly
             class="annotation-item"
           >
-            <b>${this.identifier}: </b>${this.description}
+            <div>${this.identifier}</div>
+            <div style="font-weight:300;padding-top:4px;padding-bottom:6px">
+              ${this.description}
+            </div>
           </vscode-text-field>`}
         </div>
         <div class="row">
