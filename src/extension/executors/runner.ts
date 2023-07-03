@@ -87,7 +87,12 @@ export async function executeRunner(
 
   let cellText = exec.cell.document.getText()
 
-  const commands = await parseCommandSeq(cellText, promptEnv, prepareCmdSeq)
+  const commands = await parseCommandSeq(
+    cellText,
+    promptEnv,
+    environment?.initialEnvs(),
+    prepareCmdSeq
+  )
   if (!commands) {
     return false
   }

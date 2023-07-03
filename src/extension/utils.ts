@@ -544,3 +544,12 @@ export async function fileOrDirectoryExists(path: Uri): Promise<boolean> {
 export function isMultiRootWorkspace(): boolean {
   return (workspace.workspaceFolders && workspace.workspaceFolders.length > 1) || false
 }
+
+export function convertEnvList(envs: string[]): Record<string, string | undefined> {
+  return envs.reduce((prev, curr) => {
+    const [key, value = ''] = curr.split(/\=(.*)/s)
+    prev[key] = value
+
+    return prev
+  }, {} as Record<string, string | undefined>)
+}

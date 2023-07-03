@@ -129,7 +129,12 @@ export class RunmeTaskProvider implements TaskProvider {
         const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
+        const commands = await parseCommandSeq(
+          cellContent,
+          undefined,
+          environment?.initialEnvs(),
+          prepareCmdSeq
+        )
 
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
