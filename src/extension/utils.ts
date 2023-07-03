@@ -405,6 +405,7 @@ export function getWorkspaceFolder(uri?: Uri): WorkspaceFolder | undefined {
   } while (testPath !== path.dirname(testPath))
 }
 
+// TODO: use gRPC project mode for this
 export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string>> {
   const res: Record<string, string> = {}
   const workspaceFolder = getWorkspaceFolder(uri)

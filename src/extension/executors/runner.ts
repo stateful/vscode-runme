@@ -90,7 +90,7 @@ export async function executeRunner(
   const commands = await parseCommandSeq(
     cellText,
     promptEnv,
-    environment?.initialEnvs(),
+    new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
     prepareCmdSeq
   )
   if (!commands) {
