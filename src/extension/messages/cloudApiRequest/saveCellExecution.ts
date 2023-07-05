@@ -68,6 +68,7 @@ export default async function saveCellExecution(
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
       uuid: message.output.uuid,
+      shareToken: runmeTokenResponse.token,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('runme-app-error')

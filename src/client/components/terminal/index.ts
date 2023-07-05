@@ -415,7 +415,7 @@ export class TerminalView extends LitElement {
                   createCellExecution: { htmlUrl },
                 },
               } = e.output.data
-              this.shareUrl = htmlUrl
+              this.shareUrl = `${htmlUrl}?share_token=${e.output.shareToken}`
               await this.#displayShareDialog()
             }
             break

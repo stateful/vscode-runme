@@ -218,6 +218,7 @@ export interface ClientMessagePayload {
     data: any
     uuid: string
     hasErrors?: boolean
+    shareToken?: string | undefined
   }
   [ClientMessages.optionsMessage]: {
     title: string
