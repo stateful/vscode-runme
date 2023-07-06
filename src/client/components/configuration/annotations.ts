@@ -308,9 +308,9 @@ export class Annotations extends LitElement {
       )} `
   }
 
-  renderCategoryTabEntry(id: string) {
-    const value = this.annotations?.[id as keyof typeof this.annotations] as any
-    const details = this.#details?.[id] as any
+  renderCategoryTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
 
     return html`<div>
       <div style="font-weight:600">
