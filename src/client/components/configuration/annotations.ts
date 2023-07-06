@@ -265,9 +265,9 @@ export class Annotations extends LitElement {
     return html`<p class="error-item current-value-error">Received value: ${value}</p>`
   }
 
-  renderCheckboxTabEntry(id: string) {
-    const value = this.annotations?.[id as keyof typeof this.annotations] as any
-    const details = this.#details?.[id] as any
+  renderCheckboxTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
 
     return html`<div>
       <div style="font-weight:600">
@@ -278,9 +278,9 @@ export class Annotations extends LitElement {
     </div> `
   }
 
-  renderTextFieldTabEntry(id: string) {
-    const value = this.annotations?.[id as keyof typeof this.annotations] as any
-    const details = this.#details?.[id] as any
+  renderTextFieldTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
 
     const errors: string[] = this.validationErrors?.errors
       ? this.validationErrors.errors[id as keyof CellAnnotations] || []
@@ -300,7 +300,6 @@ export class Annotations extends LitElement {
       ${when(
         errors.length,
         () => this.renderErrors(errors),
-        () => html``
       )}
       ${when(
         typeof value === 'boolean' && errors.length,
@@ -309,9 +308,9 @@ export class Annotations extends LitElement {
       )} `
   }
 
-  renderCategoryTabEntry(id: string) {
-    const value = this.annotations?.[id as keyof typeof this.annotations] as any
-    const details = this.#details?.[id] as any
+  renderCategoryTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
 
     return html`<div>
       <div style="font-weight:600">
