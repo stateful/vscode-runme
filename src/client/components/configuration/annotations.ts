@@ -65,6 +65,7 @@ export class Annotations extends LitElement {
       color: var(--vscode-foreground);
       border: 1px solid var(--vscode-settings-numberInputBorder, transparent);
       min-width: fit-content;
+      max-width: calc(65% - 10px);
     }
 
     .annotation-item::part(root) {
@@ -132,12 +133,11 @@ export class Annotations extends LitElement {
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     mimeType: {
-      description: "Cell's output content MIME type (default: text/plain).",
+      description: "Cell's output content MIME type.",
       docs: 'https://docs.runme.dev/configuration#supported-mime-types',
     },
     name: {
-      description:
-        "Cell's canonical name for easy referencing in the CLI (default: auto-generated)",
+      description: "Cell's canonical name for easy referencing in the CLI.",
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     category: {
@@ -311,7 +311,7 @@ export class Annotations extends LitElement {
     const details = this.#details?.[id]
 
     return html`<div>
-      <div style="font-weight:600">
+      <div>
         <category-selector
           categories="${this.categories}"
           createNewCategoryText="Add ${id}"
