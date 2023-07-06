@@ -100,7 +100,7 @@
       {
         "command": "runme.surveyFeedbackButton",
         "category": "Runme",
-        "title": "Submit Feedback",
+        "title": "Send Feedback",
         "icon": "$(feedback)"
       },
       {
