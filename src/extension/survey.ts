@@ -38,6 +38,10 @@ abstract class Survey implements Disposable {
     this.context = context
   }
 
+  open() {
+    commands.executeCommand(this.id)
+  }
+
   dispose() {
     this.disposables.forEach((d) => d.dispose())
   }
@@ -295,10 +299,6 @@ export class SurveyShebangComingSoon extends Survey {
     commands.registerCommand(SurveyShebangComingSoon.#id, this.prompt.bind(this))
   }
 
-  open() {
-    commands.executeCommand(SurveyShebangComingSoon.#id)
-  }
-
   async prompt(): Promise<void> {
     const option = await window.showWarningMessage(
       'Not every language is executable... yet! Coming soon: Mix and match languages in Runme.',
@@ -313,6 +313,26 @@ export class SurveyShebangComingSoon extends Survey {
     await commands.executeCommand(
       'vscode.open',
       Uri.parse('https://runme.dev/spotlight/shebang-support')
+    )
+  }
+}
+
+export class SurveyFeedbackButton extends Survey {
+  static readonly #id: string = 'runme.surveyFeedbackButton'
+  readonly #mid: string
+
+  constructor(protected context: ExtensionContext) {
+    super(context, SurveyFeedbackButton.#id)
+    this.#mid = getNamespacedMid(SurveyFeedbackButton.#id)
+
+    commands.registerCommand(SurveyFeedbackButton.#id, this.prompt.bind(this))
+  }
+
+  async prompt(): Promise<void> {
+    TelemetryReporter.sendTelemetryEvent('survey.FeedbackButton', { never: 'false' })
+    return commands.executeCommand(
+      'vscode.open',
+      Uri.parse(`https://wfoq097ak2p.typeform.com/feedback#mid=${this.#mid}`)
     )
   }
 }
