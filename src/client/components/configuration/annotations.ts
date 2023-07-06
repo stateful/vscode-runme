@@ -416,25 +416,20 @@ export class Annotations extends LitElement {
 
     const markup = html`<div style="width:100%">
       <vscode-panels>
-        <vscode-panel-tab id="tab-1">EXECUTION</vscode-panel-tab>
-        <vscode-panel-tab id="tab-2">PROMPT</vscode-panel-tab>
-        <vscode-panel-tab id="tab-3">ADVANCED</vscode-panel-tab>
+        <vscode-panel-tab id="tab-1">GENERAL</vscode-panel-tab>
+        <vscode-panel-tab id="tab-2">ADVANCED</vscode-panel-tab>
         <vscode-panel-view id="view-1">
           <div class="grid">
+            <div class="box">${this.renderTextFieldTabEntry('name')}</div>
             <div class="box">${this.renderCheckboxTabEntry('background')}</div>
             <div class="box">${this.renderCheckboxTabEntry('interactive')}</div>
             <div class="box">${this.renderCheckboxTabEntry('closeTerminalOnSuccess')}</div>
-            <div class="box">${this.renderCheckboxTabEntry('excludeFromRunAll')}</div>
           </div>
         </vscode-panel-view>
         <vscode-panel-view id="view-2">
           <div class="grid">
+            <div class="box">${this.renderCheckboxTabEntry('excludeFromRunAll')}</div>
             <div class="box">${this.renderCheckboxTabEntry('promptEnv')}</div>
-          </div>
-        </vscode-panel-view>
-        <vscode-panel-view id="view-3">
-          <div class="grid">
-            <div class="box">${this.renderTextFieldTabEntry('name')}</div>
             <div class="box">${this.renderTextFieldTabEntry('mimeType')}</div>
             <div class="box">${this.renderCategoryTabEntry('category')}</div>
           </div>

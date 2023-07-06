@@ -5,6 +5,7 @@ import { when } from 'lit/directives/when.js'
 export interface ISelectedCategory {
   name: string
 }
+
 @customElement('category-selector')
 export class CategorySelector extends LitElement {
   static styles = css`
@@ -138,6 +139,12 @@ export class CategorySelector extends LitElement {
     this.dispatchEvent(event)
   }
 
+  renderLink() {
+    return html`<vscode-link href="https://docs.runme.dev/configuration#run-all-cells-by-category"
+      >(open docs)</vscode-link
+    >`
+  }
+
   render() {
     return html`
       <div class="category-selector-form">
@@ -150,7 +157,7 @@ export class CategorySelector extends LitElement {
             readonly
             class="annotation-item"
           >
-            <div>${this.identifier}</div>
+            <div>${this.identifier} ${this.renderLink()}</div>
             <div style="font-weight:300;padding-top:4px;padding-bottom:6px">
               ${this.description}
             </div>
