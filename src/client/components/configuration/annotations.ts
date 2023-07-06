@@ -140,10 +140,13 @@ export class Annotations extends LitElement {
         "Cell's canonical name for easy referencing in the CLI (default: auto-generated)",
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
-    category: { description: 'Execute this code cell within a category.', docs: '' },
+    category: {
+      description: 'Execute this code cell within a category.',
+      docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
+    },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',
-      docs: '',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
     },
   }
 
@@ -265,15 +268,16 @@ export class Annotations extends LitElement {
     return html`<p class="error-item current-value-error">Received value: ${value}</p>`
   }
 
+  renderDocsLink(link: string) {
+    return html`<vscode-link href="${link}">(open docs)</vscode-link>`
+  }
+
   renderCheckboxTabEntry(id: AnnotationsKey) {
     const value = this.annotations?.[id]
     const details = this.#details?.[id]
 
     return html`<div>
-      <div style="font-weight:600">
-        ${id}
-        <vscode-link href="${details.docs}">(docs)</vscode-link>
-      </div>
+      <div style="font-weight:600">${id} ${this.renderDocsLink(details.docs)}</div>
       <div style="padding-top:4px">${this.renderCheckbox(id, value as boolean, false)}</div>
     </div> `
   }
@@ -290,17 +294,11 @@ export class Annotations extends LitElement {
       : value
 
     return html`<div>
-        <div style="font-weight:600">
-          ${id}
-          <vscode-link href="${details.docs}">(docs)</vscode-link>
-        </div>
+        <div style="font-weight:600">${id} ${this.renderDocsLink(details.docs)}</div>
         <div style="padding-top:4px">${this.renderTextField(id, value as string)}</div>
       </div>
 
-      ${when(
-        errors.length,
-        () => this.renderErrors(errors),
-      )}
+      ${when(errors.length, () => this.renderErrors(errors))}
       ${when(
         typeof value === 'boolean' && errors.length,
         () => this.renderCurrentValueError(originalValue as string),
