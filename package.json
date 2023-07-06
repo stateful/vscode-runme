@@ -98,6 +98,12 @@
         "title": "Prompt to participate in Feedback survey"
       },
       {
+        "command": "runme.surveyFeedbackButton",
+        "category": "Runme",
+        "title": "Send Feedback",
+        "icon": "$(feedback)"
+      },
+      {
         "command": "runme.surveyShebangComingSoon",
         "category": "Runme",
         "title": "Prompt when a cell language is unsupported"
@@ -223,6 +229,10 @@
         {
           "command": "runme.runCellCategory",
           "when": "false"
+        },
+        {
+          "command": "runme.surveyFeedbackButton",
+          "when": "false"
         }
       ],
       "editor/title": [
@@ -263,6 +273,11 @@
         }
       ],
       "notebook/toolbar": [
+        {
+          "command": "runme.surveyFeedbackButton",
+          "when": "notebookType == runme",
+          "group": "navigation"
+        },
         {
           "command": "runme.runCategory",
           "when": "notebookType == runme && notebookHasCategories",
