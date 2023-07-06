@@ -56,10 +56,6 @@ export class Annotations extends LitElement {
       margin-block: 0;
     }
 
-    .row {
-      width: 100%;
-    }
-
     .annotation-item::part(control) {
       background-color: var(--theme-input-background);
       color: var(--vscode-foreground);
@@ -112,6 +108,10 @@ export class Annotations extends LitElement {
       box-sizing: border-box;
       overflow-x: auto;
       margin-top: 12px;
+    }
+
+    .themeText {
+      color: var(--vscode-foreground);
     }
   `
 
@@ -277,7 +277,9 @@ export class Annotations extends LitElement {
     const details = this.#details?.[id]
 
     return html`<div>
-      <div style="font-weight:600">${id} ${this.renderDocsLink(details.docs)}</div>
+      <div class="themeText" style="font-weight:600">
+        ${id} ${this.renderDocsLink(details.docs)}
+      </div>
       <div style="padding-top:4px">${this.renderCheckbox(id, value as boolean, false)}</div>
     </div> `
   }
@@ -294,7 +296,9 @@ export class Annotations extends LitElement {
       : value
 
     return html`<div>
-        <div style="font-weight:600">${id} ${this.renderDocsLink(details.docs)}</div>
+        <div style="font-weight:600" class="themeText">
+          ${id} ${this.renderDocsLink(details.docs)}
+        </div>
         <div style="padding-top:4px">${this.renderTextField(id, value as string)}</div>
       </div>
 
@@ -414,10 +418,10 @@ export class Annotations extends LitElement {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }
 
-    const markup = html`<div style="width:100%">
+    const markup = html`<div style="width:100%;">
       <vscode-panels>
-        <vscode-panel-tab id="tab-1">GENERAL</vscode-panel-tab>
-        <vscode-panel-tab id="tab-2">ADVANCED</vscode-panel-tab>
+        <vscode-panel-tab id="tab-1" class="themeText">GENERAL</vscode-panel-tab>
+        <vscode-panel-tab id="tab-2" class="themeText">ADVANCED</vscode-panel-tab>
         <vscode-panel-view id="view-1">
           <div class="grid">
             <div class="box">${this.renderTextFieldTabEntry('name')}</div>

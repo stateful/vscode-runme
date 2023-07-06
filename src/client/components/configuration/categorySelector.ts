@@ -86,6 +86,10 @@ export class CategorySelector extends LitElement {
     .flex-row > *:not(:last-child) {
       margin-right: 4px;
     }
+
+    .themeText {
+      color: var(--vscode-foreground);
+    }
   `
 
   @property({ type: String })
@@ -140,7 +144,7 @@ export class CategorySelector extends LitElement {
 
   render() {
     return html`
-      <div class="flex-column">
+      <div class="flex-column themeText">
         <div style="font-weight:600;">${this.identifier} ${this.renderLink()}</div>
         <div style="font-weight:300;">${this.description}</div>
 
