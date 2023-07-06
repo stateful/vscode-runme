@@ -557,6 +557,7 @@ export class Kernel implements Disposable {
           if (this.runner !== runner) {
             return
           }
+
           this.environment = env
         } catch (e: any) {
           window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)

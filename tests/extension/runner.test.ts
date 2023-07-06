@@ -21,6 +21,12 @@ vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
   getAnnotations: vi.fn().mockReturnValue({ }),
   isWindows: vi.fn().mockReturnValue(false),
+  convertEnvList: vi.fn().mockImplementation((envs: string[]) => envs.reduce((prev, curr) => {
+    const [key, value = ''] = curr.split(/\=(.*)/s)
+    prev[key] = value
+
+    return prev
+  }, {} as Record<string, string | undefined>)),
 }))
 
 vi.mock('vscode', async () => ({
@@ -41,8 +47,9 @@ let id = 0
 
 const resetId = () => { id = 0 }
 
-const createSession = vi.fn(() => ({
-  id: (id++).toString()
+const createSession = vi.fn((envs?: string[]) => ({
+  id: (id++).toString(),
+  envs: [...envs ?? [], 'foo=bar'],
 }))
 
 const deleteSession = vi.fn(async () => ({
@@ -72,10 +79,10 @@ vi.mock('../../src/extension/grpc/client', () => ({
   RunnerServiceClient: class {
     constructor() {}
 
-    async createSession() {
+    async createSession(request: { envs?: string[] }) {
       return {
         response: {
-          session: createSession()
+          session: createSession(request.envs)
         }
       }
     }
@@ -143,6 +150,16 @@ suite('grpc Runner', () => {
 
     expect(environmentDispose).toBeCalledTimes(1)
     expect(deleteSession).toBeCalledTimes(1)
+  })
+
+  test('environment has loaded variables', async () => {
+    const { runner } = createGrpcRunner()
+    const environment = await runner.createEnvironment(['bar=baz'])
+
+    const initialEnvs = environment.initialEnvs()
+
+    // { 'foo': 'bar', 'bar': 'baz' }
+    expect(initialEnvs).toStrictEqual(new Set(['foo', 'bar']))
   })
 
   test('cannot create environment if server not initialized', async () => {

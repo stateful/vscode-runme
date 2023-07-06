@@ -312,7 +312,7 @@ suite('parseCommandSeq', () => {
       'echo $TEST_MULTILINE'
     ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'), true, getCmdSeq)
+    const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq)
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
