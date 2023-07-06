@@ -300,7 +300,6 @@ export class Annotations extends LitElement {
       ${when(
         errors.length,
         () => this.renderErrors(errors),
-        () => html``
       )}
       ${when(
         typeof value === 'boolean' && errors.length,
