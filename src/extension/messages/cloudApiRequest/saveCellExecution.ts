@@ -52,12 +52,13 @@ export default async function saveCellExecution(
       throw new Error('Unable to retrieve an access token')
     }
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
+    const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
         data: {
-          stdout: exitCode === 0 ? message.output.data.stdout : Array.from([]),
-          stderr: exitCode !== 0 ? message.output.data.stderr : Array.from([]),
+          stdout: exitCode === 0 ? terminalContents : Array.from([]),
+          stderr: exitCode !== 0 ? terminalContents : Array.from([]),
           exitCode,
           pid,
           input: encodeURIComponent(cell.document.getText()),

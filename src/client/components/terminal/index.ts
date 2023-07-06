@@ -651,10 +651,9 @@ export class TerminalView extends LitElement {
       this.isCloudApiLoading = true
       const contentWithAnsi =
         this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
-      const terminalContents = new TextEncoder().encode(contentWithAnsi)
       await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
         data: {
-          stdout: JSON.stringify([...terminalContents], null, 2),
+          stdout: contentWithAnsi,
         },
         uuid: this.uuid!,
         method: APIMethod.CreateCellExecution,
