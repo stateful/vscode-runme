@@ -582,7 +582,7 @@
     "vscode:prepublish": "npm run prepare-binary",
     "download:binary": "npm run prepare-binary",
     "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "RUNME_TOKEN=$(runme token --api-url https://api.staging.stateful.com --insecure) graphql-codegen --config codegen.ts"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "4.0.1",
