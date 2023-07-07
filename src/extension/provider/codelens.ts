@@ -11,28 +11,31 @@ import {
   languages,
   commands,
   workspace,
+  window,
   tasks,
   EndOfLine,
   Position,
   NotebookData,
   NotebookCellData,
+  Uri,
 } from 'vscode'
 
 import { SerializerBase } from '../serializer'
 import type { runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
-import { getAnnotations } from '../utils'
+import { getAnnotations, getRunnerSessionEnvs } from '../utils'
 import { Serializer } from '../../types'
 import { getCodeLensEnabled } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
 import type { SurveyWinCodeLensRun } from '../survey'
+import RunmeServer from '../server/runmeServer'
 
 import { RunmeTaskProvider } from './runmeTask'
 
 export const ActionCommand = 'runme.codelens.action' as const
 
-const ActionTypes = ['run', 'open'] as const satisfies readonly string[]
+const ActionTypes = ['run', 'open', 'paste'] as const satisfies readonly string[]
 
 type ActionType = (typeof ActionTypes)[number]
 
@@ -54,11 +57,13 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
   public readonly onDidChangeCodeLenses: Event<void> = this._onDidChangeCodeLenses.event
 
   constructor(
+    protected extensionBaseUri: Uri,
     protected serializer: SerializerBase,
     protected runCLI: ReturnType<typeof runCLICommand>,
     protected surveyWinCodeLensRun: SurveyWinCodeLensRun,
     protected runner?: IRunner,
     protected kernel?: Kernel,
+    protected server?: RunmeServer,
   ) {
     this.register(
       languages.registerCodeLensProvider(
@@ -135,6 +140,16 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
               })
             }
             break
+
+          case 'paste':
+            {
+              return new CodeLens(range, {
+                title: '$(clippy) Paste into Terminal',
+                command: ActionCommand,
+                arguments: args,
+              })
+            }
+            break
         }
         /* c8 ignore stop */
       })
@@ -204,6 +219,24 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           )
 
           await tasks.executeTask(task)
+        }
+        break
+
+      case 'paste':
+        {
+          const value = cell.value
+          let activeTerminal = window.activeTerminal
+
+          if (!activeTerminal) {
+            let envs: Record<string, string> = {}
+            if (this.runner && this.kernel && this.server) {
+              envs = getRunnerSessionEnvs(this.extensionBaseUri, this.kernel, this.server)
+            }
+            activeTerminal = window.createTerminal({ env: envs })
+          }
+
+          activeTerminal.show(false)
+          activeTerminal.sendText(value, false)
         }
         break
     }

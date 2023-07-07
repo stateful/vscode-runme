@@ -23,7 +23,6 @@ import {
   getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
-  getTLSDir,
   getTLSEnabled,
   isNotebookTerminalEnabledForCell,
 } from '../../utils/configuration'
@@ -31,11 +30,11 @@ import { Kernel } from '../kernel'
 import {
   getAnnotations,
   getNotebookCategories,
+  getRunnerSessionEnvs,
   getTerminalByCell,
   openFileAsRunmeNotebook,
 } from '../utils'
 import RunmeServer from '../server/runmeServer'
-import { GrpcRunnerEnvironment } from '../runner'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
@@ -178,21 +177,14 @@ export function runCLICommand(
       `--index=${index}`,
     ]
 
-    const envs: Record<string, string> = {}
+    let envs: Record<string, string> = {}
 
     if (grpcRunner) {
-      envs['RUNME_SERVER_ADDR'] = server.address()
-
-      if (getTLSEnabled()) {
-        envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
-      } else {
+      if (!getTLSEnabled()) {
         args.push('--insecure')
       }
 
-      const runnerEnv = kernel.getRunnerEnvironment()
-      if (runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
-        envs['RUNME_SESSION'] = runnerEnv.getSessionId()
-      }
+      envs = getRunnerSessionEnvs(extensionBaseUri, kernel, server)
     }
 
     const annotations = getAnnotations(cell.metadata)

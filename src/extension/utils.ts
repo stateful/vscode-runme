@@ -32,11 +32,15 @@ import {
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getPortNumber,
+  getTLSDir,
+  getTLSEnabled,
 } from '../utils/configuration'
 
 import getLogger from './logger'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV, BOOTFILE } from './constants'
+import { GrpcRunnerEnvironment } from './runner'
+import RunmeServer from './server/runmeServer'
 
 declare var globalThis: any
 
@@ -541,4 +545,19 @@ export function getAuthSession(createIfNone: boolean = true) {
 
 export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
+}
+
+export function getRunnerSessionEnvs(extensionBaseUri: Uri, kernel: Kernel, server: RunmeServer) {
+  const envs: Record<string, string> = {}
+  envs['RUNME_SERVER_ADDR'] = server.address()
+
+  if (getTLSEnabled()) {
+    envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
+  }
+
+  const runnerEnv = kernel.getRunnerEnvironment()
+  if (runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
+    envs['RUNME_SESSION'] = runnerEnv.getSessionId()
+  }
+  return envs
 }
