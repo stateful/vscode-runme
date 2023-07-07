@@ -6,9 +6,10 @@ import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
 import { getAnnotations, getTerminalByCell } from '../../utils'
-import { createCellExecutionQuery } from '../../api/grapql'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
+import { CreateCellExecutionDocument } from '../../__generated__/graphql'
+
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
 export default async function saveCellExecution(
@@ -51,18 +52,23 @@ export default async function saveCellExecution(
       throw new Error('Unable to retrieve an access token')
     }
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
+    const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
     const result = await graphClient.mutate({
-      mutation: createCellExecutionQuery({
-        ...message.output.data,
-        exitCode,
-        pid,
-        input: encodeURIComponent(cell.document.getText()),
-        metadata: {
-          mimeType: annotations.mimeType,
-          name: annotations.name,
-          category: annotations.category,
+      mutation: CreateCellExecutionDocument,
+      variables: {
+        data: {
+          stdout: exitCode === 0 ? terminalContents : Array.from([]),
+          stderr: exitCode !== 0 ? terminalContents : Array.from([]),
+          exitCode,
+          pid,
+          input: encodeURIComponent(cell.document.getText()),
+          metadata: {
+            mimeType: annotations.mimeType,
+            name: annotations.name,
+            category: annotations.category || '',
+          },
         },
-      }),
+      },
     })
     TelemetryReporter.sendTelemetryEvent('runme-app-share')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {

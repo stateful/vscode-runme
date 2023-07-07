@@ -17,3 +17,4 @@ tests/e2e/logs
 tests/e2e/screenshots
 bin
 vscode-runme-CHANGELOG.txt
+__generated__

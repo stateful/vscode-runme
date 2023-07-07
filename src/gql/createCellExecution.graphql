@@ -1,0 +1,6 @@
+mutation CreateCellExecution($data: CellExecutionInput!) {
+  createCellExecution(data: $data) {
+   id,
+   htmlUrl
+  }
+}
