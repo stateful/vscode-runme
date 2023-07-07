@@ -12,6 +12,7 @@ import {
 } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { postClientMessage, onClientMessage } from '../../../utils/messaging'
+import { ExternalLinkIcon } from '../icons/external'
 
 import '../closeCellButton'
 import './categorySelector'
@@ -25,6 +26,11 @@ type Target = {
     value: string
     type: string
   }
+}
+
+interface configDetails {
+  description: string
+  docs: string
 }
 
 @customElement(RENDERERS.EditAnnotations)
@@ -51,14 +57,12 @@ export class Annotations extends LitElement {
       margin-block: 0;
     }
 
-    .row {
-      width: 100%;
-    }
-
     .annotation-item::part(control) {
       background-color: var(--theme-input-background);
       color: var(--vscode-foreground);
       border: 1px solid var(--vscode-settings-numberInputBorder, transparent);
+      min-width: fit-content;
+      max-width: calc(65% - 10px);
     }
 
     .annotation-item::part(root) {
@@ -91,18 +95,61 @@ export class Annotations extends LitElement {
     .current-value-error {
       padding: 1rem;
     }
+
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .box {
+      width: calc(50% - 10px);
+      padding: 4px;
+      box-sizing: border-box;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .themeText {
+      color: var(--vscode-foreground);
+    }
   `
 
-  readonly #descriptions = new Map<string, string>([
-    ['background', 'Run cell as background process (default: false)'],
-    ['interactive', 'Run cell inside terminal to allow for interactive input (default: true)'],
-    ['closeTerminalOnSuccess', 'Hide terminal after cell successful execution (default: true)'],
-    ['promptEnv', 'Prompt user input for exported environment variables (default: true)'],
-    ['mimeType', "Cell's output content MIME type (default: text/plain)"],
-    ['name', "Cell's canonical name for easy referencing in the CLI (default: auto-generated)"],
-    ['category', 'Execute this code cell within a category'],
-    ['excludeFromRunAll', 'Prevent executing this cell during the "Run All" operation'],
-  ])
+  readonly #details: { [id: string]: configDetails } = {
+    background: {
+      description: 'Run the cell as background process.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+    interactive: {
+      description: 'Run cell inside terminal to allow for interactive input.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+    closeTerminalOnSuccess: {
+      description: 'Hide terminal after cell successful execution.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+    promptEnv: {
+      description: 'Prompt user input for exported environment variables.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+    mimeType: {
+      description: "Cell's output content MIME type.",
+      docs: 'https://docs.runme.dev/configuration#supported-mime-types',
+    },
+    name: {
+      description: "Cell's canonical name for easy referencing in the CLI.",
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+    category: {
+      description: 'Execute this code cell within a category.',
+      docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
+    },
+    excludeFromRunAll: {
+      description: 'Prevent executing this cell during the "Run All" operation.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
+  }
 
   // Declare reactive properties
   @property({ type: Object, reflect: true })
@@ -113,10 +160,6 @@ export class Annotations extends LitElement {
 
   @property()
   categories: string[] = []
-
-  #desc(id: string): string {
-    return this.#descriptions.get(id) || id
-  }
 
   #getTargetValue(e: Target) {
     switch (e.target.type) {
@@ -183,6 +226,8 @@ export class Annotations extends LitElement {
   }
 
   renderCheckbox(id: string, isChecked: boolean, isReadOnly: boolean) {
+    const details = this.#details?.[id] as any
+
     return html`<vscode-checkbox
       id="${id}"
       @change="${this.#onChange}"
@@ -190,11 +235,13 @@ export class Annotations extends LitElement {
       @blur="${this.#onChange}"
       readonly=${isReadOnly}
       class="annotation-item"
-      ><b>${id}</b>: ${this.#desc(id)}</vscode-checkbox
+      >${details.description}</vscode-checkbox
     >`
   }
 
   renderTextField(id: string, text: string, placeHolder: string = '') {
+    const details = this.#details?.[id] as any
+
     return html`<vscode-text-field
       id="${id}"
       type="text"
@@ -204,7 +251,9 @@ export class Annotations extends LitElement {
       placeholder=${placeHolder}
       size="50"
       class="annotation-item"
-      ><b>${id}: </b>${this.#desc(id)}</vscode-text-field
+      ><div style="margin-top:2px;margin-bottom:10px;">
+        ${details.description}
+      </div></vscode-text-field
     >`
   }
 
@@ -218,6 +267,69 @@ export class Annotations extends LitElement {
 
   renderCurrentValueError(value: string) {
     return html`<p class="error-item current-value-error">Received value: ${value}</p>`
+  }
+
+  renderDocsLink(link: string) {
+    return html`<vscode-link href="${link}">(docs ${ExternalLinkIcon})</vscode-link>`
+  }
+
+  renderCheckboxTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
+
+    return html`<div>
+      <div class="themeText" style="font-weight:600">
+        ${id} ${this.renderDocsLink(details.docs)}
+      </div>
+      <div style="padding-top:4px">${this.renderCheckbox(id, value as boolean, false)}</div>
+    </div> `
+  }
+
+  renderTextFieldTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
+
+    const errors: string[] = this.validationErrors?.errors
+      ? this.validationErrors.errors[id as keyof CellAnnotations] || []
+      : []
+    const originalValue = errors.length
+      ? this.validationErrors?.originalAnnotations[id as keyof CellAnnotations]
+      : value
+
+    return html`<div>
+        <div style="font-weight:600" class="themeText">
+          ${id} ${this.renderDocsLink(details.docs)}
+        </div>
+        <div style="padding-top:4px">${this.renderTextField(id, value as string)}</div>
+      </div>
+
+      ${when(errors.length, () => this.renderErrors(errors))}
+      ${when(
+        typeof value === 'boolean' && errors.length,
+        () => this.renderCurrentValueError(originalValue as string),
+        () => html``
+      )} `
+  }
+
+  renderCategoryTabEntry(id: AnnotationsKey) {
+    const value = this.annotations?.[id]
+    const details = this.#details?.[id]
+
+    return html`<div>
+      <div>
+        <category-selector
+          categories="${this.categories}"
+          createNewCategoryText="Add ${id}"
+          selectCategoryText="Select ${id}"
+          selectedCategory="${value}"
+          description="${details.description}"
+          identifier="${id}"
+          @onChange="${this.onCategoryChange}"
+          @onCreateNewCategory=${this.createNewCategoryClick}
+          @onSelectCategory=${this.onSelectCategory}
+        ></category-selector>
+      </div>
+    </div>`
   }
 
   private getCellId() {
@@ -303,62 +415,45 @@ export class Annotations extends LitElement {
 
   // Render the UI as a function of component state
   render() {
-    let errorCount = 0
     if (!this.annotations) {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }
 
-    const displayableAnnotations = Object.entries(this.annotations).filter(
-      ([k]) => k.indexOf('runme.dev/') < 0
-    )
+    const markup = html`<div style="width:100%;">
+      <vscode-panels>
+        <vscode-panel-tab id="tab-1" class="themeText">GENERAL</vscode-panel-tab>
+        <vscode-panel-tab id="tab-2" class="themeText">ADVANCED</vscode-panel-tab>
+        <vscode-panel-view id="view-1">
+          <div class="grid">
+            <div class="box">${this.renderTextFieldTabEntry('name')}</div>
+            <div class="box">${this.renderCheckboxTabEntry('background')}</div>
+            <div class="box">${this.renderCheckboxTabEntry('interactive')}</div>
+            <div class="box">${this.renderCheckboxTabEntry('closeTerminalOnSuccess')}</div>
+          </div>
+        </vscode-panel-view>
+        <vscode-panel-view id="view-2">
+          <div class="grid">
+            <div class="box">${this.renderCheckboxTabEntry('excludeFromRunAll')}</div>
+            <div class="box">${this.renderCheckboxTabEntry('promptEnv')}</div>
+            <div class="box">${this.renderTextFieldTabEntry('mimeType')}</div>
+            <div class="box">${this.renderCategoryTabEntry('category')}</div>
+          </div>
+        </vscode-panel-view>
+      </vscode-panels>
+    </div>`
 
-    const markup = displayableAnnotations.map(([key, value]) => {
+    const errorArr = Object.keys(this.#details).map((key) => {
       const errors: string[] = this.validationErrors?.errors
         ? this.validationErrors.errors[key as keyof CellAnnotations] || []
         : []
-      const originalValue = errors.length
-        ? this.validationErrors?.originalAnnotations[key as keyof CellAnnotations]
-        : value
-      errorCount += errors.length
-      return html`<div class="row ${errors.length ? 'error-container' : ''}">
-        ${when(
-          typeof value === 'boolean',
-          () => this.renderCheckbox(key, value as boolean, false),
-          () => html``
-        )}
-        ${when(
-          typeof value === 'string',
-          () =>
-            key !== 'category'
-              ? this.renderTextField(key, value as string, key)
-              : html`<category-selector
-                  categories="${this.categories}"
-                  createNewCategoryText="Add ${key}"
-                  selectCategoryText="Select ${key}"
-                  selectedCategory="${value}"
-                  description="${this.#desc(key)}"
-                  identifier="${key}"
-                  @onChange="${this.onCategoryChange}"
-                  @onCreateNewCategory=${this.createNewCategoryClick}
-                  @onSelectCategory=${this.onSelectCategory}
-                />`,
-          () => html``
-        )}
-        ${when(
-          errors.length,
-          () => this.renderErrors(errors),
-          () => html``
-        )}
-        ${when(
-          typeof value === 'boolean' && errors.length,
-          () => this.renderCurrentValueError(originalValue as string),
-          () => html``
-        )}
-      </div>`
+      return errors.length
+    })
+
+    const errorCount = errorArr.reduce(function (a, b) {
+      return a + b
     })
 
     return html` <section class="annotation-container ${errorCount ? 'has-errors' : ''}">
-      <h4>Configure cell's execution behavior:</h4>
       ${markup}
       <close-cell-button
         @closed="${() => {
@@ -370,9 +465,10 @@ export class Annotations extends LitElement {
       ></close-cell-button>
       ${when(
         errorCount,
-        () => html` <p class="error-item">
-          This configuration block contains errors, using the default values instead
-        </p>`,
+        () =>
+          html` <p class="error-item">
+            This configuration block contains errors, using the default values instead
+          </p>`,
         () => html``
       )}
     </section>`

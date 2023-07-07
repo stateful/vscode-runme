@@ -2,28 +2,21 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
+import { ExternalLinkIcon } from '../icons/external'
+
 export interface ISelectedCategory {
   name: string
 }
+
 @customElement('category-selector')
 export class CategorySelector extends LitElement {
   static styles = css`
-    .category-selector-form {
-      display: flex;
-      align-items: flex-end;
-      max-width: 630px;
-    }
-
     :host([appearance='secondary']) {
       background: red;
     }
 
     label {
       font-size: var(--notebook-cell-output-font-size);
-    }
-
-    .category-item {
-      min-width: 200px;
     }
 
     .category-item::part(control) {
@@ -42,10 +35,7 @@ export class CategorySelector extends LitElement {
     .category-item::part(checked-indicator) {
       fill: var(--vscode-foreground);
     }
-    .row {
-      width: 100%;
-      margin-right: 0.5rem;
-    }
+
     .category-item::part(control) {
       background-color: var(--theme-input-background);
       color: var(--vscode-foreground);
@@ -56,6 +46,7 @@ export class CategorySelector extends LitElement {
       background-color: var(--theme-input-background);
       color: var(--vscode-foreground);
       border: 1px solid var(--vscode-settings-numberInputBorder, transparent);
+      max-width: calc(65% - 10px);
     }
 
     .annotation-item::part(root) {
@@ -70,8 +61,6 @@ export class CategorySelector extends LitElement {
 
     .category-button {
       color: var(--vscode-button-foreground);
-      margin-bottom: 0.2rem;
-      margin-right: 0.5rem;
     }
 
     .category-button label {
@@ -82,15 +71,26 @@ export class CategorySelector extends LitElement {
       background-color: var(--vscode-button-background);
     }
 
-    @media only screen and (max-width: 630px) {
-      .category-selector-form {
-        flex-direction: column;
-        margin-left: 0.5rem;
-      }
+    .flex-row {
+      display: flex;
+      flex-direction: row;
+    }
 
-      .category-button {
-        margin-top: 0.5rem;
-      }
+    .flex-column > *:not(:last-child) {
+      margin-bottom: 4px;
+    }
+
+    .flex-column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .flex-row > *:not(:last-child) {
+      margin-right: 4px;
+    }
+
+    .themeText {
+      color: var(--vscode-foreground);
     }
   `
 
@@ -138,22 +138,40 @@ export class CategorySelector extends LitElement {
     this.dispatchEvent(event)
   }
 
+  renderLink() {
+    return html`<vscode-link href="https://docs.runme.dev/configuration#run-all-cells-by-category"
+      >(docs ${ExternalLinkIcon})</vscode-link
+    >`
+  }
+
   render() {
     return html`
-      <div class="category-selector-form">
-        <div class="row">
-          ${html`<vscode-text-field
+      <div class="flex-column themeText">
+        <div style="font-weight:600;">${this.identifier} ${this.renderLink()}</div>
+        <div style="font-weight:300;">${this.description}</div>
+
+        ${when(
+          this.categories.length,
+          () => html`<vscode-text-field
             type="text"
             value="${this.selectedCategory}"
             size="30"
             @change="${this.onChange}"
+            @click="${this.onSelectCategory}"
             readonly
             class="annotation-item"
           >
-            <b>${this.identifier}: </b>${this.description}
-          </vscode-text-field>`}
-        </div>
-        <div class="row">
+          </vscode-text-field>`
+        )}
+
+        <div class="flex-row" style="margin-top:4px">
+          <vscode-button
+            appearance="secondary"
+            class="category-button"
+            @click="${this.onCreateNewCategory}"
+          >
+            <label>${this.createNewCategoryText}</label>
+          </vscode-button>
           ${when(
             this.categories.length,
             () => html` <vscode-button
@@ -164,13 +182,6 @@ export class CategorySelector extends LitElement {
             </vscode-button>`,
             () => html``
           )}
-          <vscode-button
-            appearance="secondary"
-            class="category-button"
-            @click="${this.onCreateNewCategory}"
-          >
-            <label>${this.createNewCategoryText}</label>
-          </vscode-button>
         </div>
       </div>
     `
