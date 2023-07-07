@@ -26,7 +26,8 @@ import {
   bootFile,
   isShellLanguage,
   fileOrDirectoryExists,
-  isMultiRootWorkspace
+  isMultiRootWorkspace,
+  convertEnvList,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -669,5 +670,21 @@ suite('isMultiRootWorkspace', () => {
     // @ts-expect-error
     workspace.workspaceFolders = undefined
     expect(isMultiRootWorkspace()).toStrictEqual(false)
+  })
+})
+
+suite('convertEnvList', () => {
+  test('can handle basic example', () => {
+    expect(
+      convertEnvList([
+        'a=1',
+        'b=2',
+        'c=3\n4',
+      ])
+    ).toStrictEqual({
+      'a': '1',
+      'b': '2',
+      'c': '3\n4',
+    })
   })
 })

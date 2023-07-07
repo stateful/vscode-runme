@@ -1,4 +1,4 @@
-import { workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
+import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Serializer } from '../types'
@@ -87,8 +87,12 @@ export class RunmeExtension {
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
-    const activeUsersSurvey = new survey.SurveyActiveUserFeedback(context)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
+    const surveys: Disposable[] = [
+      winCodeLensRunSurvey,
+      new survey.SurveyActiveUserFeedback(context),
+      new survey.SurveyFeedbackButton(context),
+    ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
@@ -115,8 +119,7 @@ export class RunmeExtension {
       serializer,
       server,
       treeViewer,
-      activeUsersSurvey,
-      winCodeLensRunSurvey,
+      ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
         transientCellMetadata,

@@ -128,12 +128,17 @@ export class RunmeTaskProvider implements TaskProvider {
       new CustomExecution(async () => {
         const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
-        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(cellContent, undefined, prepareCmdSeq)
-
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
+
+        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
+        const commands = await parseCommandSeq(
+          cellContent,
+          undefined,
+          new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
+          prepareCmdSeq
+        )
 
         if (!environment) {
           Object.assign(envs, process.env)

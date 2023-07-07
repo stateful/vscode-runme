@@ -23,6 +23,7 @@ import {
 import { RunnerServiceClient } from './grpc/client'
 import { getSystemShellPath } from './executors/utils'
 import RunmeServer from './server/runmeServer'
+import { convertEnvList } from './utils'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -81,7 +82,9 @@ export interface IRunner extends Disposable {
 
 interface IRunnerChild extends DisposableAsync {}
 
-export interface IRunnerEnvironment extends IRunnerChild {}
+export interface IRunnerEnvironment extends IRunnerChild {
+  initialEnvs(): Set<string>
+}
 
 export type RunnerExitReason =
   | {
@@ -253,12 +256,7 @@ export class GrpcRunner implements IRunner {
       return undefined
     }
 
-    return session.envs.reduce((prev, curr) => {
-      const [key, value = ''] = curr.split(/\=(.*)/s)
-      prev[key] = value
-
-      return prev
-    }, {} as Record<string, string>)
+    convertEnvList(session.envs)
   }
 
   // TODO: create a gRPC endpoint for this so it can be done without making a
@@ -744,7 +742,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 }
 
 export class GrpcRunnerEnvironment implements IRunnerEnvironment {
-  constructor(private readonly client: RunnerServiceClient, private readonly session: Session) {}
+  initialEnvKeys: Set<string>
+
+  constructor(private readonly client: RunnerServiceClient, private readonly session: Session) {
+    this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))
+  }
 
   getRunmeSession(): Session {
     return this.session
@@ -760,6 +762,10 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
 
   private async delete() {
     return await this.client.deleteSession({ id: this.getSessionId() })
+  }
+
+  initialEnvs(): Set<string> {
+    return this.initialEnvKeys
   }
 }
 

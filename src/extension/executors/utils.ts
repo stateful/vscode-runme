@@ -301,6 +301,7 @@ function resolveOrAbsolute(parent?: string, child?: string): string | undefined 
 export async function parseCommandSeq(
   cellText: string,
   promptForEnv = DEFAULT_PROMPT_ENV,
+  skipEnvs?: Set<string>,
   parseBlock?: (block: string) => string[]
 ): Promise<string[] | undefined> {
   parseBlock ??= (s) => (s ? s.split('\n') : [])
@@ -322,11 +323,18 @@ export async function parseCommandSeq(
   let offset = 0
 
   for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
-    let userValue: string
+    let userValue: string | undefined
+
+    let skip = false
 
     switch (type) {
       case 'prompt':
         {
+          if (skipEnvs?.has(key)) {
+            skip = true
+            break
+          }
+
           const userInput = await promptUserForVariable(key, value, hasStringValue)
 
           if (userInput === undefined) {
@@ -351,7 +359,9 @@ export async function parseCommandSeq(
     const prior = cellText.slice(offset, regexpMatch.index)
     parsedCommandBlocks.push({ type: 'block', content: prior })
 
-    parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+    if (!skip && userValue !== undefined) {
+      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+    }
 
     offset = regexpMatch.index + match.length
   }
