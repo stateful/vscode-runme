@@ -12,6 +12,7 @@ import {
 } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { postClientMessage, onClientMessage } from '../../../utils/messaging'
+import { ExternalLinkIcon } from '../icons/external'
 
 import '../closeCellButton'
 import './categorySelector'
@@ -269,7 +270,7 @@ export class Annotations extends LitElement {
   }
 
   renderDocsLink(link: string) {
-    return html`<vscode-link href="${link}">(open docs)</vscode-link>`
+    return html`<vscode-link href="${link}">(docs ${ExternalLinkIcon})</vscode-link>`
   }
 
   renderCheckboxTabEntry(id: AnnotationsKey) {

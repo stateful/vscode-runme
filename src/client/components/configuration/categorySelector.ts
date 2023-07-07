@@ -2,6 +2,8 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
+import { ExternalLinkIcon } from '../icons/external'
+
 export interface ISelectedCategory {
   name: string
 }
@@ -138,7 +140,7 @@ export class CategorySelector extends LitElement {
 
   renderLink() {
     return html`<vscode-link href="https://docs.runme.dev/configuration#run-all-cells-by-category"
-      >(open docs)</vscode-link
+      >(docs ${ExternalLinkIcon})</vscode-link
     >`
   }
 
