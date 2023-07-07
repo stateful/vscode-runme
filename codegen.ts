@@ -13,7 +13,7 @@ const config: CodegenConfig = {
    }
   ],
   documents: ['./src/gql/*.graphql'],
-  ignoreNoDocuments: true,
+  ignoreNoDocuments: false,
   generates: {
     './src/extension/__generated__/': {
       preset: 'client',
