@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
 
+const ACTIONS_SECTION_NAME = 'runme.actions'
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME = 'runme.terminal'
 const CODELENS_SECTION_NAME = 'runme.codelens'
@@ -15,6 +16,7 @@ const ENV_SECTION_NAME = 'runme.env'
 const CLI_SECTION_NAME = 'runme.cli'
 const APP_SECTION_NAME = 'runme.app'
 
+export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://app.runme.dev/graphql'
@@ -22,6 +24,9 @@ const DEFAULT_RUNME_APP_API_URL = 'https://app.runme.dev/graphql'
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
 const configurationSchema = {
+  actions: {
+    openViewInEditor: OpenViewInEditorAction.default('split'),
+  },
   server: {
     customAddress: z.string().nonempty().optional(),
     binaryPath: z.string().optional(),
@@ -51,6 +56,19 @@ const configurationSchema = {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
     enableShare: z.boolean().default(false),
   },
+}
+
+const getActionsConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.actions,
+  defaultValue: T
+) => {
+  const configurationSection = workspace.getConfiguration(ACTIONS_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.actions[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
+  }
+  return defaultValue
 }
 
 const getServerConfigurationValue = <T>(
@@ -214,6 +232,14 @@ const registerExtensionEnvironmentVariables = (context: ExtensionContext): void 
   )
 }
 
+const getActionsOpenViewInEditor = () => {
+  type ActionEnum = z.infer<typeof OpenViewInEditorAction>
+  return getActionsConfigurationValue<ActionEnum>(
+    'openViewInEditor',
+    OpenViewInEditorAction.enum.split
+  )
+}
+
 const getEnvWorkspaceFileOrder = (): string[] => {
   return getEnvConfigurationValue('workspaceFileOrder', DEFAULT_WORKSPACE_FILE_ORDER)
 }
@@ -249,6 +275,7 @@ export {
   getCodeLensEnabled,
   registerExtensionEnvironmentVariables,
   getCustomServerAddress,
+  getActionsOpenViewInEditor,
   getEnvWorkspaceFileOrder,
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,

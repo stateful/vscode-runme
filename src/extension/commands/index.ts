@@ -19,6 +19,8 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 
 import {
+  OpenViewInEditorAction,
+  getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
   getTLSDir,
@@ -209,16 +211,36 @@ export function runCLICommand(
   }
 }
 
+function openDocumentAs(doc: { text?: TextDocument; notebook?: NotebookDocument }) {
+  const openIn = getActionsOpenViewInEditor()
+  switch (openIn) {
+    case OpenViewInEditorAction.enum.toggle:
+      {
+        commands.executeCommand('workbench.action.toggleEditorType')
+      }
+      break
+    default:
+      {
+        if (doc.notebook) {
+          window.showNotebookDocument(doc.notebook, {
+            viewColumn: ViewColumn.Active,
+          })
+        } else if (doc.text) {
+          window.showTextDocument(doc.text, {
+            viewColumn: ViewColumn.Beside,
+          })
+        }
+      }
+      break
+  }
+}
+
 export function openAsRunmeNotebook(doc: NotebookDocument) {
-  window.showNotebookDocument(doc, {
-    viewColumn: ViewColumn.Active,
-  })
+  openDocumentAs({ notebook: doc })
 }
 
 export function openSplitViewAsMarkdownText(doc: TextDocument) {
-  window.showTextDocument(doc, {
-    viewColumn: ViewColumn.Beside,
-  })
+  openDocumentAs({ text: doc })
 }
 
 export async function createNewRunmeNotebook() {

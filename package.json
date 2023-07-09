@@ -438,6 +438,19 @@
             "default": 10,
             "markdownDescription": "Default number of rows in notebook terminal"
           },
+          "runme.actions.openViewInEditor": {
+            "type": "string",
+            "default": "split",
+            "enum": [
+              "split",
+              "toggle"
+            ],
+            "enumDescriptions": [
+              "Opens text editor to the side",
+              "Will replace notebook view with text editor"
+            ],
+            "markdownDescription": "Default behavior of Open In Editor action button"
+          },
           "runme.codelens.enable": {
             "type": "boolean",
             "default": true,
@@ -464,7 +477,7 @@
           "runme.app.apiUrl": {
             "type": "string",
             "default": "",
-            "markdownDescription": "Runme App API URL"
+            "markdownDescription": "App API URL"
           },
           "runme.app.enableShare": {
             "type": "boolean",
