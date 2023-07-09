@@ -31,6 +31,7 @@ import {
 } from '../../../src/extension/commands'
 import { getTerminalByCell, getAnnotations, openFileAsRunmeNotebook } from '../../../src/extension/utils'
 import {
+  getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
   isNotebookTerminalEnabledForCell
@@ -46,9 +47,11 @@ vi.mock('../../../src/extension/utils', () => ({
   openFileAsRunmeNotebook: vi.fn(),
 }))
 vi.mock('../../../src/utils/configuration', () => ({
+  getActionsOpenViewInEditor: vi.fn(),
   getBinaryPath: vi.fn(),
   isNotebookTerminalEnabledForCell: vi.fn(),
   getCLIUseIntegratedRunme: vi.fn().mockReturnValue(false),
+  OpenViewInEditorAction: { enum: { toggle: 'toggle', split: 'split' } }
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
   CliProvider: {
@@ -206,14 +209,28 @@ suite('runCliCommand', () => {
   })
 })
 
-test('open markdown as Runme notebook', (file: NotebookDocument) => {
+test('open markdown as Runme notebook split', (file: NotebookDocument) => {
+  vi.mocked(getActionsOpenViewInEditor).mockReturnValue('split' as const)
   openAsRunmeNotebook(file)
   expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined })
 })
 
-test('open Runme notebook in text editor', (file: TextDocument) => {
+test('open Runme notebook in text editor split', (file: TextDocument) => {
+  vi.mocked(getActionsOpenViewInEditor).mockReturnValue('split' as const)
   openSplitViewAsMarkdownText(file)
   expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside })
+})
+
+test('open markdown as Runme notebook toggle', (file: NotebookDocument) => {
+  vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
+  openAsRunmeNotebook(file)
+  expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
+})
+
+test('open Runme notebook in text editor toggle', (file: TextDocument) => {
+  vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
+  openSplitViewAsMarkdownText(file)
+  expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
 })
 
 test('stopBackgroundTask if terminal exists', () => {
