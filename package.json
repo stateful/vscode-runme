@@ -560,12 +560,30 @@
         }
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "runme",
+          "title": "Runme",
+          "icon": "assets/runme-logo-dark.svg"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
           "id": "runme.launcher",
+          "type": "tree",
           "name": "Runme Notebooks",
           "visibility": "collapsed"
+        }
+      ],
+      "runme": [
+        {
+          "id": "runme.cloud",
+          "type": "webview",
+          "name": "Cloud",
+          "visibility": "visible"
         }
       ]
     },

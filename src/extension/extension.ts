@@ -40,6 +40,7 @@ import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
+import Panel from './panels/panel'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -118,6 +119,7 @@ export class RunmeExtension {
       kernel,
       serializer,
       server,
+      ...this.registerPanels(context),
       treeViewer,
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -198,6 +200,12 @@ export class RunmeExtension {
     )
 
     await bootFile()
+  }
+
+  protected registerPanels(context: ExtensionContext): Disposable[] {
+    const id: string = 'runme.cloud'
+    const p = new Panel(context, id)
+    return [window.registerWebviewViewProvider(id, p), p]
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {
