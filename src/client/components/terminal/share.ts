@@ -3,6 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
 import { ShareIcon } from '../icons/share'
+import { SaveIcon } from '../icons/save'
 
 @customElement('share-cell')
 export class ShareCell extends LitElement {
@@ -15,12 +16,12 @@ export class ShareCell extends LitElement {
   /* eslint-disable */
   static styles = css`
     vscode-button {
-      background: transparent;
-      color: #ccc;
+      color: var(--vscode-button-foreground);
+      background-color: var(--vscode-button-background);
       transform: scale(0.9);
     }
     vscode-button:hover {
-      background: var(--button-secondary-background);
+      background: var(--vscode-button-hoverBackground);
     }
     vscode-button:focus {
       outline: #007fd4 1px solid;
@@ -45,7 +46,7 @@ export class ShareCell extends LitElement {
       this.disabled,
       () => html`
         <vscode-button disabled appearance="secondary" @click=${this.onShareClick}>
-          ${ShareIcon} ${this.shareText}
+          ${SaveIcon} ${this.shareText}
         </vscode-button>
       `,
       () => html`
