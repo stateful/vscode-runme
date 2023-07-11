@@ -24,7 +24,7 @@ interface IWindowSize {
 }
 
 enum MessageOptions {
-  OpenLink = 'Open link',
+  OpenLink = 'Open',
   CopyToClipboard = 'Copy to clipboard',
   Cancel = 'Cancel',
 }
@@ -65,7 +65,8 @@ const ANSI_COLORS = [
 @customElement(RENDERERS.TerminalView)
 export class TerminalView extends LitElement {
   protected copyText = 'Copy'
-  protected shareText = 'Share'
+  protected shareText = 'Save'
+  protected shareEnabledText = 'Share'
 
   static styles = css`
     .xterm {
@@ -255,12 +256,12 @@ export class TerminalView extends LitElement {
     }
 
     vscode-button {
-      background: transparent;
-      color: #ccc;
+      color: var(--vscode-button-foreground);
+      background-color: var(--vscode-button-background);
       transform: scale(0.9);
     }
     vscode-button:hover {
-      background: var(--button-secondary-background);
+      background: var(--vscode-button-hoverBackground);
     }
     vscode-button:focus {
       outline: #007fd4 1px solid;
@@ -332,6 +333,9 @@ export class TerminalView extends LitElement {
   @property({ type: Boolean })
   enableShareButton: boolean = false
 
+  @property()
+  isShareReady: boolean = false
+
   constructor() {
     super()
     this.windowSize = {
@@ -397,7 +401,10 @@ export class TerminalView extends LitElement {
                 return
               }
               if (e.type === ClientMessages.terminalStdout) {
+                this.shareText = 'Save'
+                this.isShareReady = false
                 this.terminal!.write(data)
+                this.requestUpdate()
               }
             }
             break
@@ -416,7 +423,8 @@ export class TerminalView extends LitElement {
                 },
               } = e.output.data
               this.shareUrl = htmlUrl
-              await this.#displayShareDialog()
+              this.shareText = this.shareEnabledText
+              this.isShareReady = true
             }
             break
 
@@ -635,6 +643,8 @@ export class TerminalView extends LitElement {
     if (!ctx.postMessage || !this.shareUrl) {
       return
     }
+    this.shareText = this.shareEnabledText
+    this.isShareReady = true
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
       title: 'Share link created',
       options: Object.values(MessageOptions),
@@ -648,6 +658,10 @@ export class TerminalView extends LitElement {
       return
     }
     try {
+      if (this.isShareReady) {
+        return this.#displayShareDialog()
+      }
+
       this.isCloudApiLoading = true
       const contentWithAnsi =
         this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
@@ -696,7 +710,8 @@ export class TerminalView extends LitElement {
           () =>
             html` <share-cell
               ?disabled=${this.isCloudApiLoading}
-              shareText="${this.isCloudApiLoading ? 'Generating link ...' : this.shareText}"
+              ?displayShareIcon=${this.isShareReady}
+              shareText="${this.isCloudApiLoading ? 'Saving ...' : this.shareText}"
               @onShare="${this.#shareCellOutput}"
             >
             </share-cell>`,
