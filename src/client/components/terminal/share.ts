@@ -13,6 +13,9 @@ export class ShareCell extends LitElement {
   @property({ type: Boolean, reflect: true })
   disabled: boolean = false
 
+  @property({ type: Boolean, reflect: true })
+  displayShareIcon: boolean = false
+
   /* eslint-disable */
   static styles = css`
     vscode-button {
@@ -46,12 +49,12 @@ export class ShareCell extends LitElement {
       this.disabled,
       () => html`
         <vscode-button disabled appearance="secondary" @click=${this.onShareClick}>
-          ${SaveIcon} ${this.shareText}
+          ${ShareIcon} ${this.shareText}
         </vscode-button>
       `,
       () => html`
         <vscode-button appearance="secondary" @click=${this.onShareClick}>
-          ${ShareIcon} ${this.shareText}
+          ${this.displayShareIcon ? ShareIcon : SaveIcon} ${this.shareText}
         </vscode-button>
       `
     )

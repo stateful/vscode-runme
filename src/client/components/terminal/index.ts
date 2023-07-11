@@ -710,6 +710,7 @@ export class TerminalView extends LitElement {
           () =>
             html` <share-cell
               ?disabled=${this.isCloudApiLoading}
+              ?displayShareIcon=${this.isShareReady}
               shareText="${this.isCloudApiLoading ? 'Saving ...' : this.shareText}"
               @onShare="${this.#shareCellOutput}"
             >
