@@ -451,6 +451,7 @@ export class Annotations extends LitElement {
             <div class="box">${this.renderTextFieldTabEntry('mimeType')}</div>
             <div class="box">${this.renderCategoryTabEntry('category')}</div>
             <div class="box">${this.renderTextFieldTabEntry('terminalRows')}</div>
+            <div class="box">${this.renderTextFieldTabEntry('program')}</div>
           </div>
         </vscode-panel-view>
       </vscode-panels>
