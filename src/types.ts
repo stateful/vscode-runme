@@ -297,3 +297,5 @@ export interface IApiMessage<T extends ClientMessage<ClientMessages>> {
 }
 
 export type ShellType = 'sh' | 'powershell' | 'cmd' | 'fish'
+
+export type ActiveTerminal = RunmeTerminal & { executionId: number }

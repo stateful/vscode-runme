@@ -40,7 +40,6 @@ import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
-import { TerminalManager } from './terminal/terminalManager'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -195,8 +194,7 @@ export class RunmeExtension {
        */
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
         addToRecommendedExtensions(context)
-      ),
-      new TerminalManager()
+      )
     )
 
     await bootFile()

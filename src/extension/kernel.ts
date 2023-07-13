@@ -17,7 +17,7 @@ import {
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { ClientMessage, Serializer } from '../types'
+import type { ActiveTerminal, ClientMessage, RunmeTerminal, Serializer } from '../types'
 import {
   ClientMessages,
   DEFAULT_LANGUAGEID,
@@ -40,6 +40,7 @@ import {
   isWindows,
   setNotebookCategories,
   isShellLanguage,
+  getTerminalRunmeId,
 } from './utils'
 import './wasm/wasm_exec.js'
 import { IRunner, IRunnerEnvironment } from './runner'
@@ -85,6 +86,7 @@ export class Kernel implements Disposable {
   protected runnerReadyListener?: Disposable
 
   protected cellManager = new NotebookCellManager(this.#controller)
+  protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
 
   constructor(protected context: ExtensionContext) {
@@ -140,6 +142,7 @@ export class Kernel implements Disposable {
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
     this.runnerReadyListener?.dispose()
+    this.activeTerminals = []
   }
 
   async getTerminalState(cell: NotebookCell): Promise<ITerminalState | undefined> {
@@ -354,6 +357,7 @@ export class Kernel implements Disposable {
         messaging: this.messaging,
         message,
         editor,
+        kernel: this,
       })
     } else if (message.type === ClientMessages.optionsMessage) {
       const answer = await window.showInformationMessage(
@@ -595,5 +599,18 @@ export class Kernel implements Disposable {
 
   getSupportedLanguages() {
     return this.#controller.supportedLanguages
+  }
+
+  registerTerminal(terminal: RunmeTerminal, executionId: number) {
+    const exists = this.activeTerminals.find((t) => t.executionId === executionId)
+    if (!exists) {
+      this.activeTerminals.push({ ...terminal, executionId })
+    }
+  }
+
+  getTerminal(runmeId: string) {
+    return this.activeTerminals.find((t) => {
+      return getTerminalRunmeId(t) === runmeId
+    }) as RunmeTerminal | undefined
   }
 }

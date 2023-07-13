@@ -9,12 +9,13 @@ import { getAnnotations, getCellRunmeId } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
 import { CreateCellExecutionDocument } from '../../__generated__/graphql'
-import { TerminalManager } from '../../terminal/terminalManager'
+import { Kernel } from '../../kernel'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
 export default async function saveCellExecution(
-  requestMessage: APIRequestMessage
+  requestMessage: APIRequestMessage,
+  kernel: Kernel
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
 
@@ -36,7 +37,7 @@ export default async function saveCellExecution(
     }
 
     const runmeId = getCellRunmeId(cell)
-    const terminal = TerminalManager.getTerminal(runmeId)
+    const terminal = kernel.getTerminal(runmeId)
     if (!terminal) {
       throw new Error('Could not find an associated terminal')
     }
