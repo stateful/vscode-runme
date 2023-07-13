@@ -33,6 +33,7 @@ import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
 import { NotebookCellOutputManager } from '../cell'
+import { TerminalManager } from '../terminal/terminalManager'
 
 import { closeTerminalByEnvID } from './task'
 import { getCellShellPath, parseCommandSeq, getCellCwd } from './utils'
@@ -341,6 +342,7 @@ export async function executeRunner(
       }
 
       terminal.runnerSession = program
+      TerminalManager.register(terminal, executionId)
 
       // proxy pid value
       Object.defineProperty(terminal, 'processId', {
