@@ -114,6 +114,10 @@ export class Annotations extends LitElement {
     .themeText {
       color: var(--vscode-foreground);
     }
+
+    .noSelect {
+      user-select: none;
+    }
   `
 
   readonly #details: { [id: string]: configDetails } = {
@@ -421,8 +425,8 @@ export class Annotations extends LitElement {
 
     const markup = html`<div style="width:100%;">
       <vscode-panels>
-        <vscode-panel-tab id="tab-1" class="themeText">GENERAL</vscode-panel-tab>
-        <vscode-panel-tab id="tab-2" class="themeText">ADVANCED</vscode-panel-tab>
+        <vscode-panel-tab id="tab-1" class="themeText noSelect">GENERAL</vscode-panel-tab>
+        <vscode-panel-tab id="tab-2" class="themeText noSelect">ADVANCED</vscode-panel-tab>
         <vscode-panel-view id="view-1">
           <div class="grid">
             <div class="box">${this.renderTextFieldTabEntry('name')}</div>
