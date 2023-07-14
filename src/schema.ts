@@ -50,6 +50,16 @@ export const AnnotationSchema = {
   closeTerminalOnSuccess: boolify(true),
   promptEnv: boolify(true),
   excludeFromRunAll: boolify(false),
+  terminalRows: z.preprocess((subject) => {
+    if (typeof subject === 'string' && subject) {
+      const numeric = Number(subject)
+      if (Number.isFinite(numeric)) {
+        return numeric
+      }
+    }
+
+    return undefined
+  }, z.number().int().positive().optional()),
   name: z.preprocess(
     (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
     z.string().default('')
