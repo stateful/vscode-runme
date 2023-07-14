@@ -1,7 +1,8 @@
 import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
+import Channel from 'tangle/webviews'
 
-import { Serializer } from '../types'
+import { Serializer, SyncSchema } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
 
 import { Kernel } from './kernel'
@@ -203,8 +204,11 @@ export class RunmeExtension {
   }
 
   protected registerPanels(context: ExtensionContext): Disposable[] {
-    const id: string = 'runme.cloud'
+    const id: string = 'runme.cloud' as const
     const p = new Panel(context, id)
+    const channel = new Channel<SyncSchema>('app')
+    const bus$ = channel.register([p.webview])
+    p.registerBus(bus$)
     return [window.registerWebviewViewProvider(id, p), p]
   }
 

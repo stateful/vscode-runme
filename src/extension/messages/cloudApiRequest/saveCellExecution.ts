@@ -1,11 +1,10 @@
-import { authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { AuthenticationProviders, ClientMessages } from '../../../constants'
+import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
-import { getAnnotations, getCellRunmeId } from '../../utils'
+import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
 import { CreateCellExecutionDocument } from '../../__generated__/graphql'
@@ -20,13 +19,7 @@ export default async function saveCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await authentication.getSession(
-      AuthenticationProviders.GitHub,
-      ['user:email'],
-      {
-        createIfNone: true,
-      }
-    )
+    const session = await getAuthSession()
 
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
@@ -51,7 +44,7 @@ export default async function saveCellExecution(
     const annotations = getAnnotations(cell)
     delete annotations['runme.dev/uuid']
     const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
-    const runmeTokenResponse = await runmeService.getAccessToken()
+    const runmeTokenResponse = await runmeService.getUserToken()
     if (!runmeTokenResponse) {
       throw new Error('Unable to retrieve an access token')
     }
