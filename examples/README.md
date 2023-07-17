@@ -156,8 +156,8 @@ echo Columns: \$(tput cols)
 
 With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON files interactively in Runme notebooks, e.g.:
 
-```sh
-curl "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
+```sh { terminalRows=20 }
+curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
 ```
 
 ## YAML

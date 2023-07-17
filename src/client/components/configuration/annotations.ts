@@ -151,8 +151,7 @@ export class Annotations extends LitElement {
     },
     terminalRows: {
       description: 'Number of rows to display in the notebook terminal.',
-      // FIXME: provide docs link
-      docs: '',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
     },
   }
 
