@@ -640,7 +640,7 @@
     "eslint-import-resolver-typescript": "^3.5.5",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-unicorn": "^47.0.0",
-    "eslint-plugin-unused-imports": "^2.0.0",
+    "eslint-plugin-unused-imports": "^3.0.0",
     "expect-webdriverio": "^4.2.3",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "husky": "^8.0.3",
