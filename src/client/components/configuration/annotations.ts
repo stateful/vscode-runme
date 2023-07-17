@@ -149,6 +149,10 @@ export class Annotations extends LitElement {
       description: 'Prevent executing this cell during the "Run All" operation.',
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
+    terminalRows: {
+      description: 'Number of rows to display in the notebook terminal.',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
+    },
   }
 
   // Declare reactive properties
@@ -437,6 +441,7 @@ export class Annotations extends LitElement {
             <div class="box">${this.renderCheckboxTabEntry('promptEnv')}</div>
             <div class="box">${this.renderTextFieldTabEntry('mimeType')}</div>
             <div class="box">${this.renderCategoryTabEntry('category')}</div>
+            <div class="box">${this.renderTextFieldTabEntry('terminalRows')}</div>
           </div>
         </vscode-panel-view>
       </vscode-panels>

@@ -151,7 +151,7 @@ export class NotebookCellOutputManager {
           return
         }
 
-        const cellId = getAnnotations(cell)['runme.dev/uuid']
+        const { 'runme.dev/uuid': cellId, terminalRows } = getAnnotations(cell)
         if (!cellId) {
           throw new Error('Cannot open cell terminal with invalid UUID!')
         }
@@ -172,7 +172,7 @@ export class NotebookCellOutputManager {
               terminalFontFamily,
               terminalFontSize,
               content: terminalState.serialize(),
-              initialRows: getNotebookTerminalRows(),
+              initialRows: terminalRows || getNotebookTerminalRows(),
               enableShareButton: isRunmeApiEnabled(),
             },
           }
