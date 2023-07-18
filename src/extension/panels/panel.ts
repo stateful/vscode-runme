@@ -1,10 +1,9 @@
 import { Disposable, ExtensionContext, Webview, WebviewView, WebviewViewProvider } from 'vscode'
 import { TelemetryViewProvider } from 'vscode-telemetry'
 import { Subject } from 'rxjs'
-import { fetch } from 'cross-fetch'
 import { Observable, Subscription } from 'rxjs'
 
-import { getAuthSession } from '../utils'
+import { fetchStaticHtml, getAuthSession } from '../utils'
 import { IAppToken, RunmeService } from '../services/runme'
 import { SyncSchemaBus } from '../../types'
 
@@ -26,7 +25,7 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
 
   public dispose() {}
 
-  protected async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
+  public async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
     const session = await getAuthSession(createIfNone)
 
     if (session) {
@@ -38,7 +37,7 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
     return null
   }
 
-  protected hydrateHtml(html: string, payload: InitPayload) {
+  public hydrateHtml(html: string, payload: InitPayload) {
     let content = html
     // eslint-disable-next-line quotes
     content = html.replace(`'{ "appToken": null }'`, `'${JSON.stringify(payload)}'`)
@@ -52,16 +51,12 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
 
 export default class Panel extends PanelBase implements WebviewViewProvider {
   public readonly webview = new Subject<Webview>()
-  private _visible: boolean = false
-  public get visible(): boolean {
-    return this._visible
-  }
   protected readonly staticHtml
 
   constructor(protected readonly context: ExtensionContext, public readonly identifier: string) {
     super(context)
 
-    this.staticHtml = fetch(this.appUrl)
+    this.staticHtml = fetchStaticHtml(this.appUrl)
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {

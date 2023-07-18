@@ -3,6 +3,7 @@ import util from 'node:util'
 import cp from 'node:child_process'
 import os from 'node:os'
 
+import { fetch } from 'cross-fetch'
 import vscode, {
   FileType,
   Uri,
@@ -564,4 +565,8 @@ export function getAuthSession(createIfNone: boolean = true) {
   return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
     createIfNone,
   })
+}
+
+export function fetchStaticHtml(appUrl: string) {
+  return fetch(appUrl)
 }
