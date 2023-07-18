@@ -16,7 +16,7 @@ export interface InitPayload {
   defaultUx: DefaultUx
 }
 
-export class PanelBase extends TelemetryViewProvider implements Disposable {
+class PanelBase extends TelemetryViewProvider implements Disposable {
   protected readonly appUrl: string = 'http://localhost:3001'
   protected readonly defaultUx: DefaultUx = 'panels'
 

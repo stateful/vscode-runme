@@ -205,8 +205,8 @@ export class RunmeExtension {
 
   protected registerPanels(context: ExtensionContext): Disposable[] {
     const id: string = 'runme.cloud' as const
-    const p = new Panel(context, id)
     const channel = new Channel<SyncSchema>('app')
+    const p = new Panel(context, id)
     const bus$ = channel.register([p.webview])
     p.registerBus(bus$)
     return [window.registerWebviewViewProvider(id, p), p]

@@ -12,6 +12,13 @@ import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
 
+vi.mock('../../src/extension/panels/panel', () => {
+  class Panel {
+    registerBus = vi.fn()
+  }
+  return ({ default: Panel })
+})
+
 vi.mock('../../src/extension/grpc/client', () => {
   class MockedParserServiceClient {
     deserialize = vi.fn(() => {
