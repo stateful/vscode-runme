@@ -223,12 +223,16 @@ export interface ClientMessagePayload {
     title: string
     uuid: string
     options: any[]
+    telemetryEvent?: string
   }
   [ClientMessages.onOptionsMessage]: {
     uuid: string
     option: string | undefined
   }
-  [ClientMessages.openExternalLink]: string
+  [ClientMessages.openExternalLink]: {
+    link: string
+    telemetryEvent: string
+  }
   [ClientMessages.copyTextToClipboard]: {
     uuid: string
     text: string
