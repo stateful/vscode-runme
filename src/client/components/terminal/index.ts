@@ -437,7 +437,10 @@ export class TerminalView extends LitElement {
               this.isCloudApiLoading = false
               switch (answer) {
                 case MessageOptions.OpenLink: {
-                  return postClientMessage(ctx, ClientMessages.openExternalLink, this.shareUrl!)
+                  return postClientMessage(ctx, ClientMessages.openExternalLink, {
+                    link: this.shareUrl!,
+                    telemetryEvent: 'app.openLink',
+                  })
                 }
                 case MessageOptions.CopyToClipboard: {
                   return postClientMessage(ctx, ClientMessages.copyTextToClipboard, {
@@ -649,6 +652,7 @@ export class TerminalView extends LitElement {
       title: 'Share link created',
       options: Object.values(MessageOptions),
       uuid: this.uuid!,
+      telemetryEvent: 'app.share',
     })
   }
 

@@ -74,7 +74,7 @@ export default async function saveCellExecution(
         },
       },
     })
-    TelemetryReporter.sendTelemetryEvent('app.share')
+    TelemetryReporter.sendTelemetryEvent('app.save')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
       uuid: message.output.uuid,

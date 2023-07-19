@@ -360,6 +360,9 @@ export class Kernel implements Disposable {
         kernel: this,
       })
     } else if (message.type === ClientMessages.optionsMessage) {
+      if (message.output.telemetryEvent) {
+        TelemetryReporter.sendTelemetryEvent(message.output.telemetryEvent)
+      }
       const answer = await window.showInformationMessage(
         message.output.title,
         ...message.output.options
@@ -374,7 +377,8 @@ export class Kernel implements Disposable {
         uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.openExternalLink) {
-      return env.openExternal(Uri.parse(message.output))
+      TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)
+      return env.openExternal(Uri.parse(message.output.link))
     } else if (message.type.startsWith('terminal:')) {
       return
     }
