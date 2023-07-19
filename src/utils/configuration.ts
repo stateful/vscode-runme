@@ -19,7 +19,7 @@ const APP_SECTION_NAME = 'runme.app'
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
-const DEFAULT_RUNME_APP_API_URL = 'https://app.runme.dev/graphql'
+const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev/graphql'
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 

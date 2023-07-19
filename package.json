@@ -560,12 +560,30 @@
         }
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "runme",
+          "title": "Runme",
+          "icon": "assets/runme-logo-sidebar.svg"
+        }
+      ]
+    },
     "views": {
       "explorer": [
         {
           "id": "runme.launcher",
+          "type": "tree",
           "name": "Runme Notebooks",
           "visibility": "collapsed"
+        }
+      ],
+      "runme": [
+        {
+          "id": "runme.cloud",
+          "type": "webview",
+          "name": "Cloud",
+          "visibility": "visible"
         }
       ]
     },
@@ -683,6 +701,7 @@
     "lit": "^2.7.4",
     "octokit": "^2.0.14",
     "preact": "^10.14.1",
+    "tangle": "^3.0.0",
     "undici": "^5.22.1",
     "uuid": "^9.0.0",
     "vercel": "^30.1.2",

@@ -3,6 +3,7 @@ import util from 'node:util'
 import cp from 'node:child_process'
 import os from 'node:os'
 
+import { fetch } from 'cross-fetch'
 import vscode, {
   FileType,
   Uri,
@@ -14,6 +15,7 @@ import vscode, {
   commands,
   WorkspaceFolder,
   ExtensionContext,
+  authentication,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -27,7 +29,11 @@ import {
   ShellType,
 } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
-import { NOTEBOOK_AVAILABLE_CATEGORIES, SERVER_ADDRESS } from '../constants'
+import {
+  AuthenticationProviders,
+  NOTEBOOK_AVAILABLE_CATEGORIES,
+  SERVER_ADDRESS,
+} from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
@@ -553,4 +559,14 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
 
     return prev
   }, {} as Record<string, string | undefined>)
+}
+
+export function getAuthSession(createIfNone: boolean = true) {
+  return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
+    createIfNone,
+  })
+}
+
+export function fetchStaticHtml(appUrl: string) {
+  return fetch(appUrl)
 }

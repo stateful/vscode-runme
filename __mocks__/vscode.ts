@@ -87,6 +87,7 @@ export const window = {
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   registerTreeDataProvider: vi.fn(),
   registerUriHandler: vi.fn(),
+  registerWebviewViewProvider: vi.fn(),
   onDidCloseTerminal: vi.fn(),
   withProgress: vi.fn(),
   onDidChangeActiveColorTheme: vi.fn().mockReturnValue({ dispose: vi.fn() }),
