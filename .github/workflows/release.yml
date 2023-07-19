@@ -314,7 +314,7 @@ jobs:
       - name: Publish to Open VSX Registry Linux X86 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
@@ -324,7 +324,7 @@ jobs:
       - name: Publish to Open VSX Registry Linux arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
@@ -334,7 +334,7 @@ jobs:
       - name: Publish to Open VSX Registry MacOS x86_64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
@@ -344,7 +344,7 @@ jobs:
       - name: Publish to Open VSX Registry MacOS arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
@@ -354,7 +354,7 @@ jobs:
       - name: Publish to Open VSX Registry Windows x64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
@@ -364,7 +364,7 @@ jobs:
       - name: Publish to Open VSX Registry Windows arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
