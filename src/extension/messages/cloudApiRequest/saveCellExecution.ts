@@ -74,13 +74,13 @@ export default async function saveCellExecution(
         },
       },
     })
-    TelemetryReporter.sendTelemetryEvent('runme-app-share')
+    TelemetryReporter.sendTelemetryEvent('app.share')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
       uuid: message.output.uuid,
     })
   } catch (error) {
-    TelemetryReporter.sendTelemetryEvent('runme-app-error')
+    TelemetryReporter.sendTelemetryEvent('app.error')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: (error as any).message,
       uuid: message.output.uuid,
