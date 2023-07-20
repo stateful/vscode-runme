@@ -128,13 +128,30 @@ You can copy also results from the inline executed shell:
 openssl rand -base64 32
 ```
 
-## Non-Supported Languages
+## Non-Shell Languages
 
-These are shown as simple markdowns, e.g:
+These are sometimes executable by default, like for python:
 
-```py { readonly=true }
-def hello():
-    print("Hello World")
+```py
+print("Hello World")
+```
+
+Otherwise, execution can be set with the `interpreter` annotation, like so:
+
+```yaml { interpreter=cat }
+config:
+  nested:
+    para: true
+```
+
+Non-shell scripts can also access environment variables, and are run from the current working directory:
+
+```sh
+export YOUR_NAME=enter your name
+```
+
+```javascript { name=echo-hello-js }
+console.log(`Hello, ${process.env.YOUR_NAME}, from ${__dirname}!`)
 ```
 
 ## Curl an image
@@ -158,22 +175,4 @@ With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON file
 
 ```sh { terminalRows=20 }
 curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
-```
-
-## YAML
-
-```yaml
-config:
-  nested:
-    para: true
-```
-
-## JavaScript
-
-```sh
-export YOUR_NAME=enter your name
-```
-
-```javascript { name=echo-hello-js }
-console.log(`Hello, ${process.env.YOUR_NAME}!`)
 ```
