@@ -420,7 +420,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         }
 
         if (error.message.includes('invalid ProgramName')) {
-          window.showErrorMessage(`Unable to locate program "${this.opts.programName}"`)
+          window.showErrorMessage(`Unable to locate interpreter "${this.opts.programName}"`)
         }
 
         console.error(
