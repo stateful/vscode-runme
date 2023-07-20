@@ -3,7 +3,6 @@ import os from 'node:os'
 
 import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
-import { v4 as uuidv4 } from 'uuid'
 
 import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
@@ -17,7 +16,6 @@ const CLI_SECTION_NAME = 'runme.cli'
 const APP_SECTION_NAME = 'runme.app'
 
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
-export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev/graphql'
 
@@ -32,7 +30,7 @@ const configurationSchema = {
     binaryPath: z.string().optional(),
     enableLogger: z.boolean().default(false),
     enableTLS: z.boolean().default(true),
-    tlsDir: z.string().nonempty().default(DEFAULT_TLS_DIR),
+    tlsDir: z.string().optional(),
   },
   notebookTerminal: {
     backgroundTask: z.boolean().default(true),
@@ -166,8 +164,10 @@ const getTLSEnabled = (): boolean => {
   return getServerConfigurationValue('enableTLS', true)
 }
 
-const getTLSDir = (): string => {
-  return getServerConfigurationValue('tlsDir', DEFAULT_TLS_DIR)
+const getTLSDir = (extensionsDir: Uri): string => {
+  return (
+    getServerConfigurationValue('tlsDir', undefined) || Uri.joinPath(extensionsDir, 'tls').fsPath
+  )
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
