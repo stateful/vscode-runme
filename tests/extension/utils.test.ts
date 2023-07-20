@@ -279,7 +279,7 @@ suite('#getAnnotations', () => {
         excludeFromRunAll: false,
         promptEnv: true,
         'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0',
-        program: '',
+        interpreter: '',
       }
     )
   })
@@ -301,7 +301,7 @@ suite('#getAnnotations', () => {
       promptEnv: true,
       excludeFromRunAll: false,
       category: '',
-      program: '',
+      interpreter: '',
     })
   })
 })

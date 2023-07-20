@@ -387,19 +387,19 @@ suite('getCellProgram', () => {
     })
   })
 
-  test('respects custom program in shell mode', async () => {
-    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ program: x.program })) as any)
+  test('respects custom interpreter in shell mode', async () => {
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ interpreter: x.interpreter })) as any)
 
-    expect(getCellProgram({ metadata: { program: 'fish' } } as any, {} as any, 'sh')).toStrictEqual({
+    expect(getCellProgram({ metadata: { interpreter: 'fish' } } as any, {} as any, 'sh')).toStrictEqual({
       commandMode: COMMAND_MODE_INLINE_SHELL,
       programName: 'fish'
     })
   })
 
-  test('respects custom program in temp file mode', async () => {
-    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ program: x.program })) as any)
+  test('respects custom interpreter in temp file mode', async () => {
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ interpreter: x.interpreter })) as any)
 
-    expect(getCellProgram({ metadata: { program: 'bun' } } as any, {} as any, 'javascript')).toStrictEqual({
+    expect(getCellProgram({ metadata: { interpreter: 'bun' } } as any, {} as any, 'javascript')).toStrictEqual({
       commandMode: COMMAND_MODE_TEMP_FILE,
       programName: 'bun'
     })

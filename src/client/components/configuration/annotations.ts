@@ -145,8 +145,8 @@ export class Annotations extends LitElement {
       description: "Cell's canonical name for easy referencing in the CLI.",
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
-    program: {
-      description: "Program with which to run this cell's script.",
+    interpreter: {
+      description: 'Script shebang line',
       // FIXME: update docs link
       docs: '',
     },
@@ -451,7 +451,7 @@ export class Annotations extends LitElement {
             <div class="box">${this.renderTextFieldTabEntry('mimeType')}</div>
             <div class="box">${this.renderCategoryTabEntry('category')}</div>
             <div class="box">${this.renderTextFieldTabEntry('terminalRows')}</div>
-            <div class="box">${this.renderTextFieldTabEntry('program')}</div>
+            <div class="box">${this.renderTextFieldTabEntry('interpreter')}</div>
           </div>
         </vscode-panel-view>
       </vscode-panels>

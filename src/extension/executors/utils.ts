@@ -269,7 +269,7 @@ export function getCellProgram(
   execKey: string
 ): { programName: string; commandMode: CommandMode } {
   let result: { programName: string; commandMode: CommandMode }
-  const { program } = getAnnotations(cell.metadata)
+  const { interpreter } = getAnnotations(cell.metadata)
 
   if (isShellLanguage(execKey)) {
     const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
@@ -286,8 +286,8 @@ export function getCellProgram(
     }
   }
 
-  if (program) {
-    result.programName = program
+  if (interpreter) {
+    result.programName = interpreter
   }
 
   return result
