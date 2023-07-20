@@ -415,7 +415,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         if (error.message.includes('invalid LanguageId')) {
           window.showErrorMessage(
             // eslint-disable-next-line max-len
-            'Unable to automatically execute cell. To execute this cell, set the "program" field in the configuration foldout!'
+            'Unable to automatically execute cell. To execute this cell, set the "interpreter" field in the configuration foldout!'
           )
         }
 
