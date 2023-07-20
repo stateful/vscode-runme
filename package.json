@@ -623,7 +623,6 @@
     "test:format:fix": "prettier --write .",
     "test:unit": "vitest -c ./vitest.conf.ts",
     "test:e2e": "wdio run ./tests/e2e/wdio.conf.ts",
-    "pretest:e2e": "npm run download:binary",
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
     "download:binary": "npm run prepare-binary",

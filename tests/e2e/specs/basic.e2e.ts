@@ -83,6 +83,28 @@ describe('Runme VS Code Extension', async () => {
       ])
     })
 
+    it('basic hello world python execution', async () => {
+      const cell = await notebook.getCell('print("Hello World")')
+
+      await cell.run()
+
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
+        'Hello World\n'
+      ])
+    })
+
+    it('basic yaml example', async () => {
+      const cell = await notebook.getCell('config:\n  nested:\n    para: true')
+
+      await cell.run()
+
+      await tryExecuteCommand(await browser.getWorkbench(), 'focus active cell output')
+
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
+        'config:\nnested:\npara: true\n'
+      ])
+    })
+
     it('more shell example', async () => {
       const cell = await notebook.getCell('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
       await cell.run()

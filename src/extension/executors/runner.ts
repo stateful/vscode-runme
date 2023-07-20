@@ -35,7 +35,7 @@ import { toggleTerminal } from '../commands'
 import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
-import { getCellShellPath, parseCommandSeq, getCellCwd } from './utils'
+import { parseCommandSeq, getCellCwd, getCellProgram } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 import type { IEnvironmentManager } from '.'
@@ -124,8 +124,10 @@ export async function executeRunner(
     }
   }
 
+  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+
   const program = await runner.createProgramSession({
-    programName: getCellShellPath(exec.cell, exec.cell.notebook, execKey) ?? execKey,
+    programName,
     environment,
     exec: execution,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
@@ -134,6 +136,8 @@ export async function executeRunner(
     tty: interactive,
     convertEol: !mimeType || mimeType === 'text/plain',
     storeLastOutput: true,
+    languageId: exec.cell.document.languageId,
+    commandMode,
   })
 
   context.subscriptions.push(program)

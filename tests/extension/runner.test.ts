@@ -2,7 +2,8 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter, NotebookCellKind, Position, tasks, commands, EndOfLine } from 'vscode'
+import { EventEmitter, NotebookCellKind, Position, tasks, commands, EndOfLine, window } from 'vscode'
+import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import {
   GrpcRunner,
@@ -199,6 +200,10 @@ suite('grpc Runner', () => {
   })
 
   suite('grpc program session', () => {
+    beforeEach(() => {
+      vi.mocked(window.showErrorMessage).mockClear()
+    })
+
     test('session dispose is called on runner dispose', async () => {
       const { runner, session, duplex } = await createNewSession()
 
@@ -558,6 +563,18 @@ suite('grpc Runner', () => {
 
       expect(writeListener).toBeCalledTimes(1)
       expect(writeListener).toBeCalledWith('test\n')
+    })
+
+    test('grpc program failure gives info message', async () => {
+      const { duplex } = await createNewSession()
+
+      duplex._onError.fire(new RpcError('invalid LanguageId'))
+      expect(window.showErrorMessage).toBeCalledTimes(1)
+
+      vi.mocked(window.showErrorMessage).mockClear()
+
+      duplex._onError.fire(new RpcError('invalid ProgramName'))
+      expect(window.showErrorMessage).toBeCalledTimes(1)
     })
   })
 })
