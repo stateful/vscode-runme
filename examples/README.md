@@ -170,6 +170,10 @@ config:
 
 ## JavaScript
 
+```sh
+export YOUR_NAME=enter your name
+```
+
 ```javascript { name=echo-hello-js }
-console.log('Hello World!')
+console.log(`Hello, ${process.env.YOUR_NAME}!`)
 ```
