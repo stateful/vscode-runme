@@ -24,7 +24,7 @@ import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serialize
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
-import { initWasm } from './utils'
+import { initWasm, normalizeImagePaths } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
 
@@ -180,6 +180,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const cells = notebook.cells ?? []
       notebook.cells = await Promise.all(
         cells.map((elem) => {
+          if (elem.kind === NotebookCellKind.Markup && elem.value) {
+            elem.value = normalizeImagePaths(
+              elem.value,
+              workspace.workspaceFolders?.[0].uri!
+            )
+          }
+
           if (elem.kind === NotebookCellKind.Code && elem.value && (elem.languageId || '') === '') {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {

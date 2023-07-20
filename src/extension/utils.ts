@@ -570,3 +570,25 @@ export function getAuthSession(createIfNone: boolean = true) {
 export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
 }
+
+const REGEX_HTML_IMG = /(?<=<img\s+[^>]*?src=)["']?([^"']*)["']?/gi
+export function normalizeImagePaths(md: string, rootUri: Uri) {
+  /**
+   * images in <img /> tags, e.g.
+   * `"<br /><img src="/img/venn.png" style={{width: "70%"}} alt="What is runme"/>"`
+   */
+  let match = md.match(REGEX_HTML_IMG)
+  if (
+    /**
+     * verify we match an image that has an absolute source path
+     */
+    Array.isArray(match) &&
+    typeof match[0] === 'string' &&
+    (match[0].startsWith('"/') || match[0].startsWith("'/"))
+  ) {
+    const imgUri = Uri.joinPath(rootUri, match[0].slice(1, -1))
+    md = md.replace(REGEX_HTML_IMG, `"${imgUri.fsPath}"`)
+  }
+
+  return md
+}
