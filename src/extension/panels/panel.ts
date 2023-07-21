@@ -16,7 +16,7 @@ export interface InitPayload {
 }
 
 class PanelBase extends TelemetryViewProvider implements Disposable {
-  protected readonly appUrl: string = 'http://localhost:3001'
+  protected readonly appUrl: string = 'http://localhost:4001'
   protected readonly defaultUx: DefaultUx = 'panels'
 
   constructor(protected readonly context: ExtensionContext) {

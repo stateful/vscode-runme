@@ -38,7 +38,7 @@ suite('Panel', () => {
       defaultUx: 'panels',
     })
 
-    expect(hydrated).toContain('<base href="http://localhost:3001">')
+    expect(hydrated).toContain('<base href="http://localhost:4001">')
     expect(hydrated).toContain(
       '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels"}'
     )
@@ -50,7 +50,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="http://localhost:3001">')
+    expect(view.webview.html).toContain('<base href="http://localhost:4001">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}'
     )
@@ -62,7 +62,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="http://localhost:3001">')
+    expect(view.webview.html).toContain('<base href="http://localhost:4001">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}'
     )
