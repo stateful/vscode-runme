@@ -379,7 +379,7 @@
           },
           "runme.server.binaryPath": {
             "type": "string",
-            "scope": "machine",
+            "scope": "window",
             "markdownDescription": "Runme server path to binary. (It requires the GRPC interface enabled)"
           },
           "runme.server.enableLogger": {
