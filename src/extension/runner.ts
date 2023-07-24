@@ -413,14 +413,18 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.session.responses.onError((error) => {
       if (error instanceof RpcError) {
         if (error.message.includes('invalid LanguageId')) {
-          window.showErrorMessage(
+          // todo(sebastian): provide "Configure" button to trigger foldout
+          window.showWarningMessage(
             // eslint-disable-next-line max-len
-            'Unable to automatically execute cell. To execute this cell, set the "interpreter" field in the configuration foldout!'
+            'Not every language is automatically executable. You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.'
           )
         }
 
         if (error.message.includes('invalid ProgramName')) {
-          window.showErrorMessage(`Unable to locate interpreter "${this.opts.programName}"`)
+          window.showErrorMessage(
+            // eslint-disable-next-line max-len
+            `Unable to locate interpreter "${this.opts.programName}" specified in shebang (aka #!). Please check the cell's "Configure" foldout.`
+          )
         }
 
         console.error(
