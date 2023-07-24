@@ -21,6 +21,7 @@ export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev'
 const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
+const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
@@ -260,9 +261,7 @@ const getCLIUseIntegratedRunme = (): boolean => {
 
 const getRunmeAppUrl = (subdomain: string[]): string => {
   const base = getRunmeBaseDomain()
-  const isLoopback = ['127.0.0.1', 'localhost']
-    .map((host) => base.includes(host))
-    .reduce((p, c) => p || c)
+  const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
   const scheme = isLoopback ? 'http' : 'https'
 
   let sub = subdomain.join('.')
