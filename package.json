@@ -482,7 +482,7 @@
           },
           "runme.app.enableShare": {
             "type": "boolean",
-            "default": false,
+            "default": true,
             "markdownDescription": "Enable app buttons in notebook terminal"
           }
         }

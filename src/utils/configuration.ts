@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
@@ -24,6 +25,15 @@ const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
 ])
+
+// todo(sebastian): temp hack, remove for stable release
+let APP_PANELS_PRESENT = false
+try {
+  const packageJson = readFileSync(path.join(__dirname, '../package.json'), { encoding: 'utf8' })
+  APP_PANELS_PRESENT = packageJson.indexOf('viewsContainers') > -1
+} catch (err) {
+  console.error(err)
+}
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -59,7 +69,7 @@ const configurationSchema = {
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
     baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
-    enableShare: z.boolean().default(false),
+    enableShare: z.boolean().default(true),
   },
 }
 
@@ -288,7 +298,7 @@ const getRunmeBaseDomain = (): string => {
 }
 
 const isRunmeAppButtonsEnabled = (): boolean => {
-  return getCloudConfigurationValue('enableShare', false)
+  return APP_PANELS_PRESENT && getCloudConfigurationValue('enableShare', true)
 }
 
 export {
