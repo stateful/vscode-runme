@@ -1,4 +1,4 @@
-import { suite, test, expect, vi } from 'vitest'
+import { suite, test, expect, vi, afterEach, beforeEach } from 'vitest'
 import { Uri, type ExtensionContext, type WebviewView } from 'vscode'
 
 import Panel from '../../../src/extension/panels/panel'
@@ -8,6 +8,37 @@ vi.mock('vscode-telemetry')
 
 vi.mock('../../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/runner', () => ({}))
+
+const SETTINGS_MOCK:
+    {
+        baseDomain: string | undefined
+    } = {
+    baseDomain: undefined,
+}
+
+beforeEach(() => {
+  vi.mock('vscode', async () => {
+    const mocked = await import('../../../__mocks__/vscode')
+
+    return ({
+      ...mocked,
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({
+          get: (configurationName) => {
+            return SETTINGS_MOCK[configurationName]
+          }
+        }),
+      },
+      Uri: mocked.Uri,
+    })
+  })
+})
+
+afterEach(() => {
+    Object.keys(SETTINGS_MOCK).forEach(key => {
+          SETTINGS_MOCK[key] = undefined
+    })
+})
 
 vi.mock('../../../src/extension/utils', () => {
   return {
@@ -38,7 +69,7 @@ suite('Panel', () => {
       defaultUx: 'panels',
     })
 
-    expect(hydrated).toContain('<base href="http://localhost:4001">')
+    expect(hydrated).toContain('<base href="https://app.runme.dev/">')
     expect(hydrated).toContain(
       '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels"}'
     )
@@ -50,7 +81,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="http://localhost:4001">')
+    expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}'
     )
@@ -62,7 +93,33 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="http://localhost:4001">')
+    expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
+    expect(view.webview.html).toContain(
+      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}'
+    )
+  })
+
+  test('resovles authed localhost', async () => {
+    SETTINGS_MOCK.baseDomain = 'localhost'
+    const p = new Panel(contextMock, 'testing')
+    p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
+
+    await p.resolveWebviewTelemetryView(view)
+
+    expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
+    expect(view.webview.html).toContain(
+      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}'
+    )
+  })
+
+  test('resovles unauthed localhost', async () => {
+    SETTINGS_MOCK.baseDomain = 'localhost'
+    const p = new Panel(contextMock, 'testing')
+    p.getAppToken = vi.fn().mockResolvedValue(null)
+
+    await p.resolveWebviewTelemetryView(view)
+
+    expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}'
     )

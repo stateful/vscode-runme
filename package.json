@@ -474,10 +474,11 @@
             "default": false,
             "markdownDescription": "Whether to use full path to integrated runme executable when running CLI commands. This is mostly useful for development purposes."
           },
-          "runme.app.apiUrl": {
+          "runme.app.baseDomain": {
             "type": "string",
             "default": "",
-            "markdownDescription": "App API URL"
+            "scope": "window",
+            "markdownDescription": "Base domain to be use for Runme app"
           },
           "runme.app.enableShare": {
             "type": "boolean",

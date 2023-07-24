@@ -19,7 +19,12 @@ const APP_SECTION_NAME = 'runme.app'
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
-const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev/graphql'
+const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev'
+const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
+const APP_LOOPBACK_MAPPING = new Map<string, string>([
+  ['api.', ':4000'],
+  ['app.', ':4001'],
+])
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -54,6 +59,7 @@ const configurationSchema = {
   },
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
+    baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
     enableShare: z.boolean().default(false),
   },
 }
@@ -252,8 +258,34 @@ const getCLIUseIntegratedRunme = (): boolean => {
   return getCLIConfigurationValue('useIntegratedRunme', false)
 }
 
-const getRunmeApiUrl = (): string => {
-  return getCloudConfigurationValue('apiUrl', DEFAULT_RUNME_APP_API_URL)
+const getRunmeAppUrl = (subdomain: string[]): string => {
+  const base = getRunmeBaseDomain()
+  const isLoopback = ['127.0.0.1', 'localhost']
+    .map((host) => base.includes(host))
+    .reduce((p, c) => p || c)
+  const scheme = isLoopback ? 'http' : 'https'
+
+  let sub = subdomain.join('.')
+  if (sub.length > 0) {
+    sub = `${sub}.`
+  }
+
+  let port = ''
+  if (isLoopback && sub.length > 0) {
+    port = APP_LOOPBACK_MAPPING.get(sub) ?? ''
+    sub = ''
+  }
+
+  const url = Uri.parse(`${scheme}://${sub}${base}${port}`, true)
+  return url.toString()
+}
+
+const getRunmeBaseDomain = (): string => {
+  const baseDomain = getCloudConfigurationValue('baseDomain', DEFAULT_RUNME_BASE_DOMAIN)
+  if (baseDomain.length === 0) {
+    return DEFAULT_RUNME_BASE_DOMAIN
+  }
+  return baseDomain
 }
 
 const isRunmeApiEnabled = (): boolean => {
@@ -279,6 +311,6 @@ export {
   getEnvWorkspaceFileOrder,
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,
-  getRunmeApiUrl,
+  getRunmeAppUrl,
   isRunmeApiEnabled,
 }

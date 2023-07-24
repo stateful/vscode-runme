@@ -1,6 +1,7 @@
 import fetch from 'cross-fetch'
+import { Uri } from 'vscode'
 
-import { getRunmeApiUrl } from '../../utils/configuration'
+import { getRunmeAppUrl } from '../../utils/configuration'
 
 export interface IUserToken {
   token: string
@@ -12,13 +13,16 @@ export interface IAppToken {
 
 export class RunmeService {
   protected githubAccessToken: string
+  private readonly apiBase = Uri.parse(getRunmeAppUrl(['api']), true)
+
   constructor({ githubAccessToken }: { githubAccessToken: string }) {
     this.githubAccessToken = githubAccessToken
   }
   async getUserToken(): Promise<IUserToken> {
+    const userAuthEndpoint = Uri.joinPath(this.apiBase, '/auth/vscode').toString()
     let response
     try {
-      response = await fetch(`${getRunmeApiUrl()}/auth/vscode`, {
+      response = await fetch(userAuthEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,9 +44,10 @@ export class RunmeService {
     return response.json()
   }
   async getAppToken(userToken: IUserToken): Promise<IAppToken> {
+    const appAuthEndpoint = Uri.joinPath(this.apiBase, '/auth/user/app').toString()
     let response
     try {
-      response = await fetch(`${getRunmeApiUrl()}/auth/user/app`, {
+      response = await fetch(appAuthEndpoint, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${userToken.token}`,
