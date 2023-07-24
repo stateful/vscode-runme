@@ -184,7 +184,7 @@ export function runCLICommand(
       envs['RUNME_SERVER_ADDR'] = server.address()
 
       if (getTLSEnabled()) {
-        envs['RUNME_TLS_DIR'] = getTLSDir()
+        envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
       } else {
         args.push('--insecure')
       }

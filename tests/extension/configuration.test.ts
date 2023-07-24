@@ -10,7 +10,6 @@ import {
   getBinaryPath,
   getServerConfigurationValue,
   getTLSDir,
-  DEFAULT_TLS_DIR,
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
   getCodeLensEnabled,
@@ -124,12 +123,12 @@ suite('Configuration', () => {
 
     test('should get default TLS dir by default', () => {
       SETTINGS_MOCK.tlsDir = undefined
-      expect(getTLSDir()).toBe(DEFAULT_TLS_DIR)
+      expect(getTLSDir(Uri.file('/ext/base'))).toBe(Uri.file('/ext/base/tls').fsPath)
     })
 
     test('should get set TLS dir if set', () => {
       SETTINGS_MOCK.tlsDir = '/tmp/runme/tls'
-      expect(getTLSDir()).toBe('/tmp/runme/tls')
+      expect(getTLSDir(Uri.file('/ext/base'))).toBe('/tmp/runme/tls')
     })
 
     test('getServerConfigurationValue Should default to undefined binaryPath', () => {
