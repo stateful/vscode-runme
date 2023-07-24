@@ -47,12 +47,22 @@ node ./scripts/stdin.js
 
 ## Formatted Code Blocks
 
-You can also inline TypeScript or JavaScript:
+You can also execute JavaScript inline:
 
 ```js
-function attach() {
-    document.body.innerHTML += 'Hello world!'
+(function({ message }) {
+    console.log(message)
+})({ message: 'Running javascript that outputs this message' })
+```
+
+Or typescript:
+
+```typescript
+function unnest({ message }: { message: string }): void {
+    console.log(message)
 }
+
+unnest({ message: 'Running typescript that outputs this message' })
 ```
 
 ## Environment Variables
@@ -146,7 +156,7 @@ config:
 
 Non-shell scripts can also access environment variables, and are run from the current working directory:
 
-```sh
+```sh { interactive=false }
 export YOUR_NAME=enter your name
 ```
 
