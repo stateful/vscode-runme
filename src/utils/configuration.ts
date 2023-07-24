@@ -259,12 +259,12 @@ const getCLIUseIntegratedRunme = (): boolean => {
   return getCLIConfigurationValue('useIntegratedRunme', false)
 }
 
-const getRunmeAppUrl = (subdomain: string[]): string => {
+const getRunmeAppUrl = (subdomains: string[]): string => {
   const base = getRunmeBaseDomain()
   const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
   const scheme = isLoopback ? 'http' : 'https'
 
-  let sub = subdomain.join('.')
+  let sub = subdomains.join('.')
   if (sub.length > 0) {
     sub = `${sub}.`
   }
