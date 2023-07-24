@@ -32,7 +32,11 @@ try {
   const packageJson = readFileSync(path.join(__dirname, '../package.json'), { encoding: 'utf8' })
   APP_PANELS_PRESENT = packageJson.indexOf('viewsContainers') > -1
 } catch (err) {
-  console.error(err)
+  if (err instanceof Error) {
+    console.error(err.message)
+  } else {
+    console.error(err)
+  }
 }
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
