@@ -569,9 +569,9 @@ suite('grpc Runner', () => {
       const { duplex } = await createNewSession()
 
       duplex._onError.fire(new RpcError('invalid LanguageId'))
-      expect(window.showErrorMessage).toBeCalledTimes(1)
+      expect(window.showWarningMessage).toBeCalledTimes(1)
 
-      vi.mocked(window.showErrorMessage).mockClear()
+      vi.mocked(window.showWarningMessage).mockClear()
 
       duplex._onError.fire(new RpcError('invalid ProgramName'))
       expect(window.showErrorMessage).toBeCalledTimes(1)
