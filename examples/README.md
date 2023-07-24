@@ -45,7 +45,7 @@ $ npm i -g webdriverio
 node ./scripts/stdin.js
 ```
 
-## Formatted Code Blocks
+## Mix & Match Languages
 
 You can also execute JavaScript inline:
 
