@@ -65,6 +65,8 @@ function unnest({ message }: { message: string }): void {
 unnest({ message: 'Running typescript that outputs this message' })
 ```
 
+Please see more examples, including configuration languages further down.
+
 ## Environment Variables
 
 Within single lines:
