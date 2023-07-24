@@ -483,7 +483,7 @@
           "runme.app.enableShare": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "Enable share button in notebook terminal"
+            "markdownDescription": "Enable app buttons in notebook terminal"
           }
         }
       }

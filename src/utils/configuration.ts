@@ -287,7 +287,7 @@ const getRunmeBaseDomain = (): string => {
   return baseDomain
 }
 
-const isRunmeApiEnabled = (): boolean => {
+const isRunmeAppButtonsEnabled = (): boolean => {
   return getCloudConfigurationValue('enableShare', false)
 }
 
@@ -311,5 +311,5 @@ export {
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,
   getRunmeAppUrl,
-  isRunmeApiEnabled,
+  isRunmeAppButtonsEnabled,
 }
