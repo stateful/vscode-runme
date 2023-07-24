@@ -146,9 +146,8 @@ export class Annotations extends LitElement {
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     interpreter: {
-      description: 'Script shebang line',
-      // FIXME: update docs link
-      docs: '',
+      description: 'Inserted into shebang (aka #!) line',
+      docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     category: {
       description: 'Execute this code cell within a category.',
