@@ -690,7 +690,7 @@
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "clipboardy": "^3.0.0",
     "clsx": "^1.2.1",
-    "cross-fetch": "^3.1.6",
+    "cross-fetch": "^4.0.0",
     "detect-port": "^1.5.1",
     "dotenv": "^16.0.3",
     "filenamify": "^6.0.0",
