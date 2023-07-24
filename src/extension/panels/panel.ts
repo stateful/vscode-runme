@@ -6,6 +6,7 @@ import { Observable, Subscription } from 'rxjs'
 import { fetchStaticHtml, getAuthSession } from '../utils'
 import { IAppToken, RunmeService } from '../services/runme'
 import { SyncSchemaBus } from '../../types'
+import { getRunmeAppUrl } from '../../utils/configuration'
 
 export type DefaultUx = 'panels'
 export interface InitPayload {
@@ -16,7 +17,7 @@ export interface InitPayload {
 }
 
 class PanelBase extends TelemetryViewProvider implements Disposable {
-  protected readonly appUrl: string = 'http://localhost:4001'
+  protected readonly appUrl: string = getRunmeAppUrl(['app'])
   protected readonly defaultUx: DefaultUx = 'panels'
 
   constructor(protected readonly context: ExtensionContext) {
