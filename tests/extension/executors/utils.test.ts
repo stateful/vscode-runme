@@ -371,9 +371,15 @@ suite('getCellProgram', () => {
     for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
       vi.mocked(getAnnotations).mockReturnValueOnce({} as any)
 
+      let shellPath = getSystemShellPath()
+      if (!shellPath) {
+        console.warn('SHELL env not set likely due to non-interactive execution, using /bin/bash as default')
+        shellPath = '/bin/bash'
+      }
+
       expect(getCellProgram({ metadata: { } } as any, {} as any, shell)).toStrictEqual({
         commandMode: COMMAND_MODE_INLINE_SHELL,
-        programName: getSystemShellPath()
+        programName: shellPath
       })
     }
   })
