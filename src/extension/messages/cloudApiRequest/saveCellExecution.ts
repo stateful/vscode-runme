@@ -58,6 +58,7 @@ export default async function saveCellExecution(
           stderr: exitCode !== 0 ? terminalContents : Array.from([]),
           exitCode,
           pid,
+          isPrivate: false,
           input: encodeURIComponent(cell.document.getText()),
           metadata: {
             mimeType: annotations.mimeType,
