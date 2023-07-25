@@ -100,7 +100,7 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
             let text = expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
 
             if (expectedTerminal === OutputType.TerminalView) {
-              text = text.slice(0, text.length - 'Copy'.length)
+              text = text.slice(0, text.length - 'Copy\nSave'.length)
             }
 
             res.push(text)
