@@ -373,8 +373,8 @@ suite('getCellProgram', () => {
 
       let shellPath = getSystemShellPath()
       if (!shellPath) {
-        console.warn('SHELL env not set likely due to non-interactive execution, using /bin/bash as default')
-        shellPath = '/bin/bash'
+        console.warn('SHELL env not set likely due to non-interactive execution, using bash as default')
+        shellPath = 'bash'
       }
 
       expect(getCellProgram({ metadata: { } } as any, {} as any, shell)).toStrictEqual({
