@@ -127,17 +127,17 @@ export async function executeRunner(
   const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
 
   const program = await runner.createProgramSession({
-    programName,
-    environment,
-    exec: execution,
-    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    cwd,
     background,
-    tty: interactive,
-    convertEol: !mimeType || mimeType === 'text/plain',
-    storeLastOutput: true,
-    languageId: exec.cell.document.languageId,
     commandMode,
+    convertEol: !mimeType || mimeType === 'text/plain',
+    cwd,
+    environment,
+    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+    exec: execution,
+    languageId: exec.cell.document.languageId,
+    programName,
+    storeLastOutput: true,
+    tty: interactive,
   })
 
   context.subscriptions.push(program)

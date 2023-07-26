@@ -118,11 +118,8 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const isBackground = options.isBackground || background
 
-    const { programName, commandMode } = getCellProgram(
-      cell,
-      notebook,
-      ('languageId' in cell && cell.languageId) || 'sh'
-    )
+    const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+    const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
 
     const name = `${command}`
 
@@ -151,18 +148,16 @@ export class RunmeTaskProvider implements TaskProvider {
         }
 
         const runOpts: RunProgramOptions = {
-          programName,
-          exec: {
-            type: 'commands',
-            commands: commands ?? [''],
-          },
+          commandMode,
+          convertEol: true,
           cwd,
           environment,
-          tty: interactive,
-          convertEol: true,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+          exec: { type: 'commands', commands: commands ?? [''] },
+          languageId,
+          programName,
           storeLastOutput: true,
-          commandMode,
+          tty: interactive,
         }
 
         const program = await runner.createProgramSession(runOpts)
