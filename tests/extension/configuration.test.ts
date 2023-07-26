@@ -254,5 +254,13 @@ suite('Configuration', () => {
         const url = getRunmeAppUrl([])
         expect(url).toStrictEqual('http://localhost/')
       })
+
+      test('should allow specific app URL for remote dev returning staging-based domains', async () => {
+        SETTINGS_MOCK.baseDomain = 'http://localhost:4001'
+        const app = getRunmeAppUrl(['app'])
+        expect(app).toStrictEqual('http://localhost:4001')
+        const api = getRunmeAppUrl(['api'])
+        expect(api).toStrictEqual('https://api.staging.runme.dev/')
+      })
     })
 })

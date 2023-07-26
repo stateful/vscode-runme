@@ -20,6 +20,7 @@ export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev'
 const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
+const DEFAULT_RUNME_REMOTE_DEV = 'staging.runme.dev'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
@@ -273,8 +274,24 @@ const getCLIUseIntegratedRunme = (): boolean => {
   return getCLIConfigurationValue('useIntegratedRunme', false)
 }
 
+const getRemoteDev = (baseDomain: string): boolean => {
+  const localDev = APP_LOOPBACKS.map((host) =>
+    Uri.from({ scheme: 'http', authority: host }).toString().slice(0, -1)
+  )
+  return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
+}
+
 const getRunmeAppUrl = (subdomains: string[]): string => {
-  const base = getRunmeBaseDomain()
+  let base = getRunmeBaseDomain()
+  const isRemoteDev = getRemoteDev(base)
+  if (isRemoteDev) {
+    if (subdomains.length === 1 && subdomains?.[0] === 'app') {
+      return base
+    } else {
+      base = DEFAULT_RUNME_REMOTE_DEV
+    }
+  }
+
   const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
   const scheme = isLoopback ? 'http' : 'https'
 
@@ -289,8 +306,8 @@ const getRunmeAppUrl = (subdomains: string[]): string => {
     sub = ''
   }
 
-  const url = Uri.parse(`${scheme}://${sub}${base}${port}`, true)
-  return url.toString()
+  const endpoint = Uri.parse(`${scheme}://${sub}${base}${port}`, true)
+  return endpoint.toString()
 }
 
 const getRunmeBaseDomain = (): string => {
