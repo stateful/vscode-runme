@@ -202,7 +202,7 @@ suite('_doExecuteCell', () => {
     )
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
       'cell.endExecute',
-      { 'cell.success': undefined }
+      { 'cell.success': undefined, 'cell.mimeType': undefined }
     )
   })
 
@@ -223,7 +223,7 @@ suite('_doExecuteCell', () => {
 
     await k['_doExecuteCell']({
       document: { uri: { fsPath: '/foo/bar' } },
-      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce', mimeType: 'text/plain' }
     } as any)
 
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
@@ -231,7 +231,7 @@ suite('_doExecuteCell', () => {
     )
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
       'cell.endExecute',
-      { 'cell.success': 'false' }
+      { 'cell.success': 'false', 'cell.mimeType': 'text/plain' }
     )
   })
 })
