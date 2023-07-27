@@ -19,9 +19,25 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+export type Admin = {
+  __typename?: 'Admin';
+  users?: Maybe<Array<Maybe<User>>>;
+};
+
+export type Anonymous = {
+  __typename?: 'Anonymous';
+  cellExecution?: Maybe<CellExecution>;
+  id?: Maybe<Scalars['String']['output']>;
+};
+
+
+export type AnonymousCellExecutionArgs = {
+  id: Scalars['String']['input'];
+};
+
 export type CellExecution = {
   __typename?: 'CellExecution';
-  createTime?: Maybe<Scalars['DateTime']['output']>;
+  createTime: Scalars['DateTime']['output'];
   exitCode: Scalars['Int']['output'];
   htmlUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -29,10 +45,11 @@ export type CellExecution = {
   isOwner?: Maybe<Scalars['Boolean']['output']>;
   isPrivate: Scalars['Boolean']['output'];
   metadata?: Maybe<Metadata>;
-  pid?: Maybe<Scalars['Int']['output']>;
+  owner?: Maybe<Owner>;
+  pid: Scalars['Int']['output'];
   stderr: Scalars['Bytes']['output'];
   stdout: Scalars['Bytes']['output'];
-  updateTime?: Maybe<Scalars['DateTime']['output']>;
+  updateTime: Scalars['DateTime']['output'];
   user?: Maybe<User>;
   userId: Scalars['String']['output'];
 };
@@ -58,12 +75,14 @@ export type IdConnect = {
 export type Metadata = {
   __typename?: 'Metadata';
   category?: Maybe<Scalars['String']['output']>;
+  exitType?: Maybe<Scalars['String']['output']>;
   mimeType?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
 };
 
 export type MetadataInput = {
   category?: InputMaybe<Scalars['String']['input']>;
+  exitType?: InputMaybe<Scalars['String']['input']>;
   mimeType?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
@@ -91,22 +110,28 @@ export type MutationUpdateCellExecutionArgs = {
   id: Scalars['String']['input'];
 };
 
-export type Query = {
-  __typename?: 'Query';
-  cellExecutionById?: Maybe<CellExecution>;
-  cellExecutions?: Maybe<Array<Maybe<CellExecution>>>;
-  user?: Maybe<User>;
-  users?: Maybe<Array<Maybe<User>>>;
+export type Owner = {
+  __typename?: 'Owner';
+  bio?: Maybe<Scalars['String']['output']>;
+  company?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  githubUsername?: Maybe<Scalars['String']['output']>;
+  linkedin?: Maybe<Scalars['String']['output']>;
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  siteUrl?: Maybe<Scalars['String']['output']>;
+  twitter?: Maybe<Scalars['String']['output']>;
 };
 
-
-export type QueryCellExecutionByIdArgs = {
-  id: Scalars['String']['input'];
+export type Query = {
+  __typename?: 'Query';
+  admin?: Maybe<Admin>;
+  anonymous?: Maybe<Anonymous>;
+  user?: Maybe<User>;
 };
 
 
 export type QueryUserArgs = {
-  id: Scalars['String']['input'];
+  id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type User = {
@@ -116,18 +141,17 @@ export type User = {
   cellExecutions?: Maybe<Array<Maybe<CellExecution>>>;
   company?: Maybe<Scalars['String']['output']>;
   create_time: Scalars['DateTime']['output'];
-  display_name?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
-  email_verified?: Maybe<Scalars['Boolean']['output']>;
+  emailVerified?: Maybe<Scalars['Boolean']['output']>;
   firebase_refresh_time?: Maybe<Scalars['DateTime']['output']>;
-  github_id?: Maybe<Scalars['String']['output']>;
-  github_refresh_time?: Maybe<Scalars['DateTime']['output']>;
-  github_username?: Maybe<Scalars['String']['output']>;
+  githubId?: Maybe<Scalars['String']['output']>;
+  githubUsername?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
   linkedin?: Maybe<Scalars['String']['output']>;
-  photo_url?: Maybe<Scalars['String']['output']>;
-  site_admin: Scalars['Boolean']['output'];
-  site_url?: Maybe<Scalars['String']['output']>;
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  siteAdmin: Scalars['Boolean']['output'];
+  siteUrl?: Maybe<Scalars['String']['output']>;
   twitter?: Maybe<Scalars['String']['output']>;
   update_time: Scalars['DateTime']['output'];
 };
