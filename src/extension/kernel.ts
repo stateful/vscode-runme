@@ -540,9 +540,11 @@ export class Kernel implements Disposable {
 
       successfulCellExecution = false
     }
+    const annotations = getAnnotations(cell)
 
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
+      'cell.mimeType': annotations.mimeType,
     })
     runmeExec.end(successfulCellExecution)
   }
