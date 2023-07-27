@@ -156,6 +156,12 @@ jobs:
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: node .github/scripts/updateEdgeVersion.js
 
+      - name: Deactivate panels for public releases
+        run: |
+          jq 'del( .contributes.viewsContainers ) | del( .contributes.views.runme )' package.json > _package.json
+          mv -f _package.json package.json
+        if: ${{ github.event.inputs.releaseChannel == 'stable' }}
+
       # Linux X86
       - name: Package Extension Linux x86_64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
@@ -314,62 +320,62 @@ jobs:
       - name: Publish to Open VSX Registry Linux X86 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@linux-x64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-x64-${{ env.RELEASE_VERSION }}.vsix
       # Linux arm64
       - name: Publish to Open VSX Registry Linux arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@linux-arm64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-linux-arm64-${{ env.RELEASE_VERSION }}.vsix
       # MacOS x86_64
       - name: Publish to Open VSX Registry MacOS x86_64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@darwin-x64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-x64-${{ env.RELEASE_VERSION }}.vsix
       # MacOS arm64
       - name: Publish to Open VSX Registry MacOS arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@darwin-arm64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-darwin-arm64-${{ env.RELEASE_VERSION }}.vsix
       # Windows x64
       - name: Publish to Open VSX Registry Windows x64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@win32-x64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-x64-${{ env.RELEASE_VERSION }}.vsix
       # Windows arm64
       - name: Publish to Open VSX Registry Windows arm64 (Stable)
         uses: HaaLeo/publish-vscode-extension@v1
         timeout-minutes: 20
-        continue-on-error: true
+        # continue-on-error: true
         if: ${{ github.event.inputs.publishOpenVSX == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
         with:
           preRelease: false
           pat: ${{ secrets.OPEN_VSX_TOKEN }}
-          extensionFile: ./${{ env.EXTENSION_NAME }}.${{ env.RELEASE_VERSION }}@win32-arm64.vsix
+          extensionFile: ./${{ env.EXTENSION_NAME }}-win32-arm64-${{ env.RELEASE_VERSION }}.vsix
 
       # Release
       - name: Push Tags

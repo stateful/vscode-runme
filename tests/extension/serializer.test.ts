@@ -40,6 +40,7 @@ vi.mock('../../src/extension/languages', () => ({
   default: {
     fromContext: vi.fn(),
   },
+    NotebookData: class {}
 }))
 
 vi.mock('../../src/extension/utils', () => ({

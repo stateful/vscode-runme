@@ -20,6 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUNME_PROJECT: ${{ github.workspace }}
+          SHELL: bash
       - name: 🔼 Upload Artifacts
         uses: actions/upload-artifact@v3
         if: failure()

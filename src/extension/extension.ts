@@ -1,7 +1,8 @@
 import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
+import Channel from 'tangle/webviews'
 
-import { Serializer } from '../types'
+import { Serializer, SyncSchema } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
 
 import { Kernel } from './kernel'
@@ -40,6 +41,7 @@ import { GrpcRunner, IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
+import Panel from './panels/panel'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -118,6 +120,7 @@ export class RunmeExtension {
       kernel,
       serializer,
       server,
+      ...this.registerPanels(context),
       treeViewer,
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -198,6 +201,15 @@ export class RunmeExtension {
     )
 
     await bootFile()
+  }
+
+  protected registerPanels(context: ExtensionContext): Disposable[] {
+    const id: string = 'runme.cloud' as const
+    const channel = new Channel<SyncSchema>('app')
+    const p = new Panel(context, id)
+    const bus$ = channel.register([p.webview])
+    p.registerBus(bus$)
+    return [window.registerWebviewViewProvider(id, p), p]
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {

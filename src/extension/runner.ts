@@ -6,12 +6,14 @@ import {
   type Disposable,
   type TerminalDimensions,
   EventEmitter,
+  window,
 } from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
 
 import {
+  CommandMode,
   CreateSessionRequest,
   ExecuteRequest,
   ExecuteResponse,
@@ -51,6 +53,9 @@ export interface RunProgramOptions {
   background?: boolean
   convertEol?: boolean
   storeLastOutput?: boolean
+  languageId?: string
+  fileExtension?: string
+  commandMode?: CommandMode
 }
 
 export interface IRunner extends Disposable {
@@ -407,6 +412,21 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.responses.onError((error) => {
       if (error instanceof RpcError) {
+        if (error.message.includes('invalid LanguageId')) {
+          // todo(sebastian): provide "Configure" button to trigger foldout
+          window.showWarningMessage(
+            // eslint-disable-next-line max-len
+            'Not every language is automatically executable. You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.'
+          )
+        }
+
+        if (error.message.includes('invalid ProgramName')) {
+          window.showErrorMessage(
+            // eslint-disable-next-line max-len
+            `Unable to locate interpreter "${this.opts.programName}" specified in shebang (aka #!). Please check the cell's "Configure" foldout.`
+          )
+        }
+
         console.error(
           'RpcError occurred!',
           {
@@ -712,6 +732,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     terminalDimensions,
     background,
     storeLastOutput,
+    fileExtension,
+    languageId,
+    commandMode,
   }: RunProgramOptions): ExecuteRequest {
     if (environment && !(environment instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC environment!')
@@ -729,6 +752,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...(exec?.type === 'script' && { script: exec.script }),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
       storeLastOutput,
+      fileExtension,
+      languageId,
+      commandMode,
     })
   }
 

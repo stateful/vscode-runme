@@ -55,7 +55,7 @@ class RunmeServer implements Disposable {
   readonly onTransportReady = this.#onTransportReady.event
 
   constructor(
-    extBasePath: Uri,
+    protected readonly extBasePath: Uri,
     options: IServerConfig,
     externalServer: boolean,
     protected readonly enableRunner = false
@@ -125,12 +125,16 @@ class RunmeServer implements Disposable {
     }
   }
 
+  protected getTLSDir(): string {
+    return getTLSDir(this.extBasePath)
+  }
+
   protected async channelCredentials(): Promise<ChannelCredentials> {
     if (!getTLSEnabled()) {
       return ChannelCredentials.createInsecure()
     }
 
-    const { certPEM, privKeyPEM } = await RunmeServer.getTLS(getTLSDir())
+    const { certPEM, privKeyPEM } = await RunmeServer.getTLS(this.getTLSDir())
 
     return ChannelCredentials.createSsl(certPEM, privKeyPEM, certPEM)
   }
@@ -184,7 +188,7 @@ class RunmeServer implements Disposable {
     }
 
     if (getTLSEnabled()) {
-      args.push('--tls', getTLSDir())
+      args.push('--tls', this.getTLSDir())
     } else {
       args.push('--insecure')
     }

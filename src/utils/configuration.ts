@@ -1,9 +1,9 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
 import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
-import { v4 as uuidv4 } from 'uuid'
 
 import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
@@ -17,9 +17,28 @@ const CLI_SECTION_NAME = 'runme.cli'
 const APP_SECTION_NAME = 'runme.app'
 
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
-export const DEFAULT_TLS_DIR = path.join(os.tmpdir(), 'runme', uuidv4(), 'tls')
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
-const DEFAULT_RUNME_APP_API_URL = 'https://app.runme.dev/graphql'
+const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev'
+const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
+const DEFAULT_RUNME_REMOTE_DEV = 'staging.runme.dev'
+const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
+const APP_LOOPBACK_MAPPING = new Map<string, string>([
+  ['api.', ':4000'],
+  ['app.', ':4001'],
+])
+
+// todo(sebastian): temp hack, remove for stable release
+let APP_PANELS_PRESENT = false
+try {
+  const packageJson = readFileSync(path.join(__dirname, '../package.json'), { encoding: 'utf8' })
+  APP_PANELS_PRESENT = packageJson.indexOf('viewsContainers') > -1
+} catch (err) {
+  if (err instanceof Error) {
+    console.error(err.message)
+  } else {
+    console.error(err)
+  }
+}
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -32,7 +51,7 @@ const configurationSchema = {
     binaryPath: z.string().optional(),
     enableLogger: z.boolean().default(false),
     enableTLS: z.boolean().default(true),
-    tlsDir: z.string().nonempty().default(DEFAULT_TLS_DIR),
+    tlsDir: z.string().optional(),
   },
   notebookTerminal: {
     backgroundTask: z.boolean().default(true),
@@ -54,7 +73,8 @@ const configurationSchema = {
   },
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
-    enableShare: z.boolean().default(false),
+    baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
+    enableShare: z.boolean().default(true),
   },
 }
 
@@ -166,8 +186,10 @@ const getTLSEnabled = (): boolean => {
   return getServerConfigurationValue('enableTLS', true)
 }
 
-const getTLSDir = (): string => {
-  return getServerConfigurationValue('tlsDir', DEFAULT_TLS_DIR)
+const getTLSDir = (extensionsDir: Uri): string => {
+  return (
+    getServerConfigurationValue('tlsDir', undefined) || Uri.joinPath(extensionsDir, 'tls').fsPath
+  )
 }
 
 const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
@@ -252,12 +274,52 @@ const getCLIUseIntegratedRunme = (): boolean => {
   return getCLIConfigurationValue('useIntegratedRunme', false)
 }
 
-const getRunmeApiUrl = (): string => {
-  return getCloudConfigurationValue('apiUrl', DEFAULT_RUNME_APP_API_URL)
+const getRemoteDev = (baseDomain: string): boolean => {
+  const localDev = APP_LOOPBACKS.map((host) =>
+    Uri.from({ scheme: 'http', authority: host }).toString().slice(0, -1)
+  )
+  return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
 }
 
-const isRunmeApiEnabled = (): boolean => {
-  return getCloudConfigurationValue('enableShare', false)
+const getRunmeAppUrl = (subdomains: string[]): string => {
+  let base = getRunmeBaseDomain()
+  const isRemoteDev = getRemoteDev(base)
+  if (isRemoteDev) {
+    if (subdomains.length === 1 && subdomains?.[0] === 'app') {
+      return base
+    } else {
+      base = DEFAULT_RUNME_REMOTE_DEV
+    }
+  }
+
+  const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
+  const scheme = isLoopback ? 'http' : 'https'
+
+  let sub = subdomains.join('.')
+  if (sub.length > 0) {
+    sub = `${sub}.`
+  }
+
+  let port = ''
+  if (isLoopback && sub.length > 0) {
+    port = APP_LOOPBACK_MAPPING.get(sub) ?? ''
+    sub = ''
+  }
+
+  const endpoint = Uri.parse(`${scheme}://${sub}${base}${port}`, true)
+  return endpoint.toString()
+}
+
+const getRunmeBaseDomain = (): string => {
+  const baseDomain = getCloudConfigurationValue('baseDomain', DEFAULT_RUNME_BASE_DOMAIN)
+  if (baseDomain.length === 0) {
+    return DEFAULT_RUNME_BASE_DOMAIN
+  }
+  return baseDomain
+}
+
+const isRunmeAppButtonsEnabled = (): boolean => {
+  return APP_PANELS_PRESENT && getCloudConfigurationValue('enableShare', true)
 }
 
 export {
@@ -279,6 +341,6 @@ export {
   getEnvWorkspaceFileOrder,
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,
-  getRunmeApiUrl,
-  isRunmeApiEnabled,
+  getRunmeAppUrl,
+  isRunmeAppButtonsEnabled,
 }

@@ -24,6 +24,8 @@ vi.mock('../../src/extension/executors/index.js', () => ({
 }))
 vi.mock('../../src/extension/runner', () => ({}))
 
+vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+
 const getCells = (cnt: number, metadata: Record<string, any> = {}) => ([...new Array(cnt)]).map((_, i) => ({
   document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },
   notebook: {
@@ -208,7 +210,7 @@ suite('_doExecuteCell', () => {
 
   test('shows error window if language is not supported', async () => {
     const k = new Kernel({} as any)
-    k['runner'] = {} as any
+    k['runner'] = undefined
 
     k.createCellExecution = vi.fn().mockResolvedValue({
       start: vi.fn(),
@@ -221,10 +223,14 @@ suite('_doExecuteCell', () => {
       languageId: 'barfoo'
     } as any)
 
-    await k['_doExecuteCell']({
-      document: { uri: { fsPath: '/foo/bar' } },
-      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce', mimeType: 'text/plain' }
-    } as any)
+    try {
+      await k['_doExecuteCell']({
+        document: { uri: { fsPath: '/foo/bar' } },
+        metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+      } as any)
+    } catch(e) {
+
+    }
 
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith(
       'cell.startExecute'

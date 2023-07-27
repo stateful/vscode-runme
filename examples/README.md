@@ -45,15 +45,27 @@ $ npm i -g webdriverio
 node ./scripts/stdin.js
 ```
 
-## Formatted Code Blocks
+## Mix & Match Languages
 
-You can also inline TypeScript or JavaScript:
+You can also execute JavaScript inline:
 
 ```js
-function attach() {
-    document.body.innerHTML += 'Hello world!'
-}
+(function({ message }) {
+    console.log(message)
+})({ message: 'Running javascript that outputs this message' })
 ```
+
+Or typescript:
+
+```typescript
+function unnest({ message }: { message: string }): void {
+    console.log(message)
+}
+
+unnest({ message: 'Running typescript that outputs this message' })
+```
+
+Please see more examples, including configuration languages further down.
 
 ## Environment Variables
 
@@ -128,13 +140,30 @@ You can copy also results from the inline executed shell:
 openssl rand -base64 32
 ```
 
-## Non-Supported Languages
+## Non-Shell Languages
 
-These are shown as simple markdowns, e.g:
+These are sometimes executable by default, like for python:
 
-```py { readonly=true }
-def hello():
-    print("Hello World")
+```py
+print("Hello World")
+```
+
+Otherwise, execution can be set with the `interpreter` annotation, like so:
+
+```yaml { interpreter=cat }
+config:
+  nested:
+    para: true
+```
+
+Non-shell scripts can also access environment variables, and are run from the current working directory:
+
+```sh { interactive=false }
+export YOUR_NAME=enter your name
+```
+
+```javascript { name=echo-hello-js }
+console.log(`Hello, ${process.env.YOUR_NAME}, from ${__dirname}!`)
 ```
 
 ## Curl an image
@@ -158,12 +187,4 @@ With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON file
 
 ```sh { terminalRows=20 }
 curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
-```
-
-## YAML
-
-```yaml
-config:
-  netsed:
-    para: true
 ```

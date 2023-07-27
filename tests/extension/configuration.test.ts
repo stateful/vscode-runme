@@ -4,12 +4,12 @@ import { suite, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
 
 import {
+  getRunmeAppUrl,
   getPortNumber,
   enableServerLogs,
   getBinaryPath,
   getServerConfigurationValue,
   getTLSDir,
-  DEFAULT_TLS_DIR,
   getNotebookTerminalFontFamily,
   getNotebookTerminalFontSize,
   getCodeLensEnabled,
@@ -29,11 +29,13 @@ const SETTINGS_MOCK:
         binaryPath: string | undefined
         enableLogger: string | boolean | undefined
         tlsDir: string | undefined
+        baseDomain: string | undefined
     } = {
     port: undefined,
     binaryPath: undefined,
     enableLogger: undefined,
-    tlsDir: undefined
+    tlsDir: undefined,
+    baseDomain: undefined,
 }
 
 beforeEach(() => {
@@ -82,7 +84,7 @@ function platformPathMocks(platform: path.PlatformPath) {
 
 afterEach(() => {
     Object.keys(SETTINGS_MOCK).forEach(key => {
-        SETTINGS_MOCK[key] = undefined
+          SETTINGS_MOCK[key] = undefined
     })
 })
 
@@ -97,36 +99,36 @@ suite('Configuration', () => {
       expect(fontSize).toBeUndefined()
     })
 
-    test('Should default to a valid port number', () => {
+    test('should default to a valid port number', () => {
         const portNumber = getPortNumber()
         expect(portNumber).toStrictEqual(7863)
     })
 
-    test('Should use a valid specified port number', () => {
+    test('should use a valid specified port number', () => {
         const portNumber = getPortNumber()
         expect(portNumber).toStrictEqual(SERVER_PORT)
     })
 
-    test('Should disable server logs with an invalid value', () => {
+    test('should disable server logs with an invalid value', () => {
       SETTINGS_MOCK.enableLogger = undefined
       const path = enableServerLogs()
       expect(path).toBeFalsy()
     })
 
-    test('Should disable server logs with an invalid string', () => {
+    test('should disable server logs with an invalid string', () => {
         SETTINGS_MOCK.enableLogger = 'true'
         const path = enableServerLogs()
         expect(path).toBeFalsy()
     })
 
-    test('Should get default TLS dir by default', () => {
+    test('should get default TLS dir by default', () => {
       SETTINGS_MOCK.tlsDir = undefined
-      expect(getTLSDir()).toBe(DEFAULT_TLS_DIR)
+      expect(getTLSDir(Uri.file('/ext/base'))).toBe(Uri.file('/ext/base/tls').fsPath)
     })
 
-    test('Should get set TLS dir if set', () => {
+    test('should get set TLS dir if set', () => {
       SETTINGS_MOCK.tlsDir = '/tmp/runme/tls'
-      expect(getTLSDir()).toBe('/tmp/runme/tls')
+      expect(getTLSDir(Uri.file('/ext/base'))).toBe('/tmp/runme/tls')
     })
 
     test('getServerConfigurationValue Should default to undefined binaryPath', () => {
@@ -160,12 +162,12 @@ suite('Configuration', () => {
         platformPathMocks(path.posix)
       })
 
-      test('Should default to a valid binaryPath', () => {
+      test('should default to a valid binaryPath', () => {
           const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'linux')
           expect(binary.fsPath).toStrictEqual('/Users/user/.vscode/extension/stateful.runme/bin/runme')
       })
 
-      test('Should default to a valid relative binaryPath when specified', () => {
+      test('should default to a valid relative binaryPath when specified', () => {
           SETTINGS_MOCK.binaryPath = 'newBin'
           // @ts-expect-error
           workspace.workspaceFolders = [{ uri: Uri.file('/Users/user/Projects/project') }]
@@ -173,13 +175,13 @@ suite('Configuration', () => {
           expect(binary.fsPath).toStrictEqual('/Users/user/Projects/project/newBin')
       })
 
-      test('Should default to a valid absolute binaryPath when specified', () => {
+      test('should default to a valid absolute binaryPath when specified', () => {
         SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
         const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'linux')
         expect(binary.fsPath).toStrictEqual('/opt/homebrew/bin/runme')
       })
 
-      test('Should use runme for non-windows platforms', () => {
+      test('should use runme for non-windows platforms', () => {
           SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
           const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'darwin')
           expect(binary.fsPath).toStrictEqual('/opt/homebrew/bin/runme')
@@ -191,26 +193,74 @@ suite('Configuration', () => {
         platformPathMocks(path.win32)
       })
 
-      test('Should default to a valid binaryPath exe on windows', () => {
+      test('should default to a valid binaryPath exe on windows', () => {
         const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win')
         expect(binary.fsPath).toStrictEqual(
           'c:\\Users\\.vscode\\extensions\\stateful.runme\\bin\\runme.exe'
         )
       })
 
-      test('Should use runme.exe for windows platforms with absolute path', () => {
+      test('should use runme.exe for windows platforms with absolute path', () => {
         SETTINGS_MOCK.binaryPath = 'C:\\custom\\path\\to\\bin\\runme.exe'
 
         const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win32')
         expect(binary.fsPath).toStrictEqual('c:\\custom\\path\\to\\bin\\runme.exe')
       })
 
-      test('Should use runme.exe for windows platforms with relative path', () => {
+      test('should use runme.exe for windows platforms with relative path', () => {
           SETTINGS_MOCK.binaryPath = 'newBin.exe'
           // @ts-expect-error
           workspace.workspaceFolders = [{ uri: Uri.file('c:\\Users\\Projects\\project') }]
           const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win32')
           expect(binary.fsPath).toStrictEqual('c:\\Users\\Projects\\project\\newBin.exe')
+      })
+    })
+
+    suite('app domain resolution', () => {
+      test('should return URL for api with subdomain', () => {
+        const url = getRunmeAppUrl(['api'])
+        expect(url).toStrictEqual('https://api.runme.dev/')
+      })
+
+      test('should return URL for api with deep subdomain', () => {
+        const url = getRunmeAppUrl(['l4', 'l3', 'api'])
+        expect(url).toStrictEqual('https://l4.l3.api.runme.dev/')
+      })
+
+      test('should return URL without subdomain', () => {
+        const url = getRunmeAppUrl([])
+        expect(url).toStrictEqual('https://runme.dev/')
+      })
+
+      test('should return URL without subdomain', () => {
+        const url = getRunmeAppUrl([])
+        expect(url).toStrictEqual('https://runme.dev/')
+      })
+
+      test('should allow api URL with http for 127.0.0.1', async () => {
+        SETTINGS_MOCK.baseDomain = '127.0.0.1'
+        const url = getRunmeAppUrl(['api'])
+        expect(url).toStrictEqual('http://127.0.0.1:4000/')
+      })
+
+      test('should allow app URL with http for localhost', async () => {
+        SETTINGS_MOCK.baseDomain = 'localhost'
+        const url = getRunmeAppUrl(['app'])
+        expect(url).toStrictEqual('http://localhost:4001/')
+      })
+
+      test('should allow app URL with http for localhost without subdomain', async () => {
+        SETTINGS_MOCK.baseDomain = 'localhost'
+        const url = getRunmeAppUrl([])
+        expect(url).toStrictEqual('http://localhost/')
+      })
+
+      test('should allow specific app URL for remote dev returning staging-based domains', async () => {
+        SETTINGS_MOCK.baseDomain = 'http://localhost:4001'
+        const app = getRunmeAppUrl(['app'])
+        expect(app).toStrictEqual('http://localhost:4001')
+        const api = getRunmeAppUrl(['api'])
+        expect(api).toStrictEqual('https://api.staging.runme.dev/')
       })
     })
 })

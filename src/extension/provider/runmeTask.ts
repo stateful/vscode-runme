@@ -24,7 +24,7 @@ import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
-import { getCellCwd, getCellShellPath, parseCommandSeq } from '../executors/utils'
+import { getCellCwd, getCellProgram, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -118,6 +118,9 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const isBackground = options.isBackground || background
 
+    const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+    const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
+
     const name = `${command}`
 
     const task = new Task(
@@ -145,17 +148,16 @@ export class RunmeTaskProvider implements TaskProvider {
         }
 
         const runOpts: RunProgramOptions = {
-          programName: getCellShellPath(cell, notebook) ?? 'sh',
-          exec: {
-            type: 'commands',
-            commands: commands ?? [''],
-          },
+          commandMode,
+          convertEol: true,
           cwd,
           environment,
-          tty: interactive,
-          convertEol: true,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+          exec: { type: 'commands', commands: commands ?? [''] },
+          languageId,
+          programName,
           storeLastOutput: true,
+          tty: interactive,
         }
 
         const program = await runner.createProgramSession(runOpts)
