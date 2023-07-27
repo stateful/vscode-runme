@@ -226,7 +226,7 @@ suite('_doExecuteCell', () => {
     try {
       await k['_doExecuteCell']({
         document: { uri: { fsPath: '/foo/bar' } },
-        metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' }
+        metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce', mimeType: 'text/plain' }
       } as any)
     } catch(e) {
 
