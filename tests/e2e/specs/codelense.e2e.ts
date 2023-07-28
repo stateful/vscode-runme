@@ -12,7 +12,9 @@ describe('Runme Codelense Support', async () => {
   })
 
   it('should allow to open file in notebook', async () => {
-    await browser.waitUntil(() => $$('.codelens-decoration').then((elems) => elems.length > 1))
+    await browser.waitUntil(
+      () => $$('.codelens-decoration').then((elems) => elems.length > 1),
+      { timeoutMsg: 'Codelens not found', timeout: 30 * 1000 })
     await $$('.codelens-decoration a')[1].click()
     await browser.pause(1000)
 
