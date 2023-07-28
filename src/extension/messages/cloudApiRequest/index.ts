@@ -5,6 +5,7 @@ import { APIMethod, ClientMessage } from '../../../types'
 import { Kernel } from '../../kernel'
 
 import saveCellExecution from './saveCellExecution'
+import updateCellExecution from './updateCellExecution'
 
 export interface IApiMessage {
   messaging: NotebookRendererMessaging
@@ -25,6 +26,8 @@ export async function handleCloudApiMessage({
   switch (message.output.method) {
     case APIMethod.CreateCellExecution:
       return saveCellExecution({ messaging, message, editor }, kernel)
+    case APIMethod.UpdateCellExecution:
+      return updateCellExecution({ messaging, message, editor }, kernel)
     default:
       throw new Error('Method not implemented')
   }

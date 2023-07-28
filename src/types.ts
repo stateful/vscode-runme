@@ -304,6 +304,7 @@ export interface NotebookToolbarCommand {
 
 export enum APIMethod {
   CreateCellExecution = 'createCellExecution',
+  UpdateCellExecution = 'updateCellExecution',
 }
 
 export interface IApiMessage<T extends ClientMessage<ClientMessages>> {

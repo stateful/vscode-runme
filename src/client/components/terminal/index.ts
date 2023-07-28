@@ -328,6 +328,9 @@ export class TerminalView extends LitElement {
   isCloudApiLoading: boolean = false
 
   @property()
+  cloudId?: string
+
+  @property()
   shareUrl?: string
 
   @property({ type: Boolean })
@@ -335,6 +338,9 @@ export class TerminalView extends LitElement {
 
   @property()
   isShareReady: boolean = false
+
+  @property()
+  isUpdatedReady: boolean = false
 
   constructor() {
     super()
@@ -417,14 +423,20 @@ export class TerminalView extends LitElement {
               if (e.output.hasErrors) {
                 return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
               }
-              const {
-                data: {
-                  createCellExecution: { htmlUrl },
-                },
-              } = e.output.data
-              this.shareUrl = htmlUrl
-              this.shareText = this.shareEnabledText
-              this.isShareReady = true
+              const { data } = e.output.data
+              if (data.createCellExecution) {
+                const {
+                  createCellExecution: { id, htmlUrl },
+                } = data
+                this.cloudId = id
+                this.shareUrl = htmlUrl
+                this.shareText = this.shareEnabledText
+                this.isShareReady = true
+              }
+              if (data.updateCellExecution) {
+                this.isUpdatedReady = true
+                this.#displayShareDialog()
+              }
             }
             break
 
@@ -649,7 +661,7 @@ export class TerminalView extends LitElement {
     this.shareText = this.shareEnabledText
     this.isShareReady = true
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
-      title: 'Share link created',
+      title: 'Publicly accessible link created and ready to share.',
       options: Object.values(MessageOptions),
       uuid: this.uuid!,
       telemetryEvent: 'app.share',
@@ -662,8 +674,19 @@ export class TerminalView extends LitElement {
       return
     }
     try {
-      if (this.isShareReady) {
+      if (this.isUpdatedReady) {
         return this.#displayShareDialog()
+      }
+      if (this.isShareReady) {
+        this.isCloudApiLoading = true
+        await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
+          data: {
+            id: this.cloudId,
+          },
+          uuid: this.uuid!,
+          method: APIMethod.UpdateCellExecution,
+        })
+        return
       }
 
       this.isCloudApiLoading = true
