@@ -661,7 +661,7 @@ export class TerminalView extends LitElement {
     this.shareText = this.shareEnabledText
     this.isShareReady = true
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
-      title: 'Share link created, no longer private',
+      title: 'Publicly accessible link created and ready to share.',
       options: Object.values(MessageOptions),
       uuid: this.uuid!,
       telemetryEvent: 'app.share',
