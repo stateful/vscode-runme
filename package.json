@@ -305,6 +305,15 @@
           },
           {
             "filenamePattern": "*.mdi"
+          },
+          {
+            "filenamePattern": "*.mdr"
+          },
+          {
+            "filenamePattern": "*.run"
+          },
+          {
+            "filenamePattern": "*.runme"
           }
         ]
       }
