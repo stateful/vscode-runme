@@ -36,11 +36,12 @@ export default async function saveCellExecution(
     }
     const pid = (await terminal.processId) || 0
     const runnerExitStatus = terminal.runnerSession?.hasExited()
-    const exitCode = runnerExitStatus
-      ? runnerExitStatus.type === 'exit'
+    const exitCode =
+      runnerExitStatus?.type === 'exit'
         ? runnerExitStatus.code
-        : -1
-      : 0
+        : runnerExitStatus?.type === 'error'
+        ? 1
+        : 0
     const annotations = getAnnotations(cell)
     delete annotations['runme.dev/uuid']
     const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
@@ -63,6 +64,7 @@ export default async function saveCellExecution(
             mimeType: annotations.mimeType,
             name: annotations.name,
             category: annotations.category || '',
+            exitType: runnerExitStatus?.type,
           },
         },
       },
