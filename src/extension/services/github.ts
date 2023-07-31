@@ -1,5 +1,6 @@
 import { Octokit } from 'octokit'
 import { parse } from 'yaml'
+import { fetch } from 'cross-fetch'
 
 import { IWorkflowDispatchOptions, IWorkflowRun, IWorkflowYamlContentRequest } from './types'
 
@@ -10,7 +11,12 @@ export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'>
 export class GitHubService {
   private octokit: Octokit
   constructor(accessToken: string) {
-    this.octokit = new Octokit({ auth: accessToken })
+    this.octokit = new Octokit({
+      auth: accessToken,
+      request: {
+        fetch,
+      },
+    })
   }
 
   /**
