@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
@@ -26,19 +25,6 @@ const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
 ])
-
-// todo(sebastian): temp hack, remove for stable release
-let APP_PANELS_PRESENT = false
-try {
-  const packageJson = readFileSync(path.join(__dirname, '../package.json'), { encoding: 'utf8' })
-  APP_PANELS_PRESENT = packageJson.indexOf('viewsContainers') > -1
-} catch (err) {
-  if (err instanceof Error) {
-    console.error(err.message)
-  } else {
-    console.error(err)
-  }
-}
 
 type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
 
@@ -319,7 +305,7 @@ const getRunmeBaseDomain = (): string => {
 }
 
 const isRunmeAppButtonsEnabled = (): boolean => {
-  return APP_PANELS_PRESENT && getCloudConfigurationValue('enableShare', true)
+  return getCloudConfigurationValue('enableShare', true)
 }
 
 export {
