@@ -117,5 +117,5 @@ export async function handleVercelDeployOutput(
 }
 
 export function isVercelDeployScript(script: string): boolean {
-  return script.trim().endsWith('vercel')
+  return Boolean(script.split(';').pop()?.trim() === 'vercel')
 }
