@@ -58,18 +58,26 @@ export class WorkflowViewer extends LitElement {
 
   static styles = styles
 
-  private renderSelect(group: string, groupLabel: string, options: string[]) {
+  private renderSelect(group: string, groupLabel: string, options: string[], defaultValue: string) {
     return html`
       <div class="dropdown-container">
         <label slot="label">${groupLabel}</label>
-        <vscode-dropdown class="github-workflow-control">
+        <vscode-dropdown class="github-workflow-control" position="below">
           ${options.map((option: string) => {
-            return html`<vscode-option
-              value="${option}"
-              @click=${(e: Event) => this.setControlValue(group, e)}
-            >
-              ${option}
-            </vscode-option>`
+            return option === defaultValue
+              ? html`<vscode-option
+                  value="${option}"
+                  selected="true"
+                  @click=${(e: Event) => this.setControlValue(group, e)}
+                >
+                  ${option}
+                </vscode-option>`
+              : html`<vscode-option
+                  value="${option}"
+                  @click=${(e: Event) => this.setControlValue(group, e)}
+                >
+                  ${option}
+                </vscode-option>`
           })}
         </vscode-dropdown>
       </div>
@@ -166,7 +174,7 @@ export class WorkflowViewer extends LitElement {
         return html`<div class="row">
           ${when(
             type === 'choice' && options.length <= 3,
-            () => this.renderSelect(key, description, options),
+            () => this.renderSelect(key, description, options, defaultValue),
             () => html``
           )}
           ${when(
