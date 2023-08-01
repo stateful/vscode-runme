@@ -292,6 +292,17 @@
         }
       ]
     },
+    "languages": [
+      {
+        "id": "markdown",
+        "extensions": [
+          ".mdi",
+          ".mdr",
+          ".run",
+          ".runme"
+        ]
+      }
+    ],
     "notebooks": [
       {
         "type": "runme",
