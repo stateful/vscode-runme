@@ -394,7 +394,7 @@
           },
           "runme.server.customAddress": {
             "type": "string",
-            "scope": "machine",
+            "scope": "window",
             "markdownDescription": "Custom runme server address. This address will be used instead of launching the server at start. Use this only if you know what you are doing!"
           },
           "runme.server.binaryPath": {
@@ -410,7 +410,7 @@
           },
           "runme.server.tlsDir": {
             "type": "string",
-            "scope": "machine",
+            "scope": "window",
             "markdownDescription": "Directory for storing TLS certificates for GRPC interface"
           },
           "runme.server.enableTLS": {
