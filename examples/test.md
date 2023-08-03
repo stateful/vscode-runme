@@ -11,3 +11,9 @@ This markdown file contains some custom examples to test the execution within a 
 ```sh { background=false interactive=false }
 echo "Hello World!"
 ```
+
+# GitHub Action Integration
+
+```yaml
+https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml
+```

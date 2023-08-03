@@ -1,10 +1,10 @@
-import { NotebookCellExecution, TextDocument, authentication, window } from 'vscode'
+import { NotebookCellExecution, TextDocument, window } from 'vscode'
 
 import type { Kernel } from '../kernel'
 import { NotebookCellOutputManager } from '../cell'
-import { AuthenticationProviders, OutputType } from '../../constants'
+import { OutputType } from '../../constants'
 
-import { parseGitHubURL, getYamlFileContents } from './github/workflows'
+import { parseGitHubURL, getYamlFileContents, getService } from './github/workflows'
 
 export async function github(
   this: Kernel,
@@ -13,9 +13,7 @@ export async function github(
   outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   try {
-    await authentication.getSession(AuthenticationProviders.GitHub, ['repo'], {
-      createIfNone: true,
-    })
+    await getService(true)
     const { owner, repo, path, ref } = parseGitHubURL(doc.getText())
     const json = await getYamlFileContents({ owner, repo, path })
     outputs.setState({

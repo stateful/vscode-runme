@@ -83,7 +83,7 @@ export class RunmeExtension {
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
       return window.showErrorMessage(
         'Failed to start Runme server, please try to reload the window. ' +
-          `Reason: ${(e as any).message}`
+        `Reason: ${(e as any).message}`
       )
     }
 
@@ -168,8 +168,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
-      RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
-      RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
+      RunmeExtension.registerCommand('runme.keybinding.m', () => { }),
+      RunmeExtension.registerCommand('runme.keybinding.y', () => { }),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       tasks.registerTaskProvider(
         RunmeTaskProvider.id,
