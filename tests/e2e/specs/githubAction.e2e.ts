@@ -5,6 +5,13 @@ describe('Runme Codelense Support', async () => {
   const notebook = new RunmeNotebook()
   const token = process.env.RUNME_TEST_TOKEN
 
+  /**
+   * Skip GitHub Action tests for local testing due to missing token
+   */
+  if (!token && !process.env.CI) {
+    return
+  }
+
   it('has GitHub test token defined in the environment', async () => {
     expect(token).toBeDefined()
   })
