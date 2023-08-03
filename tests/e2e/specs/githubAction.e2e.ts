@@ -1,3 +1,5 @@
+import { Key } from 'webdriverio'
+
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import type { NotebookCell } from '../pageobjects/cell.page.js'
 
@@ -37,6 +39,10 @@ describe('Runme Codelense Support', async () => {
     })
 
     it('should open GitHub Action trigger view', async () => {
+      await browser.action('key')
+        .down(Key.Ctrl).down(Key.Subtract)
+        .pause(100)
+        .perform()
       await cell.run()
       await cell.switchIntoCellFrame()
       await expect($('>>>.github-workflow-item-container')).toBePresent()
