@@ -11,7 +11,7 @@ describe('Runme Codelense Support', async () => {
 
   it('open test markdown file', async () => {
     await browser.executeWorkbench(async (vscode, accessToken) => {
-      // @ts-expect-error
+      // @ts-expect-error inject test token
       globalThis._RUNME_TEST_TOKEN = { accessToken }
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`)
