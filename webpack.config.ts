@@ -3,8 +3,17 @@ import path from 'node:path'
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import { Configuration, DefinePlugin } from 'webpack'
 
+enum Mode {
+  PRODUCTION = 'production',
+  DEVELOPMENT = 'development'
+}
+const mode = process.env.NODE_ENV !== Mode.DEVELOPMENT
+  ? Mode.PRODUCTION
+  : Mode.DEVELOPMENT
+const testToken = 'globalThis._RUNME_TEST_TOKEN'
+
 const baseConfig: Partial<Configuration> = {
-  mode: process.env.NODE_ENV ? 'production' : 'development',
+  mode,
   devtool: 'source-map',
   externals: {
     vscode: 'commonjs vscode',
@@ -66,7 +75,10 @@ const extensionConfig: Configuration = {
   },
   plugins: [
     new DefinePlugin({
-      INSTRUMENTATION_KEY: JSON.stringify(process.env.INSTRUMENTATION_KEY || 'invalid')
+      INSTRUMENTATION_KEY: JSON.stringify(process.env.INSTRUMENTATION_KEY || 'invalid'),
+      [testToken]: mode === Mode.DEVELOPMENT
+        ? testToken
+        : 'false'
     })
   ]
 }
