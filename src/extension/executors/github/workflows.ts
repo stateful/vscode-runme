@@ -51,11 +51,14 @@ export async function deployWorkflow(
 }
 
 export async function getService(createIfNone?: boolean) {
-  const session = (
+  const session =
     // @ts-expect-error test token only for testing purposes
     globalThis._RUNME_TEST_TOKEN ||
-    await authentication.getSession(AuthenticationProviders.GitHub, ['repo'], createIfNone ? { createIfNone } : {})
-  )
+    (await authentication.getSession(
+      AuthenticationProviders.GitHub,
+      ['repo'],
+      createIfNone ? { createIfNone } : {}
+    ))
   if (!session) {
     throw new Error('Missing a valid GitHub session')
   }
