@@ -10,7 +10,7 @@ export async function github(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   try {
     await authentication.getSession(AuthenticationProviders.GitHub, ['repo'], {

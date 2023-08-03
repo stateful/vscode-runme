@@ -64,7 +64,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           annoElem.setAttribute('annotations', JSON.stringify(payload.output.annotations ?? []))
           annoElem.setAttribute(
             'validationErrors',
-            JSON.stringify(payload.output.validationErrors ?? [])
+            JSON.stringify(payload.output.validationErrors ?? []),
           )
           element.appendChild(annoElem)
           break
@@ -74,12 +74,12 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
           terminalElement.setAttribute(
             'terminalFontSize',
-            payload.output.terminalFontSize.toString()
+            payload.output.terminalFontSize.toString(),
           )
           if (payload.output.enableShareButton) {
             terminalElement.setAttribute(
               'enableShareButton',
-              payload.output.enableShareButton.toString()
+              payload.output.enableShareButton.toString(),
             )
           }
           if (payload.output.initialRows !== undefined) {

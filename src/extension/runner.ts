@@ -70,18 +70,18 @@ export interface IRunner extends Disposable {
 
   createEnvironment(
     envs?: string[],
-    metadata?: { [index: string]: string }
+    metadata?: { [index: string]: string },
   ): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
   getEnvironmentVariables(
-    environment: IRunnerEnvironment
+    environment: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined>
 
   setEnvironmentVariables(
     environment: IRunnerEnvironment,
-    variables: Record<string, string | undefined>
+    variables: Record<string, string | undefined>,
   ): Promise<boolean>
 }
 
@@ -142,7 +142,7 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   setDimensions(
     dimensions: TerminalDimensions,
-    terminalWindow?: TerminalWindow
+    terminalWindow?: TerminalWindow,
   ): void | Promise<void>
 
   /**
@@ -163,7 +163,7 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   open(
     initialDimensions?: TerminalDimensions,
-    terminalWindow?: TerminalWindow
+    terminalWindow?: TerminalWindow,
   ): void | Promise<void>
 }
 
@@ -178,7 +178,7 @@ export class GrpcRunner implements IRunner {
 
   constructor(protected server: RunmeServer) {
     this.disposables.push(
-      server.onTransportReady(({ transport }) => this.initRunnerClient(transport))
+      server.onTransportReady(({ transport }) => this.initRunnerClient(transport)),
     )
 
     this.disposables.push(server.onClose(() => this.deinitRunnerClient()))
@@ -245,7 +245,7 @@ export class GrpcRunner implements IRunner {
   }
 
   async getEnvironmentVariables(
-    environment: IRunnerEnvironment
+    environment: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined> {
     GrpcRunner.assertClient(this.client)
 
@@ -269,7 +269,7 @@ export class GrpcRunner implements IRunner {
   async setEnvironmentVariables(
     environment: IRunnerEnvironment,
     variables: Record<string, string | undefined>,
-    shellPath?: string
+    shellPath?: string,
   ): Promise<boolean> {
     const commands = Object.entries(variables).map(([key, val]) => `export ${key}=${val ?? ''}`)
 
@@ -363,7 +363,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   pid = new Promise<number | undefined>(this._onPid.event)
 
-  constructor(private readonly client: RunnerServiceClient, protected opts: RunProgramOptions) {
+  constructor(
+    private readonly client: RunnerServiceClient,
+    protected opts: RunProgramOptions,
+  ) {
     this.session = client.execute()
 
     this.register(
@@ -371,7 +374,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         // TODO: web compat
         const stdout = Buffer.from(data).toString('utf-8')
         this._onDidWrite.fire(stdout)
-      })
+      }),
     )
 
     this.register(
@@ -379,7 +382,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         // TODO: web compat
         const stderr = Buffer.from(data).toString('utf-8')
         this._onDidErr.fire(stderr)
-      })
+      }),
     )
 
     this.register(this._onDidClose.event(() => this.dispose()))
@@ -416,14 +419,14 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
           // todo(sebastian): provide "Configure" button to trigger foldout
           window.showWarningMessage(
             // eslint-disable-next-line max-len
-            'Not every language is automatically executable. You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.'
+            'Not every language is automatically executable. You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.',
           )
         }
 
         if (error.message.includes('invalid ProgramName')) {
           window.showErrorMessage(
             // eslint-disable-next-line max-len
-            `Unable to locate interpreter "${this.opts.programName}" specified in shebang (aka #!). Please check the cell's "Configure" foldout.`
+            `Unable to locate interpreter "${this.opts.programName}" specified in shebang (aka #!). Please check the cell's "Configure" foldout.`,
           )
         }
 
@@ -438,7 +441,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
             service: error.serviceName,
             name: error.name,
           },
-          error
+          error,
         )
       } else {
         console.error('Unexpected error!!', error)
@@ -561,7 +564,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.session.requests.send(
       ExecuteRequest.create({
         inputData: inputData,
-      })
+      }),
     )
   }
 
@@ -664,7 +667,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.session.requests.send(
       ExecuteRequest.create({
         stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
-      })
+      }),
     )
   }
 
@@ -681,7 +684,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   async setDimensions(
     dimensions: TerminalDimensions,
-    terminalWindow: TerminalWindow = 'vscode'
+    terminalWindow: TerminalWindow = 'vscode',
   ): Promise<void> {
     const terminalWindowState = this.terminalWindows.get(terminalWindow)
 
@@ -707,7 +710,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       await this.session.requests.send(
         ExecuteRequest.create({
           winsize: terminalDimensionsToWinsize(dimensions),
-        })
+        }),
       )
     }
   }
@@ -770,7 +773,10 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   initialEnvKeys: Set<string>
 
-  constructor(private readonly client: RunnerServiceClient, private readonly session: Session) {
+  constructor(
+    private readonly client: RunnerServiceClient,
+    private readonly session: Session,
+  ) {
     this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))
   }
 

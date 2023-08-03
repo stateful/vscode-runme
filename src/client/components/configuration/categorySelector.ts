@@ -152,16 +152,17 @@ export class CategorySelector extends LitElement {
 
         ${when(
           this.categories.length,
-          () => html`<vscode-text-field
-            type="text"
-            value="${this.selectedCategory}"
-            size="30"
-            @change="${this.onChange}"
-            @click="${this.onSelectCategory}"
-            readonly
-            class="annotation-item"
-          >
-          </vscode-text-field>`
+          () =>
+            html`<vscode-text-field
+              type="text"
+              value="${this.selectedCategory}"
+              size="30"
+              @change="${this.onChange}"
+              @click="${this.onSelectCategory}"
+              readonly
+              class="annotation-item"
+            >
+            </vscode-text-field>`,
         )}
 
         <div class="flex-row" style="margin-top:4px">
@@ -174,13 +175,14 @@ export class CategorySelector extends LitElement {
           </vscode-button>
           ${when(
             this.categories.length,
-            () => html` <vscode-button
-              class="category-button primary"
-              @click="${this.onSelectCategory}"
-            >
-              <label>${this.selectCategoryText}</label>
-            </vscode-button>`,
-            () => html``
+            () =>
+              html` <vscode-button
+                class="category-button primary"
+                @click="${this.onSelectCategory}"
+              >
+                <label>${this.selectCategoryText}</label>
+              </vscode-button>`,
+            () => html``,
           )}
         </div>
       </div>

@@ -35,9 +35,9 @@ export function renderError(outputs: NotebookCellOutputManager, output: string) 
           type: OutputType.error,
           output,
         },
-        OutputType.error
+        OutputType.error,
       ),
-    ])
+    ]),
   )
 }
 
@@ -62,7 +62,7 @@ export interface CommandExportExtractMatch {
 export async function promptUserForVariable(
   key: string,
   placeHolder: string,
-  hasStringValue: boolean
+  hasStringValue: boolean,
 ): Promise<string | undefined> {
   return await window.showInputBox({
     title: `Set Environment Variable "${key}"`,
@@ -76,7 +76,7 @@ export async function promptUserForVariable(
 export function getCommandExportExtractMatches(
   rawText: string,
   supportsDirect = true,
-  supportsPrompt = true
+  supportsPrompt = true,
 ): CommandExportExtractMatch[] {
   const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
@@ -130,7 +130,7 @@ export function getCommandExportExtractMatches(
  */
 export async function retrieveShellCommand(
   exec: NotebookCellExecution,
-  promptForEnv = DEFAULT_PROMPT_ENV
+  promptForEnv = DEFAULT_PROMPT_ENV,
 ) {
   let cellText = exec.cell.document.getText()
   const cwd = path.dirname(exec.cell.document.uri.fsPath)
@@ -181,7 +181,7 @@ export async function retrieveShellCommand(
        */
       stateEnv[key] = populateEnvVar(
         (await promptUserForVariable(key, value, hasStringValue)) ?? '',
-        { ...process.env, ...stateEnv }
+        { ...process.env, ...stateEnv },
       )
     } else {
       stateEnv[key] = populateEnvVar(value)
@@ -216,7 +216,7 @@ export function getSystemShellPath(execKey?: string): string | undefined {
 export function getCellShellPath(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
-  execKey?: string
+  execKey?: string,
 ): string | undefined {
   const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
 
@@ -266,7 +266,7 @@ export function isShellLanguage(languageId: string): ShellType | undefined {
 export function getCellProgram(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
-  execKey: string
+  execKey: string,
 ): { programName: string; commandMode: CommandMode } {
   let result: { programName: string; commandMode: CommandMode }
   const { interpreter } = getAnnotations(cell.metadata)
@@ -296,7 +296,7 @@ export function getCellProgram(
 export async function getCellCwd(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
   notebook?: NotebookData | NotebookDocument | Serializer.Notebook,
-  notebookFile?: Uri
+  notebookFile?: Uri,
 ): Promise<string | undefined> {
   let res: string | undefined
 
@@ -319,7 +319,7 @@ export async function getCellCwd(
     if (candidate) {
       const folderExists = await fs.stat(candidate).then(
         (f) => f.isDirectory(),
-        () => false
+        () => false,
       )
 
       if (!folderExists) {
@@ -359,7 +359,7 @@ export async function parseCommandSeq(
   cellText: string,
   promptForEnv = DEFAULT_PROMPT_ENV,
   skipEnvs?: Set<string>,
-  parseBlock?: (block: string) => string[]
+  parseBlock?: (block: string) => string[],
 ): Promise<string[] | undefined> {
   parseBlock ??= (s) => (s ? s.split('\n') : [])
 
@@ -426,6 +426,7 @@ export async function parseCommandSeq(
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
   return parsedCommandBlocks.flatMap(
-    ({ type, content }) => (type === 'block' && parseBlock?.(content)) || (content ? [content] : [])
+    ({ type, content }) =>
+      (type === 'block' && parseBlock?.(content)) || (content ? [content] : []),
   )
 }

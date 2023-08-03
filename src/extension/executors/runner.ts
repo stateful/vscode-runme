@@ -56,7 +56,7 @@ export async function executeRunner(
   execKey: string,
   outputs: NotebookCellOutputManager,
   environment?: IRunnerEnvironment,
-  environmentManager?: IEnvironmentManager
+  environmentManager?: IEnvironmentManager,
 ) {
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
@@ -91,7 +91,7 @@ export async function executeRunner(
     cellText,
     promptEnv,
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
-    prepareCmdSeq
+    prepareCmdSeq,
   )
   if (!commands) {
     return false
@@ -157,7 +157,7 @@ export async function executeRunner(
     postClientMessage(messaging, ClientMessages.terminalStderr, {
       'runme.dev/uuid': cellUUID,
       data,
-    })
+    }),
   )
 
   messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
@@ -229,7 +229,7 @@ export async function executeRunner(
 
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
-    revealNotebookTerminal ? 'xterm' : 'local'
+    revealNotebookTerminal ? 'xterm' : 'local',
   )
 
   if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(script)) {
@@ -251,7 +251,7 @@ export async function executeRunner(
 
       let item: NotebookCellOutputItem | undefined = new NotebookCellOutputItem(
         Buffer.concat(output),
-        mime
+        mime,
       )
 
       // hacky for now, maybe inheritence is a fitting pattern
@@ -262,7 +262,7 @@ export async function executeRunner(
           output,
           exec.cell.index,
           vercelProd,
-          environmentManager
+          environmentManager,
         )
 
         item = undefined
@@ -301,7 +301,7 @@ export async function executeRunner(
       (cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText) +
         ` (RUNME_ID: ${RUNME_ID})`,
       'exec',
-      new CustomExecution(async () => program)
+      new CustomExecution(async () => program),
     )
 
     taskExecution.isBackground = background

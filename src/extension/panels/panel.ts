@@ -44,7 +44,7 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
     content = html.replace(`'{ "appToken": null }'`, `'${JSON.stringify(payload)}'`)
     content = content.replace(
       '<script id="appAuthToken">',
-      `<base href="${this.appUrl}"><script id="appAuthToken">`
+      `<base href="${this.appUrl}"><script id="appAuthToken">`,
     )
     return content
   }
@@ -54,7 +54,10 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
   public readonly webview = new Subject<Webview>()
   protected readonly staticHtml
 
-  constructor(protected readonly context: ExtensionContext, public readonly identifier: string) {
+  constructor(
+    protected readonly context: ExtensionContext,
+    public readonly identifier: string,
+  ) {
     super(context)
 
     this.staticHtml = fetchStaticHtml(this.appUrl)

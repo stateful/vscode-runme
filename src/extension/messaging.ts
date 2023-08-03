@@ -12,7 +12,7 @@ export abstract class DisplayableMessage {
   abstract display(): void
   constructor(
     protected readonly context: ExtensionContext,
-    readonly stateSettings?: Record<TELEMETRY_EVENTS, any>
+    readonly stateSettings?: Record<TELEMETRY_EVENTS, any>,
   ) {
     this.context = context
     this.stateSettings = stateSettings
@@ -81,7 +81,7 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
         'Would you like to add Runme to the recommended extensions?',
         'Yes',
         'No',
-        "Don't ask again"
+        "Don't ask again",
       )
       if (answer !== 'Yes') {
         TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, {
@@ -111,9 +111,9 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
               recommendations,
             },
             null,
-            2
-          )
-        )
+            2,
+          ),
+        ),
       )
 
       window.showInformationMessage('Runme added successfully to the recommended extensions')

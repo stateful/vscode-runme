@@ -4,7 +4,7 @@ export class CopyProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const item = new vscode.NotebookCellStatusBarItem(
       '$(copy) Copy',
-      vscode.NotebookCellStatusBarAlignment.Right
+      vscode.NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.copyCellToClipboard'
     return item

@@ -32,7 +32,7 @@ function log(scope?: string, logLevel: LogLevel = DEFAULT_LOG_LEVEL, ...logParam
     `${color('green', '[%s]')} ${color('yellow', '%s')} Runme%s:`,
     now.toISOString(),
     (logLevel && logLevel.toUpperCase()) ?? '',
-    scopeAddition
+    scopeAddition,
   )
   console.log(prefix, ...logParams)
   outputChannel.appendLine(stripANSI([prefix, ...logParams].join(' ')))

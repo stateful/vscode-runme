@@ -36,7 +36,7 @@ interface VercelCLILogin {
 export async function login(
   exec: NotebookCellExecution,
   argv: Argv<VercelCLILogin>,
-  outputs: NotebookCellOutputManager
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   const args = await argv.argv
   const method =
@@ -94,12 +94,12 @@ export async function login(
     // eslint-disable-next-line max-len
     await env.openExternal(
       Uri.parse(
-        `https://vercel.com/api/registration/login-with-github?mode=login&next=http%3A%2F%2Flocalhost%3A${port}`
-      )
+        `https://vercel.com/api/registration/login-with-github?mode=login&next=http%3A%2F%2Flocalhost%3A${port}`,
+      ),
     )
     const { token } = (await authPromise) as any
     const verifyResponse = (await got(
-      `https://api.vercel.com/registration/verify?token=${token}`
+      `https://api.vercel.com/registration/verify?token=${token}`,
     ).json()) as any
     const configFilePath = await getConfigFilePath()
     await fs.writeFile(configFilePath, JSON.stringify({ token: verifyResponse.token }))
@@ -111,14 +111,14 @@ export async function login(
 
   const { username } = (await authPromise) as any
   outputs.replaceOutputs(
-    new NotebookCellOutput([NotebookCellOutputItem.text(`Logged in as ${username}`)])
+    new NotebookCellOutput([NotebookCellOutputItem.text(`Logged in as ${username}`)]),
   )
   return true
 }
 
 export async function logout(
   exec: NotebookCellExecution,
-  outputs: NotebookCellOutputManager
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   let token = await getAuthToken()
 
@@ -126,7 +126,7 @@ export async function logout(
     outputs.replaceOutputs(
       new NotebookCellOutput([
         NotebookCellOutputItem.text('Not currently logged in, so logout did nothing'),
-      ])
+      ]),
     )
     return true
   }

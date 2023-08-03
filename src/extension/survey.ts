@@ -94,7 +94,7 @@ export class WinDefaultShell extends Survey {
       'Please help us improve Runme on Windows: Click OK to share what default shell you are using.',
       'OK',
       "Don't ask again",
-      'Dismiss'
+      'Dismiss',
     )
     if (option === 'Dismiss' || option === undefined) {
       return
@@ -121,7 +121,7 @@ export class WinDefaultShell extends Survey {
       TaskScope.Workspace,
       name,
       'exec',
-      new ShellExecution(cmdline)
+      new ShellExecution(cmdline),
     )
 
     taskExecution.isBackground = true
@@ -144,7 +144,7 @@ export class WinDefaultShell extends Survey {
 
             // non-zero exit code does not mean failure
             resolve(e.exitCode)
-          })
+          }),
         )
       })
     })
@@ -187,7 +187,7 @@ export class SurveyWinCodeLensRun implements Disposable {
       'Support for running scripts directly from markdown is currently not supported on Windows.\nPlease help us improve Runme on Windows: Click OK to share your interest in this feature.',
       'OK',
       "Don't ask again",
-      'Dismiss'
+      'Dismiss',
     )
 
     switch (option) {
@@ -238,7 +238,7 @@ export class SurveyActiveUserFeedback extends Survey {
 
     try {
       const response = await fetch(
-        `https://runme.dev/api/survey?name=feedback&mid=${vscode.env.machineId}`
+        `https://runme.dev/api/survey?name=feedback&mid=${vscode.env.machineId}`,
       )
       if (response.status === 404) {
         // no match, try again next session
@@ -270,7 +270,7 @@ export class SurveyActiveUserFeedback extends Survey {
       "We'd love to hear how we can improve Runme for you. Please click OK to open the feedback form. Takes <1min.",
       'OK',
       "Don't ask again",
-      'Dismiss'
+      'Dismiss',
     )
     this.#displayed = true
     if (option === 'Dismiss' || option === undefined) {
@@ -284,7 +284,7 @@ export class SurveyActiveUserFeedback extends Survey {
     TelemetryReporter.sendTelemetryEvent('survey.ActiveUserFeedback', { never: 'false' })
     await commands.executeCommand(
       'vscode.open',
-      Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`)
+      Uri.parse(`https://wfoq097ak2p.typeform.com/runme#mid=${this.#mid}`),
     )
     await this.done()
   }
@@ -303,7 +303,7 @@ export class SurveyShebangComingSoon extends Survey {
     const option = await window.showWarningMessage(
       'Not every language is executable... yet! Coming soon: Mix and match languages in Runme.',
       'Learn more',
-      'Dismiss'
+      'Dismiss',
     )
     if (option === 'Dismiss' || option === undefined) {
       return
@@ -312,7 +312,7 @@ export class SurveyShebangComingSoon extends Survey {
     TelemetryReporter.sendTelemetryEvent('survey.ShebangComingSoon', { never: 'false' })
     await commands.executeCommand(
       'vscode.open',
-      Uri.parse('https://runme.dev/spotlight/shebang-support')
+      Uri.parse('https://runme.dev/spotlight/shebang-support'),
     )
   }
 }
@@ -332,7 +332,7 @@ export class SurveyFeedbackButton extends Survey {
     TelemetryReporter.sendTelemetryEvent('survey.FeedbackButton', { never: 'false' })
     return commands.executeCommand(
       'vscode.open',
-      Uri.parse(`https://wfoq097ak2p.typeform.com/feedback#mid=${this.#mid}`)
+      Uri.parse(`https://wfoq097ak2p.typeform.com/feedback#mid=${this.#mid}`),
     )
   }
 }
