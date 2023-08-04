@@ -15,7 +15,7 @@ export async function deno(
   doc: TextDocument,
   outputs: NotebookCellOutputManager,
   runScript?: () => Promise<boolean>,
-  environment = ENV_STORE_MANAGER
+  environment = ENV_STORE_MANAGER,
 ): Promise<boolean> {
   /**
    * ensure token is set for operations

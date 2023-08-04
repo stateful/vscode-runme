@@ -20,7 +20,7 @@ export async function vercel(
   exec: NotebookCellExecution,
   doc: TextDocument,
   outputs: NotebookCellOutputManager,
-  runScript?: () => Promise<boolean>
+  runScript?: () => Promise<boolean>,
 ): Promise<boolean> {
   const command = doc.getText()
 
@@ -89,15 +89,15 @@ export async function handleVercelDeployOutput(
   outputItems: Buffer[],
   index: number,
   prod: boolean,
-  environment?: IEnvironmentManager
+  environment?: IEnvironmentManager,
 ) {
   const states = ['Queued', 'Building', 'Completing'].reverse()
 
   const status = (
     states.find((s) =>
       outputItems.find(
-        (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1
-      )
+        (oi) => oi.toString().toLocaleLowerCase().indexOf(s.toLocaleLowerCase()) > -1,
+      ),
     ) || 'pending'
   ).replaceAll('Completing', 'complete')
   // should get this from API instead

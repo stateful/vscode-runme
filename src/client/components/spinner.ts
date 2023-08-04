@@ -10,7 +10,9 @@ export class VSCodeSpinner extends LitElement {
       height: 10px;
       border-radius: 50%;
       background-color: #fff;
-      box-shadow: 16px 0 #fff, -16px 0 #fff;
+      box-shadow:
+        16px 0 #fff,
+        -16px 0 #fff;
       animation: flash 0.5s ease-out infinite alternate;
       display: inline-block;
       margin: 0 25px;
@@ -19,15 +21,21 @@ export class VSCodeSpinner extends LitElement {
     @keyframes flash {
       0% {
         background-color: #fff2;
-        box-shadow: 16px 0 #fff2, -16px 0 #fff;
+        box-shadow:
+          16px 0 #fff2,
+          -16px 0 #fff;
       }
       50% {
         background-color: #fff;
-        box-shadow: 16px 0 #fff2, -16px 0 #fff2;
+        box-shadow:
+          16px 0 #fff2,
+          -16px 0 #fff2;
       }
       100% {
         background-color: #fff2;
-        box-shadow: 16px 0 #fff, -16px 0 #fff2;
+        box-shadow:
+          16px 0 #fff,
+          -16px 0 #fff2;
       }
     }
   `

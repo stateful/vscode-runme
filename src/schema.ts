@@ -27,21 +27,24 @@ const falseyBoolean = (defaultValue: boolean) =>
   }, z.boolean())
 
 const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a boolean value') =>
-  z.preprocess((subject) => {
-    if (!subject) {
-      return defaultValue
-    }
-    if (typeof subject === 'string') {
-      subject = cleanAnnotation(subject, ',')
-    }
-    if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
-      return false
-    }
-    if (typeof subject === 'string' && subject.toLowerCase() === 'true') {
-      return true
-    }
-    return subject
-  }, z.boolean({ invalid_type_error: invalidTypeError }))
+  z.preprocess(
+    (subject) => {
+      if (!subject) {
+        return defaultValue
+      }
+      if (typeof subject === 'string') {
+        subject = cleanAnnotation(subject, ',')
+      }
+      if (typeof subject === 'string' && subject.toLowerCase() === 'false') {
+        return false
+      }
+      if (typeof subject === 'string' && subject.toLowerCase() === 'true') {
+        return true
+      }
+      return subject
+    },
+    z.boolean({ invalid_type_error: invalidTypeError }),
+  )
 
 export const AnnotationSchema = {
   'runme.dev/uuid': z.string().uuid().optional(),
@@ -62,7 +65,7 @@ export const AnnotationSchema = {
   }, z.number().int().positive().optional()),
   name: z.preprocess(
     (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
-    z.string().default('')
+    z.string().default(''),
   ),
   mimeType: z
     .string()
@@ -78,7 +81,7 @@ export const AnnotationSchema = {
   cwd: z.string().nonempty().optional(),
   category: z.preprocess(
     (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
-    z.string().default('')
+    z.string().default(''),
   ),
 }
 

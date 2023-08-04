@@ -42,7 +42,7 @@ type ActionArguments = [
   notebook: NotebookData,
   cell: NotebookCellData,
   index: number,
-  action: ActionType
+  action: ActionType,
 ]
 
 type ActionCallback = (...arg: ActionArguments) => void
@@ -58,7 +58,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     protected runCLI: ReturnType<typeof runCLICommand>,
     protected surveyWinCodeLensRun: SurveyWinCodeLensRun,
     protected runner?: IRunner,
-    protected kernel?: Kernel
+    protected kernel?: Kernel,
   ) {
     this.register(
       languages.registerCodeLensProvider(
@@ -66,8 +66,8 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           { language: 'markdown', scheme: 'file' },
           { language: 'mdx', scheme: 'file' },
         ],
-        this
-      )
+        this,
+      ),
     )
 
     const cmd: ActionCallback = this.codeLensActionCallback.bind(this)
@@ -161,7 +161,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     notebook: NotebookData,
     cell: NotebookCellData,
     index: number,
-    action: ActionType
+    action: ActionType,
   ) {
     switch (action) {
       case 'open':
@@ -175,7 +175,9 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           await commands.executeCommand('notebook.focusTop')
 
           await Promise.all(
-            Array.from({ length: index }, () => commands.executeCommand('notebook.focusNextEditor'))
+            Array.from({ length: index }, () =>
+              commands.executeCommand('notebook.focusNextEditor'),
+            ),
           )
 
           // to execute the command:
@@ -198,7 +200,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
             cell,
             {},
             this.runner!,
-            this.kernel?.getRunnerEnvironment()
+            this.kernel?.getRunnerEnvironment(),
           )
 
           await tasks.executeTask(task)

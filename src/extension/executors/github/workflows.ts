@@ -35,7 +35,7 @@ export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>)
 }
 
 export async function deployWorkflow(
-  options: IWorkflowDispatchOptions
+  options: IWorkflowDispatchOptions,
 ): Promise<IWorkflowRunResult> {
   try {
     const githubService = await getService()

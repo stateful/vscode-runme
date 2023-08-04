@@ -77,7 +77,7 @@ export class Kernel implements Disposable {
   #controller = notebooks.createNotebookController(
     Kernel.type,
     Kernel.type,
-    Kernel.type.toUpperCase()
+    Kernel.type.toUpperCase(),
   )
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
@@ -122,7 +122,7 @@ export class Kernel implements Disposable {
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
-      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this))
+      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
     )
   }
 
@@ -151,7 +151,7 @@ export class Kernel implements Disposable {
 
   async registerCellTerminalState(
     cell: NotebookCell,
-    type: NotebookTerminalType
+    type: NotebookTerminalType,
   ): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
     return outputs.registerCellTerminalState(type)
@@ -172,7 +172,7 @@ export class Kernel implements Disposable {
     await commands.executeCommand(
       'setContext',
       NOTEBOOK_HAS_CATEGORIES,
-      !!availableCategories.length
+      !!availableCategories.length,
     )
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
@@ -277,7 +277,7 @@ export class Kernel implements Disposable {
       const api = API.fromToken(token)
       const deployed = await api.promoteDeployment(
         payload.output.id,
-        payload.output.productionDeployment
+        payload.output.productionDeployment,
       )
       postClientMessage(this.messaging, ClientMessages.denoUpdate, {
         promoted: deployed.valueOf(),
@@ -365,7 +365,7 @@ export class Kernel implements Disposable {
       }
       const answer = await window.showInformationMessage(
         message.output.title,
-        ...message.output.options
+        ...message.output.options,
       )
       return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
         option: answer,
@@ -453,7 +453,7 @@ export class Kernel implements Disposable {
   }
 
   public async createCellExecution(
-    cell: NotebookCell
+    cell: NotebookCell,
   ): Promise<RunmeNotebookCellExecution | undefined> {
     return await this.cellManager.createNotebookCellExecution(cell)
   }
@@ -506,7 +506,7 @@ export class Kernel implements Disposable {
           key,
           outputs,
           this.environment,
-          environmentManager
+          environmentManager,
         ).catch((e) => {
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
           log.error('Internal failure executing runner', e.message)
@@ -522,7 +522,7 @@ export class Kernel implements Disposable {
           runningCell,
           outputs,
           runScript,
-          environmentManager
+          environmentManager,
         )
       }
     } else if (execKey in executor) {
@@ -533,7 +533,7 @@ export class Kernel implements Disposable {
         this,
         exec,
         runningCell,
-        outputs
+        outputs,
       )
     } else {
       window.showErrorMessage('Cell language is not executable')
@@ -562,7 +562,7 @@ export class Kernel implements Disposable {
           const env = await runner.createEnvironment(
             // copy env from process naively for now
             // later we might want a more sophisticated approach/to bring this serverside
-            processEnviron()
+            processEnviron(),
           )
 
           if (this.runner !== runner) {
