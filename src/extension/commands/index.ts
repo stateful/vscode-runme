@@ -255,7 +255,7 @@ export async function createNewRunmeNotebook() {
       new NotebookCellData(NotebookCellKind.Code, 'echo "Hello World"', 'sh'),
       new NotebookCellData(
         NotebookCellKind.Markup,
-        '*Read the docs on [runme.dev](https://www.runme.dev/docs/intro)' +
+        '*Read the docs on [runme.dev](https://runme.dev/docs/intro)' +
           ' to learn how to get most out of Runme notebooks!*',
         'markdown',
       ),
