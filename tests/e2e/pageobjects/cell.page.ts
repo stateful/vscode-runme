@@ -8,112 +8,116 @@ import {
 } from './locators.js'
 
 export enum OutputType {
-    TerminalView = 'terminal-view',
-    ShellOutput = 'shell-output',
-    Display = '.display'
+  TerminalView = 'terminal-view',
+  ShellOutput = 'shell-output',
+  Display = '.display'
 }
 
 export enum StatusBarElements {
-    Copy = 'Copy',
-    Configure = 'Configure',
-    CLI = 'CLI',
-    ShellScript = 'Shell Script',
-    OpenTerminal = 'Open Terminal',
-    BackgroundTask = 'Background Task',
-    StopTask = 'Stop Task'
+  Copy = 'Copy',
+  Configure = 'Configure',
+  CLI = 'CLI',
+  ShellScript = 'Shell Script',
+  OpenTerminal = 'Open Terminal',
+  BackgroundTask = 'Background Task',
+  StopTask = 'Stop Task'
 }
 
 export interface NotebookCommand {
-    element$: WebdriverIO.Element
-    text: string
+  element$: WebdriverIO.Element
+  text: string
 }
 
 export interface NotebookCell extends IPageDecorator<typeof notebookCellLocators> { }
 
 @PageDecorator(notebookCellLocators)
 export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof locatorMap> {
-    public locatorKey = 'notebookCell' as const
-    #cellText: string
-    constructor(cellContainer: ChainablePromiseElement<WebdriverIO.Element>, cellText: string) {
-        super(locatorMap, cellContainer)
-        this.#cellText = cellText
+  public locatorKey = 'notebookCell' as const
+  #cellText: string
+  constructor(cellContainer: ChainablePromiseElement<WebdriverIO.Element>, cellText: string) {
+    super(locatorMap, cellContainer)
+    this.#cellText = cellText
+  }
+
+  /**
+   * Ensure the focus is over the cell code block element
+   */
+  async focus() {
+    await this.elem.click()
+      .catch(() => {
+        // ci sometimes yaps about this
+      })
+  }
+
+  async run(waitForSuccess = true) {
+    const runButton = await this.runButton$
+    await runButton.click()
+    await browser.pause(100)
+
+    if (waitForSuccess) {
+      await this.getStatusBar().waitForSuccess()
     }
+  }
 
-    /**
-     * Ensure the focus is over the cell code block element
-     */
-    async focus() {
-      await this.elem.click()
-        .catch(() => {
-          // ci sometimes yaps about this
-        })
+  getStatusBar() {
+    return new NotebookCellStatusBar(this.statusBar$, this)
+  }
+
+  async openTerminal() {
+    const terminalButton = await this.getStatusBar().getCommand(StatusBarElements.OpenTerminal)
+    await terminalButton.isClickable()
+    await terminalButton.click()
+  }
+
+  async switchIntoCellFrame() {
+    await browser.switchToParentFrame()
+    const notebookIframe = await $('iframe')
+    if (notebookIframe.error) {
+      throw new Error('Could not find notebook iframe')
     }
-
-    async run(waitForSuccess = true) {
-        const runButton = await this.runButton$
-
-        await runButton.click()
-
-        await new Promise(cb => setTimeout(cb, 100))
-
-        if (waitForSuccess) {
-          await this.getStatusBar().waitForSuccess()
-        }
+    await browser.switchToFrame(notebookIframe)
+    const executionIFrame = await $('iframe')
+    if (executionIFrame.error) {
+      throw new Error('Could not find execution iframe')
     }
+    await browser.switchToFrame(executionIFrame)
+  }
 
-    getStatusBar() {
-      return new NotebookCellStatusBar(this.statusBar$, this)
+  async switchOutOfCellFrame() {
+    await browser.switchToParentFrame()
+    await browser.switchToParentFrame()
+    await this.focus()
+  }
+
+  /**
+   * Checks if the specified output (a string or regular expression) is rendered
+   * @param expectedOutput {string}
+   * @param regex {RegExp}
+   * @returns boolean
+   */
+  async getCellOutput(expectedTerminal: OutputType): Promise<string[]> {
+    await this.switchIntoCellFrame()
+    const rows = await $$(expectedTerminal)
+    const res: string[] = []
+    for (const row of rows) {
+      if (row.error) {
+        throw row.error
+      }
+      let text = expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
+
+      if (expectedTerminal === OutputType.TerminalView) {
+        text = text.slice(0, text.length - 'Copy\nSave'.length)
+      }
+
+      res.push(text)
     }
+    await this.switchOutOfCellFrame()
+    return res
+  }
 
-    async openTerminal() {
-      const terminalButton = await this.getStatusBar().getCommand(StatusBarElements.OpenTerminal)
-
-      await terminalButton.isClickable()
-
-      await terminalButton.click()
-    }
-
-    /**
-     * Checks if the specified output (a string or regular expression) is rendered
-     * @param expectedOutput {string}
-     * @param regex {RegExp}
-     * @returns boolean
-     */
-    async getCellOutput(expectedTerminal: OutputType): Promise<string[]> {
-        await browser.switchToParentFrame()
-        const notebookIframe = await $('iframe')
-        if (notebookIframe.error) {
-            throw new Error('Could not find notebook iframe')
-        }
-        await browser.switchToFrame(notebookIframe)
-        const executionIFrame = await $('iframe')
-        if (executionIFrame.error) {
-            throw new Error('Could not find execution iframe')
-        }
-        await browser.switchToFrame(executionIFrame)
-        const rows = await $$(expectedTerminal)
-        const res: string[] = []
-        for (const row of rows) {
-            if (row.error) {
-                throw row.error
-            }
-            let text = expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
-
-            if (expectedTerminal === OutputType.TerminalView) {
-              text = text.slice(0, text.length - 'Copy\nSave'.length)
-            }
-
-            res.push(text)
-        }
-        await browser.switchToParentFrame()
-        await browser.switchToParentFrame()
-        await this.focus()
-        return res
-    }
-
-    async getContainer() {
-      return await this.elem
-    }
+  async getContainer() {
+    return await this.elem
+  }
 }
 
 export interface NotebookCellStatusBar extends IPageDecorator<typeof notebookCellStatusLocators> { }

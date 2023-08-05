@@ -19,6 +19,7 @@ jobs:
           run: npx runme run configureNPM setup build test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUNME_TEST_TOKEN: ${{ secrets.RUNME_TEST_TOKEN }}
           RUNME_PROJECT: ${{ github.workspace }}
           SHELL: bash
       - name: 🔼 Upload Artifacts

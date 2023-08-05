@@ -2,6 +2,7 @@ import { authentication } from 'vscode'
 
 import { GitHubService } from '../../services'
 import { IWorkflowDispatchOptions, IWorkflowRun } from '../../services/types'
+import { AuthenticationProviders } from '../../../constants'
 
 export type IGitHubURLParts = {
   owner: string
@@ -49,8 +50,15 @@ export async function deployWorkflow(
   }
 }
 
-export async function getService() {
-  const session = await authentication.getSession('github', ['repo'])
+export async function getService(createIfNone?: boolean) {
+  const session =
+    // @ts-expect-error test token only for testing purposes
+    globalThis._RUNME_TEST_TOKEN ||
+    (await authentication.getSession(
+      AuthenticationProviders.GitHub,
+      ['repo'],
+      createIfNone ? { createIfNone } : {}
+    ))
   if (!session) {
     throw new Error('Missing a valid GitHub session')
   }
