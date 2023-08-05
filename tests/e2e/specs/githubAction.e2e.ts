@@ -3,7 +3,7 @@ import { Key } from 'webdriverio'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import type { NotebookCell } from '../pageobjects/cell.page.js'
 
-describe('Runme Codelense Support', async () => {
+describe('Runme GitHub Workflow Integration', async () => {
   const notebook = new RunmeNotebook()
   const token = process.env.RUNME_TEST_TOKEN
 
