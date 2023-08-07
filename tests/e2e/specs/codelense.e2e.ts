@@ -1,4 +1,4 @@
-import { getTerminalText } from '../helpers/index.js'
+import { getTerminalText, killAllTerminals } from '../helpers/index.js'
 
 describe('Runme Codelense Support', async () => {
   it('should allow to run a cell', async () => {
@@ -8,7 +8,24 @@ describe('Runme Codelense Support', async () => {
 
     const workbench = await browser.getWorkbench()
     const text = await getTerminalText(workbench)
-    expect(text).toContain('Hello World')
+    expect(text).toContain('Hello World!\n ')
+    await killAllTerminals(workbench)
+  })
+
+  it('should allow to paste into terminal', async () => {
+    await browser.waitUntil(
+      () => $$('.codelens-decoration').then((elems) => {
+        return elems.length > 1
+      }),
+      { timeoutMsg: 'Codelens not found', timeout: 30 * 1000 })
+    const lense = (await $$('.codelens-decoration a'))[2]
+    await lense.click()
+    await browser.pause(1000)
+
+    const workbench = await browser.getWorkbench()
+    const text = await getTerminalText(workbench)
+    expect(text).toContain('echo "Hello World!"')
+    await killAllTerminals(workbench)
   })
 
   it('should allow to open file in notebook', async () => {
