@@ -651,7 +651,7 @@
     "codegen": "RUNME_TOKEN=$(runme token --api-url https://api.staging.stateful.com --insecure) graphql-codegen --config codegen.ts"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "4.0.1",
+    "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/client-preset": "^4.0.1",
     "@graphql-codegen/typescript": "4.0.1",
     "@octokit/rest": "^19.0.13",
