@@ -38,10 +38,7 @@ interface TreeFile {
 let i = 0
 
 export class RunmeFile extends TreeItem {
-  constructor(
-    public label: string,
-    options: IRunmeFileProps,
-  ) {
+  constructor(public label: string, options: IRunmeFileProps) {
     super(label, options.collapsibleState)
     const assetsPath = join(__filename, '..', '..', 'assets')
 
@@ -65,7 +62,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     const watcher = workspace.createFileSystemWatcher('**/*.md', false, true, false)
     this.#disposables.push(
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
-      watcher.onDidDelete((file) => this.#onFileChange(file)),
+      watcher.onDidDelete((file) => this.#onFileChange(file))
     )
   }
 
@@ -103,7 +100,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
               lightIcon: 'folder.svg',
               darkIcon: 'folder.svg',
               contextValue: 'folder',
-            }),
+            })
         )
         .sort((a: RunmeFile, b: RunmeFile) => (a.label.length > b.label.length ? 1 : -1))
     }
@@ -122,7 +119,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
             command: 'runme.openRunmeFile',
             title: file,
           },
-        }),
+        })
     )
   }
 

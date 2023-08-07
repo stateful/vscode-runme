@@ -14,7 +14,7 @@ type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiReques
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
-  kernel: Kernel,
+  kernel: Kernel
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
 

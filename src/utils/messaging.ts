@@ -12,7 +12,7 @@ interface Messaging {
 export async function postClientMessage<T extends ClientMessages>(
   messaging: Partial<Messaging>,
   type: T,
-  payload: ClientMessagePayload[T],
+  payload: ClientMessagePayload[T]
 ) {
   const msg = {
     type,
@@ -24,7 +24,7 @@ export async function postClientMessage<T extends ClientMessages>(
 
 export function onClientMessage(
   messaging: Partial<Messaging>,
-  cb: (message: ClientMessage<ClientMessages>) => void,
+  cb: (message: ClientMessage<ClientMessages>) => void
 ): Disposable {
   return messaging.onDidReceiveMessage?.(cb) ?? { dispose: () => {} }
 }

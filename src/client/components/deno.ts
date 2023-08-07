@@ -75,7 +75,7 @@ export class DenoOutput extends LitElement {
     const project = this.project!
     const prodDomainMapping = project.productionDeployment?.domainMappings.reduce((acc, curr) =>
       // oldest is prod domain mapping
-      acc?.createdAt > curr.createdAt ? curr : acc,
+      acc?.createdAt > curr.createdAt ? curr : acc
     )
     const deployment = this.deployments[0]
     return html`<section>
@@ -113,7 +113,7 @@ export class DenoOutput extends LitElement {
             >
               🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
             </vscode-button>
-          `,
+          `
         )}
         ${when(
           this.deployed && supportsMessaging && this.promoted && project.hasProductionDeployment,
@@ -124,7 +124,7 @@ export class DenoOutput extends LitElement {
                 ${prodDomainMapping?.domain}
               </vscode-link>
             </p>
-          `,
+          `
         )}
       </div>
     </section>`

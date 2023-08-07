@@ -29,7 +29,7 @@ export async function getProjectDir(context: ExtensionContext) {
   const projectDir = Uri.parse(url.pathToFileURL(projectDirPath).toString())
   const isExisting = await workspace.fs.stat(projectDir).then(
     () => true,
-    () => false,
+    () => false
   )
   if (isExisting) {
     return projectDir
@@ -40,7 +40,7 @@ export async function getProjectDir(context: ExtensionContext) {
       `A project directory (${projectDir}) was set up but doesn't exist. ` +
         'Do you want to create it?',
       'Yes',
-      'No',
+      'No'
     )) === 'Yes'
 
   if (!createDir) {
@@ -61,7 +61,7 @@ export async function getProjectDir(context: ExtensionContext) {
 export async function getTargetDirName(
   targetDir: Uri,
   suggestedName: string,
-  index = 0,
+  index = 0
 ): Promise<string> {
   /**
    * for now let's expect a suggested name mimicking the format "<org>/<project>"
@@ -77,7 +77,7 @@ export async function getTargetDirName(
   const orgDir = Uri.joinPath(targetDir, orgName)
   const isOrgDirExisting = await workspace.fs.stat(orgDir).then(
     () => true,
-    () => false,
+    () => false
   )
   if (!isOrgDirExisting) {
     await workspace.fs.createDirectory(orgDir)
@@ -87,7 +87,7 @@ export async function getTargetDirName(
   const fullTargetDir = Uri.joinPath(targetDir, amendedSuggestedName)
   const isExisting = await workspace.fs.stat(fullTargetDir).then(
     () => true,
-    () => false,
+    () => false
   )
   if (isExisting) {
     return getTargetDirName(targetDir, suggestedName, ++index)
@@ -128,7 +128,7 @@ export function getSuggestedProjectName(repository: string) {
 
   window.showErrorMessage(
     'Invalid git url, expected following format "git@provider.com:org/project.git",' +
-      ` received "${repository}"`,
+      ` received "${repository}"`
   )
   return
 }

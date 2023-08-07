@@ -66,7 +66,7 @@ const configurationSchema = {
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(ACTIONS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -79,7 +79,7 @@ const getActionsConfigurationValue = <T>(
 
 const getServerConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.server,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(SERVER_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -92,7 +92,7 @@ const getServerConfigurationValue = <T>(
 
 const getRunmeTerminalConfigurationValue = <T>(
   configName: NotebookTerminalValue,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -105,7 +105,7 @@ const getRunmeTerminalConfigurationValue = <T>(
 
 const getCodeLensConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.codelens,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -118,7 +118,7 @@ const getCodeLensConfigurationValue = <T>(
 
 const getEnvConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.env,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(ENV_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -131,7 +131,7 @@ const getEnvConfigurationValue = <T>(
 
 const getCloudConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.app,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(APP_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -144,7 +144,7 @@ const getCloudConfigurationValue = <T>(
 
 const getCLIConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.cli,
-  defaultValue: T,
+  defaultValue: T
 ) => {
   const configurationSection = workspace.getConfiguration(CLI_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
@@ -201,7 +201,7 @@ const enableServerLogs = (): boolean => {
 }
 
 const isNotebookTerminalFeatureEnabled = (
-  featureName: keyof typeof configurationSchema.notebookTerminal,
+  featureName: keyof typeof configurationSchema.notebookTerminal
 ): boolean => {
   return getRunmeTerminalConfigurationValue(featureName, false)
 }
@@ -236,7 +236,7 @@ const registerExtensionEnvironmentVariables = (context: ExtensionContext): void 
   context.environmentVariableCollection.prepend(
     'PATH',
     path.dirname(getBinaryPath(context.extensionUri, os.platform()).fsPath) +
-      (isWindows() ? ';' : ':'),
+      (isWindows() ? ';' : ':')
   )
 }
 
@@ -244,7 +244,7 @@ const getActionsOpenViewInEditor = () => {
   type ActionEnum = z.infer<typeof OpenViewInEditorAction>
   return getActionsConfigurationValue<ActionEnum>(
     'openViewInEditor',
-    OpenViewInEditorAction.enum.split,
+    OpenViewInEditorAction.enum.split
   )
 }
 
@@ -262,7 +262,7 @@ const getCLIUseIntegratedRunme = (): boolean => {
 
 const getRemoteDev = (baseDomain: string): boolean => {
   const localDev = APP_LOOPBACKS.map((host) =>
-    Uri.from({ scheme: 'http', authority: host }).toString().slice(0, -1),
+    Uri.from({ scheme: 'http', authority: host }).toString().slice(0, -1)
   )
   return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
 }

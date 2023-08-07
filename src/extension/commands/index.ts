@@ -62,7 +62,7 @@ export async function displayCategoriesSelector({
 }: NotebookToolbarCommand) {
   const categories = await getNotebookCategories(
     context,
-    notebookToolbarCommand.notebookEditor.notebookUri,
+    notebookToolbarCommand.notebookEditor.notebookUri
   )
   if (!categories) {
     return
@@ -87,7 +87,7 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
     const answer = await window.showInformationMessage(
       'No category assigned to this cell. Add one in the configuration.',
       'Configure',
-      'Dismiss',
+      'Dismiss'
     )
     if (answer !== 'Configure') {
       return
@@ -141,14 +141,14 @@ export function runCLICommand(
   extensionBaseUri: Uri,
   grpcRunner: boolean,
   server: RunmeServer,
-  kernel: Kernel,
+  kernel: Kernel
 ) {
   return async function (cell: NotebookCell) {
     if (cell.notebook.isDirty) {
       const option = await window.showInformationMessage(
         'You have unsaved changes. Save and run in CLI?',
         'Save',
-        'Cancel',
+        'Cancel'
       )
 
       if (option === 'Cancel' || !option) {
@@ -250,16 +250,16 @@ export async function createNewRunmeNotebook() {
       new NotebookCellData(
         NotebookCellKind.Markup,
         '# Runme Notebook\n\nDouble-click and start writing here...',
-        'markdown',
+        'markdown'
       ),
       new NotebookCellData(NotebookCellKind.Code, 'echo "Hello World"', 'sh'),
       new NotebookCellData(
         NotebookCellKind.Markup,
         '*Read the docs on [runme.dev](https://runme.dev/docs/intro)' +
           ' to learn how to get most out of Runme notebooks!*',
-        'markdown',
+        'markdown'
       ),
-    ]),
+    ])
   )
   await commands.executeCommand('vscode.openWith', newNotebook.uri, Kernel.type)
 }
@@ -271,7 +271,7 @@ export async function welcome() {
 export async function tryIt(context: ExtensionContext) {
   try {
     const fileContent = await workspace.fs.readFile(
-      Uri.file(path.join(__dirname, '..', 'walkthroughs', 'welcome.md')),
+      Uri.file(path.join(__dirname, '..', 'walkthroughs', 'welcome.md'))
     )
 
     const projectUri = Uri.joinPath(context.globalStorageUri, uuidv4())
@@ -284,7 +284,7 @@ export async function tryIt(context: ExtensionContext) {
     const localMarkdown = Uri.joinPath(
       Uri.file(context.extensionPath),
       'walkthroughs',
-      'welcome.md',
+      'welcome.md'
     )
     return commands.executeCommand('vscode.openWith', localMarkdown, Kernel.type)
   }

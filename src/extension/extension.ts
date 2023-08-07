@@ -56,7 +56,7 @@ export class RunmeExtension {
         maxNumberOfIntents: 10,
       },
       !grpcServer,
-      grpcRunner,
+      grpcRunner
     )
 
     let runner: IRunner | undefined
@@ -83,7 +83,7 @@ export class RunmeExtension {
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
       return window.showErrorMessage(
         'Failed to start Runme server, please try to reload the window. ' +
-          `Reason: ${(e as any).message}`,
+          `Reason: ${(e as any).message}`
       )
     }
 
@@ -104,7 +104,7 @@ export class RunmeExtension {
       runCLI,
       winCodeLensRunSurvey,
       runner,
-      kernel,
+      kernel
     )
 
     registerExtensionEnvironmentVariables(context)
@@ -130,17 +130,17 @@ export class RunmeExtension {
 
       notebooks.registerNotebookCellStatusBarItemProvider(
         Kernel.type,
-        new ToggleTerminalProvider(kernel),
+        new ToggleTerminalProvider(kernel)
       ),
       notebooks.registerNotebookCellStatusBarItemProvider(
         Kernel.type,
-        new BackgroundTaskProvider(),
+        new BackgroundTaskProvider()
       ),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
       notebooks.registerNotebookCellStatusBarItemProvider(
         Kernel.type,
-        new AnnotationsProvider(kernel),
+        new AnnotationsProvider(kernel)
       ),
 
       stopBackgroundTaskProvider,
@@ -155,14 +155,14 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand(
         'runme.openSplitViewAsMarkdownText',
-        openSplitViewAsMarkdownText,
+        openSplitViewAsMarkdownText
       ),
       RunmeExtension.registerCommand('runme.openAsRunmeNotebook', openAsRunmeNotebook),
       RunmeExtension.registerCommand('runme.runCategory', (notebook) => {
         return displayCategoriesSelector({ context, kernel, notebookToolbarCommand: notebook })
       }),
       RunmeExtension.registerCommand('runme.runCellCategory', (cell) =>
-        runCellsByCategory(cell, kernel),
+        runCellsByCategory(cell, kernel)
       ),
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
@@ -173,7 +173,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       tasks.registerTaskProvider(
         RunmeTaskProvider.id,
-        new RunmeTaskProvider(context, serializer, runner, kernel),
+        new RunmeTaskProvider(context, serializer, runner, kernel)
       ),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
@@ -183,7 +183,7 @@ export class RunmeExtension {
       window.registerTreeDataProvider('runme.launcher', treeViewer),
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',
-        treeViewer.collapseAll.bind(treeViewer),
+        treeViewer.collapseAll.bind(treeViewer)
       ),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
@@ -196,8 +196,8 @@ export class RunmeExtension {
        * Runme Message Display commands
        */
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
-        addToRecommendedExtensions(context),
-      ),
+        addToRecommendedExtensions(context)
+      )
     )
 
     await bootFile()
@@ -219,7 +219,7 @@ export class RunmeExtension {
         TelemetryReporter.sendTelemetryEvent('extension.command', { command })
         return callback(...wrappedArgs, thisArg)
       },
-      thisArg,
+      thisArg
     )
   }
 }

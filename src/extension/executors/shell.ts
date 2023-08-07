@@ -21,7 +21,7 @@ async function shellExecutor(
   script: string,
   cwd: string,
   env: Record<string, string>,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   let postScript = script
   let prod = false
@@ -64,7 +64,7 @@ async function shellExecutor(
             mime,
           },
         },
-        OutputType.outputItems,
+        OutputType.outputItems
       )
     } else {
       item = new NotebookCellOutputItem(Buffer.concat(outputItems), mime)
@@ -96,7 +96,7 @@ async function shellExecutor(
       })
 
       child.on('exit', resolve)
-    }),
+    })
   )
 }
 

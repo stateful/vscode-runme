@@ -136,7 +136,7 @@ export class FitAddon implements ITerminalAddon {
         renderer._charSizeService.width +
         Math.round(renderer._optionsService.rawOptions.letterSpacing),
       height: Math.floor(
-        renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight,
+        renderer._charSizeService.height * renderer._optionsService.rawOptions.lineHeight
       ),
     }
   }

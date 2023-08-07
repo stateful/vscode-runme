@@ -52,11 +52,11 @@ export class VercelOutput extends LitElement {
     }
 
     const errorMessages = this.content.outputItems.filter((item: string) =>
-      item.startsWith('Error: '),
+      item.startsWith('Error: ')
     )
     const hasFailed = errorMessages.length > 0
     const deployUrl = this.content.outputItems.find(
-      (item: string) => item.indexOf('vercel.app') > -1,
+      (item: string) => item.indexOf('vercel.app') > -1
     )
     if (!deployUrl) {
       if (hasFailed) {
@@ -90,14 +90,14 @@ export class VercelOutput extends LitElement {
             when(
               deployed,
               () => (supportsMessaging && this.#promoted ? 'production' : 'preview'),
-              () => html`pending <vscode-spinner />`,
-            ),
+              () => html`pending <vscode-spinner />`
+            )
         )}
         <h4>Status</h4>
         ${when(
           hasFailed,
           () => errorMessages.map((error: string) => html`<div>${error}</div>`),
-          () => when(!deployed, () => html`${this.content.payload.status.toLowerCase()}`),
+          () => when(!deployed, () => html`${this.content.payload.status.toLowerCase()}`)
         )}
         ${when(
           deployed && supportsMessaging && !this.#promoted,
@@ -111,7 +111,7 @@ export class VercelOutput extends LitElement {
             >
               🚀 ${this.#isPromoting ? 'Promoting...' : 'Promote to Production'}
             </vscode-button>
-          `,
+          `
         )}
         ${when(deployed && supportsMessaging && this.#promoted, () => html` 👌 Promoted `)}
       </div>

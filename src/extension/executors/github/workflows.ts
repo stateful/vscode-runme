@@ -36,7 +36,7 @@ export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>)
 }
 
 export async function deployWorkflow(
-  options: IWorkflowDispatchOptions,
+  options: IWorkflowDispatchOptions
 ): Promise<IWorkflowRunResult> {
   try {
     const githubService = await getService()
@@ -57,7 +57,7 @@ export async function getService(createIfNone?: boolean) {
     (await authentication.getSession(
       AuthenticationProviders.GitHub,
       ['repo'],
-      createIfNone ? { createIfNone } : {},
+      createIfNone ? { createIfNone } : {}
     ))
   if (!session) {
     throw new Error('Missing a valid GitHub session')

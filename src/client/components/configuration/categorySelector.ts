@@ -162,7 +162,7 @@ export class CategorySelector extends LitElement {
               readonly
               class="annotation-item"
             >
-            </vscode-text-field>`,
+            </vscode-text-field>`
         )}
 
         <div class="flex-row" style="margin-top:4px">
@@ -182,7 +182,7 @@ export class CategorySelector extends LitElement {
               >
                 <label>${this.selectCategoryText}</label>
               </vscode-button>`,
-            () => html``,
+            () => html``
           )}
         </div>
       </div>

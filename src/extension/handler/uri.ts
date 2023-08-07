@@ -82,7 +82,7 @@ export class RunmeUriHandler implements UriHandler {
 
     const targetDirUri = Uri.joinPath(
       projectDirUri,
-      ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/'),
+      ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/')
     )
     window.showInformationMessage('Setting up a new project using Runme...')
     return window.withProgress(
@@ -91,7 +91,7 @@ export class RunmeUriHandler implements UriHandler {
         cancellable: false,
         title: `Setting up project from repository ${repository}`,
       },
-      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen),
+      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen)
     )
   }
 
@@ -122,7 +122,7 @@ export class RunmeUriHandler implements UriHandler {
       })
     } catch (err: unknown) {
       return window.showErrorMessage(
-        `Failed to set-up project from ${fileToOpen}: ${(err as Error).message}`,
+        `Failed to set-up project from ${fileToOpen}: ${(err as Error).message}`
       )
     }
   }
@@ -131,7 +131,7 @@ export class RunmeUriHandler implements UriHandler {
     progress: Progress<{ message?: string; increment?: number }>,
     targetDirUri: Uri,
     repository: string,
-    fileToOpen: string,
+    fileToOpen: string
   ) {
     progress.report({ increment: 0, message: 'Cloning repository...' })
 
@@ -140,7 +140,7 @@ export class RunmeUriHandler implements UriHandler {
       TaskScope.Workspace,
       'Clone Repo',
       'exec',
-      new ShellExecution(`git clone ${repository} "${targetDirUri.fsPath}"`),
+      new ShellExecution(`git clone ${repository} "${targetDirUri.fsPath}"`)
     )
 
     const success = await new Promise<boolean>((resolve) => {
@@ -163,7 +163,7 @@ export class RunmeUriHandler implements UriHandler {
 
     if (!success) {
       window.showErrorMessage(
-        'Failed to checkout repository; see integrated terminal for more details/logs',
+        'Failed to checkout repository; see integrated terminal for more details/logs'
       )
       return
     }

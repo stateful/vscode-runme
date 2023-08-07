@@ -32,7 +32,7 @@ export async function deploy(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager,
+  outputs: NotebookCellOutputManager
 ): Promise<boolean> {
   let token = await getAuthToken()
   const cwd = path.dirname(doc.uri.fsPath)
@@ -66,13 +66,13 @@ export async function deploy(
     const vercelConfigPath = path.resolve(cwd, VERCEL_DIR, 'project.json')
     const hasVercelConfig = await fs.access(vercelConfigPath).then(
       () => true,
-      () => false,
+      () => false
     )
     if (!hasVercelConfig) {
       const linkProject = await quickPick(
         'Project is not linked yet, what do you like to do?',
         LINK_OPTIONS,
-        (selection) => selection[0].label === LINK_OPTIONS[0],
+        (selection) => selection[0].label === LINK_OPTIONS[0]
       )
 
       const { teams } = await listTeams(headers)
@@ -90,7 +90,7 @@ export async function deploy(
         const projectToLink = await quickPick<VercelProject>(
           'To which existing project do you want to link?',
           projects.map((p) => p.name),
-          (selection) => projects.find((p) => p.name === selection[0].label),
+          (selection) => projects.find((p) => p.name === selection[0].label)
         )
 
         deployParams.name = projectToLink.name
@@ -124,7 +124,7 @@ export async function deploy(
       const framework = await quickPick<Framework>(
         'Which framework preset are you using?',
         frameworkList.map((f) => f.name),
-        (selection) => frameworkList.find((f) => f.name === selection[0].label),
+        (selection) => frameworkList.find((f) => f.name === selection[0].label)
       )
       deployParams.projectSettings = {
         framework: framework.slug,
@@ -134,7 +134,7 @@ export async function deploy(
        * get project information (e.g. name to be able to deploy)
        */
       const { projectId } = JSON.parse(
-        (await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString(),
+        (await fs.readFile(path.join(cwd, VERCEL_DIR, 'project.json'))).toString()
       )
       const project = await getProject(projectId, headers)
       deployParams.name = project.name
@@ -153,7 +153,7 @@ export async function deploy(
         }
         await cancelDeployment(deploymentId, headers)
         deployCanceled = true
-      }),
+      })
     )
     for await (const event of createDeployment(clientParams, deployParams)) {
       if (event.type === 'error') {

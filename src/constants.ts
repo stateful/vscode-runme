@@ -105,7 +105,7 @@ export const LANGUAGES = new Map(
     ['Visual Basic', 'vba', undefined],
     ['XML', 'xml', undefined],
     ['YAML', 'yaml', undefined],
-  ].map(([, source, dest]) => [source, dest]),
+  ].map(([, source, dest]) => [source, dest])
 )
 
 /**

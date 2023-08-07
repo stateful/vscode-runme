@@ -10,7 +10,7 @@ export default class Languages {
   private readonly modulOperations: ModelOperations
 
   private static NODE_MODEL_JSON_FUNC = (
-    basePath: string,
+    basePath: string
   ): (() => Promise<{ [key: string]: any }>) => {
     return async () => {
       return new Promise<any>((resolve, reject) => {
@@ -66,8 +66,8 @@ export default class Languages {
     const pstdev = Math.sqrt(
       stdev(
         top.map((r) => r.confidence),
-        true,
-      ),
+        true
+      )
     )
     // if it's narrow at the top (< 5% variance) look for execs
     while (pstdev < 0.05 && !LANGUAGES.get(top[0]?.languageId) && top.shift()) {

@@ -38,13 +38,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
 
-  constructor(
-    protected context: ExtensionContext,
-    protected kernel: Kernel,
-  ) {
+  constructor(protected context: ExtensionContext, protected kernel: Kernel) {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
-      workspace.onDidChangeNotebookDocument(this.handleNotebookChanged.bind(this)),
+      workspace.onDidChangeNotebookDocument(this.handleNotebookChanged.bind(this))
       // workspace.onDidSaveNotebookDocument(
       //   this.handleNotebookSaved.bind(this)
       // )
@@ -72,7 +69,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellUuid(cellAdded.metadata),
+          SerializerBase.addCellUuid(cellAdded.metadata)
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -121,13 +118,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Uint8Array>
 
   public async serializeNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Uint8Array> {
     const transformedCells = data.cells.map((cell) => {
       return {
@@ -155,13 +152,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract reviveNotebook(
     content: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Serializer.Notebook>
 
   public async deserializeNotebook(
     content: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<NotebookData> {
     let notebook: Serializer.Notebook
     try {
@@ -175,7 +172,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         '⚠️ __Error__: document could not be loaded' +
           (err ? `\n<small>${err.message}</small>` : '') +
           '.<p>Please report bug at https://github.com/stateful/vscode-runme/issues' +
-          ' or let us know on Discord (https://discord.gg/stateful)</p>',
+          ' or let us know on Discord (https://discord.gg/stateful)</p>'
       )
     }
 
@@ -193,7 +190,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
             })
           }
           return Promise.resolve(elem)
-        }),
+        })
       )
     } catch (err: any) {
       console.error(`Error guessing snippet languages: ${err}`)
@@ -213,34 +210,31 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   }
 
   protected static revive(notebook: Serializer.Notebook) {
-    return notebook.cells.reduce(
-      (accu, elem) => {
-        let cell: NotebookCellData
+    return notebook.cells.reduce((accu, elem) => {
+      let cell: NotebookCellData
 
-        if (elem.kind === NotebookCellKind.Code) {
-          cell = new NotebookCellData(
-            NotebookCellKind.Code,
-            elem.value,
-            elem.languageId || DEFAULT_LANG_ID,
-          )
-        } else {
-          cell = new NotebookCellData(NotebookCellKind.Markup, elem.value, 'markdown')
-        }
+      if (elem.kind === NotebookCellKind.Code) {
+        cell = new NotebookCellData(
+          NotebookCellKind.Code,
+          elem.value,
+          elem.languageId || DEFAULT_LANG_ID
+        )
+      } else {
+        cell = new NotebookCellData(NotebookCellKind.Markup, elem.value, 'markdown')
+      }
 
-        if (cell.kind === NotebookCellKind.Code) {
-          // serializer owns lifecycle because live edits bypass deserialization
-          cell.metadata = SerializerBase.addCellUuid(elem.metadata)
-        }
+      if (cell.kind === NotebookCellKind.Code) {
+        // serializer owns lifecycle because live edits bypass deserialization
+        cell.metadata = SerializerBase.addCellUuid(elem.metadata)
+      }
 
-        cell.metadata ??= {}
-        ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] = elem.textRange
+      cell.metadata ??= {}
+      ;(cell.metadata as Serializer.Metadata)['runme.dev/textRange'] = elem.textRange
 
-        accu.push(cell)
+      accu.push(cell)
 
-        return accu
-      },
-      <NotebookCellData[]>[],
-    )
+      return accu
+    }, <NotebookCellData[]>[])
   }
 
   public static normalize(source: string): string {
@@ -257,10 +251,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 export class WasmSerializer extends SerializerBase {
   protected readonly ready: ReadyPromise
 
-  constructor(
-    protected context: ExtensionContext,
-    kernel: Kernel,
-  ) {
+  constructor(protected context: ExtensionContext, kernel: Kernel) {
     super(context, kernel)
     const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
     this.ready = initWasm(wasmUri)
@@ -269,7 +260,7 @@ export class WasmSerializer extends SerializerBase {
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Uint8Array> {
     const { Runme } = globalThis as Serializer.Wasm
 
@@ -283,7 +274,7 @@ export class WasmSerializer extends SerializerBase {
   protected async reviveNotebook(
     content: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Serializer.Notebook> {
     const { Runme } = globalThis as Serializer.Wasm
 
@@ -303,11 +294,7 @@ export class GrpcSerializer extends SerializerBase {
 
   private serverReadyListener: Disposable | undefined
 
-  constructor(
-    protected context: ExtensionContext,
-    protected server: RunmeServer,
-    kernel: Kernel,
-  ) {
+  constructor(protected context: ExtensionContext, protected server: RunmeServer, kernel: Kernel) {
     super(context, kernel)
 
     this.ready = new Promise((resolve) => {
@@ -318,7 +305,7 @@ export class GrpcSerializer extends SerializerBase {
     })
 
     this.serverReadyListener = server.onTransportReady(({ transport }) =>
-      this.initParserClient(transport),
+      this.initParserClient(transport)
     )
   }
 
@@ -329,7 +316,7 @@ export class GrpcSerializer extends SerializerBase {
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Uint8Array> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const notebook = Notebook.clone(data as any)
@@ -348,7 +335,7 @@ export class GrpcSerializer extends SerializerBase {
   protected async reviveNotebook(
     content: Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
+    token: CancellationToken
   ): Promise<Serializer.Notebook> {
     const deserialRequest = DeserializeRequest.create({ source: content })
     const request = await this.client!.deserialize(deserialRequest)

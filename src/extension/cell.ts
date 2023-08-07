@@ -99,10 +99,7 @@ export class NotebookCellOutputManager {
   protected terminalState?: ITerminalState
   protected terminalEnabled = false
 
-  constructor(
-    protected cell: NotebookCell,
-    protected controller: NotebookController,
-  ) {}
+  constructor(protected cell: NotebookCell, protected controller: NotebookController) {}
 
   protected generateOutputUnsafe(type: OutputType): NotebookCellOutput | undefined {
     const cell = this.cell
@@ -314,7 +311,7 @@ export class NotebookCellOutputManager {
 
   protected hasOutputTypeUnsafe(
     type: OutputType,
-    outputs?: readonly NotebookCellOutput[],
+    outputs?: readonly NotebookCellOutput[]
   ): boolean {
     outputs ??= this.cell.outputs
     return outputs.some((x) => x.items.some((y) => y.mime === type))
