@@ -240,7 +240,7 @@ export function normalizeLanguage(l?: string) {
 export async function verifyCheckedInFile(filePath: string) {
   const fileDir = path.dirname(filePath)
   const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) =>
-    fileDir.includes(ws.uri.fsPath)
+    fileDir.includes(ws.uri.fsPath),
   )
 
   if (!workspaceFolder) {
@@ -249,7 +249,7 @@ export async function verifyCheckedInFile(filePath: string) {
 
   const hasGitDirectory = await vscode.workspace.fs.stat(workspaceFolder.uri).then(
     (stat) => stat.type === FileType.Directory,
-    () => false
+    () => false,
   )
   if (!hasGitDirectory) {
     return false
@@ -261,7 +261,7 @@ export async function verifyCheckedInFile(filePath: string) {
     })
     .then(
       () => true,
-      () => false
+      () => false,
     )
   return isCheckedIn
 }
@@ -276,7 +276,7 @@ export async function initWasm(wasmUri: Uri) {
     (err: Error) => {
       log.error(`failed initializing WASM file: ${err.message}`)
       return err
-    }
+    },
   )
 }
 
@@ -289,7 +289,7 @@ export function getDefaultWorkspace(): string | undefined {
 export async function getPathType(uri: vscode.Uri): Promise<vscode.FileType> {
   return workspace.fs.stat(uri).then(
     (stat) => stat.type,
-    () => FileType.Unknown
+    () => FileType.Unknown,
   )
 }
 
@@ -332,7 +332,7 @@ export function hashDocumentUri(uri: string): string {
 export function replaceOutput(
   exec: NotebookCellExecution,
   out: NotebookCellOutput | readonly NotebookCellOutput[],
-  cell?: NotebookCell
+  cell?: NotebookCell,
 ): Thenable<void> {
   exec.clearOutput()
   return exec.replaceOutput(out, cell)
@@ -406,9 +406,9 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
         },
         () => {
           return {}
-        }
+        },
       )
-    })
+    }),
   )
 
   for (const env of envs) {
@@ -427,7 +427,7 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 export async function setNotebookCategories(
   context: ExtensionContext,
   uri: Uri,
-  categories: string[]
+  categories: string[],
 ): Promise<void> {
   const notebooksCategoryState =
     context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
@@ -443,10 +443,10 @@ export async function setNotebookCategories(
  */
 export async function getNotebookCategories(
   context: ExtensionContext,
-  uri: Uri
+  uri: Uri,
 ): Promise<string[]> {
   const notebooksCategories = context.globalState.get<Record<string, string[]>>(
-    NOTEBOOK_AVAILABLE_CATEGORIES
+    NOTEBOOK_AVAILABLE_CATEGORIES,
   )
   if (!notebooksCategories) {
     return []
@@ -476,7 +476,7 @@ export async function bootFile() {
   const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
   const hasStartupFile = await workspace.fs.stat(startupFileUri).then(
     () => true,
-    () => false
+    () => false,
   )
   if (hasStartupFile) {
     const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
@@ -498,7 +498,7 @@ export async function bootFile() {
   const startupFileUriConfig = Uri.joinPath(workspace.workspaceFolders[0].uri, startupFilePath)
   const hasStartupFileConfig = await workspace.fs.stat(startupFileUriConfig).then(
     () => true,
-    () => false
+    () => false,
   )
   if (!hasStartupFileConfig) {
     return
@@ -513,7 +513,7 @@ export async function fileOrDirectoryExists(path: Uri): Promise<boolean> {
     async (file) => {
       return file.type === FileType.File || file.type === FileType.Directory
     },
-    () => false
+    () => false,
   )
 }
 
@@ -522,12 +522,15 @@ export function isMultiRootWorkspace(): boolean {
 }
 
 export function convertEnvList(envs: string[]): Record<string, string | undefined> {
-  return envs.reduce((prev, curr) => {
-    const [key, value = ''] = curr.split(/\=(.*)/s)
-    prev[key] = value
+  return envs.reduce(
+    (prev, curr) => {
+      const [key, value = ''] = curr.split(/\=(.*)/s)
+      prev[key] = value
 
-    return prev
-  }, {} as Record<string, string | undefined>)
+      return prev
+    },
+    {} as Record<string, string | undefined>,
+  )
 }
 
 export function getAuthSession(createIfNone: boolean = true) {

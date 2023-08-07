@@ -2,7 +2,7 @@ import vscode from 'vscode'
 
 export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): vscode.NotebookCellStatusBarItem | undefined {
     const ran = <boolean | undefined>cell.outputs[0]?.metadata?.['ran']
     if (typeof ran !== 'boolean' || ran === false) {
@@ -10,7 +10,7 @@ export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvide
     }
     const item = new vscode.NotebookCellStatusBarItem(
       '👍',
-      vscode.NotebookCellStatusBarAlignment.Right
+      vscode.NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'marquee.open'
     item.tooltip = 'This worked great'
@@ -20,7 +20,7 @@ export class ThumbsUpProvider implements vscode.NotebookCellStatusBarItemProvide
 
 export class ThumbsDownProvider implements vscode.NotebookCellStatusBarItemProvider {
   provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): vscode.NotebookCellStatusBarItem | undefined {
     const ran = <boolean | undefined>cell.outputs[0]?.metadata?.['ran']
     if (typeof ran !== 'boolean' || ran === false) {
@@ -28,7 +28,7 @@ export class ThumbsDownProvider implements vscode.NotebookCellStatusBarItemProvi
     }
     const item = new vscode.NotebookCellStatusBarItem(
       '👎',
-      vscode.NotebookCellStatusBarAlignment.Right
+      vscode.NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'marquee.open'
     item.tooltip = "Didn't work"

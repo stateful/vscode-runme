@@ -88,7 +88,7 @@ export class WorkflowViewer extends LitElement {
     id: string,
     text: string,
     description: string = '',
-    placeHolder: string = ''
+    placeHolder: string = '',
   ) {
     return html`<vscode-text-field
       id="${id}"
@@ -151,7 +151,7 @@ export class WorkflowViewer extends LitElement {
           }
           this.workflowRun = workflowRun
         }
-      })
+      }),
     )
   }
 
@@ -175,12 +175,12 @@ export class WorkflowViewer extends LitElement {
           ${when(
             type === 'choice' && options.length <= 3,
             () => this.renderSelect(key, description, options, defaultValue),
-            () => html``
+            () => html``,
           )}
           ${when(
             type === 'string',
             () => this.renderTextField(key, defaultValue, description),
-            () => html``
+            () => html``,
           )}
         </div>`
       })
@@ -207,7 +207,7 @@ export class WorkflowViewer extends LitElement {
           />
         `
       },
-      () => html``
+      () => html``,
     )
   }
 
@@ -225,7 +225,7 @@ export class WorkflowViewer extends LitElement {
             @click="${this.onRunWorkflow}"
           >
             Run Workflow
-          </vscode-button>`
+          </vscode-button>`,
       )}
     </div>`
   }
@@ -243,7 +243,7 @@ export class WorkflowViewer extends LitElement {
               html`<div class="message error-message">
                 Failed to trigger workflow:${this.reason}
               </div>`,
-            () => html``
+            () => html``,
           )}
           <div class="github-workflow-container">${workflowForm}</div>
           ${this.getFooter()}

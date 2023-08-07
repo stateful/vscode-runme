@@ -475,8 +475,8 @@ export class TerminalView extends LitElement {
         postClientMessage(ctx, ClientMessages.terminalStdin, {
           'runme.dev/uuid': this.uuid!,
           input: data,
-        })
-      )
+        }),
+      ),
     )
   }
 
@@ -595,10 +595,10 @@ export class TerminalView extends LitElement {
       selectionForeground: this.#getThemeHexColor(terminalCSS('selectionForeground')),
       selectionBackground: this.#getThemeHexColor(terminalCSS('selectionBackground')),
       selectionInactiveBackground: this.#getThemeHexColor(
-        terminalCSS('inactiveSelectionBackground')
+        terminalCSS('inactiveSelectionBackground'),
       ),
       ...Object.fromEntries(
-        ANSI_COLORS.map((k) => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const)
+        ANSI_COLORS.map((k) => [k, this.#getThemeHexColor(terminalCSS(toAnsi(k)))] as const),
       ),
     }
     this.terminal!.options.theme = terminalTheme
@@ -705,7 +705,7 @@ export class TerminalView extends LitElement {
       postClientMessage(
         ctx,
         ClientMessages.infoMessage,
-        `Failed to share output: ${(error as any).message}`
+        `Failed to share output: ${(error as any).message}`,
       )
     }
   }
@@ -743,7 +743,7 @@ export class TerminalView extends LitElement {
               @onShare="${this.#shareCellOutput}"
             >
             </share-cell>`,
-          () => html``
+          () => html``,
         )}
       </div>
     </section>`
@@ -759,7 +759,7 @@ export class TerminalView extends LitElement {
       return
     }
     const content = stripANSI(
-      this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
+      this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? '',
     )
     return navigator.clipboard
       .writeText(content)
@@ -771,8 +771,8 @@ export class TerminalView extends LitElement {
         postClientMessage(
           ctx,
           ClientMessages.infoMessage,
-          `Failed to copy to clipboard: ${err.message}!`
-        )
+          `Failed to copy to clipboard: ${err.message}!`,
+        ),
       )
   }
 }
@@ -780,7 +780,7 @@ export class TerminalView extends LitElement {
 function convertXTermDimensions(dimensions: ITerminalDimensions): TerminalDimensions
 function convertXTermDimensions(dimensions: undefined): undefined
 function convertXTermDimensions(
-  dimensions: ITerminalDimensions | undefined
+  dimensions: ITerminalDimensions | undefined,
 ): TerminalDimensions | undefined
 function convertXTermDimensions(dimensions?: ITerminalDimensions): TerminalDimensions | undefined {
   if (!dimensions) {

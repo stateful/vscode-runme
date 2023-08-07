@@ -41,7 +41,7 @@ async function taskExecutor(
   this: Kernel,
   exec: NotebookCellExecution,
   doc: TextDocument,
-  outputs: NotebookCellOutputManager
+  outputs: NotebookCellOutputManager,
 ): Promise<boolean> {
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
 
@@ -82,7 +82,7 @@ async function taskExecutor(
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText,
     'exec',
-    new ShellExecution(cmdLine, { cwd, env })
+    new ShellExecution(cmdLine, { cwd, env }),
     // experimental only
     // new CustomExecution(async (): Promise<Pseudoterminal> => {
     //   return new ExperimentalTerminal(scriptFile.fsPath, { cwd, env })
@@ -109,7 +109,7 @@ async function taskExecutor(
           log.error(`Failed to terminate task: ${(err as Error).message}`)
           resolve(1)
         }
-      })
+      }),
     )
 
     tasks.onDidEndTaskProcess((e) => {
@@ -148,7 +148,7 @@ async function taskExecutor(
       setTimeout(() => {
         closeTerminalByEnvID(RUNME_ID)
         return resolve(true)
-      }, BACKGROUND_TASK_HIDE_TIMEOUT)
+      }, BACKGROUND_TASK_HIDE_TIMEOUT),
     )
 
     return Promise.race([p.then((exitCode) => exitCode === 0), giveItTime])

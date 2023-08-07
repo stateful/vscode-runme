@@ -14,7 +14,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   constructor(private readonly kernel: Kernel) {
     RunmeExtension.registerCommand(
       'runme.toggleCellAnnotations',
-      this.toggleCellAnnotations.bind(this)
+      this.toggleCellAnnotations.bind(this),
     )
   }
 
@@ -24,7 +24,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
   }
 
   async provideCellStatusBarItems(
-    cell: NotebookCell
+    cell: NotebookCell,
   ): Promise<NotebookCellStatusBarItem | undefined> {
     if (cell.kind !== NotebookCellKind.Code) {
       return
@@ -32,7 +32,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
 
     const item = new NotebookCellStatusBarItem(
       '$(gear) Configure',
-      NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right,
     )
 
     item.command = {

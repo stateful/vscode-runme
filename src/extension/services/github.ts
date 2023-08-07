@@ -23,7 +23,7 @@ export class GitHubService {
    *  Dispatch a workflow
    */
   async createWorkflowDispatch(
-    dispatchOptions: IWorkflowDispatchOptions
+    dispatchOptions: IWorkflowDispatchOptions,
   ): Promise<IWorkflowRun | undefined> {
     const { owner, repo, workflow_id, ref, inputs } = dispatchOptions
     const creationDate = new Date().toISOString()

@@ -17,7 +17,7 @@ export async function getAuthToken() {
   try {
     const canRead = await fs.access(authFilePath).then(
       () => true,
-      () => false
+      () => false,
     )
     if (canRead) {
       return JSON.parse((await fs.readFile(authFilePath, 'utf-8')).toString()).token as string
@@ -30,7 +30,7 @@ export async function getAuthToken() {
 export async function quickPick<T>(
   title: string,
   items: string[],
-  onSelect?: (selection: readonly vscode.QuickPickItem[]) => any
+  onSelect?: (selection: readonly vscode.QuickPickItem[]) => any,
 ): Promise<T> {
   let madeSelection = false
   const quickPickLink = await vscode.window.createQuickPick()
@@ -78,7 +78,7 @@ export async function updateGitIgnore(cwd: string, orgSlug: string, projectName:
 
     vscode.window.showInformationMessage(
       `Linked to ${orgSlug}/${projectName} ` +
-        `(created ${VERCEL_DIR}${isGitIgnoreUpdated ? ' and added it to .gitignore' : ''})`
+        `(created ${VERCEL_DIR}${isGitIgnoreUpdated ? ' and added it to .gitignore' : ''})`,
     )
   } catch (error) {
     // ignore errors since this is non-critical

@@ -4,7 +4,7 @@ import { getAnnotations } from '../utils'
 
 export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     if (cell.kind !== NotebookCellKind.Code) {
       return
@@ -20,7 +20,7 @@ export class CliProvider implements vscode.NotebookCellStatusBarItemProvider {
 
     const item = new vscode.NotebookCellStatusBarItem(
       '$(github-action) CLI',
-      vscode.NotebookCellStatusBarAlignment.Right
+      vscode.NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.runCliCommand'
     return item

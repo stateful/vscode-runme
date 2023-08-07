@@ -22,12 +22,12 @@ export class ToggleTerminalProvider
     this.disposables.push(
       window.onDidCloseTerminal(this.refreshStatusBarItems.bind(this)),
       tasks.onDidStartTaskProcess(this.refreshStatusBarItems.bind(this)),
-      tasks.onDidEndTaskProcess(this.refreshStatusBarItems.bind(this))
+      tasks.onDidEndTaskProcess(this.refreshStatusBarItems.bind(this)),
     )
   }
 
   async provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const terminalState = await this.kernel.getTerminalState(cell)
 
@@ -39,7 +39,7 @@ export class ToggleTerminalProvider
 
     const item = new NotebookCellStatusBarItem(
       terminalButtonParts.join(' '),
-      NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.toggleTerminal'
 
@@ -57,7 +57,7 @@ export class ToggleTerminalProvider
 
 export class BackgroundTaskProvider implements vscode.NotebookCellStatusBarItemProvider {
   async provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
     const annotations = getAnnotations(cell)
 
@@ -98,18 +98,18 @@ export class StopBackgroundTaskProvider
     this.disposables.push(
       tasks.onDidEndTaskProcess(() => {
         this._onDidChangeCellStatusBarItems.fire()
-      })
+      }),
     )
 
     this.disposables.push(
       window.onDidCloseTerminal(() => {
         this._onDidChangeCellStatusBarItems.fire()
-      })
+      }),
     )
   }
 
   provideCellStatusBarItems(
-    cell: vscode.NotebookCell
+    cell: vscode.NotebookCell,
   ): vscode.NotebookCellStatusBarItem | undefined {
     const annotations = getAnnotations(cell)
 
@@ -128,7 +128,7 @@ export class StopBackgroundTaskProvider
 
     const item = new NotebookCellStatusBarItem(
       '$(circle-slash) Stop Task',
-      NotebookCellStatusBarAlignment.Right
+      NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.stopBackgroundTask'
     return item

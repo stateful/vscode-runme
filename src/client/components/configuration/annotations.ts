@@ -319,7 +319,7 @@ export class Annotations extends LitElement {
       ${when(
         typeof value === 'boolean' && errors.length,
         () => this.renderCurrentValueError(originalValue as string),
-        () => html``
+        () => html``,
       )} `
   }
 
@@ -483,7 +483,7 @@ export class Annotations extends LitElement {
           html` <p class="error-item">
             This configuration block contains errors, using the default values instead
           </p>`,
-        () => html``
+        () => html``,
       )}
     </section>`
   }

@@ -56,7 +56,7 @@ export class ShareCell extends LitElement {
         <vscode-button appearance="secondary" @click=${this.onShareClick}>
           ${this.displayShareIcon ? ShareIcon : SaveIcon} ${this.shareText}
         </vscode-button>
-      `
+      `,
     )
   }
 }

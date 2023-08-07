@@ -41,7 +41,7 @@ export class RunmeTaskProvider implements TaskProvider {
     private context: ExtensionContext,
     private serializer: SerializerBase,
     private runner?: IRunner,
-    private kernel?: Kernel
+    private kernel?: Kernel,
   ) {}
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
@@ -77,7 +77,7 @@ export class RunmeTaskProvider implements TaskProvider {
     return await Promise.all(
       notebook.cells
         .filter(
-          (cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code
+          (cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code,
         )
         .map(
           async (cell) =>
@@ -88,9 +88,9 @@ export class RunmeTaskProvider implements TaskProvider {
               cell,
               {},
               this.runner!,
-              environment
-            )
-        )
+              environment,
+            ),
+        ),
     )
   }
 
@@ -108,7 +108,7 @@ export class RunmeTaskProvider implements TaskProvider {
     cell: NotebookCell | NotebookCellData | Serializer.Cell,
     options: TaskOptions = {},
     runner: IRunner,
-    environment?: IRunnerEnvironment
+    environment?: IRunnerEnvironment,
   ): Promise<Task> {
     const source = workspace.workspaceFolders?.[0]
       ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
@@ -140,7 +140,7 @@ export class RunmeTaskProvider implements TaskProvider {
           cellContent,
           undefined,
           new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
-          prepareCmdSeq
+          prepareCmdSeq,
         )
 
         if (!environment) {
@@ -166,7 +166,7 @@ export class RunmeTaskProvider implements TaskProvider {
         program.setActiveTerminalWindow('vscode')
 
         return program
-      })
+      }),
     )
 
     task.isBackground = isBackground

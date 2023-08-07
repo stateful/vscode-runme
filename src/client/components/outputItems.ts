@@ -77,7 +77,7 @@ export class ShellOutputItems extends LitElement {
       ctx.postMessage!(<ClientMessage<ClientMessages.errorMessage>>{
         type: ClientMessages.errorMessage,
         output: `'Failed to copy to clipboard: ${err.message}!'`,
-      })
+      }),
     )
   }
 }

@@ -131,7 +131,7 @@ export class API {
 
   async projectNegotiateAssets(
     id: string,
-    manifest: { entries: Record<string, ManifestEntry> }
+    manifest: { entries: Record<string, ManifestEntry> },
   ): Promise<string[]> {
     return await this.#requestJson(`/projects/${id}/assets/negotiate`, {
       method: 'POST',

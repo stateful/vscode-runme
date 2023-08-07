@@ -58,7 +58,7 @@ class RunmeServer implements Disposable {
     protected readonly extBasePath: Uri,
     options: IServerConfig,
     externalServer: boolean,
-    protected readonly enableRunner = false
+    protected readonly enableRunner = false,
   ) {
     this.#port = getPortNumber()
     this.#loggingEnabled = enableServerLogs()
@@ -162,14 +162,14 @@ class RunmeServer implements Disposable {
 
     const binaryExists = await fs.access(binaryLocation).then(
       () => true,
-      () => false
+      () => false,
     )
 
     const isFile = await fs.stat(binaryLocation).then(
       (result) => {
         return result.isFile()
       },
-      () => false
+      () => false,
     )
 
     if (!binaryExists || !isFile) {
@@ -253,7 +253,7 @@ class RunmeServer implements Disposable {
         })
       }),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timed out listening for server ready message')), 10000)
+        setTimeout(() => reject(new Error('Timed out listening for server ready message')), 10000),
       ),
     ])
   }
@@ -312,7 +312,7 @@ class RunmeServer implements Disposable {
       this.#onClose.event(() => {
         this.launch()
         this.#serverDisposables.forEach(({ dispose }) => dispose())
-      })
+      }),
     )
 
     return addr
