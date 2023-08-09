@@ -150,7 +150,7 @@ export class Annotations extends LitElement {
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     category: {
-      description: 'Execute this code cell within a category.',
+      description: 'Execute this code cell within a category. (no comma or spaces allowed)',
       docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
     },
     excludeFromRunAll: {
@@ -338,7 +338,6 @@ export class Annotations extends LitElement {
           identifier="${id}"
           @onChange=${this.onCategorySelectorChange}
           @onCreateNewCategory=${this.createNewCategoryClick}
-          @onSelectCategory=${this.onSelectCategory}
         ></category-selector>
       </div>
     </div>`
@@ -360,16 +359,6 @@ export class Annotations extends LitElement {
         placeholder: 'Category name',
         isSecret: false,
         title: 'New cell execution category',
-        uuid: this.getCellId(),
-      })
-  }
-
-  protected onSelectCategory() {
-    const ctx = getContext()
-    ctx.postMessage &&
-      postClientMessage(ctx, ClientMessages.displayPicker, {
-        title: 'Select execution category',
-        options: this.categories,
         uuid: this.getCellId(),
       })
   }
@@ -402,18 +391,10 @@ export class Annotations extends LitElement {
           return this.setCategory(answer)
         case ClientMessages.onGetState:
           if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.uuid === uuid) {
-            console.log('SET ME', e.output)
-
             this.categories = e.output.value as unknown as string[]
             this.requestUpdate()
           }
           break
-        case ClientMessages.onPickerOption:
-          const selectedCategory = e.output.option
-          if (!selectedCategory || !this.annotations || e.output.uuid !== uuid) {
-            return
-          }
-          return this.setCategory(selectedCategory)
         default:
           return
       }
@@ -433,8 +414,6 @@ export class Annotations extends LitElement {
 
   // Render the UI as a function of component state
   render() {
-    console.log('AHHHH', this.categories)
-
     if (!this.annotations) {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }

@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import type { TextField } from '@vscode/webview-ui-toolkit'
 
 import { ExternalLinkIcon } from '../icons/external'
 
@@ -8,9 +9,15 @@ export interface ISelectedCategory {
   name: string
 }
 
+export interface IUpdatedCategory {
+  before: string
+  after: string
+}
+
 @customElement('category-item')
 export class CategoryItem extends LitElement {
   #isEditing = false
+  #hasError = false
 
   static styles = css`
     :host {
@@ -58,12 +65,36 @@ export class CategoryItem extends LitElement {
   @property({ type: String })
   category: string = ''
 
-  @property({ type: Function })
-  onCategoryRemoved: (categoryName: string) => void = () => {}
+  #onCategoryNameChange(e: Event) {
+    this.#hasError = false
+    if (e.defaultPrevented) {
+      e.preventDefault()
+    }
+    const textfield = this.shadowRoot?.querySelector('vscode-text-field') as TextField
+    const newName = textfield.value
+
+    if (newName.includes(' ') || newName.includes(',')) {
+      this.#hasError = true
+      this.requestUpdate()
+      return
+    }
+
+    const event = new CustomEvent<IUpdatedCategory>('onCategoryUpdated', {
+      detail: { before: this.category, after: newName },
+    })
+    this.dispatchEvent(event)
+    this.#isEditing = false
+    this.requestUpdate()
+  }
 
   #renderEditMode() {
     return html`<div class="item-container editMode">
-      <vscode-text-field value="${this.category}" placeholder=${this.category} @change=${() => {}}>
+      <vscode-text-field
+        style="${this.#hasError ? 'border: 1px solid red' : ''}"
+        value="${this.category}"
+        placeholder=${this.category}
+        @change=${this.#onCategoryNameChange}
+      >
       </vscode-text-field>
       <ul class="actions-container editMode" role="toolbar">
         <li
@@ -72,7 +103,7 @@ export class CategoryItem extends LitElement {
           role="presentation"
           title="Edit Category Item"
         >
-          <vscode-button appearance="primary" @click="${() => {}}">
+          <vscode-button appearance="primary" @click="${this.#onCategoryNameChange}">
             <label>OK</label>
           </vscode-button>
         </li>
@@ -271,8 +302,6 @@ export class CategorySelector extends LitElement {
   identifier: string | undefined
 
   private dispatchComponentEvent(name: string, e: Event) {
-    console.log('dispatch', name, e)
-
     if (e.defaultPrevented) {
       e.preventDefault()
     }
@@ -289,6 +318,20 @@ export class CategorySelector extends LitElement {
     this.dispatchEvent(event)
   }
 
+  #onCategoryUpdated(e: CustomEvent<IUpdatedCategory>) {
+    this.categories = this.categories
+      .split(',')
+      .map((category) => {
+        if (category === e.detail.before) {
+          return e.detail.after
+        }
+        return category
+      })
+      .join(',')
+    const event = new CustomEvent('onChange', { detail: { categories: this.categories } })
+    this.dispatchEvent(event)
+  }
+
   renderLink() {
     return html`<vscode-link href="https://docs.runme.dev/configuration#run-all-cells-by-category"
       >(docs ${ExternalLinkIcon})</vscode-link
@@ -296,8 +339,6 @@ export class CategorySelector extends LitElement {
   }
 
   render() {
-    console.log('SOO', this.categories, this.categories.split(','))
-
     return html`
       <div class="flex-column themeText">
         <div style="font-weight:600;">${this.identifier} ${this.renderLink()}</div>
@@ -311,7 +352,8 @@ export class CategorySelector extends LitElement {
               (categeory: string) =>
                 html`<category-item
                   category="${categeory}"
-                  @onCategoryRemoved="${this.#onCategoryRemoved.bind(this)}"
+                  @onCategoryRemoved="${this.#onCategoryRemoved}"
+                  @onCategoryUpdated="${this.#onCategoryUpdated}"
                 />`,
             )}
         </div>

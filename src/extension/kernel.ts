@@ -315,6 +315,12 @@ export class Kernel implements Disposable {
         password: message.output.isSecret,
         placeHolder: message.output.placeholder,
         title: message.output.title,
+        validateInput: (value) => {
+          if (value.includes(' ') || value.includes(',')) {
+            return 'Cannot contain spaces or commas'
+          }
+          return null
+        },
       })
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
       if (!cell || message.output.uuid !== cell.metadata?.['runme.dev/uuid']) {
@@ -340,15 +346,6 @@ export class Kernel implements Disposable {
         return
       }
       await setNotebookCategories(this.context, cell.notebook.uri, new Set(message.output.value))
-    } else if (message.type === ClientMessages.displayPicker) {
-      const selectedOption = await window.showQuickPick(message.output.options, {
-        title: message.output.title,
-        ignoreFocusOut: true,
-      })
-      postClientMessage(this.messaging, ClientMessages.onPickerOption, {
-        option: selectedOption,
-        uuid: message.output.uuid,
-      })
     } else if (message.type === ClientMessages.cloudApiRequest) {
       return handleCloudApiMessage({
         messaging: this.messaging,

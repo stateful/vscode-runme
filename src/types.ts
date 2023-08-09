@@ -182,15 +182,6 @@ export interface ClientMessagePayload {
     answer: string | undefined
     uuid: string
   }
-  [ClientMessages.onPickerOption]: {
-    option: string | undefined
-    uuid: string
-  }
-  [ClientMessages.displayPicker]: {
-    options: string[]
-    title: string
-    uuid: string
-  }
   [ClientMessages.githubWorkflowDispatch]: {
     inputs: Record<string, string>
     repo: string
