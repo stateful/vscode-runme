@@ -166,19 +166,14 @@ export class Kernel implements Disposable {
     if (notebookType !== Kernel.type) {
       return
     }
-    const availableCategories: string[] = []
-    getCells().forEach((cell) => {
-      const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
-        availableCategories.push(annotations.category)
-      }
-    })
-    setNotebookCategories(this.context, uri, availableCategories)
-    await commands.executeCommand(
-      'setContext',
-      NOTEBOOK_HAS_CATEGORIES,
-      !!availableCategories.length,
-    )
+    const availableCategories = new Set<string>([
+      ...getCells()
+        .map((cell) => getAnnotations(cell).category.split(','))
+        .flat()
+        .filter((c) => c.length > 0),
+    ])
+    await setNotebookCategories(this.context, uri, availableCategories)
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.size)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
 
@@ -194,15 +189,16 @@ export class Kernel implements Disposable {
     if (notebookType !== Kernel.type) {
       return
     }
-    const availableCategories: string[] = []
-    getCells().forEach((cell) => {
-      const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
-        availableCategories.push(annotations.category)
-      }
-      this.registerNotebookCell(cell)
-    })
-    setNotebookCategories(this.context, uri, availableCategories)
+    getCells().forEach((cell) => this.registerNotebookCell(cell))
+    const availableCategories = new Set<string>([
+      ...getCells()
+        .map((cell) => getAnnotations(cell).category.split(','))
+        .flat()
+        .filter((c) => c.length > 0),
+    ])
+    console.log('OPEN', [...availableCategories.values()])
+
+    await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -333,13 +329,9 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
-      if (!categories) {
-        return
-      }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
-        value: categories,
+        value: getAnnotations(cell).category.split(',').filter(Boolean),
         uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.setState) {
@@ -347,7 +339,7 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
+      await setNotebookCategories(this.context, cell.notebook.uri, new Set(message.output.value))
     } else if (message.type === ClientMessages.displayPicker) {
       const selectedOption = await window.showQuickPick(message.output.options, {
         title: message.output.title,

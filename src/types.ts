@@ -59,6 +59,7 @@ export namespace Serializer {
     closeTerminalOnSuccess?: string
     mimeType?: string
     promptEnv?: string
+    category?: string
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
     ['runme.dev/denoState']?: DenoState

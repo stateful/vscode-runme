@@ -423,7 +423,7 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 }
 
 /**
- * Stores the specified notebook cell categories in the global state.
+ * Stores the specified unique notebook cell categories in the global state.
  * @param context
  * @param uri
  * @param categories
@@ -431,11 +431,11 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 export async function setNotebookCategories(
   context: ExtensionContext,
   uri: Uri,
-  categories: string[],
+  categories: Set<string>,
 ): Promise<void> {
   const notebooksCategoryState =
     context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
-  notebooksCategoryState[uri.path] = categories
+  notebooksCategoryState[uri.path] = [...categories.values()]
   return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
 }
 
@@ -455,6 +455,8 @@ export async function getNotebookCategories(
   if (!notebooksCategories) {
     return []
   }
+  console.log('EHH', notebooksCategories)
+
   return notebooksCategories[uri.path] || []
 }
 

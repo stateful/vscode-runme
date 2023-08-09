@@ -336,7 +336,7 @@ export class Annotations extends LitElement {
           selectedCategory="${value}"
           description="${details.description}"
           identifier="${id}"
-          @onChange="${this.onCategoryChange}"
+          @onChange=${this.onCategorySelectorChange}
           @onCreateNewCategory=${this.createNewCategoryClick}
           @onSelectCategory=${this.onSelectCategory}
         ></category-selector>
@@ -346,6 +346,11 @@ export class Annotations extends LitElement {
 
   private getCellId() {
     return (this.annotations && this.annotations['runme.dev/uuid']) || ''
+  }
+
+  protected onCategorySelectorChange(e: CustomEvent) {
+    this.categories = e.detail.categories.split(',')
+    this.setCategory()
   }
 
   protected createNewCategoryClick() {
@@ -391,12 +396,14 @@ export class Annotations extends LitElement {
           ctx.postMessage &&
             postClientMessage(ctx, ClientMessages.setState, {
               state: NOTEBOOK_AVAILABLE_CATEGORIES,
-              value: this.categories!,
+              value: this.categories,
               uuid,
             })
           return this.setCategory(answer)
         case ClientMessages.onGetState:
           if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.uuid === uuid) {
+            console.log('SET ME', e.output)
+
             this.categories = e.output.value as unknown as string[]
             this.requestUpdate()
           }
@@ -413,20 +420,21 @@ export class Annotations extends LitElement {
     })
   }
 
-  private setCategory(category: string) {
+  private setCategory(category?: string) {
     if (this.annotations) {
-      this.annotations.category = category
+      this.annotations.category = category || this.annotations.category
       this.requestUpdate()
-      return this.#dispatch({ 'runme.dev/uuid': this.annotations['runme.dev/uuid'], category })
+      return this.#dispatch({
+        'runme.dev/uuid': this.annotations['runme.dev/uuid'],
+        category: this.categories.join(','),
+      })
     }
-  }
-
-  private onCategoryChange(e: { detail: string }) {
-    this.setCategory(e.detail)
   }
 
   // Render the UI as a function of component state
   render() {
+    console.log('AHHHH', this.categories)
+
     if (!this.annotations) {
       return html`⚠️ Whoops! Something went wrong displaying the editing UI!`
     }
@@ -486,9 +494,5 @@ export class Annotations extends LitElement {
         () => html``,
       )}
     </section>`
-  }
-
-  #reset() {
-    throw new Error('not implemented yet')
   }
 }
