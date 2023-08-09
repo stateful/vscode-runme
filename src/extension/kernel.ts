@@ -23,6 +23,7 @@ import {
   DEFAULT_LANGUAGEID,
   NOTEBOOK_HAS_CATEGORIES,
   SUPPORTED_FILE_EXTENSIONS,
+  CATEGORY_SEPARATOR,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
@@ -168,7 +169,7 @@ export class Kernel implements Disposable {
     }
     const availableCategories = new Set<string>([
       ...getCells()
-        .map((cell) => getAnnotations(cell).category.split(','))
+        .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
         .flat()
         .filter((c) => c.length > 0),
     ])
@@ -192,11 +193,10 @@ export class Kernel implements Disposable {
     getCells().forEach((cell) => this.registerNotebookCell(cell))
     const availableCategories = new Set<string>([
       ...getCells()
-        .map((cell) => getAnnotations(cell).category.split(','))
+        .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
         .flat()
         .filter((c) => c.length > 0),
     ])
-    console.log('OPEN', [...availableCategories.values()])
 
     await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
@@ -316,7 +316,7 @@ export class Kernel implements Disposable {
         placeHolder: message.output.placeholder,
         title: message.output.title,
         validateInput: (value) => {
-          if (value.includes(' ') || value.includes(',')) {
+          if (value.includes(' ') || value.includes(CATEGORY_SEPARATOR)) {
             return 'Cannot contain spaces or commas'
           }
           return null
@@ -337,7 +337,7 @@ export class Kernel implements Disposable {
       }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
-        value: getAnnotations(cell).category.split(',').filter(Boolean),
+        value: getAnnotations(cell).category.split(CATEGORY_SEPARATOR).filter(Boolean),
         uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.setState) {

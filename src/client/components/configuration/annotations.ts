@@ -9,6 +9,7 @@ import {
   NOTEBOOK_AVAILABLE_CATEGORIES,
   OutputType,
   RENDERERS,
+  CATEGORY_SEPARATOR,
 } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { postClientMessage, onClientMessage } from '../../../utils/messaging'
@@ -348,7 +349,7 @@ export class Annotations extends LitElement {
   }
 
   protected onCategorySelectorChange(e: CustomEvent) {
-    this.categories = e.detail.categories.split(',')
+    this.categories = e.detail.categories.split(CATEGORY_SEPARATOR)
     this.setCategory()
   }
 
@@ -407,7 +408,7 @@ export class Annotations extends LitElement {
       this.requestUpdate()
       return this.#dispatch({
         'runme.dev/uuid': this.annotations['runme.dev/uuid'],
-        category: this.categories.join(','),
+        category: this.categories.join(CATEGORY_SEPARATOR),
       })
     }
   }

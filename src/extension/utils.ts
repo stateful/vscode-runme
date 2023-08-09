@@ -455,8 +455,6 @@ export async function getNotebookCategories(
   if (!notebooksCategories) {
     return []
   }
-  console.log('EHH', notebooksCategories)
-
   return notebooksCategories[uri.path] || []
 }
 

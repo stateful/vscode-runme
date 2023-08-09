@@ -4,6 +4,7 @@ import { customElement, property } from 'lit/decorators.js'
 import type { TextField } from '@vscode/webview-ui-toolkit'
 
 import { ExternalLinkIcon } from '../icons/external'
+import { CATEGORY_SEPARATOR } from '../../../constants'
 
 export interface ISelectedCategory {
   name: string
@@ -311,23 +312,23 @@ export class CategorySelector extends LitElement {
 
   #onCategoryRemoved(e: CustomEvent<ISelectedCategory>) {
     this.categories = this.categories
-      .split(',')
+      .split(CATEGORY_SEPARATOR)
       .filter((category) => category !== e.detail.name)
-      .join(',')
+      .join(CATEGORY_SEPARATOR)
     const event = new CustomEvent('onChange', { detail: { categories: this.categories } })
     this.dispatchEvent(event)
   }
 
   #onCategoryUpdated(e: CustomEvent<IUpdatedCategory>) {
     this.categories = this.categories
-      .split(',')
+      .split(CATEGORY_SEPARATOR)
       .map((category) => {
         if (category === e.detail.before) {
           return e.detail.after
         }
         return category
       })
-      .join(',')
+      .join(CATEGORY_SEPARATOR)
     const event = new CustomEvent('onChange', { detail: { categories: this.categories } })
     this.dispatchEvent(event)
   }
@@ -346,7 +347,7 @@ export class CategorySelector extends LitElement {
 
         <div class="categories">
           ${this.categories
-            .split(',')
+            .split(CATEGORY_SEPARATOR)
             .filter(Boolean)
             .map(
               (categeory: string) =>
