@@ -29,6 +29,7 @@ import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
 import * as survey from './survey'
+import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -311,25 +312,64 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
       await handleGitHubMessage({ messaging: this.messaging, message })
     } else if (message.type === ClientMessages.displayPrompt) {
-      const answer = await window.showInputBox({
-        password: message.output.isSecret,
-        placeHolder: message.output.placeholder,
-        title: message.output.title,
-        validateInput: (value) => {
-          if (value.includes(' ') || value.includes(CATEGORY_SEPARATOR)) {
-            return 'Cannot contain spaces or commas'
-          }
-          return null
-        },
-      })
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
       if (!cell || message.output.uuid !== cell.metadata?.['runme.dev/uuid']) {
         return
       }
-      postClientMessage(this.messaging, ClientMessages.onPrompt, {
-        answer,
-        uuid: message.output.uuid,
-      })
+      const categories = await getNotebookCategories(this.context, cell.document.uri)
+
+      const input = window.createQuickPick<CategoryQuickPickItem>()
+      input.title = message.output.title
+      input.placeholder = message.output.placeholder
+      input.canSelectMany = true
+
+      const origCategories = categories.map((val) => new CategoryQuickPickItem(val))
+      input.items = origCategories
+      input.show()
+
+      this.#disposables.push(
+        input.onDidChangeValue((value) => {
+          const isNewItem = categories.filter((c) => c.includes(value)).length === 0
+          if (!isNewItem) {
+            input.items = origCategories
+            return
+          }
+
+          input.items = [
+            ...input.items.filter((i) => !i.isNew()),
+            new CategoryQuickPickItem(value, true),
+          ]
+
+          /**
+           * auto select new category if label is valid
+           */
+          if (CategoryQuickPickItem.isValid(value)) {
+            input.selectedItems = input.items.slice(-1)
+          }
+        }),
+        input.onDidHide(() => {
+          input.dispose()
+          postClientMessage(this.messaging, ClientMessages.onPrompt, {
+            answer: input.selectedItems.map((qp) => qp.label).join(CATEGORY_SEPARATOR),
+            uuid: message.output.uuid,
+          })
+        }),
+        input.onDidChangeSelection((items) => {
+          if (items.length === 1 && !items[0].isValid()) {
+            input.selectedItems = []
+          }
+        }),
+        input.onDidAccept(() => {
+          /**
+           * validate new category label
+           */
+          if (input.selectedItems.length === 1 && !input.selectedItems[0].isValid()) {
+            return
+          }
+
+          input.hide()
+        }),
+      )
     } else if (message.type === ClientMessages.getState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
       if (!cell) {

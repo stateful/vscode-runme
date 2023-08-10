@@ -380,8 +380,10 @@ export class Annotations extends LitElement {
           if (!answer || e.output.uuid !== uuid) {
             return
           }
-          if (this.categories && !this.categories.includes(answer)) {
-            this.categories.push(answer)
+          for (const newCategory of answer.split(CATEGORY_SEPARATOR)) {
+            if (!this.categories.includes(newCategory)) {
+              this.categories.push(newCategory)
+            }
           }
           ctx.postMessage &&
             postClientMessage(ctx, ClientMessages.setState, {
