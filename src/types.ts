@@ -182,6 +182,7 @@ export interface ClientMessagePayload {
     answer: string | undefined
     uuid: string
   }
+  [ClientMessages.onCategoryChange]: void
   [ClientMessages.githubWorkflowDispatch]: {
     inputs: Record<string, string>
     repo: string

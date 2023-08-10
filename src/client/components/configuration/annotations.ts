@@ -408,6 +408,13 @@ export class Annotations extends LitElement {
     if (this.annotations) {
       this.annotations.category = category || this.annotations.category
       this.requestUpdate()
+
+      /**
+       * make VS Code display warn message to save document
+       */
+      const ctx = getContext()
+      postClientMessage(ctx, ClientMessages.onCategoryChange, undefined)
+
       return this.#dispatch({
         'runme.dev/uuid': this.annotations['runme.dev/uuid'],
         category: this.categories.join(CATEGORY_SEPARATOR),

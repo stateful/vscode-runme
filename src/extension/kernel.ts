@@ -386,6 +386,13 @@ export class Kernel implements Disposable {
         return
       }
       await setNotebookCategories(this.context, cell.notebook.uri, new Set(message.output.value))
+    } else if (message.type === ClientMessages.onCategoryChange) {
+      const btnSave = 'Save Now'
+      window.showWarningMessage('Save changes?', btnSave).then((val) => {
+        if (val === btnSave) {
+          commands.executeCommand('workbench.action.files.save')
+        }
+      })
     } else if (message.type === ClientMessages.cloudApiRequest) {
       return handleCloudApiMessage({
         messaging: this.messaging,
