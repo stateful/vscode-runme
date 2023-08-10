@@ -347,13 +347,6 @@ export class Kernel implements Disposable {
             input.selectedItems = input.items.slice(-1)
           }
         }),
-        input.onDidHide(() => {
-          input.dispose()
-          postClientMessage(this.messaging, ClientMessages.onPrompt, {
-            answer: input.selectedItems.map((qp) => qp.label).join(CATEGORY_SEPARATOR),
-            uuid: message.output.uuid,
-          })
-        }),
         input.onDidChangeSelection((items) => {
           if (items.length === 1 && !items[0].isValid()) {
             input.selectedItems = []
@@ -367,7 +360,11 @@ export class Kernel implements Disposable {
             return
           }
 
-          input.hide()
+          input.dispose()
+          postClientMessage(this.messaging, ClientMessages.onPrompt, {
+            answer: input.selectedItems.map((qp) => qp.label).join(CATEGORY_SEPARATOR),
+            uuid: message.output.uuid,
+          })
         }),
       )
     } else if (message.type === ClientMessages.getState) {
