@@ -400,8 +400,6 @@ export class Kernel implements Disposable {
 
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
-      console.log('CHECK', this.category, annotations.category)
-
       if (
         (totalCellsToExecute > 1 &&
           this.category &&

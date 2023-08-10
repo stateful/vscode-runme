@@ -35,6 +35,7 @@ const getCells = (cnt: number, metadata: Record<string, any> = {}) => ([...new A
   },
   metadata: {
     'runme.dev/name': `Cell #${i}`,
+    category: '',
     ...metadata
   }
 }) as any as NotebookCell)
@@ -131,7 +132,7 @@ suite('_executeAll', async () => {
   test('does not runs any cells for non-existent cell category', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
     const k = new Kernel({} as any)
-    k.setCategory('shell scripts')
+    k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
     await k['_executeAll'](getCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
@@ -144,9 +145,9 @@ suite('_executeAll', async () => {
   test('does runs cells for specific cell category', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
     const k = new Kernel({} as any)
-    k.setCategory('shell scripts')
+    k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
-    const cellsFromCategory = getCells(2, { category: 'shell scripts' }).concat(getCells(5))
+    const cellsFromCategory = getCells(2, { category: 'shellscripts' }).concat(getCells(5))
     await k['_executeAll'](cellsFromCategory)
     expect(k['_doExecuteCell']).toBeCalledTimes(2)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
@@ -158,16 +159,17 @@ suite('_executeAll', async () => {
   test('does runs cells for specific cell category and skip cells with excludeFromRunAll', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => { }))
     const k = new Kernel({} as any)
-    k.setCategory('shell scripts')
+    k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
-    const cellsFromCategory = getCells(2, { category: 'shell scripts', excludeFromRunAll: true })
-      .concat(getCells(1, { category: 'shell scripts' }))
+    const cellsFromCategory = getCells(2, { category: 'foo,shellscripts,bar', excludeFromRunAll: true })
+      .concat(getCells(1, { category: 'bar,shellscripts,foo' }))
+      .concat(getCells(1, { category: 'barfoo,shellscripts' }))
       .concat(getCells(1))
     await k['_executeAll'](cellsFromCategory)
-    expect(k['_doExecuteCell']).toBeCalledTimes(1)
+    expect(k['_doExecuteCell']).toBeCalledTimes(2)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith(
       'cells.executeAll',
-      { 'cells.executed': '1', 'cells.total': '10' }
+      { 'cells.executed': '2', 'cells.total': '10' }
     )
   })
 })
