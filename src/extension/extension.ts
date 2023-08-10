@@ -100,11 +100,13 @@ export class RunmeExtension {
     const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
 
     const codeLensProvider = new RunmeCodeLensProvider(
+      context.extensionUri,
       serializer,
       runCLI,
       winCodeLensRunSurvey,
       runner,
       kernel,
+      server,
     )
 
     registerExtensionEnvironmentVariables(context)

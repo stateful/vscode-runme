@@ -4,6 +4,7 @@ import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { EventEmitter, NotebookCellKind, Position, tasks, commands, EndOfLine, window } from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
+import { URI } from 'vscode-uri'
 
 import {
   GrpcRunner,
@@ -652,7 +653,7 @@ suite('RunmeCodeLensProvider', () => {
 
     expect(serializer.deserializeNotebook).toBeCalledTimes(1)
 
-    expect(lenses).toHaveLength(4)
+    expect(lenses).toHaveLength(6)
 
     lenses.forEach((lens, i) => {
       switch (i) {
@@ -666,7 +667,7 @@ suite('RunmeCodeLensProvider', () => {
           expect(lens.range.end.character).toStrictEqual(0)
         } break
 
-        case 2: {
+        case 3: {
           const line = block2Start.split('\n').length - 2
 
           expect(lens.range.start.line).toStrictEqual(line)
@@ -776,6 +777,7 @@ function createCodeLensProvider(
   runner?: IRunner
 ) {
   return new RunmeCodeLensProvider(
+    URI.parse('file:///foo/bar'),
     serializer,
     vi.fn(),
     new SurveyWinCodeLensRun({} as any),

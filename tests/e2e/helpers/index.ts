@@ -21,6 +21,12 @@ export async function getTerminalText(workbench: Workbench) {
   return text
 }
 
+export async function killAllTerminals(workbench: Workbench) {
+  const bottomBar = workbench.getBottomBar()
+  await bottomBar.openTerminalView()
+  await workbench.executeCommand('Terminal kill all')
+}
+
 export async function tryExecuteCommand(workbench: Workbench, command: string) {
   const cmds = await workbench.openCommandPrompt()
 
