@@ -523,26 +523,26 @@
             }
           },
           {
-            "id": "runme.welcome.annotations",
-            "title": "Cell Configuration",
-            "description": "To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.",
-            "media": {
-              "markdown": "walkthroughs/1-annotations.md"
-            }
-          },
-          {
             "id": "runme.welcome.features",
             "title": "Key Features",
             "description": "Get the best of Runme by learning the key features",
             "media": {
-              "markdown": "walkthroughs/3-features.md"
+              "markdown": "walkthroughs/1-features.md"
+            }
+          },
+          {
+            "id": "runme.welcome.annotations",
+            "title": "Cell Configuration",
+            "description": "To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.",
+            "media": {
+              "markdown": "walkthroughs/2-annotations.md"
             }
           },
           {
             "id": "runme.welcome.learn",
             "title": "Learn more",
             "media": {
-              "markdown": "walkthroughs/4-learn-more.md"
+              "markdown": "walkthroughs/3-learn-more.md"
             }
           }
         ]
