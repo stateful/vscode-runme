@@ -2,62 +2,26 @@
 
 Thank you for interest in Runme 💟!
 
-Runme strives to provide a great experience right out of the box. Please continue to learn how to get the most out of our docs via Runme. Please don't be surprised if Runme's docs prompt you to use Runme. Learning by using is very effective.
+Runme is a tool that makes runbooks actually runnable, making it easier to follow step-by-step instructions. Users can execute instructions, check intermediate results, and ensure the desired outputs are achieved. Authors can create predefined golden paths and share them with others. Runme combines the guardrails of a pipeline with the flexibility of scripting, where users can check intermediary results before moving on.
 
-<div>
-  <img width="15" src="https://runme.dev/runme_logo.svg" />
+Runme achieves this by literally running markdown (ubiquitous for docs inside repos). More specifically, Runme runs your commands inside your fenced code blocks (shell, bash, zsh). It's 100% compatible with your programming language's task definitions (Makefile, Gradle, Grunt, NPM scripts, Pipfile or Deno tasks, etc.). Runme persists your runbooks in markdown, which your docs are likely already using.
+
+<div align="center">
+  <img src="https://docs.runme.dev/img/venn.png" />
   <a href="command:runme.try">Give Runme a try</a>
 </div>
 
-A well-written README can significantly impact time to get up and running on your projects, reduce onboarding time, and interactively document common development and operations workflows (runbooks). On the contrary, a poorly written README can negatively impact the visibility of your project, even if the underyling code of your software is in excellent condition. For new contributors, it can quickly become a very frustrating experience.
-
-The Runme team believes that even if you have textually excellent README.md, encouraging your users to experience it through the lens of Runme, your docs will be more reliable, less susceptible to bit-rot, and a lot more humanly ergnomic. All of which leeds to happier and more productive developers.
-
 ## What is Runme? 🤔​
 
-Runme is primary interface is a VS Code extension that provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart. It consists of two major parts:
+Runme has interfaces for terminal, editor, and notebooks attached to a kernel, making them interoperable. While all client interfaces share core features, namely execution, they excel in different use cases.
 
-- A [CLI tool](https://github.com/stateful/runme) that understands markdown and allows you to discover and run code snippets within it
-- A VS Code extension that integrates these capabilities into VS Code and allows you to run markdown through a notebook UI
+> 💡 Runme is like Jupyter but with a Shell/Bash Kernel and lightweight dependencies.
 
-## 🤩 Markdown turned interactive
+Runme runs your runbooks everywhere, irrespective of the environment: a local laptop, a VM, a Devcontainer, Cloud Development Environment, or attached to a remote host via SSH:
 
-- 🏃 Runme lets you craft dev-native markdown files and create an interactive runbook experience for VS Code.
-- 🙌 It is an open-source tool building on the developer norm of using README.md as an entry point to a code repository.
-- 📜 It lets you seamlessly turn your existing Markdown docs, such as README.md, into runnable notebooks.
-   ⏯ It enables static docs to become interactive for its readers and greatly improves their learning experience.
-- 🙆 Runme is a human-centric approach to providing and consuming code repository documentation. It's designed to progressively bridge the widening developer experience gaps in a cloud-native age.
+- Split loose scripts into runbooks with separate cells, intermediate outputs, and controls to check before moving on.
+- Get ahead of bit-rot and reverse-engineering runbooks executing them directly from markdown inside your project's repo.
+- Increase shareability of runbooks by decoupling them from personal dotfiles or bash_history's without getting in the way.
+- Codify golden paths without overly restricting the flexibility of "scripting".
 
-Gaps in developer experience such as:
-
-- Low integration between building blocks employed to deliver apps and services
-- Error-prone copy&paste-management of dev environments
-- Docs that have fallen behind undetected
-- The vault lines of commonplace tools were designed for machines, not humans.
-
-![Readme as Notebook and Markdown side-by-side](https://github.com/stateful/runme.dev/raw/63f857ba8f4f8cfd824099c80c14ffc405802ea4/static/img/sidebyside.png)
-
-Runme’s purpose is to enable developers to achieve a functional local development environment quickly, starting with copy&paste, click to run commands, and many more features. While README.md is the most well-known, there are several other markdown files often found in a repo that you may encounter, including; BUILD.md, CONTRIBUTING.md, and many more. Runme supports most .md and .mdx files!
-
-Make sure to [get in touch](https://discord.gg/BQm8zRCBUY) with us if you are missing a feature or have other ideas.
-
-## Known limitations
-
-- Be cautious with environment variables interleaved within code blocks. The stateful execution of the notebooks (shell/bash-only; no PowerShell on Windows yet) leverages a naive implementation where the VS Code extension prompts for ENV var values and attempts to expand them. In essence, it does not match an interactive bash/shell session (yet).
-- We continue experimenting with aspects of user/developer experience including the passing of information/variables from cell to cell, ENV var handling that more closely matches shell a session and more robust markdown handling.
-- Please [report any issues](https://github.com/stateful/runme/issues/new) you encounter to help us mature Runme.
-
-## 💡 Telemetry for improvements
-
-Runme exists to serve its users. Any information emitted by Runme is pseudo-anonymized (no PII whatsoever) and the emitter will respect VS Code's global "send no telemetry" (id: telemetry.telemetryLevel) setting. The purpose of collecting this information is to continuously improve the Runme experience for developers.
-
-Telemetry collected includes:
-
-- Buttons clicked & commands triggered
-- Total cells and how many are being executed
-- Extension activation and deactivation
-- Notebook opened and saved (incl. metadata; file names are obfuscated)
-
-Please find us on [Discord](https://discord.gg/stateful) if you have any questions.
-
-<br /><br />
+Read more about Runme in the [official documentation](https://docs.runme.dev/).
