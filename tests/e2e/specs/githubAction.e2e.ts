@@ -10,7 +10,7 @@ describe('Runme GitHub Workflow Integration', async () => {
   /**
    * Skip GitHub Action tests for local testing due to missing token
    */
-  if ((!token && !process.env.CI) || process.env.NODE_ENV !== 'development') {
+  if ((!token && !process.env.CI) || process.env.NODE_ENV === 'production') {
     return
   }
 
