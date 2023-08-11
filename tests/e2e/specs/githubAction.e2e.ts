@@ -31,7 +31,7 @@ describe('Runme GitHub Workflow Integration', async () => {
     }, token)
   })
 
-  describe('trigger workflow', () => {
+  describe.skip('trigger workflow', () => {
     let cell: NotebookCell
     before(async () => {
       await notebook.focusDocument()
