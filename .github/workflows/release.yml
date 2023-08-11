@@ -81,6 +81,8 @@ jobs:
         with:
           run: npm test
           options: "-screen 0 1600x1200x24"
+        env:
+          NODE_ENV: production
       
       - name: Set Extension Name
         run: |
