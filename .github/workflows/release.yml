@@ -65,7 +65,7 @@ jobs:
       - name: Build Package (Edge)
         run: npm run build:dev
         env:
-          NODE_ENV: development
+          NODE_ENV: production
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
 
