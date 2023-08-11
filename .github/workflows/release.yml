@@ -63,7 +63,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Build Package (Edge)
-        run: npm run build:dev
+        run: npm run build:prod
         env:
           NODE_ENV: production
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
