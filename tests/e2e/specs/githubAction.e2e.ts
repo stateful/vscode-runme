@@ -8,9 +8,11 @@ describe('Runme GitHub Workflow Integration', async () => {
   const token = process.env.RUNME_TEST_TOKEN
 
   /**
-   * Skip GitHub Action tests for local testing due to missing token
+   * Skip GitHub Action tests for
+   *   - local testing due to missing token
+   *   - or when releasing extension since the token is not available
    */
-  if ((!token && !process.env.CI) || process.env.NODE_ENV === 'production') {
+  if ((!token && !process.env.CI) || Boolean(process.env.INSTRUMENTATION_KEY)) {
     return
   }
 
@@ -31,7 +33,7 @@ describe('Runme GitHub Workflow Integration', async () => {
     }, token)
   })
 
-  describe.skip('trigger workflow', () => {
+  describe('trigger workflow', () => {
     let cell: NotebookCell
     before(async () => {
       await notebook.focusDocument()
