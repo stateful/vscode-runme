@@ -14,6 +14,12 @@ async function assertDocumentContains (documentPath: string, matcher: string) {
   await expect(await source.toString()).toContain(matcher)
 }
 
+async function removeAllNotifications () {
+  const workbench = await browser.getWorkbench()
+  const notifications = await workbench.getNotifications()
+  await Promise.all(notifications.map((notification) => notification.dismiss()))
+}
+
 describe('Runme GitHub Workflow Integration', async () => {
   const notebook = new RunmeNotebook()
   const webview = new Webview()
@@ -69,6 +75,7 @@ describe('Runme GitHub Workflow Integration', async () => {
       const quickInput = new QuickOpenBox(workbench.locatorMap)
       await quickInput.elem.$('=category-two').click()
       await browser.keys([Key.Enter])
+      await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(2)
       await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
@@ -82,6 +89,7 @@ describe('Runme GitHub Workflow Integration', async () => {
 
       await browser.keys('some invalid category name')
       await browser.keys([Key.Enter])
+      await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(2)
     })
@@ -92,6 +100,7 @@ describe('Runme GitHub Workflow Integration', async () => {
 
       await browser.keys('some,invalid,category,name')
       await browser.keys([Key.Enter])
+      await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(2)
     })
@@ -102,6 +111,7 @@ describe('Runme GitHub Workflow Integration', async () => {
 
       await browser.keys('category-three')
       await browser.keys([Key.Enter])
+      await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(3)
       await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
