@@ -122,8 +122,8 @@ export class RunmeExtension {
       kernel,
       serializer,
       server,
-      ...this.registerPanels(context),
       treeViewer,
+      ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientOutputs: true,
@@ -205,13 +205,15 @@ export class RunmeExtension {
     await bootFile()
   }
 
-  protected registerPanels(context: ExtensionContext): Disposable[] {
+  protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
     const id: string = 'runme.cloud' as const
+    const cloudPanel = new Panel(context, id)
     const channel = new Channel<SyncSchema>('app')
-    const p = new Panel(context, id)
-    const bus$ = channel.register([p.webview])
-    p.registerBus(bus$)
-    return [window.registerWebviewViewProvider(id, p), p]
+    const bus$ = channel.register([cloudPanel.webview])
+    cloudPanel.registerBus(bus$)
+    const webviewProvider = window.registerWebviewViewProvider(id, cloudPanel)
+    kernel.registerWebview(id, cloudPanel, webviewProvider)
+    return [webviewProvider, cloudPanel]
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {

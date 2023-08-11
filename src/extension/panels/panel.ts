@@ -5,7 +5,7 @@ import { Observable, Subscription } from 'rxjs'
 
 import { fetchStaticHtml, getAuthSession } from '../utils'
 import { IAppToken, RunmeService } from '../services/runme'
-import { SyncSchemaBus } from '../../types'
+import { type SyncSchemaBus } from '../../types'
 import { getRunmeAppUrl } from '../../utils/configuration'
 
 export type DefaultUx = 'panels'
@@ -53,6 +53,7 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
 export default class Panel extends PanelBase implements WebviewViewProvider {
   public readonly webview = new Subject<Webview>()
   protected readonly staticHtml
+  private bus$?: SyncSchemaBus
 
   constructor(
     protected readonly context: ExtensionContext,
@@ -111,8 +112,13 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
     }
   }
 
+  public getBus() {
+    return this.bus$
+  }
+
   public registerBus(bus$: Observable<SyncSchemaBus>) {
     bus$.subscribe((bus) => {
+      this.bus$ = bus
       const subs: Subscription[] = [
         bus.on('onCommand', (cmdEvent) => {
           if (cmdEvent?.name !== 'signIn') {

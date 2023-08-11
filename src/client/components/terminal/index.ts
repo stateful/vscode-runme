@@ -8,7 +8,7 @@ import { WebLinksAddon } from 'xterm-addon-web-links'
 import { when } from 'lit/directives/when.js'
 
 import { FitAddon, type ITerminalDimensions } from '../../fitAddon'
-import { ClientMessages, RENDERERS, OutputType } from '../../../constants'
+import { ClientMessages, RENDERERS, OutputType, WebViews } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
@@ -432,6 +432,13 @@ export class TerminalView extends LitElement {
                 this.shareUrl = htmlUrl
                 this.shareText = this.shareEnabledText
                 this.isShareReady = true
+                // Dispatch tangle update event
+                return postClientMessage(ctx, ClientMessages.tangleEvent, {
+                  webviewId: WebViews.RunmeCloud,
+                  data: {
+                    cellId: id,
+                  },
+                })
               }
               if (data.updateCellExecution) {
                 this.isUpdatedReady = true
