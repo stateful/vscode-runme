@@ -15,3 +15,6 @@ updates:
     # ESM only packages we can't update since VS Code doesn't
     # support ESM yet
     - dependency-name: "got"
+    # following dependencies dropped support for Node.js v16
+    # which is the current runtime for VS Code extensions
+    - dependency-name: "@octokit/rest"

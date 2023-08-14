@@ -654,7 +654,7 @@
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/client-preset": "^4.1.0",
     "@graphql-codegen/typescript": "4.0.1",
-    "@octokit/rest": "^20.0.1",
+    "@octokit/rest": "^19.0.13",
     "@types/node": "^20.5.0",
     "@types/split2": "^4.2.0",
     "@types/uuid": "^9.0.2",
