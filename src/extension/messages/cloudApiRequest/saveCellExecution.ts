@@ -55,8 +55,8 @@ export default async function saveCellExecution(
       mutation: CreateCellExecutionDocument,
       variables: {
         data: {
-          stdout: exitCode === 0 ? terminalContents : Array.from([]),
-          stderr: exitCode !== 0 ? terminalContents : Array.from([]),
+          stdout: terminalContents,
+          stderr: Array.from([]), // stderr will become applicable for non-terminal
           exitCode,
           pid,
           input: encodeURIComponent(cell.document.getText()),
