@@ -46,6 +46,7 @@ export enum ClientMessages {
   githubWorkflowDispatch = 'github:workflowDispatch',
   githubWorkflowDeploy = 'github:workflowDeploy',
   githubWorkflowStatusUpdate = 'github:workflowStatusUpdate',
+  tangleEvent = 'tangle:event',
 }
 
 // [pretty print, languageId, destination]
@@ -1055,4 +1056,8 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 export const EXTENSION_NAME = 'stateful.runme'
 export enum TELEMETRY_EVENTS {
   RecommendExtension = 'runme.recommendExtension',
+}
+
+export enum WebViews {
+  RunmeCloud = 'runme.cloud',
 }

@@ -57,6 +57,8 @@ import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import { SurveyShebangComingSoon } from './survey'
+import PanelManager from './panels/panelManager'
+import Panel from './panels/panel'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -88,6 +90,7 @@ export class Kernel implements Disposable {
   protected cellManager = new NotebookCellManager(this.#controller)
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
+  protected panelManager: PanelManager
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
@@ -116,6 +119,7 @@ export class Kernel implements Disposable {
     })
 
     this.messaging.postMessage({ from: 'kernel' })
+    this.panelManager = new PanelManager(context)
     this.#disposables.push(
       this.#shebangComingSoon,
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
@@ -123,6 +127,7 @@ export class Kernel implements Disposable {
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
+      this.panelManager,
     )
   }
 
@@ -379,6 +384,13 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.openExternalLink) {
       TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)
       return env.openExternal(Uri.parse(message.output.link))
+    } else if (message.type === ClientMessages.tangleEvent) {
+      const webviewPanel = this.panelManager.getPanel(message.output.webviewId)
+      if (webviewPanel) {
+        return webviewPanel.getBus()?.emit('onSave', {
+          cellId: message.output.data.cellId,
+        })
+      }
     } else if (message.type.startsWith('terminal:')) {
       return
     }
@@ -619,5 +631,9 @@ export class Kernel implements Disposable {
     return this.activeTerminals.find((t) => {
       return getTerminalRunmeId(t) === runmeId
     }) as RunmeTerminal | undefined
+  }
+
+  registerWebview(webviewId: string, panel: Panel, disposableWebViewProvider: Disposable): void {
+    this.panelManager.addPanel(webviewId, panel, disposableWebViewProvider)
   }
 }

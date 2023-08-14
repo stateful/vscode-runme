@@ -25,6 +25,9 @@ export interface SyncSchema {
     name: string
   }
   onAppToken?: IAppToken
+  onSave?: {
+    cellId: string
+  }
 }
 
 export type SyncSchemaBus = Bus<SyncSchema>
@@ -251,6 +254,10 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.onCopyTextToClipboard]: {
     uuid: string
+  }
+  [ClientMessages.tangleEvent]: {
+    data: any
+    webviewId: string
   }
 }
 
