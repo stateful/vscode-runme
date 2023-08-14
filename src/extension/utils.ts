@@ -310,16 +310,16 @@ export function mapGitIgnoreToGlobFolders(gitignoreContents: string[]): Array<st
         }
         const hasExtension = path.extname(entry)
         const slashPlacement = entry.charAt(entry.length - 1)
-        if (slashPlacement === '/') {
+        if (firstChar === '.' || slashPlacement === '/') {
           return `**/${entry}**`
         }
-        if (hasExtension || ['.', '*', '#'].includes(firstChar)) {
+        if (hasExtension || ['*', '#'].includes(firstChar)) {
           return
         }
         return `**/${entry}/**`
       }
     })
-    .filter((entry: string | undefined) => entry)
+    .filter(Boolean)
 
   return [...new Set(entries)]
 }

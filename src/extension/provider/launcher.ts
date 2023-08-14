@@ -161,9 +161,8 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
 
     if (this.workspaceRoot) {
       const gitIgnoreUri = Uri.parse(join(this.workspaceRoot, '.gitignore'))
-      const hasGitDirectory = (await getPathType(gitIgnoreUri)) === FileType.File
-
-      if (hasGitDirectory) {
+      const hasGitignoreFile = (await getPathType(gitIgnoreUri)) === FileType.File
+      if (hasGitignoreFile) {
         try {
           const ignoreList = await workspace.openTextDocument(gitIgnoreUri)
           const patterns = mapGitIgnoreToGlobFolders(ignoreList.getText().split('\n'))
