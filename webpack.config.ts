@@ -67,7 +67,7 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, 'src', 'extension', 'index.ts'),
   },
-  externals: ['vscode'],
+  externals: ['vscode', 'vscode-telemetry'],
   output: {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',
