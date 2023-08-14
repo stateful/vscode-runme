@@ -67,7 +67,10 @@ const extensionConfig: Configuration = {
   entry: {
     extension: path.resolve(__dirname, 'src', 'extension', 'index.ts'),
   },
-  externals: ['vscode', 'vscode-telemetry'],
+  externals: [
+    'vscode', 'vscode-telemetry', 'keyv', 'yargs/helpers', 'yargs/yargs',
+    '@vscode/vscode-languagedetection'
+  ],
   output: {
     path: path.resolve(__dirname, 'out'),
     libraryTarget: 'commonjs2',
