@@ -26,7 +26,22 @@ const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['app.', ':4001'],
 ])
 
-type NotebookTerminalValue = keyof typeof configurationSchema.notebookTerminal
+type NotebookTerminalValue = keyof typeof notebookTerminalSchema
+
+const editorSettings = workspace.getConfiguration('editor')
+const notebookTerminalSchema = {
+  backgroundTask: z.boolean().default(true),
+  nonInteractive: z.boolean().default(false),
+  interactive: z.boolean().default(true),
+  fontSize: z.number().default(editorSettings.get<number>('fontSize', 10)),
+  fontFamily: z.string().default(editorSettings.get<string>('fontFamily', 'Arial')),
+  rows: z.number().int().default(10),
+  cursorStyle: z.enum(['block', 'bar', 'underline']).default('bar'),
+  cursorBlink: z.boolean().default(true).optional(),
+  cursorWidth: z.number().optional(),
+  smoothScrollDuration: z.number().optional(),
+  scrollback: z.number().optional(),
+}
 
 const configurationSchema = {
   actions: {
@@ -38,14 +53,6 @@ const configurationSchema = {
     enableLogger: z.boolean().default(false),
     enableTLS: z.boolean().default(true),
     tlsDir: z.string().optional(),
-  },
-  notebookTerminal: {
-    backgroundTask: z.boolean().default(true),
-    nonInteractive: z.boolean().default(false),
-    interactive: z.boolean().default(true),
-    fontSize: z.number().optional(),
-    fontFamily: z.string().optional(),
-    rows: z.number().int(),
   },
   codelens: {
     enable: z.boolean().default(true),
@@ -63,6 +70,9 @@ const configurationSchema = {
     enableShare: z.boolean().default(true),
   },
 }
+
+const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
+export type TerminalConfiguration = z.infer<typeof notebookTerminalSchemaObject>
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
@@ -96,7 +106,7 @@ const getRunmeTerminalConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult = configurationSchema.notebookTerminal[configName].safeParse(configurationValue)
+  const parseResult = notebookTerminalSchema[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -201,17 +211,20 @@ const enableServerLogs = (): boolean => {
 }
 
 const isNotebookTerminalFeatureEnabled = (
-  featureName: keyof typeof configurationSchema.notebookTerminal,
+  featureName: keyof typeof notebookTerminalSchema,
 ): boolean => {
   return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
-const getNotebookTerminalFontSize = (): number | undefined => {
-  return getRunmeTerminalConfigurationValue<number | undefined>('fontSize', undefined)
-}
-
-const getNotebookTerminalFontFamily = (): string | undefined => {
-  return getRunmeTerminalConfigurationValue<string | undefined>('fontFamily', undefined)
+const getNotebookTerminalConfigurations = () => {
+  const schema = z.object(notebookTerminalSchema)
+  const keys = (
+    Object.keys(notebookTerminalSchema)
+   ) as Array<keyof typeof notebookTerminalSchema>
+  return keys.reduce((p, c) => {
+    p[c] = getRunmeTerminalConfigurationValue<never>(c, undefined as never)
+    return p
+  }, {} as z.infer<typeof schema>)
 }
 
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
@@ -222,10 +235,6 @@ const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
       ? isNotebookTerminalFeatureEnabled('backgroundTask')
       : isNotebookTerminalFeatureEnabled('interactive')
     : isNotebookTerminalFeatureEnabled('nonInteractive')
-}
-
-const getNotebookTerminalRows = (): number => {
-  return getRunmeTerminalConfigurationValue<number>('rows', 10)
 }
 
 const getCodeLensEnabled = (): boolean => {
@@ -317,9 +326,7 @@ export {
   isNotebookTerminalEnabledForCell,
   getTLSEnabled,
   getTLSDir,
-  getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize,
-  getNotebookTerminalRows,
+  getNotebookTerminalConfigurations,
   getCodeLensEnabled,
   registerExtensionEnvironmentVariables,
   getCustomServerAddress,

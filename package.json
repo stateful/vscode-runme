@@ -453,6 +453,34 @@
             "default": null,
             "markdownDescription": "Font family of Runme notebook terminal"
           },
+          "runme.terminal.cursorStyle": {
+            "type": "string",
+            "enum": [
+              "block",
+              "bar",
+              "underline"
+            ],
+            "default": "bar",
+            "markdownDescription": "The style of the Runme notebook terminal cursor."
+          },
+          "runme.terminal.cursorBlink": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Defines whether the Runme notebook terminal cursor blinks."
+          },
+          "runme.terminal.cursorWidth": {
+            "type": "number",
+            "markdownDescription": "The width of the cursor in CSS pixels when `cursorStyle` is set to 'bar'."
+          },
+          "runme.terminal.smoothScrollDuration": {
+            "type": "number",
+            "default": 0,
+            "markdownDescription": "The duration to smoothly scroll between the origin and the target in milliseconds. Set to 0 to disable smooth scrolling and scroll instantly."
+          },
+          "runme.terminal.scrollback": {
+            "type": "number",
+            "markdownDescription": "The amount of scrollback in the terminal. Scrollback is the amount of rows that are retained when lines are scrolled beyond the initial viewport."
+          },
           "runme.terminal.rows": {
             "type": "integer",
             "default": 10,

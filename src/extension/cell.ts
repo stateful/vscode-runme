@@ -18,9 +18,7 @@ import { OutputType } from '../constants'
 import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
 import { Mutex } from '../utils/sync'
 import {
-  getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize,
-  getNotebookTerminalRows,
+  getNotebookTerminalConfigurations,
   isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
 
@@ -160,23 +158,16 @@ export class NotebookCellOutputManager {
         }
 
         if (type === OutputType.terminal) {
-          const editorSettings = workspace.getConfiguration('editor')
-
-          const terminalFontFamily =
-            getNotebookTerminalFontFamily() ?? editorSettings.get<string>('fontFamily', 'Arial')
-
-          const terminalFontSize =
-            getNotebookTerminalFontSize() ?? editorSettings.get<number>('fontSize', 10)
+          const terminalConfigurations = getNotebookTerminalConfigurations()
 
           const json: CellOutputPayload<OutputType.terminal> = {
             type: OutputType.terminal,
             output: {
               'runme.dev/uuid': cellId,
-              terminalFontFamily,
-              terminalFontSize,
               content: terminalState.serialize(),
-              initialRows: terminalRows || getNotebookTerminalRows(),
+              initialRows: terminalRows || terminalConfigurations.rows,
               enableShareButton: isRunmeAppButtonsEnabled(),
+              ...terminalConfigurations
             },
           }
 
