@@ -342,7 +342,12 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      await setNotebookCategories(this.context, cell.notebook.uri, new Set(message.output.value))
+      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
+      await setNotebookCategories(
+        this.context,
+        cell.notebook.uri,
+        new Set([...message.output.value, ...categories].sort()),
+      )
     } else if (message.type === ClientMessages.onCategoryChange) {
       const btnSave = 'Save Now'
       window.showWarningMessage('Save changes?', btnSave).then((val) => {
