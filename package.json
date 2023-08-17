@@ -681,8 +681,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
-    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.1-20230814203313-b57e60316e87.1",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.1-20230721161725-b3ac1903dc85.1",
+    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.0-20230505202852-f6db652602f5.1",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.0-20230522162609-549daeeacece.1",
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",
