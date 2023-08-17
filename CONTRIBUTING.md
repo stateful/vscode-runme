@@ -172,29 +172,36 @@ We use WebdriverIO to run e2e tests on the VS Code extension:
 
 ```sh { name=test:e2e }
 # run reconcile command when previous commands pass or fail
-npx runme run test:e2e:setup test:e2e:run test:e2e:reconcile || npx runme run test:e2e:reconcile
+npx runme run test:e2e:setup test:e2e:run || npx runme run test:e2e:reconcile
 ```
 
 To ensure we run the test close to a real world scenario, e.g. the extension is installed on someones system, we created a process that would rename the `node_modules` directory to ensure the extension is not depending on any dependencies that won't be shipped in a production environment:
 
 ```sh { name=test:e2e:setup }
 mv ./node_modules/ ./.node_modules
-mv package.json ./.package.json
-cp ./tests/e2e/package.json ./package.json
-RUNME_DOWNLOAD_ON_INSTALL=1 npm install
+# we need to restore Runme to keep running the pipeline
+# first make sure we re-install all node deps
+mv ./package.json ./.package.json
+# then install runme again
+RUNME_DOWNLOAD_ON_INSTALL=1 npm i runme
+# restore package.json to allow testing the extension
+mv ./.package.json ./package.json
 ```
 
-To be able to run e2e tests we setup dependencies only for that purpose. Then we can run the e2e tests via:
+For running e2e tests we use a seperate `package.json` which dependencies need to be installed prior.
+
+Then we can run the e2e tests via:
 
 ```sh { name=test:e2e:run }
-npx wdio run ./tests/e2e/wdio.conf.ts
+cd ./tests/e2e/
+npm ci
+npx wdio run ./wdio.conf.ts
 ```
 
 At the end we reconcile our dev environment by moving all files back to their original place:
 
 ```sh { name=test:e2e:reconcile }
 [ -d "./.node_modules/" ] && rm -fr ./node_modules && mv ./.node_modules/ ./node_modules
-[ -f "./.package.json" ] && mv ./.package.json ./package.json
 ```
 
 If you cancel the running test at any time, make sure to run this command before continuing development.
