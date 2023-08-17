@@ -29,7 +29,6 @@ import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 
 import * as survey from './survey'
-import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -42,6 +41,7 @@ import {
   isWindows,
   setNotebookCategories,
   getTerminalRunmeId,
+  suggestCategories,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
@@ -317,56 +317,16 @@ export class Kernel implements Disposable {
         return
       }
       const categories = await getNotebookCategories(this.context, cell.document.uri)
-
-      const input = window.createQuickPick<CategoryQuickPickItem>()
-      input.title = message.output.title
-      input.placeholder = message.output.placeholder
-      input.canSelectMany = true
-
-      const origCategories = categories.map((val) => new CategoryQuickPickItem(val))
-      input.items = origCategories
-      input.show()
-
-      this.#disposables.push(
-        input.onDidChangeValue((value) => {
-          const isNewItem = categories.filter((c) => c.includes(value)).length === 0
-          if (!isNewItem) {
-            input.items = origCategories
-            return
-          }
-
-          input.items = [
-            ...input.items.filter((i) => !i.isNew()),
-            new CategoryQuickPickItem(value, true),
-          ]
-
-          /**
-           * auto select new category if label is valid
-           */
-          if (CategoryQuickPickItem.isValid(value)) {
-            input.selectedItems = input.items.slice(-1)
-          }
-        }),
-        input.onDidChangeSelection((items) => {
-          if (items.length === 1 && !items[0].isValid()) {
-            input.selectedItems = []
-          }
-        }),
-        input.onDidAccept(() => {
-          /**
-           * validate new category label
-           */
-          if (input.selectedItems.length === 1 && !input.selectedItems[0].isValid()) {
-            return
-          }
-
-          input.dispose()
-          postClientMessage(this.messaging, ClientMessages.onPrompt, {
-            answer: input.selectedItems.map((qp) => qp.label).join(CATEGORY_SEPARATOR),
-            uuid: message.output.uuid,
-          })
-        }),
+      const { disposables, answer } = await suggestCategories(
+        categories,
+        message.output.title,
+        message.output.placeholder,
       )
+      this.#disposables.push(...disposables)
+      postClientMessage(this.messaging, ClientMessages.onPrompt, {
+        answer,
+        uuid: message.output.uuid,
+      })
     } else if (message.type === ClientMessages.getState) {
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
       if (!cell) {
