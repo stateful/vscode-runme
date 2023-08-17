@@ -105,7 +105,7 @@ describe('Runme GitHub Workflow Integration', async () => {
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(2)
     })
 
-    it('shoudl allow to add a new category', async () => {
+    it('should allow to add a new category', async () => {
       await $('>>>.category-button').click()
       await webview.close()
 
