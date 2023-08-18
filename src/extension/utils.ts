@@ -9,6 +9,8 @@ import vscode, {
   Uri,
   workspace,
   env,
+  window,
+  Disposable,
   NotebookCell,
   NotebookCellExecution,
   NotebookCellOutput,
@@ -27,6 +29,7 @@ import {
   AuthenticationProviders,
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
+  CATEGORY_SEPARATOR,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -36,6 +39,7 @@ import {
   getTLSEnabled,
 } from '../utils/configuration'
 
+import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV, BOOTFILE } from './constants'
@@ -423,7 +427,7 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 }
 
 /**
- * Stores the specified notebook cell categories in the global state.
+ * Stores the specified unique notebook cell categories in the global state.
  * @param context
  * @param uri
  * @param categories
@@ -431,11 +435,11 @@ export async function getWorkspaceEnvs(uri?: Uri): Promise<Record<string, string
 export async function setNotebookCategories(
   context: ExtensionContext,
   uri: Uri,
-  categories: string[],
+  categories: Set<string>,
 ): Promise<void> {
   const notebooksCategoryState =
     context.globalState.get<string[]>(NOTEBOOK_AVAILABLE_CATEGORIES) || ({} as any)
-  notebooksCategoryState[uri.path] = categories
+  notebooksCategoryState[uri.path] = [...categories.values()]
   return context.globalState.update(NOTEBOOK_AVAILABLE_CATEGORIES, notebooksCategoryState)
 }
 
@@ -560,4 +564,61 @@ export function getRunnerSessionEnvs(extensionBaseUri: Uri, kernel: Kernel, serv
     envs['RUNME_SESSION'] = runnerEnv.getSessionId()
   }
   return envs
+}
+
+export function suggestCategories(categories: string[], title: string, placeholder: string) {
+  const input = window.createQuickPick<CategoryQuickPickItem>()
+  input.title = title
+  input.placeholder = placeholder
+  input.canSelectMany = true
+
+  const origCategories = categories.map((val) => new CategoryQuickPickItem(val))
+  input.items = origCategories
+  input.show()
+
+  const disposables = [
+    input.onDidChangeValue((value) => {
+      const isNewItem = categories.filter((c) => c.includes(value)).length === 0
+      if (!isNewItem) {
+        input.items = origCategories
+        return
+      }
+
+      input.items = [
+        ...input.items.filter((i) => !i.isNew()),
+        new CategoryQuickPickItem(value, true),
+      ]
+
+      /**
+       * auto select new category if label is valid
+       */
+      if (CategoryQuickPickItem.isValid(value)) {
+        input.selectedItems = input.items.slice(-1)
+      }
+    }),
+    input.onDidChangeSelection((items) => {
+      if (items.length === 1 && !items[0].isValid()) {
+        input.selectedItems = []
+      }
+    }),
+  ]
+
+  return new Promise<{ disposables: Disposable[]; answer: string }>((resolve) => {
+    disposables.push(
+      input.onDidAccept(() => {
+        /**
+         * validate new category label
+         */
+        if (input.selectedItems.length === 1 && !input.selectedItems[0].isValid()) {
+          return
+        }
+
+        input.dispose()
+        resolve({
+          disposables,
+          answer: input.selectedItems.map((qp) => qp.label).join(CATEGORY_SEPARATOR),
+        })
+      }),
+    )
+  })
 }

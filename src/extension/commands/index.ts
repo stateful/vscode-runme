@@ -66,7 +66,7 @@ export async function displayCategoriesSelector({
   if (!categories) {
     return
   }
-  const category = await window.showQuickPick(categories, {
+  const category = await window.showQuickPick(categories.sort(), {
     title: 'Select a category to run.',
     ignoreFocusOut: true,
     placeHolder: 'Select a category',

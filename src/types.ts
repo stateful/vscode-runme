@@ -59,6 +59,7 @@ export namespace Serializer {
     closeTerminalOnSuccess?: string
     mimeType?: string
     promptEnv?: string
+    category?: string
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
     ['runme.dev/denoState']?: DenoState
@@ -181,15 +182,7 @@ export interface ClientMessagePayload {
     answer: string | undefined
     uuid: string
   }
-  [ClientMessages.onPickerOption]: {
-    option: string | undefined
-    uuid: string
-  }
-  [ClientMessages.displayPicker]: {
-    options: string[]
-    title: string
-    uuid: string
-  }
+  [ClientMessages.onCategoryChange]: void
   [ClientMessages.githubWorkflowDispatch]: {
     inputs: Record<string, string>
     repo: string

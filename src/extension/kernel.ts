@@ -23,6 +23,7 @@ import {
   DEFAULT_LANGUAGEID,
   NOTEBOOK_HAS_CATEGORIES,
   SUPPORTED_FILE_EXTENSIONS,
+  CATEGORY_SEPARATOR,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
@@ -40,6 +41,7 @@ import {
   isWindows,
   setNotebookCategories,
   getTerminalRunmeId,
+  suggestCategories,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
@@ -166,19 +168,14 @@ export class Kernel implements Disposable {
     if (notebookType !== Kernel.type) {
       return
     }
-    const availableCategories: string[] = []
-    getCells().forEach((cell) => {
-      const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
-        availableCategories.push(annotations.category)
-      }
-    })
-    setNotebookCategories(this.context, uri, availableCategories)
-    await commands.executeCommand(
-      'setContext',
-      NOTEBOOK_HAS_CATEGORIES,
-      !!availableCategories.length,
-    )
+    const availableCategories = new Set<string>([
+      ...getCells()
+        .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
+        .flat()
+        .filter((c) => c.length > 0),
+    ])
+    await setNotebookCategories(this.context, uri, availableCategories)
+    await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!availableCategories.size)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
 
@@ -194,15 +191,15 @@ export class Kernel implements Disposable {
     if (notebookType !== Kernel.type) {
       return
     }
-    const availableCategories: string[] = []
-    getCells().forEach((cell) => {
-      const annotations = getAnnotations(cell)
-      if (annotations.category !== '' && !availableCategories.includes(annotations.category)) {
-        availableCategories.push(annotations.category)
-      }
-      this.registerNotebookCell(cell)
-    })
-    setNotebookCategories(this.context, uri, availableCategories)
+    getCells().forEach((cell) => this.registerNotebookCell(cell))
+    const availableCategories = new Set<string>([
+      ...getCells()
+        .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
+        .flat()
+        .filter((c) => c.length > 0),
+    ])
+
+    await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
@@ -315,15 +312,17 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
       await handleGitHubMessage({ messaging: this.messaging, message })
     } else if (message.type === ClientMessages.displayPrompt) {
-      const answer = await window.showInputBox({
-        password: message.output.isSecret,
-        placeHolder: message.output.placeholder,
-        title: message.output.title,
-      })
       const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
       if (!cell || message.output.uuid !== cell.metadata?.['runme.dev/uuid']) {
         return
       }
+      const categories = await getNotebookCategories(this.context, cell.document.uri)
+      const { disposables, answer } = await suggestCategories(
+        categories,
+        message.output.title,
+        message.output.placeholder,
+      )
+      this.#disposables.push(...disposables)
       postClientMessage(this.messaging, ClientMessages.onPrompt, {
         answer,
         uuid: message.output.uuid,
@@ -333,13 +332,9 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
-      if (!categories) {
-        return
-      }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
-        value: categories,
+        value: getAnnotations(cell).category.split(CATEGORY_SEPARATOR).filter(Boolean),
         uuid: message.output.uuid,
       })
     } else if (message.type === ClientMessages.setState) {
@@ -347,15 +342,18 @@ export class Kernel implements Disposable {
       if (!cell) {
         return
       }
-      await setNotebookCategories(this.context, cell.notebook.uri, message.output.value)
-    } else if (message.type === ClientMessages.displayPicker) {
-      const selectedOption = await window.showQuickPick(message.output.options, {
-        title: message.output.title,
-        ignoreFocusOut: true,
-      })
-      postClientMessage(this.messaging, ClientMessages.onPickerOption, {
-        option: selectedOption,
-        uuid: message.output.uuid,
+      const categories = await getNotebookCategories(this.context, cell.notebook.uri)
+      await setNotebookCategories(
+        this.context,
+        cell.notebook.uri,
+        new Set([...message.output.value, ...categories].sort()),
+      )
+    } else if (message.type === ClientMessages.onCategoryChange) {
+      const btnSave = 'Save Now'
+      window.showWarningMessage('Save changes?', btnSave).then((val) => {
+        if (val === btnSave) {
+          commands.executeCommand('workbench.action.files.save')
+        }
       })
     } else if (message.type === ClientMessages.cloudApiRequest) {
       return handleCloudApiMessage({
@@ -412,7 +410,9 @@ export class Kernel implements Disposable {
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
       if (
-        (totalCellsToExecute > 1 && this.category && annotations.category !== this.category) ||
+        (totalCellsToExecute > 1 &&
+          this.category &&
+          !annotations.category.split(CATEGORY_SEPARATOR).includes(this.category)) ||
         annotations.excludeFromRunAll
       ) {
         continue

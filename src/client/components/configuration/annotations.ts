@@ -9,6 +9,7 @@ import {
   NOTEBOOK_AVAILABLE_CATEGORIES,
   OutputType,
   RENDERERS,
+  CATEGORY_SEPARATOR,
 } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { postClientMessage, onClientMessage } from '../../../utils/messaging'
@@ -150,7 +151,7 @@ export class Annotations extends LitElement {
       docs: 'https://docs.runme.dev/configuration#cell-options',
     },
     category: {
-      description: 'Execute this code cell within a category.',
+      description: 'Execute this code cell within a category. (no comma or spaces allowed)',
       docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
     },
     excludeFromRunAll: {
@@ -336,9 +337,8 @@ export class Annotations extends LitElement {
           selectedCategory="${value}"
           description="${details.description}"
           identifier="${id}"
-          @onChange="${this.onCategoryChange}"
+          @onChange=${this.onCategorySelectorChange}
           @onCreateNewCategory=${this.createNewCategoryClick}
-          @onSelectCategory=${this.onSelectCategory}
         ></category-selector>
       </div>
     </div>`
@@ -348,6 +348,11 @@ export class Annotations extends LitElement {
     return (this.annotations && this.annotations['runme.dev/uuid']) || ''
   }
 
+  protected onCategorySelectorChange(e: CustomEvent) {
+    this.categories = e.detail.categories.split(CATEGORY_SEPARATOR)
+    this.setCategory()
+  }
+
   protected createNewCategoryClick() {
     const ctx = getContext()
     ctx.postMessage &&
@@ -355,16 +360,6 @@ export class Annotations extends LitElement {
         placeholder: 'Category name',
         isSecret: false,
         title: 'New cell execution category',
-        uuid: this.getCellId(),
-      })
-  }
-
-  protected onSelectCategory() {
-    const ctx = getContext()
-    ctx.postMessage &&
-      postClientMessage(ctx, ClientMessages.displayPicker, {
-        title: 'Select execution category',
-        options: this.categories,
         uuid: this.getCellId(),
       })
   }
@@ -385,13 +380,15 @@ export class Annotations extends LitElement {
           if (!answer || e.output.uuid !== uuid) {
             return
           }
-          if (this.categories && !this.categories.includes(answer)) {
-            this.categories.push(answer)
+          for (const newCategory of answer.split(CATEGORY_SEPARATOR)) {
+            if (!this.categories.includes(newCategory)) {
+              this.categories.push(newCategory)
+            }
           }
           ctx.postMessage &&
             postClientMessage(ctx, ClientMessages.setState, {
               state: NOTEBOOK_AVAILABLE_CATEGORIES,
-              value: this.categories!,
+              value: this.categories,
               uuid,
             })
           return this.setCategory(answer)
@@ -401,28 +398,28 @@ export class Annotations extends LitElement {
             this.requestUpdate()
           }
           break
-        case ClientMessages.onPickerOption:
-          const selectedCategory = e.output.option
-          if (!selectedCategory || !this.annotations || e.output.uuid !== uuid) {
-            return
-          }
-          return this.setCategory(selectedCategory)
         default:
           return
       }
     })
   }
 
-  private setCategory(category: string) {
+  private setCategory(category?: string) {
     if (this.annotations) {
-      this.annotations.category = category
+      this.annotations.category = category || this.annotations.category
       this.requestUpdate()
-      return this.#dispatch({ 'runme.dev/uuid': this.annotations['runme.dev/uuid'], category })
-    }
-  }
 
-  private onCategoryChange(e: { detail: string }) {
-    this.setCategory(e.detail)
+      /**
+       * make VS Code display warn message to save document
+       */
+      const ctx = getContext()
+      postClientMessage(ctx, ClientMessages.onCategoryChange, undefined)
+
+      return this.#dispatch({
+        'runme.dev/uuid': this.annotations['runme.dev/uuid'],
+        category: this.categories.join(CATEGORY_SEPARATOR),
+      })
+    }
   }
 
   // Render the UI as a function of component state
@@ -486,9 +483,5 @@ export class Annotations extends LitElement {
         () => html``,
       )}
     </section>`
-  }
-
-  #reset() {
-    throw new Error('not implemented yet')
   }
 }

@@ -16,3 +16,9 @@ export const notebookCellStatus = {
   item: '.cell-status-item',
   command: '.cell-status-item-has-command'
 }
+
+export const webview = {
+  widget: (name: string) => `div[aria-label="${name}-widget"]`,
+  outerFrame: '.webview.ready',
+  innerFrame: '#active-frame',
+}

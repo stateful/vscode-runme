@@ -18,12 +18,11 @@ export enum ClientMessages {
   errorMessage = 'common:errorMessage',
   closeCellOutput = 'common:closeCellOutput',
   displayPrompt = 'common:displayPrompt',
-  displayPicker = 'common:displayPicker',
   onPrompt = 'common:onPrompt',
-  onPickerOption = 'common:onPickerOption',
   setState = 'common:setState',
   getState = 'common:getState',
   onGetState = 'common:onGetState',
+  onCategoryChange = 'common:onCategoryChange',
   cloudApiRequest = 'common:cloudApiRequest',
   cloudApiResponse = 'common:cloudApiResponse',
   optionsMessage = 'common:optionsMessage',
@@ -1061,3 +1060,4 @@ export enum TELEMETRY_EVENTS {
 export enum WebViews {
   RunmeCloud = 'runme.cloud',
 }
+export const CATEGORY_SEPARATOR = ','

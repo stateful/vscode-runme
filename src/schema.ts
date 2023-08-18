@@ -79,10 +79,7 @@ export const AnnotationSchema = {
     .default('text/plain'),
   interpreter: z.string().optional().default(''),
   cwd: z.string().nonempty().optional(),
-  category: z.preprocess(
-    (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
-    z.string().default(''),
-  ),
+  category: z.string().default(''),
 }
 
 export const SafeCellAnnotationsSchema = z.object({
