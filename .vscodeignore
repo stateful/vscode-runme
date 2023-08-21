@@ -13,5 +13,6 @@ vsc-extension-quickstart.md
 **/*.ts
 **/*.tsbuildinfo
 **/node_modules
+**/.node_modules
 tests
 coverage
