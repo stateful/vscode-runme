@@ -687,7 +687,7 @@
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",
-    "@vercel/client": "^12.6.6",
+    "@vercel/client": "^13.0.0",
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "clipboardy": "^3.0.0",
