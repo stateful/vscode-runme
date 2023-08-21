@@ -3,29 +3,8 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import vscode from 'vscode'
-import xdg from 'xdg-app-paths'
 
 import { VERCEL_DIR } from './constants'
-
-export async function getConfigFilePath() {
-  return path.join(`${xdg('com.vercel.cli').dataDirs()[0]}.cli`, 'auth.json')
-}
-
-export async function getAuthToken() {
-  const authFilePath = await getConfigFilePath()
-
-  try {
-    const canRead = await fs.access(authFilePath).then(
-      () => true,
-      () => false,
-    )
-    if (canRead) {
-      return JSON.parse((await fs.readFile(authFilePath, 'utf-8')).toString()).token as string
-    }
-  } catch (err: any) {
-    return
-  }
-}
 
 export async function quickPick<T>(
   title: string,

@@ -124,11 +124,87 @@ npm run build
 
 ### Test Project
 
-To test the project, run:
+The Runme project has several test stages that you can run individually or as a whole:
 
 ```sh { name=test }
-npm run test
+npx runme run test:format test:lint test:unit test:e2e
 ```
+
+#### Code Style Checks
+
+We use [Prettier](https://prettier.io/) to keep the code style consistent:
+
+```sh { name=test:format }
+npx prettier --check .
+```
+
+You can fix any formatting errors via:
+
+```sh { name=test:format:fix }
+npx prettier --write .
+```
+
+#### Linting
+
+We use [Eslint](https://eslint.org/) for static code analysis:
+
+```sh { name=test:lint }
+npx eslint src tests --ext ts
+```
+
+You can fix any linting errors via:
+
+```sh { name=test:lint:fix }
+eslint src tests --ext ts --fix
+```
+
+#### Unit Testing
+
+We use [Vitest](https://vitest.dev/) for running unit tests via:
+
+```sh { name=test:unit }
+npx vitest -c ./vitest.conf.ts --run
+```
+
+#### E2E Testing
+
+We use WebdriverIO to run e2e tests on the VS Code extension:
+
+```sh { name=test:e2e }
+# run reconcile command when previous commands pass or fail
+npx runme run test:e2e:setup test:e2e:run || npx runme run test:e2e:reconcile
+```
+
+To ensure we run the test close to a real world scenario, e.g. the extension is installed on someones system, we created a process that would rename the `node_modules` directory to ensure the extension is not depending on any dependencies that won't be shipped in a production environment:
+
+```sh { name=test:e2e:setup }
+mv ./node_modules/ ./.node_modules
+# we need to restore Runme to keep running the pipeline
+# first make sure we re-install all node deps
+mv ./package.json ./.package.json
+# then install runme again
+RUNME_DOWNLOAD_ON_INSTALL=1 npm i runme
+# restore package.json to allow testing the extension
+mv ./.package.json ./package.json
+```
+
+For running e2e tests we use a seperate `package.json` which dependencies need to be installed prior.
+
+Then we can run the e2e tests via:
+
+```sh { name=test:e2e:run }
+cd ./tests/e2e/
+npm ci
+npx wdio run ./wdio.conf.ts
+```
+
+At the end we reconcile our dev environment by moving all files back to their original place:
+
+```sh { name=test:e2e:reconcile }
+[ -d "./.node_modules/" ] && rm -fr ./node_modules && mv ./.node_modules/ ./node_modules
+```
+
+If you cancel the running test at any time, make sure to run this command before continuing development.
 
 ### Release
 

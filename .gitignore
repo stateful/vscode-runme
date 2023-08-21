@@ -12,3 +12,5 @@ tests/e2e/screenshots
 bin
 vscode-runme-CHANGELOG.txt
 /tls
+.package.json
+.node_modules

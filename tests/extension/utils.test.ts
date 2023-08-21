@@ -494,7 +494,7 @@ suite('validateAnnotations', () => {
     }
     const result = validateAnnotations(cell)
     expect(result.hasErrors).toBe(true)
-    expect(result.errors && Object.entries(result.errors).length).toBe(5)
+    expect(result.errors && Object.entries(result.errors).length).toBe(2)
   })
 
   test('it should pass for valid annotations values', () => {

@@ -10,7 +10,7 @@ const ext = new RunmeExtension()
 const log = getLogger()
 
 export async function activate(context: ExtensionContext) {
-  TelemetryReporter.configure(context, INSTRUMENTATION_KEY)
+  TelemetryReporter.configure(INSTRUMENTATION_KEY)
   log.info('Activating Extension')
   try {
     await ext.initialize(context)

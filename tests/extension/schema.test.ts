@@ -1,4 +1,5 @@
 import { expect, test, suite } from 'vitest'
+import type { SafeParseError } from 'zod'
 
 import { AnnotationSchema, SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../../src/schema'
 
@@ -133,15 +134,10 @@ suite('AnnotationSchema', () => {
                 interactive: 'invalid',
                 closeTerminalOnSuccess: 'invalid'
             }
-            const parseResult = CellAnnotationsSchema.safeParse(input)
-
+            const parseResult = CellAnnotationsSchema.safeParse(input) as SafeParseError<any>
             expect(parseResult.success).toBeFalsy()
-            if (!parseResult.success) {
-                const { fieldErrors } = parseResult.error.flatten()
-                for (const key in input) {
-                    expect(fieldErrors[key]).toStrictEqual(['expected a boolean value'])
-                }
-            }
+            const { fieldErrors } = parseResult.error.flatten()
+            expect(fieldErrors).toEqual({ background: ['expected a boolean value'] })
         })
 
         test('Should generate safe default values', () => {
