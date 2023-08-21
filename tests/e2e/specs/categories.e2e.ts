@@ -1,10 +1,15 @@
 import fs from 'node:fs/promises'
+import url from 'node:url'
+import path from 'node:path'
+import cp from 'node:child_process'
 
 import { Key } from 'webdriverio'
 import { QuickOpenBox } from 'wdio-vscode-service'
 
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { Webview } from '../pageobjects/webview.page.js'
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 async function assertDocumentContains (documentPath: string, matcher: string) {
   const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
@@ -149,5 +154,11 @@ describe('Runme GitHub Workflow Integration', async () => {
         'category=category-two,category-three'
       )
     })
+  })
+
+  after(() => {
+    // revert changes we made during the test
+    const mdPath = path.resolve(__dirname, '..', '..', '..', 'examples', 'CATEGORIES.md')
+    cp.execSync(`git checkout -- ${mdPath}`)
   })
 })
