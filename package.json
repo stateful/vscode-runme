@@ -665,7 +665,7 @@
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "@vitest/coverage-c8": "^0.33.0",
-    "@vitest/coverage-v8": "^0.33.0",
+    "@vitest/coverage-v8": "^0.34.2",
     "@vscode/vsce": "^2.19.0",
     "@wdio/cli": "^8.13.12",
     "@wdio/local-runner": "^8.13.12",
