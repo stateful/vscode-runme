@@ -12,6 +12,9 @@ updates:
     # the minimum required VS Code version for this extension
     # to run
     - dependency-name: "@types/vscode"
+    # we want to update this package manually as we don't have
+    # any influence which Node.js version VS Code uses
+    - dependency-name: "@types/node"
     # ESM only packages we can't update since VS Code doesn't
     # support ESM yet
     - dependency-name: "got"
