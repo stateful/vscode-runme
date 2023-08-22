@@ -172,7 +172,7 @@ We use WebdriverIO to run e2e tests on the VS Code extension:
 
 ```sh { name=test:e2e }
 # run reconcile command when previous commands pass or fail
-npx runme run test:e2e:setup test:e2e:run || npx runme run test:e2e:reconcile
+npx runme run test:e2e:setup test:e2e:run; npx runme run test:e2e:reconcile
 ```
 
 To ensure we run the test close to a real world scenario, e.g. the extension is installed on someones system, we created a process that would rename the `node_modules` directory to ensure the extension is not depending on any dependencies that won't be shipped in a production environment:
@@ -182,6 +182,7 @@ mv ./node_modules/ ./.node_modules
 # we need to restore Runme to keep running the pipeline
 # first make sure we re-install all node deps
 mv ./package.json ./.package.json
+mv ./package-lock.json ./.package-lock.json
 # then install runme again
 RUNME_DOWNLOAD_ON_INSTALL=1 npm i runme
 # restore package.json to allow testing the extension
@@ -201,7 +202,11 @@ npx wdio run ./wdio.conf.ts
 At the end we reconcile our dev environment by moving all files back to their original place:
 
 ```sh { name=test:e2e:reconcile }
-[ -d "./.node_modules/" ] && rm -fr ./node_modules && mv ./.node_modules/ ./node_modules
+[ -d "./.node_modules/" ] && \
+  rm -fr ./node_modules && \
+  mv ./.node_modules/ ./node_modules && \
+  mv ./.package-lock.json ./package-lock.json
+echo "Running test:e2e:reconcile ✅"
 ```
 
 If you cancel the running test at any time, make sure to run this command before continuing development.
