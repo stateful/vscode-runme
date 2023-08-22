@@ -1,3 +1,4 @@
+import { Key } from 'webdriverio'
 import { InputBox } from 'wdio-vscode-service'
 
 import { getTerminalText, killAllTerminals } from '../helpers/index.js'
@@ -14,6 +15,10 @@ describe('Runme Codelense Support', async () => {
     })
   })
 
+  afterEach(() => {
+    return browser.keys([Key.Escape])
+  })
+
   it('should allow to run a cell', async () => {
     await browser.waitUntil(() => $$('.codelens-decoration').then((elems) => elems.length > 1))
     await $('.codelens-decoration a').click()
@@ -23,14 +28,6 @@ describe('Runme Codelense Support', async () => {
     const text = await getTerminalText(workbench)
     expect(text).toContain('Hello World!\n ')
     await killAllTerminals(workbench)
-  })
-
-  it('should not prompt a user if promptEnv is false', async () => {
-    await browser.waitUntil(() => $$('.codelens-decoration').then((elems) => elems.length > 1))
-    await $$('.codelens-decoration')[1].$('a').click()
-    const workbench = await browser.getWorkbench()
-    const inputBox = new InputBox(workbench.locatorMap)
-    await expect(inputBox.elem).not.toBeDisplayed()
   })
 
   it('should allow to paste into terminal', async () => {
@@ -47,6 +44,14 @@ describe('Runme Codelense Support', async () => {
     const text = await getTerminalText(workbench)
     expect(text).toContain('echo "Hello World!"')
     await killAllTerminals(workbench)
+  })
+
+  it('should not prompt a user if promptEnv is false', async () => {
+    await browser.waitUntil(() => $$('.codelens-decoration').then((elems) => elems.length > 1))
+    await $$('.codelens-decoration')[1].$('a').click()
+    const workbench = await browser.getWorkbench()
+    const inputBox = new InputBox(workbench.locatorMap)
+    await expect(inputBox.elem).not.toBeDisplayed()
   })
 
   it('should allow to open file in notebook', async () => {

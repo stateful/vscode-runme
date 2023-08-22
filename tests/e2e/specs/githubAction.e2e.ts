@@ -42,6 +42,8 @@ describe('Runme GitHub Workflow Integration', async () => {
       await browser.action('key')
         .down(Key.Ctrl).down(Key.Subtract)
         .pause(100)
+        .down(Key.Ctrl).down(Key.Subtract)
+        .pause(100)
         .perform()
       await cell.run()
       await cell.switchIntoCellFrame()
@@ -53,7 +55,9 @@ describe('Runme GitHub Workflow Integration', async () => {
       await outputContainer.$('aria/Run Workflow').click()
       await outputContainer
         .$('github-workflow-run[status="queued"]')
-        .waitForExist({ timeout: 60000 })
+        .waitForExist({ timeout: 10000 })
+        // run again if workflow is not triggered
+        .catch(() => outputContainer.$('aria/Run Workflow').click())
       await outputContainer
         .$('github-workflow-run[status="in_progress"]')
         .waitForExist({ timeout: 60000 })
