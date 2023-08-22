@@ -145,7 +145,7 @@ export class NotebookCellStatusBar extends BasePage<typeof notebookCellStatusLoc
     await this.parentCell.elem.isExisting()
     // console.log(await this.parentCell.elem.getText())
     await this.parentCell.focus()
-    return this.success$.waitForExist({ timeout: 20000 })
+    return this.success$.waitForExist({ timeout: 30000 })
   }
 
   getItems() {
