@@ -42,6 +42,8 @@ describe('Runme GitHub Workflow Integration', async () => {
       await browser.action('key')
         .down(Key.Ctrl).down(Key.Subtract)
         .pause(100)
+        .down(Key.Ctrl).down(Key.Subtract)
+        .pause(100)
         .perform()
       await cell.run()
       await cell.switchIntoCellFrame()
