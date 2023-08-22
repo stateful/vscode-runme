@@ -12,6 +12,10 @@ This markdown file contains some custom examples to test the execution within a 
 echo "Hello World!"
 ```
 
+```sh { promptEnv=false }
+export FOO="don't prompt me"
+```
+
 # GitHub Action Integration
 
 ```yaml

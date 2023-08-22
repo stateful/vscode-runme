@@ -114,7 +114,7 @@ export class RunmeTaskProvider implements TaskProvider {
       ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
       : path.basename(filePath)
 
-    const { interactive, background } = getAnnotations(cell.metadata)
+    const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
 
     const isBackground = options.isBackground || background
 
@@ -138,7 +138,7 @@ export class RunmeTaskProvider implements TaskProvider {
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
         const commands = await parseCommandSeq(
           cellContent,
-          undefined,
+          promptEnv,
           new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
           prepareCmdSeq,
         )
