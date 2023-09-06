@@ -1,47 +1,47 @@
-import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
-import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
+import { Disposable, ExtensionContext, commands, notebooks, tasks, window, workspace } from 'vscode'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import { Serializer, SyncSchema } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
 
-import { Kernel } from './kernel'
-import RunmeServer from './server/runmeServer'
-import RunmeServerError from './server/runmeServerError'
 import {
-  ToggleTerminalProvider,
-  BackgroundTaskProvider,
-  StopBackgroundTaskProvider,
-} from './provider/background'
-import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
-import { AnnotationsProvider } from './provider/annotations'
-import { RunmeTaskProvider } from './provider/runmeTask'
-import {
-  toggleTerminal,
-  runCLICommand,
+  addToRecommendedExtensions,
+  authenticateWithGitHub,
   copyCellToClipboard,
-  openAsRunmeNotebook,
-  openSplitViewAsMarkdownText,
-  stopBackgroundTask,
   createNewRunmeNotebook,
-  welcome,
-  tryIt,
+  displayCategoriesSelector,
+  openAsRunmeNotebook,
   openFileInRunme,
   openIntegratedTerminal,
-  authenticateWithGitHub,
-  displayCategoriesSelector,
+  openSplitViewAsMarkdownText,
+  runCLICommand,
   runCellsByCategory,
-  addToRecommendedExtensions,
+  stopBackgroundTask,
+  toggleTerminal,
+  tryIt,
+  welcome,
 } from './commands'
-import { WasmSerializer, GrpcSerializer } from './serializer'
-import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
-import { GrpcRunner, IRunner } from './runner'
-import { CliProvider } from './provider/cli'
-import * as survey from './survey'
-import { RunmeCodeLensProvider } from './provider/codelens'
+import { Kernel } from './kernel'
 import Panel from './panels/panel'
+import { AnnotationsProvider } from './provider/annotations'
+import {
+  BackgroundTaskProvider,
+  StopBackgroundTaskProvider,
+  ToggleTerminalProvider,
+} from './provider/background'
+import { CliProvider } from './provider/cli'
+import { RunmeCodeLensProvider } from './provider/codelens'
+import { CopyProvider } from './provider/copy'
+import { RunmeLauncherProvider } from './provider/launcher'
+import { RunmeTaskProvider } from './provider/runmeTask'
+import { GrpcRunner, IRunner } from './runner'
+import { GrpcSerializer, WasmSerializer } from './serializer'
+import RunmeServer from './server/runmeServer'
+import RunmeServerError from './server/runmeServerError'
+import * as survey from './survey'
+import { bootFile, getDefaultWorkspace, resetEnv } from './utils'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -87,7 +87,7 @@ export class RunmeExtension {
       )
     }
 
-    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    const treeViewer = new RunmeLauncherProvider(runner, getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [

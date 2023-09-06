@@ -1,29 +1,31 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
+import { RpcError } from '@protobuf-ts/runtime-rpc'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
-  type Pseudoterminal,
-  type Event,
-  type Disposable,
-  type TerminalDimensions,
   EventEmitter,
   window,
+  type Disposable,
+  type Event,
+  type Pseudoterminal,
+  type TerminalDimensions,
 } from 'vscode'
-import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
 
+import { getSystemShellPath } from './executors/utils'
+import { RunnerServiceClient } from './grpc/client'
 import {
   CommandMode,
   CreateSessionRequest,
   ExecuteRequest,
   ExecuteResponse,
   ExecuteStop,
+  GetBlocksRequest,
   GetSessionRequest,
   Session,
+  Uri,
   Winsize,
 } from './grpc/runnerTypes'
-import { RunnerServiceClient } from './grpc/client'
-import { getSystemShellPath } from './executors/utils'
 import RunmeServer from './server/runmeServer'
 import { convertEnvList } from './utils'
 
@@ -74,6 +76,8 @@ export interface IRunner extends Disposable {
   ): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
+
+  getBlocks(): Promise<Uri[]>
 
   getEnvironmentVariables(
     environment: IRunnerEnvironment,
@@ -233,6 +237,34 @@ export class GrpcRunner implements IRunner {
 
           this.registerChild(environment)
           return environment
+        })
+        .catch((e) => {
+          throw e
+        })
+    } catch (err: any) {
+      console.error(err)
+      this.close()
+      throw err
+    }
+  }
+
+  async getBlocks(): Promise<Uri[]> {
+    GrpcRunner.assertClient(this.client)
+
+    const request = GetBlocksRequest.create({
+      allowUnnamed: false,
+    })
+
+    try {
+      const client = this.client
+
+      return client
+        .getBlocks(request)
+        .then(({ response: { blocks } }) => {
+          if (!blocks) {
+            throw new Error('Did not receive blocks!!')
+          }
+          return blocks
         })
         .catch((e) => {
           throw e

@@ -1,21 +1,22 @@
-import { join, basename, dirname, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 
 import {
-  TreeItem,
-  EventEmitter,
-  workspace,
-  TreeItemCollapsibleState,
   Command,
-  TreeDataProvider,
+  Disposable,
   Event,
+  EventEmitter,
+  FileType,
+  TreeDataProvider,
+  TreeItem,
+  TreeItemCollapsibleState,
   Uri,
   commands,
-  FileType,
-  Disposable,
+  workspace,
 } from 'vscode'
 
 import { Kernel } from '../kernel'
-import { mapGitIgnoreToGlobFolders, getPathType } from '../utils'
+import { IRunner } from '../runner'
+import { getPathType, mapGitIgnoreToGlobFolders } from '../utils'
 
 interface IRunmeFileProps {
   tooltip: string
@@ -58,10 +59,16 @@ export class RunmeFile extends TreeItem {
 export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Disposable {
   #disposables: Disposable[] = []
 
+  protected runner?: IRunner
+
   private filesTree: Map<string, TreeFile> = new Map()
   private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
 
-  constructor(private workspaceRoot?: string | undefined) {
+  constructor(
+    runner: IRunner | undefined,
+    private workspaceRoot?: string | undefined,
+  ) {
+    this.runner = runner
     const watcher = workspace.createFileSystemWatcher('**/*.md', false, true, false)
     this.#disposables.push(
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
@@ -87,7 +94,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
      * scan for files first time we render the tree
      */
     if (this.filesTree.size === 0) {
-      await this._scanWorkspace()
+      await this.loadBlocks()
     }
 
     if (!element) {
@@ -154,6 +161,17 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     this.defaultItemState = TreeItemCollapsibleState.Expanded
     await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
     this.refresh()
+  }
+
+  private async loadBlocks() {
+    try {
+      const blocks = await this.runner?.getBlocks()
+      for (const block of blocks) {
+        this.#addFileToTree(block)
+      }
+    } catch (err: unknown) {
+      console.error('Failed to load blocks')
+    }
   }
 
   private async _scanWorkspace() {
