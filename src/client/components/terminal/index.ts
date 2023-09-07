@@ -305,7 +305,7 @@ export class TerminalView extends LitElement {
   protected windowSize: IWindowSize
 
   protected rows: number = 10
-  protected errorCode?: any
+  protected errorCode?: number | void
 
   @property({ type: String })
   uuid?: string
