@@ -305,6 +305,7 @@ export class TerminalView extends LitElement {
   protected windowSize: IWindowSize
 
   protected rows: number = 10
+  protected errorCode?: any
 
   @property({ type: String })
   uuid?: string
@@ -398,6 +399,13 @@ export class TerminalView extends LitElement {
         switch (e.type) {
           case ClientMessages.activeThemeChanged:
             this.#updateTerminalTheme()
+            break
+          case ClientMessages.terminalErrorCode:
+            const { 'runme.dev/uuid': uuid, code } = e.output
+            if (uuid !== this.uuid) {
+              return
+            }
+            this.errorCode = code
             break
           case ClientMessages.terminalStdout:
           case ClientMessages.terminalStderr:
@@ -703,6 +711,7 @@ export class TerminalView extends LitElement {
       await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
         data: {
           stdout: contentWithAnsi,
+          errorCode: this.errorCode,
         },
         uuid: this.uuid!,
         method: APIMethod.CreateCellExecution,

@@ -34,6 +34,7 @@ export enum ClientMessages {
   denoPromote = 'deno:promoteDeployment',
   vercelProd = 'vercel:promotePreview',
   mutateAnnotations = 'annotations:mutate',
+  terminalErrorCode = 'terminal:errorCode',
   terminalStdout = 'terminal:stdout',
   terminalStderr = 'terminal:stderr',
   terminalStdin = 'terminal:stdin',

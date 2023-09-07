@@ -390,6 +390,10 @@ export async function executeRunner(
 
   return await new Promise<boolean>((resolve, reject) => {
     program.onDidClose((code) => {
+      postClientMessage(messaging, ClientMessages.terminalErrorCode, {
+        'runme.dev/uuid': cellUUID,
+        code,
+      })
       resolve(code === 0)
     })
 

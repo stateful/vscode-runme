@@ -145,6 +145,10 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
+  [ClientMessages.terminalErrorCode]: {
+    ['runme.dev/uuid']: string
+    code: number | void
+  }
   [ClientMessages.terminalStdout]: {
     ['runme.dev/uuid']: string
     data: Uint8Array | string
