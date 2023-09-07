@@ -71,11 +71,29 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
         case OutputType.terminal:
           const terminalElement = document.createElement(RENDERERS.TerminalView)
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
-          terminalElement.setAttribute('terminalFontFamily', payload.output.terminalFontFamily)
-          terminalElement.setAttribute(
-            'terminalFontSize',
-            payload.output.terminalFontSize.toString(),
-          )
+          terminalElement.setAttribute('terminalFontFamily', payload.output.fontFamily)
+          terminalElement.setAttribute('terminalFontSize', payload.output.fontSize.toString())
+          if (payload.output.cursorStyle) {
+            terminalElement.setAttribute('cursorStyle', payload.output.cursorStyle)
+          }
+          if (typeof payload.output.cursorBlink === 'boolean') {
+            terminalElement.setAttribute(
+              'cursorBlink',
+              payload.output.cursorBlink ? 'true' : 'false',
+            )
+          }
+          if (typeof payload.output.cursorWidth === 'number') {
+            terminalElement.setAttribute('cursorWidth', payload.output.cursorWidth.toString())
+          }
+          if (typeof payload.output.smoothScrollDuration === 'number') {
+            terminalElement.setAttribute(
+              'smoothScrollDuration',
+              payload.output.smoothScrollDuration.toString(),
+            )
+          }
+          if (typeof payload.output.scrollback === 'number') {
+            terminalElement.setAttribute('scrollback', payload.output.scrollback.toString())
+          }
           if (payload.output.enableShareButton) {
             terminalElement.setAttribute(
               'enableShareButton',
