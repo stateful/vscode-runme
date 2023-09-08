@@ -130,6 +130,12 @@ The Runme project has several test stages that you can run individually or as a 
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
+When testing in CI environment, run:
+
+```sh { name=test:ci }
+npx runme run test:format test:lint test:unit test:e2e:ci
+```
+
 #### Code Style Checks
 
 We use [Prettier](https://prettier.io/) to keep the code style consistent:
@@ -171,13 +177,23 @@ npx vitest -c ./vitest.conf.ts --run
 We use WebdriverIO to run e2e tests on the VS Code extension:
 
 ```sh { name=test:e2e }
+npx wdio run ./tests/e2e/wdio.conf.ts
+```
+
+#### E2E Testing in CI
+
+The process for testing in CI is a bit more complicated as we try to test closer to the real environment the extension will be executed in. If a user uses Runme, the extension will be shipped with no `node_modules`. Everything is bundled through Webpack including dependencies. Now this can become problematic because if we miss to add the dependency to the `package.json`, Webpack creates a production bundle that won't include that dependency and will fail in the users environment.
+
+Therefore to test in a closer production environment, run:
+
+```sh { name=test:e2e:ci }
 # run reconcile command when previous commands pass or fail
-npx runme run test:e2e:setup test:e2e:run; npx runme run test:e2e:reconcile
+npx runme run test:e2e:ci:setup test:e2e:ci:run; npx runme run test:e2e:ci:reconcile
 ```
 
 To ensure we run the test close to a real world scenario, e.g. the extension is installed on someones system, we created a process that would rename the `node_modules` directory to ensure the extension is not depending on any dependencies that won't be shipped in a production environment:
 
-```sh { name=test:e2e:setup }
+```sh { name=test:e2e:ci:setup }
 mv ./node_modules/ ./.node_modules
 # we need to restore Runme to keep running the pipeline
 # first make sure we re-install all node deps
@@ -193,7 +209,7 @@ For running e2e tests we use a seperate `package.json` which dependencies need t
 
 Then we can run the e2e tests via:
 
-```sh { name=test:e2e:run }
+```sh { name=test:e2e:ci:run }
 cd ./tests/e2e/
 npm ci
 npx wdio run ./wdio.conf.ts
@@ -201,7 +217,7 @@ npx wdio run ./wdio.conf.ts
 
 At the end we reconcile our dev environment by moving all files back to their original place:
 
-```sh { name=test:e2e:reconcile }
+```sh { name=test:e2e:ci:reconcile }
 [ -d "./.node_modules/" ] && \
   rm -fr ./node_modules && \
   mv ./.node_modules/ ./node_modules && \

@@ -16,7 +16,7 @@ jobs:
       - name: 🧪 Setup and Test with Runme
         uses: coactions/setup-xvfb@v1
         with:
-          run: npx runme run configureNPM setup build test
+          run: npx runme run configureNPM setup build test:ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUNME_TEST_TOKEN: ${{ secrets.RUNME_TEST_TOKEN }}
