@@ -71,8 +71,10 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
         case OutputType.terminal:
           const terminalElement = document.createElement(RENDERERS.TerminalView)
           terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
-          terminalElement.setAttribute('terminalFontFamily', payload.output.fontFamily)
-          terminalElement.setAttribute('terminalFontSize', payload.output.fontSize.toString())
+          terminalElement.setAttribute('fontFamily', payload.output.fontFamily)
+          if (typeof payload.output.fontSize === 'number') {
+            terminalElement.setAttribute('fontSize', payload.output.fontSize.toString())
+          }
           if (payload.output.cursorStyle) {
             terminalElement.setAttribute('cursorStyle', payload.output.cursorStyle)
           }
