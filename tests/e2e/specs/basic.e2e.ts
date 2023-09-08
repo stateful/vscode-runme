@@ -9,7 +9,7 @@ describe('Runme VS Code Extension', async () => {
   it('should load successfully', async () => {
     const workbench = await browser.getWorkbench()
     const title = await workbench.getTitleBar().getTitle()
-    expect(title).toContain('README.md')
+    expect(title).toContain('vscode-runme')
   })
 
   it('should re-open Readme.md and validate that it loads as notebook', async () => {
