@@ -140,13 +140,6 @@ suite('runCliCommand', () => {
       isDirty: false
     }
 
-    // vi.mocked(getAnnotations).mockReturnValueOnce({
-    //   name: 'foo-bar',
-    // } as any)
-
-    // vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
-    // vi.mocked(window.showInformationMessage).mockResolvedValueOnce(false as any)
-
     await runCLICommand({} as any, false, {} as any, {} as any)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       'runme run --chdir="/foo/bar" --filename="README.md" --index=0'

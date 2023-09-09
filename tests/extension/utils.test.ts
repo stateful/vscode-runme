@@ -64,7 +64,7 @@ vi.mock('vscode', async () => {
       }
     },
     workspace: {
-      getConfiguration: vi.fn(),
+      getConfiguration: vi.fn().mockReturnValue(new Map()),
       fs: mocked.workspace.fs,
       workspaceFolders: [],
     },

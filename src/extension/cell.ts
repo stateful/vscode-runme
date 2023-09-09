@@ -17,10 +17,7 @@ import {
 import { OutputType } from '../constants'
 import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
 import { Mutex } from '../utils/sync'
-import {
-  getNotebookTerminalConfigurations,
-  isRunmeAppButtonsEnabled,
-} from '../utils/configuration'
+import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
 
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
 import {
@@ -167,7 +164,7 @@ export class NotebookCellOutputManager {
               content: terminalState.serialize(),
               initialRows: terminalRows || terminalConfigurations.rows,
               enableShareButton: isRunmeAppButtonsEnabled(),
-              ...terminalConfigurations
+              ...terminalConfigurations,
             },
           }
 

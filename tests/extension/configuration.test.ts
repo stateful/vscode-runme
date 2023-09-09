@@ -10,8 +10,7 @@ import {
   getBinaryPath,
   getServerConfigurationValue,
   getTLSDir,
-  getNotebookTerminalFontFamily,
-  getNotebookTerminalFontSize,
+  getNotebookTerminalConfigurations,
   getCodeLensEnabled,
   getCLIUseIntegratedRunme
 } from '../../src/utils/configuration'
@@ -23,7 +22,19 @@ vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
 const FAKE_WIN_EXT_PATH = 'C:\\Users\\.vscode\\extensions\\stateful.runme'
 
-const SETTINGS_MOCK:
+vi.mock('path', async (origModFactory) => {
+  const origMod = await origModFactory<typeof path>()
+  const p = {
+    ...origMod,
+    join: vi.fn(origMod.join),
+    isAbsolute: vi.fn(origMod.isAbsolute)
+  }
+  return { ...p, default: p }
+})
+
+vi.mock('vscode', async () => {
+  const mocked = await import('../../__mocks__/vscode')
+  const SETTINGS_MOCK:
     {
         port: number | string | undefined
         binaryPath: string | undefined
@@ -36,67 +47,38 @@ const SETTINGS_MOCK:
     enableLogger: undefined,
     tlsDir: undefined,
     baseDomain: undefined,
-}
+  }
 
-beforeEach(() => {
-  vi.mock('vscode', async () => {
-    const mocked = await import('../../__mocks__/vscode')
-
-    return ({
-      ...mocked,
-      workspace: {
-        getConfiguration: vi.fn().mockReturnValue({
-          get: (configurationName) => {
-            return SETTINGS_MOCK[configurationName]
-          }
-        }),
-      },
-      Uri: mocked.Uri,
-    })
-  })
-
-  vi.mock('vscode-telemetry')
-
-  vi.mock('node:path', async () => {
-    const p = await vi.importActual('node:path') as typeof import('node:path')
-
-    const pathMock = {
-      win32: p.win32,
-      posix: p.posix,
-    }
-
-    mockedPathMethods().forEach(m => pathMock[m] = vi.fn(p[m] as any))
-
-    return ({
-      ...pathMock,
-      default: pathMock,
-    })
+  return ({
+    ...mocked,
+    workspace: {
+      getConfiguration: vi.fn().mockReturnValue({
+        update: (configurationName: string, val: unknown) => {
+          SETTINGS_MOCK[configurationName] = val
+        },
+        get: (configurationName) => {
+          return SETTINGS_MOCK[configurationName]
+        }
+      }),
+    },
+    Uri: mocked.Uri,
   })
 })
 
-function mockedPathMethods() {
-  return ['join', 'isAbsolute'] as const
-}
-
-function platformPathMocks(platform: path.PlatformPath) {
-  mockedPathMethods().forEach(m => vi.mocked(path[m]).mockImplementation(platform[m] as any))
-}
-
-afterEach(() => {
-    Object.keys(SETTINGS_MOCK).forEach(key => {
-          SETTINGS_MOCK[key] = undefined
-    })
-})
+vi.mock('vscode-telemetry')
 
 suite('Configuration', () => {
     test('should get nullish from font family', () => {
-      const fontFamily = getNotebookTerminalFontFamily()
-      expect(fontFamily).toBeUndefined()
-    })
+      expect(getNotebookTerminalConfigurations()).toMatchSnapshot()
+      workspace.getConfiguration().update('fontFamily', 'Fira Code')
+      expect(getNotebookTerminalConfigurations().fontFamily).toStrictEqual('Fira Code')
 
-    test('should get nullish from font size', () => {
-      const fontSize = getNotebookTerminalFontSize()
-      expect(fontSize).toBeUndefined()
+      // example fails because "line" is not valid
+      workspace.getConfiguration().update('cursorStyle', 'line')
+      expect(getNotebookTerminalConfigurations().cursorStyle).toStrictEqual(undefined)
+
+      workspace.getConfiguration().update('cursorStyle', 'underline')
+      expect(getNotebookTerminalConfigurations().cursorStyle).toStrictEqual('underline')
     })
 
     test('should default to a valid port number', () => {
@@ -110,29 +92,29 @@ suite('Configuration', () => {
     })
 
     test('should disable server logs with an invalid value', () => {
-      SETTINGS_MOCK.enableLogger = undefined
+      workspace.getConfiguration().update('enableLogger', undefined)
       const path = enableServerLogs()
       expect(path).toBeFalsy()
     })
 
     test('should disable server logs with an invalid string', () => {
-        SETTINGS_MOCK.enableLogger = 'true'
+        workspace.getConfiguration().update('enableLogger', 'true')
         const path = enableServerLogs()
         expect(path).toBeFalsy()
     })
 
     test('should get default TLS dir by default', () => {
-      SETTINGS_MOCK.tlsDir = undefined
+      workspace.getConfiguration().update('tlsDir', undefined)
       expect(getTLSDir(Uri.file('/ext/base'))).toBe(Uri.file('/ext/base/tls').fsPath)
     })
 
     test('should get set TLS dir if set', () => {
-      SETTINGS_MOCK.tlsDir = '/tmp/runme/tls'
+      workspace.getConfiguration().update('tlsDir', '/tmp/runme/tls')
       expect(getTLSDir(Uri.file('/ext/base'))).toBe('/tmp/runme/tls')
     })
 
     test('getServerConfigurationValue Should default to undefined binaryPath', () => {
-      SETTINGS_MOCK.binaryPath = undefined
+      workspace.getConfiguration().update('binaryPath', undefined)
 
       expect(
         getServerConfigurationValue<string | undefined>('binaryPath', undefined)
@@ -140,7 +122,7 @@ suite('Configuration', () => {
     })
 
     test('getServerConfigurationValue Should give proper binaryPath if defined', () => {
-      SETTINGS_MOCK.binaryPath = '/binary/path'
+      workspace.getConfiguration().update('binaryPath', '/binary/path')
 
       expect(
         getServerConfigurationValue<string | undefined>('binaryPath', undefined)
@@ -159,7 +141,11 @@ suite('Configuration', () => {
 
     suite('posix', () => {
       beforeEach(() => {
-        platformPathMocks(path.posix)
+        workspace.getConfiguration().update('binaryPath', undefined)
+      })
+
+      afterEach(() => {
+        workspace.getConfiguration().update('binaryPath', undefined)
       })
 
       test('should default to a valid binaryPath', () => {
@@ -168,21 +154,21 @@ suite('Configuration', () => {
       })
 
       test('should default to a valid relative binaryPath when specified', () => {
-          SETTINGS_MOCK.binaryPath = 'newBin'
-          // @ts-expect-error
+          workspace.getConfiguration().update('binaryPath', 'newBin')
+          // @ts-expect-error readonly
           workspace.workspaceFolders = [{ uri: Uri.file('/Users/user/Projects/project') }]
           const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'linux')
           expect(binary.fsPath).toStrictEqual('/Users/user/Projects/project/newBin')
       })
 
       test('should default to a valid absolute binaryPath when specified', () => {
-        SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
+        workspace.getConfiguration().update('binaryPath', '/opt/homebrew/bin/runme')
         const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'linux')
         expect(binary.fsPath).toStrictEqual('/opt/homebrew/bin/runme')
       })
 
       test('should use runme for non-windows platforms', () => {
-          SETTINGS_MOCK.binaryPath = '/opt/homebrew/bin/runme'
+          workspace.getConfiguration().update('binaryPath', '/opt/homebrew/bin/runme')
           const binary = getBinaryPath(Uri.file(FAKE_UNIX_EXT_PATH), 'darwin')
           expect(binary.fsPath).toStrictEqual('/opt/homebrew/bin/runme')
       })
@@ -190,26 +176,32 @@ suite('Configuration', () => {
 
     suite('win32', () => {
       beforeEach(() => {
-        platformPathMocks(path.win32)
+        path.join = vi.fn(path.win32.join)
+        path.isAbsolute = vi.fn(path.win32.isAbsolute)
+      })
+
+      afterEach(() => {
+        vi.mocked(path.join).mockRestore()
+        vi.mocked(path.isAbsolute).mockRestore()
       })
 
       test('should default to a valid binaryPath exe on windows', () => {
-        const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win')
+        const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win32')
         expect(binary.fsPath).toStrictEqual(
           'c:\\Users\\.vscode\\extensions\\stateful.runme\\bin\\runme.exe'
         )
       })
 
       test('should use runme.exe for windows platforms with absolute path', () => {
-        SETTINGS_MOCK.binaryPath = 'C:\\custom\\path\\to\\bin\\runme.exe'
+        workspace.getConfiguration().update('binaryPath', 'C:\\custom\\path\\to\\bin\\runme.exe')
 
         const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win32')
         expect(binary.fsPath).toStrictEqual('c:\\custom\\path\\to\\bin\\runme.exe')
       })
 
       test('should use runme.exe for windows platforms with relative path', () => {
-          SETTINGS_MOCK.binaryPath = 'newBin.exe'
-          // @ts-expect-error
+          workspace.getConfiguration().update('binaryPath', 'newBin.exe')
+          // @ts-expect-error readonly
           workspace.workspaceFolders = [{ uri: Uri.file('c:\\Users\\Projects\\project') }]
           const binary = getBinaryPath(Uri.file(FAKE_WIN_EXT_PATH), 'win32')
           expect(binary.fsPath).toStrictEqual('c:\\Users\\Projects\\project\\newBin.exe')
@@ -238,25 +230,25 @@ suite('Configuration', () => {
       })
 
       test('should allow api URL with http for 127.0.0.1', async () => {
-        SETTINGS_MOCK.baseDomain = '127.0.0.1'
+        workspace.getConfiguration().update('baseDomain', '127.0.0.1')
         const url = getRunmeAppUrl(['api'])
         expect(url).toStrictEqual('http://127.0.0.1:4000/')
       })
 
       test('should allow app URL with http for localhost', async () => {
-        SETTINGS_MOCK.baseDomain = 'localhost'
+        workspace.getConfiguration().update('baseDomain', 'localhost')
         const url = getRunmeAppUrl(['app'])
         expect(url).toStrictEqual('http://localhost:4001/')
       })
 
       test('should allow app URL with http for localhost without subdomain', async () => {
-        SETTINGS_MOCK.baseDomain = 'localhost'
+        workspace.getConfiguration().update('baseDomain', 'localhost')
         const url = getRunmeAppUrl([])
         expect(url).toStrictEqual('http://localhost/')
       })
 
       test('should allow specific app URL for remote dev returning staging-based domains', async () => {
-        SETTINGS_MOCK.baseDomain = 'http://localhost:4001'
+        workspace.getConfiguration().update('baseDomain', 'http://localhost:4001')
         const app = getRunmeAppUrl(['app'])
         expect(app).toStrictEqual('http://localhost:4001')
         const api = getRunmeAppUrl(['api'])

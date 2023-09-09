@@ -188,7 +188,7 @@ const getTLSDir = (extensionsDir: Uri): string => {
   )
 }
 
-const getBinaryPath = (extensionBaseUri: Uri, platform: string): Uri => {
+const getBinaryPath = (extensionBaseUri: Uri, platform = os.platform()): Uri => {
   const userPath = getServerConfigurationValue<string | undefined>('binaryPath', undefined)
 
   const isWin = platform.toLowerCase().startsWith('win')
@@ -218,13 +218,14 @@ const isNotebookTerminalFeatureEnabled = (
 
 const getNotebookTerminalConfigurations = () => {
   const schema = z.object(notebookTerminalSchema)
-  const keys = (
-    Object.keys(notebookTerminalSchema)
-   ) as Array<keyof typeof notebookTerminalSchema>
-  return keys.reduce((p, c) => {
-    p[c] = getRunmeTerminalConfigurationValue<never>(c, undefined as never)
-    return p
-  }, {} as z.infer<typeof schema>)
+  const keys = Object.keys(notebookTerminalSchema) as Array<keyof typeof notebookTerminalSchema>
+  return keys.reduce(
+    (p, c) => {
+      p[c] = getRunmeTerminalConfigurationValue<never>(c, undefined as never)
+      return p
+    },
+    {} as z.infer<typeof schema>,
+  )
 }
 
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
@@ -244,8 +245,7 @@ const getCodeLensEnabled = (): boolean => {
 const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
   context.environmentVariableCollection.prepend(
     'PATH',
-    path.dirname(getBinaryPath(context.extensionUri, os.platform()).fsPath) +
-      (isWindows() ? ';' : ':'),
+    path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':'),
   )
 }
 

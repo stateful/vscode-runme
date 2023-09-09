@@ -1,5 +1,5 @@
-import { suite, test, expect, vi, afterEach, beforeEach } from 'vitest'
-import { Uri, type ExtensionContext, type WebviewView } from 'vscode'
+import { suite, test, expect, vi } from 'vitest'
+import { workspace, Uri, type ExtensionContext, type WebviewView } from 'vscode'
 
 import Panel from '../../../src/extension/panels/panel'
 
@@ -9,35 +9,23 @@ vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/runner', () => ({}))
 
-const SETTINGS_MOCK:
-    {
-        baseDomain: string | undefined
-    } = {
-    baseDomain: undefined,
-}
+vi.mock('vscode', async () => {
+  const mocked = await import('../../../__mocks__/vscode')
+  const SETTINGS_MOCK: any = { baseDomain: undefined }
 
-beforeEach(() => {
-  vi.mock('vscode', async () => {
-    const mocked = await import('../../../__mocks__/vscode')
-
-    return ({
-      ...mocked,
-      workspace: {
-        getConfiguration: vi.fn().mockReturnValue({
-          get: (configurationName) => {
-            return SETTINGS_MOCK[configurationName]
-          }
-        }),
-      },
-      Uri: mocked.Uri,
-    })
+  return ({
+    ...mocked,
+    workspace: {
+      getConfiguration: vi.fn().mockReturnValue({
+        update: (configurationName: string, val: unknown) => {
+          SETTINGS_MOCK[configurationName] = val
+        },
+        get: (configurationName) => {
+          return SETTINGS_MOCK[configurationName]
+        }
+      })
+    }
   })
-})
-
-afterEach(() => {
-    Object.keys(SETTINGS_MOCK).forEach(key => {
-          SETTINGS_MOCK[key] = undefined
-    })
 })
 
 vi.mock('../../../src/extension/utils', () => {
@@ -100,7 +88,7 @@ suite('Panel', () => {
   })
 
   test('resovles authed localhost', async () => {
-    SETTINGS_MOCK.baseDomain = 'localhost'
+    workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
@@ -113,7 +101,7 @@ suite('Panel', () => {
   })
 
   test('resovles unauthed localhost', async () => {
-    SETTINGS_MOCK.baseDomain = 'localhost'
+    workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue(null)
 
