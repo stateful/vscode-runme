@@ -650,14 +650,84 @@
     ],
     "keybindings": [
       {
-        "command": "runme.keybinding.m",
+        "command": "runme.keybinding.noop",
         "key": "m",
         "when": "notebookEditorFocused && !inputFocus && activeEditor == 'workbench.editor.notebook' && notebookCellType == 'code'"
       },
       {
-        "command": "runme.keybinding.y",
-        "key": "m",
+        "command": "runme.keybinding.noop",
+        "key": "y",
         "when": "notebookEditorFocused && !inputFocus && activeEditor == 'workbench.editor.notebook' && notebookCellType == 'markup'"
+      },
+      {
+        "key": "F",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "K",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "J",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "A",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "B",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "D D",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "Z",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "S",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "C",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "X",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "V",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "shift+L",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "O",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
+      },
+      {
+        "key": "L",
+        "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
+        "command": "runme.keybinding.noop"
       }
     ]
   },

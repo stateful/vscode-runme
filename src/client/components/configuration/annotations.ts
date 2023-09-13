@@ -183,7 +183,7 @@ export class Annotations extends LitElement {
     }
   }
 
-  #onChange(e: { target: { id: AnnotationsKey; checked: boolean; value: string; type: string } }) {
+  #onChange(e: MouseEvent & Target) {
     if (!this.annotations || !e.target) {
       return
     }
