@@ -345,7 +345,7 @@ export async function executeRunner(
       }
 
       terminal.runnerSession = program
-      kernel.registerTerminal(terminal, executionId)
+      kernel.registerTerminal(terminal, executionId, RUNME_ID)
 
       // proxy pid value
       Object.defineProperty(terminal, 'processId', {

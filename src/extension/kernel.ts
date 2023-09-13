@@ -620,10 +620,16 @@ export class Kernel implements Disposable {
     return this.#controller.supportedLanguages
   }
 
-  registerTerminal(terminal: RunmeTerminal, executionId: number) {
+  registerTerminal(terminal: RunmeTerminal, executionId: number, runmeId: string) {
+    // Dispose previously attached terminal
+    const activeTerminal = this.activeTerminals.find((t) => t.runmeId === runmeId)
+    if (activeTerminal) {
+      activeTerminal.dispose()
+      this.activeTerminals.splice(this.activeTerminals.indexOf(activeTerminal), 1)
+    }
     const exists = this.activeTerminals.find((t) => t.executionId === executionId)
     if (!exists) {
-      this.activeTerminals.push({ ...terminal, executionId })
+      this.activeTerminals.push({ ...terminal, executionId, runmeId })
     }
   }
 
