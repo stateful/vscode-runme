@@ -194,9 +194,7 @@ export function runCLICommand(
       env: envs,
     })
 
-    const runmeExec = getCLIUseIntegratedRunme()
-      ? getBinaryPath(extensionBaseUri, process.platform).fsPath
-      : 'runme'
+    const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
 
     term.show(false)
     term.sendText(`${runmeExec} run ${args.join(' ')}`)

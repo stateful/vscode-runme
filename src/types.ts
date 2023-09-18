@@ -18,6 +18,7 @@ import type * as Grpc from './extension/grpc/serializerTypes'
 import { IWorkflowRun } from './extension/services/types'
 import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
+import type { TerminalConfiguration } from './utils/configuration'
 
 export interface SyncSchema {
   onCommand?: {
@@ -114,10 +115,8 @@ interface Payload {
     validationErrors?: CellAnnotationsErrorResult
     uuid?: string
   }
-  [OutputType.terminal]: {
+  [OutputType.terminal]: TerminalConfiguration & {
     ['runme.dev/uuid']: string
-    terminalFontFamily: string
-    terminalFontSize: number
     content?: string
     initialRows?: number
     enableShareButton: boolean

@@ -13,6 +13,7 @@ import { closeOutput, getContext } from '../../utils'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
 import { APIMethod } from '../../../types'
+import type { TerminalConfiguration } from '../../../utils/configuration'
 
 import '../closeCellButton'
 import '../copyButton'
@@ -310,10 +311,25 @@ export class TerminalView extends LitElement {
   uuid?: string
 
   @property({ type: String })
-  terminalFontFamily?: string
+  fontFamily?: TerminalConfiguration['fontFamily']
 
   @property({ type: Number })
-  terminalFontSize?: number
+  fontSize?: TerminalConfiguration['fontSize']
+
+  @property({ type: String })
+  cursorStyle?: TerminalConfiguration['cursorStyle']
+
+  @property({ type: Boolean })
+  cursorBlink?: TerminalConfiguration['cursorBlink']
+
+  @property({ type: Number })
+  cursorWidth?: TerminalConfiguration['cursorWidth']
+
+  @property({ type: Number })
+  smoothScrollDuration?: TerminalConfiguration['smoothScrollDuration']
+
+  @property({ type: Number })
+  scrollback?: TerminalConfiguration['scrollback']
 
   @property({ type: String })
   initialContent?: string
@@ -359,15 +375,28 @@ export class TerminalView extends LitElement {
 
     this.rows = this.initialRows ?? this.rows
 
+    const {
+      rows,
+      cursorBlink,
+      fontSize,
+      cursorStyle,
+      cursorWidth,
+      fontFamily,
+      smoothScrollDuration,
+      scrollback,
+    } = this
     this.terminal = new XTermJS({
-      rows: this.rows,
-      cursorBlink: true,
-      fontSize: this.terminalFontSize,
-      cursorStyle: 'bar',
+      rows,
+      fontSize,
+      fontFamily,
+      scrollback,
+      cursorWidth,
+      cursorBlink,
+      cursorStyle,
+      smoothScrollDuration,
       disableStdin: false,
       convertEol: true,
       allowProposedApi: true,
-      fontFamily: this.terminalFontFamily,
       drawBoldTextInBrightColors: false,
     })
 

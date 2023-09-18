@@ -62,7 +62,7 @@ class RunmeServer implements Disposable {
   ) {
     this.#port = getPortNumber()
     this.#loggingEnabled = enableServerLogs()
-    this.#binaryPath = getBinaryPath(extBasePath, process.platform)
+    this.#binaryPath = getBinaryPath(extBasePath)
     this.#retryOnFailure = options.retryOnFailure || false
     this.#maxNumberOfIntents = options.maxNumberOfIntents
     this.#acceptsIntents = options.acceptsConnection?.intents || 50

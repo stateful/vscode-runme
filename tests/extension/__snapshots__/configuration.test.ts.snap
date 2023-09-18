@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Configuration > should get nullish from font family 1`] = `
+{
+  "backgroundTask": true,
+  "cursorBlink": undefined,
+  "cursorStyle": "bar",
+  "cursorWidth": undefined,
+  "fontFamily": undefined,
+  "fontSize": undefined,
+  "interactive": true,
+  "nonInteractive": false,
+  "rows": 10,
+  "scrollback": undefined,
+  "smoothScrollDuration": undefined,
+}
+`;
