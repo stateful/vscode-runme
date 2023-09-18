@@ -21,5 +21,3 @@ updates:
       # following dependencies dropped support for Node.js v16
       # which is the current runtime for VS Code extensions
       - dependency-name: "@octokit/rest"
-
-    RUNME_TEST_TOKEN: ${{ secrets.RUNME_TEST_TOKEN }}
