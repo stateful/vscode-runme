@@ -1,23 +1,25 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/"
-  schedule:
-    interval: weekly
-    time: "11:00"
-  open-pull-requests-limit: 10
-  versioning-strategy: increase-if-necessary
-  ignore:
-    # we want to update this package manually as it changes
-    # the minimum required VS Code version for this extension
-    # to run
-    - dependency-name: "@types/vscode"
-    # we want to update this package manually as we don't have
-    # any influence which Node.js version VS Code uses
-    - dependency-name: "@types/node"
-    # ESM only packages we can't update since VS Code doesn't
-    # support ESM yet
-    - dependency-name: "got"
-    # following dependencies dropped support for Node.js v16
-    # which is the current runtime for VS Code extensions
-    - dependency-name: "@octokit/rest"
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      time: "11:00"
+    open-pull-requests-limit: 10
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # we want to update this package manually as it changes
+      # the minimum required VS Code version for this extension
+      # to run
+      - dependency-name: "@types/vscode"
+      # we want to update this package manually as we don't have
+      # any influence which Node.js version VS Code uses
+      - dependency-name: "@types/node"
+      # ESM only packages we can't update since VS Code doesn't
+      # support ESM yet
+      - dependency-name: "got"
+      # following dependencies dropped support for Node.js v16
+      # which is the current runtime for VS Code extensions
+      - dependency-name: "@octokit/rest"
+
+    RUNME_TEST_TOKEN: ${{ secrets.RUNME_TEST_TOKEN }}
