@@ -29,16 +29,19 @@ const APP_LOOPBACK_MAPPING = new Map<string, string>([
 type NotebookTerminalValue = keyof typeof notebookTerminalSchema
 
 const editorSettings = workspace.getConfiguration('editor')
+const terminalSettings = workspace.getConfiguration('terminal.integrated')
 const notebookTerminalSchema = {
   backgroundTask: z.boolean().default(true),
   nonInteractive: z.boolean().default(false),
   interactive: z.boolean().default(true),
   fontSize: z.number().default(editorSettings.get<number>('fontSize', 10)),
-  fontFamily: z.string().default(editorSettings.get<string>('fontFamily', 'Arial')),
+  fontFamily: z
+    .string()
+    .default(editorSettings.get<string>('fontFamily', terminalSettings.get('fontFamily', 'Arial'))),
   rows: z.number().int().default(10),
   cursorStyle: z.enum(['block', 'bar', 'underline']).default('bar'),
   cursorBlink: z.boolean().default(true).optional(),
-  cursorWidth: z.number().optional(),
+  cursorWidth: z.number().min(1).optional(),
   smoothScrollDuration: z.number().optional(),
   scrollback: z.number().optional(),
 }
@@ -106,7 +109,9 @@ const getRunmeTerminalConfigurationValue = <T>(
 ) => {
   const configurationSection = workspace.getConfiguration(TERMINAL_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult = notebookTerminalSchema[configName].safeParse(configurationValue)
+  const parseResult = notebookTerminalSchema[configName].safeParse(
+    configurationValue === null ? undefined : configurationValue,
+  )
   if (parseResult.success) {
     return parseResult.data as T
   }

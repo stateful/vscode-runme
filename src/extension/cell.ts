@@ -156,7 +156,6 @@ export class NotebookCellOutputManager {
 
         if (type === OutputType.terminal) {
           const terminalConfigurations = getNotebookTerminalConfigurations()
-
           const json: CellOutputPayload<OutputType.terminal> = {
             type: OutputType.terminal,
             output: {
