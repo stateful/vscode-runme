@@ -742,7 +742,7 @@
     "xterm-addon-fit": "^0.7.0",
     "xterm-addon-serialize": "^0.10.0",
     "xterm-addon-unicode11": "^0.6.0",
-    "xterm-addon-web-links": "^0.8.0",
+    "xterm-addon-web-links": "^0.9.0",
     "xterm-headless": "^5.2.1",
     "yaml": "^2.3.2",
     "zod": "^3.22.2"
