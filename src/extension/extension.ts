@@ -171,8 +171,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
-      RunmeExtension.registerCommand('runme.keybinding.m', () => {}),
-      RunmeExtension.registerCommand('runme.keybinding.y', () => {}),
+      RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       tasks.registerTaskProvider(
         RunmeTaskProvider.id,
