@@ -129,7 +129,7 @@ export class FitAddon implements ITerminalAddon {
   }
 
   getCellSize() {
-    const renderer = this.getCore()._renderService._renderer
+    const { value: renderer } = this.getCore()._renderService._renderer
 
     return {
       width:
