@@ -4,6 +4,7 @@ import Channel from 'tangle/webviews'
 
 import { Serializer, SyncSchema } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
+import { WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
@@ -206,14 +207,17 @@ export class RunmeExtension {
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
-    const id: string = 'runme.cloud' as const
-    const cloudPanel = new Panel(context, id)
     const channel = new Channel<SyncSchema>('app')
-    const bus$ = channel.register([cloudPanel.webview])
-    cloudPanel.registerBus(bus$)
-    const webviewProvider = window.registerWebviewViewProvider(id, cloudPanel)
-    kernel.registerWebview(id, cloudPanel, webviewProvider)
-    return [webviewProvider, cloudPanel]
+    const ids: string[] = [WebViews.RunmeCloud as const, WebViews.RunmeAssistant as const]
+    const disposables = ids.map((id) => {
+      const cloudPanel = new Panel(context, id)
+      const bus$ = channel.register([cloudPanel.webview])
+      cloudPanel.registerBus(bus$)
+      const webviewProvider = window.registerWebviewViewProvider(id, cloudPanel)
+      kernel.registerWebview(id, cloudPanel, webviewProvider)
+      return [cloudPanel, webviewProvider]
+    })
+    return disposables.flat()
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {

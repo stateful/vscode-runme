@@ -158,6 +158,12 @@ jobs:
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: node .github/scripts/updateEdgeVersion.js
 
+      - name: Deactivate additional panel
+        run: |
+          jq 'del( .contributes.views.runme[1] )' package.json > _package.json
+          mv -f _package.json package.json
+        # if: ${{ github.event.inputs.releaseChannel == 'stable' }}
+
       # Linux X86
       - name: Package Extension Linux x86_64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}

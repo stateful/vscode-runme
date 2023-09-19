@@ -633,6 +633,12 @@
           "type": "webview",
           "name": "Cloud",
           "visibility": "visible"
+        },
+        {
+          "id": "runme.assistant",
+          "type": "webview",
+          "name": "Assistant",
+          "visibility": "visible"
         }
       ]
     },
