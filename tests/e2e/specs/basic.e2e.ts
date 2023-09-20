@@ -79,7 +79,7 @@ describe('Runme VS Code Extension', async () => {
       await cell.run()
 
       expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
-        'Hello World!\n'
+        'Hello World!'
       ])
     })
 
