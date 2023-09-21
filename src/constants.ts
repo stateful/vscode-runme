@@ -142,6 +142,7 @@ export enum AuthenticationProviders {
 }
 export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
 export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'
+export const NOTEBOOK_SKIP_ENV_PROMPT = 'skipPromptEnv'
 
 /**
  * https://gist.github.com/ppisarczyk/43962d06686722d26d176fad46879d41?permalink_comment_id=3949999#gistcomment-3949999

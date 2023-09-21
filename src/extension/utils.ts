@@ -30,6 +30,7 @@ import {
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
+  NOTEBOOK_SKIP_ENV_PROMPT,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -623,11 +624,35 @@ export function suggestCategories(categories: string[], title: string, placehold
   })
 }
 
-export async function toggleDocumentPromptEnvSettings(context: ExtensionContext): Promise<void> {
+export async function toggleDocumentPromptEnvSettings(
+  context: ExtensionContext,
+  enableFeature: boolean,
+): Promise<void> {
   const textEditor = window.activeTextEditor
   if (textEditor) {
-    const state = context.globalState.get<string[]>('promptEnv') || ({} as any)
-    state[textEditor.document.uri.path] = true
-    return context.globalState.update('promptEnv', state)
+    let skipPromptEnvState = context.globalState.get<Map<string, boolean>>(
+      NOTEBOOK_SKIP_ENV_PROMPT,
+      new Map<string, boolean>(),
+    )
+
+    // Ensure stored object is a Map
+    skipPromptEnvState = !(skipPromptEnvState instanceof Map)
+      ? new Map<string, boolean>()
+      : skipPromptEnvState
+
+    skipPromptEnvState.set(textEditor.document.uri.path, enableFeature)
+    return context.globalState.update(NOTEBOOK_SKIP_ENV_PROMPT, skipPromptEnvState)
   }
+}
+
+export function skipPromptEnvironmentSetting(
+  context: ExtensionContext,
+  cell: NotebookCell,
+): boolean {
+  const skipPromptEnvState = context.globalState.get<Map<string, boolean>>(
+    NOTEBOOK_SKIP_ENV_PROMPT,
+    new Map<string, boolean>(),
+  )
+
+  return skipPromptEnvState.get(cell.notebook.uri.path) || false
 }

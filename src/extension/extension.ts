@@ -190,8 +190,11 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
-      RunmeExtension.registerCommand('runme.skipPromptEnv', () => {
-        return toggleDocumentPromptEnvSettings(context)
+      RunmeExtension.registerCommand('runme.enableSkipPromptEnv', () => {
+        return toggleDocumentPromptEnvSettings(context, true)
+      }),
+      RunmeExtension.registerCommand('runme.disableSkipPromptEnv', () => {
+        return toggleDocumentPromptEnvSettings(context, false)
       }),
       /**
        * Uri handler

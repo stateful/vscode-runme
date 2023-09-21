@@ -184,8 +184,13 @@
         "category": "Runme"
       },
       {
-        "command": "runme.skipPromptEnv",
-        "title": "Skip prompt environment variables",
+        "command": "runme.enableSkipPromptEnv",
+        "title": "Enable: Skip prompt environment variables",
+        "category": "Runme"
+      },
+      {
+        "command": "runme.disableSkipPromptEnv",
+        "title": "Disable: Skip prompt environment variables",
         "category": "Runme"
       }
     ],
@@ -240,7 +245,11 @@
           "when": "false"
         },
         {
-          "command": "runme.skipPromptEnv",
+          "command": "runme.enableSkipPromptEnv",
+          "when": "notebookType == runme"
+        },
+        {
+          "command": "runme.disableSkipPromptEnv",
           "when": "notebookType == runme"
         }
       ],

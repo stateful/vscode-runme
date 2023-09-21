@@ -26,6 +26,7 @@ import {
   getTerminalByCell,
   getWorkspaceEnvs,
   prepareCmdSeq,
+  skipPromptEnvironmentSetting,
 } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
@@ -87,8 +88,7 @@ export async function executeRunner(
 
   let cellText = exec.cell.document.getText()
 
-  const skipPromptEnv = context.globalState.get<string>('promptEnv') || ({} as any)
-  const promptEnvForCell = skipPromptEnv[exec.cell.notebook.uri.path] ? false : promptEnv
+  const promptEnvForCell = skipPromptEnvironmentSetting(context, exec.cell) ? false : promptEnv
 
   const commands = await parseCommandSeq(
     cellText,
