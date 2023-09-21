@@ -15,7 +15,7 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
+import { getDefaultWorkspace, resetEnv, bootFile, toggleDocumentPromptEnvSettings } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -190,6 +190,9 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
+      RunmeExtension.registerCommand('runme.skipPromptEnv', () => {
+        return toggleDocumentPromptEnvSettings(context)
+      }),
       /**
        * Uri handler
        */

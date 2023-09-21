@@ -182,6 +182,11 @@
         "command": "runme.addToRecommendedExtensions",
         "title": "Add Runme to recommended extensions",
         "category": "Runme"
+      },
+      {
+        "command": "runme.skipPromptEnv",
+        "title": "Skip prompt environment variables",
+        "category": "Runme"
       }
     ],
     "menus": {
@@ -233,6 +238,10 @@
         {
           "command": "runme.surveyFeedbackButton",
           "when": "false"
+        },
+        {
+          "command": "runme.skipPromptEnv",
+          "when": "notebookType == runme"
         }
       ],
       "editor/title": [

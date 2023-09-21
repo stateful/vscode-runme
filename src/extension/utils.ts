@@ -622,3 +622,12 @@ export function suggestCategories(categories: string[], title: string, placehold
     )
   })
 }
+
+export async function toggleDocumentPromptEnvSettings(context: ExtensionContext): Promise<void> {
+  const textEditor = window.activeTextEditor
+  if (textEditor) {
+    const state = context.globalState.get<string[]>('promptEnv') || ({} as any)
+    state[textEditor.document.uri.path] = true
+    return context.globalState.update('promptEnv', state)
+  }
+}

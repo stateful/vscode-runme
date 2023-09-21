@@ -87,9 +87,12 @@ export async function executeRunner(
 
   let cellText = exec.cell.document.getText()
 
+  const skipPromptEnv = context.globalState.get<string>('promptEnv') || ({} as any)
+  const promptEnvForCell = skipPromptEnv[exec.cell.notebook.uri.path] ? false : promptEnv
+
   const commands = await parseCommandSeq(
     cellText,
-    promptEnv,
+    promptEnvForCell,
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
     prepareCmdSeq,
   )
