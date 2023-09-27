@@ -642,4 +642,15 @@ export class Kernel implements Disposable {
   registerWebview(webviewId: string, panel: Panel, disposableWebViewProvider: Disposable): void {
     this.panelManager.addPanel(webviewId, panel, disposableWebViewProvider)
   }
+
+  async executeAndFocusNotebookCell(cell: NotebookCell) {
+    await new Promise((cb) => setTimeout(cb, 200))
+    await commands.executeCommand('notebook.focusTop')
+    await Promise.all(
+      Array.from({ length: cell.index + 1 }, () =>
+        commands.executeCommand('notebook.focusNextEditor'),
+      ),
+    )
+    return this._doExecuteCell(cell)
+  }
 }

@@ -142,6 +142,7 @@ export function parseParams(params: URLSearchParams) {
       .toString()
       .replace(FILE_PROTOCOL, '')
     let repository = params.get('repository')
+    const cell = params.get('cell')
 
     if (repository) {
       repository = (
@@ -151,6 +152,9 @@ export function parseParams(params: URLSearchParams) {
       ).replace(FILE_PROTOCOL, '')
     }
 
+    if (cell) {
+      return { fileToOpen, repository, cell: Number(cell) }
+    }
     return { fileToOpen, repository }
   } catch (err) {
     throw new Error(`Failed to parse url parameters: ${(err as Error).message}`)

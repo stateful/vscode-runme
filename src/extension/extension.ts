@@ -89,7 +89,7 @@ export class RunmeExtension {
     }
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
-    const uriHandler = new RunmeUriHandler(context)
+    const uriHandler = new RunmeUriHandler(context, kernel)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,

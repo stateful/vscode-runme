@@ -22,6 +22,9 @@ vi.mock('../../../src/extension/handler/utils', () => ({
 vi.mock('got', () => ({
   default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) }
 }))
+vi.mock('../../../src/extension/kernel', () => ({
+  Kernel: {}
+}))
 
 describe('RunmeUriHandler', () => {
   beforeEach(() => {
@@ -38,7 +41,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any)
+      handler = new RunmeUriHandler({} as any, {} as any)
       handler['_setupProject'] = vi.fn()
       handler['_setupFile'] = vi.fn()
     })
@@ -90,7 +93,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any)
+      handler = new RunmeUriHandler({} as any, {} as any)
     })
 
     it('doesn not do anything if repository was not provided', async () => {
@@ -119,7 +122,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any)
+      handler = new RunmeUriHandler({} as any, {} as any)
     })
 
     it('shows warning if file is not a markdown', async () => {
@@ -158,7 +161,7 @@ describe('RunmeUriHandler', () => {
     const progress = { report: vi.fn() }
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any)
+      handler = new RunmeUriHandler({} as any, {} as any)
       progress.report.mockClear()
       terminal.dispose.mockClear()
       vi.mocked(tasks.onDidEndTaskProcess).mockReset()
