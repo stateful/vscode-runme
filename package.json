@@ -470,6 +470,7 @@
           },
           "runme.terminal.cursorWidth": {
             "type": "number",
+            "default": 1,
             "markdownDescription": "The width of the cursor in CSS pixels when `cursorStyle` is set to 'bar'."
           },
           "runme.terminal.smoothScrollDuration": {
