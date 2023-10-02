@@ -94,7 +94,10 @@ export class RunmeUriHandler implements UriHandler {
         if (activeDocument?.notebook && activeDocument.notebook.uri.path === documentPath.path) {
           await this._executeCell(cell, activeDocument.notebook)
         } else {
-          await commands.executeCommand('vscode.openWith', documentPath, Kernel.type)
+          await writeBootstrapFile(projectPath, fileToOpen)
+          await commands.executeCommand('vscode.openFolder', projectPath, {
+            forceNewWindow: false,
+          })
         }
         return
       } catch (error) {
