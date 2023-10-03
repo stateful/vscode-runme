@@ -13,9 +13,6 @@ import {
   TaskScope,
   ShellExecution,
   tasks,
-  NotebookDocument,
-  NotebookEditor,
-  NotebookCellKind,
 } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
@@ -30,6 +27,8 @@ import {
   getSuggestedProjectName,
   writeBootstrapFile,
   parseParams,
+  writeDemoBootstrapFile,
+  executeActiveNotebookCell,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
@@ -73,9 +72,10 @@ export class RunmeUriHandler implements UriHandler {
           throw new Error('Could not find a valid git repository')
         }
 
-        if (!cell || Number.isNaN(cell)) {
+        if (cell < 0 || Number.isNaN(cell)) {
           throw new Error('Missing a cell to execute')
         }
+
         const projectPath = await this._getProjectPath(fileToOpen, repository)
         const projectExists = await workspace.fs.stat(projectPath).then(
           () => true,
@@ -85,49 +85,33 @@ export class RunmeUriHandler implements UriHandler {
           throw new Error(`Project not found ${repository} at ${projectPath.path}`)
         }
         const documentPath = Uri.joinPath(projectPath, fileToOpen)
-
-        window.onDidChangeActiveNotebookEditor((listener: NotebookEditor | undefined) => {
-          return this._executeCell(cell, listener?.notebook)
-        })
         // Handle cell execution if the file is already opened in the editor
         const activeDocument = window.activeNotebookEditor
         if (activeDocument?.notebook && activeDocument.notebook.uri.path === documentPath.path) {
-          await this._executeCell(cell, activeDocument.notebook)
-        } else {
-          await writeBootstrapFile(projectPath, fileToOpen)
-          await commands.executeCommand('vscode.openFolder', projectPath, {
-            forceNewWindow: false,
+          await executeActiveNotebookCell({
+            cell,
+            kernel: this.#kernel,
           })
+        } else {
+          const isProjectOpened =
+            workspace.workspaceFolders?.length &&
+            workspace.workspaceFolders.some((w) => w.uri.path === projectPath.path)
+
+          if (!isProjectOpened) {
+            await writeDemoBootstrapFile(projectPath, fileToOpen, cell)
+            await commands.executeCommand('vscode.openFolder', projectPath, {
+              forceNewWindow: false,
+            })
+          } else {
+            await commands.executeCommand('vscode.openWith', documentPath, Kernel.type)
+          }
         }
-        return
       } catch (error) {
         window.showErrorMessage((error as Error).message || 'Failed to execute command')
-        return
       }
     }
 
     window.showErrorMessage(`Couldn't recognise command "${command}"`)
-  }
-
-  private async _executeCell(cell: number, notebookDocument: NotebookDocument | undefined) {
-    if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
-      return
-    }
-    if (notebookDocument) {
-      const cells = notebookDocument
-        .getCells()
-        .filter((cell) => cell.kind === NotebookCellKind.Code)
-
-      if (!cells.length || Number.isNaN(cell)) {
-        return window.showErrorMessage('Could not find a valid code cell to execute')
-      }
-
-      const cellToExecute = cells[cell]
-      if (!cellToExecute) {
-        throw new Error(`Could not find cell at index ${cell}`)
-      }
-      return this.#kernel.executeAndFocusNotebookCell(cellToExecute)
-    }
   }
 
   private async _setupProject(fileToOpen: string, repository?: string | null) {

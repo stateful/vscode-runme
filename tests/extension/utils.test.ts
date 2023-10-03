@@ -529,7 +529,7 @@ suite('setNotebookCategories', () => {
       path: 'notebook1'
     } as any
 
-    await setNotebookCategories(contextMock, uriMock, ['shell scripts', 'node.js examples'])
+    await setNotebookCategories(contextMock, uriMock, new Set(['shell scripts', 'node.js examples']))
     expect(contextMock.globalState.update).toHaveBeenCalledWith('notebookAvailableCategories',
       {
         'notebook1': ['shell scripts', 'node.js examples'],
@@ -548,7 +548,7 @@ suite('setNotebookCategories', () => {
       path: 'notebook1'
     } as any
 
-    await setNotebookCategories(contextMock, uriMock, ['shell scripts', 'node.js examples'])
+    await setNotebookCategories(contextMock, uriMock, new Set(['shell scripts', 'node.js examples']))
     expect(contextMock.globalState.update).toHaveBeenCalledWith('notebookAvailableCategories',
       {
         'notebook1': ['shell scripts', 'node.js examples'],
@@ -601,8 +601,14 @@ test('getNamespacedMid', () => {
 })
 
 suite('bootFile', () => {
+  const contextMock: ExtensionContext = {
+    globalState: {
+        update: vi.fn().mockResolvedValue({}),
+    }
+  } as any
+
   test('should prefer boot file before settings', async () => {
-    await bootFile()
+    await bootFile(contextMock)
     expect(workspace.getConfiguration).toBeCalledTimes(0)
   })
 
@@ -615,7 +621,7 @@ suite('bootFile', () => {
         ? true
         : Promise.reject(new Error('not existing')) as any
     )
-    await bootFile()
+    await bootFile(contextMock)
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.objectContaining({
       path: '/foo/bar/foo/Settings.md'
     }), 'runme')

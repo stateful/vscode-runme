@@ -10,6 +10,9 @@ import {
 vi.mocked(Uri.joinPath).mockImplementation(
   (base: any, ...input: string[]) => path.join('/some/path', ...input) as any)
 vi.mock('vscode')
+vi.mock('../../../src/extension/kernel', () => ({
+  Kernel: {}
+}))
 
 const config = workspace.getConfiguration()
 
@@ -95,6 +98,7 @@ describe('parseParams', () => {
     expect(parseParams(usp)).toEqual({
       fileToOpen: 'foo%3Bbar%20loo',
       repository: 'git@github.com/org/project%3Bfoo%20bar.git',
+      cell: -1
     })
   })
 

@@ -30,6 +30,7 @@ import {
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
+  EXECUTION_CELL_STORAGE_KEY,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -42,7 +43,7 @@ import {
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
-import { ENV_STORE, DEFAULT_ENV, BOOTFILE } from './constants'
+import { ENV_STORE, DEFAULT_ENV, BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { GrpcRunnerEnvironment } from './runner'
 import RunmeServer from './server/runmeServer'
 
@@ -474,22 +475,38 @@ export function getNamespacedMid(namespace: string) {
 
 /**
  * Opens a start-up file either defined within a `.runme_bootstrap` file or
- * set as Runme configuration
+ * set as Runme configuration.
+ * It can also opens a start-up file and execute a specific cell via `.runme_bootstrap_demo`
  */
-export async function bootFile() {
+export async function bootFile(context: ExtensionContext) {
   if (!workspace.workspaceFolders?.length || !workspace.workspaceFolders[0]) {
     return
   }
 
   const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
+  const runnableFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE_DEMO)
   const hasStartupFile = await workspace.fs.stat(startupFileUri).then(
     () => true,
     () => false,
   )
-  if (hasStartupFile) {
-    const bootFile = new TextDecoder().decode(await workspace.fs.readFile(startupFileUri))
+
+  const hasRunnableFile = await workspace.fs.stat(runnableFileUri).then(
+    () => true,
+    () => false,
+  )
+
+  const fileUri = hasRunnableFile ? runnableFileUri : startupFileUri
+
+  if (hasStartupFile || hasRunnableFile) {
+    let bootFile = new TextDecoder().decode(await workspace.fs.readFile(fileUri))
+    if (hasRunnableFile) {
+      const [fileName, cell] = bootFile.split('#')
+      bootFile = fileName
+      context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+    }
+
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
-    await workspace.fs.delete(startupFileUri)
+    await workspace.fs.delete(fileUri)
     log.info(`Open file defined in "${BOOTFILE}" file: ${bootFileUri.fsPath}`)
     return commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
   }
