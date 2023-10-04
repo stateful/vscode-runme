@@ -4,7 +4,7 @@ import Channel from 'tangle/webviews'
 
 import { Serializer, SyncSchema } from '../types'
 import { registerExtensionEnvironmentVariables } from '../utils/configuration'
-import { WebViews } from '../constants'
+import { EXECUTION_CELL_STORAGE_KEY, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
@@ -43,6 +43,7 @@ import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
+import { executeActiveNotebookCell } from './handler/utils'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -89,7 +90,7 @@ export class RunmeExtension {
     }
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
-    const uriHandler = new RunmeUriHandler(context)
+    const uriHandler = new RunmeUriHandler(context, kernel)
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
@@ -200,9 +201,19 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
         addToRecommendedExtensions(context),
       ),
+      window.onDidChangeActiveNotebookEditor(async () => {
+        const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
+        if (cell !== undefined && cell >= 0) {
+          // Remove the execution cell from the storage
+          context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
+          await executeActiveNotebookCell({
+            cell,
+            kernel,
+          })
+        }
+      }),
     )
-
-    await bootFile()
+    await await bootFile(context)
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {

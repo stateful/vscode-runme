@@ -19,6 +19,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import getLogger from '../logger'
+import { Kernel } from '../kernel'
+import { EXECUTION_CELL_STORAGE_KEY } from '../../constants'
 
 import {
   getProjectDir,
@@ -26,6 +28,8 @@ import {
   getSuggestedProjectName,
   writeBootstrapFile,
   parseParams,
+  writeDemoBootstrapFile,
+  executeActiveNotebookCell,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
@@ -33,8 +37,10 @@ const log = getLogger('RunmeUriHandler')
 
 export class RunmeUriHandler implements UriHandler {
   #context: ExtensionContext
-  constructor(context: ExtensionContext) {
+  #kernel: Kernel
+  constructor(context: ExtensionContext, kernel: Kernel) {
     this.#context = context
+    this.#kernel = kernel
   }
 
   async handleUri(uri: Uri) {
@@ -58,6 +64,55 @@ export class RunmeUriHandler implements UriHandler {
       TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'project' })
       await this._setupProject(fileToOpen, repository)
       return
+    }
+
+    if (command === 'demo') {
+      try {
+        const { fileToOpen, repository, cell } = parseParams(params)
+        if (!repository) {
+          throw new Error('Could not find a valid git repository')
+        }
+
+        if (cell < 0 || Number.isNaN(cell)) {
+          throw new Error('Missing a cell to execute')
+        }
+
+        const projectPath = await this._getProjectPath(fileToOpen, repository)
+        const projectExists = await workspace.fs.stat(projectPath).then(
+          () => true,
+          () => false,
+        )
+        if (!projectExists) {
+          throw new Error(`Project not found ${repository} at ${projectPath.path}`)
+        }
+        const documentPath = Uri.joinPath(projectPath, fileToOpen)
+        // Handle cell execution if the file is already opened in the editor
+        const activeDocument = window.activeNotebookEditor
+        if (activeDocument?.notebook && activeDocument.notebook.uri.path === documentPath.path) {
+          await executeActiveNotebookCell({
+            cell,
+            kernel: this.#kernel,
+          })
+          return
+        } else {
+          const isProjectOpened =
+            workspace.workspaceFolders?.length &&
+            workspace.workspaceFolders.some((w) => w.uri.path === projectPath.path)
+          this.#context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+          if (!isProjectOpened) {
+            await writeDemoBootstrapFile(projectPath, fileToOpen, cell)
+            await commands.executeCommand('vscode.openFolder', projectPath, {
+              forceNewWindow: false,
+            })
+          } else {
+            await commands.executeCommand('vscode.openWith', documentPath, Kernel.type)
+          }
+          return
+        }
+      } catch (error) {
+        window.showErrorMessage((error as Error).message || 'Failed to execute command')
+        return
+      }
     }
 
     window.showErrorMessage(`Couldn't recognise command "${command}"`)
@@ -178,5 +233,16 @@ export class RunmeUriHandler implements UriHandler {
       forceNewWindow: true,
     })
     progress.report({ increment: 100 })
+  }
+
+  private async _getProjectPath(fileToOpen: string, repository: string): Promise<Uri> {
+    const [, projectName] = getSuggestedProjectName(repository)?.split('/') || []
+    const projectDirUri = await getProjectDir(this.#context)
+
+    if (!projectDirUri || !projectName) {
+      throw new Error(`Could not get a project path for ${repository}`)
+    }
+
+    return Uri.joinPath(projectDirUri, 'demo', projectName)
   }
 }

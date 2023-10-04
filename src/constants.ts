@@ -1063,3 +1063,4 @@ export enum WebViews {
   RunmeSearch = 'runme.search',
 }
 export const CATEGORY_SEPARATOR = ','
+export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'

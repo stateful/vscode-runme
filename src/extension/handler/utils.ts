@@ -1,9 +1,10 @@
 import url from 'node:url'
 
-import { workspace, window, Uri, ExtensionContext } from 'vscode'
+import { workspace, window, Uri, ExtensionContext, NotebookCellKind } from 'vscode'
 
+import { BOOTFILE, BOOTFILE_DEMO } from '../constants'
+import { Kernel } from '../kernel'
 import getLogger from '../logger'
-import { BOOTFILE } from '../constants'
 
 const config = workspace.getConfiguration('runme.checkout')
 const log = getLogger('RunmeUriHandler')
@@ -102,6 +103,15 @@ export async function writeBootstrapFile(targetDirUri: Uri, fileToOpen: string) 
   log.info(`Created temporary bootstrap file to open ${fileToOpen}`)
 }
 
+export async function writeDemoBootstrapFile(targetDirUri: Uri, fileToOpen: string, cell: number) {
+  const enc = new TextEncoder()
+  await workspace.fs.writeFile(
+    Uri.joinPath(targetDirUri, BOOTFILE_DEMO),
+    enc.encode(`${fileToOpen}#${cell}`),
+  )
+  log.info(`Created temporary bootstrap file to open and exec ${fileToOpen}#${cell}`)
+}
+
 /**
  * verify repository url has the right format and get suggested name from provided repository url
  */
@@ -142,6 +152,7 @@ export function parseParams(params: URLSearchParams) {
       .toString()
       .replace(FILE_PROTOCOL, '')
     let repository = params.get('repository')
+    const cell = params.get('cell')
 
     if (repository) {
       repository = (
@@ -151,8 +162,37 @@ export function parseParams(params: URLSearchParams) {
       ).replace(FILE_PROTOCOL, '')
     }
 
-    return { fileToOpen, repository }
+    if (cell) {
+      return { fileToOpen, repository, cell: Number(cell) }
+    }
+    return { fileToOpen, repository, cell: -1 }
   } catch (err) {
     throw new Error(`Failed to parse url parameters: ${(err as Error).message}`)
+  }
+}
+
+export async function executeActiveNotebookCell({
+  cell,
+  kernel,
+}: {
+  cell: number
+  kernel: Kernel
+}) {
+  const notebookDocument = window.activeNotebookEditor?.notebook
+  if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
+    return
+  }
+  if (notebookDocument) {
+    const cells = notebookDocument.getCells().filter((cell) => cell.kind === NotebookCellKind.Code)
+
+    if (!cells.length || Number.isNaN(cell)) {
+      return window.showErrorMessage('Could not find a valid code cell to execute')
+    }
+
+    const cellToExecute = cells[cell]
+    if (!cellToExecute) {
+      throw new Error(`Could not find cell at index ${cell}`)
+    }
+    return kernel.executeAndFocusNotebookCell(cellToExecute)
   }
 }

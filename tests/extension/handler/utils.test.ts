@@ -10,6 +10,9 @@ import {
 vi.mocked(Uri.joinPath).mockImplementation(
   (base: any, ...input: string[]) => path.join('/some/path', ...input) as any)
 vi.mock('vscode')
+vi.mock('../../../src/extension/kernel', () => ({
+  Kernel: {}
+}))
 
 const config = workspace.getConfiguration()
 
@@ -94,7 +97,26 @@ describe('parseParams', () => {
     const usp = new URLSearchParams('fileToOpen=foo;bar loo&repository=git@github.com/org/project;foo bar.git')
     expect(parseParams(usp)).toEqual({
       fileToOpen: 'foo%3Bbar%20loo',
-      repository: 'git@github.com/org/project%3Bfoo%20bar.git'
+      repository: 'git@github.com/org/project%3Bfoo%20bar.git',
+      cell: -1
+    })
+  })
+
+  it('should parse params to be used safely when a cell index is specified', () => {
+    const usp = new URLSearchParams('fileToOpen=foo;bar loo&repository=git@github.com/org/project;foo bar.git&cell=12')
+    expect(parseParams(usp)).toEqual({
+      fileToOpen: 'foo%3Bbar%20loo',
+      repository: 'git@github.com/org/project%3Bfoo%20bar.git',
+      cell: 12
+    })
+  })
+
+  it('should parse params to be used safely when an invalid cell index is specified', () => {
+    const usp = new URLSearchParams('fileToOpen=foo;bar loo&repository=git@github.com/org/project;foo bar.git&cell=foo')
+    expect(parseParams(usp)).toEqual({
+      fileToOpen: 'foo%3Bbar%20loo',
+      repository: 'git@github.com/org/project%3Bfoo%20bar.git',
+      cell: NaN
     })
   })
 })

@@ -15,7 +15,7 @@ vi.mock('../../src/extension/utils', async () => {
     getAnnotations: vi.fn((cell) => cell.metadata),
     getNotebookCategories: vi.fn().mockResolvedValue([]),
     isWindows: () => false,
-    isShellLanguage: () => false,
+    isShellLanguage: () => false
   })
 })
 vi.mock('../../src/extension/executors/index.js', () => ({
