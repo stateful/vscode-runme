@@ -14,6 +14,7 @@ import {
   Uri,
   commands,
   languages,
+  TextDocument,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -474,8 +475,23 @@ export class Kernel implements Disposable {
     return await this.cellManager.getNotebookOutputs(cell)
   }
 
+  private async openAndWaitForTextDocument(uri: Uri): Promise<TextDocument | undefined> {
+    let textDocument = await workspace.openTextDocument(uri)
+    if (!textDocument) {
+      textDocument = await new Promise((resolve) => {
+        workspace.onDidOpenTextDocument((document: TextDocument) => {
+          resolve(document)
+        })
+      })
+    }
+    return textDocument
+  }
+
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
-    const runningCell = await workspace.openTextDocument(cell.document.uri)
+    const runningCell = await this.openAndWaitForTextDocument(cell.document.uri)
+    if (!runningCell) {
+      throw new Error(`Failed to open ${cell.document.uri}`)
+    }
     const runmeExec = await this.createCellExecution(cell)
 
     if (!runmeExec) {
@@ -651,6 +667,7 @@ export class Kernel implements Disposable {
         commands.executeCommand('notebook.focusNextEditor'),
       ),
     )
-    return this._doExecuteCell(cell)
+    await this._doExecuteCell(cell)
+    await commands.executeCommand('notebook.cell.focusInOutput')
   }
 }

@@ -2,9 +2,9 @@ import url from 'node:url'
 
 import { workspace, window, Uri, ExtensionContext, NotebookCellKind } from 'vscode'
 
-import getLogger from '../logger'
 import { BOOTFILE, BOOTFILE_DEMO } from '../constants'
 import { Kernel } from '../kernel'
+import getLogger from '../logger'
 
 const config = workspace.getConfiguration('runme.checkout')
 const log = getLogger('RunmeUriHandler')

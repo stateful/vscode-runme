@@ -20,6 +20,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import getLogger from '../logger'
 import { Kernel } from '../kernel'
+import { EXECUTION_CELL_STORAGE_KEY } from '../../constants'
 
 import {
   getProjectDir,
@@ -92,6 +93,7 @@ export class RunmeUriHandler implements UriHandler {
             cell,
             kernel: this.#kernel,
           })
+          return
         } else {
           const isProjectOpened =
             workspace.workspaceFolders?.length &&
@@ -103,11 +105,14 @@ export class RunmeUriHandler implements UriHandler {
               forceNewWindow: false,
             })
           } else {
+            this.#context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
             await commands.executeCommand('vscode.openWith', documentPath, Kernel.type)
           }
+          return
         }
       } catch (error) {
         window.showErrorMessage((error as Error).message || 'Failed to execute command')
+        return
       }
     }
 
