@@ -52,7 +52,6 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
 
 export default class Panel extends PanelBase implements WebviewViewProvider {
   public readonly webview = new Subject<Webview>()
-  protected readonly staticHtml
   private bus$?: SyncSchemaBus
 
   constructor(
@@ -60,8 +59,6 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
     public readonly identifier: string,
   ) {
     super(context)
-
-    this.staticHtml = fetchStaticHtml(this.appUrl)
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {
@@ -89,7 +86,7 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
     let staticHtml: string
     try {
       appToken = await this.getAppToken(false).then((appToken) => appToken?.token ?? null)
-      staticHtml = await this.staticHtml.then((r) => r.text())
+      staticHtml = await fetchStaticHtml(this.appUrl).then((r) => r.text())
     } catch (err: any) {
       console.error(err?.message || err)
       throw err

@@ -1059,6 +1059,7 @@ export enum TELEMETRY_EVENTS {
 
 export enum WebViews {
   RunmeCloud = 'runme.cloud',
-  RunmeAssistant = 'runme.assistant',
+  RunmeChat = 'runme.chat',
+  RunmeSearch = 'runme.search',
 }
 export const CATEGORY_SEPARATOR = ','

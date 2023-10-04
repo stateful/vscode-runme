@@ -207,7 +207,11 @@ export class RunmeExtension {
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
     const channel = new Channel<SyncSchema>('app')
-    const ids: string[] = [WebViews.RunmeCloud as const, WebViews.RunmeAssistant as const]
+    const ids: string[] = [
+      WebViews.RunmeCloud as const,
+      WebViews.RunmeChat as const,
+      WebViews.RunmeSearch as const,
+    ]
     const disposables = ids.map((id) => {
       const cloudPanel = new Panel(context, id)
       const bus$ = channel.register([cloudPanel.webview])

@@ -160,7 +160,7 @@ jobs:
 
       - name: Deactivate additional panel
         run: |
-          jq 'del( .contributes.views.runme[1] )' package.json > _package.json
+          jq 'del( .contributes.views.runme[1], .contributes.views.runme[2] )' package.json > _package.json
           mv -f _package.json package.json
         # if: ${{ github.event.inputs.releaseChannel == 'stable' }}
 

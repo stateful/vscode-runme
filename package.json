@@ -636,10 +636,16 @@
           "visibility": "visible"
         },
         {
-          "id": "runme.assistant",
+          "id": "runme.chat",
           "type": "webview",
-          "name": "Assistant",
-          "visibility": "visible"
+          "name": "Chat",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "runme.search",
+          "type": "webview",
+          "name": "Search",
+          "visibility": "collapsed"
         }
       ]
     },
