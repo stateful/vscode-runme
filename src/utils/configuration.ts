@@ -322,6 +322,12 @@ const isRunmeAppButtonsEnabled = (): boolean => {
   return getCloudConfigurationValue('enableShare', true)
 }
 
+const getRunmePanelIdentifier = (identifer: string): string => {
+  const configurationSection = workspace.getConfiguration(`${APP_SECTION_NAME}.panel`)
+  const configurationValue = configurationSection.get<string>(identifer) || identifer
+  return configurationValue
+}
+
 export {
   getPortNumber,
   getBinaryPath,
@@ -340,5 +346,6 @@ export {
   getEnvLoadWorkspaceFiles,
   getCLIUseIntegratedRunme,
   getRunmeAppUrl,
+  getRunmePanelIdentifier,
   isRunmeAppButtonsEnabled,
 }

@@ -4,6 +4,7 @@ import { suite, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
 
 import {
+  getRunmePanelIdentifier,
   getRunmeAppUrl,
   getPortNumber,
   enableServerLogs,
@@ -41,12 +42,14 @@ vi.mock('vscode', async () => {
         enableLogger: string | boolean | undefined
         tlsDir: string | undefined
         baseDomain: string | undefined
+        'runme.cloud': string | undefined
     } = {
     port: undefined,
     binaryPath: undefined,
     enableLogger: undefined,
     tlsDir: undefined,
     baseDomain: undefined,
+    'runme.cloud': undefined,
   }
 
   return ({
@@ -253,6 +256,19 @@ suite('Configuration', () => {
         expect(app).toStrictEqual('http://localhost:4001')
         const api = getRunmeAppUrl(['api'])
         expect(api).toStrictEqual('https://api.staging.runme.dev/')
+      })
+    })
+
+    suite('app panel custom assigment', () => {
+      test('should return key value for default', () => {
+        const id = getRunmePanelIdentifier('runme.cloud')
+        expect(id).toStrictEqual('runme.cloud')
+      })
+
+      test('should return respective value for key', () => {
+        workspace.getConfiguration().update('runme.cloud', 'runme.another')
+        const id = getRunmePanelIdentifier('runme.cloud')
+        expect(id).toStrictEqual('runme.another')
       })
     })
 })

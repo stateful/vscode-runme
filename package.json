@@ -533,6 +533,12 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "Enable app buttons in notebook terminal"
+          },
+          "runme.app.panel.runme.cloud": {
+            "type": "string",
+            "default": "",
+            "scope": "window",
+            "markdownDescription": "Customize cloud panel assignment"
           }
         }
       }

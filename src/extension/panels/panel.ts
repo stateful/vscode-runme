@@ -6,7 +6,7 @@ import { Observable, Subscription } from 'rxjs'
 import { fetchStaticHtml, getAuthSession } from '../utils'
 import { IAppToken, RunmeService } from '../services/runme'
 import { type SyncSchemaBus } from '../../types'
-import { getRunmeAppUrl } from '../../utils/configuration'
+import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
 
 export type DefaultUx = 'panels'
 export interface InitPayload {
@@ -52,13 +52,15 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
 
 export default class Panel extends PanelBase implements WebviewViewProvider {
   public readonly webview = new Subject<Webview>()
+  public readonly identifier: string
   private bus$?: SyncSchemaBus
 
   constructor(
     protected readonly context: ExtensionContext,
-    public readonly identifier: string,
+    identifier: string,
   ) {
     super(context)
+    this.identifier = getRunmePanelIdentifier(identifier)
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {
