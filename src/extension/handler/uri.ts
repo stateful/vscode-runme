@@ -98,7 +98,7 @@ export class RunmeUriHandler implements UriHandler {
           const isProjectOpened =
             workspace.workspaceFolders?.length &&
             workspace.workspaceFolders.some((w) => w.uri.path === projectPath.path)
-          this.#context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+          await this.#context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
           if (!isProjectOpened) {
             await writeDemoBootstrapFile(projectPath, fileToOpen, cell)
             await commands.executeCommand('vscode.openFolder', projectPath, {

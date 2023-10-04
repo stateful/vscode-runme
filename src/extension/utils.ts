@@ -502,7 +502,7 @@ export async function bootFile(context: ExtensionContext) {
     if (hasRunnableFile) {
       const [fileName, cell] = bootFile.split('#')
       bootFile = fileName
-      context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+      await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
     }
 
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)

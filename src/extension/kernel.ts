@@ -659,15 +659,31 @@ export class Kernel implements Disposable {
     this.panelManager.addPanel(webviewId, panel, disposableWebViewProvider)
   }
 
-  async executeAndFocusNotebookCell(cell: NotebookCell) {
-    await new Promise((cb) => setTimeout(cb, 200))
-    await commands.executeCommand('notebook.focusTop')
+  // Emulate a human perception delay
+  async keyboardDelay() {
+    return new Promise((cb) => setTimeout(cb, 100))
+  }
+
+  async executeAndFocusNotebookCell(cell: NotebookCell, totalCells: number) {
+    await this.keyboardDelay()
     await Promise.all(
-      Array.from({ length: cell.index + 1 }, () =>
-        commands.executeCommand('notebook.focusNextEditor'),
-      ),
+      Array.from({ length: totalCells }, async () => {
+        await this.keyboardDelay()
+        return commands.executeCommand('notebook.focusPreviousEditor')
+      }),
     )
-    await this._doExecuteCell(cell)
+    await this.keyboardDelay()
+    await Promise.all(
+      Array.from({ length: cell.index + 1 }, async () => {
+        await this.keyboardDelay()
+        return commands.executeCommand('notebook.focusNextEditor')
+      }),
+    )
+    await this.keyboardDelay()
+    await commands.executeCommand('notebook.focusPreviousEditor')
+    await this.keyboardDelay()
+    await commands.executeCommand('notebook.cell.execute')
+    await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
   }
 }
