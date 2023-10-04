@@ -203,7 +203,7 @@ export class RunmeExtension {
       ),
       window.onDidChangeActiveNotebookEditor(async () => {
         const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-        if (cell) {
+        if (cell !== undefined && cell >= 0) {
           // Remove the execution cell from the storage
           context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
           await executeActiveNotebookCell({
