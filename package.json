@@ -540,6 +540,12 @@
             "default": "",
             "scope": "window",
             "markdownDescription": "Customize cloud panel assignment"
+          },
+          "runme.app.forceNewWindow": {
+            "type": "boolean",
+            "default": true,
+            "scope": "window",
+            "markdownDescription": "Whether to open the folder/workspace in a new window or the same"
           }
         }
       }

@@ -3,7 +3,10 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
 import { Serializer, SyncSchema } from '../types'
-import { registerExtensionEnvironmentVariables } from '../utils/configuration'
+import {
+  getForceNewWindowConfig,
+  registerExtensionEnvironmentVariables,
+} from '../utils/configuration'
 import { EXECUTION_CELL_STORAGE_KEY, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
@@ -43,7 +46,7 @@ import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
-import { executeActiveNotebookCell } from './handler/utils'
+import { cleanExecutionDemo, executeActiveNotebookCell, shouldExecuteDemo } from './handler/utils'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -90,7 +93,7 @@ export class RunmeExtension {
     }
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
-    const uriHandler = new RunmeUriHandler(context, kernel)
+    const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
@@ -202,12 +205,12 @@ export class RunmeExtension {
         addToRecommendedExtensions(context),
       ),
       window.onDidChangeActiveNotebookEditor(async () => {
-        const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-        if (cell !== undefined && cell >= 0) {
+        if (shouldExecuteDemo(context)) {
+          const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
           // Remove the execution cell from the storage
-          await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
+          await cleanExecutionDemo(context)
           await executeActiveNotebookCell({
-            cell,
+            cell: cell!,
             kernel,
           })
         }

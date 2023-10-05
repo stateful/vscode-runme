@@ -5,6 +5,10 @@ import { workspace, window, Uri, ExtensionContext, NotebookCellKind } from 'vsco
 import { BOOTFILE, BOOTFILE_DEMO } from '../constants'
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
+import {
+  EXECUTION_CELL_CREATION_DATE_STORAGE_KEY,
+  EXECUTION_CELL_STORAGE_KEY,
+} from '../../constants'
 
 const config = workspace.getConfiguration('runme.checkout')
 const log = getLogger('RunmeUriHandler')
@@ -195,4 +199,29 @@ export async function executeActiveNotebookCell({
     }
     return kernel.executeAndFocusNotebookCell(cellToExecute, notebookDocument.getCells().length)
   }
+}
+
+export async function setCurrentCellExecutionDemo(context: ExtensionContext, cell: number) {
+  if (isNaN(cell)) {
+    return
+  }
+  await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+  await context.globalState.update(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY, new Date())
+}
+
+export function shouldExecuteDemo(context: ExtensionContext): boolean {
+  const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
+  const creationDate = context.globalState.get<string>(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY)
+  if (cell && cell >= 0 && creationDate) {
+    const timeStampDiff =
+      Math.abs(new Date().getTime() - new Date(creationDate).getTime()) / (1000 * 60)
+    // Max diff of 5 minutes to execute a cell
+    return timeStampDiff <= 5
+  }
+  return false
+}
+
+export async function cleanExecutionDemo(context: ExtensionContext) {
+  await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
+  await context.globalState.update(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY, undefined)
 }

@@ -30,7 +30,6 @@ import {
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
-  EXECUTION_CELL_STORAGE_KEY,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -46,6 +45,7 @@ import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV, BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { GrpcRunnerEnvironment } from './runner'
 import RunmeServer from './server/runmeServer'
+import { setCurrentCellExecutionDemo } from './handler/utils'
 
 declare var globalThis: any
 
@@ -502,7 +502,7 @@ export async function bootFile(context: ExtensionContext) {
     if (hasRunnableFile) {
       const [fileName, cell] = bootFile.split('#')
       bootFile = fileName
-      await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+      await setCurrentCellExecutionDemo(context, Number(cell))
     }
 
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)

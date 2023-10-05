@@ -1064,3 +1064,4 @@ export enum WebViews {
 }
 export const CATEGORY_SEPARATOR = ','
 export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'
+export const EXECUTION_CELL_CREATION_DATE_STORAGE_KEY = 'executionCellCreationDate'
