@@ -1,4 +1,6 @@
 # Deploying a Dockerized React App to Kubernetes Cluster
+Learn how to dockerize a React App and deploy it to a Kubernetes cluster with Linkerd.
+Using the Linkerd CLI, you’ll install the control plane onto your Kubernetes cluster. Finally, you’ll “mesh” a application by adding Linkerd’s data plane to it.
 
 ## Prerequisites
 
