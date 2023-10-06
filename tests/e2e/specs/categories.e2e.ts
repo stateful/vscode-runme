@@ -25,6 +25,7 @@ async function removeAllNotifications () {
   await Promise.all(notifications.map((notification) => notification.dismiss()))
 }
 
+// TODO: Fix this test
 describe.skip('Runme Categories Tests', async () => {
   const notebook = new RunmeNotebook()
   const webview = new Webview()
