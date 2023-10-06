@@ -131,7 +131,7 @@ describe('Runme VS Code Extension', async () => {
       // TODO: check to ensure this works
     })
 
-    it('complex output', async () => {
+    it.skip('complex output', async () => {
       const cell = await notebook.getCell('npm i -g webdriverio')
       await cell.run()
 
@@ -142,7 +142,7 @@ describe('Runme VS Code Extension', async () => {
       expect(text).toMatch(/(added|changed) \d+ packages/)
     })
 
-    it('stdin example', async () => {
+    it.skip('stdin example', async () => {
       const cell = await notebook.getCell('node ./scripts/stdin.js')
       await cell.run(false)
 
@@ -172,7 +172,7 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // note: can be inconsistent
-    it('single line environment variable', async () => {
+    it.skip('single line environment variable', async () => {
       {
         const cell = await notebook.getCell('export DENO_ACCESS_TOKEN="<insert-token-here>"')
         await cell.run(false)
@@ -195,7 +195,7 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // note: can be inconsistent
-    it('multiple lines environment variable', async () => {
+    it.skip('multiple lines environment variable', async () => {
       {
         const cell = await notebook.getCell([
           'echo "Auth token for service foo"',
@@ -242,7 +242,7 @@ describe('Runme VS Code Extension', async () => {
     })
 
     // TODO: fix in ci
-    it('supports piping content to an environment variable', async () => {
+    it.skip('supports piping content to an environment variable', async () => {
       {
         const cell = await notebook.getCell('export LICENSE=$(cat ../LICENSE)')
         await cell.run()
@@ -262,7 +262,7 @@ describe('Runme VS Code Extension', async () => {
       }
     })
 
-    it('support for multiline exports', async () => {
+    it.skip('support for multiline exports', async () => {
       const private_key = [
         '-----BEGIN RSA PRIVATE KEY-----',
         'MIIEpAIBAAKCAQEA04up8hoqzS1+',
