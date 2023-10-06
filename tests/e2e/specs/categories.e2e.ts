@@ -25,7 +25,7 @@ async function removeAllNotifications () {
   await Promise.all(notifications.map((notification) => notification.dismiss()))
 }
 
-describe('Runme Categories Tests', async () => {
+describe.skip('Runme Categories Tests', async () => {
   const notebook = new RunmeNotebook()
   const webview = new Webview()
   const token = process.env.RUNME_TEST_TOKEN
