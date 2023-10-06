@@ -5,7 +5,7 @@ title: Examples
 
 # Runme Examples
 
-This `CATEGORIES.md` contains some examples for testing this extension.
+This `CATEGORIES.md` contains examples for running automated e2e tests for this extension.
 
 # Extension Example Markdown Files
 

@@ -1,6 +1,7 @@
 # Deploy Next.js with Runme
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Next.js enables you to create full-stack Web applications by extending the latest React features, and integrating powerful Rust-based JavaScript tooling for the fastest builds
 
 ## Getting Started
 
@@ -25,6 +26,10 @@ open http://localhost:3000
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
 [API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+
+```sh
+open http://localhost:3000/api/hello
+```
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 

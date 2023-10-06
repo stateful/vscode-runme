@@ -1,6 +1,7 @@
 # Runme Language Support
 
 By default Runme can run everything that is also installed on your machine.
+Read more in our [docs](https://docs.runme.dev/features#interpreter)
 
 ## Like Python:
 

@@ -7,8 +7,7 @@ This project is a showcase for deploying apps with Deno and [Runme Extension](ht
 This project is based on [Fresh](https://fresh.deno.dev/) and requires Deno to
 run.
 
-To test if you already have Deno installed run:
-If this prints the Deno version to the console the installation was successful.
+You can test if you already have deno installed by running the following command:
 
 ```sh { closeTerminalOnSuccess=false interactive=false }
 deno --version
@@ -34,7 +33,7 @@ Or the installer which also works on Linux:
 curl -fsSL https://deno.land/x/install/install.sh | sh
 ```
 
-Add Deno to your path:
+Once Deno is installed, ensure is added to your path:
 
 ```sh
 export DENO_INSTALL="$HOME/.deno"
@@ -59,7 +58,9 @@ This will watch the project directory and restart as necessary.
 
 ### Deployment
 
-To deploy this project you need to have `deployctl` installed on your system. To
+We will be using [Deno deploy](https://deno.com/deploy) a serverless edge first JavaScript hosting service.
+
+To deploy this project you need to have `deployctl` (the command line tool for Deno Deploy) installed on your system. To
 install, please run:
 
 ```sh { closeTerminalOnSuccess=false interactive=false }

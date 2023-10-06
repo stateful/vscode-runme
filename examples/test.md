@@ -1,6 +1,7 @@
 # Runme Examples
 
-This `README.md` contains some examples for testing this extension.
+This `README.md` contains some examples for executing e2e tests for the extension.
+It covers Cell shell executions, GitHub integration and Codelense test suites
 
 # Extension Example Markdown Files
 
