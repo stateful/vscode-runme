@@ -11,7 +11,7 @@ async function assertDocumentContains (documentPath: string, matcher: string) {
     return `${vscode.workspace.rootPath}${documentPath}`
   }, documentPath)
   const source = await fs.readFile(absDocPath, 'utf-8')
-  await expect(await source.toString()).toContain(matcher)
+  await expect(source.toString()).toContain(matcher)
 }
 
 describe('Runme Cell Annotations', async () => {

@@ -17,7 +17,10 @@ vi.mock('../../../src/extension/handler/utils', () => ({
   getTargetDirName: vi.fn(),
   waitForProjectCheckout: vi.fn(),
   getSuggestedProjectName: vi.fn(),
-  writeBootstrapFile: vi.fn()
+  writeBootstrapFile: vi.fn(),
+  setCurrentCellExecutionDemo: vi.fn(),
+  shouldExecuteDemo: vi.fn(),
+  cleanExecutionDemo: vi.fn()
 }))
 vi.mock('got', () => ({
   default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) }
@@ -41,7 +44,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any, {} as any)
+      handler = new RunmeUriHandler({} as any, {} as any, true)
       handler['_setupProject'] = vi.fn()
       handler['_setupFile'] = vi.fn()
     })
@@ -67,7 +70,8 @@ describe('RunmeUriHandler', () => {
       } as any)
       vi.mocked(parseParams).mockReturnValue({
         fileToOpen: '/sub/file.md',
-        repository: 'git@github.com:/foo/bar'
+        repository: 'git@github.com:/foo/bar',
+        cell: -1
       })
       await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
       expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'git@github.com:/foo/bar')
@@ -81,7 +85,7 @@ describe('RunmeUriHandler', () => {
         query: { command: 'setup' },
         fsPath: '/foo/bar'
       } as any)
-      vi.mocked(parseParams).mockReturnValue({ fileToOpen: 'https://some url', repository: null })
+      vi.mocked(parseParams).mockReturnValue({ fileToOpen: 'https://some url', repository: null, cell: -1 })
       await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
       expect(handler['_setupFile']).toBeCalledWith('https://some url')
       expect(TelemetryReporter.sendTelemetryEvent)
@@ -93,7 +97,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any, {} as any)
+      handler = new RunmeUriHandler({} as any, {} as any, true)
     })
 
     it('doesn not do anything if repository was not provided', async () => {
@@ -122,7 +126,7 @@ describe('RunmeUriHandler', () => {
     let handler: RunmeUriHandler
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any, {} as any)
+      handler = new RunmeUriHandler({} as any, {} as any, true)
     })
 
     it('shows warning if file is not a markdown', async () => {
@@ -161,7 +165,7 @@ describe('RunmeUriHandler', () => {
     const progress = { report: vi.fn() }
 
     beforeEach(() => {
-      handler = new RunmeUriHandler({} as any, {} as any)
+      handler = new RunmeUriHandler({} as any, {} as any, true)
       progress.report.mockClear()
       terminal.dispose.mockClear()
       vi.mocked(tasks.onDidEndTaskProcess).mockReset()

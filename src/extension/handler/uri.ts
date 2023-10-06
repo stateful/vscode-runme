@@ -20,7 +20,6 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import getLogger from '../logger'
 import { Kernel } from '../kernel'
-import { EXECUTION_CELL_STORAGE_KEY } from '../../constants'
 
 import {
   getProjectDir,
@@ -30,18 +29,18 @@ import {
   parseParams,
   writeDemoBootstrapFile,
   executeActiveNotebookCell,
+  setCurrentCellExecutionDemo,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 const log = getLogger('RunmeUriHandler')
 
 export class RunmeUriHandler implements UriHandler {
-  #context: ExtensionContext
-  #kernel: Kernel
-  constructor(context: ExtensionContext, kernel: Kernel) {
-    this.#context = context
-    this.#kernel = kernel
-  }
+  constructor(
+    private context: ExtensionContext,
+    private kernel: Kernel,
+    private forceNewWindow: boolean,
+  ) {}
 
   async handleUri(uri: Uri) {
     log.info(`triggered RunmeUriHandler with ${uri}`)
@@ -91,18 +90,18 @@ export class RunmeUriHandler implements UriHandler {
         if (activeDocument?.notebook && activeDocument.notebook.uri.path === documentPath.path) {
           await executeActiveNotebookCell({
             cell,
-            kernel: this.#kernel,
+            kernel: this.kernel,
           })
           return
         } else {
           const isProjectOpened =
             workspace.workspaceFolders?.length &&
             workspace.workspaceFolders.some((w) => w.uri.path === projectPath.path)
-          this.#context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+          await setCurrentCellExecutionDemo(this.context, cell)
           if (!isProjectOpened) {
             await writeDemoBootstrapFile(projectPath, fileToOpen, cell)
             await commands.executeCommand('vscode.openFolder', projectPath, {
-              forceNewWindow: false,
+              forceNewWindow: this.forceNewWindow,
             })
           } else {
             await commands.executeCommand('vscode.openWith', documentPath, Kernel.type)
@@ -124,7 +123,7 @@ export class RunmeUriHandler implements UriHandler {
     }
 
     const suggestedProjectName = getSuggestedProjectName(repository)
-    const projectDirUri = await getProjectDir(this.#context)
+    const projectDirUri = await getProjectDir(this.context)
 
     /**
      * cancel operation if
@@ -159,7 +158,7 @@ export class RunmeUriHandler implements UriHandler {
     /**
      * cancel operation if user doesn't want to create set up project directory
      */
-    const projectDirUri = await getProjectDir(this.#context)
+    const projectDirUri = await getProjectDir(this.context)
     if (!projectDirUri) {
       return
     }
@@ -237,7 +236,7 @@ export class RunmeUriHandler implements UriHandler {
 
   private async _getProjectPath(fileToOpen: string, repository: string): Promise<Uri> {
     const [, projectName] = getSuggestedProjectName(repository)?.split('/') || []
-    const projectDirUri = await getProjectDir(this.#context)
+    const projectDirUri = await getProjectDir(this.context)
 
     if (!projectDirUri || !projectName) {
       throw new Error(`Could not get a project path for ${repository}`)

@@ -71,6 +71,7 @@ const configurationSchema = {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
     baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
     enableShare: z.boolean().default(true),
+    forceNewWindow: z.boolean().default(true),
   },
 }
 
@@ -328,6 +329,10 @@ const getRunmePanelIdentifier = (identifer: string): string => {
   return configurationValue
 }
 
+const getForceNewWindowConfig = (): boolean => {
+  return getCloudConfigurationValue('forceNewWindow', true)
+}
+
 export {
   getPortNumber,
   getBinaryPath,
@@ -348,4 +353,5 @@ export {
   getRunmeAppUrl,
   getRunmePanelIdentifier,
   isRunmeAppButtonsEnabled,
+  getForceNewWindowConfig,
 }
