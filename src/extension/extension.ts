@@ -1,13 +1,4 @@
-import {
-  Disposable,
-  workspace,
-  notebooks,
-  commands,
-  ExtensionContext,
-  tasks,
-  window,
-  Uri,
-} from 'vscode'
+import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
@@ -16,7 +7,7 @@ import {
   getForceNewWindowConfig,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
-import { EXECUTION_CELL_STORAGE_KEY, WebViews } from '../constants'
+import { WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
@@ -55,9 +46,7 @@ import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
-import { cleanExecutionDemo, executeActiveNotebookCell, shouldExecuteDemo } from './handler/utils'
-import { BOOTFILE_DEMO } from './constants'
-import getLogger from './logger'
+import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -133,9 +122,6 @@ export class RunmeExtension {
       ['runme.dev/textRange']: undefined,
     }
     const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))
-
-    const fileWatcher = workspace.createFileSystemWatcher(BOOTFILE_DEMO)
-    const logger = getLogger()
 
     context.subscriptions.push(
       kernel,
@@ -218,31 +204,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
         addToRecommendedExtensions(context),
       ),
-      window.onDidChangeActiveNotebookEditor(async () => {
-        logger.info('==========> onDidChangeActiveNotebookEditor')
-        if (shouldExecuteDemo(context)) {
-          logger.info('============> shouldExecuteDemo')
-          const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-          // Remove the execution cell from the storage
-          await cleanExecutionDemo(context)
-          await executeActiveNotebookCell({
-            cell: cell!,
-            kernel,
-          })
-        }
-      }),
-      fileWatcher.onDidChange(async (uri: Uri) => {
-        logger.info('==========> fileWatcher.onDidChange' + uri.path)
-        if (shouldExecuteDemo(context)) {
-          const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-          // Remove the execution cell from the storage
-          await cleanExecutionDemo(context)
-          await executeActiveNotebookCell({
-            cell: cell!,
-            kernel,
-          })
-        }
-      }),
+      createDemoFileRunnerForActiveNotebook(context, kernel),
+      createDemoFileRunnerWatcher(context, kernel),
     )
     await await bootFile(context)
   }

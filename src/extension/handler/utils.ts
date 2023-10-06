@@ -1,6 +1,6 @@
 import url from 'node:url'
 
-import { workspace, window, Uri, ExtensionContext, NotebookCellKind } from 'vscode'
+import { workspace, window, Uri, ExtensionContext, NotebookCellKind, commands } from 'vscode'
 
 import { BOOTFILE, BOOTFILE_DEMO } from '../constants'
 import { Kernel } from '../kernel'
@@ -182,9 +182,7 @@ export async function executeActiveNotebookCell({
   cell: number
   kernel: Kernel
 }) {
-  const logger = getLogger()
   const notebookDocument = window.activeNotebookEditor?.notebook
-  logger.info('======> Found new notebookDocument' + notebookDocument)
   if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
     return
   }
@@ -212,15 +210,12 @@ export async function setCurrentCellExecutionDemo(context: ExtensionContext, cel
 }
 
 export function shouldExecuteDemo(context: ExtensionContext): boolean {
-  const logger = getLogger()
   const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
   const creationDate = context.globalState.get<string>(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY)
-  logger.info('======> checking cell and creation date:' + cell + ' ' + creationDate)
   if (cell && cell >= 0 && creationDate) {
     const timeStampDiff =
       Math.abs(new Date().getTime() - new Date(creationDate).getTime()) / (1000 * 60)
     // Max diff of 5 minutes to execute a cell
-    logger.info('=====> diff' + timeStampDiff)
     return timeStampDiff <= 5
   }
   return false
@@ -229,4 +224,38 @@ export function shouldExecuteDemo(context: ExtensionContext): boolean {
 export async function cleanExecutionDemo(context: ExtensionContext) {
   await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
   await context.globalState.update(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY, undefined)
+}
+
+export function createDemoFileRunnerWatcher(context: ExtensionContext, kernel: Kernel) {
+  const fileWatcher = workspace.createFileSystemWatcher(`**/*${BOOTFILE_DEMO}`)
+  return fileWatcher.onDidCreate(async (uri: Uri) => {
+    const bootFile = new TextDecoder().decode(await workspace.fs.readFile(uri))
+    const [fileName, cell] = bootFile.split('#')
+    const notebookUri = Uri.file(uri.path.replace(BOOTFILE_DEMO, fileName))
+    await workspace.fs.delete(uri)
+    const activeDocument = window.activeNotebookEditor
+    if (activeDocument?.notebook && activeDocument.notebook.uri.path === notebookUri.path) {
+      await executeActiveNotebookCell({
+        cell: Number(cell),
+        kernel,
+      })
+    } else {
+      await setCurrentCellExecutionDemo(context, Number(cell))
+      await commands.executeCommand('vscode.openWith', notebookUri, Kernel.type)
+    }
+  })
+}
+
+export function createDemoFileRunnerForActiveNotebook(context: ExtensionContext, kernel: Kernel) {
+  return window.onDidChangeActiveNotebookEditor(async () => {
+    if (shouldExecuteDemo(context)) {
+      const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
+      // Remove the execution cell from the storage
+      await cleanExecutionDemo(context)
+      await executeActiveNotebookCell({
+        cell: cell!,
+        kernel,
+      })
+    }
+  })
 }

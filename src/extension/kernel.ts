@@ -665,8 +665,6 @@ export class Kernel implements Disposable {
   }
 
   async executeAndFocusNotebookCell(cell: NotebookCell, totalCells: number) {
-    const logger = getLogger()
-    logger.info('======> Execute cell')
     await this.keyboardDelay()
     await Promise.all(
       Array.from({ length: totalCells }, async () => {
@@ -684,7 +682,6 @@ export class Kernel implements Disposable {
     await this.keyboardDelay()
     await commands.executeCommand('notebook.focusPreviousEditor')
     await this.keyboardDelay()
-    logger.info('======> Execute cell command')
     await commands.executeCommand('notebook.cell.execute')
     await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
