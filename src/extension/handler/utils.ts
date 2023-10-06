@@ -182,7 +182,9 @@ export async function executeActiveNotebookCell({
   cell: number
   kernel: Kernel
 }) {
+  const logger = getLogger()
   const notebookDocument = window.activeNotebookEditor?.notebook
+  logger.info('======> Found new notebookDocument' + notebookDocument)
   if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
     return
   }
@@ -210,12 +212,15 @@ export async function setCurrentCellExecutionDemo(context: ExtensionContext, cel
 }
 
 export function shouldExecuteDemo(context: ExtensionContext): boolean {
+  const logger = getLogger()
   const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
   const creationDate = context.globalState.get<string>(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY)
+  logger.info('======> checking cell and creation date:' + cell + ' ' + creationDate)
   if (cell && cell >= 0 && creationDate) {
     const timeStampDiff =
       Math.abs(new Date().getTime() - new Date(creationDate).getTime()) / (1000 * 60)
     // Max diff of 5 minutes to execute a cell
+    logger.info('=====> diff' + timeStampDiff)
     return timeStampDiff <= 5
   }
   return false
