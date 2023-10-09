@@ -7,7 +7,7 @@ import {
   getForceNewWindowConfig,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
-import { EXECUTION_CELL_STORAGE_KEY, WebViews } from '../constants'
+import { WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
@@ -46,7 +46,7 @@ import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
-import { cleanExecutionDemo, executeActiveNotebookCell, shouldExecuteDemo } from './handler/utils'
+import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -204,17 +204,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
         addToRecommendedExtensions(context),
       ),
-      window.onDidChangeActiveNotebookEditor(async () => {
-        if (shouldExecuteDemo(context)) {
-          const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-          // Remove the execution cell from the storage
-          await cleanExecutionDemo(context)
-          await executeActiveNotebookCell({
-            cell: cell!,
-            kernel,
-          })
-        }
-      }),
+      createDemoFileRunnerForActiveNotebook(context, kernel),
+      createDemoFileRunnerWatcher(context, kernel),
     )
     await await bootFile(context)
   }
