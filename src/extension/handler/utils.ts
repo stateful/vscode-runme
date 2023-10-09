@@ -13,6 +13,13 @@ import {
 const config = workspace.getConfiguration('runme.checkout')
 const log = getLogger('RunmeUriHandler')
 
+function fsExists(uri: Uri) {
+  return workspace.fs.stat(uri).then(
+    () => true,
+    () => false,
+  )
+}
+
 /**
  * Get the project directory from the settings object.
  *
@@ -32,10 +39,7 @@ export async function getProjectDir(context: ExtensionContext) {
   }
 
   const projectDir = Uri.parse(url.pathToFileURL(projectDirPath).toString())
-  const isExisting = await workspace.fs.stat(projectDir).then(
-    () => true,
-    () => false,
-  )
+  const isExisting = await fsExists(projectDir)
   if (isExisting) {
     return projectDir
   }
@@ -80,20 +84,14 @@ export async function getTargetDirName(
    */
   const [orgName] = suggestedName.split('/')
   const orgDir = Uri.joinPath(targetDir, orgName)
-  const isOrgDirExisting = await workspace.fs.stat(orgDir).then(
-    () => true,
-    () => false,
-  )
+  const isOrgDirExisting = await fsExists(orgDir)
   if (!isOrgDirExisting) {
     await workspace.fs.createDirectory(orgDir)
   }
 
   const amendedSuggestedName = !index ? suggestedName : `${suggestedName}_${index}`
   const fullTargetDir = Uri.joinPath(targetDir, amendedSuggestedName)
-  const isExisting = await workspace.fs.stat(fullTargetDir).then(
-    () => true,
-    () => false,
-  )
+  const isExisting = await fsExists(fullTargetDir)
   if (isExisting) {
     return getTargetDirName(targetDir, suggestedName, ++index)
   }
@@ -229,6 +227,14 @@ export async function cleanExecutionDemo(context: ExtensionContext) {
 export function createDemoFileRunnerWatcher(context: ExtensionContext, kernel: Kernel) {
   const fileWatcher = workspace.createFileSystemWatcher(`**/*${BOOTFILE_DEMO}`)
   return fileWatcher.onDidCreate(async (uri: Uri) => {
+    for (let i = 0; i < 50; i++) {
+      // avoid race condition due to IO being slow
+      const exists = await fsExists(uri)
+      if (exists) {
+        break
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
     const bootFile = new TextDecoder().decode(await workspace.fs.readFile(uri))
     const [fileName, cell] = bootFile.split('#')
     const notebookUri = Uri.file(uri.path.replace(BOOTFILE_DEMO, fileName))
