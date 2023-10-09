@@ -229,6 +229,8 @@ If you cancel the running test at any time, make sure to run this command before
 
 ### Release
 
+You can use following Github Actions workflow to release both edge (pre-release) and stable versions of the Runme's VS Code extension. This will package, test, and upon success push a new build of the extension to Microsoft's VS Code marketplace as well as OpenVSX.
+
 ```sh
 https://github.com/stateful/vscode-runme/actions/workflows/release.yml
 ```
