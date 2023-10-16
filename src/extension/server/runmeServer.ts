@@ -1,6 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import crypto from 'node:crypto'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -10,10 +11,12 @@ import getLogger from '../logger'
 import { HealthCheckRequest, HealthCheckResponse_ServingStatus } from '../grpc/healthTypes'
 import { SERVER_ADDRESS } from '../../constants'
 import {
+  ServerTransportType,
   enableServerLogs,
   getBinaryPath,
   getCustomServerAddress,
   getPortNumber,
+  getServerConfigurationValue,
   getTLSDir,
   getTLSEnabled,
 } from '../../utils/configuration'
@@ -36,6 +39,7 @@ const log = getLogger('RunmeServer')
 
 class RunmeServer implements Disposable {
   #port: number
+  #socketId?: string
   #process: ChildProcessWithoutNullStreams | undefined
   #binaryPath: Uri
   #retryOnFailure: boolean
@@ -106,8 +110,32 @@ class RunmeServer implements Disposable {
     return false
   }
 
-  address() {
-    return getCustomServerAddress() || `${SERVER_ADDRESS}:${this.#port}`
+  address(): string {
+    const customAddress = getCustomServerAddress()
+    if (customAddress) {
+      return customAddress
+    }
+
+    const defaultTransport: ServerTransportType = 'TCP'
+    const transportType = getServerConfigurationValue<ServerTransportType>(
+      'transportType',
+      defaultTransport,
+    )
+
+    if (transportType === defaultTransport) {
+      const host = `${SERVER_ADDRESS}:${this.#port}`
+      return host
+    }
+
+    // only do this once and only if required
+    if (!this.#socketId) {
+      const rndBytes = crypto.randomBytes(4)
+      this.#socketId = rndBytes.toString('hex')
+    }
+
+    const sockPath = path.join('/tmp', `/runme-${this.#socketId}.sock`)
+    const unix = `unix://${sockPath}`
+    return unix
   }
 
   private get externalServer(): boolean {

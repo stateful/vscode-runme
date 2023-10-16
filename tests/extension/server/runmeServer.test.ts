@@ -48,6 +48,12 @@ vi.mock('node:fs/promises', async () => ({
   }
 }))
 
+vi.mock('crypto', async () => ({
+  default: {
+    randomBytes: vi.fn().mockReturnValue('abcdefgh')
+  }
+}))
+
 vi.mock('node:child_process', async () => ({
   spawn: vi.fn(),
 }))
@@ -99,21 +105,53 @@ suite('Runme server spawn process', () => {
       expect(creds._isSecure()).toBe(false)
   })
 
-  test('proper credentials with tls', async () => {
-    configValues.enableTLS = true
+    test('proper credentials with tls', async () => {
+      configValues.enableTLS = true
 
-    const server = new Server(
-      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
-      {
-        retryOnFailure: true,
-        maxNumberOfIntents: 2,
-      },
-      false
-    )
+      const server = new Server(
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        },
+        false
+      )
 
-    const creds = await server['channelCredentials']()
-    expect(creds._isSecure()).toBe(true)
-})
+      const creds = await server['channelCredentials']()
+      expect(creds._isSecure()).toBe(true)
+    })
+
+    test('uses UDS instead of TCP socket', async () => {
+      configValues.transportType = 'UDS'
+
+      const server = new Server(
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        },
+        false
+      )
+
+      const address = server['address']()
+      expect(address).toStrictEqual('unix:///tmp/runme-abcdefgh.sock')
+    })
+
+    test('uses TCP socket by default', async () => {
+      configValues.transportType = undefined
+
+      const server = new Server(
+        Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+        {
+          retryOnFailure: true,
+          maxNumberOfIntents: 2,
+        },
+        false
+      )
+
+      const address = server['address']()
+      expect(address).toStrictEqual('localhost:7863')
+    })
 
     test('Should try 2 times before failing', async () => {
       configValues.enableTLS = true
