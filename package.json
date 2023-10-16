@@ -416,6 +416,16 @@
             "default": true,
             "markdownDescription": "Use TLS over GRPC server interface (strongly recommended - only disable if you know what you are doing!!!)"
           },
+          "runme.server.transportType": {
+            "type": "string",
+            "scope": "window",
+            "default": "TCP",
+            "enum": [
+              "TCP",
+              "UDS"
+            ],
+            "markdownDescription": "Connect to GRPC server interface via TCP or Unix Domain Socket (not available on Windows)"
+          },
           "runme.terminal.backgroundTask": {
             "type": "boolean",
             "scope": "machine",

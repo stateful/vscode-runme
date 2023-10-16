@@ -51,11 +51,12 @@ const configurationSchema = {
     openViewInEditor: OpenViewInEditorAction.default('split'),
   },
   server: {
-    customAddress: z.string().nonempty().optional(),
+    customAddress: z.string().min(1).optional(),
     binaryPath: z.string().optional(),
     enableLogger: z.boolean().default(false),
     enableTLS: z.boolean().default(true),
     tlsDir: z.string().optional(),
+    transportType: z.enum(['TCP', 'UDS']).default('TCP'),
   },
   codelens: {
     enable: z.boolean().default(true),
@@ -77,6 +78,7 @@ const configurationSchema = {
 
 const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
 export type TerminalConfiguration = z.infer<typeof notebookTerminalSchemaObject>
+export type ServerTransportType = z.infer<typeof configurationSchema.server.transportType>
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
