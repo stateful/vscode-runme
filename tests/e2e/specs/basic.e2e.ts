@@ -73,9 +73,11 @@ describe('Runme VS Code Extension', async () => {
       await tryExecuteCommand(workbench, 'clear all notifications')
     })
 
-    it('basic hello world shell execution', async () => {
+    it('basic hello world, run twice back-to-back', async () => {
       const cell = await notebook.getCell('echo "Hello World!')
 
+      // running 2x to avoid regression with terminal/process disposal
+      await cell.run()
       await cell.run()
 
       expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
