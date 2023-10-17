@@ -112,7 +112,10 @@
         "command": "runme.openAsRunmeNotebook",
         "category": "Runme",
         "title": "Open markdown as Runme",
-        "icon": "assets/runme-logo-open.svg"
+        "icon": {
+          "dark": "assets/runme-logo-open-dark.svg",
+          "light": "assets/runme-logo-open-light.svg"
+        }
       },
       {
         "command": "runme.openSplitViewAsMarkdownText",
