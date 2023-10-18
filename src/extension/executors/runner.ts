@@ -35,7 +35,12 @@ import { toggleTerminal } from '../commands'
 import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
-import { parseCommandSeq, getCellCwd, getCellProgram } from './utils'
+import {
+  parseCommandSeq,
+  getCellCwd,
+  getCellProgram,
+  getNotebookSkipPromptEnvSetting,
+} from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
 import type { IEnvironmentManager } from '.'
@@ -60,7 +65,8 @@ export async function executeRunner(
 ) {
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
-
+  // Document level settings
+  const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
   // enforce background tasks as singleton instanes
   // to do this,
   if (background) {
@@ -89,7 +95,7 @@ export async function executeRunner(
 
   const commands = await parseCommandSeq(
     cellText,
-    promptEnv,
+    skipPromptEnvDocumentLevel === false ? promptEnv : false,
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
     prepareCmdSeq,
   )

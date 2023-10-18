@@ -213,6 +213,14 @@ export function getSystemShellPath(execKey?: string): string | undefined {
   return process.env.SHELL ?? execKey
 }
 
+export function getNotebookSkipPromptEnvSetting(
+  notebook: NotebookData | Serializer.Notebook | NotebookDocument,
+): boolean {
+  const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
+  const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
+  return frontmatter?.skipEnv || false
+}
+
 export function getCellShellPath(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
