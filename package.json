@@ -427,7 +427,7 @@
               "TCP",
               "UDS"
             ],
-            "markdownDescription": "Connect to GRPC server interface via TCP or Unix Domain Socket (not available on Windows)"
+            "markdownDescription": "Connect to GRPC server via TCP or Unix Domain Socket (restart required - not available on Windows)"
           },
           "runme.terminal.backgroundTask": {
             "type": "boolean",

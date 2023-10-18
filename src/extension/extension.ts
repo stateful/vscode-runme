@@ -37,6 +37,7 @@ import {
   displayCategoriesSelector,
   runCellsByCategory,
   addToRecommendedExtensions,
+  openRunmeSettings,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -70,6 +71,11 @@ export class RunmeExtension {
       kernel.useRunner(runner)
     }
 
+    // register ahead of attempting to server launch for error handling
+    context.subscriptions.push(
+      RunmeExtension.registerCommand('runme.openSettings', openRunmeSettings),
+    )
+
     const serializer = grpcSerializer
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
@@ -83,7 +89,27 @@ export class RunmeExtension {
       // Unrecoverable error happened
       if (e instanceof RunmeServerError) {
         TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: e.message })
-        return window.showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
+        if (server.transportType === RunmeServer.transportTypeDefault) {
+          return window
+            .showErrorMessage(
+              `Failed to start Runme server (reason: ${e.message}).` +
+                ' Consider switching from TCP to Unix Domain Socket in Settings.',
+              'Open Settings',
+            )
+            .then((action) => {
+              if (!action) {
+                return
+              }
+              return commands.executeCommand('runme.openSettings', 'runme.server.transportType')
+            })
+        }
+        return window
+          .showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
+          .then((action) => {
+            if (!action) {
+              return
+            }
+          })
       }
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
       return window.showErrorMessage(

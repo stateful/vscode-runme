@@ -55,8 +55,11 @@ class RunmeServer implements Disposable {
   readonly #onClose = this.register(new EventEmitter<{ code: number | null }>())
   readonly #onTransportReady = this.register(new EventEmitter<{ transport: GrpcTransport }>())
 
+  readonly transportType: ServerTransportType
   readonly onClose = this.#onClose.event
   readonly onTransportReady = this.#onTransportReady.event
+
+  static readonly transportTypeDefault: ServerTransportType = 'TCP'
 
   constructor(
     protected readonly extBasePath: Uri,
@@ -64,6 +67,10 @@ class RunmeServer implements Disposable {
     externalServer: boolean,
     protected readonly enableRunner = false,
   ) {
+    this.transportType = getServerConfigurationValue<ServerTransportType>(
+      'transportType',
+      RunmeServer.transportTypeDefault,
+    )
     this.#port = getPortNumber()
     this.#loggingEnabled = enableServerLogs()
     this.#binaryPath = getBinaryPath(extBasePath)
@@ -116,13 +123,7 @@ class RunmeServer implements Disposable {
       return customAddress
     }
 
-    const defaultTransport: ServerTransportType = 'TCP'
-    const transportType = getServerConfigurationValue<ServerTransportType>(
-      'transportType',
-      defaultTransport,
-    )
-
-    if (transportType === defaultTransport) {
+    if (this.transportType === RunmeServer.transportTypeDefault) {
       const host = `${SERVER_ADDRESS}:${this.#port}`
       return host
     }
@@ -304,7 +305,8 @@ class RunmeServer implements Disposable {
       iter++
     }
 
-    throw new RunmeServerError(`Server did not accept connections after ${iter * INTERVAL}ms`)
+    const intervalSecs = ((iter * INTERVAL) / 1000).toFixed(1)
+    throw new RunmeServerError(`Server did not accept connections after ${intervalSecs}s`)
   }
 
   /**

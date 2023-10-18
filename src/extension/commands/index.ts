@@ -54,6 +54,14 @@ export function openIntegratedTerminal(cell: NotebookCell) {
   return terminal.show()
 }
 
+export async function openRunmeSettings(id?: string) {
+  let query = '@ext:stateful.runme'
+  if (id) {
+    query = `${query} ${id}`
+  }
+  return commands.executeCommand('workbench.action.openSettings', query)
+}
+
 export async function displayCategoriesSelector({
   context,
   notebookToolbarCommand,
