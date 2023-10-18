@@ -195,7 +195,7 @@ suite('Runme server accept connections', () => {
         maxNumberOfIntents: 2,
         acceptsConnection: {
           intents: 4,
-          interval: 1,
+          interval: 50,
         }
       })
     })
@@ -216,7 +216,7 @@ suite('Runme server accept connections', () => {
         await expect(
           server.launch()
         ).rejects.toThrowErrorMatchingInlineSnapshot(
-          '"Server did not accept connections after 4ms"'
+          '"Server did not accept connections after 0.2s"'
         )
     })
 })
