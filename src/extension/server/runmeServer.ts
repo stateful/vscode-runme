@@ -209,7 +209,8 @@ class RunmeServer implements Disposable {
       this.#port++
     }
 
-    const args = ['server', '--address', this.address()]
+    const address = this.address()
+    const args = ['server', '--address', address]
 
     if (this.enableRunner) {
       args.push('--runner')
@@ -233,7 +234,7 @@ class RunmeServer implements Disposable {
     })
 
     process.stderr.once('data', () => {
-      log.info(`Server process #${this.#process?.pid} started on port ${this.#port}`)
+      log.info(`Server process #${this.#process?.pid} started at ${address}`)
     })
 
     process.stderr.on('data', (data) => {
