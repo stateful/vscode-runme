@@ -218,7 +218,7 @@ export function getNotebookSkipPromptEnvSetting(
 ): boolean {
   const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
   const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
-  return frontmatter?.skipEnv || false
+  return frontmatter?.skipPrompts || false
 }
 
 export function getCellShellPath(
