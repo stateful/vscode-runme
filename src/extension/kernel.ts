@@ -640,7 +640,6 @@ export class Kernel implements Disposable {
     // Dispose previously attached terminal
     const activeTerminal = this.activeTerminals.find((t) => t.runmeId === runmeId)
     if (activeTerminal) {
-      // activeTerminal.dispose()
       this.activeTerminals.splice(this.activeTerminals.indexOf(activeTerminal), 1)
     }
     const exists = this.activeTerminals.find((t) => t.executionId === executionId)
