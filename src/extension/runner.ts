@@ -8,7 +8,6 @@ import {
   EventEmitter,
   window,
 } from 'vscode'
-import { interval, take, takeWhile, map } from 'rxjs'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
@@ -661,27 +660,15 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
    * please use `_close` internally
    */
   close() {
-    let reason = this.hasExited()
-    // avoid race by giving it 1s to have a reason
-    const reasonInterval$ = interval(50).pipe(
-      take(20),
-      map(() => this.hasExited()),
-      takeWhile((r) => !Boolean(r)),
-    )
+    if (this.hasExited()) {
+      return
+    }
 
-    reasonInterval$.subscribe({
-      next: (r) => (reason = r),
-      complete: () => {
-        if (reason) {
-          return
-        }
-        this.session.requests.send(
-          ExecuteRequest.create({
-            stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
-          }),
-        )
-      },
-    })
+    this.session.requests.send(
+      ExecuteRequest.create({
+        stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
+      }),
+    )
   }
 
   /**
