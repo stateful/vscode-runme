@@ -75,7 +75,7 @@ export type CellExecutionInput = {
   exitCode: Scalars['Int']['input'];
   input: Scalars['String']['input'];
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
-  languageId: Scalars['String']['input'];
+  languageId?: InputMaybe<Scalars['String']['input']>;
   metadata: MetadataInput;
   pid: Scalars['Int']['input'];
   stderr: Scalars['Bytes']['input'];
