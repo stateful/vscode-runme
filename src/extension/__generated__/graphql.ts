@@ -140,20 +140,20 @@ export type IdConnect = {
 export type Metadata = {
   __typename?: 'Metadata';
   category?: Maybe<Scalars['String']['output']>;
+  endTime?: Maybe<Scalars['Float']['output']>;
   exitType?: Maybe<Scalars['String']['output']>;
   mimeType?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
-  processingEndTime?: Maybe<Scalars['Float']['output']>;
-  processingStartTime?: Maybe<Scalars['Float']['output']>;
+  startTime?: Maybe<Scalars['Float']['output']>;
 };
 
 export type MetadataInput = {
   category?: InputMaybe<Scalars['String']['input']>;
+  endTime?: InputMaybe<Scalars['Float']['input']>;
   exitType?: InputMaybe<Scalars['String']['input']>;
   mimeType?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  processingEndTime?: InputMaybe<Scalars['Float']['input']>;
-  processingStartTime?: InputMaybe<Scalars['Float']['input']>;
+  startTime?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Mutation = {
