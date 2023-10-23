@@ -574,7 +574,7 @@ export class Kernel implements Disposable {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
     })
-    runmeExec.end(successfulCellExecution)
+    runmeExec.end(successfulCellExecution, Date.now())
   }
 
   useRunner(runner: IRunner) {
