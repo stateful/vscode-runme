@@ -35,15 +35,32 @@ export type AnonymousCellExecutionArgs = {
   id: Scalars['String']['input'];
 };
 
+export type Assistant = {
+  __typename?: 'Assistant';
+  chat?: Maybe<Chat>;
+  search?: Maybe<Search>;
+};
+
+
+export type AssistantChatArgs = {
+  input: ChatInput;
+};
+
+
+export type AssistantSearchArgs = {
+  input: SearchInput;
+};
+
 export type CellExecution = {
   __typename?: 'CellExecution';
   createTime: Scalars['DateTime']['output'];
   exitCode: Scalars['Int']['output'];
-  htmlUrl?: Maybe<Scalars['String']['output']>;
+  htmlUrl: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   input: Scalars['String']['output'];
-  isOwner?: Maybe<Scalars['Boolean']['output']>;
+  isOwner: Scalars['Boolean']['output'];
   isPrivate: Scalars['Boolean']['output'];
+  languageId?: Maybe<Scalars['String']['output']>;
   metadata?: Maybe<Metadata>;
   owner?: Maybe<Owner>;
   pid: Scalars['Int']['output'];
@@ -58,6 +75,7 @@ export type CellExecutionInput = {
   exitCode: Scalars['Int']['input'];
   input: Scalars['String']['input'];
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
+  languageId: Scalars['String']['input'];
   metadata: MetadataInput;
   pid: Scalars['Int']['input'];
   stderr: Scalars['Bytes']['input'];
@@ -66,6 +84,53 @@ export type CellExecutionInput = {
 
 export type CellExecutionUpdateInput = {
   isPrivate: Scalars['Boolean']['input'];
+};
+
+export type Chat = {
+  __typename?: 'Chat';
+  commands?: Maybe<Scalars['String']['output']>;
+  hits: Array<Hit>;
+  question: Scalars['String']['output'];
+  response: Scalars['String']['output'];
+  session?: Maybe<ChatSession>;
+};
+
+export type ChatInput = {
+  executableOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  question: Scalars['String']['input'];
+  session?: InputMaybe<ChatSessionInput>;
+};
+
+export type ChatMessage = {
+  __typename?: 'ChatMessage';
+  done: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  token: Scalars['String']['output'];
+};
+
+export type ChatSession = {
+  __typename?: 'ChatSession';
+  collectionName: Scalars['String']['output'];
+  expiryMs?: Maybe<Scalars['Int']['output']>;
+  expirySecs?: Maybe<Scalars['Int']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type ChatSessionInput = {
+  id: Scalars['ID']['input'];
+};
+
+export type DocMetadata = {
+  __typename?: 'DocMetadata';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type Hit = {
+  __typename?: 'Hit';
+  distance?: Maybe<Scalars['Float']['output']>;
+  document: Scalars['String']['output'];
+  metadata: Array<DocMetadata>;
 };
 
 export type IdConnect = {
@@ -78,6 +143,8 @@ export type Metadata = {
   exitType?: Maybe<Scalars['String']['output']>;
   mimeType?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
+  processingEndTime?: Maybe<Scalars['Float']['output']>;
+  processingStartTime?: Maybe<Scalars['Float']['output']>;
 };
 
 export type MetadataInput = {
@@ -85,13 +152,17 @@ export type MetadataInput = {
   exitType?: InputMaybe<Scalars['String']['input']>;
   mimeType?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  processingEndTime?: InputMaybe<Scalars['Float']['input']>;
+  processingStartTime?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createCellExecution?: Maybe<CellExecution>;
   deleteCellExecution?: Maybe<CellExecution>;
+  deleteSlackInstallation?: Maybe<SlackInstallation>;
   updateCellExecution?: Maybe<CellExecution>;
+  updateSlackInstallation?: Maybe<SlackInstallation>;
 };
 
 
@@ -105,9 +176,20 @@ export type MutationDeleteCellExecutionArgs = {
 };
 
 
+export type MutationDeleteSlackInstallationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateCellExecutionArgs = {
   data: CellExecutionUpdateInput;
   id: Scalars['String']['input'];
+  notifySlack?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type MutationUpdateSlackInstallationArgs = {
+  data: SlackInstallationUpdateInput;
 };
 
 export type Owner = {
@@ -126,12 +208,59 @@ export type Query = {
   __typename?: 'Query';
   admin?: Maybe<Admin>;
   anonymous?: Maybe<Anonymous>;
+  assistant?: Maybe<Assistant>;
+  getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
   user?: Maybe<User>;
 };
 
 
 export type QueryUserArgs = {
   id?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type Search = {
+  __typename?: 'Search';
+  hits: Array<Hit>;
+  query: Scalars['String']['output'];
+  stdev?: Maybe<Scalars['Float']['output']>;
+};
+
+export type SearchInput = {
+  exclusion?: InputMaybe<Scalars['Boolean']['input']>;
+  executableOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  expect?: InputMaybe<Scalars['Int']['input']>;
+  metadataKeys?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  query: Scalars['String']['input'];
+};
+
+export type SlackChannel = {
+  __typename?: 'SlackChannel';
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type SlackInstallation = {
+  __typename?: 'SlackInstallation';
+  app_id: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  default_channel_id?: Maybe<Scalars['String']['output']>;
+  default_channel_name?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  scopes: Scalars['String']['output'];
+  team_id: Scalars['String']['output'];
+  team_name: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
+};
+
+export type SlackInstallationUpdateInput = {
+  default_channel_id: Scalars['String']['input'];
+  default_channel_name: Scalars['String']['input'];
+};
+
+export type Subscription = {
+  __typename?: 'Subscription';
+  chat?: Maybe<ChatMessage>;
 };
 
 export type User = {
@@ -152,6 +281,8 @@ export type User = {
   photoUrl?: Maybe<Scalars['String']['output']>;
   siteAdmin: Scalars['Boolean']['output'];
   siteUrl?: Maybe<Scalars['String']['output']>;
+  /** Slack installation for the user */
+  slackInstallation?: Maybe<SlackInstallation>;
   twitter?: Maybe<Scalars['String']['output']>;
   update_time: Scalars['DateTime']['output'];
 };
@@ -161,7 +292,7 @@ export type CreateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } | null };
+export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl: string } | null };
 
 export type UpdateCellExecutionMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -169,7 +300,7 @@ export type UpdateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } | null };
+export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl: string } | null };
 
 
 export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
