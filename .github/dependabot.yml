@@ -21,3 +21,5 @@ updates:
       # following dependencies dropped support for Node.js v16
       # which is the current runtime for VS Code extensions
       - dependency-name: "@octokit/rest"
+      # it breaks wdio-vscode-service
+      - dependency-name: "vscode-uri"
