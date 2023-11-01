@@ -365,6 +365,12 @@ export class GrpcSerializer extends SerializerBase {
     const notebook = Notebook.clone(data as any)
     const serialRequest = <SerializeRequest>{ notebook }
 
+    serialRequest.notebook?.cells.forEach((cell) =>
+      cell.outputs.forEach((out) =>
+        out.items.forEach((item) => (item.type = item.data.buffer ? 'Buffer' : typeof item.data)),
+      ),
+    )
+
     const request = await this.client!.serialize(serialRequest)
 
     const { result } = request.response

@@ -46,7 +46,7 @@ export namespace Serializer {
     frontmatter?: Grpc.Frontmatter
   }
 
-  export type Cell = Omit<Grpc.Cell, 'kind' | 'metadata' | 'languageId'> & {
+  export type Cell = Omit<Grpc.Cell, 'kind' | 'metadata' | 'languageId' | 'outputs'> & {
     metadata?: Metadata
     kind: NotebookCellKind
     languageId?: string

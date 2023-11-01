@@ -171,16 +171,20 @@ export class NotebookCellOutputManager {
 
           return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.terminal)])
         } else {
+          const stdoutBase64 = terminalState.serialize()
           const json: CellOutputPayload<OutputType.outputItems> = {
             type: OutputType.outputItems,
             output: {
-              content: terminalState.serialize(),
+              content: stdoutBase64,
               mime: 'text/plain',
               uuid: cellId,
             },
           }
 
-          return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.outputItems)])
+          return new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.outputItems),
+            NotebookCellOutputItem.stdout(Buffer.from(stdoutBase64, 'base64').toString('utf-8')),
+          ])
         }
       }
 
