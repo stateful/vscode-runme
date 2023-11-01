@@ -44,4 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # The "auto" flag will only merge once all of the target branch's required checks
         # are met. Configure those in the "branch protection" settings for each repo.
-        run: gh pr merge --auto --squash "$PR_URL"
+        run: |
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
