@@ -41,6 +41,7 @@ const LISTEN_TO_EVENTS = [
   ClientMessages.onOptionsMessage,
   ClientMessages.optionsMessage,
   ClientMessages.onCopyTextToClipboard,
+  ClientMessages.onProgramClose,
 ]
 
 const ANSI_COLORS = [
@@ -67,6 +68,7 @@ const ANSI_COLORS = [
 export class TerminalView extends LitElement {
   protected copyText = 'Copy'
   protected shareText = 'Save'
+  protected saveText = 'Save'
   protected shareEnabledText = 'Share'
 
   static styles = css`
@@ -340,7 +342,7 @@ export class TerminalView extends LitElement {
   @property({ type: Number })
   lastLine?: number // TODO: Get the last line of the terminal and store it.
 
-  @property()
+  @property({ type: Boolean })
   isCloudApiLoading: boolean = false
 
   @property()
@@ -352,11 +354,14 @@ export class TerminalView extends LitElement {
   @property({ type: Boolean })
   enableShareButton: boolean = false
 
-  @property()
+  @property({ type: Boolean })
   isShareReady: boolean = false
 
-  @property()
+  @property({ type: Boolean })
   isUpdatedReady: boolean = false
+
+  @property({ type: Boolean })
+  isAutoSaveEnabled: boolean = false
 
   constructor() {
     super()
@@ -436,7 +441,7 @@ export class TerminalView extends LitElement {
                 return
               }
               if (e.type === ClientMessages.terminalStdout) {
-                this.shareText = 'Save'
+                this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
                 this.isShareReady = false
                 this.terminal!.write(data)
                 this.requestUpdate()
@@ -504,6 +509,13 @@ export class TerminalView extends LitElement {
               return
             }
             return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
+          }
+          case ClientMessages.onProgramClose: {
+            const { 'runme.dev/uuid': uuid } = e.output
+            if (uuid !== this.uuid || !this.isAutoSaveEnabled) {
+              return
+            }
+            return this.#shareCellOutput()
           }
         }
       }),

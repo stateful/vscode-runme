@@ -53,6 +53,8 @@ export type AssistantSearchArgs = {
 
 export type CellExecution = {
   __typename?: 'CellExecution';
+  archivedTime?: Maybe<Scalars['DateTime']['output']>;
+  autoSave: Scalars['Boolean']['output'];
   createTime: Scalars['DateTime']['output'];
   exitCode: Scalars['Int']['output'];
   htmlUrl: Scalars['String']['output'];
@@ -72,6 +74,7 @@ export type CellExecution = {
 };
 
 export type CellExecutionInput = {
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
   exitCode: Scalars['Int']['input'];
   input: Scalars['String']['input'];
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
@@ -158,11 +161,17 @@ export type MetadataInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  archiveCellExecution?: Maybe<CellExecution>;
   createCellExecution?: Maybe<CellExecution>;
   deleteCellExecution?: Maybe<CellExecution>;
   deleteSlackInstallation?: Maybe<SlackInstallation>;
   updateCellExecution?: Maybe<CellExecution>;
   updateSlackInstallation?: Maybe<SlackInstallation>;
+};
+
+
+export type MutationArchiveCellExecutionArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -285,6 +294,12 @@ export type User = {
   slackInstallation?: Maybe<SlackInstallation>;
   twitter?: Maybe<Scalars['String']['output']>;
   update_time: Scalars['DateTime']['output'];
+};
+
+
+export type UserCellExecutionsArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type CreateCellExecutionMutationVariables = Exact<{

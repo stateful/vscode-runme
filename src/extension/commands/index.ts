@@ -38,6 +38,8 @@ import RunmeServer from '../server/runmeServer'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
+import { NOTEBOOK_AUTOSAVE_ON } from '../../constants'
+import ContextState from '../contextState'
 
 const log = getLogger('Commands')
 
@@ -304,4 +306,8 @@ export async function addToRecommendedExtensions(context: ExtensionContext) {
   return new RecommendExtensionMessage(context, {
     'runme.recommendExtension': true,
   }).display()
+}
+
+export async function toggleAutosave(context: ExtensionContext, autoSaveIsOn: boolean) {
+  return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }

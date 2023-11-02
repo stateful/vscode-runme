@@ -43,6 +43,7 @@ import {
   setNotebookCategories,
   getTerminalRunmeId,
   suggestCategories,
+  handleNotebookAutosaveSettings,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
@@ -218,6 +219,7 @@ export class Kernel implements Disposable {
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
+    await handleNotebookAutosaveSettings()
   }
 
   // eslint-disable-next-line max-len

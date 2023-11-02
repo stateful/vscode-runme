@@ -204,7 +204,9 @@ export async function executeRunner(
 
   program.onDidClose((code) => {
     if (!background) {
-      return
+      return postClientMessage(messaging, ClientMessages.onProgramClose, {
+        'runme.dev/uuid': cellUUID,
+      })
     }
 
     const parts = ['Program exited']
