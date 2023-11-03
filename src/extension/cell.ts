@@ -155,13 +155,14 @@ export class NotebookCellOutputManager {
           throw new Error('Cannot open cell terminal with invalid UUID!')
         }
 
+        const stdoutBase64 = terminalState.serialize()
         if (type === OutputType.terminal) {
           const terminalConfigurations = getNotebookTerminalConfigurations()
           const json: CellOutputPayload<OutputType.terminal> = {
             type: OutputType.terminal,
             output: {
               'runme.dev/uuid': cellId,
-              content: terminalState.serialize(),
+              content: stdoutBase64,
               initialRows: terminalRows || terminalConfigurations.rows,
               enableShareButton: isRunmeAppButtonsEnabled(),
               isAutoSaveEnabled: ContextState.getKey(NOTEBOOK_AUTOSAVE_ON),
@@ -171,7 +172,6 @@ export class NotebookCellOutputManager {
 
           return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.terminal)])
         } else {
-          const stdoutBase64 = terminalState.serialize()
           const json: CellOutputPayload<OutputType.outputItems> = {
             type: OutputType.outputItems,
             output: {
