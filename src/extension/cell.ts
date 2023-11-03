@@ -64,7 +64,7 @@ export class NotebookCellManager {
 
 type NotebookOutputs = NotebookCellOutput | readonly NotebookCellOutput[]
 interface ICellOption {
-  editor: NotebookEditor
+  editor?: NotebookEditor
   uuid: string
 }
 
@@ -176,10 +176,12 @@ export class NotebookCellOutputManager {
             terminalOutputItem = NotebookCellOutputItem.json(json, OutputType.terminal)
           }
 
-          return new NotebookCellOutput([
-            terminalOutputItem,
-            NotebookCellOutputItem.stdout(terminalStateStr),
-          ])
+          return new NotebookCellOutput(
+            [terminalOutputItem, NotebookCellOutputItem.stdout(terminalStateStr)],
+            {
+              'runme.dev/uuid': cellId,
+            },
+          )
         } else {
           const terminalStateBase64 = terminalState.serialize()
           const json: CellOutputPayload<OutputType.outputItems> = {
@@ -585,7 +587,7 @@ export async function getCellByUuId(options: ICellOption): Promise<NotebookCell 
     for (const cell of document.getCells()) {
       if (
         cell.kind !== NotebookCellKind.Code ||
-        cell.document.uri.fsPath !== editor.notebook.uri.fsPath
+        (editor && cell.document.uri.fsPath !== editor.notebook.uri.fsPath)
       ) {
         continue
       }

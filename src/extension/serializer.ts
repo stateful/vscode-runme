@@ -13,12 +13,13 @@ import {
   Disposable,
   NotebookDocument,
   CancellationTokenSource,
+  NotebookCellOutput,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
-import { VSCODE_LANGUAGEID_MAP } from '../constants'
+import { OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
@@ -34,6 +35,7 @@ import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
+import { getCellByUuId } from './cell'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -136,12 +138,51 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const transformedCells = data.cells.map((cell) => {
-      return {
-        ...cell,
-        languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
-      }
-    })
+    const transformedCells = await Promise.all(
+      data.cells.map(async (cell) => {
+        let terminalOutput: NotebookCellOutput | undefined
+        let uuid: string = ''
+        for (const out of cell.outputs || []) {
+          Object.entries(out.metadata ?? {}).find(([k, v]) => {
+            if (k === 'runme.dev/uuid') {
+              terminalOutput = out
+              uuid = v
+            }
+          })
+
+          if (terminalOutput) {
+            delete out.metadata?.['runme.dev/uuid']
+            break
+          }
+        }
+
+        const notebookCell = await getCellByUuId({ uuid })
+        if (notebookCell && terminalOutput) {
+          const strTerminalState = await this.kernel
+            .getCellOutputs(notebookCell)
+            .then((cellOutputMgr) => {
+              const terminalState = cellOutputMgr.getCellTerminalState()
+              if (terminalState?.outputType !== OutputType.terminal) {
+                return undefined
+              }
+              return terminalState?.serialize()
+            })
+
+          if (strTerminalState !== undefined) {
+            terminalOutput.items.forEach((item) => {
+              if (item.mime === OutputType.stdout) {
+                item.data = Buffer.from(strTerminalState)
+              }
+            })
+          }
+        }
+
+        return {
+          ...cell,
+          languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
+        }
+      }),
+    )
 
     const metadata = data.metadata
 
