@@ -394,21 +394,27 @@
           },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
           },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the notebook runner will use the GRPC interface (except on Windows)."
           },
           "runme.experiments.grpcServer": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
+          },
+          "runme.experiments.outputPersistence": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the notebook will store input and outputs."
           },
           "runme.checkout.projectDir": {
             "type": "string",
