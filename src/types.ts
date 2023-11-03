@@ -131,6 +131,7 @@ interface Payload {
     isAutoSaveEnabled: boolean
   }
   [OutputType.github]?: GitHubState
+  [OutputType.stdout]: object
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
