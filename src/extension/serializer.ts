@@ -403,14 +403,19 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
+    data.cells.forEach((cell) => {
+      if (!cell.executionSummary?.timing) {
+        delete cell.executionSummary
+      }
+    })
     const notebook = Notebook.clone(data as any)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    serialRequest.notebook?.cells.forEach((cell) =>
-      cell.outputs.forEach((out) =>
+    serialRequest.notebook?.cells.forEach(async (cell) => {
+      return cell.outputs.forEach((out) =>
         out.items.forEach((item) => (item.type = item.data.buffer ? 'Buffer' : typeof item.data)),
-      ),
-    )
+      )
+    })
 
     const request = await this.client!.serialize(serialRequest)
 
