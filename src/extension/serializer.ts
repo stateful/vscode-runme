@@ -19,8 +19,14 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 import { VSCODE_LANGUAGEID_MAP } from '../constants'
+import { ServerPersistIdentity, getServerConfigurationValue } from '../utils/configuration'
 
-import { DeserializeRequest, SerializeRequest, Notebook } from './grpc/serializerTypes'
+import {
+  DeserializeRequest,
+  SerializeRequest,
+  Notebook,
+  RunmeIdentity,
+} from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
@@ -300,6 +306,8 @@ export class WasmSerializer extends SerializerBase {
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
+  protected readonly persistIdentity: ServerPersistIdentity =
+    getServerConfigurationValue<ServerPersistIdentity>('persistIdentity', RunmeIdentity.ALL)
 
   private serverReadyListener: Disposable | undefined
 
@@ -331,9 +339,9 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const identity = this.persistIdentity
     const notebook = Notebook.clone(data as any)
-    const serialRequest = <SerializeRequest>{ notebook }
+    const serialRequest = <SerializeRequest>{ notebook, identity }
 
     const request = await this.client!.serialize(serialRequest)
 

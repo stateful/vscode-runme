@@ -429,6 +429,24 @@
             ],
             "markdownDescription": "Connect to GRPC server via TCP or Unix Domain Socket (restart required - not available on Windows)"
           },
+          "runme.server.persistIdentity": {
+            "type": "number",
+            "scope": "window",
+            "default": 1,
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "enumItemLabels": [
+              "None",
+              "All",
+              "Document",
+              "Cell"
+            ],
+            "markdownDescription": "Select whether or not identities of document and/or cells should be presistent inside markdown"
+          },
           "runme.terminal.backgroundTask": {
             "type": "boolean",
             "scope": "machine",

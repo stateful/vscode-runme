@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
+import { RunmeIdentity } from '../extension/grpc/serializerTypes'
 
 const ACTIONS_SECTION_NAME = 'runme.actions'
 const SERVER_SECTION_NAME = 'runme.server'
@@ -57,6 +58,7 @@ const configurationSchema = {
     enableTLS: z.boolean().default(true),
     tlsDir: z.string().optional(),
     transportType: z.enum(['TCP', 'UDS']).default('TCP'),
+    persistIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.ALL),
   },
   codelens: {
     enable: z.boolean().default(true),
@@ -79,6 +81,7 @@ const configurationSchema = {
 const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
 export type TerminalConfiguration = z.infer<typeof notebookTerminalSchemaObject>
 export type ServerTransportType = z.infer<typeof configurationSchema.server.transportType>
+export type ServerPersistIdentity = z.infer<typeof configurationSchema.server.persistIdentity>
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
