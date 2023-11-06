@@ -6,9 +6,9 @@ import { RunnerExitReason } from '../runner'
 
 export type NotebookTerminalType = 'xterm' | 'local'
 
-interface IProcessInfo {
-  pid: number | undefined
+interface IProcessInfoState {
   exitReason: RunnerExitReason
+  pid: number | undefined
 }
 
 export interface ITerminalState {
@@ -16,8 +16,8 @@ export interface ITerminalState {
   write(data: string | Uint8Array): void
   input(data: string, wasUserInput: boolean): void
 
-  setProcessInfo(processInfo?: IProcessInfo): void
-  hasProcessInfo(): IProcessInfo | undefined
+  setProcessInfo(processInfo?: IProcessInfoState): void
+  hasProcessInfo(): IProcessInfoState | undefined
 
   readonly outputType: OutputType
 }
@@ -27,7 +27,7 @@ export class XTermState implements ITerminalState {
 
   private xterm: XTerm
   private serializer: SerializeAddon
-  private processInfo: IProcessInfo | undefined
+  private processInfo: IProcessInfoState | undefined
 
   constructor() {
     // TODO: lines/cols
@@ -39,11 +39,11 @@ export class XTermState implements ITerminalState {
     this.xterm.loadAddon(this.serializer)
   }
 
-  setProcessInfo(processInfo?: IProcessInfo) {
+  setProcessInfo(processInfo?: IProcessInfoState) {
     this.processInfo = processInfo
   }
 
-  hasProcessInfo(): IProcessInfo | undefined {
+  hasProcessInfo(): IProcessInfoState | undefined {
     return this.processInfo
   }
 
@@ -69,7 +69,7 @@ export class LocalBufferTermState implements ITerminalState {
   readonly outputType = OutputType.outputItems
 
   private output: Buffer[] = []
-  private processInfo: IProcessInfo | undefined
+  private processInfo: IProcessInfoState | undefined
 
   write(data: string | Uint8Array) {
     this.output.push(Buffer.from(data))
@@ -78,11 +78,11 @@ export class LocalBufferTermState implements ITerminalState {
   // noop
   input(): void {}
 
-  setProcessInfo(processInfo?: IProcessInfo) {
+  setProcessInfo(processInfo?: IProcessInfoState) {
     this.processInfo = processInfo
   }
 
-  hasProcessInfo(): IProcessInfo | undefined {
+  hasProcessInfo(): IProcessInfoState | undefined {
     return this.processInfo
   }
 

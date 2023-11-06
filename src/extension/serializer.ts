@@ -158,17 +158,22 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookCell = await getCellByUuId({ uuid })
         if (notebookCell && terminalOutput) {
-          const strTerminalState = await this.kernel
+          const terminalState = await this.kernel
             .getCellOutputs(notebookCell)
             .then((cellOutputMgr) => {
               const terminalState = cellOutputMgr.getCellTerminalState()
               if (terminalState?.outputType !== OutputType.terminal) {
                 return undefined
               }
-              return terminalState?.serialize()
+              return terminalState
             })
 
-          if (strTerminalState !== undefined) {
+          if (terminalState !== undefined) {
+            const processInfo = terminalState.hasProcessInfo()
+            if (processInfo) {
+              ;(terminalOutput as any).processInfo = processInfo
+            }
+            const strTerminalState = terminalState?.serialize()
             terminalOutput.items.forEach((item) => {
               if (item.mime === OutputType.stdout) {
                 item.data = Buffer.from(strTerminalState)
