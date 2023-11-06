@@ -18,7 +18,7 @@ import getLogger from '../logger'
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
+import { IRunner, IRunnerEnvironment, IRunnerProgramSession, RunProgramExecution } from '../runner'
 import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
@@ -391,12 +391,17 @@ export async function executeRunner(
     await program.run()
   }
 
-  return await new Promise<boolean>((resolve, reject) => {
-    program.onDidClose((code) => {
+  return await new Promise<boolean>(async (resolve, reject) => {
+    const terminalState = outputs.getCellTerminalState()
+    program.onDidClose(async (code) => {
+      const pid = await program.pid
+      updateProcessInfo(program, terminalState, pid)
       resolve(code === 0)
     })
 
     program.onInternalErr((e) => {
+      const pid = undefined
+      updateProcessInfo(program, terminalState, pid)
       reject(e)
     })
 
@@ -404,6 +409,8 @@ export async function executeRunner(
 
     // unexpected early return, likely an error
     if (exitReason) {
+      const pid = undefined
+      updateProcessInfo(program, terminalState, pid)
       switch (exitReason.type) {
         case 'error':
           {
@@ -428,5 +435,21 @@ export async function executeRunner(
         resolve(true)
       }, BACKGROUND_TASK_HIDE_TIMEOUT)
     }
+  })
+}
+
+function updateProcessInfo(
+  program: IRunnerProgramSession,
+  terminalState: ITerminalState | undefined,
+  pid: number | undefined,
+) {
+  const exitReason = program.hasExited()
+  if (!terminalState || !exitReason) {
+    return
+  }
+
+  terminalState.setProcessInfo({
+    exitReason,
+    pid,
   })
 }

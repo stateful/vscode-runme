@@ -496,6 +496,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       this.opts.envs.push('TERM=')
     }
 
+    // TODO: remove once kernel sends pid for non-background tasks
     if (!this.opts.background) {
       this._onPid.fire(undefined)
     }
