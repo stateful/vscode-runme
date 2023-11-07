@@ -6,19 +6,16 @@ import {
   getTerminalByCell,
   resetEnv,
   getKey,
-  getCmdShellSeq,
   normalizeLanguage,
   getAnnotations,
   mapGitIgnoreToGlobFolders,
   hashDocumentUri,
   getGrpcHost,
-  prepareCmdSeq,
   openFileAsRunmeNotebook,
   getWorkspaceFolder,
   getWorkspaceEnvs,
   isGitHubLink,
   isDenoScript,
-  getCmdSeq,
   validateAnnotations,
   setNotebookCategories,
   getNotebookCategories,
@@ -149,66 +146,6 @@ test('getKey', () => {
   ).toBe('sh')
 })
 
-suite('getCmdShellSeq', () => {
-  test('one command', () => {
-    const cellText = 'deno task start'
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('wrapped command', () => {
-    // eslint-disable-next-line max-len
-    const cellText = Buffer.from(
-      // eslint-disable-next-line max-len
-      'ZGVubyBpbnN0YWxsIFwKICAgICAgLS1hbGxvdy1yZWFkIC0tYWxsb3ctd3JpdGUgXAogICAgICAtLWFsbG93LWVudiAtLWFsbG93LW5ldCAtLWFsbG93LXJ1biBcCiAgICAgIC0tbm8tY2hlY2sgXAogICAgICAtciAtZiBodHRwczovL2Rlbm8ubGFuZC94L2RlcGxveS9kZXBsb3ljdGwudHMK',
-      'base64',
-    ).toString('utf-8')
-
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('env only', () => {
-    const cellText = `export DENO_INSTALL="$HOME/.deno"
-      export PATH="$DENO_INSTALL/bin:$PATH"
-    `
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('complex wrapped', () => {
-    // eslint-disable-next-line max-len
-    const cellText =
-      // eslint-disable-next-line max-len
-      'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "(.title) - by (.authors[0].name), id: (.id)"\''
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('linux without pipefail', () => {
-    const cellText = 'ls ~/'
-    expect(getCmdShellSeq(cellText, 'linux')).toMatchSnapshot()
-  })
-
-  test('windows without shell flags', () => {
-    const cellText = 'ls ~/'
-    expect(getCmdShellSeq(cellText, 'win32')).toMatchSnapshot()
-  })
-
-  test('with comments', () => {
-    const cellText =
-      // eslint-disable-next-line max-len
-      'echo "Install deno via installer script"\n# macOS or Linux\ncurl -fsSL https://deno.land/x/install/install.sh | sh'
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('trailing comment', () => {
-    const cellText = 'cd ..\nls / # list dir contents\ncd ..\nls /'
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-
-  test('leading prompts', () => {
-    const cellText = '$ docker build -t runme/demo .\n$ docker ps -qa'
-    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
-  })
-})
-
 suite('normalizeLanguage', () => {
   test('with zsh', () => {
     const lang = normalizeLanguage('zsh')
@@ -336,14 +273,6 @@ suite('#getGrpcHost', () => {
       get: vi.fn().mockReturnValue(7863),
     } as any)
     expect(getGrpcHost()).toStrictEqual('localhost:7863')
-  })
-})
-
-suite('prepareCmdSeq', () => {
-  test('should eliminate trailing dollar signs', () => {
-    expect(prepareCmdSeq('$ echo hi')).toStrictEqual(['echo hi'])
-    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual(['echo hi'])
-    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
   })
 })
 
@@ -485,19 +414,6 @@ suite('isDenoScript', () => {
       getText: vi.fn().mockReturnValue('deployctl deploy'),
     }
     expect(isDenoScript(cell)).toBe(true)
-  })
-})
-
-suite('getCmdSeq', () => {
-  test('Rejects invalid deno command', () => {
-    const cellText = `export DENO_INSTALL="$HOME/.deno"
-    export PATH="$DENO_INSTALL/bin:$PATH"
-  `
-    const result = getCmdSeq(cellText)
-    expect(result).toStrictEqual([
-      'export DENO_INSTALL="$HOME/.deno"',
-      'export PATH="$DENO_INSTALL/bin:$PATH"',
-    ])
   })
 })
 

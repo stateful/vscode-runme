@@ -21,6 +21,7 @@ import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
 import { CommandMode } from '../grpc/runnerTypes'
 
+const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const ENV_VAR_REGEXP = /(\$\w+)/g
 /**
  * for understanding post into https://jex.im/regulex/
@@ -358,6 +359,72 @@ function resolveOrAbsolute(parent?: string, child?: string): string | undefined 
 }
 
 /**
+ * treat cells like a series of individual commands
+ * which need to be executed in sequence
+ */
+export function getCmdSeq(cellText: string): string[] {
+  return cellText
+    .trimStart()
+    .split('\\\n')
+    .map((l) => l.trim())
+    .join(' ')
+    .split('\n')
+    .map((l) => {
+      const hashPos = l.indexOf('#')
+      if (hashPos > -1) {
+        return l.substring(0, hashPos).trim()
+      }
+      const stripped = l.trim()
+
+      if (stripped.startsWith('$')) {
+        return stripped.slice(1).trim()
+      } else {
+        return stripped
+      }
+    })
+    .filter((l) => {
+      const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
+      return l !== '' && !hasPrefix
+    })
+}
+
+/**
+ * treat cells like like a series of individual commands
+ * which need to be executed in sequence
+ *
+ * packages command sequence into single callable script
+ */
+export function getCmdShellSeq(cellText: string, os: string): string {
+  const trimmed = getCmdSeq(cellText).join('; ')
+
+  if (['darwin'].find((entry) => entry === os)) {
+    return `set -e -o pipefail; ${trimmed}`
+  } else if (os.toLocaleLowerCase().startsWith('win')) {
+    return trimmed
+  }
+
+  return `set -e; ${trimmed}`
+}
+
+/**
+ * Does the following to a command list:
+ *
+ * - Splits by new lines
+ * - Removes trailing `$` characters
+ */
+export function prepareCmdSeq(cellText: string): string[] {
+  return cellText.split('\n').map((l) => {
+    const stripped = l.trimStart()
+
+    if (stripped.startsWith('$')) {
+      return stripped.slice(1).trimStart()
+    }
+
+    return l
+  })
+}
+
+/**
  * Parse set of commands, requiring user input for prompted environment
  * variables, and supporting multiline strings
  *
@@ -365,11 +432,13 @@ function resolveOrAbsolute(parent?: string, child?: string): string | undefined 
  */
 export async function parseCommandSeq(
   cellText: string,
+  languageId: string,
   promptForEnv = DEFAULT_PROMPT_ENV,
   skipEnvs?: Set<string>,
-  parseBlock?: (block: string) => string[],
 ): Promise<string[] | undefined> {
-  parseBlock ??= (s) => (s ? s.split('\n') : [])
+  const parseBlock = isShellLanguage(languageId)
+    ? prepareCmdSeq
+    : (s: string) => (s ? s.split('\n') : [])
 
   const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
 

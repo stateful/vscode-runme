@@ -19,14 +19,7 @@ import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import {
-  getAnnotations,
-  getCellRunmeId,
-  getCmdShellSeq,
-  getTerminalByCell,
-  getWorkspaceEnvs,
-  prepareCmdSeq,
-} from '../utils'
+import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -40,6 +33,7 @@ import {
   getCellCwd,
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
+  getCmdShellSeq,
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
@@ -95,9 +89,9 @@ export async function executeRunner(
 
   const commands = await parseCommandSeq(
     cellText,
+    execKey, // same as languageId
     skipPromptEnvDocumentLevel === false ? promptEnv : false,
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
-    prepareCmdSeq,
   )
   if (!commands) {
     return false

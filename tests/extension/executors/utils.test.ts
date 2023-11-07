@@ -13,8 +13,11 @@ import {
   getSystemShellPath,
   getCellCwd,
   isShellLanguage,
+  getCmdShellSeq,
+  prepareCmdSeq,
+  getCmdSeq,
 } from '../../../src/extension/executors/utils'
-import { getCmdSeq, getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
+import { getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
 import { getCellProgram } from '../../../src/extension/executors/utils'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -25,13 +28,6 @@ vi.mock('vscode')
 
 vi.mock('../../../src/extension/utils', () => ({
   replaceOutput: vi.fn(),
-  // TODO: this should use importActual
-  getCmdSeq: vi.fn((cellText: string) =>
-    cellText
-      .trim()
-      .split('\n')
-      .filter((x) => x),
-  ),
   getWorkspaceFolder: vi.fn(),
   getAnnotations: vi.fn(),
 }))
@@ -233,20 +229,20 @@ suite('parseCommandSeq', () => {
     vi.mocked(window.showInputBox).mockReset()
   })
 
-  test('single-line export', async () => {
+  test('single-line export with prompt', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'))
+    const res = await parseCommandSeq(['$ export TEST="<placeholder>"'].join('\n'), 'sh')
 
     expect(res).toBeTruthy()
-    expect(res).toHaveLength(1)
-    expect(res?.[0]).toBe('export TEST="test value"')
+    expect(res).toHaveLength(3)
+    expect(res?.[1]).toBe('export TEST="test value"')
   })
 
   test('single-line export with prompt disabled', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), false)
+    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), 'sh', false)
 
     expect(window.showInputBox).toBeCalledTimes(0)
 
@@ -258,15 +254,35 @@ suite('parseCommandSeq', () => {
   test('single line export with cancelled prompt', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
 
-    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'))
+    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'), 'sh')
 
     expect(res).toBe(undefined)
+  })
+
+  test('non shell code with exports retains leading dollar signs', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
+
+    const res = await parseCommandSeq(
+      [
+        "$currentDateTime = date('Y-m-d H:i:s');",
+        '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+        'echo $fullGreeting;',
+      ].join('\n'),
+      'php',
+    )
+
+    expect(res).toBeTruthy()
+    expect(res).toStrictEqual([
+      "$currentDateTime = date('Y-m-d H:i:s');",
+      '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+      'echo $fullGreeting;',
+    ])
   })
 
   test('multiline export', async () => {
     const exportLines = ['export TEST="I', 'am', 'doing', 'well!"']
 
-    const res = await parseCommandSeq(exportLines.join('\n'))
+    const res = await parseCommandSeq(exportLines.join('\n'), 'sh')
 
     expect(res).toBeTruthy
     expect(res).toHaveLength(4)
@@ -289,7 +305,7 @@ suite('parseCommandSeq', () => {
       'echo $TEST_MULTILINE',
     ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'))
+    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh')
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
@@ -303,34 +319,35 @@ suite('parseCommandSeq', () => {
     ])
   })
 
-  test('exports between normal command sequences with getCmdSeq', async () => {
-    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+  // todo(seb): Not being used directly anywhere - deactivate for now and remove in future
+  // test('exports between normal command sequences with getCmdSeq', async () => {
+  //   vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const cmdLines = [
-      'echo "Hello!"',
-      'echo "Hi!"',
-      'export TEST="<placeholder>"',
-      'echo $TEST',
-      'export TEST_MULTILINE="This',
-      'is',
-      'a',
-      'multiline',
-      'env!"',
-      'echo $TEST_MULTILINE',
-    ]
+  //   const cmdLines = [
+  //     'echo "Hello!"',
+  //     'echo "Hi!"',
+  //     'export TEST="<placeholder>"',
+  //     'echo $TEST',
+  //     'export TEST_MULTILINE="This',
+  //     'is',
+  //     'a',
+  //     'multiline',
+  //     'env!"',
+  //     'echo $TEST_MULTILINE',
+  //   ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq)
+  //   const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq) // signature obsolete
 
-    expect(res).toBeTruthy()
-    expect(res).toStrictEqual([
-      'echo "Hello!"',
-      'echo "Hi!"',
-      'export TEST="test value"',
-      'echo $TEST',
-      ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
-      'echo $TEST_MULTILINE',
-    ])
-  })
+  //   expect(res).toBeTruthy()
+  //   expect(res).toStrictEqual([
+  //     'echo "Hello!"',
+  //     'echo "Hi!"',
+  //     'export TEST="test value"',
+  //     'echo $TEST',
+  //     ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
+  //     'echo $TEST_MULTILINE',
+  //   ])
+  // })
 })
 
 suite('getCellShellPath', () => {
@@ -525,5 +542,86 @@ suite('getCellCwd', () => {
     expect(await testGetCellCwd(frntmtr, '../', files)).toStrictEqual('/')
 
     expect(await testGetCellCwd(frntmtr, '/opt', files)).toStrictEqual('/opt')
+  })
+})
+
+suite('getCmdShellSeq', () => {
+  test('one command', () => {
+    const cellText = 'deno task start'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('wrapped command', () => {
+    // eslint-disable-next-line max-len
+    const cellText = Buffer.from(
+      // eslint-disable-next-line max-len
+      'ZGVubyBpbnN0YWxsIFwKICAgICAgLS1hbGxvdy1yZWFkIC0tYWxsb3ctd3JpdGUgXAogICAgICAtLWFsbG93LWVudiAtLWFsbG93LW5ldCAtLWFsbG93LXJ1biBcCiAgICAgIC0tbm8tY2hlY2sgXAogICAgICAtciAtZiBodHRwczovL2Rlbm8ubGFuZC94L2RlcGxveS9kZXBsb3ljdGwudHMK',
+      'base64',
+    ).toString('utf-8')
+
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('env only', () => {
+    const cellText = `export DENO_INSTALL="$HOME/.deno"
+      export PATH="$DENO_INSTALL/bin:$PATH"
+    `
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('complex wrapped', () => {
+    // eslint-disable-next-line max-len
+    const cellText =
+      // eslint-disable-next-line max-len
+      'curl "https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)" --compressed 2>/dev/null \\\n| jq -r \'.[].posts[] | "(.title) - by (.authors[0].name), id: (.id)"\''
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('linux without pipefail', () => {
+    const cellText = 'ls ~/'
+    expect(getCmdShellSeq(cellText, 'linux')).toMatchSnapshot()
+  })
+
+  test('windows without shell flags', () => {
+    const cellText = 'ls ~/'
+    expect(getCmdShellSeq(cellText, 'win32')).toMatchSnapshot()
+  })
+
+  test('with comments', () => {
+    const cellText =
+      // eslint-disable-next-line max-len
+      'echo "Install deno via installer script"\n# macOS or Linux\ncurl -fsSL https://deno.land/x/install/install.sh | sh'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('trailing comment', () => {
+    const cellText = 'cd ..\nls / # list dir contents\ncd ..\nls /'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+
+  test('leading prompts', () => {
+    const cellText = '$ docker build -t runme/demo .\n$ docker ps -qa'
+    expect(getCmdShellSeq(cellText, 'darwin')).toMatchSnapshot()
+  })
+})
+
+suite('prepareCmdSeq', () => {
+  test('should eliminate leading dollar signs', () => {
+    expect(prepareCmdSeq('$ echo hi')).toStrictEqual(['echo hi'])
+    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual(['echo hi'])
+    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
+  })
+})
+
+suite('getCmdSeq', () => {
+  test('Rejects invalid deno command', () => {
+    const cellText = `export DENO_INSTALL="$HOME/.deno"
+    export PATH="$DENO_INSTALL/bin:$PATH"
+  `
+    const result = getCmdSeq(cellText)
+    expect(result).toStrictEqual([
+      'export DENO_INSTALL="$HOME/.deno"',
+      'export PATH="$DENO_INSTALL/bin:$PATH"',
+    ])
   })
 })
