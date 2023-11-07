@@ -16,6 +16,7 @@ import {
   getCLIUseIntegratedRunme,
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
+import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
@@ -115,7 +116,7 @@ suite('Configuration', () => {
     expect(getTLSDir(Uri.file('/ext/base'))).toBe('/tmp/runme/tls')
   })
 
-  test('getServerConfigurationValue Should default to undefined binaryPath', () => {
+  test('getServerConfigurationValue should default to undefined binaryPath', () => {
     workspace.getConfiguration().update('binaryPath', undefined)
 
     expect(getServerConfigurationValue<string | undefined>('binaryPath', undefined)).toStrictEqual(
@@ -123,7 +124,7 @@ suite('Configuration', () => {
     )
   })
 
-  test('getServerConfigurationValue Should give proper binaryPath if defined', () => {
+  test('getServerConfigurationValue should give proper binaryPath if defined', () => {
     workspace.getConfiguration().update('binaryPath', '/binary/path')
 
     expect(getServerConfigurationValue<string | undefined>('binaryPath', undefined)).toStrictEqual(
@@ -131,11 +132,17 @@ suite('Configuration', () => {
     )
   })
 
+  test('getServerConfigurationValue should give default persist identity', () => {
+    expect(
+      getServerConfigurationValue<number>('persistIdentity', RunmeIdentity.UNSPECIFIED),
+    ).toStrictEqual(RunmeIdentity.ALL)
+  })
+
   test('getCodeLensEnabled should return true by default', () => {
     expect(getCodeLensEnabled()).toStrictEqual(true)
   })
 
-  test('getCLIUseIntegratexRunme should return false by default', () => {
+  test('getCLIUseIntegratedRunme should return false by default', () => {
     expect(getCLIUseIntegratedRunme()).toStrictEqual(false)
   })
 

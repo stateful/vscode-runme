@@ -24,6 +24,10 @@ vi.mock('vscode', () => ({
     onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     applyEdit: vi.fn(),
+    getConfiguration: vi.fn().mockReturnValue({
+      update: vi.fn(),
+      get: vi.fn(),
+    }),
   },
   commands: { executeCommand: vi.fn() },
   WorkspaceEdit: Map<Uri, NotebookEdit[]>,
