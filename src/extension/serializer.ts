@@ -341,7 +341,7 @@ export class GrpcSerializer extends SerializerBase {
   ): Promise<Uint8Array> {
     const identity = this.persistIdentity
     const notebook = Notebook.clone(data as any)
-    const serialRequest = <SerializeRequest>{ notebook, identity }
+    const serialRequest = <SerializeRequest>{ notebook, options: { identity } }
 
     const request = await this.client!.serialize(serialRequest)
 
