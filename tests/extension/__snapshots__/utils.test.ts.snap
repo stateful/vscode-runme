@@ -1,23 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getCmdShellSeq > complex wrapped 1`] = `"set -e -o pipefail; curl \\"https://api-us-west-2.graphcms.com/v2/cksds5im94b3w01xq4hfka1r4/master?query=$(deno run -A query.ts)\\" --compressed 2>/dev/null | jq -r '.[].posts[] | \\"(.title) - by (.authors[0].name), id: (.id)\\"'"`;
-
-exports[`getCmdShellSeq > env only 1`] = `"set -e -o pipefail; export DENO_INSTALL=\\"$HOME/.deno\\"; export PATH=\\"$DENO_INSTALL/bin:$PATH\\""`;
-
-exports[`getCmdShellSeq > leading prompts 1`] = `"set -e -o pipefail; docker build -t runme/demo .; docker ps -qa"`;
-
-exports[`getCmdShellSeq > linux without pipefail 1`] = `"set -e; ls ~/"`;
-
-exports[`getCmdShellSeq > one command 1`] = `"set -e -o pipefail; deno task start"`;
-
-exports[`getCmdShellSeq > trailing comment 1`] = `"set -e -o pipefail; cd ..; ls /; cd ..; ls /"`;
-
-exports[`getCmdShellSeq > windows without shell flags 1`] = `"ls ~/"`;
-
-exports[`getCmdShellSeq > with comments 1`] = `"set -e -o pipefail; echo \\"Install deno via installer script\\"; curl -fsSL https://deno.land/x/install/install.sh | sh"`;
-
-exports[`getCmdShellSeq > wrapped command 1`] = `"set -e -o pipefail; deno install --allow-read --allow-write --allow-env --allow-net --allow-run --no-check -r -f https://deno.land/x/deploy/deployctl.ts"`;
-
 exports[`resetEnv 1`] = `
 Map {
   "RUNME_TASK" => "true",
