@@ -35,3 +35,19 @@ then run:
 const myVar: string = 'I am a typed string!'
 console.log(myVar)
 ```
+
+## and, of course, PHP
+
+Be sure to have the `php` interpreter in your `$PATH`:
+
+```php { interpreter=php }
+<?php
+$greeting = "Hello, World!";
+$currentDateTime = date('Y-m-d H:i:s');
+
+// Concatenate the greeting with the current date and time
+$fullGreeting = $greeting . " It's now " . $currentDateTime . "\n";
+
+echo $fullGreeting;
+?>
+```
