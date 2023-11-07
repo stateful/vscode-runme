@@ -240,8 +240,8 @@ suite('parseCommandSeq', () => {
     )
 
     expect(res).toBeTruthy()
-    expect(res).toHaveLength(1)
-    expect(res?.[0]).toBe('export TEST="test value"')
+    expect(res).toHaveLength(3)
+    expect(res?.[1]).toBe('export TEST="test value"')
   })
 
   test('single-line export with prompt disabled', async () => {
