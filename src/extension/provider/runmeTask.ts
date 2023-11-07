@@ -138,8 +138,8 @@ export class RunmeTaskProvider implements TaskProvider {
         const cellContent = 'value' in cell ? cell.value : cell.document.getText()
         const commands = await parseCommandSeq(
           cellContent,
-          promptEnv,
           languageId,
+          promptEnv,
           new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
         )
 

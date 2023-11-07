@@ -89,8 +89,8 @@ export async function executeRunner(
 
   const commands = await parseCommandSeq(
     cellText,
-    skipPromptEnvDocumentLevel === false ? promptEnv : false,
     execKey, // same as languageId
+    skipPromptEnvDocumentLevel === false ? promptEnv : false,
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
   )
   if (!commands) {

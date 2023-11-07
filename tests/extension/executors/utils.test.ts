@@ -229,15 +229,10 @@ suite('parseCommandSeq', () => {
     vi.mocked(window.showInputBox).mockReset()
   })
 
-  test('single-line export', async () => {
+  test('single-line export with prompt', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq(
-      ['export TEST="<placeholder>"'].join('\n'),
-      true,
-      'sh',
-      new Set(),
-    )
+    const res = await parseCommandSeq(['$ export TEST="<placeholder>"'].join('\n'), 'sh')
 
     expect(res).toBeTruthy()
     expect(res).toHaveLength(3)
@@ -247,12 +242,7 @@ suite('parseCommandSeq', () => {
   test('single-line export with prompt disabled', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq(
-      ['export TEST="placeholder"'].join('\n'),
-      false,
-      'sh',
-      new Set(),
-    )
+    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), 'sh', false)
 
     expect(window.showInputBox).toBeCalledTimes(0)
 
@@ -264,20 +254,35 @@ suite('parseCommandSeq', () => {
   test('single line export with cancelled prompt', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
 
-    const res = await parseCommandSeq(
-      ['export TEST="<placeholder>"'].join('\n'),
-      true,
-      'sh',
-      new Set(),
-    )
+    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'), 'sh')
 
     expect(res).toBe(undefined)
+  })
+
+  test('non shell code with exports retains leading dollar signs', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
+
+    const res = await parseCommandSeq(
+      [
+        "$currentDateTime = date('Y-m-d H:i:s');",
+        '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+        'echo $fullGreeting;',
+      ].join('\n'),
+      'php',
+    )
+
+    expect(res).toBeTruthy()
+    expect(res).toStrictEqual([
+      "$currentDateTime = date('Y-m-d H:i:s');",
+      '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+      'echo $fullGreeting;',
+    ])
   })
 
   test('multiline export', async () => {
     const exportLines = ['export TEST="I', 'am', 'doing', 'well!"']
 
-    const res = await parseCommandSeq(exportLines.join('\n'), true, 'sh', new Set())
+    const res = await parseCommandSeq(exportLines.join('\n'), 'sh')
 
     expect(res).toBeTruthy
     expect(res).toHaveLength(4)
@@ -300,7 +305,7 @@ suite('parseCommandSeq', () => {
       'echo $TEST_MULTILINE',
     ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'), true, 'sh', new Set())
+    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh')
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
@@ -331,7 +336,7 @@ suite('parseCommandSeq', () => {
   //     'echo $TEST_MULTILINE',
   //   ]
 
-  //   const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq)
+  //   const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq) // signature obsolete
 
   //   expect(res).toBeTruthy()
   //   expect(res).toStrictEqual([

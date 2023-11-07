@@ -432,9 +432,9 @@ export function prepareCmdSeq(cellText: string): string[] {
  */
 export async function parseCommandSeq(
   cellText: string,
-  promptForEnv = DEFAULT_PROMPT_ENV,
   languageId: string,
-  skipEnvs: Set<string>,
+  promptForEnv = DEFAULT_PROMPT_ENV,
+  skipEnvs?: Set<string>,
 ): Promise<string[] | undefined> {
   const parseBlock = isShellLanguage(languageId)
     ? prepareCmdSeq
