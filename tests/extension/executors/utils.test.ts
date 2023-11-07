@@ -12,7 +12,7 @@ import {
   getCellShellPath,
   getSystemShellPath,
   getCellCwd,
-  isShellLanguage
+  isShellLanguage,
 } from '../../../src/extension/executors/utils'
 import { getCmdSeq, getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
 import { getCellProgram } from '../../../src/extension/executors/utils'
@@ -26,7 +26,12 @@ vi.mock('vscode')
 vi.mock('../../../src/extension/utils', () => ({
   replaceOutput: vi.fn(),
   // TODO: this should use importActual
-  getCmdSeq: vi.fn((cellText: string) => cellText.trim().split('\n').filter(x => x)),
+  getCmdSeq: vi.fn((cellText: string) =>
+    cellText
+      .trim()
+      .split('\n')
+      .filter((x) => x),
+  ),
   getWorkspaceFolder: vi.fn(),
   getAnnotations: vi.fn(),
 }))
@@ -34,7 +39,7 @@ vi.mock('../../../src/extension/utils', () => ({
 vi.mock('node:fs/promises', () => ({
   default: {
     stat: vi.fn(),
-  }
+  },
 }))
 
 const COMMAND_MODE_INLINE_SHELL = 1
@@ -44,7 +49,7 @@ vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
   CommandMode: {
     INLINE_SHELL: 1,
     TEMP_FILE: 2,
-  }
+  },
 }))
 
 beforeEach(() => {
@@ -58,9 +63,9 @@ test('should support export without quotes', async () => {
       metadata: { executeableCode: 'export foo=bar' },
       document: {
         getText: vi.fn().mockReturnValue('export foo=bar'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
@@ -76,9 +81,9 @@ test('should populate value if quotes are used', async () => {
       metadata: { executeableCode: 'export foo="bar"' },
       document: {
         getText: vi.fn().mockReturnValue('export foo="bar"'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
@@ -91,12 +96,12 @@ test('should populate value if quotes are used', async () => {
 test('can support single quotes', async () => {
   const exec: any = {
     cell: {
-      metadata: { executeableCode: 'export foo=\'bar\'' },
+      metadata: { executeableCode: "export foo='bar'" },
       document: {
-        getText: vi.fn().mockReturnValue('export foo=\'bar\''),
-        uri: { fsPath: __dirname }
-      }
-    }
+        getText: vi.fn().mockReturnValue("export foo='bar'"),
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   vi.mocked(window.showInputBox).mockResolvedValue('barValue')
   const cellText = await retrieveShellCommand(exec)
@@ -112,9 +117,9 @@ test('can handle new lines before and after', async () => {
       metadata: { executeableCode: '\n\nexport foo=bar\n' },
       document: {
         getText: vi.fn().mockReturnValue('\n\nexport foo=bar\n'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('\n')
@@ -126,9 +131,9 @@ test('can populate pre-existing envs', async () => {
       metadata: { executeableCode: 'export foo="foo$BARloo"' },
       document: {
         getText: vi.fn().mockReturnValue('export foo="foo$BARloo"'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   process.env.BAR = 'rab'
   vi.mocked(window.showInputBox).mockResolvedValue('foo$BAR')
@@ -143,9 +148,9 @@ test('can support expressions', async () => {
       metadata: { executeableCode: 'export foo=$(echo "foo$BAR")' },
       document: {
         getText: vi.fn().mockReturnValue('export foo=$(echo "foo$BAR")'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   process.env.BAR = 'bar'
   const cellText = await retrieveShellCommand(exec)
@@ -159,9 +164,9 @@ test('can recall previous vars', async () => {
       metadata: { executeableCode: 'export foo=$(echo "foo$BAR")' },
       document: {
         getText: vi.fn().mockReturnValue('export foo=$(echo "foo$BAR")'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   process.env.BAR = 'bar'
   const cellText1 = await retrieveShellCommand(exec1)
@@ -172,9 +177,9 @@ test('can recall previous vars', async () => {
       metadata: { executeableCode: 'export barfoo=$(echo "bar$foo")' },
       document: {
         getText: vi.fn().mockReturnValue('export barfoo=$(echo "bar$foo")'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   const cellText2 = await retrieveShellCommand(exec2)
   expect(cellText2).toBe('')
@@ -187,9 +192,9 @@ test('returns undefined if expression fails', async () => {
       metadata: { executeableCode: 'export foo=$(FAIL)' },
       document: {
         getText: vi.fn().mockReturnValue('export foo=$(FAIL)'),
-        uri: { fsPath: __dirname }
-      }
-    }
+        uri: { fsPath: __dirname },
+      },
+    },
   }
   expect(await retrieveShellCommand(exec)).toBeUndefined()
   expect(window.showErrorMessage).toBeCalledTimes(1)
@@ -198,16 +203,23 @@ test('returns undefined if expression fails', async () => {
 test('supports multiline exports', async () => {
   const exec: any = {
     cell: {
-      metadata: { executeableCode: 'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"' },
+      metadata: {
+        executeableCode:
+          'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"',
+      },
       document: {
-        getText: vi.fn().mockReturnValue(
-          'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"'
-        ),
-        uri: { fsPath: __dirname }
-      }
-    }
+        getText: vi
+          .fn()
+          .mockReturnValue(
+            'export bar=foo\nexport foo="some\nmultiline\nexport"\nexport foobar="barfoo"',
+          ),
+        uri: { fsPath: __dirname },
+      },
+    },
   }
-  vi.mocked(window.showInputBox).mockImplementation(({ value, placeHolder }: any) => value || placeHolder)
+  vi.mocked(window.showInputBox).mockImplementation(
+    ({ value, placeHolder }: any) => value || placeHolder,
+  )
   const cellText = await retrieveShellCommand(exec)
   expect(cellText).toBe('')
   expect(ENV_STORE.get('bar')).toBe('foo')
@@ -224,9 +236,7 @@ suite('parseCommandSeq', () => {
   test('single-line export', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq([
-      'export TEST="<placeholder>"'
-    ].join('\n'))
+    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'))
 
     expect(res).toBeTruthy()
     expect(res).toHaveLength(1)
@@ -236,9 +246,7 @@ suite('parseCommandSeq', () => {
   test('single-line export with prompt disabled', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq([
-      'export TEST="placeholder"'
-    ].join('\n'), false)
+    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), false)
 
     expect(window.showInputBox).toBeCalledTimes(0)
 
@@ -250,20 +258,13 @@ suite('parseCommandSeq', () => {
   test('single line export with cancelled prompt', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
 
-    const res = await parseCommandSeq([
-      'export TEST="<placeholder>"'
-    ].join('\n'))
+    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'))
 
     expect(res).toBe(undefined)
   })
 
   test('multiline export', async () => {
-    const exportLines = [
-      'export TEST="I',
-      'am',
-      'doing',
-      'well!"'
-    ]
+    const exportLines = ['export TEST="I', 'am', 'doing', 'well!"']
 
     const res = await parseCommandSeq(exportLines.join('\n'))
 
@@ -285,7 +286,7 @@ suite('parseCommandSeq', () => {
       'a',
       'multiline',
       'env!"',
-      'echo $TEST_MULTILINE'
+      'echo $TEST_MULTILINE',
     ]
 
     const res = await parseCommandSeq(cmdLines.join('\n'))
@@ -297,14 +298,8 @@ suite('parseCommandSeq', () => {
       'export TEST="test value"',
       '',
       'echo $TEST',
-      ...[
-        'export TEST_MULTILINE="This',
-        'is',
-        'a',
-        'multiline',
-        'env!"',
-      ],
-      'echo $TEST_MULTILINE'
+      ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
+      'echo $TEST_MULTILINE',
     ])
   })
 
@@ -321,7 +316,7 @@ suite('parseCommandSeq', () => {
       'a',
       'multiline',
       'env!"',
-      'echo $TEST_MULTILINE'
+      'echo $TEST_MULTILINE',
     ]
 
     const res = await parseCommandSeq(cmdLines.join('\n'), true, undefined, getCmdSeq)
@@ -332,35 +327,43 @@ suite('parseCommandSeq', () => {
       'echo "Hi!"',
       'export TEST="test value"',
       'echo $TEST',
-      ...[
-        'export TEST_MULTILINE="This',
-        'is',
-        'a',
-        'multiline',
-        'env!"',
-      ],
-      'echo $TEST_MULTILINE'
+      ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
+      'echo $TEST_MULTILINE',
     ])
   })
 })
 
 suite('getCellShellPath', () => {
   test('respects frontmatter', () => {
-    const shellPath = getCellShellPath({ } as any, {
-      metadata: { 'runme.dev/frontmatterParsed': { shell: 'fish' }
-    } } as any)
+    const shellPath = getCellShellPath(
+      {} as any,
+      {
+        metadata: { 'runme.dev/frontmatterParsed': { shell: 'fish' } },
+      } as any,
+    )
     expect(shellPath).toStrictEqual('fish')
   })
 
   test('fallback to system shell', () => {
-    const shellPath = getCellShellPath({ } as any, { } as any)
+    const shellPath = getCellShellPath({} as any, {} as any)
     expect(shellPath).toStrictEqual(getSystemShellPath())
   })
 })
 
 suite('isShellLanguage', () => {
   test('usual suspects', () => {
-    for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
+    for (const shell of [
+      'bash',
+      'sh',
+      'fish',
+      'ksh',
+      'zsh',
+      'shell',
+      'bat',
+      'cmd',
+      'powershell',
+      'pwsh',
+    ]) {
       expect(isShellLanguage(shell)).toBeTruthy()
     }
   })
@@ -368,18 +371,31 @@ suite('isShellLanguage', () => {
 
 suite('getCellProgram', () => {
   test('is inline shell for shell types', async () => {
-    for (const shell of ['bash', 'sh', 'fish', 'ksh', 'zsh', 'shell', 'bat', 'cmd', 'powershell', 'pwsh']) {
+    for (const shell of [
+      'bash',
+      'sh',
+      'fish',
+      'ksh',
+      'zsh',
+      'shell',
+      'bat',
+      'cmd',
+      'powershell',
+      'pwsh',
+    ]) {
       vi.mocked(getAnnotations).mockReturnValueOnce({} as any)
 
       let shellPath = getSystemShellPath()
       if (!shellPath) {
-        console.warn(`SHELL env not set likely due to non-interactive execution, using ${shell} as default`)
+        console.warn(
+          `SHELL env not set likely due to non-interactive execution, using ${shell} as default`,
+        )
         shellPath = getSystemShellPath(shell)
       }
 
-      expect(getCellProgram({ metadata: { } } as any, {} as any, shell)).toStrictEqual({
+      expect(getCellProgram({ metadata: {} } as any, {} as any, shell)).toStrictEqual({
         commandMode: COMMAND_MODE_INLINE_SHELL,
-        programName: shellPath
+        programName: shellPath,
       })
     }
   })
@@ -387,27 +403,35 @@ suite('getCellProgram', () => {
   test('is temp file for non-shell types', async () => {
     vi.mocked(getAnnotations).mockReturnValueOnce({} as any)
 
-    expect(getCellProgram({ metadata: { } } as any, {} as any, 'python')).toStrictEqual({
+    expect(getCellProgram({ metadata: {} } as any, {} as any, 'python')).toStrictEqual({
       commandMode: COMMAND_MODE_TEMP_FILE,
-      programName: ''
+      programName: '',
     })
   })
 
   test('respects custom interpreter in shell mode', async () => {
-    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ interpreter: x.interpreter })) as any)
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({
+      interpreter: x.interpreter,
+    })) as any)
 
-    expect(getCellProgram({ metadata: { interpreter: 'fish' } } as any, {} as any, 'sh')).toStrictEqual({
+    expect(
+      getCellProgram({ metadata: { interpreter: 'fish' } } as any, {} as any, 'sh'),
+    ).toStrictEqual({
       commandMode: COMMAND_MODE_INLINE_SHELL,
-      programName: 'fish'
+      programName: 'fish',
     })
   })
 
   test('respects custom interpreter in temp file mode', async () => {
-    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({ interpreter: x.interpreter })) as any)
+    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({
+      interpreter: x.interpreter,
+    })) as any)
 
-    expect(getCellProgram({ metadata: { interpreter: 'bun' } } as any, {} as any, 'javascript')).toStrictEqual({
+    expect(
+      getCellProgram({ metadata: { interpreter: 'bun' } } as any, {} as any, 'javascript'),
+    ).toStrictEqual({
       commandMode: COMMAND_MODE_TEMP_FILE,
-      programName: 'bun'
+      programName: 'bun',
     })
   })
 })
@@ -420,7 +444,7 @@ suite('getCellCwd', () => {
     frontmatter?: string,
     annotation?: string,
     existingFolders?: string[],
-    disableMdFile = false
+    disableMdFile = false,
   ) => {
     const mdFile = disableMdFile ? undefined : mdFilePath
 
@@ -429,7 +453,7 @@ suite('getCellCwd', () => {
     } as any)
 
     vi.mocked(getAnnotations).mockReturnValueOnce({
-      cwd: annotation
+      cwd: annotation,
     } as any)
 
     vi.mocked(fs.stat).mockImplementation((async (p: string) => ({
@@ -437,13 +461,13 @@ suite('getCellCwd', () => {
     })) as any)
 
     const cwd = await getCellCwd(
-      { } as any,
+      {} as any,
       {
         metadata: {
           'runme.dev/frontmatterParsed': {
-            cwd: frontmatter
-          }
-        }
+            cwd: frontmatter,
+          },
+        },
       } as any,
       mdFile ? Uri.file(mdFile) : undefined,
     )
@@ -456,64 +480,50 @@ suite('getCellCwd', () => {
   test('falls back when cwd doesnt exist', async () => {
     const files = ['/project/folder']
 
-    expect(
-      await testGetCellCwd(undefined, './non_existant', files)
-    ).toStrictEqual('/project/folder')
+    expect(await testGetCellCwd(undefined, './non_existant', files)).toStrictEqual(
+      '/project/folder',
+    )
   })
 
   test('no notebook file', async () => {
-    expect(
-      await testGetCellCwd(undefined, undefined, undefined, true)
-    ).toStrictEqual(undefined)
+    expect(await testGetCellCwd(undefined, undefined, undefined, true)).toStrictEqual(undefined)
   })
 
   test('no frontmatter', async () => {
     const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt']
 
-    expect(
-      await testGetCellCwd(undefined, undefined, files)
-    ).toStrictEqual(path.dirname(mdFilePath))
+    expect(await testGetCellCwd(undefined, undefined, files)).toStrictEqual(
+      path.dirname(mdFilePath),
+    )
 
-    expect(
-      await testGetCellCwd(undefined, '../', files)
-    ).toStrictEqual(path.dirname(path.dirname(mdFilePath)) + '/')
+    expect(await testGetCellCwd(undefined, '../', files)).toStrictEqual(
+      path.dirname(path.dirname(mdFilePath)) + '/',
+    )
 
-    expect(
-      await testGetCellCwd(undefined, '/opt', files)
-    ).toStrictEqual('/opt')
+    expect(await testGetCellCwd(undefined, '/opt', files)).toStrictEqual('/opt')
   })
 
   test('absolute frontmatter', async () => {
     const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt', '/']
     const frntmtr = '/tmp'
 
-    expect(
-      await testGetCellCwd(frntmtr, undefined, files)
-    ).toStrictEqual('/tmp')
+    expect(await testGetCellCwd(frntmtr, undefined, files)).toStrictEqual('/tmp')
 
-    expect(
-      await testGetCellCwd(frntmtr, '../', files)
-    ).toStrictEqual('/')
+    expect(await testGetCellCwd(frntmtr, '../', files)).toStrictEqual('/')
 
-    expect(
-      await testGetCellCwd(frntmtr, '/opt', files)
-    ).toStrictEqual('/opt')
+    expect(await testGetCellCwd(frntmtr, '/opt', files)).toStrictEqual('/opt')
   })
 
   test('relative frontmatter', async () => {
     const files = ['/project/folder', '/project', '/project/', '/tmp', '/opt', '/']
     const frntmtr = '../'
 
-    expect(
-      await testGetCellCwd(frntmtr, undefined, files)
-    ).toStrictEqual(path.dirname(path.dirname(mdFilePath)) + '/')
+    expect(await testGetCellCwd(frntmtr, undefined, files)).toStrictEqual(
+      path.dirname(path.dirname(mdFilePath)) + '/',
+    )
 
-    expect(
-      await testGetCellCwd(frntmtr, '../', files)
-    ).toStrictEqual('/')
+    expect(await testGetCellCwd(frntmtr, '../', files)).toStrictEqual('/')
 
-    expect(
-      await testGetCellCwd(frntmtr, '/opt', files)
-    ).toStrictEqual('/opt')
+    expect(await testGetCellCwd(frntmtr, '/opt', files)).toStrictEqual('/opt')
   })
 })

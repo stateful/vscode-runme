@@ -6,17 +6,20 @@ import { PidStatusProvider } from '../../../src/extension/provider/pid'
 vi.mock('vscode', () => ({
   default: {
     NotebookCellStatusBarItem: class {
-      constructor (public label: string, public position: number) {}
+      constructor(
+        public label: string,
+        public position: number,
+      ) {}
     },
     NotebookCellStatusBarAlignment: {
-      Right: 'right'
-    }
-  }
+      Right: 'right',
+    },
+  },
 }))
 
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
-  getTerminalByCell: vi.fn()
+  getTerminalByCell: vi.fn(),
 }))
 
 beforeEach(() => {
@@ -41,7 +44,7 @@ test('dont show pid if terminal could not be found', async () => {
   expect(getTerminalByCell).toBeCalledWith('cell')
 })
 
-test('don\'t show if terminal has no pid', async () => {
+test("don't show if terminal has no pid", async () => {
   vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
   vi.mocked(getTerminalByCell).mockReturnValueOnce({} as any)
   const p = new PidStatusProvider()

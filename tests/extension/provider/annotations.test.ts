@@ -14,24 +14,23 @@ vi.mock('../../../src/extension/grpc/client', () => ({
 
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn().mockReturnValue({
-    'type': 'stateful.runme/annotations',
-    'output': {
-      'annotations':
-      {
-        'background': false,
-        'interactive': true,
-        'closeTerminalOnSuccess': true,
-        'mimeType': 'text/plain',
-        'name': 'npm-install',
-        'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce'
-      }
-    }
+    type: 'stateful.runme/annotations',
+    output: {
+      annotations: {
+        background: false,
+        interactive: true,
+        closeTerminalOnSuccess: true,
+        mimeType: 'text/plain',
+        name: 'npm-install',
+        'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce',
+      },
+    },
   }),
   validateAnnotations: vi.fn(),
   replaceOutput: vi.fn(),
 }))
 
-vi.mock('../../../src/extension/runner', () => ({ }))
+vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
 
 describe('Runme Annotations', () => {
@@ -39,22 +38,24 @@ describe('Runme Annotations', () => {
   it('should register a command when initializing', () => {
     new AnnotationsProvider(kernel)
     expect(commands.registerCommand).toBeCalledTimes(2)
-    expect(commands.registerCommand).toBeCalledWith('runme.toggleCellAnnotations', expect.anything(), undefined)
+    expect(commands.registerCommand).toBeCalledWith(
+      'runme.toggleCellAnnotations',
+      expect.anything(),
+      undefined,
+    )
   })
 
-
   describe('provideCellStatusBarItems', () => {
-
     it('should not create a status bar item for non-code elements', async () => {
       const annotationsProvider = new AnnotationsProvider(kernel)
       const cell = {
         metadata: {
-          background: 'true'
+          background: 'true',
         },
         executionSummary: {
-          success: false
+          success: false,
         },
-        kind: NotebookCellKind.Markup
+        kind: NotebookCellKind.Markup,
       }
       const statusBarItems = await annotationsProvider.provideCellStatusBarItems(cell as any)
       expect(statusBarItems).toBe(undefined)
@@ -64,12 +65,12 @@ describe('Runme Annotations', () => {
       const annotationsProvider = new AnnotationsProvider(kernel)
       const cell = {
         metadata: {
-          background: 'true'
+          background: 'true',
         },
         executionSummary: {
-          success: false
+          success: false,
         },
-        kind: NotebookCellKind.Code
+        kind: NotebookCellKind.Code,
       }
 
       const expectedItem = {
@@ -80,7 +81,7 @@ describe('Runme Annotations', () => {
           command: 'runme.toggleCellAnnotations',
           arguments: [cell],
         },
-        tooltip: 'Click to configure cell behavior'
+        tooltip: 'Click to configure cell behavior',
       }
 
       const statusBarItem = await annotationsProvider.provideCellStatusBarItems(cell as any)
@@ -93,22 +94,22 @@ describe('Runme Annotations', () => {
       const annotationsProvider = new AnnotationsProvider(kernel)
       const cell = {
         metadata: {
-          background: 'true'
+          background: 'true',
         },
         executionSummary: {
-          success: false
+          success: false,
         },
         kind: NotebookCellKind.Markup,
-        outputs: [{
-          items: [
-            { id: '', items: [], metadata: {}, mime: OutputType.annotations }
-          ]
-        }]
+        outputs: [
+          {
+            items: [{ id: '', items: [], metadata: {}, mime: OutputType.annotations }],
+          },
+        ],
       }
 
       const toggleOutput = vi.fn()
       kernel.getCellOutputs = vi.fn().mockResolvedValue({
-        toggleOutput
+        toggleOutput,
       })
       await annotationsProvider.toggleCellAnnotations(cell as any)
       expect(toggleOutput).toBeCalledTimes(1)
@@ -119,18 +120,18 @@ describe('Runme Annotations', () => {
       const annotationsProvider = new AnnotationsProvider(kernel)
       const cell = {
         metadata: {
-          background: 'true'
+          background: 'true',
         },
         executionSummary: {
-          success: false
+          success: false,
         },
         kind: NotebookCellKind.Markup,
-        outputs: []
+        outputs: [],
       }
 
       const toggleOutput = vi.fn()
       kernel.getCellOutputs = vi.fn().mockResolvedValue({
-        toggleOutput
+        toggleOutput,
       })
       await annotationsProvider.toggleCellAnnotations(cell as any)
       expect(toggleOutput).toBeCalledTimes(1)

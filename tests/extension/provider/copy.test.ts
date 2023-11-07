@@ -5,12 +5,15 @@ import { CopyProvider } from '../../../src/extension/provider/copy'
 vi.mock('vscode', () => ({
   default: {
     NotebookCellStatusBarItem: class {
-      constructor (public label: string, public position: number) {}
+      constructor(
+        public label: string,
+        public position: number,
+      ) {}
     },
     NotebookCellStatusBarAlignment: {
-      Right: 'right'
-    }
-  }
+      Right: 'right',
+    },
+  },
 }))
 
 test('dont show pid if cell is non interactive', async () => {
@@ -19,6 +22,6 @@ test('dont show pid if cell is non interactive', async () => {
   expect(item).toEqual({
     label: '$(copy) Copy',
     position: 'right',
-    command: 'runme.copyCellToClipboard'
+    command: 'runme.copyCellToClipboard',
   })
 })

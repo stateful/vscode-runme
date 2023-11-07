@@ -1,4 +1,5 @@
-export const testCertPEM = Buffer.from(`
+export const testCertPEM = Buffer.from(
+  `
 -----BEGIN CERTIFICATE-----
 MIIFujCCA6KgAwIBAgIBATANBgkqhkiG9w0BAQsFADBhMQswCQYDVQQGEwJVUzET
 MBEGA1UECBMKQ2FsaWZvcm5pYTERMA8GA1UEBxMIQmVya2VsZXkxFzAVBgNVBAoT
@@ -32,9 +33,11 @@ eMPwXRXMZzd0N6dvnNI8u99CV06epR8PvsC4wdigsADd26Lh3vMzzUVVIylrBn0M
 5+JHdBZEd3DMC4ollNTLXKJePcc1wXLEyAy60Z9gd3WBC4z5G87JTuqi7DKJbS38
 QAXXb/4OC1SUvh0l81YIJcVdV/2J8kv0L+8RBFCX
 -----END CERTIFICATE-----
-`.trim())
+`.trim(),
+)
 
-export const testPrivKeyPEM = Buffer.from(`
+export const testPrivKeyPEM = Buffer.from(
+  `
 -----BEGIN RSA PRIVATE KEY-----
 MIIJKAIBAAKCAgEA4oajCOjEVKf/teJu5lPsowVfXTO2QHAfz0gQowVCVPHmwha0
 5Z/Lf/tNVdKSVxEJ0tgD5kTwXMnxlTtXH6rt4QOeKTwrRAKPbQSzFjwXtojjwVmK
@@ -86,4 +89,5 @@ WqJOb1EXp9cM++CdW6PipqAWmVFcyKqOMiYf3e0mXQ8rZL19KqayGsOSsg7eO5Jh
 agvwIaA1+KzfHffYXKq5L15XA74YaIM44ykt4f0lsPtACIPL57DGcBhlY3VqEDOY
 zRDtJuaD1Nz+6+g0+uSeBRAY+eozixzF40CaPE/ZnPsf+ffSHVVqtcXTsOA=
 -----END RSA PRIVATE KEY-----
-`.trim())
+`.trim(),
+)

@@ -6,16 +6,16 @@ vi.mock('vscode')
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/executors/task.js', () => ({
   bash: vi.fn(),
-  sh: vi.fn()
+  sh: vi.fn(),
 }))
 vi.mock('../../../src/extension/executors/vercel/index.js', () => ({
   deploy: vi.fn(),
   login: vi.fn(),
-  logout: vi.fn()
+  logout: vi.fn(),
 }))
 vi.mock('../../../src/extension/cell.js', () => ({
   NotebookCellOutputManager: vi.fn(),
-  updateCellMetadata: vi.fn()
+  updateCellMetadata: vi.fn(),
 }))
 
 test('isVercelDeployScript', () => {

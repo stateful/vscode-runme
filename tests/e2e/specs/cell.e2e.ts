@@ -6,7 +6,7 @@ import { Key } from 'webdriverio'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { Webview } from '../pageobjects/webview.page.js'
 
-async function assertDocumentContains (documentPath: string, matcher: string) {
+async function assertDocumentContains(documentPath: string, matcher: string) {
   const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
     return `${vscode.workspace.rootPath}${documentPath}`
   }, documentPath)
@@ -24,10 +24,10 @@ describe('Runme Cell Annotations', async () => {
       // @ts-expect-error inject test token
       globalThis._RUNME_TEST_TOKEN = { accessToken }
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`)
+        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
-        viewColumn: vscode.ViewColumn.Active
+        viewColumn: vscode.ViewColumn.Active,
       })
     }, token)
 

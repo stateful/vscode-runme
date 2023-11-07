@@ -13,20 +13,22 @@ vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
   getPathType: vi.fn().mockResolvedValue(1),
   getDefaultWorkspace: vi.fn().mockReturnValue('runme/workspace/src'),
-  mapGitIgnoreToGlobFolders: vi.fn().mockReturnValue([
-    '**/modules/**',
-    '**/out/**',
-    '**/node_modules/**',
-    '**/.vscode-test/**',
-    '**/wasm/**',
-    '**/coverage/**',
-    '**/tests/e2e/logs/**',
-    '**/tests/e2e/screenshots/**',
-    '**/coverage/config/**',
-    '**/abc/**/**',
-    '**/a/**/b/**',
-    '**/jspm_packages/**'
-  ])
+  mapGitIgnoreToGlobFolders: vi
+    .fn()
+    .mockReturnValue([
+      '**/modules/**',
+      '**/out/**',
+      '**/node_modules/**',
+      '**/.vscode-test/**',
+      '**/wasm/**',
+      '**/coverage/**',
+      '**/tests/e2e/logs/**',
+      '**/tests/e2e/screenshots/**',
+      '**/coverage/config/**',
+      '**/abc/**/**',
+      '**/a/**/b/**',
+      '**/jspm_packages/**',
+    ]),
 }))
 
 beforeEach(() => {
@@ -72,7 +74,11 @@ describe('Runme Notebooks', () => {
 
       RunmeLauncherProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
       expect(commands.executeCommand).toBeCalledTimes(1)
-      expect(commands.executeCommand).toBeCalledWith('vscode.openWith', 'runme/workspace/src/README.md', 'runme')
+      expect(commands.executeCommand).toBeCalledWith(
+        'vscode.openWith',
+        'runme/workspace/src/README.md',
+        'runme',
+      )
     })
   })
 
@@ -96,16 +102,17 @@ describe('Runme Notebooks', () => {
     const handler = vi.fn()
     vi.mocked(workspace.createFileSystemWatcher).mockReturnValue({
       onDidCreate: handler,
-      onDidDelete: handler
+      onDidDelete: handler,
     } as any)
     const launchProvider = new RunmeLauncherProvider()
     launchProvider.refresh = vi.fn()
     launchProvider['_onDidChangeTreeData'] = { fire: vi.fn() } as any
     expect(workspace.createFileSystemWatcher).toBeCalledWith('**/*.md', false, true, false)
     handler.mock.calls[0][0]({ path: '/foo/bar' }, true)
-    expect([...launchProvider['filesTree'].entries()])
-      .toEqual([['foo ', { files: ['bar'], folderPath: '/foo' }]])
-      handler.mock.calls[1][0]({ path: '/foo/bar' })
+    expect([...launchProvider['filesTree'].entries()]).toEqual([
+      ['foo ', { files: ['bar'], folderPath: '/foo' }],
+    ])
+    handler.mock.calls[1][0]({ path: '/foo/bar' })
     expect(launchProvider.refresh).toBeCalledTimes(1)
   })
 })

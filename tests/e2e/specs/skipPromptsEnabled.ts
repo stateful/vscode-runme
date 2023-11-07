@@ -3,17 +3,16 @@ import { Key } from 'webdriverio'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { OutputType } from '../pageobjects/cell.page.js'
 
-
 describe('Runme Frontmatter', async () => {
   const notebook = new RunmeNotebook()
 
   it('open category markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/frontmatter/skipPrompts/ENABLED.md`)
+        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/frontmatter/skipPrompts/ENABLED.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
-        viewColumn: vscode.ViewColumn.Active
+        viewColumn: vscode.ViewColumn.Active,
       })
     })
   })

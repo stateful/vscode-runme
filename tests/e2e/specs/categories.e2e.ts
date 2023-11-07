@@ -11,7 +11,7 @@ import { Webview } from '../pageobjects/webview.page.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-async function assertDocumentContains (documentPath: string, matcher: string) {
+async function assertDocumentContains(documentPath: string, matcher: string) {
   const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
     return `${vscode.workspace.rootPath}${documentPath}`
   }, documentPath)
@@ -19,7 +19,7 @@ async function assertDocumentContains (documentPath: string, matcher: string) {
   await expect(await source.toString()).toContain(matcher)
 }
 
-async function removeAllNotifications () {
+async function removeAllNotifications() {
   const workbench = await browser.getWorkbench()
   const notifications = await workbench.getNotifications()
   await Promise.all(notifications.map((notification) => notification.dismiss()))
@@ -36,10 +36,10 @@ describe.skip('Runme Categories Tests', async () => {
       // @ts-expect-error inject test token
       globalThis._RUNME_TEST_TOKEN = { accessToken }
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/CATEGORIES.md`)
+        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/CATEGORIES.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
-        viewColumn: vscode.ViewColumn.Active
+        viewColumn: vscode.ViewColumn.Active,
       })
     }, token)
   })
@@ -70,10 +70,9 @@ describe.skip('Runme Categories Tests', async () => {
       const workbench = await browser.getWorkbench()
       const quickInput = new QuickOpenBox(workbench.locatorMap)
       expect(await quickInput.getTitle()).toBe('New cell execution category')
-      expect(await quickInput.elem.$$('.monaco-list-row').map((row) => row.$('.label-name').getText())).toEqual([
-        'category-one',
-        'category-two'
-      ])
+      expect(
+        await quickInput.elem.$$('.monaco-list-row').map((row) => row.$('.label-name').getText()),
+      ).toEqual(['category-one', 'category-two'])
     })
 
     it('should allow to add existing category', async () => {
@@ -84,9 +83,10 @@ describe.skip('Runme Categories Tests', async () => {
       await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(2)
-      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
-        ['category-one', 'category-two']
-      )
+      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual([
+        'category-one',
+        'category-two',
+      ])
     })
 
     it('should not allow to add category with a space', async () => {
@@ -120,13 +120,15 @@ describe.skip('Runme Categories Tests', async () => {
       await removeAllNotifications()
       await webview.open()
       await expect($$('>>>.item-container')).toBeElementsArrayOfSize(3)
-      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
-        ['category-one', 'category-two', 'category-three']
-      )
+      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual([
+        'category-one',
+        'category-two',
+        'category-three',
+      ])
       await browser.keys([Key.Ctrl, 's'])
       await assertDocumentContains(
         '/examples/CATEGORIES.md',
-        'category=category-one,category-two,category-three'
+        'category=category-one,category-two,category-three',
       )
     })
   })
@@ -137,22 +139,25 @@ describe.skip('Runme Categories Tests', async () => {
       $('>>>input[placeholder="category-one"]').addValue('-or-something-else')
       $('>>>vscode-button[appearance="primary"]').click()
       await browser.keys([Key.Enter])
-      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
-        ['category-one-or-something-else', 'category-two', 'category-three']
-      )
+      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual([
+        'category-one-or-something-else',
+        'category-two',
+        'category-three',
+      ])
     })
   })
 
   describe('delete a category', () => {
     it('should allow to delete a category', async () => {
       await $$('>>>.item-container pre')[0].parentElement().$('aria/Remove Category Item').click()
-      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual(
-        ['category-two', 'category-three']
-      )
+      await expect(await $$('>>>.item-container pre').map((elem) => elem.getText())).toEqual([
+        'category-two',
+        'category-three',
+      ])
       await browser.keys([Key.Ctrl, 's'])
       await assertDocumentContains(
         '/examples/CATEGORIES.md',
-        'category=category-two,category-three'
+        'category=category-two,category-three',
       )
     })
   })

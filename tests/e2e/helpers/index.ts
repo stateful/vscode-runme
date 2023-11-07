@@ -34,7 +34,7 @@ export async function tryExecuteCommand(workbench: Workbench, command: string) {
 
   const items = await cmds.getQuickPicks()
 
-  if (items.length > 0 && await items[0].getLabel() !== 'No matching commands') {
+  if (items.length > 0 && (await items[0].getLabel()) !== 'No matching commands') {
     await cmds.confirm()
   } else {
     await cmds.cancel()

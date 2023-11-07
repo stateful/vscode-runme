@@ -1,5 +1,5 @@
 export const runmeNotebook = {
-  codeCell: '.code-cell-row'
+  codeCell: '.code-cell-row',
 }
 
 export const notebookCell = {
@@ -7,14 +7,14 @@ export const notebookCell = {
   // container: '.code-cell-row',
   runButton: '.run-button-container',
   // status: '.cell-status-item',
-  statusBar: '.cell-statusbar-container'
+  statusBar: '.cell-statusbar-container',
 }
 
 export const notebookCellStatus = {
   success: '.codicon-notebook-state-success',
   failure: '.codicon-notebook-state-error',
   item: '.cell-status-item',
-  command: '.cell-status-item-has-command'
+  command: '.cell-status-item-has-command',
 }
 
 export const webview = {

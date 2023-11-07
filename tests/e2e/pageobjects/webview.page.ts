@@ -3,7 +3,7 @@ import { PageDecorator, IPageDecorator, BasePage } from 'wdio-vscode-service'
 import * as locatorMap from './locators.js'
 import { webview as webviewLocators } from './locators.js'
 
-export interface Webview extends IPageDecorator<typeof webviewLocators> { }
+export interface Webview extends IPageDecorator<typeof webviewLocators> {}
 @PageDecorator(webviewLocators)
 export class Webview extends BasePage<typeof webviewLocators, typeof locatorMap> {
   /**
@@ -15,7 +15,7 @@ export class Webview extends BasePage<typeof webviewLocators, typeof locatorMap>
     super(locatorMap)
   }
 
-  public async open () {
+  public async open() {
     await this.outerFrame$.waitForExist()
     await browser.switchToFrame(await this.outerFrame$)
     await this.innerFrame$.waitForExist()
@@ -23,7 +23,7 @@ export class Webview extends BasePage<typeof webviewLocators, typeof locatorMap>
     await browser.switchToFrame(webviewInner)
   }
 
-  public async close (closeTab?: boolean) {
+  public async close(closeTab?: boolean) {
     await browser.switchToFrame(null)
     await browser.switchToFrame(null)
 

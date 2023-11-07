@@ -1,8 +1,7 @@
 import { test, expect, vi } from 'vitest'
 import { notebooks, workspace, commands, window, Uri } from 'vscode'
-import {
-  HealthCheckResponse_ServingStatus
-} from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
+// eslint-disable-next-line max-len
+import { HealthCheckResponse_ServingStatus } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
 import { RunmeExtension } from '../../src/extension/extension'
 import { bootFile } from '../../src/extension/utils'
@@ -16,7 +15,7 @@ vi.mock('../../src/extension/panels/panel', () => {
   class Panel {
     registerBus = vi.fn()
   }
-  return ({ default: Panel })
+  return { default: Panel }
 })
 
 vi.mock('../../src/extension/grpc/client', () => {
@@ -26,24 +25,24 @@ vi.mock('../../src/extension/grpc/client', () => {
     })
   }
 
-  return ({
+  return {
     ParserServiceClient: MockedParserServiceClient,
     RunnerServiceClient: vi.fn(),
     initParserClient: vi.fn(() => ({
       deserialize: vi.fn(() => {
         return { status: { code: 'OK' } }
-      })
+      }),
     })),
     HealthClient: class {
       async check() {
         return {
           response: {
-            status: HealthCheckResponse_ServingStatus.SERVING
-          }
+            status: HealthCheckResponse_ServingStatus.SERVING,
+          },
         }
       }
     },
-  })
+  }
 })
 
 vi.mock('../../src/extension/utils', async () => ({
@@ -52,21 +51,23 @@ vi.mock('../../src/extension/utils', async () => ({
   initWasm: vi.fn(),
   getNamespacedMid: vi.fn(),
   isWindows: vi.fn().mockReturnValue(false),
-  bootFile: vi.fn().mockResolvedValue(undefined)
+  bootFile: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 test('initializes all providers', async () => {
   const configValues = {
-    binaryPath: 'bin'
+    binaryPath: 'bin',
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
-    get: vi.fn((config: string) => configValues[config])
+    get: vi.fn((config: string) => configValues[config]),
   } as any)
   const dummyFilePath = Uri.file('/foo/bar')
   vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)
-  RunmeServer['getTLS'] = vi.fn().mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
+  RunmeServer['getTLS'] = vi
+    .fn()
+    .mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   const context: any = {
     subscriptions: [],
     extensionUri: { fsPath: '/foo/bar' },
@@ -74,7 +75,7 @@ test('initializes all providers', async () => {
       prepend: vi.fn(),
       append: vi.fn(),
       replace: vi.fn(),
-    }
+    },
   }
   const ext = new RunmeExtension()
   await ext.initialize(context)
