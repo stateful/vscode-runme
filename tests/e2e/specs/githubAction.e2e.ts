@@ -23,10 +23,10 @@ describe('Runme GitHub Workflow Integration', async () => {
       // @ts-expect-error inject test token
       globalThis._RUNME_TEST_TOKEN = { accessToken }
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`)
+        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
-        viewColumn: vscode.ViewColumn.Active
+        viewColumn: vscode.ViewColumn.Active,
       })
     }, token)
   })
@@ -35,14 +35,19 @@ describe('Runme GitHub Workflow Integration', async () => {
     let cell: NotebookCell
     before(async () => {
       await notebook.focusDocument()
-      cell = await notebook.getCell('https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml')
+      cell = await notebook.getCell(
+        'https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml',
+      )
     })
 
     it('should open GitHub Action trigger view', async () => {
-      await browser.action('key')
-        .down(Key.Ctrl).down(Key.Subtract)
+      await browser
+        .action('key')
+        .down(Key.Ctrl)
+        .down(Key.Subtract)
         .pause(100)
-        .down(Key.Ctrl).down(Key.Subtract)
+        .down(Key.Ctrl)
+        .down(Key.Subtract)
         .pause(100)
         .perform()
       await cell.run()

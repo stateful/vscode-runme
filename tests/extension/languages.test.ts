@@ -17,13 +17,13 @@ test('languages#run', async () => {
   const f = fixture as Serializer.Notebook
 
   const results = await Promise.all(
-    f.cells!
-      .filter((s) => s.kind !== 1) // skip pure markdown
+    f
+      .cells!.filter((s) => s.kind !== 1) // skip pure markdown
       .map((s) => {
-        return langs.run(Languages.normalizeSource(s.value)).then(l => {
+        return langs.run(Languages.normalizeSource(s.value)).then((l) => {
           return l?.[0]?.languageId
         })
-      })
+      }),
   )
 
   expect(results).toStrictEqual([
@@ -51,13 +51,13 @@ test('languages#biased', async () => {
   const f = fixture as Serializer.Notebook
 
   const biased = await Promise.all(
-    f.cells!
-      .filter((s) => s.kind !== 1) // skip pure markdown
+    f
+      .cells!.filter((s) => s.kind !== 1) // skip pure markdown
       .map((s) => {
-        return langs.run(Languages.normalizeSource(s.value)).then(res => {
+        return langs.run(Languages.normalizeSource(s.value)).then((res) => {
           return [res?.[0].languageId, Languages.biased('darwin', res)]
         })
-      })
+      }),
   )
 
   expect(biased).toStrictEqual([
@@ -76,6 +76,6 @@ test('languages#biased', async () => {
     ['dart', 'sh'],
     ['sh', 'sh'],
     ['bat', 'sh'],
-    ['csv', 'sh']
+    ['csv', 'sh'],
   ])
 })

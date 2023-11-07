@@ -2,7 +2,15 @@ import path from 'node:path'
 
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 import { type GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { EventEmitter, NotebookCellKind, Position, tasks, commands, EndOfLine, window } from 'vscode'
+import {
+  EventEmitter,
+  NotebookCellKind,
+  Position,
+  tasks,
+  commands,
+  EndOfLine,
+  window,
+} from 'vscode'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 import { URI } from 'vscode-uri'
 
@@ -11,7 +19,7 @@ import {
   GrpcRunnerEnvironment,
   GrpcRunnerProgramSession,
   IRunner,
-  RunProgramOptions
+  RunProgramOptions,
 } from '../../src/extension/runner'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
@@ -21,18 +29,23 @@ import { SurveyWinCodeLensRun } from '../../src/extension/survey'
 
 vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
-  getAnnotations: vi.fn().mockReturnValue({ }),
+  getAnnotations: vi.fn().mockReturnValue({}),
   isWindows: vi.fn().mockReturnValue(false),
-  convertEnvList: vi.fn().mockImplementation((envs: string[]) => envs.reduce((prev, curr) => {
-    const [key, value = ''] = curr.split(/\=(.*)/s)
-    prev[key] = value
+  convertEnvList: vi.fn().mockImplementation((envs: string[]) =>
+    envs.reduce(
+      (prev, curr) => {
+        const [key, value = ''] = curr.split(/\=(.*)/s)
+        prev[key] = value
 
-    return prev
-  }, {} as Record<string, string | undefined>)),
+        return prev
+      },
+      {} as Record<string, string | undefined>,
+    ),
+  ),
 }))
 
 vi.mock('vscode', async () => ({
-  ...await import(path.join(process.cwd(), '__mocks__', 'vscode')) ,
+  ...(await import(path.join(process.cwd(), '__mocks__', 'vscode'))),
 }))
 
 vi.mock('vscode-telemetry')
@@ -41,22 +54,22 @@ vi.mock('@protobuf-ts/grpc-transport', () => ({
   GrpcTransport: class {
     constructor() {}
 
-    close() { }
-  }
+    close() {}
+  },
 }))
 
 let id = 0
 
-const resetId = () => { id = 0 }
+const resetId = () => {
+  id = 0
+}
 
 const createSession = vi.fn((envs?: string[]) => ({
   id: (id++).toString(),
-  envs: [...envs ?? [], 'foo=bar'],
+  envs: [...(envs ?? []), 'foo=bar'],
 }))
 
-const deleteSession = vi.fn(async () => ({
-
-}))
+const deleteSession = vi.fn(async () => ({}))
 
 class MockedDuplexClientStream {
   constructor() {}
@@ -68,12 +81,12 @@ class MockedDuplexClientStream {
   responses = {
     onMessage: this._onMessage.event,
     onComplete: this._onComplete.event,
-    onError: this._onError.event
+    onError: this._onError.event,
   }
 
   requests = {
     send: vi.fn(async () => {}),
-    complete: vi.fn()
+    complete: vi.fn(),
   }
 }
 
@@ -84,39 +97,39 @@ vi.mock('../../src/extension/grpc/client', () => ({
     async createSession(request: { envs?: string[] }) {
       return {
         response: {
-          session: createSession(request.envs)
-        }
+          session: createSession(request.envs),
+        },
       }
     }
 
     async deleteSession() {
       return {
-        response: deleteSession()
+        response: deleteSession(),
       }
     }
 
     execute() {
       return new MockedDuplexClientStream()
     }
-  }
+  },
 }))
 
 vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb', () => ({
-  default: { },
+  default: {},
   CreateSessionRequest: {
-    create: vi.fn((x: any) => x)
+    create: vi.fn((x: any) => x),
   },
   ExecuteRequest: {
-    create: vi.fn((x: any) => x)
+    create: vi.fn((x: any) => x),
   },
   Winsize: {
-    create: vi.fn((x: any) => x)
-  }
+    create: vi.fn((x: any) => x),
+  },
 }))
 
 class MockedRunmeServer {
   _onTransportReady = new EventEmitter<{ transport: GrpcTransport }>()
-  _onClose = new EventEmitter<{ code: number|null }>()
+  _onClose = new EventEmitter<{ code: number | null }>()
 
   onTransportReady = this._onTransportReady.event
   onClose = this._onClose.event
@@ -126,7 +139,7 @@ vi.mock('../../src/extension/provider/runmeTask', async () => {
   return {
     RunmeTaskProvider: {
       getRunmeTask: vi.fn().mockResolvedValue({}),
-    }
+    },
   }
 })
 
@@ -171,12 +184,16 @@ suite('grpc Runner', () => {
 
   test('cannot create program session if server not initialized', async () => {
     const { runner } = createGrpcRunner(false)
-    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError(
+      'Client is not active!',
+    )
   })
 
   test('cannot get environment variables not initialized', async () => {
     const { runner } = createGrpcRunner(false)
-    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
+      'Client is not active!',
+    )
   })
 
   test('cannot create environment if server closed', async () => {
@@ -190,14 +207,18 @@ suite('grpc Runner', () => {
     const { runner, server } = createGrpcRunner(true)
 
     server._onClose.fire({ code: null })
-    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError('Client is not active!')
+    await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError(
+      'Client is not active!',
+    )
   })
 
   test('cannot get environment variables if server closed', async () => {
     const { runner, server } = createGrpcRunner(true)
 
     server._onClose.fire({ code: null })
-    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError('Client is not active!')
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
+      'Client is not active!',
+    )
   })
 
   suite('grpc program session', () => {
@@ -227,7 +248,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(stdoutListener).toBeCalledTimes(1)
@@ -241,7 +262,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
-        stderrData: Buffer.from('test')
+        stderrData: Buffer.from('test'),
       })
 
       expect(stdoutListener).not.toBeCalled()
@@ -257,8 +278,8 @@ suite('grpc Runner', () => {
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from(''),
         pid: {
-          pid: '1234'
-        }
+          pid: '1234',
+        },
       })
 
       const pid = await session.pid
@@ -281,7 +302,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -293,7 +314,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
-        stderrData: Buffer.from('test')
+        stderrData: Buffer.from('test'),
       })
 
       expect(errListener).toBeCalledTimes(1)
@@ -301,19 +322,14 @@ suite('grpc Runner', () => {
     })
 
     test('duplex onMessage calls close', async () => {
-      const {
-        duplex,
-        stdoutListener,
-        stderrListener,
-        closeListener
-      } = await createNewSession()
+      const { duplex, stdoutListener, stderrListener, closeListener } = await createNewSession()
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from(''),
         exitCode: {
-          value: 1
-        }
+          value: 1,
+        },
       })
 
       expect(stdoutListener).not.toBeCalled()
@@ -325,7 +341,7 @@ suite('grpc Runner', () => {
 
     test('initial request has winsize', async () => {
       const { duplex, session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('vscode')
@@ -339,13 +355,13 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 50,
           rows: 20,
-        }
+        },
       })
     })
 
     test('further requests have winsize', async () => {
       const { duplex, session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('vscode')
@@ -359,13 +375,13 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 60,
           rows: 30,
-        }
+        },
       })
     })
 
     test('requires all active windows to open before starting', async () => {
       const { duplex, session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('vscode')
@@ -383,7 +399,7 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 60,
           rows: 30,
-        }
+        },
       })
       duplex.requests.send.mockClear()
 
@@ -398,20 +414,20 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 80,
           rows: 50,
-        }
+        },
       })
       duplex.requests.send.mockClear()
 
       await session.setActiveTerminalWindow('vscode')
       expect(duplex.requests.send).toBeCalledTimes(1)
-      expect(((duplex.requests.send.mock.calls[0]) as any)[0]).toStrictEqual({
-        winsize: { cols: 70, rows: 40 }
+      expect((duplex.requests.send.mock.calls[0] as any)[0]).toStrictEqual({
+        winsize: { cols: 70, rows: 40 },
       })
     })
 
     test('active window does not send dimensions if program is uninitialized', async () => {
       const { duplex, session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('vscode', { rows: 40, columns: 40 })
@@ -430,7 +446,7 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 40,
           rows: 40,
-        }
+        },
       })
       duplex.requests.send.mockClear()
 
@@ -439,23 +455,24 @@ suite('grpc Runner', () => {
         winsize: {
           cols: 50,
           rows: 50,
-        }
+        },
       })
       duplex.requests.send.mockClear()
     })
 
     test('cannot set dimensions of unregistered terminal window', async () => {
       const { session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
-      expect( session.setDimensions({ columns: 10, rows: 10 }, 'vscode'))
-        .rejects.toThrowError('Tried to set dimensions for unregistered terminal window vscode')
+      expect(session.setDimensions({ columns: 10, rows: 10 }, 'vscode')).rejects.toThrowError(
+        'Tried to set dimensions for unregistered terminal window vscode',
+      )
     })
 
     test('cannot set active terminal to unregistered window', async () => {
       const { session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('vscode')
@@ -464,24 +481,28 @@ suite('grpc Runner', () => {
       const consoleError = vi.spyOn(console, 'error')
       session.setActiveTerminalWindow('notebook')
 
-      expect(consoleError).toBeCalledWith('Attempted to set active terminal window to unregistered window \'notebook\'')
+      expect(consoleError).toBeCalledWith(
+        "Attempted to set active terminal window to unregistered window 'notebook'",
+      )
     })
 
     test('cannot open unregistered terminal window', async () => {
       const { session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       const consoleError = vi.spyOn(console, 'error')
       session.open(undefined, 'notebook')
 
-      expect(consoleError).toBeCalledWith('Attempted to open unregistered terminal window \'notebook\'!')
+      expect(consoleError).toBeCalledWith(
+        "Attempted to open unregistered terminal window 'notebook'!",
+      )
       expect(session['terminalWindows'].get('notebook')?.opened).toBeUndefined()
     })
 
     test('cannot open terminal window twice', async () => {
       const { session } = await createNewSession({
-        tty: true
+        tty: true,
       })
 
       session.registerTerminalWindow('notebook')
@@ -492,17 +513,19 @@ suite('grpc Runner', () => {
 
       session.open(undefined, 'notebook')
 
-      expect(consoleWarn).toBeCalledWith('Attempted to open terminal window \'notebook\' that has already opened!')
+      expect(consoleWarn).toBeCalledWith(
+        "Attempted to open terminal window 'notebook' that has already opened!",
+      )
     })
 
     test('onDidWrite replaces returns in non-interactive', async () => {
       const { duplex, writeListener } = await createNewSession({
-        convertEol: true
+        convertEol: true,
       })
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\n'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -511,12 +534,12 @@ suite('grpc Runner', () => {
 
     test('onDidWrite replaces returns in complex string in non-interactive', async () => {
       const { duplex, writeListener } = await createNewSession({
-        convertEol: true
+        convertEol: true,
       })
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\nSERVICE_BAR_TOKEN: barfoo'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -525,12 +548,12 @@ suite('grpc Runner', () => {
 
     test('onDidWrite replaces returns in non-interactive in stderr', async () => {
       const { duplex, errListener } = await createNewSession({
-        convertEol: true
+        convertEol: true,
       })
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
-        stderrData: Buffer.from('test\n')
+        stderrData: Buffer.from('test\n'),
       })
 
       expect(errListener).toBeCalledTimes(1)
@@ -545,7 +568,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\r\n'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -559,7 +582,7 @@ suite('grpc Runner', () => {
 
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\n'),
-        stderrData: Buffer.from('')
+        stderrData: Buffer.from(''),
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -624,8 +647,8 @@ suite('RunmeCodeLensProvider', () => {
               'runme.dev/textRange': {
                 start: Buffer.from(block1Start, 'utf-8').length,
                 end: Buffer.from(block1End, 'utf-8').length,
-              }
-            }
+              },
+            },
           },
           {
             kind: NotebookCellKind.Code,
@@ -633,11 +656,11 @@ suite('RunmeCodeLensProvider', () => {
               'runme.dev/textRange': {
                 start: Buffer.from(block2Start, 'utf-8').length,
                 end: Buffer.from(block2End, 'utf-8').length,
-              }
-            }
+              },
+            },
           },
-        ]
-      }))
+        ],
+      })),
     } as any
 
     const provider = createCodeLensProvider(serializer, {} as any)
@@ -648,7 +671,7 @@ suite('RunmeCodeLensProvider', () => {
         getText: vi.fn().mockReturnValue(textParts.join('')),
         positionAt: vi.fn((c) => new Position(1, c)),
       } as any,
-      {} as any
+      {} as any,
     )
 
     expect(serializer.deserializeNotebook).toBeCalledTimes(1)
@@ -657,25 +680,29 @@ suite('RunmeCodeLensProvider', () => {
 
     lenses.forEach((lens, i) => {
       switch (i) {
-        case 0: {
-          const line = block1Start.split('\n').length - 2
+        case 0:
+          {
+            const line = block1Start.split('\n').length - 2
 
-          expect(lens.range.start.line).toStrictEqual(line)
-          expect(lens.range.start.character).toStrictEqual(0)
+            expect(lens.range.start.line).toStrictEqual(line)
+            expect(lens.range.start.character).toStrictEqual(0)
 
-          expect(lens.range.end.line).toStrictEqual(line)
-          expect(lens.range.end.character).toStrictEqual(0)
-        } break
+            expect(lens.range.end.line).toStrictEqual(line)
+            expect(lens.range.end.character).toStrictEqual(0)
+          }
+          break
 
-        case 3: {
-          const line = block2Start.split('\n').length - 2
+        case 3:
+          {
+            const line = block2Start.split('\n').length - 2
 
-          expect(lens.range.start.line).toStrictEqual(line)
-          expect(lens.range.start.character).toStrictEqual(0)
+            expect(lens.range.start.line).toStrictEqual(line)
+            expect(lens.range.start.character).toStrictEqual(0)
 
-          expect(lens.range.end.line).toStrictEqual(line)
-          expect(lens.range.end.character).toStrictEqual(0)
-        } break
+            expect(lens.range.end.line).toStrictEqual(line)
+            expect(lens.range.end.character).toStrictEqual(0)
+          }
+          break
       }
 
       expect(lens.command).toBeTruthy()
@@ -689,7 +716,14 @@ suite('RunmeCodeLensProvider', () => {
   test('action callback for run command', async () => {
     const provider = createCodeLensProvider({}, {} as any)
 
-    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, {} as any, 0, 'run')
+    await provider['codeLensActionCallback'](
+      { uri: { fsPath: '' } } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      0,
+      'run',
+    )
 
     expect(RunmeTaskProvider.getRunmeTask).toBeCalledTimes(1)
 
@@ -706,7 +740,14 @@ suite('RunmeCodeLensProvider', () => {
 
     vi.mocked(isWindows).mockReturnValueOnce(true)
 
-    await provider['codeLensActionCallback']({uri: { fsPath: '' }} as any, {} as any, {} as any, {} as any, 0, 'run')
+    await provider['codeLensActionCallback'](
+      { uri: { fsPath: '' } } as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      0,
+      'run',
+    )
 
     expect(isWindows).toBeCalledTimes(1)
     expect(provider['surveyWinCodeLensRun']['prompt']).toBeCalledTimes(1)
@@ -718,7 +759,14 @@ suite('RunmeCodeLensProvider', () => {
     const provider = createCodeLensProvider()
 
     const document = { uri: { fsPath: '' } }
-    await provider['codeLensActionCallback'](document as any, {} as any, {} as any, {} as any, 0, 'open')
+    await provider['codeLensActionCallback'](
+      document as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      0,
+      'open',
+    )
 
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', document.uri, 'runme')
   })
@@ -739,13 +787,17 @@ function createGrpcRunner(initialize = true) {
   return { server, runner }
 }
 
-async function createNewSession(options: Partial<RunProgramOptions> = {}, runner?: GrpcRunner, initialize?: boolean) {
+async function createNewSession(
+  options: Partial<RunProgramOptions> = {},
+  runner?: GrpcRunner,
+  initialize?: boolean,
+) {
   const { runner: generatedRunner, server } = createGrpcRunner(initialize)
 
   runner ??= generatedRunner
   const session = (await runner.createProgramSession({
     programName: 'sh',
-    ...options
+    ...options,
   })) as GrpcRunnerProgramSession
 
   const stdoutListener = vi.fn()
@@ -772,15 +824,12 @@ async function createNewSession(options: Partial<RunProgramOptions> = {}, runner
   }
 }
 
-function createCodeLensProvider(
-  serializer = {} as any,
-  runner?: IRunner
-) {
+function createCodeLensProvider(serializer = {} as any, runner?: IRunner) {
   return new RunmeCodeLensProvider(
     URI.parse('file:///foo/bar'),
     serializer,
     vi.fn(),
     new SurveyWinCodeLensRun({} as any),
-    runner
+    runner,
   )
 }

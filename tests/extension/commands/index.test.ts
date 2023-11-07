@@ -27,14 +27,18 @@ import {
   welcome,
   tryIt,
   openFileInRunme,
-  addToRecommendedExtensions
+  addToRecommendedExtensions,
 } from '../../../src/extension/commands'
-import { getTerminalByCell, getAnnotations, openFileAsRunmeNotebook } from '../../../src/extension/utils'
+import {
+  getTerminalByCell,
+  getAnnotations,
+  openFileAsRunmeNotebook,
+} from '../../../src/extension/utils'
 import {
   getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
-  isNotebookTerminalEnabledForCell
+  isNotebookTerminalEnabledForCell,
 } from '../../../src/utils/configuration'
 import { RecommendExtensionMessage } from '../../../src/extension/messaging'
 
@@ -51,20 +55,20 @@ vi.mock('../../../src/utils/configuration', () => ({
   getBinaryPath: vi.fn(),
   isNotebookTerminalEnabledForCell: vi.fn(),
   getCLIUseIntegratedRunme: vi.fn().mockReturnValue(false),
-  OpenViewInEditorAction: { enum: { toggle: 'toggle', split: 'split' } }
+  OpenViewInEditorAction: { enum: { toggle: 'toggle', split: 'split' } },
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
   CliProvider: {
-    isCliInstalled: vi.fn()
-  }
+    isCliInstalled: vi.fn(),
+  },
 }))
 
 vi.mock('../../../src/extension/server/runmeServer.ts', () => ({
-  default: class { }
+  default: class {},
 }))
 
 vi.mock('../../../src/extension/runner', () => ({
-  GrpcRunnerEnvironment: class { }
+  GrpcRunnerEnvironment: class {},
 }))
 
 vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
@@ -81,12 +85,12 @@ test('openTerminal without notebook terminal', () => {
   const func = toggleTerminal({} as any, false)
 
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(false)
-  vi.mocked(getAnnotations).mockReturnValueOnce(({ interactive: true } as any))
+  vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
   expect(func({} as any)).resolves.toBe(undefined)
   expect(window.showWarningMessage).toBeCalledTimes(1)
 
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(false)
-  vi.mocked(getAnnotations).mockReturnValueOnce(({ interactive: true } as any))
+  vi.mocked(getAnnotations).mockReturnValueOnce({ interactive: true } as any)
   vi.mocked(getTerminalByCell).mockReturnValue({ show: vi.fn().mockReturnValue('showed') } as any)
   expect(func({} as any)).resolves.toBe('showed')
 })
@@ -100,11 +104,11 @@ test('openTerminal with notebook terminal', async () => {
   }
 
   const kernel = {
-    getCellOutputs: vi.fn().mockReturnValue(outputs)
+    getCellOutputs: vi.fn().mockReturnValue(outputs),
   }
   const func = toggleTerminal(kernel as any, true)
 
-  vi.mocked(getTerminalByCell).mockReturnValueOnce({ show: () => { } } as any)
+  vi.mocked(getTerminalByCell).mockReturnValueOnce({ show: () => {} } as any)
   vi.mocked(isNotebookTerminalEnabledForCell).mockReturnValueOnce(true)
 
   await func({} as any)
@@ -132,17 +136,17 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1
+      kind: 1,
     }
 
     cell.notebook = {
       getCells: () => [cell],
-      isDirty: false
+      isDirty: false,
     }
 
     await runCLICommand({} as any, false, {} as any, {} as any)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
-      'runme run --chdir="/foo/bar" --filename="README.md" --index=0'
+      'runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
   })
 
@@ -150,12 +154,12 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1
+      kind: 1,
     }
 
     cell.notebook = {
       getCells: () => [cell],
-      isDirty: false
+      isDirty: false,
     }
 
     vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
@@ -163,7 +167,7 @@ suite('runCliCommand', () => {
 
     await runCLICommand({} as any, false, {} as any, {} as any)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
-      '/bin/runme run --chdir="/foo/bar" --filename="README.md" --index=0'
+      '/bin/runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
   })
 
@@ -171,13 +175,13 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1
+      kind: 1,
     }
 
     cell.notebook = {
       getCells: () => [cell],
       isDirty: true,
-      save: vi.fn()
+      save: vi.fn(),
     }
 
     // Cancelled
@@ -251,17 +255,17 @@ test('welcome command', async () => {
   expect(commands.executeCommand).toBeCalledWith(
     'workbench.action.openWalkthrough',
     'stateful.runme#runme.welcome',
-    false
+    false,
   )
 })
 
 test('tryIt command', async () => {
   await tryIt({ globalStorageUri: { fsPath: '/foo/bar' } } as any)
+  expect(vi.mocked(workspace.fs.createDirectory).mock.calls[0][0].path.startsWith('/foo/bar')).toBe(
+    true,
+  )
   expect(
-    vi.mocked(workspace.fs.createDirectory).mock.calls[0][0].path.startsWith('/foo/bar')
-  ).toBe(true)
-  expect(
-    vi.mocked(workspace.fs.writeFile).mock.calls[0][0].path.endsWith('Welcome to Runme.md')
+    vi.mocked(workspace.fs.writeFile).mock.calls[0][0].path.endsWith('Welcome to Runme.md'),
   ).toBe(true)
   expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(Object), 'runme')
 })
@@ -304,7 +308,7 @@ test('addToRecommendedExtensions command', async () => {
     globalState: {
       get: vi.fn().mockReturnValue(undefined),
       update: vi.fn().mockResolvedValue({}),
-    }
+    },
   } as any
   await addToRecommendedExtensions(contextMock)
   expect(recommendExtensionSpy).toHaveBeenCalledOnce()

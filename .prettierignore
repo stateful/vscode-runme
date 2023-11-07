@@ -3,6 +3,11 @@
 !src/**/*.tsx
 !src/**/*.js
 !src/**/*.jsx
+!tests/**/*.ts
+!tests/**/*.tsx
+!tests/**/*.js
+!tests/**/*.jsx
+
 
 out
 node_modules

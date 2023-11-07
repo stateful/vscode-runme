@@ -4,13 +4,13 @@ import { ChainablePromiseElement } from 'webdriverio'
 import * as locatorMap from './locators.js'
 import {
   notebookCell as notebookCellLocators,
-  notebookCellStatus as notebookCellStatusLocators
+  notebookCellStatus as notebookCellStatusLocators,
 } from './locators.js'
 
 export enum OutputType {
   TerminalView = 'terminal-view',
   ShellOutput = 'shell-output',
-  Display = '.display'
+  Display = '.display',
 }
 
 export enum StatusBarElements {
@@ -20,7 +20,7 @@ export enum StatusBarElements {
   ShellScript = 'Shell Script',
   OpenTerminal = 'Open Terminal',
   BackgroundTask = 'Background Task',
-  StopTask = 'Stop Task'
+  StopTask = 'Stop Task',
 }
 
 export interface NotebookCommand {
@@ -28,7 +28,7 @@ export interface NotebookCommand {
   text: string
 }
 
-export interface NotebookCell extends IPageDecorator<typeof notebookCellLocators> { }
+export interface NotebookCell extends IPageDecorator<typeof notebookCellLocators> {}
 
 @PageDecorator(notebookCellLocators)
 export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof locatorMap> {
@@ -43,10 +43,9 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
    * Ensure the focus is over the cell code block element
    */
   async focus() {
-    await this.elem.click()
-      .catch(() => {
-        // ci sometimes yaps about this
-      })
+    await this.elem.click().catch(() => {
+      // ci sometimes yaps about this
+    })
   }
 
   async run(waitForSuccess = true) {
@@ -103,7 +102,8 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
       if (row.error) {
         throw row.error
       }
-      let text = expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
+      let text =
+        expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
 
       if (expectedTerminal === OutputType.TerminalView) {
         text = text.slice(0, text.length - 'Copy\nSave'.length).trim()
@@ -120,15 +120,18 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
   }
 }
 
-export interface NotebookCellStatusBar extends IPageDecorator<typeof notebookCellStatusLocators> { }
+export interface NotebookCellStatusBar extends IPageDecorator<typeof notebookCellStatusLocators> {}
 
 @PageDecorator(notebookCellStatusLocators)
-export class NotebookCellStatusBar extends BasePage<typeof notebookCellStatusLocators, typeof locatorMap> {
+export class NotebookCellStatusBar extends BasePage<
+  typeof notebookCellStatusLocators,
+  typeof locatorMap
+> {
   locatorKey = 'notebookCellStatus' as const
 
   constructor(
     container: ChainablePromiseElement<WebdriverIO.Element>,
-    protected parentCell: NotebookCell
+    protected parentCell: NotebookCell,
   ) {
     super(locatorMap, container)
   }

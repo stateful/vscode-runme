@@ -7,10 +7,10 @@ describe('Runme Codelense Support', async () => {
   before('should not prompt if promptEnv is false', async () => {
     return browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`)
+        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/test.md`),
       )
       return vscode.window.showTextDocument(doc, {
-        viewColumn: vscode.ViewColumn.Active
+        viewColumn: vscode.ViewColumn.Active,
       })
     })
   })
@@ -32,10 +32,12 @@ describe('Runme Codelense Support', async () => {
 
   it('should allow to paste into terminal', async () => {
     await browser.waitUntil(
-      () => $$('.codelens-decoration').then((elems) => {
-        return elems.length > 1
-      }),
-      { timeoutMsg: 'Codelens not found', timeout: 30 * 1000 })
+      () =>
+        $$('.codelens-decoration').then((elems) => {
+          return elems.length > 1
+        }),
+      { timeoutMsg: 'Codelens not found', timeout: 30 * 1000 },
+    )
     const lense = (await $$('.codelens-decoration a'))[2]
     await lense.click()
     await browser.pause(1000)
@@ -55,17 +57,17 @@ describe('Runme Codelense Support', async () => {
   })
 
   it('should allow to open file in notebook', async () => {
-    await browser.waitUntil(
-      () => $$('.codelens-decoration').then((elems) => elems.length > 1),
-      { timeoutMsg: 'Codelens not found', timeout: 30 * 1000 })
+    await browser.waitUntil(() => $$('.codelens-decoration').then((elems) => elems.length > 1), {
+      timeoutMsg: 'Codelens not found',
+      timeout: 30 * 1000,
+    })
     await $$('.codelens-decoration a')[1].click()
     await browser.pause(1000)
 
     const workbench = await browser.getWorkbench()
-    await browser.waitUntil(
-      async () => (await workbench.getAllWebviews()).length > 0,
-      { timeoutMsg: 'Notebook document didn\'t load' }
-    )
+    await browser.waitUntil(async () => (await workbench.getAllWebviews()).length > 0, {
+      timeoutMsg: "Notebook document didn't load",
+    })
     const webview = (await workbench.getAllWebviews())[0]
     await webview.open()
     await expect($('body')).toHaveTextContaining('Runme Examples')

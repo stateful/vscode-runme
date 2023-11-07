@@ -18,10 +18,10 @@ describe('Runme VS Code Extension', async () => {
     const content = await sidebar.getContent()
     const section = await content.getSection('VSCODE-RUNME')
 
-    const filesAndDirs = await section.getVisibleItems() as DefaultTreeItem[]
+    const filesAndDirs = (await section.getVisibleItems()) as DefaultTreeItem[]
     let readmeFile: DefaultTreeItem | undefined
     for (const file of filesAndDirs) {
-      if (await file.getLabel() === 'README.md') {
+      if ((await file.getLabel()) === 'README.md') {
         readmeFile = file
         break
       }
@@ -32,10 +32,9 @@ describe('Runme VS Code Extension', async () => {
     }
     await readmeFile.select()
 
-    await browser.waitUntil(
-      async () => (await workbench.getAllWebviews()).length > 0,
-      { timeoutMsg: 'Notebook document didn\'t load' }
-    )
+    await browser.waitUntil(async () => (await workbench.getAllWebviews()).length > 0, {
+      timeoutMsg: "Notebook document didn't load",
+    })
     const webview = (await workbench.getAllWebviews())[0]
     await webview.open()
     await expect($('body')).toHaveTextContaining('Runme Examples')
@@ -55,7 +54,6 @@ describe('Runme VS Code Extension', async () => {
       throw new Error('Could not find CLI button')
     }
   })
-
 
   describe('Runme examples', async () => {
     const notebook = new RunmeNotebook()
@@ -80,9 +78,7 @@ describe('Runme VS Code Extension', async () => {
       await cell.run()
       await cell.run()
 
-      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
-        'Hello World!'
-      ])
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual(['Hello World!'])
     })
 
     // TODO: enable this test after releasing shebang support on cli
@@ -110,10 +106,12 @@ describe('Runme VS Code Extension', async () => {
     // })
 
     it('more shell example', async () => {
-      const cell = await notebook.getCell('echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"')
+      const cell = await notebook.getCell(
+        'echo "Foo 👀"\nsleep 2\necho "Bar 🕺"\nsleep 2\necho "Loo 🚀"',
+      )
       await cell.run()
       expect(await cell.getCellOutput(OutputType.ShellOutput)).toStrictEqual([
-        'Foo 👀\nBar 🕺\nLoo 🚀'
+        'Foo 👀\nBar 🕺\nLoo 🚀',
       ])
     })
 
@@ -199,12 +197,14 @@ describe('Runme VS Code Extension', async () => {
     // note: can be inconsistent
     it.skip('multiple lines environment variable', async () => {
       {
-        const cell = await notebook.getCell([
-          'echo "Auth token for service foo"',
-          'export SERVICE_FOO_TOKEN="foobar"',
-          'echo "Auth token for service bar"',
-          'export SERVICE_BAR_TOKEN="barfoo"'
-        ].join('\n'))
+        const cell = await notebook.getCell(
+          [
+            'echo "Auth token for service foo"',
+            'export SERVICE_FOO_TOKEN="foobar"',
+            'echo "Auth token for service bar"',
+            'export SERVICE_BAR_TOKEN="barfoo"',
+          ].join('\n'),
+        )
 
         await cell.run(false)
 
@@ -226,10 +226,9 @@ describe('Runme VS Code Extension', async () => {
 
         const outputs = await cell.getCellOutput(OutputType.ShellOutput)
         expect(outputs).toHaveLength(1)
-        expect(outputs[0]).toStrictEqual([
-          'SERVICE_FOO_TOKEN: foobar',
-          'SERVICE_BAR_TOKEN: barfoo'
-        ].join('\n'))
+        expect(outputs[0]).toStrictEqual(
+          ['SERVICE_FOO_TOKEN: foobar', 'SERVICE_BAR_TOKEN: barfoo'].join('\n'),
+        )
       }
     })
 
@@ -249,7 +248,7 @@ describe('Runme VS Code Extension', async () => {
         const cell = await notebook.getCell('export LICENSE=$(cat ../LICENSE)')
         await cell.run()
 
-        await new Promise(cb => setTimeout(cb, 2000))
+        await new Promise((cb) => setTimeout(cb, 2000))
       }
 
       // await clearAllOutputs(await browser.getWorkbench())
@@ -303,25 +302,33 @@ describe('Runme VS Code Extension', async () => {
 
     it.skip('Curl an image', async () => {
       // eslint-disable-next-line max-len
-      const cell = await notebook.getCell('curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2>/dev/null')
+      const cell = await notebook.getCell(
+        // eslint-disable-next-line max-len
+        'curl https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png 2>/dev/null',
+      )
       await cell.run()
 
-      await browser.waitUntil(async () => {
-        const imageRegex = new RegExp('<img src="blob:vscode-webview:\/\/(.)+">')
+      await browser.waitUntil(
+        async () => {
+          const imageRegex = new RegExp('<img src="blob:vscode-webview://(.)+">')
 
-        const outputs = await cell.getCellOutput(OutputType.Display)
+          const outputs = await cell.getCellOutput(OutputType.Display)
 
-        if (outputs.length !== 1) {
-          return false
-        }
+          if (outputs.length !== 1) {
+            return false
+          }
 
-        return outputs[0].match(imageRegex)
-      }, { timeout: 15000 })
+          return outputs[0].match(imageRegex)
+        },
+        { timeout: 15000 },
+      )
     })
 
     it('terminal dimensions', async () => {
       const workbench = await browser.getWorkbench()
-      const cell = await notebook.getCell('echo Rows: \\$(tput lines)\necho Columns: \\$(tput cols)')
+      const cell = await notebook.getCell(
+        'echo Rows: \\$(tput lines)\necho Columns: \\$(tput cols)',
+      )
 
       await cell.run(false)
 

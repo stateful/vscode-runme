@@ -13,7 +13,7 @@ vi.mock('vscode', async () => {
   const mocked = await import('../../../__mocks__/vscode')
   const SETTINGS_MOCK: any = { baseDomain: undefined }
 
-  return ({
+  return {
     ...mocked,
     workspace: {
       getConfiguration: vi.fn().mockReturnValue({
@@ -22,10 +22,10 @@ vi.mock('vscode', async () => {
         },
         get: (configurationName) => {
           return SETTINGS_MOCK[configurationName]
-        }
-      })
-    }
-  })
+        },
+      }),
+    },
+  }
 })
 
 vi.mock('../../../src/extension/utils', () => {
@@ -34,7 +34,7 @@ vi.mock('../../../src/extension/utils', () => {
       text: vi
         .fn()
         .mockResolvedValue(
-          '<script id="appAuthToken">window.APP_STATE = JSON.parse(\'{ "appToken": null }\');</script>'
+          '<script id="appAuthToken">window.APP_STATE = JSON.parse(\'{ "appToken": null }\');</script>',
         ),
     }),
   }
@@ -59,7 +59,7 @@ suite('Panel', () => {
 
     expect(hydrated).toContain('<base href="https://app.runme.dev/">')
     expect(hydrated).toContain(
-      '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels"}'
+      '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels"}',
     )
   })
 
@@ -71,7 +71,7 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}'
+      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}',
     )
   })
 
@@ -83,7 +83,7 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}'
+      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}',
     )
   })
 
@@ -96,7 +96,7 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}'
+      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}',
     )
   })
 
@@ -109,7 +109,7 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}'
+      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}',
     )
   })
 })

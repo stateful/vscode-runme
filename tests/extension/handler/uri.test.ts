@@ -6,7 +6,11 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import {
-  getProjectDir, getSuggestedProjectName, writeBootstrapFile, parseParams, getTargetDirName
+  getProjectDir,
+  getSuggestedProjectName,
+  writeBootstrapFile,
+  parseParams,
+  getTargetDirName,
 } from '../../../src/extension/handler/utils'
 
 vi.mock('vscode')
@@ -20,13 +24,13 @@ vi.mock('../../../src/extension/handler/utils', () => ({
   writeBootstrapFile: vi.fn(),
   setCurrentCellExecutionDemo: vi.fn(),
   shouldExecuteDemo: vi.fn(),
-  cleanExecutionDemo: vi.fn()
+  cleanExecutionDemo: vi.fn(),
 }))
 vi.mock('got', () => ({
-  default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) }
+  default: { get: vi.fn().mockResolvedValue({ body: 'some markdown' }) },
 }))
 vi.mock('../../../src/extension/kernel', () => ({
-  Kernel: {}
+  Kernel: {},
 }))
 
 describe('RunmeUriHandler', () => {
@@ -51,45 +55,51 @@ describe('RunmeUriHandler', () => {
 
     it('should fail if no command was found', async () => {
       vi.mocked(Uri.parse).mockReturnValue({ query: {} } as any)
-      expect(await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar')))
-        .toBe(undefined)
+      expect(await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))).toBe(undefined)
       expect(window.showErrorMessage).toBeCalledWith('No query parameter "command" provided')
     })
 
     it('should fail if no command was recognised', async () => {
       vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'foobar' } } as any)
-      expect(await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar')))
-        .toBe(undefined)
+      expect(await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))).toBe(undefined)
       expect(window.showErrorMessage).toBeCalledWith('Couldn\'t recognise command "foobar"')
     })
 
     it('runs _setupProject if command was "setup"', async () => {
       vi.mocked(Uri.parse).mockReturnValue({
         toString: () => 'some url',
-        query: { command: 'setup' }
+        query: { command: 'setup' },
       } as any)
       vi.mocked(parseParams).mockReturnValue({
         fileToOpen: '/sub/file.md',
         repository: 'git@github.com:/foo/bar',
-        cell: -1
+        cell: -1,
       })
       await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
       expect(handler['_setupProject']).toBeCalledWith('/sub/file.md', 'git@github.com:/foo/bar')
-      expect(TelemetryReporter.sendTelemetryEvent)
-        .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'project' })
+      expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('extension.uriHandler', {
+        command: 'setup',
+        type: 'project',
+      })
     })
 
     it('runs _setupFile if command was "setup" but no repository param', async () => {
       vi.mocked(Uri.parse).mockReturnValue({
         toString: () => 'https://some url',
         query: { command: 'setup' },
-        fsPath: '/foo/bar'
+        fsPath: '/foo/bar',
       } as any)
-      vi.mocked(parseParams).mockReturnValue({ fileToOpen: 'https://some url', repository: null, cell: -1 })
+      vi.mocked(parseParams).mockReturnValue({
+        fileToOpen: 'https://some url',
+        repository: null,
+        cell: -1,
+      })
       await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))
       expect(handler['_setupFile']).toBeCalledWith('https://some url')
-      expect(TelemetryReporter.sendTelemetryEvent)
-        .toBeCalledWith('extension.uriHandler', { command: 'setup', type: 'file' })
+      expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('extension.uriHandler', {
+        command: 'setup',
+        type: 'file',
+      })
     })
   })
 
@@ -102,8 +112,7 @@ describe('RunmeUriHandler', () => {
 
     it('doesn not do anything if repository was not provided', async () => {
       await handler['_setupProject']('README.md')
-      expect(window.showErrorMessage)
-        .toBeCalledWith('No project to setup was provided in the url')
+      expect(window.showErrorMessage).toBeCalledWith('No project to setup was provided in the url')
       expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
     })
 
@@ -130,33 +139,41 @@ describe('RunmeUriHandler', () => {
     })
 
     it('shows warning if file is not a markdown', async () => {
-      vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup' }, fsPath: '/foo/bar' } as any)
+      vi.mocked(Uri.parse).mockReturnValue({
+        query: { command: 'setup' },
+        fsPath: '/foo/bar',
+      } as any)
       await handler['_setupFile']('/foo/bar.js')
-      expect(window.showErrorMessage)
-        .toBeCalledWith('Parameter "fileToOpen" from URL is not a markdown file!')
+      expect(window.showErrorMessage).toBeCalledWith(
+        'Parameter "fileToOpen" from URL is not a markdown file!',
+      )
       expect(getProjectDir).toBeCalledTimes(0)
     })
 
     it('should fail gracefully', async () => {
       vi.mocked(got.get).mockRejectedValueOnce(new Error('ups'))
-      vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup' }, fsPath: '/foo/bar.md' } as any)
+      vi.mocked(Uri.parse).mockReturnValue({
+        query: { command: 'setup' },
+        fsPath: '/foo/bar.md',
+      } as any)
       vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
       await handler['_setupFile']('/foo/bar.md')
       expect(vi.mocked(window.showErrorMessage).mock.calls[0][0]).toMatch(/Failed to set-up/)
     })
 
     it('should create new dir with file and open VS Code', async () => {
-      vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'setup' }, fsPath: '/foo/bar.md' } as any)
+      vi.mocked(Uri.parse).mockReturnValue({
+        query: { command: 'setup' },
+        fsPath: '/foo/bar.md',
+      } as any)
       vi.mocked(getProjectDir).mockResolvedValueOnce(Uri.file('foobar'))
       await handler['_setupFile']('/foo/bar.md')
       expect(workspace.fs.createDirectory).toBeCalledTimes(1)
       expect(workspace.fs.writeFile).toBeCalledTimes(1)
       expect(writeBootstrapFile).toBeCalledTimes(1)
-      expect(commands.executeCommand).toBeCalledWith(
-        'vscode.openFolder',
-        expect.any(Object),
-        { forceNewWindow: true }
-      )
+      expect(commands.executeCommand).toBeCalledWith('vscode.openFolder', expect.any(Object), {
+        forceNewWindow: true,
+      })
     })
   })
 
@@ -173,34 +190,48 @@ describe('RunmeUriHandler', () => {
 
     it('should return false if executeTask fails', async () => {
       vi.mocked(tasks.executeTask).mockResolvedValue({ _id: 'id' } as any)
-      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) => x({
-        execution: {
-          _id: 'id'
-        },
-        exitCode: 1
-      } as any))
+      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) =>
+        x({
+          execution: {
+            _id: 'id',
+          },
+          exitCode: 1,
+        } as any),
+      )
 
-      await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
+      await handler['_cloneProject'](
+        progress,
+        { fsPath: '/bar/foo' } as any,
+        '/foo/bar',
+        'README.md',
+      )
 
       expect(window.showErrorMessage).toBeCalledTimes(1)
     })
 
     it('should finish clone process', async () => {
       vi.mocked(tasks.executeTask).mockResolvedValue({ _id: 'id' } as any)
-      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) => x({
-        execution: {
-          _id: 'id'
-        },
-        exitCode: 0
-      } as any))
+      vi.mocked(tasks.onDidEndTaskProcess).mockImplementation((x) =>
+        x({
+          execution: {
+            _id: 'id',
+          },
+          exitCode: 0,
+        } as any),
+      )
 
-      await handler['_cloneProject'](progress, { fsPath: '/bar/foo' } as any, '/foo/bar', 'README.md')
+      await handler['_cloneProject'](
+        progress,
+        { fsPath: '/bar/foo' } as any,
+        '/foo/bar',
+        'README.md',
+      )
 
       expect(progress.report).toBeCalledWith({ increment: 100 })
       expect(commands.executeCommand).toBeCalledWith(
         'vscode.openFolder',
-        { 'fsPath': '/bar/foo' },
-        { forceNewWindow: true }
+        { fsPath: '/bar/foo' },
+        { forceNewWindow: true },
       )
     })
   })
