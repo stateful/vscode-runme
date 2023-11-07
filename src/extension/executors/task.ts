@@ -14,12 +14,12 @@ import {
 
 import getLogger from '../logger'
 // import { ExperimentalTerminal } from "../terminal"
-import { getCmdShellSeq, getAnnotations, getTerminalRunmeId } from '../utils'
+import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 import { NotebookCellOutputManager } from '../cell'
 
-import { retrieveShellCommand } from './utils'
+import { getCmdShellSeq, retrieveShellCommand } from './utils'
 import { sh as inlineSh } from './shell'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000

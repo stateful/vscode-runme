@@ -49,7 +49,6 @@ import { setCurrentCellExecutionDemo } from './handler/utils'
 
 declare var globalThis: any
 
-const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const log = getLogger()
 
 /**
@@ -168,72 +167,6 @@ export function getKey(runningCell: vscode.TextDocument): string {
   }
 
   return languageId
-}
-
-/**
- * treat cells like a series of individual commands
- * which need to be executed in sequence
- */
-export function getCmdSeq(cellText: string): string[] {
-  return cellText
-    .trimStart()
-    .split('\\\n')
-    .map((l) => l.trim())
-    .join(' ')
-    .split('\n')
-    .map((l) => {
-      const hashPos = l.indexOf('#')
-      if (hashPos > -1) {
-        return l.substring(0, hashPos).trim()
-      }
-      const stripped = l.trim()
-
-      if (stripped.startsWith('$')) {
-        return stripped.slice(1).trim()
-      } else {
-        return stripped
-      }
-    })
-    .filter((l) => {
-      const hasPrefix = (l.match(HASH_PREFIX_REGEXP) || []).length > 0
-      return l !== '' && !hasPrefix
-    })
-}
-
-/**
- * Does the following to a command list:
- *
- * - Splits by new lines
- * - Removes trailing `$` characters
- */
-export function prepareCmdSeq(cellText: string): string[] {
-  return cellText.split('\n').map((l) => {
-    const stripped = l.trimStart()
-
-    if (stripped.startsWith('$')) {
-      return stripped.slice(1).trimStart()
-    }
-
-    return l
-  })
-}
-
-/**
- * treat cells like like a series of individual commands
- * which need to be executed in sequence
- *
- * packages command sequence into single callable script
- */
-export function getCmdShellSeq(cellText: string, os: string): string {
-  const trimmed = getCmdSeq(cellText).join('; ')
-
-  if (['darwin'].find((entry) => entry === os)) {
-    return `set -e -o pipefail; ${trimmed}`
-  } else if (os.toLocaleLowerCase().startsWith('win')) {
-    return trimmed
-  }
-
-  return `set -e; ${trimmed}`
 }
 
 export function normalizeLanguage(l?: string) {

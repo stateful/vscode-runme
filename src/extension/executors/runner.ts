@@ -19,13 +19,7 @@ import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerEnvironment, RunProgramExecution } from '../runner'
-import {
-  getAnnotations,
-  getCellRunmeId,
-  getCmdShellSeq,
-  getTerminalByCell,
-  getWorkspaceEnvs,
-} from '../utils'
+import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { Kernel } from '../kernel'
@@ -39,6 +33,7 @@ import {
   getCellCwd,
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
+  getCmdShellSeq,
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
