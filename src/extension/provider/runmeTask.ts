@@ -20,7 +20,7 @@ import {
 } from 'vscode'
 
 import getLogger from '../logger'
-import { getAnnotations, getWorkspaceEnvs, prepareCmdSeq } from '../utils'
+import { getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
@@ -139,8 +139,8 @@ export class RunmeTaskProvider implements TaskProvider {
         const commands = await parseCommandSeq(
           cellContent,
           promptEnv,
+          languageId,
           new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
-          prepareCmdSeq,
         )
 
         if (!environment) {

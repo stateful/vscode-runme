@@ -25,7 +25,6 @@ import {
   getCmdShellSeq,
   getTerminalByCell,
   getWorkspaceEnvs,
-  prepareCmdSeq,
 } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
@@ -96,8 +95,8 @@ export async function executeRunner(
   const commands = await parseCommandSeq(
     cellText,
     skipPromptEnvDocumentLevel === false ? promptEnv : false,
+    execKey, // same as languageId
     new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
-    prepareCmdSeq,
   )
   if (!commands) {
     return false

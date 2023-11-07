@@ -18,7 +18,7 @@ import { ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
-import { getAnnotations, getWorkspaceFolder } from '../utils'
+import { getAnnotations, getWorkspaceFolder, prepareCmdSeq } from '../utils'
 import { CommandMode } from '../grpc/runnerTypes'
 
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -366,10 +366,12 @@ function resolveOrAbsolute(parent?: string, child?: string): string | undefined 
 export async function parseCommandSeq(
   cellText: string,
   promptForEnv = DEFAULT_PROMPT_ENV,
-  skipEnvs?: Set<string>,
-  parseBlock?: (block: string) => string[],
+  languageId: string,
+  skipEnvs: Set<string>,
 ): Promise<string[] | undefined> {
-  parseBlock ??= (s) => (s ? s.split('\n') : [])
+  const parseBlock = isShellLanguage(languageId)
+    ? prepareCmdSeq
+    : (s: string) => (s ? s.split('\n') : [])
 
   const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
 
