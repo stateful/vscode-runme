@@ -133,9 +133,9 @@ suite('Configuration', () => {
   })
 
   test('getServerConfigurationValue should give default persist identity', () => {
-    expect(
-      getServerConfigurationValue<number>('persistIdentity', RunmeIdentity.UNSPECIFIED),
-    ).toStrictEqual(RunmeIdentity.ALL)
+    expect(getServerConfigurationValue<number>('persistIdentity', RunmeIdentity.ALL)).toStrictEqual(
+      RunmeIdentity.UNSPECIFIED,
+    )
   })
 
   test('getCodeLensEnabled should return true by default', () => {

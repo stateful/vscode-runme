@@ -307,7 +307,7 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
   protected readonly persistIdentity: ServerPersistIdentity =
-    getServerConfigurationValue<ServerPersistIdentity>('persistIdentity', RunmeIdentity.ALL)
+    getServerConfigurationValue<ServerPersistIdentity>('persistIdentity', RunmeIdentity.UNSPECIFIED)
 
   private serverReadyListener: Disposable | undefined
 
