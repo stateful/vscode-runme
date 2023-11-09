@@ -441,7 +441,6 @@ export class TerminalView extends LitElement {
                 return
               }
               if (e.type === ClientMessages.terminalStdout) {
-                this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
                 this.isShareReady = false
                 this.terminal!.write(data)
                 this.requestUpdate()
@@ -515,6 +514,7 @@ export class TerminalView extends LitElement {
             if (uuid !== this.uuid || !this.isAutoSaveEnabled) {
               return
             }
+            this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
             return this.#shareCellOutput()
           }
         }
