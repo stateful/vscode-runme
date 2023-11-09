@@ -358,7 +358,8 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    const deserialRequest = DeserializeRequest.create({ source: content })
+    const identity = this.persistIdentity
+    const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 
     const { notebook } = request.response
