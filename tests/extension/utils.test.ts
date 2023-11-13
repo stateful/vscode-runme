@@ -240,6 +240,7 @@ suite('#getAnnotations', () => {
       category: '',
       excludeFromRunAll: false,
       promptEnv: true,
+      id: undefined,
       'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0',
       interpreter: '',
     })
@@ -254,6 +255,7 @@ suite('#getAnnotations', () => {
     }
 
     expect(getAnnotations(hello)).toStrictEqual({
+      id: undefined,
       background: false,
       closeTerminalOnSuccess: true,
       interactive: true,
