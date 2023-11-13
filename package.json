@@ -3,7 +3,7 @@
   "version": "1.11.1-edge.0",
   "publisher": "stateful",
   "displayName": "Runme runs Markdown",
-  "description": "Execute commands inside your runbooks, docs, and READMEs.",
+  "description": "Execute your runbooks, docs, and READMEs.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
