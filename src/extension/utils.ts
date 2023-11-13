@@ -66,6 +66,7 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
 
   const schema = {
     ...metadata,
+    id: metadata.id || metadata['runme.dev/id'],
     name: metadata.name || metadata['runme.dev/name'],
   }
 
