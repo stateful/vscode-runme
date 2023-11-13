@@ -19,13 +19,14 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 import { VSCODE_LANGUAGEID_MAP } from '../constants'
-import { ServerPersistIdentity, getServerConfigurationValue } from '../utils/configuration'
+import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
   DeserializeRequest,
   SerializeRequest,
   Notebook,
   RunmeIdentity,
+  CellKind,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
@@ -306,8 +307,11 @@ export class WasmSerializer extends SerializerBase {
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
-  protected readonly persistIdentity: ServerPersistIdentity =
-    getServerConfigurationValue<ServerPersistIdentity>('persistIdentity', RunmeIdentity.UNSPECIFIED)
+  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
+    getServerConfigurationValue<ServerLifecycleIdentity>(
+      'lifecycleIdentity',
+      RunmeIdentity.UNSPECIFIED,
+    )
 
   private serverReadyListener: Disposable | undefined
 
@@ -334,14 +338,35 @@ export class GrpcSerializer extends SerializerBase {
     this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
+  protected applyIdentity(data: Notebook): Notebook {
+    const identity = this.lifecycleIdentity
+    switch (identity) {
+      case RunmeIdentity.UNSPECIFIED:
+      case RunmeIdentity.DOCUMENT: {
+        break
+      }
+      default: {
+        data.cells.forEach((cell) => {
+          if (cell.kind !== CellKind.CODE) {
+            return
+          }
+          if (!cell.metadata?.['id'] && cell.metadata?.['runme.dev/id']) {
+            cell.metadata['id'] = cell.metadata['runme.dev/id']
+          }
+        })
+      }
+    }
+
+    return data
+  }
+
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const identity = this.persistIdentity
     const notebook = Notebook.clone(data as any)
-    const serialRequest = <SerializeRequest>{ notebook, options: { identity } }
+    const serialRequest = <SerializeRequest>{ notebook }
 
     const request = await this.client!.serialize(serialRequest)
 
@@ -358,7 +383,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    const identity = this.persistIdentity
+    const identity = this.lifecycleIdentity
     const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 
@@ -367,8 +392,10 @@ export class GrpcSerializer extends SerializerBase {
       throw new Error('deserialization failed to revive notebook')
     }
 
+    const _notebook = this.applyIdentity(notebook)
+
     // we can remove ugly casting once we switch to GRPC
-    return notebook as unknown as Serializer.Notebook
+    return _notebook as unknown as Serializer.Notebook
   }
 
   public dispose(): void {

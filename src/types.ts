@@ -54,6 +54,7 @@ export namespace Serializer {
   }
 
   export interface Metadata {
+    id?: string
     name?: string
     background?: string
     interactive?: string
@@ -63,6 +64,7 @@ export namespace Serializer {
     category?: string
     ['runme.dev/name']?: string
     ['runme.dev/uuid']?: string
+    ['runme.dev/id']?: string
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState

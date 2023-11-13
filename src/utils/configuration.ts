@@ -58,7 +58,7 @@ const configurationSchema = {
     enableTLS: z.boolean().default(true),
     tlsDir: z.string().optional(),
     transportType: z.enum(['TCP', 'UDS']).default('TCP'),
-    persistIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.UNSPECIFIED),
+    lifecycleIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.UNSPECIFIED),
   },
   codelens: {
     enable: z.boolean().default(true),
@@ -81,7 +81,7 @@ const configurationSchema = {
 const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
 export type TerminalConfiguration = z.infer<typeof notebookTerminalSchemaObject>
 export type ServerTransportType = z.infer<typeof configurationSchema.server.transportType>
-export type ServerPersistIdentity = z.infer<typeof configurationSchema.server.persistIdentity>
+export type ServerLifecycleIdentity = z.infer<typeof configurationSchema.server.lifecycleIdentity>
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
