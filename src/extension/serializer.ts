@@ -19,7 +19,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
 import { VSCODE_LANGUAGEID_MAP } from '../constants'
-import { ServerPersistIdentity, getServerConfigurationValue } from '../utils/configuration'
+import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
   DeserializeRequest,
@@ -307,8 +307,11 @@ export class WasmSerializer extends SerializerBase {
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
-  protected readonly persistIdentity: ServerPersistIdentity =
-    getServerConfigurationValue<ServerPersistIdentity>('persistIdentity', RunmeIdentity.UNSPECIFIED)
+  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
+    getServerConfigurationValue<ServerLifecycleIdentity>(
+      'lifecycleIdentity',
+      RunmeIdentity.UNSPECIFIED,
+    )
 
   private serverReadyListener: Disposable | undefined
 
@@ -336,7 +339,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected applyIdentity(data: Notebook): Notebook {
-    const identity = this.persistIdentity
+    const identity = this.lifecycleIdentity
     switch (identity) {
       case RunmeIdentity.UNSPECIFIED:
       case RunmeIdentity.DOCUMENT: {
@@ -380,7 +383,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    const identity = this.persistIdentity
+    const identity = this.lifecycleIdentity
     const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 
