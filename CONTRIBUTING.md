@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7VQMH8ESX1EFV4QCBTXB1Y
+  version: v2.0
+---
+
 # Contributing to `vscode-runme`
 
 **Thank you for your interest in `vscode-runme`. Your contributions are highly welcome.**
@@ -57,7 +63,7 @@ To build and work on this project you need to install:
 
 To get the code base, have [git](https://git-scm.com/downloads) installed and run:
 
-```sh
+```sh {"id":"01HF7VQMH8ESX1EFV4NQ54N42A"}
 git clone git@github.com:stateful/vscode-runme.git
 cd vscode-runme
 nvm install
@@ -65,7 +71,7 @@ nvm install
 
 optionally install jq and the GitHub CLI to streamline downloading binaries:
 
-```sh
+```sh {"id":"01HF7VQMH8ESX1EFV4NTQPB38T"}
 # macOS
 $ brew install gh jq
 # other platforms: https://github.com/cli/cli#installation
@@ -73,20 +79,20 @@ $ brew install gh jq
 
 the recommended extensions are actually strongly encouraged (otherwise your watcher will hang) - easily install them:
 
-```sh
+```sh {"id":"01HF7VQMH8ESX1EFV4NXY8HSFJ"}
 $ jq -r ".recommendations[]" .vscode/extensions.json \
     | xargs -n 1 code --force --install-extension
 ```
 
 make sure to configure your local npm to pull from Buf's registry (for GRPC dependencies)
 
-```sh { name=configureNPM }
+```sh {"id":"01HF7VQMH8ESX1EFV4P0ZCRR37","name":"configureNPM"}
 $ npm config set @buf:registry https://buf.build/gen/npm/v1
 ```
 
 then ensure to install all project dependencies. Note GitHub token is required to auto-dowload the latest `runme` binary. The branch ref name is optional, if it's not `main` pre-release binaries are being considered.
 
-```sh { name=setup promptEnv=false }
+```sh {"id":"01HF7VQMH8ESX1EFV4P491H696","name":"setup","promptEnv":"false"}
 $ export GITHUB_REF_NAME=$(git branch --show-current)
 $ export GITHUB_TOKEN=$(gh auth token)
 $ npm install --include=dev
@@ -94,7 +100,7 @@ $ npm install --include=dev
 
 Similarly a Runme WASM binary needs to be downloaded. If an error happened follow the error instructions and re-run the download, via:
 
-```sh { interactive=true promptEnv=false }
+```sh {"id":"01HF7VQMH8ESX1EFV4P77NKA3N","interactive":"true","promptEnv":"false"}
 $ export GITHUB_REF_NAME=$(git branch --show-current)
 $ GITHUB_TOKEN=$(gh auth token) npm run download:wasm
 $ npm run prepare-binary -- -f tar
@@ -104,13 +110,13 @@ $ npm run prepare-binary -- -f tar
 
 Make sure to install all recommended extensions please:
 
-```sh { interactive=false mimeType=text/plain }
+```sh {"id":"01HF7VQMH8ESX1EFV4PAM5E73C","interactive":"false","mimeType":"text/plain"}
 cat .vscode/extensions.json | grep -v '\/\/' | jq -r ".recommendations[]" | xargs code --install-extension
 ```
 
 Then just run the watcher and you're off to the races.
 
-```sh { name=npm-watch background=true }
+```sh {"background":"true","id":"01HF7VQMH8ESX1EFV4PD922S8P","name":"npm-watch"}
 npm run watch
 ```
 
@@ -118,7 +124,7 @@ npm run watch
 
 To compile all extension files, run:
 
-```sh { name=build }
+```sh {"id":"01HF7VQMH8ESX1EFV4PDNTDPTS","name":"build"}
 npm run build
 ```
 
@@ -126,13 +132,13 @@ npm run build
 
 The Runme project has several test stages that you can run individually or as a whole:
 
-```sh { name=test }
+```sh {"id":"01HF7VQMH8ESX1EFV4PFZ87Q58","name":"test"}
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
 When testing in CI environment, run:
 
-```sh { name=test:ci }
+```sh {"id":"01HF7VQMH8ESX1EFV4PGJBDGG0","name":"test:ci"}
 npx runme run test:format test:lint test:unit test:e2e:ci
 ```
 
@@ -140,13 +146,13 @@ npx runme run test:format test:lint test:unit test:e2e:ci
 
 We use [Prettier](https://prettier.io/) to keep the code style consistent:
 
-```sh { name=test:format }
+```sh {"id":"01HF7VQMH8ESX1EFV4PKWHPQG6","name":"test:format"}
 npx prettier --check .
 ```
 
 You can fix any formatting errors via:
 
-```sh { name=test:format:fix }
+```sh {"id":"01HF7VQMH8ESX1EFV4PKXKKCZ2","name":"test:format:fix"}
 npx prettier --write .
 ```
 
@@ -154,13 +160,13 @@ npx prettier --write .
 
 We use [Eslint](https://eslint.org/) for static code analysis:
 
-```sh { name=test:lint }
+```sh {"id":"01HF7VQMH8ESX1EFV4PN78YHJV","name":"test:lint"}
 npx eslint src tests --ext ts
 ```
 
 You can fix any linting errors via:
 
-```sh { name=test:lint:fix }
+```sh {"id":"01HF7VQMH8ESX1EFV4PQ1YA4G5","name":"test:lint:fix"}
 eslint src tests --ext ts --fix
 ```
 
@@ -168,7 +174,7 @@ eslint src tests --ext ts --fix
 
 We use [Vitest](https://vitest.dev/) for running unit tests via:
 
-```sh { name=test:unit }
+```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit"}
 npx vitest -c ./vitest.conf.ts --run
 ```
 
@@ -176,7 +182,7 @@ npx vitest -c ./vitest.conf.ts --run
 
 We use WebdriverIO to run e2e tests on the VS Code extension:
 
-```sh { name=test:e2e }
+```sh {"id":"01HF7VQMH8ESX1EFV4PX19FXW0","name":"test:e2e"}
 npx wdio run ./tests/e2e/wdio.conf.ts
 ```
 
@@ -186,14 +192,14 @@ The process for testing in CI is a bit more complicated as we try to test closer
 
 Therefore to test in a closer production environment, run:
 
-```sh { name=test:e2e:ci }
+```sh {"id":"01HF7VQMH8ESX1EFV4PYWC0M3X","name":"test:e2e:ci"}
 # run reconcile command when previous commands pass or fail
 npx runme run test:e2e:ci:setup test:e2e:ci:run; npx runme run test:e2e:ci:reconcile
 ```
 
 To ensure we run the test close to a real world scenario, e.g. the extension is installed on someones system, we created a process that would rename the `node_modules` directory to ensure the extension is not depending on any dependencies that won't be shipped in a production environment:
 
-```sh { name=test:e2e:ci:setup }
+```sh {"id":"01HF7VQMH8ESX1EFV4Q0412315","name":"test:e2e:ci:setup"}
 mv ./node_modules/ ./.node_modules
 # we need to restore Runme to keep running the pipeline
 # first make sure we re-install all node deps
@@ -209,7 +215,7 @@ For running e2e tests we use a seperate `package.json` which dependencies need t
 
 Then we can run the e2e tests via:
 
-```sh { name=test:e2e:ci:run }
+```sh {"id":"01HF7VQMH8ESX1EFV4Q3XXMMX7","name":"test:e2e:ci:run"}
 cd ./tests/e2e/
 npm ci
 npx wdio run ./wdio.conf.ts
@@ -217,7 +223,7 @@ npx wdio run ./wdio.conf.ts
 
 At the end we reconcile our dev environment by moving all files back to their original place:
 
-```sh { name=test:e2e:ci:reconcile }
+```sh {"id":"01HF7VQMH8ESX1EFV4Q5KEQM7Y","name":"test:e2e:ci:reconcile"}
 [ -d "./.node_modules/" ] && \
   rm -fr ./node_modules && \
   mv ./.node_modules/ ./node_modules && \
@@ -231,7 +237,7 @@ If you cancel the running test at any time, make sure to run this command before
 
 You can use following Github Actions workflow to release both edge (pre-release) and stable versions of the Runme's VS Code extension. This will package, test, and upon success push a new build of the extension to Microsoft's VS Code marketplace as well as OpenVSX.
 
-```sh
+```sh {"id":"01HF7VQMH8ESX1EFV4Q8N8Z85Z"}
 https://github.com/stateful/vscode-runme/actions/workflows/release.yml
 ```
 
