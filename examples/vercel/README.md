@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJKPC0FGMY181R7Q7GE
+  version: v2.0
+---
+
 # Deploy Next.js with Runme
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
@@ -7,19 +13,19 @@ Next.js enables you to create full-stack Web applications by extending the lates
 
 First, install all dependencies:
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY170T17SAS"}
 npm install
 ```
 
 then, run the development server:
 
-```sh { background=true }
+```sh {"background":"true","id":"01HF7B0KJKPC0FGMY1732863Z1"}
 npx next dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY173Y6SSJE"}
 open http://localhost:3000
 ```
 
@@ -27,7 +33,7 @@ You can start editing the page by modifying `pages/index.tsx`. The page auto-upd
 
 [API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY174SYPE1A"}
 open http://localhost:3000/api/hello
 ```
 
@@ -48,31 +54,31 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 To deploy this application, first install Vercel CLI:
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY177TXQDTV"}
 npm i -g vercel
 ```
 
 Then, log into Vercel:
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17AH7BK3D"}
 vercel login
 ```
 
 select your team, let's list them first:
 
-```sh { interactive=false }
+```sh {"id":"01HF7B0KJKPC0FGMY17BAH4ZGF","interactive":"false"}
 vercel teams ls 2>/dev/null
 ```
 
 then select team (skip if no change required):
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17E94BMTG"}
 vercel team switch
 ```
 
 go on to list projects:
 
-```sh { interactive=true }
+```sh {"id":"01HF7B0KJKPC0FGMY17HVGMKC2","interactive":"true"}
 vercel projects list 2>&1 | tail -n +5
 ```
 
@@ -80,31 +86,31 @@ Great! Let's attempt a preview deploy.
 
 Set up your project name
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17MKD6NNF"}
 export PROJECT_NAME=Name of your project
 echo "Your project name is set to: $PROJECT_NAME"
 ```
 
 Link your local directory to a project
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17QP3RC7E"}
 vercel link -p $PROJECT_NAME
 ```
 
 then kick off a preview deploy and optionally promote to prod
 
-```sh { interactive=false }
+```sh {"id":"01HF7B0KJKPC0FGMY17VBV7VHQ","interactive":"false"}
 vercel
 ```
 
 afterwards, you can optionally log out:
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17YBTN7B6"}
 vercel logout
 ```
 
 or call another command:
 
-```sh
+```sh {"id":"01HF7B0KJKPC0FGMY17ZZF04GE"}
 vercel domain
 ```

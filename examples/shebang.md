@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJQ8625WYMCRVJADMQF
+  version: v2.0
+---
+
 # Runme Language Support
 
 By default Runme can run everything that is also installed on your machine.
@@ -5,13 +11,13 @@ Read more in our [docs](https://docs.runme.dev/features#interpreter)
 
 ## Like Python:
 
-```py
+```py {"id":"01HF7B0KJQ8625WYMCRHW1XHEG"}
 print("Hello Pythonista 🐍")
 ```
 
 ## maybe Ruby?
 
-```rb
+```rb {"id":"01HF7B0KJQ8625WYMCRHW9YEKE"}
 # Open up the String class to add a new method
 class String
   # Define a new method to reverse the words in a string
@@ -28,7 +34,7 @@ puts "Reversed words: #{sentence.reverse_words}"
 
 ## or JavaScript:
 
-```js
+```js {"id":"01HF7B0KJQ8625WYMCRNP9C0RE"}
 console.log("Always bet on JS!")
 ```
 
@@ -36,13 +42,13 @@ console.log("Always bet on JS!")
 
 Make sure you have `ts-node` installed globally:
 
-```sh
+```sh {"id":"01HF7B0KJQ8625WYMCRQCT1F71"}
 npm i -g ts-node
 ```
 
 then run:
 
-```ts
+```ts {"id":"01HF7B0KJQ8625WYMCRRMQ8MVX"}
 const myVar: string = 'I am a typed string!'
 console.log(myVar)
 ```
@@ -51,7 +57,7 @@ console.log(myVar)
 
 Be sure to have the `php` interpreter in your `$PATH`:
 
-```php { interpreter=php }
+```php {"id":"01HF7B0KJQ8625WYMCRVAXDNGJ","interpreter":"php"}
 <?php
 $greeting = "Hello, World!";
 $currentDateTime = date('Y-m-d H:i:s');

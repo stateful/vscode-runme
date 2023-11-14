@@ -1,4 +1,7 @@
 ---
+runme:
+  id: 01HF7B0KJWYTVQEAZ3GA7C3H8H
+  version: v2.0
 skipPrompts: true
 ---
 
@@ -8,10 +11,10 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Using skipPrompts = true
 
-```sh
+```sh {"id":"01HF7B0KJWYTVQEAZ3G67T0MBD"}
 export ENV="dev"
 ```
 
-```sh { interactive=false }
+```sh {"id":"01HF7B0KJWYTVQEAZ3G91BTEHW","interactive":"false"}
 echo $ENV
 ```

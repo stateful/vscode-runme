@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJZGJFJ7P0G9MAQCSM4
+  version: v2.0
+---
+
 # Enhance
 
 This project is a showcase for deploying apps with [Begin](https://begin.com/) and [Runme Extension](https://marketplace.visualstudio.com/items?itemName=stateful.runme).
@@ -10,7 +16,7 @@ Enhance is an HTML-first full-stack web framework that gives you everything you 
 
 Before you start make sure to install the dependencies of the project:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G8S5RSEM7"}
 npm install
 ```
 
@@ -18,13 +24,13 @@ npm install
 
 Start the project:
 
-```sh { background=true }
+```sh {"background":"true","id":"01HF7B0KJZGJFJ7P0G8VDRF7HP"}
 npm start
 ```
 
 Open the project in your browser:
 
-```sh { interactive=false }
+```sh {"id":"01HF7B0KJZGJFJ7P0G8Y5KNFZ1","interactive":"false"}
 open http://localhost:3333/
 ```
 
@@ -35,43 +41,43 @@ This will watch the project directory and restart as necessary.
 To deploy the `begin` project example you need to have `begin` CLI installed on your system. To
 install, please run:
 
-```sh { closeTerminalOnSuccess=false interactive=false }
+```sh {"closeTerminalOnSuccess":"false","id":"01HF7B0KJZGJFJ7P0G91HRZB7V","interactive":"false"}
 curl -sS https://dl.begin.com/install.sh | sh
 ```
 
 To check you have `begin` CLI installed, you can run the following command:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G93127C4D"}
 begin version
 ```
 
 If you have `begin` CLI installed, but still not working, ensure that the CLI was added your `$PATH`:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G95FKSDNC"}
 export BEGIN_INSTALL="$HOME/.begin"
 export PATH="$BEGIN_INSTALL:$PATH"
 ```
 
 To get started with Begin, once you have `begin` CLI installed and configured, you can log into your Begin account via:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G98XACPWA"}
 begin login
 ```
 
 If you haven't deployed the application before, create one first via:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G9BBD4J4K"}
 begin create
 ```
 
 The Begin CLI will store a new `appId` in your `.arc` file. Then you can run a deployment via:
 
-```sh { background=true }
+```sh {"background":"true","id":"01HF7B0KJZGJFJ7P0G9F2E6QD1"}
 begin deploy
 ```
 
 In order to review the status of the deployment you can run:
 
-```sh
+```sh {"id":"01HF7B0KJZGJFJ7P0G9GE4N06S"}
 begin deploy --status
 ```

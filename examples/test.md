@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJM3HHFDVSXA6E12JM3
+  version: v2.0
+---
+
 # Runme Examples
 
 This `README.md` contains some examples for executing e2e tests for the extension.
@@ -9,16 +15,16 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```sh { background=false interactive=false }
+```sh {"background":"false","id":"01HF7B0KJM3HHFDVSX9YFTZ8PE","interactive":"false"}
 echo "Hello World!"
 ```
 
-```sh { promptEnv=false }
+```sh {"id":"01HF7B0KJM3HHFDVSXA100Y04X","promptEnv":"false"}
 export FOO="don't prompt me"
 ```
 
 # GitHub Action Integration
 
-```yaml
+```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
 https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml
 ```

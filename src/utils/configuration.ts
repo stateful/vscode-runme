@@ -58,7 +58,7 @@ const configurationSchema = {
     enableTLS: z.boolean().default(true),
     tlsDir: z.string().optional(),
     transportType: z.enum(['TCP', 'UDS']).default('TCP'),
-    lifecycleIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.UNSPECIFIED),
+    lifecycleIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.ALL),
   },
   codelens: {
     enable: z.boolean().default(true),

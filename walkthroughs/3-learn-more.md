@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJEBFYW9W1CP7CX7W1C
+  version: v2.0
+---
+
 # Learn more
 
 Learn more about Runme by visiting the [official docs](https://docs.runme.dev) and subscribe to the official Runme [newsletter](https://runme.dev/list) to not miss any updates.

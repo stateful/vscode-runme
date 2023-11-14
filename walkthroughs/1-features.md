@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HF7B0KJH9FJZR3CM4C3VE08B
+  version: v2.0
+---
+
 # Key features
 
 Read all about Runme's features in the [official documentation](https://docs.runme.dev/features).
