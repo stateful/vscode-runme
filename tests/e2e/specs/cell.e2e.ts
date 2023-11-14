@@ -54,7 +54,7 @@ describe('Runme Cell Annotations', async () => {
 
     it('propagates changes to markdown document', async () => {
       await browser.keys([Key.Ctrl, 's'])
-      await assertDocumentContains('/examples/test.md', 'name=HelloWorld')
+      await assertDocumentContains('/examples/test.md', '"name":"HelloWorld"')
     })
 
     after(() => {
