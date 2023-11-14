@@ -14,16 +14,16 @@ print("Hello Pythonista 🐍")
 ```rb
 # Open up the String class to add a new method
 class String
-    # Define a new method to reverse the words in a string
-    def reverse_words
-      self.split(' ').reverse.join(' ')
-    end
+  # Define a new method to reverse the words in a string
+  def reverse_words
+    self.split(' ').reverse.join(' ')
   end
-  
-  # Use the new method on a string
-  sentence = "Hello Ruby world"
-  puts "Original sentence: #{sentence}"
-  puts "Reversed words: #{sentence.reverse_words}"
+end
+
+# Use the new method on a string
+sentence = "Hello Ruby world"
+puts "Original sentence: #{sentence}"
+puts "Reversed words: #{sentence.reverse_words}"
 ```
 
 ## or JavaScript:
