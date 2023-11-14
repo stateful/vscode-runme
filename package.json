@@ -93,6 +93,11 @@
         "title": "Prompt to participate in Windows Default Shell survey"
       },
       {
+        "command": "runme.surveyNotifyV2",
+        "category": "Runme",
+        "title": "Prompt to notify about changes in Runme v2.0"
+      },
+      {
         "command": "runme.surveyActiveUserFeedback",
         "category": "Runme",
         "title": "Prompt to participate in Feedback survey"

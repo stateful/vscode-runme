@@ -336,3 +336,72 @@ export class SurveyFeedbackButton extends Survey {
     )
   }
 }
+
+export class SurveyNotifyV2 extends Survey {
+  static readonly #id: string = 'runme.surveyNotifyV2'
+
+  private prompted = false
+
+  constructor(protected context: ExtensionContext) {
+    super(context, SurveyNotifyV2.#id)
+    this.disposables.push(
+      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
+      commands.registerCommand(SurveyNotifyV2.#id, this.prompt.bind(this)),
+    )
+  }
+
+  shouldPrompt() {
+    return !this.prompted
+  }
+
+  async #handleOpenNotebook({ notebookType }: NotebookDocument) {
+    if (
+      notebookType !== Kernel.type ||
+      this.context.globalState.get<boolean>(SurveyNotifyV2.#id, false)
+    ) {
+      return
+    }
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 2000))
+    await commands.executeCommand(SurveyNotifyV2.#id, false)
+  }
+
+  async prompt(runDirect = true) {
+    if (runDirect) {
+      this.prompted = false
+      await this.undo()
+    }
+
+    if (this.context.globalState.get<boolean>(SurveyNotifyV2.#id, false) || !this.shouldPrompt()) {
+      return
+    }
+
+    this.prompted = true
+    const option = await window.showInformationMessage(
+      // eslint-disable-next-line max-len
+      "Find out what's changing in Runme v2.0 and learn more about its powerful shebang support which executes non-shell languages in your notebooks.",
+      'Learn more',
+      "Don't show again",
+    )
+
+    switch (option) {
+      case undefined: {
+        return
+      }
+      case 'Learn more':
+        {
+          TelemetryReporter.sendTelemetryEvent('survey.NotifyV2', {})
+          commands.executeCommand('vscode.open', Uri.parse('https://runme.dev/redirect/notifyV2'))
+        }
+        break
+    }
+
+    await this.#done()
+  }
+
+  async #done() {
+    await this.context.globalState.update(SurveyNotifyV2.#id, true)
+  }
+
+  dispose() {}
+}

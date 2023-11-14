@@ -125,6 +125,7 @@ export class RunmeExtension {
       winCodeLensRunSurvey,
       new survey.SurveyActiveUserFeedback(context),
       new survey.SurveyFeedbackButton(context),
+      new survey.SurveyNotifyV2(context),
     ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
