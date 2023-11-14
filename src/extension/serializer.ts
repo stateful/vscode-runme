@@ -308,10 +308,7 @@ export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
   protected readonly lifecycleIdentity: ServerLifecycleIdentity =
-    getServerConfigurationValue<ServerLifecycleIdentity>(
-      'lifecycleIdentity',
-      RunmeIdentity.UNSPECIFIED,
-    )
+    getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
 
   private serverReadyListener: Disposable | undefined
 
