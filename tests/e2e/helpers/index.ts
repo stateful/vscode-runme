@@ -96,6 +96,8 @@ export async function assertDocumentContains(absDocPath: string, matcher: string
   for (let index = 0; index < savedContent.length; index++) {
     if (savedContent[index].includes('"id":')) {
       await expect(savedContent[index]).toMatch(JSON_ULID)
+    } else if (savedContent[index].includes('id:')) {
+      await expect(savedContent[index]).toMatch(FRONT_MATTER_ULID)
     } else {
       await expect(savedContent[index]).toMatch(matcherParts[index])
     }
@@ -110,5 +112,5 @@ export function revertChanges(fileName: string) {
   cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
 }
 
-// export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
+export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
 export const JSON_ULID = /\"id\":\"([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\"/
