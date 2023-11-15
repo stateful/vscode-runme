@@ -22,5 +22,5 @@
   "[javascriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "runme.server.persistIdentity": 0
+  "runme.server.lifecycleIdentity": 0
 }

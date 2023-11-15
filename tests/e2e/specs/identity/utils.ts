@@ -1,4 +1,6 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
+import cp from 'node:child_process'
 
 import * as jsonc from 'comment-json'
 
@@ -37,6 +39,13 @@ export async function assertDocumentContains(absDocPath: string, matcher: string
       await expect(savedContent[index]).toMatch(matcherParts[index])
     }
   }
+}
+
+export function revertChanges(fileName: string) {
+  //revert changes we made during the test
+  const mdPath = path.resolve(__dirname, '..', '..', '..', '..', 'examples', 'identity', fileName)
+  const settingsPath = path.resolve(__dirname, '.vscode', 'settings.json')
+  cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
 }
 
 export const FRONT_MATTER_ULID = /id=([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*\}/
