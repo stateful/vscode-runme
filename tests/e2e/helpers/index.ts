@@ -111,4 +111,4 @@ export function revertChanges(fileName: string) {
 }
 
 // export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
-export const JSON_ULID = /\\\"id\\\":\\\"([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\\\"/
+export const JSON_ULID = /\"id\":\"([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\"/
