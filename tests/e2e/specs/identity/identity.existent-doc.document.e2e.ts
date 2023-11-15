@@ -5,7 +5,6 @@ import cp from 'node:child_process'
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
-
 import { assertDocumentContains, updateSettings } from '../../helpers/index.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))

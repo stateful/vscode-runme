@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import cp from 'node:child_process'
 import url from 'node:url'
+
 import * as jsonc from 'comment-json'
 import clipboard from 'clipboardy'
 import type { Workbench } from 'wdio-vscode-service'
