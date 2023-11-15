@@ -1,12 +1,6 @@
-import url from 'node:url'
-import path from 'node:path'
-import cp from 'node:child_process'
-
 import { Key } from 'webdriverio'
 
-import { assertDocumentContains, updateSettings } from './utils.js'
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()
@@ -45,7 +39,7 @@ describe('Test suite: Empty file with setting Cell (3)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/empty-file.md')
 
-    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 3 })
+    await updateLifecycleIdentitySetting(3)
     await reloadWindow()
     await browser.keys([Key.Control, 's'])
     await assertDocumentContains(absDocPath, '')
@@ -53,16 +47,6 @@ describe('Test suite: Empty file with setting Cell (3)', async () => {
 
   after(() => {
     //revert changes we made during the test
-    const mdPath = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'examples',
-      'identity',
-      'empty-file.md',
-    )
-    cp.execSync(`git checkout -- ${mdPath}`)
+    revertChanges('empty-file.md')
   })
 })

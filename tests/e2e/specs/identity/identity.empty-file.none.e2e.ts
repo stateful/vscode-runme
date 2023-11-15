@@ -1,6 +1,6 @@
 import { Key } from 'webdriverio'
 
-import { assertDocumentContains, revertChanges, updateSettings } from './utils.js'
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()
@@ -40,7 +40,7 @@ describe('Test suite: Empty file with setting None (0)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/empty-file.md')
 
-    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 0 })
+    await updateLifecycleIdentitySetting(0)
     await reloadWindow()
     await browser.keys([Key.Control, 's'])
     await assertDocumentContains(absDocPath, '')

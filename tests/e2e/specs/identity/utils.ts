@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import cp from 'node:child_process'
+import url from 'node:url'
 
 import * as jsonc from 'comment-json'
 
@@ -41,10 +42,15 @@ export async function assertDocumentContains(absDocPath: string, matcher: string
   }
 }
 
+export async function updateLifecycleIdentitySetting(value: number) {
+  return updateSettings({ setting: 'runme.server.lifecycleIdentity', value: value })
+}
+
 export function revertChanges(fileName: string) {
   //revert changes we made during the test
+  const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
   const mdPath = path.resolve(__dirname, '..', '..', '..', '..', 'examples', 'identity', fileName)
-  const settingsPath = path.resolve(__dirname, '.vscode', 'settings.json')
+  const settingsPath = path.resolve(__dirname, '..', '..', '..', '..', '.vscode', 'settings.json')
   cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
 }
 

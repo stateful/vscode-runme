@@ -1,14 +1,8 @@
-import url from 'node:url'
-import path from 'node:path'
-import cp from 'node:child_process'
-
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 
-import { assertDocumentContains, updateSettings } from './utils.js'
-
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()
@@ -49,7 +43,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/existent-doc-id.md')
 
-    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 0 })
+    await updateLifecycleIdentitySetting(0)
     await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()
@@ -86,16 +80,6 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
 
   after(() => {
     //revert changes we made during the test
-    const mdPath = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'examples',
-      'identity',
-      'existent-doc-id.md',
-    )
-    cp.execSync(`git checkout -- ${mdPath}`)
+    revertChanges('existent-doc-id.md')
   })
 })
