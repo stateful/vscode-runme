@@ -2,7 +2,7 @@ import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 
-import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from '../../helpers/index.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()

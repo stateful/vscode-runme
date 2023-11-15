@@ -1,6 +1,13 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import cp from 'node:child_process'
+import url from 'node:url'
+
+import * as jsonc from 'comment-json'
+
 import { Key } from 'webdriverio'
 
-import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from '../../helpers/index.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()

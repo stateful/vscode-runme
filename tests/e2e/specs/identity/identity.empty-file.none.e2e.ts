@@ -1,6 +1,6 @@
 import { Key } from 'webdriverio'
 
-import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from './utils.js'
+import { assertDocumentContains, revertChanges, updateLifecycleIdentitySetting } from '../../helpers/index.js'
 
 async function reloadWindow() {
   const workbench = await browser.getWorkbench()
