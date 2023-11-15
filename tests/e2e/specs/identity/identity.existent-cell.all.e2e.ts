@@ -70,7 +70,7 @@ describe('Test suite: Cell with existent identity and setting All (1)', async ()
 
       ## Scenario
 
-      \`\`\`js { id=01HER3GA0RQKJETKK5X5PPRTB4 }
+      \`\`\`js {"id":"01HER3GA0RQKJETKK5X5PPRTB4"}
       console.log("Hello from JS")
 
       \`\`\`

@@ -63,7 +63,7 @@ describe('Test suite: Document with existent identity and setting All (1)', asyn
         bar: baz
       runme:
         id: 01HEJKW175Z0SYY4SJCA86J0TF
-        version: v1.8
+        version: v2.0
       ---
 
       ## Document with id
@@ -72,7 +72,7 @@ describe('Test suite: Document with existent identity and setting All (1)', asyn
 
       ## Scenario
 
-      \`\`\`js { name=foo }
+      \`\`\`js {"id":"01HFA08N6F66WSG09RR9XEP0T6","name":"foo"}
       console.log("Always bet on JS!")
 
       \`\`\`

@@ -94,10 +94,7 @@ export async function assertDocumentContains(absDocPath: string, matcher: string
   const savedContent = sanitizeOutput(source.toString()).split('\n')
   const matcherParts = sanitizeOutput(matcher).split('\n')
   for (let index = 0; index < savedContent.length; index++) {
-    if (savedContent[index].includes('id=')) {
-      const match = savedContent[index].match(FRONT_MATTER_ULID)
-      await expect(match && match[1]).toBeTruthy()
-    } else if (savedContent[index].includes('id:') || savedContent[index].includes('id=')) {
+    if (savedContent[index].includes('"id":')) {
       await expect(savedContent[index]).toMatch(JSON_ULID)
     } else {
       await expect(savedContent[index]).toMatch(matcherParts[index])
@@ -113,5 +110,5 @@ export function revertChanges(fileName: string) {
   cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
 }
 
-export const FRONT_MATTER_ULID = /id=([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*\}/
-export const JSON_ULID = /^id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})$/
+// export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
+export const JSON_ULID = /\\\"id\\\":\\\"([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\\\"/
