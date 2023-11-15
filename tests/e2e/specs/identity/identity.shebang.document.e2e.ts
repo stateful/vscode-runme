@@ -61,7 +61,7 @@ describe('Test suite: Shebang with setting Document only (2)', async () => {
       `---
       runme:
         id: 01HEXJ9KWG7BYSFYCNKSRE4JZR
-        version: v1.8
+        version: v2.0
       ---
 
       ## Shebang
@@ -69,7 +69,7 @@ describe('Test suite: Shebang with setting Document only (2)', async () => {
 
       ## Scenario
 
-      \`\`\`js { name=foo }
+      \`\`\`js {"name":"foo"}
       console.log("Always bet on JS!")
 
       \`\`\`

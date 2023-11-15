@@ -71,7 +71,7 @@ describe('Test suite: Document with existent identity and setting Cell only (3)'
 
       ## Scenario
 
-      \`\`\`js { name=foo }
+      \`\`\`js {"name":"foo"}
       console.log("Always bet on JS!")
 
       \`\`\`

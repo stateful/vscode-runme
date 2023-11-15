@@ -71,7 +71,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
 
       ## Scenario
 
-      \`\`\`js { name=foo }
+      \`\`\`js {"name":"foo"}
       console.log("Always bet on JS!")
 
       \`\`\`
