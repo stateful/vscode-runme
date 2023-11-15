@@ -49,7 +49,7 @@ describe('Test suite: Document with existent identity and setting All (1)', asyn
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/existent-doc-id.md')
 
-    await updateSettings({ setting: 'runme.server.persistIdentity', value: 1 })
+    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 1 })
     await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()

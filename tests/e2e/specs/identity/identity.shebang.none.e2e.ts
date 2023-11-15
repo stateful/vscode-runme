@@ -48,7 +48,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/shebang.md')
 
-    await updateSettings({ setting: 'runme.server.persistIdentity', value: 0 })
+    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 0 })
     await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()
@@ -66,7 +66,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
 
       ## Scenario
 
-      \`\`\`js { name=foo }
+      \`\`\`js {"name":"foo"}
       console.log("Always bet on JS!")
 
       \`\`\`

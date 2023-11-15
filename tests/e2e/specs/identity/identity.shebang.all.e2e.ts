@@ -49,7 +49,7 @@ describe('Test suite: Shebang with setting All (1)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/shebang.md')
 
-    await updateSettings({ setting: 'runme.server.persistIdentity', value: 1 })
+    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 1 })
     await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()

@@ -46,7 +46,7 @@ describe('Test suite: Empty file with setting None (0)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/empty-file.md')
 
-    await updateSettings({ setting: 'runme.server.persistIdentity', value: 0 })
+    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 0 })
     await reloadWindow()
     await browser.keys([Key.Control, 's'])
     await assertDocumentContains(absDocPath, '')

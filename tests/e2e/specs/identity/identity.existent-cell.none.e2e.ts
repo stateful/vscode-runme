@@ -49,7 +49,7 @@ describe('Test suite: Cell with existent identity and setting None (0)', async (
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/examples/identity/existent-cell-id.md')
 
-    await updateSettings({ setting: 'runme.server.persistIdentity', value: 0 })
+    await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 0 })
     await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()
