@@ -57,7 +57,7 @@ describe('Test suite: Document with existent identity and setting Cell only (3)'
     await browser.keys([Key.Enter])
     const cell = await notebook.getCell('console.log("Always bet on JS!")')
     await cell.focus()
-    await browser.keys([Key.Command, 's'])
+    await browser.keys([Key.Control, 's'])
 
     await assertDocumentContains(
       absDocPath,

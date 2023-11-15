@@ -57,7 +57,7 @@ describe('Test suite: Shebang with setting Cell only (3)', async () => {
     await browser.keys([Key.Enter])
     const cell = await notebook.getCell('console.log("Always bet on JS!")')
     await cell.focus()
-    await browser.keys([Key.Command, 's'])
+    await browser.keys([Key.Control, 's'])
 
     await assertDocumentContains(
       absDocPath,

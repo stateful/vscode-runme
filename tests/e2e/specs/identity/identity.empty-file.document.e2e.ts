@@ -48,7 +48,7 @@ describe('Test suite: Empty file with setting Document (2)', async () => {
 
     await updateSettings({ setting: 'runme.server.persistIdentity', value: 2 })
     await reloadWindow()
-    await browser.keys([Key.Command, 's'])
+    await browser.keys([Key.Control, 's'])
     await assertDocumentContains(absDocPath, '')
   })
 
