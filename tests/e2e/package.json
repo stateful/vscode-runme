@@ -7,6 +7,7 @@
     "@wdio/local-runner": "^8.15.4",
     "@wdio/mocha-framework": "^8.15.4",
     "@wdio/spec-reporter": "^8.15.0",
+    "comment-json": "^4.2.3",
     "expect-webdriverio": "^4.2.7",
     "runme": "^3.0.1",
     "ts-node": "^10.9.1",

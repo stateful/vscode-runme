@@ -15,7 +15,7 @@ This markdown file contains some custom examples to test the execution within a 
 
 ## Shell Executions
 
-```sh {"background":"false","id":"01HF7B0KJM3HHFDVSX9YFTZ8PE","interactive":"false"}
+```sh {"background":"false","id":"01HF7B0KJM3HHFDVSX9YFTZ8PE","interactive":"false","name":"HelloWorld"}
 echo "Hello World!"
 ```
 
