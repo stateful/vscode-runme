@@ -5,7 +5,7 @@ import cp from 'node:child_process'
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
-import { assertDocumentContains, updateSettings } from '../../helpers/index.js'
+import { assertDocumentContains, saveFile, updateSettings } from '../../helpers/index.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
@@ -56,7 +56,7 @@ describe('Test suite: Document with existent identity and setting Document only 
     await browser.keys([Key.Enter])
     const cell = await notebook.getCell('console.log("Always bet on JS!")')
     await cell.focus()
-    await browser.keys([Key.Control, 's'])
+    await saveFile(browser)
 
     await assertDocumentContains(
       absDocPath,

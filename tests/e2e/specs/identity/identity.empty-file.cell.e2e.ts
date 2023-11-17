@@ -3,6 +3,7 @@ import { Key } from 'webdriverio'
 import {
   assertDocumentContains,
   revertChanges,
+  saveFile,
   updateLifecycleIdentitySetting,
 } from '../../helpers/index.js'
 
@@ -45,7 +46,7 @@ describe('Test suite: Empty file with setting Cell (3)', async () => {
 
     await updateLifecycleIdentitySetting(3)
     await reloadWindow()
-    await browser.keys([Key.Control, 's'])
+    await saveFile(browser)
     await assertDocumentContains(absDocPath, '')
   })
 
