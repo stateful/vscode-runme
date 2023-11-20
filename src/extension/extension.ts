@@ -38,6 +38,7 @@ import {
   runCellsByCategory,
   addToRecommendedExtensions,
   openRunmeSettings,
+  toggleAutosave,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -234,6 +235,12 @@ export class RunmeExtension {
       ),
       createDemoFileRunnerForActiveNotebook(context, kernel),
       createDemoFileRunnerWatcher(context, kernel),
+      RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () =>
+        toggleAutosave(context, false),
+      ),
+      RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () =>
+        toggleAutosave(context, true),
+      ),
     )
     await await bootFile(context)
   }

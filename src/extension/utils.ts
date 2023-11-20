@@ -23,17 +23,25 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 
-import { CellAnnotations, CellAnnotationsErrorResult, RunmeTerminal, Serializer } from '../types'
+import {
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+  NotebookAutoSaveSetting,
+  RunmeTerminal,
+  Serializer,
+} from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
   AuthenticationProviders,
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
+  NOTEBOOK_AUTOSAVE_ON,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
+  getNotebookAutoSave,
   getPortNumber,
   getTLSDir,
   getTLSEnabled,
@@ -46,6 +54,7 @@ import { ENV_STORE, DEFAULT_ENV, BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { GrpcRunnerEnvironment } from './runner'
 import RunmeServer from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
+import ContextState from './contextState'
 
 declare var globalThis: any
 
@@ -572,4 +581,11 @@ export function suggestCategories(categories: string[], title: string, placehold
       }),
     )
   })
+}
+
+export async function handleNotebookAutosaveSettings() {
+  const configAutoSaveSetting = getNotebookAutoSave()
+  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  await commands.executeCommand('setContext', NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }

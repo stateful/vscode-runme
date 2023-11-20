@@ -14,7 +14,7 @@ import {
   WorkspaceEdit,
 } from 'vscode'
 
-import { OutputType } from '../constants'
+import { NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
 import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
 import { Mutex } from '../utils/sync'
 import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
@@ -26,6 +26,7 @@ import {
   NotebookTerminalType,
   XTermState,
 } from './terminal/terminalState'
+import ContextState from './contextState'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -163,6 +164,7 @@ export class NotebookCellOutputManager {
               content: terminalState.serialize(),
               initialRows: terminalRows || terminalConfigurations.rows,
               enableShareButton: isRunmeAppButtonsEnabled(),
+              isAutoSaveEnabled: ContextState.getKey(NOTEBOOK_AUTOSAVE_ON),
               ...terminalConfigurations,
             },
           }

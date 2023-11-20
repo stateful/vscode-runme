@@ -1,6 +1,6 @@
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { ClientMessages } from '../../../constants'
+import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
@@ -9,6 +9,7 @@ import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
 import { CreateCellExecutionDocument } from '../../__generated__/graphql'
 import { Kernel } from '../../kernel'
+import ContextState from '../../contextState'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
@@ -61,6 +62,7 @@ export default async function saveCellExecution(
           pid,
           input: encodeURIComponent(cell.document.getText()),
           languageId: cell.document.languageId,
+          autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
           metadata: {
             mimeType: annotations.mimeType,
             name: annotations.name,

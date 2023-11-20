@@ -110,6 +110,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             terminalElement.setAttribute('initialContent', payload.output.content)
           }
 
+          if (payload.output.isAutoSaveEnabled) {
+            terminalElement.setAttribute(
+              'isAutoSaveEnabled',
+              payload.output.isAutoSaveEnabled.toString(),
+            )
+          }
+
           element.appendChild(terminalElement)
           break
         case OutputType.error:

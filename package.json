@@ -187,6 +187,20 @@
         "command": "runme.addToRecommendedExtensions",
         "title": "Add Runme to recommended extensions",
         "category": "Runme"
+      },
+      {
+        "command": "runme.notebookAutoSaveOn",
+        "category": "Runme",
+        "title": "Click to disable saving terminal output automatically",
+        "icon": "$(stop-circle)",
+        "shortTitle": "Auto-Save (on)"
+      },
+      {
+        "command": "runme.notebookAutoSaveOff",
+        "category": "Runme",
+        "title": "Click to enable saving terminal output automatically",
+        "icon": "$(play-circle)",
+        "shortTitle": "Auto-Save (off)"
       }
     ],
     "menus": {
@@ -286,6 +300,16 @@
         {
           "command": "runme.runCategory",
           "when": "notebookType == runme && notebookHasCategories",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.notebookAutoSaveOn",
+          "when": "notebookType == runme && notebookAutoSaveOn",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.notebookAutoSaveOff",
+          "when": "notebookType == runme && !notebookAutoSaveOn",
           "group": "navigation"
         }
       ],
@@ -579,6 +603,12 @@
             "default": true,
             "scope": "window",
             "markdownDescription": "Whether to open the folder/workspace in a new window or the same"
+          },
+          "runme.app.notebookAutoSave": {
+            "type": "string",
+            "enum": ["yes", "no"],
+            "default": "no" ,
+            "markdownDescription": "Automatically save cell execution output"
           }
         }
       }

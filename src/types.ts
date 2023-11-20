@@ -122,6 +122,7 @@ interface Payload {
     content?: string
     initialRows?: number
     enableShareButton: boolean
+    isAutoSaveEnabled: boolean
   }
   [OutputType.github]?: GitHubState
 }
@@ -166,6 +167,9 @@ export interface ClientMessagePayload {
   [ClientMessages.terminalOpen]: {
     ['runme.dev/uuid']: string
     terminalDimensions?: TerminalDimensions
+  }
+  [ClientMessages.onProgramClose]: {
+    ['runme.dev/uuid']: string
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
@@ -317,3 +321,8 @@ export interface IApiMessage<T extends ClientMessage<ClientMessages>> {
 export type ShellType = 'sh' | 'powershell' | 'cmd' | 'fish'
 
 export type ActiveTerminal = RunmeTerminal & { executionId: number; runmeId: string }
+
+export enum NotebookAutoSaveSetting {
+  Yes = 'yes',
+  No = 'no',
+}
