@@ -4,6 +4,7 @@ import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import {
   assertDocumentContains,
   revertChanges,
+  saveFile,
   updateLifecycleIdentitySetting,
 } from '../../helpers/index.js'
 
@@ -54,7 +55,7 @@ describe('Test suite: Cell with existent identity and setting All (1)', async ()
     await browser.keys([Key.Enter])
     const cell = await notebook.getCell('console.log("Hello from JS")')
     await cell.focus()
-    await browser.keys([Key.Control, 's'])
+    await saveFile(browser)
 
     await assertDocumentContains(
       absDocPath,

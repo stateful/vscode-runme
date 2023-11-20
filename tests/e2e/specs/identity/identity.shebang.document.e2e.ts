@@ -4,6 +4,7 @@ import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import {
   assertDocumentContains,
   revertChanges,
+  saveFile,
   updateLifecycleIdentitySetting,
 } from '../../helpers/index.js'
 
@@ -54,7 +55,7 @@ describe('Test suite: Shebang with setting Document only (2)', async () => {
     await browser.keys([Key.Enter])
     const cell = await notebook.getCell('console.log("Always bet on JS!")')
     await cell.focus()
-    await browser.keys([Key.Control, 's'])
+    await saveFile(browser)
 
     await assertDocumentContains(
       absDocPath,

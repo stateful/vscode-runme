@@ -6,6 +6,7 @@ import url from 'node:url'
 import * as jsonc from 'comment-json'
 import clipboard from 'clipboardy'
 import type { Workbench } from 'wdio-vscode-service'
+import { Key } from 'webdriverio'
 
 /**
  * TODO: cannot get text, this is a bug in wdio integration...
@@ -110,6 +111,16 @@ export function revertChanges(fileName: string) {
   const mdPath = path.resolve(__dirname, '..', '..', '..', 'examples', 'identity', fileName)
   const settingsPath = path.resolve(__dirname, '..', '..', '..', '.vscode', 'settings.json')
   cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
+}
+
+const osPlatform = process.platform.toString()
+
+export function saveFile(browser: WebdriverIO.Browser): Promise<void> {
+  if (osPlatform.indexOf('darwin') > -1) {
+    browser.keys([Key.Command, 's'])
+  } else {
+  }
+  return browser.keys([Key.Control, 's'])
 }
 
 export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
