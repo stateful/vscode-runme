@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HF7B0KJDG9R0YG2H9C136NEC
-  version: v2.0
----
-
 # ![Runme](https://runme.dev/runme_logo.svg "Runme") Welcome to Runme
 
 Runme is primary a VS Code extension that provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart.

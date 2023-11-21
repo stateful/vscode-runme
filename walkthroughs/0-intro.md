@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HF7B0KJH9FJZR3CM4FABSH01
-  version: v2.0
----
-
 # Why Runme?
 
 Thank you for interest in Runme 💟!

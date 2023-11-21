@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HF7B0KJG2DZZV3VX42KA0NW5
-  version: v2.0
----
-
 # Cell configuration
 
 To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.
