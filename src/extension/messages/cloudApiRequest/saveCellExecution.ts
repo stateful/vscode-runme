@@ -2,14 +2,14 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
+import { postClientMessage } from '../../../utils/messaging'
+import { CreateCellExecutionDocument } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
-import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
-import { postClientMessage } from '../../../utils/messaging'
-import { RunmeService } from '../../services/runme'
-import { CreateCellExecutionDocument } from '../../__generated__/graphql'
-import { Kernel } from '../../kernel'
 import ContextState from '../../contextState'
+import { Kernel } from '../../kernel'
+import { RunmeService } from '../../services/runme'
+import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
@@ -70,6 +70,11 @@ export default async function saveCellExecution(
             exitType: runnerExitStatus?.type,
             startTime: cell.executionSummary?.timing?.startTime,
             endTime: cell.executionSummary?.timing?.endTime,
+          },
+          id: annotations.id,
+          notebook: {
+            id: '01HF7B0KK32HBQ9X4AC2GPMZG5',
+            version: 'v2',
           },
         },
       },
