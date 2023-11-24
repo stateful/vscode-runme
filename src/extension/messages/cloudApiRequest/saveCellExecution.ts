@@ -9,7 +9,7 @@ import { getCellByUuId } from '../../cell'
 import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
 import { RunmeService } from '../../services/runme'
-import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
+import { getAnnotations, getAuthSession, getCellRunmeId, getNotebookAnnotation } from '../../utils'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
@@ -52,6 +52,14 @@ export default async function saveCellExecution(
     }
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
     const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
+    const notebookAnnotations = getNotebookAnnotation(cell)
+    let notebook
+    if (notebookAnnotations) {
+      notebook = {
+        id: notebookAnnotations.id,
+        version: notebookAnnotations.version,
+      }
+    }
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
@@ -72,10 +80,7 @@ export default async function saveCellExecution(
             endTime: cell.executionSummary?.timing?.endTime,
           },
           id: annotations.id,
-          notebook: {
-            id: '01HF7B0KK32HBQ9X4AC2GPMZG5',
-            version: 'v2',
-          },
+          notebook,
         },
       },
     })

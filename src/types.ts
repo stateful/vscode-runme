@@ -12,7 +12,7 @@ import { z } from 'zod'
 import { Bus } from 'tangle'
 
 import { OutputType, ClientMessages } from './constants'
-import { SafeCellAnnotationsSchema } from './schema'
+import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
 import { IWorkflowRun } from './extension/services/types'
@@ -281,6 +281,8 @@ export interface RunmeTaskDefinition extends TaskDefinition {
 }
 
 export type CellAnnotations = z.infer<typeof SafeCellAnnotationsSchema>
+
+export type NotebookAnnotations = z.infer<typeof SafeNotebookAnnotationsSchema>
 
 export type allKeys<T> = T extends any ? keyof T : never
 
