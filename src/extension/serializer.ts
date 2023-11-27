@@ -419,6 +419,7 @@ export class GrpcSerializer extends SerializerBase {
     token: CancellationToken,
   ): Promise<Uint8Array> {
     const notebook = this.marshalNotebook(data)
+
     const serialRequest = <SerializeRequest>{ notebook }
     const request = await this.client!.serialize(serialRequest)
 
@@ -437,14 +438,30 @@ export class GrpcSerializer extends SerializerBase {
     notebook.cells.forEach(async (cell, cellIdx) => {
       const dataExecSummary = data.cells[cellIdx].executionSummary
       cell.executionSummary = this.marshalCellExecutionSummary(dataExecSummary)
-      cell.outputs = this.marshalCellOutputs(cell.outputs)
+      const dataOutputs = data.cells[cellIdx].outputs
+      cell.outputs = this.marshalCellOutputs(cell.outputs, dataOutputs)
     })
 
     return notebook
   }
 
-  private marshalCellOutputs(outputs: CellOutput[]) {
-    outputs.forEach((out) => {
+  private marshalCellOutputs(
+    outputs: CellOutput[],
+    dataOutputs: NotebookCellOutput[] | undefined,
+  ): CellOutput[] {
+    if (!dataOutputs) {
+      return []
+    }
+
+    outputs.forEach((out, outIdx) => {
+      const dataOut: NotebookCellOutputWithProcessInfo = dataOutputs[outIdx]
+      if (dataOut.processInfo?.exitReason?.type === 'exit') {
+        if (dataOut.processInfo.exitReason.code) {
+          out.processInfo!.exitReason!.code!.value = dataOut.processInfo.exitReason.code
+        } else {
+          out.processInfo!.exitReason!.code = undefined
+        }
+      }
       out.items.forEach((item) => {
         item.type = item.data.buffer ? 'Buffer' : typeof item.data
       })
@@ -454,15 +471,20 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   private marshalCellExecutionSummary(executionSummary: NotebookCellExecutionSummary | undefined) {
-    if (executionSummary?.success === undefined) {
+    if (!executionSummary) {
+      return undefined
+    }
+
+    const { success, timing } = executionSummary
+    if (success === undefined || timing === undefined) {
       return undefined
     }
 
     return {
-      success: { value: executionSummary.success },
+      success: { value: success },
       timing: {
-        endTime: { value: executionSummary.timing!.endTime.toString() },
-        startTime: { value: executionSummary.timing!.startTime.toString() },
+        endTime: { value: timing!.endTime.toString() },
+        startTime: { value: timing!.startTime.toString() },
       },
     }
   }
