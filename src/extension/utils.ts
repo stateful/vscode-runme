@@ -22,12 +22,10 @@ import vscode, {
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
-import yaml from 'js-yaml'
 
 import {
   CellAnnotations,
   CellAnnotationsErrorResult,
-  NotebookAnnotations,
   NotebookAutoSaveSetting,
   RunmeTerminal,
   Serializer,
@@ -84,17 +82,6 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
   const parseResult = SafeCellAnnotationsSchema.safeParse(schema)
   if (parseResult.success) {
     return parseResult.data
-  }
-}
-
-export function getNotebookAnnotation(cell: NotebookCell): NotebookAnnotations | undefined {
-  let metadata = cell.notebook.metadata
-
-  const parseResult = yaml.loadAll(metadata['runme.dev/frontmatter']) as {
-    runme: NotebookAnnotations
-  }[]
-  if (parseResult) {
-    return parseResult[0].runme
   }
 }
 
