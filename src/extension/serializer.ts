@@ -14,6 +14,7 @@ import {
   NotebookDocument,
   CancellationTokenSource,
   NotebookCellOutput,
+  NotebookCellExecutionSummary,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -408,20 +409,8 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    data.cells.forEach((cell) => {
-      if (!cell.executionSummary?.timing) {
-        delete cell.executionSummary
-      }
-    })
-    const notebook = Notebook.clone(data as any)
+    const notebook = this.marshalNotebook(data)
     const serialRequest = <SerializeRequest>{ notebook }
-
-    serialRequest.notebook?.cells.forEach(async (cell) => {
-      return cell.outputs.forEach((out) =>
-        out.items.forEach((item) => (item.type = item.data.buffer ? 'Buffer' : typeof item.data)),
-      )
-    })
-
     const request = await this.client!.serialize(serialRequest)
 
     const { result } = request.response
@@ -430,6 +419,38 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     return result
+  }
+
+  private marshalNotebook(data: NotebookData): Notebook {
+    // the bulk copies cleanly except for what's below
+    const notebook = Notebook.clone(data as any)
+
+    notebook.cells.forEach(async (cell, cellIdx) => {
+      const executionSummary = data.cells[cellIdx].executionSummary
+      cell.executionSummary = this.marshalCellExecutionSummary(executionSummary)
+
+      return cell.outputs.forEach((out) => {
+        return out.items.forEach(
+          (item) => (item.type = item.data.buffer ? 'Buffer' : typeof item.data),
+        )
+      })
+    })
+
+    return notebook
+  }
+
+  private marshalCellExecutionSummary(executionSummary: NotebookCellExecutionSummary | undefined) {
+    if (executionSummary?.success === undefined) {
+      return undefined
+    } else {
+      return {
+        success: { value: executionSummary.success },
+        timing: {
+          endTime: { value: executionSummary.timing!.endTime.toString() },
+          startTime: { value: executionSummary.timing!.startTime.toString() },
+        },
+      }
+    }
   }
 
   protected async reviveNotebook(
