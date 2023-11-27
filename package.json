@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "2.1.1-edge.0",
+  "version": "2.1.1-edge.1",
   "publisher": "stateful",
   "displayName": "Runme runs Markdown",
   "description": "Execute your runbooks, docs, and READMEs.",
