@@ -13,6 +13,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
+    "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}": types.ArchiveCellExecutionDocument,
     "mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n  }\n}": types.CreateCellExecutionDocument,
     "mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n  }\n}": types.UpdateCellExecutionDocument,
 };
@@ -31,6 +32,10 @@ const documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}"): (typeof documents)["mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

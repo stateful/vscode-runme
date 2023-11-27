@@ -1,4 +1,11 @@
-import { Disposable, ExtensionContext, Webview, WebviewView, WebviewViewProvider } from 'vscode'
+import {
+  Disposable,
+  ExtensionContext,
+  Webview,
+  WebviewView,
+  WebviewViewProvider,
+  window,
+} from 'vscode'
 import { TelemetryViewProvider } from 'vscode-telemetry'
 import { Subject } from 'rxjs'
 import { Observable, Subscription } from 'rxjs'
@@ -7,6 +14,7 @@ import { fetchStaticHtml, getAuthSession } from '../utils'
 import { IAppToken, RunmeService } from '../services/runme'
 import { type SyncSchemaBus } from '../../types'
 import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
+import archiveCell from '../services/archiveCell'
 
 export type DefaultUx = 'panels'
 export interface InitPayload {
@@ -124,6 +132,25 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
             return
           }
           this.onSignIn(bus)
+        }),
+        bus.on('onArchiveCell', async (cmdEvent) => {
+          const answer = await window.showInformationMessage(
+            'Are you sure you want to archive this cell?',
+            'Yes',
+            'No',
+          )
+
+          try {
+            if (answer === 'Yes') {
+              bus.emit('onCellArchived', {
+                cellId: cmdEvent?.cellId!,
+              })
+              await archiveCell(cmdEvent?.cellId!)
+              await window.showInformationMessage('The cell has been archived!')
+            }
+          } catch (error) {
+            await window.showErrorMessage(`Failed to archive cell: ${(error as any).message}`)
+          }
         }),
       ]
 
