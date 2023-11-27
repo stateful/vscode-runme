@@ -29,6 +29,12 @@ export interface SyncSchema {
   onSave?: {
     cellId: string
   }
+  onArchiveCell?: {
+    cellId: string
+  }
+  onCellArchived?: {
+    cellId: string
+  }
 }
 
 export type SyncSchemaBus = Bus<SyncSchema>
