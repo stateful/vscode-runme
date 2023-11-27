@@ -29,6 +29,7 @@ import {
   Notebook,
   RunmeIdentity,
   CellKind,
+  CellOutput,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
@@ -37,11 +38,16 @@ import { initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
 import { getCellByUuId } from './cell'
+import { IProcessInfoState } from './terminal/terminalState'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 
 type ReadyPromise = Promise<void | Error>
+
+type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
+  processInfo?: IProcessInfoState
+}
 
 export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
@@ -141,7 +147,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   ): Promise<Uint8Array> {
     const transformedCells = await Promise.all(
       data.cells.map(async (cell) => {
-        let terminalOutput: NotebookCellOutput | undefined
+        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
         let uuid: string = ''
         for (const out of cell.outputs || []) {
           Object.entries(out.metadata ?? {}).find(([k, v]) => {
@@ -172,7 +178,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           if (terminalState !== undefined) {
             const processInfo = terminalState.hasProcessInfo()
             if (processInfo) {
-              ;(terminalOutput as any).processInfo = processInfo
+              if (processInfo.pid === undefined) {
+                delete processInfo.pid
+              }
+              terminalOutput.processInfo = processInfo
             }
             const strTerminalState = terminalState?.serialize()
             terminalOutput.items.forEach((item) => {
@@ -426,30 +435,35 @@ export class GrpcSerializer extends SerializerBase {
     const notebook = Notebook.clone(data as any)
 
     notebook.cells.forEach(async (cell, cellIdx) => {
-      const executionSummary = data.cells[cellIdx].executionSummary
-      cell.executionSummary = this.marshalCellExecutionSummary(executionSummary)
-
-      return cell.outputs.forEach((out) => {
-        return out.items.forEach(
-          (item) => (item.type = item.data.buffer ? 'Buffer' : typeof item.data),
-        )
-      })
+      const dataExecSummary = data.cells[cellIdx].executionSummary
+      cell.executionSummary = this.marshalCellExecutionSummary(dataExecSummary)
+      cell.outputs = this.marshalCellOutputs(cell.outputs)
     })
 
     return notebook
   }
 
+  private marshalCellOutputs(outputs: CellOutput[]) {
+    outputs.forEach((out) => {
+      out.items.forEach((item) => {
+        item.type = item.data.buffer ? 'Buffer' : typeof item.data
+      })
+    })
+
+    return outputs
+  }
+
   private marshalCellExecutionSummary(executionSummary: NotebookCellExecutionSummary | undefined) {
     if (executionSummary?.success === undefined) {
       return undefined
-    } else {
-      return {
-        success: { value: executionSummary.success },
-        timing: {
-          endTime: { value: executionSummary.timing!.endTime.toString() },
-          startTime: { value: executionSummary.timing!.startTime.toString() },
-        },
-      }
+    }
+
+    return {
+      success: { value: executionSummary.success },
+      timing: {
+        endTime: { value: executionSummary.timing!.endTime.toString() },
+        startTime: { value: executionSummary.timing!.startTime.toString() },
+      },
     }
   }
 

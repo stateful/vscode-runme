@@ -6,7 +6,7 @@ import { RunnerExitReason } from '../runner'
 
 export type NotebookTerminalType = 'xterm' | 'local'
 
-interface IProcessInfoState {
+export interface IProcessInfoState {
   exitReason: RunnerExitReason
   pid: number | undefined
 }
