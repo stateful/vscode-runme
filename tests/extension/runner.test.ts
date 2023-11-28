@@ -114,7 +114,7 @@ vi.mock('../../src/extension/grpc/client', () => ({
   },
 }))
 
-vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb', () => ({
+vi.mock('@buf/pastuxso_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb', () => ({
   default: {},
   CreateSessionRequest: {
     create: vi.fn((x: any) => x),
