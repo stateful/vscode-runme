@@ -145,7 +145,25 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const transformedCells = await Promise.all(
+    const cells = await this.addExecInfo(data)
+
+    const metadata = data.metadata
+    data = new NotebookData(cells)
+    data.metadata = metadata
+
+    let encoded: Uint8Array
+    try {
+      encoded = await this.saveNotebook(data, token)
+    } catch (err: any) {
+      console.error(err)
+      throw err
+    }
+
+    return encoded
+  }
+
+  private async addExecInfo(data: NotebookData): Promise<NotebookCellData[]> {
+    return Promise.all(
       data.cells.map(async (cell) => {
         let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
         let uuid: string = ''
@@ -198,21 +216,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         }
       }),
     )
-
-    const metadata = data.metadata
-
-    data = new NotebookData(transformedCells)
-    data.metadata = metadata
-
-    let encoded: Uint8Array
-    try {
-      encoded = await this.saveNotebook(data, token)
-    } catch (err: any) {
-      console.error(err)
-      throw err
-    }
-
-    return encoded
   }
 
   protected abstract reviveNotebook(
