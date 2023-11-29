@@ -61,11 +61,11 @@ export type CellExecution = {
   history?: Maybe<Array<Maybe<CellExecution>>>;
   htmlUrl: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  identityId?: Maybe<Scalars['String']['output']>;
   input: Scalars['String']['output'];
   isOwner: Scalars['Boolean']['output'];
   isPrivate: Scalars['Boolean']['output'];
   languageId?: Maybe<Scalars['String']['output']>;
+  lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
   metadata?: Maybe<Metadata>;
   notebook?: Maybe<Notebook>;
   owner?: Maybe<Owner>;
@@ -75,6 +75,12 @@ export type CellExecution = {
   updateTime: Scalars['DateTime']['output'];
   user?: Maybe<User>;
   userId: Scalars['String']['output'];
+};
+
+
+export type CellExecutionHistoryArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type CellExecutionInput = {
@@ -211,13 +217,13 @@ export type Notebook = {
   __typename?: 'Notebook';
   createTime?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['String']['output'];
+  runmeVersion?: Maybe<Scalars['String']['output']>;
   updateTime?: Maybe<Scalars['DateTime']['output']>;
-  version: Scalars['String']['output'];
 };
 
 export type NotebookInput = {
   id: Scalars['String']['input'];
-  version: Scalars['String']['input'];
+  runmeVersion: Scalars['String']['input'];
 };
 
 export type Owner = {
