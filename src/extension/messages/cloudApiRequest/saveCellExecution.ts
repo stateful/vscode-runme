@@ -7,10 +7,10 @@ import { CreateCellExecutionDocument } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
 import ContextState from '../../contextState'
+import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
 import { RunmeService } from '../../services/runme'
 import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
-import { Frontmatter } from '../../grpc/serializerTypes'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
@@ -61,7 +61,7 @@ export default async function saveCellExecution(
     if (fmParsed?.runme) {
       notebook = {
         id: fmParsed.runme.id,
-        version: fmParsed.runme.version,
+        runmeVersion: fmParsed.runme.version,
       }
     }
 
