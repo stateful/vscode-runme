@@ -431,7 +431,7 @@ export class GrpcSerializer extends SerializerBase {
     return result
   }
 
-  private marshalNotebook(data: NotebookData): Notebook {
+  protected marshalNotebook(data: NotebookData): Notebook {
     // the bulk copies cleanly except for what's below
     const notebook = Notebook.clone(data as any)
 
