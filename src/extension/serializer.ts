@@ -458,11 +458,18 @@ export class GrpcSerializer extends SerializerBase {
 
     outputs.forEach((out, outIdx) => {
       const dataOut: NotebookCellOutputWithProcessInfo = dataOutputs[outIdx]
+      // todo(sebastian): consider sending error state too
       if (dataOut.processInfo?.exitReason?.type === 'exit') {
         if (dataOut.processInfo.exitReason.code) {
           out.processInfo!.exitReason!.code!.value = dataOut.processInfo.exitReason.code
         } else {
           out.processInfo!.exitReason!.code = undefined
+        }
+
+        if (dataOut.processInfo?.pid !== undefined) {
+          out.processInfo!.pid = { value: dataOut.processInfo.pid.toString() }
+        } else {
+          out.processInfo!.pid = undefined
         }
       }
       out.items.forEach((item) => {
