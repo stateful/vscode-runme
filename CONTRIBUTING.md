@@ -174,7 +174,8 @@ eslint src tests --ext ts --fix
 
 We use [Vitest](https://vitest.dev/) for running unit tests via:
 
-```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit"}
+```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"false"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node"
 npx vitest -c ./vitest.conf.ts --run
 ```
 

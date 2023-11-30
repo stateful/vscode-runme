@@ -28,6 +28,7 @@ vi.mock('vscode', () => ({
       update: vi.fn(),
       get: vi.fn(),
     }),
+    notebookDocuments: [],
   },
   commands: { executeCommand: vi.fn() },
   WorkspaceEdit: Map<Uri, NotebookEdit[]>,
