@@ -145,7 +145,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const cells = await this.addExecInfo(data)
+    const cells = await SerializerBase.addExecInfo(data, this.kernel)
 
     const metadata = data.metadata
     data = new NotebookData(cells)
@@ -162,7 +162,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     return encoded
   }
 
-  private async addExecInfo(data: NotebookData): Promise<NotebookCellData[]> {
+  public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
     return Promise.all(
       data.cells.map(async (cell) => {
         let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
@@ -183,15 +183,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookCell = await getCellByUuId({ uuid })
         if (notebookCell && terminalOutput) {
-          const terminalState = await this.kernel
-            .getCellOutputs(notebookCell)
-            .then((cellOutputMgr) => {
-              const terminalState = cellOutputMgr.getCellTerminalState()
-              if (terminalState?.outputType !== OutputType.terminal) {
-                return undefined
-              }
-              return terminalState
-            })
+          const terminalState = await kernel.getCellOutputs(notebookCell).then((cellOutputMgr) => {
+            const terminalState = cellOutputMgr.getCellTerminalState()
+            if (terminalState?.outputType !== OutputType.terminal) {
+              return undefined
+            }
+            return terminalState
+          })
 
           if (terminalState !== undefined) {
             const processInfo = terminalState.hasProcessInfo()
@@ -210,9 +208,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           }
         }
 
+        const languageId = cell.languageId ?? ''
+
         return {
           ...cell,
-          languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
+          languageId: VSCODE_LANGUAGEID_MAP[languageId] ?? languageId,
         }
       }),
     )
