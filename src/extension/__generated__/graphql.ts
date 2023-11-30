@@ -57,13 +57,17 @@ export type CellExecution = {
   autoSave: Scalars['Boolean']['output'];
   createTime: Scalars['DateTime']['output'];
   exitCode: Scalars['Int']['output'];
+  /** Cell execution history */
+  history?: Maybe<Array<Maybe<CellExecution>>>;
   htmlUrl: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   input: Scalars['String']['output'];
   isOwner: Scalars['Boolean']['output'];
   isPrivate: Scalars['Boolean']['output'];
   languageId?: Maybe<Scalars['String']['output']>;
+  lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
   metadata?: Maybe<Metadata>;
+  notebook?: Maybe<Notebook>;
   owner?: Maybe<Owner>;
   pid: Scalars['Int']['output'];
   stderr: Scalars['Bytes']['output'];
@@ -73,13 +77,21 @@ export type CellExecution = {
   userId: Scalars['String']['output'];
 };
 
+
+export type CellExecutionHistoryArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type CellExecutionInput = {
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
   exitCode: Scalars['Int']['input'];
+  id?: InputMaybe<Scalars['String']['input']>;
   input: Scalars['String']['input'];
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
   languageId?: InputMaybe<Scalars['String']['input']>;
   metadata: MetadataInput;
+  notebook?: InputMaybe<NotebookInput>;
   pid: Scalars['Int']['input'];
   stderr: Scalars['Bytes']['input'];
   stdout: Scalars['Bytes']['input'];
@@ -199,6 +211,19 @@ export type MutationUpdateCellExecutionArgs = {
 
 export type MutationUpdateSlackInstallationArgs = {
   data: SlackInstallationUpdateInput;
+};
+
+export type Notebook = {
+  __typename?: 'Notebook';
+  createTime?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['String']['output'];
+  runmeVersion?: Maybe<Scalars['String']['output']>;
+  updateTime?: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type NotebookInput = {
+  id: Scalars['String']['input'];
+  runmeVersion: Scalars['String']['input'];
 };
 
 export type Owner = {

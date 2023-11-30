@@ -2,14 +2,15 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
+import { postClientMessage } from '../../../utils/messaging'
+import { CreateCellExecutionDocument } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
-import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
-import { postClientMessage } from '../../../utils/messaging'
-import { RunmeService } from '../../services/runme'
-import { CreateCellExecutionDocument } from '../../__generated__/graphql'
-import { Kernel } from '../../kernel'
 import ContextState from '../../contextState'
+import { Frontmatter } from '../../grpc/serializerTypes'
+import { Kernel } from '../../kernel'
+import { RunmeService } from '../../services/runme'
+import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
@@ -52,6 +53,18 @@ export default async function saveCellExecution(
     }
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
     const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
+
+    const fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
+
+    let notebook
+
+    if (fmParsed?.runme) {
+      notebook = {
+        id: fmParsed.runme.id,
+        runmeVersion: fmParsed.runme.version,
+      }
+    }
+
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
@@ -71,6 +84,8 @@ export default async function saveCellExecution(
             startTime: cell.executionSummary?.timing?.startTime,
             endTime: cell.executionSummary?.timing?.endTime,
           },
+          id: annotations.id,
+          notebook,
         },
       },
     })

@@ -92,6 +92,11 @@ export const SafeCellAnnotationsSchema = z.object({
   promptEnv: falseyBoolean(DEFAULT_PROMPT_ENV),
 })
 
+export const SafeNotebookAnnotationsSchema = z.object({
+  id: z.string(),
+  version: z.string(),
+})
+
 export const CellAnnotationsSchema = z.object({
   ...AnnotationSchema,
 })
