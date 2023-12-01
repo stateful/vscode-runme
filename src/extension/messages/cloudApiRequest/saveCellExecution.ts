@@ -3,7 +3,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
-import { CreateCellExecutionDocument } from '../../__generated__/graphql'
+import { CreateCellExecutionDocument, NotebookInput } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellByUuId } from '../../cell'
 import ContextState from '../../contextState'
@@ -56,12 +56,12 @@ export default async function saveCellExecution(
 
     const fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
 
-    let notebook
+    let notebookInput: NotebookInput | undefined
 
-    if (fmParsed?.runme) {
-      notebook = {
-        id: fmParsed.runme.id,
-        runmeVersion: fmParsed.runme.version,
+    if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
+      notebookInput = {
+        id: fmParsed?.runme?.id,
+        runmeVersion: fmParsed?.runme?.version,
       }
     }
 
@@ -85,7 +85,7 @@ export default async function saveCellExecution(
             endTime: cell.executionSummary?.timing?.endTime,
           },
           id: annotations.id,
-          notebook,
+          notebook: notebookInput,
         },
       },
     })
