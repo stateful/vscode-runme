@@ -105,7 +105,7 @@ jobs:
       - name: Setup Git
         run: |
           git config --global user.name "stateful-wombot"
-          git config --global user.email "christian+github-bot@stateful.com"
+          git config --global user.email "sebastian+github-bot@stateful.com"
 
       - name: Get Current Version Number
         run: |
