@@ -287,14 +287,22 @@ suite('grpc Runner', () => {
       expect(pid).toStrictEqual(1234)
     })
 
-    test('PID is undefined in non-background mode', async () => {
-      const { session } = await createNewSession()
+    test('PID is defined in non-background mode', async () => {
+      const { duplex, session } = await createNewSession()
+
+      duplex._onMessage.fire({
+        stdoutData: Buffer.from(''),
+        stderrData: Buffer.from(''),
+        pid: {
+          pid: '4321',
+        },
+      })
 
       await session.run()
 
       const pid = await session.pid
 
-      expect(pid).toBeUndefined()
+      expect(pid).toStrictEqual(4321)
     })
 
     test('duplex onMessage calls onDidWrite', async () => {
