@@ -421,7 +421,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const notebook = this.marshalNotebook(data)
+    const notebook = GrpcSerializer.marshalNotebook(data)
 
     const serialRequest = <SerializeRequest>{ notebook }
     const request = await this.client!.serialize(serialRequest)
@@ -434,7 +434,7 @@ export class GrpcSerializer extends SerializerBase {
     return result
   }
 
-  protected marshalNotebook(data: NotebookData): Notebook {
+  public static marshalNotebook(data: NotebookData): Notebook {
     // the bulk copies cleanly except for what's below
     const notebook = Notebook.clone(data as any)
 
@@ -448,7 +448,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  private marshalCellOutputs(
+  private static marshalCellOutputs(
     outputs: CellOutput[],
     dataOutputs: NotebookCellOutput[] | undefined,
   ): CellOutput[] {
@@ -480,7 +480,9 @@ export class GrpcSerializer extends SerializerBase {
     return outputs
   }
 
-  private marshalCellExecutionSummary(executionSummary: NotebookCellExecutionSummary | undefined) {
+  private static marshalCellExecutionSummary(
+    executionSummary: NotebookCellExecutionSummary | undefined,
+  ) {
     if (!executionSummary) {
       return undefined
     }

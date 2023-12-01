@@ -1,10 +1,12 @@
 import { NotebookData, NotebookDocument, NotebookEdit, window, workspace } from 'vscode'
 import { expect, vi, it, describe, beforeEach } from 'vitest'
 
-import { SerializerBase, WasmSerializer } from '../../src/extension/serializer'
+import { GrpcSerializer, SerializerBase, WasmSerializer } from '../../src/extension/serializer'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
+
+import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
@@ -184,6 +186,70 @@ describe('WasmSerializer', () => {
       expect(Buffer.from(await s.serializeNotebook({ cells: [] } as any, {} as any))).toEqual(
         Buffer.from('Hello World!'),
       )
+    })
+  })
+})
+
+describe('GrpcSerializer', () => {
+  const deepCopyFixture = () => {
+    const raw = fixtureMarshalNotebook as any
+    return JSON.parse(JSON.stringify(raw))
+  }
+
+  describe('cell execution summary marshaling', () => {
+    it('should not misrepresenting uninitialized values', () => {
+      // i.e. undefined is not sucess=false
+      const execSummaryFixture = deepCopyFixture()
+      expect(execSummaryFixture.cells.length).toBe(2)
+
+      // set here since JSON does not represent "undefined" as vscode APIs do
+      execSummaryFixture.cells[0].executionSummary = {
+        success: undefined,
+        timing: { startTime: undefined, endTime: undefined },
+      }
+
+      const notebookData = GrpcSerializer.marshalNotebook(execSummaryFixture)
+      expect(notebookData.cells.length).toBe(2)
+      expect(notebookData.cells[0].executionSummary).toBeUndefined()
+    })
+
+    it('should wrap raw values for protobuf', () => {
+      const execSummaryFixture = deepCopyFixture()
+      expect(execSummaryFixture.cells.length).toBe(2)
+
+      const notebookData = GrpcSerializer.marshalNotebook(execSummaryFixture)
+      expect(notebookData.cells.length).toBe(2)
+
+      const summary = notebookData.cells[1].executionSummary
+      expect(summary?.success).toBeDefined()
+      expect(summary?.success?.value).toStrictEqual(false)
+
+      expect(summary?.timing).toBeDefined()
+      expect(summary?.timing?.startTime?.value).toStrictEqual('1701444499517')
+      expect(summary?.timing?.endTime?.value).toStrictEqual('1701444501696')
+    })
+  })
+
+  describe('cell outputs marshaling', () => {
+    it('should backfill the output type for buffers', () => {
+      const outputsFixture = deepCopyFixture()
+      expect(outputsFixture.cells.length).toBe(2)
+
+      const notebookData = GrpcSerializer.marshalNotebook(outputsFixture)
+      expect(notebookData.cells.length).toBe(2)
+      const cells = notebookData.cells[1]
+      const items = cells.outputs[0].items
+      expect(items.length).toBe(2)
+      items.forEach((item) => {
+        expect((item.data as any).type).toBe('Buffer')
+        expect(item.mime).toBeDefined()
+      })
+      const { processInfo } = cells.outputs[0]
+      expect(processInfo?.exitReason).toBeDefined()
+      expect(processInfo?.exitReason?.type).toStrictEqual('exit')
+      expect(processInfo?.exitReason?.code?.value).toStrictEqual(16)
+      expect(processInfo?.pid).toBeDefined()
+      expect(processInfo?.pid?.value).toStrictEqual('98354')
     })
   })
 })
