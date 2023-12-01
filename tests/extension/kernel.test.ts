@@ -32,7 +32,7 @@ const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
       ({
         document: { getText: vi.fn().mockReturnValue(`Cell #${i}`) },
         notebook: {
-          getCells: vi.fn().mockReturnValue([...new Array(10)].map(() => ({ kind: 1 }))),
+          getCells: vi.fn().mockReturnValue([...new Array(10)].map(() => ({ kind: 2 }))),
         },
         metadata: {
           'runme.dev/name': `Cell #${i}`,
