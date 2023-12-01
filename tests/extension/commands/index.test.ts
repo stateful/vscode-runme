@@ -136,7 +136,7 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1,
+      kind: 2,
     }
 
     cell.notebook = {
@@ -154,7 +154,7 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1,
+      kind: 2,
     }
 
     cell.notebook = {
@@ -175,7 +175,7 @@ suite('runCliCommand', () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
-      kind: 1,
+      kind: 2,
     }
 
     cell.notebook = {
