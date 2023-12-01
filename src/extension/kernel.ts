@@ -101,6 +101,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
+    this.#experiments.set('outputPersistence', config.get<boolean>('outputPersistence', false))
 
     this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
 
@@ -143,7 +144,7 @@ export class Kernel implements Disposable {
   }
 
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
-    return this.#experiments.get(key) || defaultValue
+    return this.#experiments.get(key) ?? defaultValue
   }
 
   dispose() {

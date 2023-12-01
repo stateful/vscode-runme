@@ -496,10 +496,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       this.opts.envs.push('TERM=')
     }
 
-    if (!this.opts.background) {
-      this._onPid.fire(undefined)
-    }
-
     await this.session.requests.send(GrpcRunnerProgramSession.runOptionsToExecuteRequest(this.opts))
   }
 

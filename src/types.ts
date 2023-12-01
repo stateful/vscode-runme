@@ -46,7 +46,10 @@ export namespace Serializer {
     frontmatter?: Grpc.Frontmatter
   }
 
-  export type Cell = Omit<Grpc.Cell, 'kind' | 'metadata' | 'languageId'> & {
+  export type Cell = Omit<
+    Grpc.Cell,
+    'kind' | 'metadata' | 'languageId' | 'outputs' | 'executionSummary'
+  > & {
     metadata?: Metadata
     kind: NotebookCellKind
     languageId?: string
@@ -131,6 +134,7 @@ interface Payload {
     isAutoSaveEnabled: boolean
   }
   [OutputType.github]?: GitHubState
+  [OutputType.stdout]: object
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any

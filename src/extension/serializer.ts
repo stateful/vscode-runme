@@ -13,12 +13,14 @@ import {
   Disposable,
   NotebookDocument,
   CancellationTokenSource,
+  NotebookCellOutput,
+  NotebookCellExecutionSummary,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
-import { VSCODE_LANGUAGEID_MAP } from '../constants'
+import { OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
@@ -27,6 +29,7 @@ import {
   Notebook,
   RunmeIdentity,
   CellKind,
+  CellOutput,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
@@ -34,11 +37,17 @@ import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
+import { getCellByUuId } from './cell'
+import { IProcessInfoState } from './terminal/terminalState'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 
 type ReadyPromise = Promise<void | Error>
+
+type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
+  processInfo?: IProcessInfoState
+}
 
 export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
@@ -136,16 +145,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const transformedCells = data.cells.map((cell) => {
-      return {
-        ...cell,
-        languageId: VSCODE_LANGUAGEID_MAP[cell.languageId] ?? cell.languageId,
-      }
-    })
+    const cells = await SerializerBase.addExecInfo(data, this.kernel)
 
     const metadata = data.metadata
-
-    data = new NotebookData(transformedCells)
+    data = new NotebookData(cells)
     data.metadata = metadata
 
     let encoded: Uint8Array
@@ -157,6 +160,62 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     return encoded
+  }
+
+  public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
+    return Promise.all(
+      data.cells.map(async (cell) => {
+        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
+        let uuid: string = ''
+        for (const out of cell.outputs || []) {
+          Object.entries(out.metadata ?? {}).find(([k, v]) => {
+            if (k === 'runme.dev/uuid') {
+              terminalOutput = out
+              uuid = v
+            }
+          })
+
+          if (terminalOutput) {
+            delete out.metadata?.['runme.dev/uuid']
+            break
+          }
+        }
+
+        const notebookCell = await getCellByUuId({ uuid })
+        if (notebookCell && terminalOutput) {
+          const terminalState = await kernel.getCellOutputs(notebookCell).then((cellOutputMgr) => {
+            const terminalState = cellOutputMgr.getCellTerminalState()
+            if (terminalState?.outputType !== OutputType.terminal) {
+              return undefined
+            }
+            return terminalState
+          })
+
+          if (terminalState !== undefined) {
+            const processInfo = terminalState.hasProcessInfo()
+            if (processInfo) {
+              if (processInfo.pid === undefined) {
+                delete processInfo.pid
+              }
+              terminalOutput.processInfo = processInfo
+            }
+            const strTerminalState = terminalState?.serialize()
+            terminalOutput.items.forEach((item) => {
+              if (item.mime === OutputType.stdout) {
+                item.data = Buffer.from(strTerminalState)
+              }
+            })
+          }
+        }
+
+        const languageId = cell.languageId ?? ''
+
+        return {
+          ...cell,
+          languageId: VSCODE_LANGUAGEID_MAP[languageId] ?? languageId,
+        }
+      }),
+    )
   }
 
   protected abstract reviveNotebook(
@@ -362,9 +421,9 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const notebook = Notebook.clone(data as any)
-    const serialRequest = <SerializeRequest>{ notebook }
+    const notebook = GrpcSerializer.marshalNotebook(data)
 
+    const serialRequest = <SerializeRequest>{ notebook }
     const request = await this.client!.serialize(serialRequest)
 
     const { result } = request.response
@@ -373,6 +432,73 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     return result
+  }
+
+  public static marshalNotebook(data: NotebookData): Notebook {
+    // the bulk copies cleanly except for what's below
+    const notebook = Notebook.clone(data as any)
+
+    notebook.cells.forEach(async (cell, cellIdx) => {
+      const dataExecSummary = data.cells[cellIdx].executionSummary
+      cell.executionSummary = this.marshalCellExecutionSummary(dataExecSummary)
+      const dataOutputs = data.cells[cellIdx].outputs
+      cell.outputs = this.marshalCellOutputs(cell.outputs, dataOutputs)
+    })
+
+    return notebook
+  }
+
+  private static marshalCellOutputs(
+    outputs: CellOutput[],
+    dataOutputs: NotebookCellOutput[] | undefined,
+  ): CellOutput[] {
+    if (!dataOutputs) {
+      return []
+    }
+
+    outputs.forEach((out, outIdx) => {
+      const dataOut: NotebookCellOutputWithProcessInfo = dataOutputs[outIdx]
+      // todo(sebastian): consider sending error state too
+      if (dataOut.processInfo?.exitReason?.type === 'exit') {
+        if (dataOut.processInfo.exitReason.code) {
+          out.processInfo!.exitReason!.code!.value = dataOut.processInfo.exitReason.code
+        } else {
+          out.processInfo!.exitReason!.code = undefined
+        }
+
+        if (dataOut.processInfo?.pid !== undefined) {
+          out.processInfo!.pid = { value: dataOut.processInfo.pid.toString() }
+        } else {
+          out.processInfo!.pid = undefined
+        }
+      }
+      out.items.forEach((item) => {
+        item.type = item.data.buffer ? 'Buffer' : typeof item.data
+      })
+    })
+
+    return outputs
+  }
+
+  private static marshalCellExecutionSummary(
+    executionSummary: NotebookCellExecutionSummary | undefined,
+  ) {
+    if (!executionSummary) {
+      return undefined
+    }
+
+    const { success, timing } = executionSummary
+    if (success === undefined || timing === undefined) {
+      return undefined
+    }
+
+    return {
+      success: { value: success },
+      timing: {
+        endTime: { value: timing!.endTime.toString() },
+        startTime: { value: timing!.startTime.toString() },
+      },
+    }
   }
 
   protected async reviveNotebook(

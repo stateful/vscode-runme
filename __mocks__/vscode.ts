@@ -122,8 +122,8 @@ export const env = {
 export const NotebookData = vi.fn()
 export const NotebookCellData = vi.fn()
 export enum NotebookCellKind {
-  Code = 1,
-  Markup = 2
+  Markup = 1,
+  Code = 2
 }
 
 export const TreeItem = vi.fn()

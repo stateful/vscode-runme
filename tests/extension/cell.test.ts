@@ -97,7 +97,7 @@ describe('NotebookCellOutputManager', () => {
     createExecution.mockReturnValue(mockCellExecution(cell))
     await outputs.toggleOutput(OutputType.annotations)
 
-    expect(vi.mocked(exec1.replaceOutput)).toBeCalledTimes(1)
+    expect(vi.mocked(exec1.replaceOutput)).toBeCalledTimes(2)
   })
 
   it('waits on current execution before creating a new one', async () => {
@@ -342,7 +342,7 @@ describe('NotebookCellOutputManager', () => {
 })
 
 describe('RunmeNotebookCellExecution', () => {
-  it('runs onEnd when end is called', () => {
+  it('runs onEnd when end is called', async () => {
     const exec = mockedNotebookCellExecution()
     const runmeExec = new RunmeNotebookCellExecution(exec)
 
@@ -353,7 +353,7 @@ describe('RunmeNotebookCellExecution', () => {
     const onEndFunc = vi.fn()
     runmeExec.onEnd(onEndFunc)
 
-    runmeExec.end(false, 200)
+    await runmeExec.end(false, 200)
     expect(vi.mocked(exec.end)).toBeCalledTimes(1)
     expect(vi.mocked(exec.end)).toBeCalledWith(false, 200)
 

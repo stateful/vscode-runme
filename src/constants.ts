@@ -11,6 +11,7 @@ export enum OutputType {
   terminal = 'stateful.runme/terminal',
   error = 'stateful.runme/error',
   github = 'stateful.runme/github-stdout',
+  stdout = 'application/vnd.code.notebook.stdout',
 }
 
 export enum ClientMessages {

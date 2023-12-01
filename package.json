@@ -394,21 +394,27 @@
           },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
           },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the notebook runner will use the GRPC interface (except on Windows)."
           },
           "runme.experiments.grpcServer": {
             "type": "boolean",
-            "scope": "machine",
+            "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
+          },
+          "runme.experiments.outputPersistence": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the notebook will store input and outputs."
           },
           "runme.checkout.projectDir": {
             "type": "string",
@@ -881,7 +887,7 @@
   "dependencies": {
     "@apollo/client": "^3.8.3",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.1-20230830152835-a5b3a068eb8c.1",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.1-20231129154715-554de6e99b7c.2",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.1-20231201190151-043bb99c0a8f.2",
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",

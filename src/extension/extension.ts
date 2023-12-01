@@ -144,6 +144,8 @@ export class RunmeExtension {
 
     registerExtensionEnvironmentVariables(context)
 
+    const transientOutputs = !kernel.hasExperimentEnabled('outputPersistence')
+
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/id']: undefined,
@@ -160,7 +162,7 @@ export class RunmeExtension {
       ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
-        transientOutputs: true,
+        transientOutputs,
         transientCellMetadata,
       }),
 

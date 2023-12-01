@@ -64,7 +64,7 @@ export class NotebookCellManager {
 
 type NotebookOutputs = NotebookCellOutput | readonly NotebookCellOutput[]
 interface ICellOption {
-  editor: NotebookEditor
+  editor?: NotebookEditor
   uuid: string
 }
 
@@ -155,32 +155,50 @@ export class NotebookCellOutputManager {
           throw new Error('Cannot open cell terminal with invalid UUID!')
         }
 
+        const stdoutBase64 = terminalState.serialize()
         if (type === OutputType.terminal) {
-          const terminalConfigurations = getNotebookTerminalConfigurations()
-          const json: CellOutputPayload<OutputType.terminal> = {
-            type: OutputType.terminal,
-            output: {
-              'runme.dev/uuid': cellId,
-              content: terminalState.serialize(),
-              initialRows: terminalRows || terminalConfigurations.rows,
-              enableShareButton: isRunmeAppButtonsEnabled(),
-              isAutoSaveEnabled: ContextState.getKey(NOTEBOOK_AUTOSAVE_ON),
-              ...terminalConfigurations,
-            },
+          let terminalOutputItem: NotebookCellOutputItem | undefined
+
+          const terminalStateStr = terminalState.serialize()
+          if (!terminalOutputItem) {
+            const terminalConfigurations = getNotebookTerminalConfigurations()
+            const json: CellOutputPayload<OutputType.terminal> = {
+              type: OutputType.terminal,
+              output: {
+                'runme.dev/uuid': cellId,
+                content: stdoutBase64,
+                initialRows: terminalRows || terminalConfigurations.rows,
+                enableShareButton: isRunmeAppButtonsEnabled(),
+                isAutoSaveEnabled: ContextState.getKey(NOTEBOOK_AUTOSAVE_ON),
+                ...terminalConfigurations,
+              },
+            }
+            terminalOutputItem = NotebookCellOutputItem.json(json, OutputType.terminal)
           }
 
-          return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.terminal)])
+          return new NotebookCellOutput(
+            [terminalOutputItem, NotebookCellOutputItem.stdout(terminalStateStr)],
+            {
+              'runme.dev/uuid': cellId,
+            },
+          )
         } else {
+          const terminalStateBase64 = terminalState.serialize()
           const json: CellOutputPayload<OutputType.outputItems> = {
             type: OutputType.outputItems,
             output: {
-              content: terminalState.serialize(),
+              content: terminalStateBase64,
               mime: 'text/plain',
               uuid: cellId,
             },
           }
 
-          return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.outputItems)])
+          return new NotebookCellOutput([
+            NotebookCellOutputItem.json(json, OutputType.outputItems),
+            NotebookCellOutputItem.stdout(
+              Buffer.from(terminalStateBase64, 'base64').toString('utf-8'),
+            ),
+          ])
         }
       }
 
@@ -205,7 +223,20 @@ export class NotebookCellOutputManager {
     switch (type) {
       case 'xterm':
         {
-          terminalState = new XTermState()
+          const _terminalState = new XTermState()
+          const _write = _terminalState.write
+          const _input = _terminalState.input
+
+          _terminalState.write = (data) => {
+            _write.call(_terminalState, data)
+            // this.refreshTerminal(_terminalState)
+          }
+
+          _terminalState.input = (data: string, wasUserInput: boolean) => {
+            _input.call(_terminalState, data, wasUserInput)
+          }
+
+          terminalState = _terminalState
         }
         break
 
@@ -287,6 +318,10 @@ export class NotebookCellOutputManager {
       }
 
       this.onFinish = new Promise<void>(async (resolve) => {
+        // todo: see bug note inside refreshTerminal
+        // wrapper.onWillEnd(async () => {
+        //   await this.refreshTerminal(this.terminalState)
+        // })
         wrapper.onEnd(async () => {
           await resetExecution()
           resolve()
@@ -334,6 +369,55 @@ export class NotebookCellOutputManager {
   async showTerminal(shown: boolean | (() => boolean) = true) {
     await this.refreshOutputInternal(async () => {
       this.terminalEnabled = typeof shown === 'function' ? shown() : shown
+    })
+  }
+
+  /**
+   * Syncs a stdout output item based on the active terminal
+   *
+   * @param terminalState the terminal's state that should be
+   * used to update the output item
+   *
+   * Unfortunately the replacement behavior appears to be broken
+   * which leads to duplication of the output item in the UX
+   *
+   */
+  async refreshTerminal(terminalState: ITerminalState | undefined) {
+    await this.withLock(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      await this.getExecutionUnsafe(async (exec) => {
+        const strTerminalState = terminalState?.serialize() || ''
+
+        if (
+          !terminalState ||
+          strTerminalState === '' ||
+          !this.terminalEnabled ||
+          !this.hasOutputTypeUnsafe(OutputType.terminal)
+        ) {
+          return
+        }
+
+        let terminalOutput: NotebookCellOutput | undefined
+        let terminalOutputItem: NotebookCellOutputItem | undefined
+        for (const out of this.cell.outputs) {
+          terminalOutputItem = out.items.find((item) => {
+            return item.mime === terminalState.outputType
+          })
+          if (terminalOutputItem) {
+            terminalOutput = out
+            break
+          }
+        }
+
+        if (!terminalOutput || !terminalOutputItem) {
+          return
+        }
+
+        // deactivated due to some duplication behavior
+        // perhaps https://github.com/microsoft/vscode/issues/173577 ?
+        // const newStdoutOutputItem = NotebookCellOutputItem.stdout(strTerminalState)
+        // await exec.replaceOutputItems([terminalOutputItem, newStdoutOutputItem], terminalOutput)
+      })
     })
   }
 
@@ -444,10 +528,12 @@ function outputsAsArray(outputs: NotebookOutputs): readonly NotebookCellOutput[]
   return Array.isArray(outputs) ? outputs : [outputs]
 }
 
+type OnWillEndCallback = () => Promise<void>
 type OnEndCallback = (info: { success?: boolean; endTime?: number }) => Promise<void>
 
 export class RunmeNotebookCellExecution implements Disposable {
   private _onEnd?: OnEndCallback
+  private _onWillEnd?: OnWillEndCallback
 
   private _hasEnded = false
 
@@ -457,11 +543,16 @@ export class RunmeNotebookCellExecution implements Disposable {
     this._onEnd = cb
   }
 
+  onWillEnd(cb: OnWillEndCallback) {
+    this._onWillEnd = cb
+  }
+
   start(startTime?: number): void {
     return this.exec.start(startTime)
   }
 
   async end(success: boolean | undefined, endTime?: number): Promise<void> {
+    await this._onWillEnd?.()
     this.exec.end(success, endTime)
     await this._onEnd?.({ success, endTime })
     this._hasEnded = true
@@ -496,7 +587,7 @@ export async function getCellByUuId(options: ICellOption): Promise<NotebookCell 
     for (const cell of document.getCells()) {
       if (
         cell.kind !== NotebookCellKind.Code ||
-        cell.document.uri.fsPath !== editor.notebook.uri.fsPath
+        (editor && cell.document.uri.fsPath !== editor.notebook.uri.fsPath)
       ) {
         continue
       }
