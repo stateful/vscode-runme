@@ -97,6 +97,12 @@ export type CellExecutionInput = {
   stdout: Scalars['Bytes']['input'];
 };
 
+export type CellExecutionList = {
+  __typename?: 'CellExecutionList';
+  data?: Maybe<Array<Maybe<CellExecution>>>;
+  totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
 export type CellExecutionUpdateInput = {
   isPrivate: Scalars['Boolean']['input'];
 };
@@ -222,8 +228,8 @@ export type Notebook = {
 };
 
 export type NotebookInput = {
-  id: Scalars['String']['input'];
-  runmeVersion: Scalars['String']['input'];
+  id?: InputMaybe<Scalars['String']['input']>;
+  runmeVersion?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Owner = {
@@ -300,8 +306,9 @@ export type Subscription = {
 export type User = {
   __typename?: 'User';
   bio?: Maybe<Scalars['String']['output']>;
+  cellExecution?: Maybe<CellExecution>;
   /** Cells executed by the user */
-  cellExecutions?: Maybe<Array<Maybe<CellExecution>>>;
+  cellExecutions?: Maybe<CellExecutionList>;
   company?: Maybe<Scalars['String']['output']>;
   create_time: Scalars['DateTime']['output'];
   displayName?: Maybe<Scalars['String']['output']>;
@@ -317,8 +324,14 @@ export type User = {
   siteUrl?: Maybe<Scalars['String']['output']>;
   /** Slack installation for the user */
   slackInstallation?: Maybe<SlackInstallation>;
+  totalArchived?: Maybe<Scalars['Int']['output']>;
   twitter?: Maybe<Scalars['String']['output']>;
   update_time: Scalars['DateTime']['output'];
+};
+
+
+export type UserCellExecutionArgs = {
+  id: Scalars['String']['input'];
 };
 
 
