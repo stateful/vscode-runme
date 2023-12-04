@@ -65,7 +65,7 @@ export class NotebookCellManager {
 type NotebookOutputs = NotebookCellOutput | readonly NotebookCellOutput[]
 interface ICellOption {
   editor?: NotebookEditor
-  uuid: string
+  id: string
 }
 
 interface ICellState {
@@ -111,7 +111,7 @@ export class NotebookCellOutputManager {
           output: {
             annotations: getAnnotations(cell),
             validationErrors: validateAnnotations(cell),
-            uuid: cell.metadata['runme.dev/uuid'],
+            id: cell.metadata['runme.dev/id'],
           },
         }
 
@@ -150,9 +150,9 @@ export class NotebookCellOutputManager {
           return
         }
 
-        const { 'runme.dev/uuid': cellId, terminalRows } = getAnnotations(cell)
+        const { 'runme.dev/id': cellId, terminalRows } = getAnnotations(cell)
         if (!cellId) {
-          throw new Error('Cannot open cell terminal with invalid UUID!')
+          throw new Error('Cannot open cell terminal with invalid ID!')
         }
 
         const stdoutBase64 = terminalState.serialize()
@@ -165,7 +165,7 @@ export class NotebookCellOutputManager {
             const json: CellOutputPayload<OutputType.terminal> = {
               type: OutputType.terminal,
               output: {
-                'runme.dev/uuid': cellId,
+                'runme.dev/id': cellId,
                 content: stdoutBase64,
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
@@ -179,7 +179,7 @@ export class NotebookCellOutputManager {
           return new NotebookCellOutput(
             [terminalOutputItem, NotebookCellOutputItem.stdout(terminalStateStr)],
             {
-              'runme.dev/uuid': cellId,
+              'runme.dev/id': cellId,
             },
           )
         } else {
@@ -189,7 +189,7 @@ export class NotebookCellOutputManager {
             output: {
               content: terminalStateBase64,
               mime: 'text/plain',
-              uuid: cellId,
+              id: cellId,
             },
           }
 
@@ -581,8 +581,8 @@ export async function updateCellMetadata(cell: NotebookCell, meta: Partial<Seria
   await workspace.applyEdit(edit)
 }
 
-export async function getCellByUuId(options: ICellOption): Promise<NotebookCell | undefined> {
-  const { editor, uuid } = options
+export async function getCellById(options: ICellOption): Promise<NotebookCell | undefined> {
+  const { editor, id } = options
   for (const document of workspace.notebookDocuments) {
     for (const cell of document.getCells()) {
       if (
@@ -592,12 +592,12 @@ export async function getCellByUuId(options: ICellOption): Promise<NotebookCell 
         continue
       }
 
-      if (cell.metadata?.['runme.dev/uuid'] === undefined) {
-        console.error(`[Runme] Cell with index ${cell.index} lacks uuid`)
+      if (cell.metadata?.['runme.dev/id'] === undefined) {
+        console.error(`[Runme] Cell with index ${cell.index} lacks id`)
         continue
       }
 
-      if (cell.metadata?.['runme.dev/uuid'] === uuid) {
+      if (cell.metadata?.['runme.dev/id'] === id) {
         return cell
       }
     }

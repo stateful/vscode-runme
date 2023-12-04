@@ -188,7 +188,7 @@ export class Annotations extends LitElement {
       return
     }
 
-    const propVal: any = { 'runme.dev/uuid': this.annotations['runme.dev/uuid'] }
+    const propVal: any = { 'runme.dev/id': this.annotations['runme.dev/id'] }
     const propName = e.target.id
     const targetValue = this.#getTargetValue(e)
 
@@ -345,7 +345,7 @@ export class Annotations extends LitElement {
   }
 
   private getCellId() {
-    return (this.annotations && this.annotations['runme.dev/uuid']) || ''
+    return (this.annotations && this.annotations['runme.dev/id']) || ''
   }
 
   protected onCategorySelectorChange(e: CustomEvent) {
@@ -360,24 +360,24 @@ export class Annotations extends LitElement {
         placeholder: 'Category name',
         isSecret: false,
         title: 'New cell execution category',
-        uuid: this.getCellId(),
+        id: this.getCellId(),
       })
   }
 
   connectedCallback(): void {
     super.connectedCallback()
     const ctx = getContext()
-    const uuid = this.getCellId()
+    const id = this.getCellId()
     ctx.postMessage &&
       postClientMessage(ctx, ClientMessages.getState, {
         state: NOTEBOOK_AVAILABLE_CATEGORIES,
-        uuid,
+        id,
       })
     onClientMessage(ctx, (e) => {
       switch (e.type) {
         case ClientMessages.onPrompt:
           const answer = e.output.answer
-          if (!answer || e.output.uuid !== uuid) {
+          if (!answer || e.output.id !== id) {
             return
           }
           for (const newCategory of answer.split(CATEGORY_SEPARATOR)) {
@@ -389,11 +389,11 @@ export class Annotations extends LitElement {
             postClientMessage(ctx, ClientMessages.setState, {
               state: NOTEBOOK_AVAILABLE_CATEGORIES,
               value: this.categories,
-              uuid,
+              id,
             })
           return this.setCategory(answer)
         case ClientMessages.onGetState:
-          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.uuid === uuid) {
+          if (e.output.state === NOTEBOOK_AVAILABLE_CATEGORIES && e.output.id === id) {
             this.categories = e.output.value as unknown as string[]
             this.requestUpdate()
           }
@@ -416,7 +416,7 @@ export class Annotations extends LitElement {
       postClientMessage(ctx, ClientMessages.onCategoryChange, undefined)
 
       return this.#dispatch({
-        'runme.dev/uuid': this.annotations['runme.dev/uuid'],
+        'runme.dev/id': this.annotations['runme.dev/id'],
         category: this.categories.join(CATEGORY_SEPARATOR),
       })
     }
@@ -469,7 +469,7 @@ export class Annotations extends LitElement {
       <close-cell-button
         @closed="${() => {
           return closeOutput({
-            uuid: (this.annotations && this.annotations['runme.dev/uuid']) || '',
+            id: (this.annotations && this.annotations['runme.dev/id']) || '',
             outputType: OutputType.annotations,
           })
         }}"

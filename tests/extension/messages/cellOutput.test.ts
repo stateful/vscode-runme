@@ -49,7 +49,7 @@ suite('Handle CellOutput messages', () => {
       message: {
         type: ClientMessages.closeCellOutput,
         output: {
-          uuid: 'a17249e7-4b5f-4b40-8037-10902dd446c9',
+          id: '01HGVC65A3FV1960XEFGTMM8YG',
           outputType: type,
         },
       },

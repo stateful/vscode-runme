@@ -1,6 +1,6 @@
 import vscode, { ExtensionContext, FileType, Uri, commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
-import { v4 } from 'uuid'
+import { ulid } from 'ulidx'
 
 import {
   getTerminalByCell,
@@ -32,11 +32,11 @@ vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 vi.mock('vscode', async () => {
-  const { v4 } = (await vi.importActual('uuid')) as typeof import('uuid')
+  const { ulid } = (await vi.importActual('ulidx')) as typeof import('ulidx')
   const mocked = (await vi.importActual('../../__mocks__/vscode')) as any
 
-  const uuid1 = v4()
-  const uuid2 = v4()
+  const ulid1 = ulid()
+  const ulid2 = ulid()
 
   return {
     ...mocked,
@@ -44,10 +44,10 @@ vi.mock('vscode', async () => {
       window: {
         terminals: [
           {
-            creationOptions: { env: { RUNME_ID: uuid1 } },
-            name: `echo hello (RUNME_ID: ${uuid1})`,
+            creationOptions: { env: { RUNME_ID: ulid1 } },
+            name: `echo hello (RUNME_ID: ${ulid1})`,
           },
-          { creationOptions: { env: { RUNME_ID: uuid2 } }, name: `echo hi (RUNME_ID: ${uuid2})` },
+          { creationOptions: { env: { RUNME_ID: ulid2 } }, name: `echo hi (RUNME_ID: ${ulid2})` },
         ],
       },
       workspace: {
@@ -97,14 +97,14 @@ test('isInteractive', () => {
 test('getTerminalByCell', () => {
   expect(
     getTerminalByCell({
-      metadata: { 'runme.dev/uuid': vscode.window.terminals[0].creationOptions['env'].RUNME_ID },
+      metadata: { 'runme.dev/id': vscode.window.terminals[0].creationOptions['env'].RUNME_ID },
       kind: 2,
     } as any),
   ).toBeTruthy()
 
   expect(
     getTerminalByCell({
-      metadata: { 'runme.dev/uuid': v4() },
+      metadata: { 'runme.dev/id': ulid() },
       kind: 2,
     } as any),
   ).toBeUndefined()
@@ -229,7 +229,7 @@ suite('#getAnnotations', () => {
   test('should have sane defaults', () => {
     const d = getAnnotations({
       name: 'command-123',
-      'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0',
+      'runme.dev/id': '01HGVC6M8Y76XAGAY6MQ06F5XS',
     })
     expect(d).toStrictEqual(<CellAnnotations>{
       background: false,
@@ -240,8 +240,8 @@ suite('#getAnnotations', () => {
       category: '',
       excludeFromRunAll: false,
       promptEnv: true,
-      id: undefined,
-      'runme.dev/uuid': '48d86c43-84a4-469d-8c78-963513b0f9d0',
+      id: d.id,
+      'runme.dev/id': '01HGVC6M8Y76XAGAY6MQ06F5XS',
       interpreter: '',
     })
   })

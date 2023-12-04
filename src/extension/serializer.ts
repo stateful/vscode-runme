@@ -16,8 +16,8 @@ import {
   NotebookCellOutput,
   NotebookCellExecutionSummary,
 } from 'vscode'
-import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
+import { ulid } from 'ulidx'
 
 import { Serializer } from '../types'
 import { OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
@@ -37,7 +37,7 @@ import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
 import RunmeServer from './server/runmeServer'
 import { Kernel } from './kernel'
-import { getCellByUuId } from './cell'
+import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 
 declare var globalThis: any
@@ -72,7 +72,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   }
 
   /**
-   * Handle newly added cells (live edits) to have UUIDs
+   * Handle newly added cells (live edits) to have IDs
    */
   protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
     changes.contentChanges.forEach((contentChanges) => {
@@ -81,14 +81,14 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         if (
           cellAdded.kind !== NotebookCellKind.Code ||
-          cellAdded.metadata['runme.dev/uuid'] !== undefined
+          cellAdded.metadata['runme.dev/id'] !== undefined
         ) {
           return
         }
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellUuid(cellAdded.metadata),
+          SerializerBase.addCellId(cellAdded.metadata),
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -125,12 +125,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     await workspace.applyEdit(edit)
   }
 
-  public static addCellUuid(metadata: Serializer.Metadata | undefined): {
+  public static addCellId(metadata: Serializer.Metadata | undefined): {
     [key: string]: any
   } {
     return {
       ...(metadata || {}),
-      ...{ 'runme.dev/uuid': uuidv4() },
+      ...{ 'runme.dev/id': metadata?.id || ulid() },
     }
   }
 
@@ -166,22 +166,22 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     return Promise.all(
       data.cells.map(async (cell) => {
         let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
-        let uuid: string = ''
+        let id: string = ''
         for (const out of cell.outputs || []) {
           Object.entries(out.metadata ?? {}).find(([k, v]) => {
-            if (k === 'runme.dev/uuid') {
+            if (k === 'runme.dev/id') {
               terminalOutput = out
-              uuid = v
+              id = v
             }
           })
 
           if (terminalOutput) {
-            delete out.metadata?.['runme.dev/uuid']
+            delete out.metadata?.['runme.dev/id']
             break
           }
         }
 
-        const notebookCell = await getCellByUuId({ uuid })
+        const notebookCell = await getCellById({ id })
         if (notebookCell && terminalOutput) {
           const terminalState = await kernel.getCellOutputs(notebookCell).then((cellOutputMgr) => {
             const terminalState = cellOutputMgr.getCellTerminalState()
@@ -295,7 +295,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         if (cell.kind === NotebookCellKind.Code) {
           // serializer owns lifecycle because live edits bypass deserialization
-          cell.metadata = SerializerBase.addCellUuid(elem.metadata)
+          cell.metadata = SerializerBase.addCellId(elem.metadata)
         }
 
         cell.metadata ??= {}

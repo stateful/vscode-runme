@@ -55,7 +55,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
            * output items, e.g. copy to clipboard
            */
           const outputItemElem = document.createElement(RENDERERS.ShellOutputItems)
-          outputItemElem.setAttribute('uuid', payload.output.uuid)
+          outputItemElem.setAttribute('id', payload.output.id)
           outputItemElem.setAttribute('content', content)
           element.appendChild(outputItemElem)
           break
@@ -70,7 +70,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           break
         case OutputType.terminal:
           const terminalElement = document.createElement(RENDERERS.TerminalView)
-          terminalElement.setAttribute('uuid', payload.output['runme.dev/uuid'])
+          terminalElement.setAttribute('id', payload.output['runme.dev/id'])
           terminalElement.setAttribute('fontFamily', payload.output.fontFamily)
           if (typeof payload.output.fontSize === 'number') {
             terminalElement.setAttribute('fontSize', payload.output.fontSize.toString())

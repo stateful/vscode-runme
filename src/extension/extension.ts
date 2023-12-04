@@ -149,7 +149,6 @@ export class RunmeExtension {
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/id']: undefined,
-      ['runme.dev/uuid']: undefined,
       ['runme.dev/textRange']: undefined,
     }
     const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))

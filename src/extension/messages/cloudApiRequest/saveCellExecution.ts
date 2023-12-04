@@ -5,7 +5,7 @@ import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import { CreateCellExecutionDocument, NotebookInput } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
-import { getCellByUuId } from '../../cell'
+import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
@@ -26,7 +26,7 @@ export default async function saveCellExecution(
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
     }
-    const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+    const cell = await getCellById({ editor, id: message.output.id })
     if (!cell) {
       throw new Error('Cell not found')
     }
@@ -45,7 +45,7 @@ export default async function saveCellExecution(
         ? 1
         : 0
     const annotations = getAnnotations(cell)
-    delete annotations['runme.dev/uuid']
+    delete annotations['runme.dev/id']
     const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
     const runmeTokenResponse = await runmeService.getUserToken()
     if (!runmeTokenResponse) {
@@ -92,13 +92,13 @@ export default async function saveCellExecution(
     TelemetryReporter.sendTelemetryEvent('app.save')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
-      uuid: message.output.uuid,
+      id: message.output.id,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.error')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: (error as any).message,
-      uuid: message.output.uuid,
+      id: message.output.id,
       hasErrors: true,
     })
   }

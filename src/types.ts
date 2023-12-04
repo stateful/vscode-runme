@@ -72,7 +72,6 @@ export namespace Serializer {
     promptEnv?: string
     category?: string
     ['runme.dev/name']?: string
-    ['runme.dev/uuid']?: string
     ['runme.dev/id']?: string
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
@@ -124,10 +123,10 @@ interface Payload {
   [OutputType.annotations]: {
     annotations?: CellAnnotations
     validationErrors?: CellAnnotationsErrorResult
-    uuid?: string
+    id?: string
   }
   [OutputType.terminal]: TerminalConfiguration & {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     content?: string
     initialRows?: number
     enableShareButton: boolean
@@ -158,44 +157,44 @@ export interface ClientMessagePayload {
   [ClientMessages.infoMessage]: string
   [ClientMessages.errorMessage]: string
   [ClientMessages.terminalStdout]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     data: Uint8Array | string
   }
   [ClientMessages.terminalStderr]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     data: Uint8Array | string
   }
   [ClientMessages.terminalStdin]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     input: string
   }
-  [ClientMessages.terminalFocus]: { ['runme.dev/uuid']: string }
+  [ClientMessages.terminalFocus]: { ['runme.dev/id']: string }
   [ClientMessages.terminalResize]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     terminalDimensions: TerminalDimensions
   }
   [ClientMessages.terminalOpen]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
     terminalDimensions?: TerminalDimensions
   }
   [ClientMessages.onProgramClose]: {
-    ['runme.dev/uuid']: string
+    ['runme.dev/id']: string
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
   [ClientMessages.closeCellOutput]: {
-    uuid: string
+    id: string
     outputType: OutputType
   }
   [ClientMessages.displayPrompt]: {
     placeholder: string
     isSecret: boolean
     title: string
-    uuid: string
+    id: string
   }
   [ClientMessages.onPrompt]: {
     answer: string | undefined
-    uuid: string
+    id: string
   }
   [ClientMessages.onCategoryChange]: void
   [ClientMessages.githubWorkflowDispatch]: {
@@ -220,36 +219,36 @@ export interface ClientMessagePayload {
   [ClientMessages.setState]: {
     state: string
     value: string[]
-    uuid: string
+    id: string
   }
   [ClientMessages.getState]: {
     state: string
-    uuid: string
+    id: string
   }
   [ClientMessages.onGetState]: {
     state: string
     value: string | string[]
-    uuid: string
+    id: string
   }
   [ClientMessages.cloudApiRequest]: {
     data: any
-    uuid: string
+    id: string
     hasErrors?: boolean
     method: APIMethod
   }
   [ClientMessages.cloudApiResponse]: {
     data: any
-    uuid: string
+    id: string
     hasErrors?: boolean
   }
   [ClientMessages.optionsMessage]: {
     title: string
-    uuid: string
+    id: string
     options: any[]
     telemetryEvent?: string
   }
   [ClientMessages.onOptionsMessage]: {
-    uuid: string
+    id: string
     option: string | undefined
   }
   [ClientMessages.openExternalLink]: {
@@ -257,11 +256,11 @@ export interface ClientMessagePayload {
     telemetryEvent: string
   }
   [ClientMessages.copyTextToClipboard]: {
-    uuid: string
+    id: string
     text: string
   }
   [ClientMessages.onCopyTextToClipboard]: {
-    uuid: string
+    id: string
   }
   [ClientMessages.tangleEvent]: {
     data: any
@@ -272,7 +271,7 @@ export interface ClientMessagePayload {
 export interface OutputItemsPayload {
   content: string
   mime: string
-  uuid: string
+  id: string
 }
 
 export interface RunmeTaskDefinition extends TaskDefinition {

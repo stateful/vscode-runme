@@ -201,7 +201,7 @@ suite('_doExecuteCell', () => {
 
     await k['_doExecuteCell']({
       document: { uri: { fsPath: '/foo/bar' } },
-      metadata: { 'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce' },
+      metadata: { 'runme.dev/id': '01HGVC56X3XDWBPCC0NQDMGJ1Q' },
     } as any)
     // @ts-expect-error mocked out
     expect(executors.foobar).toBeCalledTimes(1)
@@ -231,7 +231,7 @@ suite('_doExecuteCell', () => {
       await k['_doExecuteCell']({
         document: { uri: { fsPath: '/foo/bar' } },
         metadata: {
-          'runme.dev/uuid': '849448b2-3c41-4323-920e-3098e71302ce',
+          'runme.dev/id': '01HGVC56X3XDWBPCC0NQDMGJ1Q',
           mimeType: 'text/plain',
         },
       } as any)
