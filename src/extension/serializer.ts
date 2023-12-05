@@ -428,8 +428,8 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    const sessFile = GrpcSerializer.getOutputsFile(doc.uri, sessionId)
-    await workspace.fs.writeFile(sessFile, bytes)
+    const sessionFile = GrpcSerializer.getOutputsFile(doc.uri, sessionId)
+    await workspace.fs.writeFile(sessionFile, bytes)
     await this.toggleSessionButton(true)
   }
 
