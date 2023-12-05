@@ -88,6 +88,7 @@ export interface IRunner extends Disposable {
 interface IRunnerChild extends DisposableAsync {}
 
 export interface IRunnerEnvironment extends IRunnerChild {
+  getSessionId(): string
   initialEnvs(): Set<string>
 }
 

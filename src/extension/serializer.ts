@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import {
   NotebookSerializer,
   ExtensionContext,
@@ -30,6 +32,7 @@ import {
   RunmeIdentity,
   CellKind,
   CellOutput,
+  SerializeRequestOptions,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
@@ -368,6 +371,9 @@ export class GrpcSerializer extends SerializerBase {
   protected ready: ReadyPromise
   protected readonly lifecycleIdentity: ServerLifecycleIdentity =
     getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
+  protected readonly outputPersistence: boolean
+  // todo(sebastian): naive cache for now, consider use lifecycle events for gc
+  protected readonly cache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
 
   private serverReadyListener: Disposable | undefined
 
@@ -377,6 +383,8 @@ export class GrpcSerializer extends SerializerBase {
     kernel: Kernel,
   ) {
     super(context, kernel)
+
+    this.outputPersistence = this.kernel.hasExperimentEnabled('outputPersistence') ?? false
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -388,10 +396,33 @@ export class GrpcSerializer extends SerializerBase {
     this.serverReadyListener = server.onTransportReady(({ transport }) =>
       this.initParserClient(transport),
     )
+
+    this.disposables.push(
+      workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
+    )
   }
 
   private async initParserClient(transport?: GrpcTransport) {
     this.client = initParserClient(transport ?? (await this.server.transport()))
+  }
+
+  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+    const runnerEnv = this.kernel.getRunnerEnvironment()
+    const sid = runnerEnv?.getSessionId()
+    const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
+    const bytes = this.cache.get(lid ?? '')
+
+    if (!bytes || !sid) {
+      return
+    }
+
+    const fileDir = path.dirname(doc.uri.fsPath)
+    const fileExt = path.extname(doc.uri.fsPath)
+    const fileBase = path.basename(doc.uri.fsPath, fileExt)
+
+    const sessFile = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
+
+    await workspace.fs.writeFile(Uri.parse(sessFile), bytes)
   }
 
   protected applyIdentity(data: Notebook): Notebook {
@@ -416,6 +447,15 @@ export class GrpcSerializer extends SerializerBase {
     return data
   }
 
+  public static getDocumentLifecycleId(
+    metadata: { [key: string]: any } | undefined,
+  ): string | undefined {
+    if (!metadata) {
+      return undefined
+    }
+    return metadata['runme.dev/frontmatterParsed']?.['runme']?.['id']
+  }
+
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -423,10 +463,36 @@ export class GrpcSerializer extends SerializerBase {
   ): Promise<Uint8Array> {
     const notebook = GrpcSerializer.marshalNotebook(data)
 
-    const serialRequest = <SerializeRequest>{ notebook }
-    const request = await this.client!.serialize(serialRequest)
+    const options = <SerializeRequestOptions>{
+      outputs: {
+        enabled: this.outputPersistence,
+        summary: this.outputPersistence,
+      },
+    }
 
-    const { result } = request.response
+    const lid = GrpcSerializer.getDocumentLifecycleId(data.metadata)
+    const serialRequest = <SerializeRequest>{ notebook }
+    const outputRequest = <SerializeRequest>{ notebook, options }
+
+    const output = this.client!.serialize(outputRequest).then((req) => {
+      if (req.response.result === undefined) {
+        throw new Error('serialization of notebook failed')
+      }
+
+      const bytes = req.response.result
+
+      if (!lid) {
+        console.error('skip caching since no lifecycleId was found')
+      } else {
+        this.cache.set(lid, bytes)
+      }
+    })
+
+    const request = this.client!.serialize(serialRequest)
+
+    await Promise.all([output, request])
+
+    const { result } = (await request).response
     if (result === undefined) {
       throw new Error('serialization of notebook failed')
     }
