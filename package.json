@@ -201,6 +201,13 @@
         "title": "Click to enable saving terminal output automatically",
         "icon": "$(play-circle)",
         "shortTitle": "Auto-Save (off)"
+      },
+      {
+        "command": "runme.notebookSessionOutputs",
+        "category": "Runme",
+        "title": "Click to open session outputs",
+        "icon": "$(output-view-icon)",
+        "shortTitle": "Session Outputs"
       }
     ],
     "menus": {
@@ -292,6 +299,11 @@
         }
       ],
       "notebook/toolbar": [
+        {
+          "command": "runme.notebookSessionOutputs",
+          "when": "notebookType == runme && notebookHasRunmeOutputs",
+          "group": "navigation"
+        },
         {
           "command": "runme.surveyFeedbackButton",
           "when": "notebookType == runme",

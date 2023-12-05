@@ -17,12 +17,13 @@ import {
   CancellationTokenSource,
   NotebookCellOutput,
   NotebookCellExecutionSummary,
+  commands,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import { Serializer } from '../types'
-import { OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
+import { NOTEBOOK_HAS_OUTPUTS, OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
@@ -385,6 +386,7 @@ export class GrpcSerializer extends SerializerBase {
     super(context, kernel)
 
     this.outputPersistence = this.kernel.hasExperimentEnabled('outputPersistence') ?? false
+    this.toggleSessionButton(this.outputPersistence)
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -402,27 +404,42 @@ export class GrpcSerializer extends SerializerBase {
     )
   }
 
+  public toggleSessionButton(state: boolean) {
+    return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
+  }
+
   private async initParserClient(transport?: GrpcTransport) {
     this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
-    const runnerEnv = this.kernel.getRunnerEnvironment()
-    const sid = runnerEnv?.getSessionId()
     const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
     const bytes = this.cache.get(lid ?? '')
 
-    if (!bytes || !sid) {
+    if (!bytes) {
+      this.toggleSessionButton(false)
       return
     }
 
-    const fileDir = path.dirname(doc.uri.fsPath)
-    const fileExt = path.extname(doc.uri.fsPath)
-    const fileBase = path.basename(doc.uri.fsPath, fileExt)
+    const runnerEnv = this.kernel.getRunnerEnvironment()
+    const sessionId = runnerEnv?.getSessionId()
+    if (!sessionId) {
+      this.toggleSessionButton(false)
+      return
+    }
 
-    const sessFile = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
+    const sessFile = GrpcSerializer.getOutputsFile(doc.uri, sessionId)
+    await workspace.fs.writeFile(sessFile, bytes)
+    await this.toggleSessionButton(true)
+  }
 
-    await workspace.fs.writeFile(Uri.parse(sessFile), bytes)
+  public static getOutputsFile(docUri: Uri, sid: string): Uri {
+    const fileDir = path.dirname(docUri.fsPath)
+    const fileExt = path.extname(docUri.fsPath)
+    const fileBase = path.basename(docUri.fsPath, fileExt)
+    const filePath = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
+
+    return Uri.parse(filePath)
   }
 
   protected applyIdentity(data: Notebook): Notebook {
@@ -463,33 +480,13 @@ export class GrpcSerializer extends SerializerBase {
   ): Promise<Uint8Array> {
     const notebook = GrpcSerializer.marshalNotebook(data)
 
-    const options = <SerializeRequestOptions>{
-      outputs: {
-        enabled: this.outputPersistence,
-        summary: this.outputPersistence,
-      },
-    }
-
     const lid = GrpcSerializer.getDocumentLifecycleId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
-    const outputRequest = <SerializeRequest>{ notebook, options }
 
-    const output = this.client!.serialize(outputRequest).then((req) => {
-      if (req.response.result === undefined) {
-        throw new Error('serialization of notebook failed')
-      }
-
-      const bytes = req.response.result
-
-      if (!lid) {
-        console.error('skip caching since no lifecycleId was found')
-      } else {
-        this.cache.set(lid, bytes)
-      }
-    })
-
+    const output = this.cacheNotebookOutputs(notebook, lid)
     const request = this.client!.serialize(serialRequest)
 
+    // run in parallel
     await Promise.all([output, request])
 
     const { result } = (await request).response
@@ -498,6 +495,29 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     return result
+  }
+
+  private async cacheNotebookOutputs(notebook: Notebook, lid: string | undefined) {
+    if (!this.outputPersistence) {
+      return Promise.resolve()
+    }
+
+    const options = <SerializeRequestOptions>{ outputs: { enabled: true, summary: true } }
+    const request = <SerializeRequest>{ notebook, options }
+
+    const result = await this.client!.serialize(request)
+
+    if (result.response.result === undefined) {
+      throw new Error('serialization of notebook outputs failed')
+    }
+
+    const bytes = result.response.result
+
+    if (!lid) {
+      console.error('skip caching since no lifecycleId was found')
+    } else {
+      this.cache.set(lid, bytes)
+    }
   }
 
   public static marshalNotebook(data: NotebookData): Notebook {
