@@ -24,7 +24,7 @@ import {
 } from './grpc/runnerTypes'
 import { RunnerServiceClient } from './grpc/client'
 import { getSystemShellPath } from './executors/utils'
-import RunmeServer from './server/runmeServer'
+import { IServer } from './server/runmeServer'
 import { convertEnvList } from './utils'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
@@ -177,7 +177,7 @@ export class GrpcRunner implements IRunner {
   protected _onReady = this.register(new EventEmitter<void>())
   onReady = this._onReady.event
 
-  constructor(protected server: RunmeServer) {
+  constructor(protected server: IServer) {
     this.disposables.push(
       server.onTransportReady(({ transport }) => this.initRunnerClient(transport)),
     )

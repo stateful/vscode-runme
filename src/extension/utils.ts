@@ -52,7 +52,7 @@ import getLogger from './logger'
 import { Kernel } from './kernel'
 import { ENV_STORE, DEFAULT_ENV, BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { GrpcRunnerEnvironment } from './runner'
-import RunmeServer from './server/runmeServer'
+import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 
@@ -511,7 +511,7 @@ export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
 }
 
-export function getRunnerSessionEnvs(extensionBaseUri: Uri, kernel: Kernel, server: RunmeServer) {
+export function getRunnerSessionEnvs(extensionBaseUri: Uri, kernel: Kernel, server: IServer) {
   const envs: Record<string, string> = {}
   envs['RUNME_SERVER_ADDR'] = server.address()
 

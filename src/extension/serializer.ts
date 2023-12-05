@@ -39,7 +39,7 @@ import { initParserClient, ParserServiceClient } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
-import RunmeServer from './server/runmeServer'
+import { IServer } from './server/runmeServer'
 import { Kernel } from './kernel'
 import { getCellByUuId } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
@@ -380,7 +380,7 @@ export class GrpcSerializer extends SerializerBase {
 
   constructor(
     protected context: ExtensionContext,
-    protected server: RunmeServer,
+    protected server: IServer,
     kernel: Kernel,
   ) {
     super(context, kernel)

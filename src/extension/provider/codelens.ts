@@ -29,7 +29,7 @@ import { Serializer } from '../../types'
 import { getCodeLensEnabled } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
 import type { SurveyWinCodeLensRun } from '../survey'
-import RunmeServer from '../server/runmeServer'
+import IServer from '../server/runmeServer'
 
 import { RunmeTaskProvider } from './runmeTask'
 
@@ -63,7 +63,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     protected surveyWinCodeLensRun: SurveyWinCodeLensRun,
     protected runner?: IRunner,
     protected kernel?: Kernel,
-    protected server?: RunmeServer,
+    protected server?: IServer,
   ) {
     this.register(
       languages.registerCodeLensProvider(
