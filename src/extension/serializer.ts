@@ -428,18 +428,22 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    const sessionFile = GrpcSerializer.getOutputsFile(doc.uri, sessionId)
+    const sessionFile = GrpcSerializer.getOutputsUri(doc.uri, sessionId)
     await workspace.fs.writeFile(sessionFile, bytes)
     await this.toggleSessionButton(true)
   }
 
-  public static getOutputsFile(docUri: Uri, sid: string): Uri {
-    const fileDir = path.dirname(docUri.fsPath)
-    const fileExt = path.extname(docUri.fsPath)
-    const fileBase = path.basename(docUri.fsPath, fileExt)
+  public static getOutputsFilePath(fsPath: string, sid: string): string {
+    const fileDir = path.dirname(fsPath)
+    const fileExt = path.extname(fsPath)
+    const fileBase = path.basename(fsPath, fileExt)
     const filePath = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
 
-    return Uri.parse(filePath)
+    return filePath
+  }
+
+  public static getOutputsUri(docUri: Uri, sid: string): Uri {
+    return Uri.parse(this.getOutputsFilePath(docUri.fsPath, sid))
   }
 
   protected applyIdentity(data: Notebook): Notebook {

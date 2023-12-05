@@ -1,4 +1,11 @@
-import { NotebookData, NotebookDocument, NotebookEdit, window, workspace } from 'vscode'
+import {
+  CancellationTokenSource,
+  NotebookData,
+  NotebookDocument,
+  NotebookEdit,
+  window,
+  workspace,
+} from 'vscode'
 import { expect, vi, it, describe, beforeEach } from 'vitest'
 
 import { GrpcSerializer, SerializerBase, WasmSerializer } from '../../src/extension/serializer'
@@ -22,7 +29,7 @@ vi.mock('vscode', () => ({
   },
   Uri: { joinPath: vi.fn().mockReturnValue('/foo/bar') },
   workspace: {
-    fs: { readFile: vi.fn().mockResolvedValue({}) },
+    fs: { readFile: vi.fn().mockResolvedValue({}), writeFile: vi.fn() },
     onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     applyEdit: vi.fn(),
@@ -250,6 +257,60 @@ describe('GrpcSerializer', () => {
       expect(processInfo?.exitReason?.code?.value).toStrictEqual(16)
       expect(processInfo?.pid).toBeDefined()
       expect(processInfo?.pid?.value).toStrictEqual('98354')
+    })
+  })
+
+  describe('session file', () => {
+    const context: any = {
+      extensionUri: { fsPath: '/foo/bar' },
+    }
+
+    const Server = vi.fn().mockImplementation(() => ({
+      onTransportReady: vi.fn(),
+      ready: vi.fn().mockResolvedValue(null),
+    }))
+
+    const Kernel = vi.fn().mockImplementation(() => ({
+      hasExperimentEnabled: vi.fn().mockReturnValue(true),
+      getRunnerEnvironment: vi.fn().mockImplementation(() => ({
+        getSessionId: vi.fn().mockImplementation(() => 'FAKE-SESSION'),
+      })),
+    }))
+
+    const fakeOutputFileUri = { fsPath: '/tmp/fake/outputs.md' } as any
+
+    it('writes cached outputs on save', async () => {
+      const fixture = deepCopyFixture()
+
+      const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      serializer.outputPersistence = true
+      serializer.client = {
+        serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
+      }
+
+      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeOutputFileUri)
+
+      const result = await serializer.serializeNotebook(
+        { cells: [], metadata: fixture.metadata } as any,
+        new CancellationTokenSource().token,
+      )
+      expect(result.length).toStrictEqual(4)
+
+      await serializer.handleSaveNotebookOutputs({
+        uri: fakeOutputFileUri,
+        metadata: fixture.metadata,
+      })
+
+      expect(workspace.fs.writeFile).toBeCalledWith(fakeOutputFileUri, fakeCachedBytes)
+    })
+
+    it('derives its path from notebook source document and session', () => {
+      const outputFilePath = GrpcSerializer.getOutputsFilePath(
+        '/tmp/fake/runbook.md',
+        '01HGX8KYWM9K41YVYP0CNR3TZW',
+      )
+      expect(outputFilePath).toStrictEqual('/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md')
     })
   })
 })

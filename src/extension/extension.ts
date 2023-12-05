@@ -260,7 +260,7 @@ export class RunmeExtension {
           if (!e.ui || !sessionId) {
             return
           }
-          const outputFilePath = GrpcSerializer.getOutputsFile(
+          const outputFilePath = GrpcSerializer.getOutputsUri(
             e.notebookEditor.notebookUri,
             sessionId,
           )
