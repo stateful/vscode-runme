@@ -56,7 +56,10 @@
       "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
       "args": ["run", "${relativeFile}"],
       "smartStep": true,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_OPTIONS": "--experimental-specifier-resolution=node"
+      },
     },
     {
       "name": "run selected e2e spec",
@@ -71,7 +74,10 @@
           "${workspaceFolder}/node_modules/**/*.js",
           "${workspaceFolder}/lib/**/*.js",
           "<node_internals>/**/*.js"
-      ]
+      ],
+      "env": {
+        "NODE_OPTIONS": "--experimental-specifier-resolution=node"
+      },
   }
   ]
 }
