@@ -119,11 +119,6 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    if (!this.client) {
-      log.error('gRPC client not initialized')
-      return []
-    }
-
     const current =
       (window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') &&
         window.activeNotebookEditor?.notebook.uri) ||
