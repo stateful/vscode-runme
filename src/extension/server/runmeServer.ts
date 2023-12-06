@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { Disposable, Uri, EventEmitter } from 'vscode'
+import { Disposable, Uri, EventEmitter, Event } from 'vscode'
 
 import getLogger from '../logger'
 import { HealthCheckRequest, HealthCheckResponse_ServingStatus } from '../grpc/healthTypes'
@@ -37,7 +37,20 @@ export interface IServerConfig {
 
 const log = getLogger('RunmeServer')
 
-class RunmeServer implements Disposable {
+export interface IServer extends Disposable {
+  transportType: ServerTransportType
+
+  onTransportReady: Event<{ transport: GrpcTransport }>
+  onClose: Event<{
+    code: number | null
+  }>
+
+  launch(): Promise<string>
+  address(): string
+  transport(): Promise<GrpcTransport>
+}
+
+class RunmeServer implements IServer {
   #port: number
   #socketId?: string
   #process: ChildProcessWithoutNullStreams | undefined
@@ -98,7 +111,7 @@ class RunmeServer implements Disposable {
     process?.kill()
   }
 
-  async isRunning(): Promise<boolean> {
+  protected async isRunning(): Promise<boolean> {
     const client = new HealthClient(await this.transport())
 
     try {
@@ -186,7 +199,7 @@ class RunmeServer implements Disposable {
     return this.#transport
   }
 
-  async start(): Promise<string> {
+  protected async start(): Promise<string> {
     const binaryLocation = this.#binaryPath.fsPath
 
     const binaryExists = await fs.access(binaryLocation).then(
@@ -288,7 +301,7 @@ class RunmeServer implements Disposable {
     ])
   }
 
-  async acceptsConnection(): Promise<void> {
+  protected async acceptsConnection(): Promise<void> {
     const INTERVAL = this.#acceptsInterval
     const INTENTS = this.#acceptsIntents
     let iter = 0

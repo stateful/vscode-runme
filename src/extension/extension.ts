@@ -1,4 +1,13 @@
-import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
+import {
+  Disposable,
+  workspace,
+  notebooks,
+  commands,
+  ExtensionContext,
+  tasks,
+  window,
+  Uri,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
@@ -242,6 +251,21 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () =>
         toggleAutosave(context, true),
+      ),
+      RunmeExtension.registerCommand(
+        'runme.notebookSessionOutputs',
+        (e: { notebookEditor: { notebookUri: Uri }; ui: boolean }) => {
+          const runnerEnv = kernel.getRunnerEnvironment()
+          const sessionId = runnerEnv?.getSessionId()
+          if (!e.ui || !sessionId) {
+            return
+          }
+          const outputFilePath = GrpcSerializer.getOutputsUri(
+            e.notebookEditor.notebookUri,
+            sessionId,
+          )
+          commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
+        },
       ),
     )
     await await bootFile(context)

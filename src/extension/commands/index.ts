@@ -34,7 +34,7 @@ import {
   getTerminalByCell,
   openFileAsRunmeNotebook,
 } from '../utils'
-import RunmeServer from '../server/runmeServer'
+import IServer from '../server/runmeServer'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
@@ -149,7 +149,7 @@ export function stopBackgroundTask(cell: NotebookCell) {
 export function runCLICommand(
   extensionBaseUri: Uri,
   grpcRunner: boolean,
-  server: RunmeServer,
+  server: IServer,
   kernel: Kernel,
 ) {
   return async function (cell: NotebookCell) {
