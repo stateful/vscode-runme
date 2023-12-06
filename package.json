@@ -426,7 +426,7 @@
             "type": "boolean",
             "scope": "window",
             "default": false,
-            "markdownDescription": "If set to `true`, the notebook will store input and outputs."
+            "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           },
           "runme.checkout.projectDir": {
             "type": "string",
