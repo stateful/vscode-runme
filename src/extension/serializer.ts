@@ -128,9 +128,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public static addCellId(metadata: Serializer.Metadata | undefined): {
     [key: string]: any
   } {
+    const id = metadata?.id || metadata?.['runme.dev/id']
+    const newId = id || ulid()
     return {
       ...(metadata || {}),
-      ...{ 'runme.dev/id': metadata?.id || ulid() },
+      ...{ id: newId, 'runme.dev/id': newId },
     }
   }
 
@@ -294,7 +296,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         }
 
         if (cell.kind === NotebookCellKind.Code) {
-          // serializer owns lifecycle because live edits bypass deserialization
+          // The serializer used to own the lifecycle of IDs, however,
+          // that's no longer true since they are coming out of the kernel now.
+          // However, if "net new" cells show up after deserialization, ie inserts, we backfill them here.
           cell.metadata = SerializerBase.addCellId(elem.metadata)
         }
 
