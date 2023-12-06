@@ -17,7 +17,10 @@ import {
   NotebookCell,
   NotebookCellData,
   NotebookData,
+  Disposable,
 } from 'vscode'
+import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
+import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import getLogger from '../logger'
 import { getAnnotations, getWorkspaceEnvs } from '../utils'
@@ -26,6 +29,10 @@ import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
 import { getCellCwd, getCellProgram, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
+import RunmeServer from '../server/runmeServer'
+import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
+import { LoadRequest, LoadResponse } from '../grpc/projectTypes'
+import { RunmeIdentity } from '../grpc/serializerTypes'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 const log = getLogger('RunmeTaskProvider')
@@ -34,19 +41,86 @@ export interface RunmeTask extends Task {
   definition: Required<RunmeTaskDefinition>
 }
 
+type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
+
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
   static id = 'runme'
+
+  private client: ProjectServiceClient | undefined
+  private serverReadyListener: Disposable | undefined
+
+  protected ready: ReadyPromise
+
   constructor(
     private context: ExtensionContext,
     private serializer: SerializerBase,
+    private kernel: Kernel,
+    private server: RunmeServer,
     private runner?: IRunner,
-    private kernel?: Kernel,
-  ) {}
+  ) {
+    this.serverReadyListener = this.server.onTransportReady(({ transport }) =>
+      this.initProjectClient(transport),
+    )
+
+    this.ready = new Promise((resolve) => {
+      const disposable = server.onTransportReady(() => {
+        disposable.dispose()
+        resolve()
+      })
+    })
+
+    this.loadProjects()
+  }
+
+  private async initProjectClient(transport?: GrpcTransport) {
+    this.client = initProjectClient(transport ?? (await this.server.transport()))
+  }
+
+  protected async loadProjects() {
+    await this.ready
+
+    const requests = (workspace.workspaceFolders ?? []).map((folder) => {
+      return <LoadRequest>{
+        kind: {
+          oneofKind: 'directory',
+          directory: {
+            path: workspace.asRelativePath(folder.uri),
+            skipGitignore: false,
+            ignoreFilePatterns: [],
+            skipRepoLookupUpward: false,
+          },
+        },
+        identity: RunmeIdentity.ALL,
+      }
+    })
+
+    log.info(`Walking ${requests.length} directories/repos...`)
+
+    await Promise.all(
+      requests.map((request) => {
+        const session: LoadStream = this.client!.load(request)
+        session.responses.onMessage((msg) => {
+          if (msg.data.oneofKind !== 'foundTask') {
+            return
+          }
+          console.log(msg.data.foundTask)
+        })
+        return session
+      }),
+    )
+
+    log.info('Finished walk.')
+  }
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
     if (!this.runner) {
       log.error('Tasks only supported with gRPC runner enabled')
+      return []
+    }
+
+    if (!this.client) {
+      log.error('gRPC client not initialized')
       return []
     }
 
@@ -81,7 +155,7 @@ export class RunmeTaskProvider implements TaskProvider {
         )
         .map(
           async (cell) =>
-            await RunmeTaskProvider.getRunmeTask(
+            await RunmeTaskProvider.newRunmeTask(
               current.fsPath,
               `${getAnnotations(cell.metadata).name}`,
               notebook,
@@ -101,7 +175,7 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static async getRunmeTask(
+  static async newRunmeTask(
     filePath: string,
     command: string,
     notebook: NotebookData | Serializer.Notebook,

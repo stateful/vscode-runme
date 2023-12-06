@@ -35,7 +35,7 @@ import {
   CellOutput,
   SerializeRequestOptions,
 } from './grpc/serializerTypes'
-import { initParserClient, ParserServiceClient } from './grpc/client'
+import { initParserClient, ParserServiceClient, type ReadyPromise } from './grpc/client'
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
@@ -46,8 +46,6 @@ import { IProcessInfoState } from './terminal/terminalState'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
-
-type ReadyPromise = Promise<void | Error>
 
 type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
   processInfo?: IProcessInfoState

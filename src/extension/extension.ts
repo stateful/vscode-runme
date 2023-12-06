@@ -90,6 +90,11 @@ export class RunmeExtension {
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
 
+    const runmeTaskProvider = tasks.registerTaskProvider(
+      RunmeTaskProvider.id,
+      new RunmeTaskProvider(context, serializer, kernel, server, runner),
+    )
+
     /**
      * Start the Runme server
      */
@@ -216,10 +221,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
-      tasks.registerTaskProvider(
-        RunmeTaskProvider.id,
-        new RunmeTaskProvider(context, serializer, runner, kernel),
-      ),
+      runmeTaskProvider,
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**
