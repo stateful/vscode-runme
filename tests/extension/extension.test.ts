@@ -28,9 +28,15 @@ vi.mock('../../src/extension/grpc/client', () => {
   return {
     ParserServiceClient: MockedParserServiceClient,
     RunnerServiceClient: vi.fn(),
+    ProjectServiceClient: vi.fn(),
     initParserClient: vi.fn(() => ({
       deserialize: vi.fn(() => {
         return { status: { code: 'OK' } }
+      }),
+    })),
+    initProjectClient: vi.fn(() => ({
+      load: vi.fn(() => {
+        return { responses: { onMessage: vi.fn() } }
       }),
     })),
     HealthClient: class {

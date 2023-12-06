@@ -7,11 +7,9 @@ import {
   TaskProvider,
   Uri,
   workspace,
-  window,
   TaskScope,
   TaskRevealKind,
   TaskPanelKind,
-  NotebookCellKind,
   CancellationToken,
   CustomExecution,
   NotebookCell,
@@ -21,6 +19,8 @@ import {
 } from 'vscode'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Observable, scan, takeLast } from 'rxjs'
 
 import getLogger from '../logger'
 import { getAnnotations, getWorkspaceEnvs } from '../utils'
@@ -31,7 +31,7 @@ import { getCellCwd, getCellProgram, parseCommandSeq } from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
-import { LoadRequest, LoadResponse } from '../grpc/projectTypes'
+import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
@@ -43,14 +43,18 @@ export interface RunmeTask extends Task {
 
 type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
 
+type ProjectTask = LoadEventFoundTask
+
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
   static id = 'runme'
 
+  private ready: ReadyPromise
+  private projectTasks$: Observable<ProjectTask[]>
   private client: ProjectServiceClient | undefined
   private serverReadyListener: Disposable | undefined
 
-  protected ready: ReadyPromise
+  private tasks: ProjectTask[] = []
 
   constructor(
     private context: ExtensionContext,
@@ -70,16 +74,15 @@ export class RunmeTaskProvider implements TaskProvider {
       })
     })
 
-    this.loadProjects()
+    this.projectTasks$ = this.loadProjectTasks()
+    this.projectTasks$.pipe(takeLast(1)).subscribe((tasks) => this.tasks.push(...tasks))
   }
 
   private async initProjectClient(transport?: GrpcTransport) {
     this.client = initProjectClient(transport ?? (await this.server.transport()))
   }
 
-  protected async loadProjects() {
-    await this.ready
-
+  protected loadProjectTasks(): Observable<ProjectTask[]> {
     const requests = (workspace.workspaceFolders ?? []).map((folder) => {
       return <LoadRequest>{
         kind: {
@@ -97,20 +100,32 @@ export class RunmeTaskProvider implements TaskProvider {
 
     log.info(`Walking ${requests.length} directories/repos...`)
 
-    await Promise.all(
-      requests.map((request) => {
-        const session: LoadStream = this.client!.load(request)
-        session.responses.onMessage((msg) => {
-          if (msg.data.oneofKind !== 'foundTask') {
-            return
-          }
-          console.log(msg.data.foundTask)
-        })
-        return session
-      }),
-    )
+    const task$ = new Observable<ProjectTask>((observer) => {
+      this.ready.then(() =>
+        Promise.all(
+          requests.map((request) => {
+            const session: LoadStream = this.client!.load(request)
+            session.responses.onMessage((msg) => {
+              if (msg.data.oneofKind !== 'foundTask') {
+                return
+              }
+              observer.next(msg.data.foundTask)
+            })
+            return session
+          }),
+        ).then(() => {
+          log.info('Finished walk.')
+          observer.complete()
+        }),
+      )
+    })
 
-    log.info('Finished walk.')
+    return task$.pipe(
+      scan((acc, one) => {
+        acc.push(one)
+        return acc
+      }, new Array<ProjectTask>()),
+    )
   }
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
@@ -119,47 +134,19 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    const current =
-      (window.activeNotebookEditor?.notebook.uri.fsPath.endsWith('md') &&
-        window.activeNotebookEditor?.notebook.uri) ||
-      (workspace.workspaceFolders?.[0].uri &&
-        Uri.joinPath(workspace.workspaceFolders?.[0].uri, 'README.md'))
-
-    if (!current) {
-      return []
-    }
-
-    let mdContent: Uint8Array
-    try {
-      mdContent = await workspace.fs.readFile(current)
-    } catch (err: any) {
-      if (err.code !== 'FileNotFound') {
-        log.error(`${err.message}`)
-      }
-      return []
-    }
-
-    const notebook = await this.serializer.deserializeNotebook(mdContent, token)
-
     const environment = this.kernel?.getRunnerEnvironment()
 
-    return await Promise.all(
-      notebook.cells
-        .filter(
-          (cell: Serializer.Cell): cell is Serializer.Cell => cell.kind === NotebookCellKind.Code,
+    return Promise.all(
+      this.tasks.map(async (prjTask) => {
+        return await RunmeTaskProvider.newRunmeProjectTask(
+          prjTask,
+          {},
+          token,
+          this.serializer,
+          this.runner!,
+          environment,
         )
-        .map(
-          async (cell) =>
-            await RunmeTaskProvider.newRunmeTask(
-              current.fsPath,
-              `${getAnnotations(cell.metadata).name}`,
-              notebook,
-              cell,
-              {},
-              this.runner!,
-              environment,
-            ),
-        ),
+      }),
     )
   }
 
@@ -167,6 +154,91 @@ export class RunmeTaskProvider implements TaskProvider {
     /**
      * ToDo(Christian) fetch terminal from Kernel
      */
+    return task
+  }
+  static async newRunmeProjectTask(
+    projectTask: ProjectTask,
+    // notebook: NotebookData | Serializer.Notebook,
+    // cell: NotebookCell | NotebookCellData | Serializer.Cell,
+    options: TaskOptions = {},
+    token: CancellationToken,
+    serializer: SerializerBase,
+    runner: IRunner,
+    environment?: IRunnerEnvironment,
+  ): Promise<Task> {
+    const { name, documentPath } = projectTask
+    const source = path.basename(documentPath)
+
+    const task = new Task(
+      { type: 'runme', name, command: name },
+      TaskScope.Workspace,
+      name,
+      source,
+      new CustomExecution(async () => {
+        let mdContent: Uint8Array
+        try {
+          mdContent = await workspace.fs.readFile(Uri.parse(documentPath))
+        } catch (err: any) {
+          if (err.code !== 'FileNotFound') {
+            log.error(`${err.message}`)
+          }
+          throw err
+        }
+
+        const notebook = await serializer.deserializeNotebook(mdContent, token)
+
+        const cell: Serializer.Cell = notebook.cells.find((cell) => {
+          return (
+            cell.metadata?.['id'] === projectTask.id || cell.metadata?.['runme.dev/name'] === name
+          )
+        })!
+
+        const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
+
+        const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+        const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
+
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(documentPath)))
+
+        const envs: Record<string, string> = {
+          ...(await getWorkspaceEnvs(Uri.file(documentPath))),
+        }
+
+        const cellContent = cell.value
+        const commands = await parseCommandSeq(
+          cellContent,
+          languageId,
+          promptEnv,
+          new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
+        )
+
+        if (!environment) {
+          Object.assign(envs, process.env)
+        }
+
+        const runOpts: RunProgramOptions = {
+          commandMode,
+          convertEol: true,
+          cwd,
+          environment,
+          envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+          exec: { type: 'commands', commands: commands ?? [''] },
+          languageId,
+          background,
+          programName,
+          storeLastOutput: true,
+          tty: interactive,
+        }
+
+        const program = await runner.createProgramSession(runOpts)
+
+        program.registerTerminalWindow('vscode')
+        program.setActiveTerminalWindow('vscode')
+
+        return program
+      }),
+    )
+
     return task
   }
 

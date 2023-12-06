@@ -29,6 +29,7 @@ export class Uri extends URI {
 }
 
 export const workspace = {
+  asRelativePath: vi.fn(),
   getConfiguration: vi.fn().mockReturnValue(new Map()),
   onDidChangeConfiguration: vi.fn(),
   openNotebookDocument: vi.fn().mockReturnValue({ uri: 'new notebook uri' }),
