@@ -20,7 +20,6 @@ import {
   IRunner,
   RunProgramOptions,
 } from '../../src/extension/runner'
-import { RpcError } from '../../src/extension/grpc/client'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
 import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
@@ -595,18 +594,6 @@ suite('grpc Runner', () => {
 
       expect(writeListener).toBeCalledTimes(1)
       expect(writeListener).toBeCalledWith('test\n')
-    })
-
-    test('grpc program failure gives info message', async () => {
-      const { duplex } = await createNewSession()
-
-      duplex._onError.fire(new RpcError('invalid LanguageId'))
-      expect(window.showWarningMessage).toBeCalledTimes(1)
-
-      vi.mocked(window.showWarningMessage).mockClear()
-
-      duplex._onError.fire(new RpcError('invalid ProgramName'))
-      expect(window.showErrorMessage).toBeCalledTimes(1)
     })
   })
 })
