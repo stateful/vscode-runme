@@ -20,7 +20,7 @@ import {
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Observable, scan, takeLast } from 'rxjs'
+import { Observable, of, scan, takeLast } from 'rxjs'
 
 import getLogger from '../logger'
 import { getAnnotations, getWorkspaceEnvs } from '../utils'
@@ -83,6 +83,12 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   protected loadProjectTasks(): Observable<ProjectTask[]> {
+    if (!workspace.workspaceFolders?.length) {
+      return of([])
+    }
+
+    const separator = workspace.workspaceFolders[0].uri.fsPath.indexOf('/') > -1 ? '/' : '\\'
+
     const requests = (workspace.workspaceFolders ?? []).map((folder) => {
       return <LoadRequest>{
         kind: {
@@ -120,9 +126,16 @@ export class RunmeTaskProvider implements TaskProvider {
       )
     })
 
+    const prox = (pt: ProjectTask) => {
+      return pt.documentPath.split(separator).length
+    }
+
     return task$.pipe(
       scan((acc, one) => {
         acc.push(one)
+        acc.sort((a, b) => {
+          return prox(a) - prox(b)
+        })
         return acc
       }, new Array<ProjectTask>()),
     )
