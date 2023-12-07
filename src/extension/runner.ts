@@ -6,9 +6,7 @@ import {
   type Disposable,
   type TerminalDimensions,
   EventEmitter,
-  window,
 } from 'vscode'
-import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../types'
 
@@ -22,7 +20,7 @@ import {
   Session,
   Winsize,
 } from './grpc/runnerTypes'
-import { RunnerServiceClient } from './grpc/client'
+import { RunnerServiceClient, RpcError } from './grpc/client'
 import { getSystemShellPath } from './executors/utils'
 import { IServer } from './server/runmeServer'
 import { convertEnvList } from './utils'
@@ -416,21 +414,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.responses.onError((error) => {
       if (error instanceof RpcError) {
-        if (error.message.includes('invalid LanguageId')) {
-          // todo(sebastian): provide "Configure" button to trigger foldout
-          window.showWarningMessage(
-            // eslint-disable-next-line max-len
-            'Not every language is automatically executable. You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.',
-          )
-        }
-
-        if (error.message.includes('invalid ProgramName')) {
-          window.showErrorMessage(
-            // eslint-disable-next-line max-len
-            `Unable to locate interpreter "${this.opts.programName}" specified in shebang (aka #!). Please check the cell's "Configure" foldout.`,
-          )
-        }
-
         console.error(
           'RpcError occurred!',
           {

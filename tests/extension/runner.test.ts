@@ -11,7 +11,6 @@ import {
   EndOfLine,
   window,
 } from 'vscode'
-import { RpcError } from '@protobuf-ts/runtime-rpc'
 import { URI } from 'vscode-uri'
 
 import {
@@ -21,6 +20,7 @@ import {
   IRunner,
   RunProgramOptions,
 } from '../../src/extension/runner'
+import { RpcError } from '../../src/extension/grpc/client'
 import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
 import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
