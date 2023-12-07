@@ -310,7 +310,7 @@ export class TerminalView extends LitElement {
   protected rows: number = 10
 
   @property({ type: String })
-  uuid?: string
+  id!: string
 
   @property({ type: String })
   fontFamily?: TerminalConfiguration['fontFamily']
@@ -374,8 +374,8 @@ export class TerminalView extends LitElement {
   connectedCallback(): void {
     super.connectedCallback()
 
-    if (!this.uuid) {
-      throw new Error('No uuid provided to terminal!')
+    if (!this.id) {
+      throw new Error('No id provided to terminal!')
     }
 
     this.rows = this.initialRows ?? this.rows
@@ -436,8 +436,8 @@ export class TerminalView extends LitElement {
           case ClientMessages.terminalStdout:
           case ClientMessages.terminalStderr:
             {
-              const { 'runme.dev/uuid': uuid, data } = e.output
-              if (uuid !== this.uuid) {
+              const { 'runme.dev/id': id, data } = e.output
+              if (id !== this.id) {
                 return
               }
               if (e.type === ClientMessages.terminalStdout) {
@@ -449,7 +449,7 @@ export class TerminalView extends LitElement {
             break
           case ClientMessages.cloudApiResponse:
             {
-              if (e.output.uuid !== this.uuid) {
+              if (e.output.id !== this.id) {
                 return
               }
               this.isCloudApiLoading = false
@@ -482,7 +482,7 @@ export class TerminalView extends LitElement {
 
           case ClientMessages.onOptionsMessage:
             {
-              if (e.output.uuid !== this.uuid) {
+              if (e.output.id !== this.id) {
                 return
               }
               const answer = e.output.option
@@ -496,7 +496,7 @@ export class TerminalView extends LitElement {
                 }
                 case MessageOptions.CopyToClipboard: {
                   return postClientMessage(ctx, ClientMessages.copyTextToClipboard, {
-                    uuid: this.uuid!,
+                    id: this.id!,
                     text: this.shareUrl!,
                   })
                 }
@@ -504,14 +504,14 @@ export class TerminalView extends LitElement {
             }
             break
           case ClientMessages.onCopyTextToClipboard: {
-            if (e.output.uuid !== this.uuid) {
+            if (e.output.id !== this.id) {
               return
             }
             return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
           }
           case ClientMessages.onProgramClose: {
-            const { 'runme.dev/uuid': uuid } = e.output
-            if (uuid !== this.uuid || !this.isAutoSaveEnabled) {
+            const { 'runme.dev/id': id } = e.output
+            if (id !== this.id || !this.isAutoSaveEnabled) {
               return
             }
             this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
@@ -521,7 +521,7 @@ export class TerminalView extends LitElement {
       }),
       this.terminal.onData((data) =>
         postClientMessage(ctx, ClientMessages.terminalStdin, {
-          'runme.dev/uuid': this.uuid!,
+          'runme.dev/id': this.id!,
           input: data,
         }),
       ),
@@ -555,7 +555,7 @@ export class TerminalView extends LitElement {
     const ctx = getContext()
     ctx.postMessage &&
       postClientMessage(ctx, ClientMessages.terminalOpen, {
-        'runme.dev/uuid': this.uuid!,
+        'runme.dev/id': this.id!,
         terminalDimensions: convertXTermDimensions(this.fitAddon?.proposeDimensions()),
       })
 
@@ -680,7 +680,7 @@ export class TerminalView extends LitElement {
       }
 
       await postClientMessage(ctx, ClientMessages.terminalResize, {
-        'runme.dev/uuid': this.uuid!,
+        'runme.dev/id': this.id!,
         terminalDimensions: convertXTermDimensions(proposedDimensions),
       })
     }
@@ -697,7 +697,7 @@ export class TerminalView extends LitElement {
     }
 
     await postClientMessage(ctx, ClientMessages.terminalFocus, {
-      'runme.dev/uuid': this.uuid!,
+      'runme.dev/id': this.id!,
     })
   }
 
@@ -712,7 +712,7 @@ export class TerminalView extends LitElement {
       title:
         'Please share link with caution. Anyone with the link has access. Click "Open" to toggle visibility.',
       options: Object.values(MessageOptions),
-      uuid: this.uuid!,
+      id: this.id!,
       telemetryEvent: 'app.share',
     })
   }
@@ -732,7 +732,7 @@ export class TerminalView extends LitElement {
           data: {
             id: this.cloudId,
           },
-          uuid: this.uuid!,
+          id: this.id!,
           method: APIMethod.UpdateCellExecution,
         })
         return
@@ -745,7 +745,7 @@ export class TerminalView extends LitElement {
         data: {
           stdout: contentWithAnsi,
         },
-        uuid: this.uuid!,
+        id: this.id!,
         method: APIMethod.CreateCellExecution,
       })
     } catch (error) {
@@ -769,7 +769,7 @@ export class TerminalView extends LitElement {
       <close-cell-button
         @closed="${() => {
           return closeOutput({
-            uuid: this.uuid!,
+            id: this.id!,
             outputType: OutputType.terminal,
           })
         }}"

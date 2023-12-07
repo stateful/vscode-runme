@@ -24,7 +24,7 @@ export async function github(
         owner,
         workflow_id: path,
         ref,
-        cellId: exec.cell.metadata['runme.dev/uuid'],
+        cellId: exec.cell.metadata['runme.dev/id'],
       },
     })
     await outputs.showOutput(OutputType.github)

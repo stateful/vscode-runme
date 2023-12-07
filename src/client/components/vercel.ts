@@ -118,7 +118,7 @@ export class VercelOutput extends LitElement {
       <close-cell-button
         @closed="${() => {
           return closeOutput({
-            uuid: this.content.payload.uuid,
+            id: this.content.payload.id,
             outputType: OutputType.vercel,
           })
         }}"

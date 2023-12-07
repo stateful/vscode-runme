@@ -250,7 +250,7 @@ export class WorkflowViewer extends LitElement {
           <close-cell-button
             @closed="${() => {
               return closeOutput({
-                uuid: this.state.cellId!,
+                id: this.state.cellId!,
                 outputType: OutputType.github,
               })
             }}"
@@ -268,7 +268,7 @@ export class WorkflowViewer extends LitElement {
       <close-cell-button
         @closed="${() => {
           return closeOutput({
-            uuid: this.state.cellId!,
+            id: this.state.cellId!,
             outputType: OutputType.github,
           })
         }}"

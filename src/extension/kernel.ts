@@ -54,7 +54,7 @@ import {
   NotebookCellManager,
   NotebookCellOutputManager,
   RunmeNotebookCellExecution,
-  getCellByUuId,
+  getCellById,
 } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
@@ -244,12 +244,12 @@ export class Kernel implements Disposable {
             continue
           }
 
-          if (cell.metadata?.['runme.dev/uuid'] === undefined) {
-            log.error(`Cell with index ${cell.index} lacks uuid`)
+          if (cell.metadata?.['runme.dev/id'] === undefined) {
+            log.error(`Cell with index ${cell.index} lacks id`)
             continue
           }
 
-          if (cell.metadata?.['runme.dev/uuid'] === payload.output.annotations['runme.dev/uuid']) {
+          if (cell.metadata?.['runme.dev/id'] === payload.output.annotations['runme.dev/id']) {
             editCell = cell
             break
           }
@@ -303,7 +303,7 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.openLink) {
       return env.openExternal(Uri.parse(message.output))
     } else if (message.type === ClientMessages.closeCellOutput) {
-      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      const cell = await getCellById({ editor, id: message.output.id })
       if (!cell) {
         return
       }
@@ -316,8 +316,8 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.githubWorkflowDispatch) {
       await handleGitHubMessage({ messaging: this.messaging, message })
     } else if (message.type === ClientMessages.displayPrompt) {
-      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
-      if (!cell || message.output.uuid !== cell.metadata?.['runme.dev/uuid']) {
+      const cell = await getCellById({ editor, id: message.output.id })
+      if (!cell || message.output.id !== cell.metadata?.['runme.dev/id']) {
         return
       }
       const categories = await getNotebookCategories(this.context, cell.document.uri)
@@ -329,20 +329,20 @@ export class Kernel implements Disposable {
       this.#disposables.push(...disposables)
       postClientMessage(this.messaging, ClientMessages.onPrompt, {
         answer,
-        uuid: message.output.uuid,
+        id: message.output.id,
       })
     } else if (message.type === ClientMessages.getState) {
-      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      const cell = await getCellById({ editor, id: message.output.id })
       if (!cell) {
         return
       }
       postClientMessage(this.messaging, ClientMessages.onGetState, {
         state: message.output.state,
         value: getAnnotations(cell).category.split(CATEGORY_SEPARATOR).filter(Boolean),
-        uuid: message.output.uuid,
+        id: message.output.id,
       })
     } else if (message.type === ClientMessages.setState) {
-      const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+      const cell = await getCellById({ editor, id: message.output.id })
       if (!cell) {
         return
       }
@@ -376,12 +376,12 @@ export class Kernel implements Disposable {
       )
       return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
         option: answer,
-        uuid: message.output.uuid,
+        id: message.output.id,
       })
     } else if (message.type === ClientMessages.copyTextToClipboard) {
       await env.clipboard.writeText(message.output.text)
       return postClientMessage(this.messaging, ClientMessages.onCopyTextToClipboard, {
-        uuid: message.output.uuid,
+        id: message.output.id,
       })
     } else if (message.type === ClientMessages.openExternalLink) {
       TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)
@@ -504,10 +504,10 @@ export class Kernel implements Disposable {
 
     const exec = runmeExec.underlyingExecution
 
-    const uuid = (cell.metadata as Serializer.Metadata)['runme.dev/uuid']
+    const id = (cell.metadata as Serializer.Metadata)['runme.dev/id']
 
-    if (!uuid) {
-      throw new Error('Executable cell does not have UUID field!')
+    if (!id) {
+      throw new Error('Executable cell does not have ID field!')
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
@@ -533,7 +533,7 @@ export class Kernel implements Disposable {
           exec,
           runningCell,
           this.messaging,
-          uuid,
+          id,
           key,
           outputs,
           this.environment,

@@ -40,14 +40,14 @@ export class ShellOutputItems extends LitElement {
   content = ''
 
   @property({ type: String })
-  uuid?: string
+  id!: string
 
   // Render the UI as a function of component state
   render() {
     return html`<section class="output-items">
     <close-cell-button @closed="${() => {
       return closeOutput({
-        uuid: this.uuid!,
+        id: this.id!,
         outputType: OutputType.outputItems,
       })
     }}"></close-cell-button>

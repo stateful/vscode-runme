@@ -122,15 +122,15 @@ export function getTerminalRunmeId(t: vscode.Terminal): string | undefined {
 }
 
 export function getCellRunmeId(cell: vscode.NotebookCell) {
-  return getCellUUID(cell)
+  return getCellId(cell)
 }
 
-function getCellUUID(cell: vscode.NotebookCell): string {
+function getCellId(cell: vscode.NotebookCell): string {
   if (cell.kind !== vscode.NotebookCellKind.Code) {
-    throw new Error('Cannot get cell UUID for non-code cell!')
+    throw new Error('Cannot get cell ID for non-code cell!')
   }
 
-  return getAnnotations(cell)['runme.dev/uuid']!
+  return getAnnotations(cell)['runme.dev/id']!
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {

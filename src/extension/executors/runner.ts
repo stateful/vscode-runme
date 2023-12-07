@@ -51,7 +51,7 @@ export async function executeRunner(
   exec: NotebookCellExecution,
   runningCell: TextDocument,
   messaging: NotebookRendererMessaging,
-  cellUUID: string,
+  cellId: string,
   execKey: string,
   outputs: NotebookCellOutputManager,
   environment?: IRunnerEnvironment,
@@ -146,7 +146,7 @@ export async function executeRunner(
 
   const writeToTerminalStdout = (data: string | Uint8Array) => {
     postClientMessage(messaging, ClientMessages.terminalStdout, {
-      'runme.dev/uuid': cellUUID,
+      'runme.dev/id': cellId,
       data,
     })
 
@@ -155,7 +155,7 @@ export async function executeRunner(
 
   program.onDidErr((data) =>
     postClientMessage(messaging, ClientMessages.terminalStderr, {
-      'runme.dev/uuid': cellUUID,
+      'runme.dev/id': cellId,
       data,
     }),
   )
@@ -163,9 +163,9 @@ export async function executeRunner(
   messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
     const { type, output } = message
 
-    if (typeof output === 'object' && 'runme.dev/uuid' in output) {
-      const uuid = output['runme.dev/uuid']
-      if (uuid !== cellUUID) {
+    if (typeof output === 'object' && 'runme.dev/id' in output) {
+      const id = output['runme.dev/id']
+      if (id !== cellId) {
         return
       }
     }
@@ -204,7 +204,7 @@ export async function executeRunner(
 
   program.onDidClose((code) => {
     postClientMessage(messaging, ClientMessages.onProgramClose, {
-      'runme.dev/uuid': cellUUID,
+      'runme.dev/id': cellId,
     })
     if (!background) {
       return

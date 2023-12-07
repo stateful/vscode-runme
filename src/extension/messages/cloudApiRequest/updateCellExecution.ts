@@ -3,7 +3,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
-import { getCellByUuId } from '../../cell'
+import { getCellById } from '../../cell'
 import { getAuthSession, getCellRunmeId } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
@@ -24,7 +24,7 @@ export default async function updateCellExecution(
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
     }
-    const cell = await getCellByUuId({ editor, uuid: message.output.uuid })
+    const cell = await getCellById({ editor, id: message.output.id })
     if (!cell) {
       throw new Error('Cell not found')
     }
@@ -52,13 +52,13 @@ export default async function updateCellExecution(
     TelemetryReporter.sendTelemetryEvent('app.update')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
-      uuid: message.output.uuid,
+      id: message.output.id,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.update.error')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: (error as any).message,
-      uuid: message.output.uuid,
+      id: message.output.id,
       hasErrors: true,
     })
   }
