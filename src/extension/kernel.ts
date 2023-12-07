@@ -548,7 +548,7 @@ export class Kernel implements Disposable {
                   // eslint-disable-next-line max-len
                   'Not every language is automatically executable. ' +
                     'Click below to learn what language runtimes are auto-detected. ' +
-                    'You can set the "interpreter" field in the "Configure" foldout to define how this cell executes.',
+                    'You can also set a "interpreter" in the "Configure" foldout to define how this cell executes.',
                   'See Auto-Detected Languages',
                 )
                 .then((link) => {
