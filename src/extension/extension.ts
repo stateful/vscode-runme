@@ -90,9 +90,10 @@ export class RunmeExtension {
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
 
+    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const runmeTaskProvider = tasks.registerTaskProvider(
       RunmeTaskProvider.id,
-      new RunmeTaskProvider(context, serializer, kernel, server, runner),
+      new RunmeTaskProvider(context, treeViewer, serializer, kernel, server, runner),
     )
 
     /**
@@ -133,7 +134,6 @@ export class RunmeExtension {
       )
     }
 
-    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
@@ -233,6 +233,14 @@ export class RunmeExtension {
         treeViewer.collapseAll.bind(treeViewer),
       ),
       RunmeExtension.registerCommand('runme.expandTreeView', treeViewer.expandAll.bind(treeViewer)),
+      RunmeExtension.registerCommand(
+        'runme.tasksIncludeUnnamed',
+        treeViewer.includeUnnamed.bind(treeViewer),
+      ),
+      RunmeExtension.registerCommand(
+        'runme.tasksExcludeUnnamed',
+        treeViewer.excludeUnnamed.bind(treeViewer),
+      ),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
       /**
        * Uri handler

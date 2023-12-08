@@ -146,6 +146,18 @@
         "icon": "$(search-expand-results)"
       },
       {
+        "command": "runme.tasksIncludeUnnamed",
+        "category": "Runme",
+        "title": "Include all tasks",
+        "icon": "$(bracket)"
+      },
+      {
+        "command": "runme.tasksExcludeUnnamed",
+        "category": "Runme",
+        "title": "Only named tasks",
+        "icon": "$(bracket-dot)"
+      },
+      {
         "command": "runme.welcome",
         "title": "Welcome",
         "category": "Runme",
@@ -241,6 +253,14 @@
           "when": "false"
         },
         {
+          "command": "runme.tasksIncludeUnnamed",
+          "when": "false"
+        },
+        {
+          "command": "runme.tasksExcludeUnnamed",
+          "when": "false"
+        },
+        {
           "command": "runme.codelens.action",
           "when": "false"
         },
@@ -288,6 +308,16 @@
         {
           "command": "runme.expandTreeView",
           "when": "view == runme.launcher && !runme.launcher.isExpanded",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.tasksIncludeUnnamed",
+          "when": "view == runme.launcher && !runme.launcher.includeUnnamed",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.tasksExcludeUnnamed",
+          "when": "view == runme.launcher && runme.launcher.includeUnnamed",
           "group": "navigation"
         }
       ],

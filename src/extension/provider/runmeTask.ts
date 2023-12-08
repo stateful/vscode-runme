@@ -34,6 +34,8 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 
+import { RunmeLauncherProvider } from './launcher'
+
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 const log = getLogger('RunmeTaskProvider')
 
@@ -56,6 +58,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
   constructor(
     private context: ExtensionContext,
+    private treeView: RunmeLauncherProvider,
     private serializer: SerializerBase,
     private kernel: Kernel,
     private server: RunmeServer,
@@ -144,10 +147,13 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const environment = this.kernel?.getRunnerEnvironment()
     const tasks = await this.tasks
+    const includeGenerated = this.treeView.includeUnnamedTasks
 
     try {
       const runmeTasks = tasks
-        .filter((prjTask) => !prjTask.isNameGenerated)
+        .filter((prjTask) => {
+          return prjTask.isNameGenerated === includeGenerated
+        })
         .map(
           async (prjTask) =>
             await RunmeTaskProvider.newRunmeProjectTask(
