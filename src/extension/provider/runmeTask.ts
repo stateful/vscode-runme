@@ -20,7 +20,7 @@ import {
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Observable, of, scan, takeLast } from 'rxjs'
+import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
 
 import getLogger from '../logger'
 import { getAnnotations, getWorkspaceEnvs } from '../utils'
@@ -50,11 +50,9 @@ export class RunmeTaskProvider implements TaskProvider {
   static id = 'runme'
 
   private ready: ReadyPromise
-  private projectTasks$: Observable<ProjectTask[]>
+  private tasks: Promise<ProjectTask[]>
   private client: ProjectServiceClient | undefined
   private serverReadyListener: Disposable | undefined
-
-  private tasks: ProjectTask[] = []
 
   constructor(
     private context: ExtensionContext,
@@ -74,8 +72,7 @@ export class RunmeTaskProvider implements TaskProvider {
       })
     })
 
-    this.projectTasks$ = this.loadProjectTasks()
-    this.projectTasks$.pipe(takeLast(1)).subscribe((tasks) => this.tasks.push(...tasks))
+    this.tasks = lastValueFrom(this.loadProjectTasks().pipe(takeLast(1)))
   }
 
   private async initProjectClient(transport?: GrpcTransport) {
@@ -126,16 +123,14 @@ export class RunmeTaskProvider implements TaskProvider {
       )
     })
 
-    const prox = (pt: ProjectTask) => {
+    const dirProx = (pt: ProjectTask) => {
       return pt.documentPath.split(separator).length
     }
 
     return task$.pipe(
       scan((acc, one) => {
         acc.push(one)
-        acc.sort((a, b) => {
-          return prox(a) - prox(b)
-        })
+        acc.sort((a, b) => dirProx(a) - dirProx(b))
         return acc
       }, new Array<ProjectTask>()),
     )
@@ -148,19 +143,28 @@ export class RunmeTaskProvider implements TaskProvider {
     }
 
     const environment = this.kernel?.getRunnerEnvironment()
+    const tasks = await this.tasks
 
-    return Promise.all(
-      this.tasks.map(async (prjTask) => {
-        return await RunmeTaskProvider.newRunmeProjectTask(
-          prjTask,
-          {},
-          token,
-          this.serializer,
-          this.runner!,
-          environment,
+    try {
+      const runmeTasks = tasks
+        .filter((prjTask) => !prjTask.isNameGenerated)
+        .map(
+          async (prjTask) =>
+            await RunmeTaskProvider.newRunmeProjectTask(
+              prjTask,
+              {},
+              token,
+              this.serializer,
+              this.runner!,
+              environment,
+            ),
         )
-      }),
-    )
+      return Promise.all(runmeTasks)
+    } catch (e) {
+      console.error(e)
+    }
+
+    return Promise.resolve([])
   }
 
   public resolveTask(task: Task): ProviderResult<Task> {
@@ -169,10 +173,9 @@ export class RunmeTaskProvider implements TaskProvider {
      */
     return task
   }
+
   static async newRunmeProjectTask(
     projectTask: ProjectTask,
-    // notebook: NotebookData | Serializer.Notebook,
-    // cell: NotebookCell | NotebookCellData | Serializer.Cell,
     options: TaskOptions = {},
     token: CancellationToken,
     serializer: SerializerBase,
@@ -188,9 +191,9 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        let mdContent: Uint8Array
+        let mdBuf: Uint8Array
         try {
-          mdContent = await workspace.fs.readFile(Uri.parse(documentPath))
+          mdBuf = await workspace.fs.readFile(Uri.parse(documentPath))
         } catch (err: any) {
           if (err.code !== 'FileNotFound') {
             log.error(`${err.message}`)
@@ -198,7 +201,7 @@ export class RunmeTaskProvider implements TaskProvider {
           throw err
         }
 
-        const notebook = await serializer.deserializeNotebook(mdContent, token)
+        const notebook = await serializer.deserializeNotebook(mdBuf, token)
 
         const cell: Serializer.Cell = notebook.cells.find((cell) => {
           return (
@@ -269,9 +272,7 @@ export class RunmeTaskProvider implements TaskProvider {
       : path.basename(filePath)
 
     const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
-
     const isBackground = options.isBackground || background
-
     const languageId = ('languageId' in cell && cell.languageId) || 'sh'
     const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
 
