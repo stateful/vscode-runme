@@ -11,6 +11,13 @@ import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
 
+vi.mock('../../src/extension/provider/runmeTask', () => {
+  class RunmeTaskProvider {
+    static id = 'runme'
+  }
+  return { RunmeTaskProvider }
+})
+
 vi.mock('../../src/extension/panels/panel', () => {
   class Panel {
     registerBus = vi.fn()
