@@ -47,6 +47,7 @@ import {
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
+import { RpcError } from './grpc/client'
 import { IRunner, IRunnerEnvironment } from './runner'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
@@ -539,6 +540,39 @@ export class Kernel implements Disposable {
           this.environment,
           environmentManager,
         ).catch((e) => {
+          if (e instanceof RpcError) {
+            if (e.message.includes('invalid LanguageId')) {
+              // todo(sebastian): provide "Configure" button to trigger foldout
+              window
+                .showWarningMessage(
+                  // eslint-disable-next-line max-len
+                  'Not every language is automatically executable. ' +
+                    'Click below to learn what language runtimes are auto-detected. ' +
+                    'You can also set an "interpreter" in the "Configure" foldout to define how this cell executes.',
+                  'See Auto-Detected Languages',
+                )
+                .then((link) => {
+                  if (!link) {
+                    return
+                  }
+                  TelemetryReporter.sendTelemetryEvent('survey.shebangAutoDetectRedirect', {})
+                  commands.executeCommand(
+                    'vscode.open',
+                    Uri.parse('https://runme.dev/redirect/shebang-auto-detect'),
+                  )
+                })
+              return false
+            }
+
+            if (e.message.includes('invalid ProgramName')) {
+              window.showErrorMessage(
+                // eslint-disable-next-line max-len
+                'Unable to locate interpreter specified in shebang (aka #!). Please check the cell\'s "Configure" foldout.',
+              )
+              return false
+            }
+          }
+
           window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
           log.error('Internal failure executing runner', e.message)
           return false

@@ -11,7 +11,6 @@ import {
   EndOfLine,
   window,
 } from 'vscode'
-import { RpcError } from '@protobuf-ts/runtime-rpc'
 import { URI } from 'vscode-uri'
 
 import {
@@ -595,18 +594,6 @@ suite('grpc Runner', () => {
 
       expect(writeListener).toBeCalledTimes(1)
       expect(writeListener).toBeCalledWith('test\n')
-    })
-
-    test('grpc program failure gives info message', async () => {
-      const { duplex } = await createNewSession()
-
-      duplex._onError.fire(new RpcError('invalid LanguageId'))
-      expect(window.showWarningMessage).toBeCalledTimes(1)
-
-      vi.mocked(window.showWarningMessage).mockClear()
-
-      duplex._onError.fire(new RpcError('invalid ProgramName'))
-      expect(window.showErrorMessage).toBeCalledTimes(1)
     })
   })
 })
