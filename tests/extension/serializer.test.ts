@@ -280,6 +280,23 @@ describe('GrpcSerializer', () => {
 
     const fakeOutputFileUri = { fsPath: '/tmp/fake/outputs.md' } as any
 
+    it('maps document lifecylce ids to document URIs on notebook opening', async () => {
+      const fixture = deepCopyFixture()
+      const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
+
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      serializer.outputPersistence = true
+
+      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeOutputFileUri)
+
+      await serializer.handleOpenNotebook({
+        metadata: fixture.metadata,
+      })
+
+      const sessionFileUri = serializer.sessionFileMapping.get(lid)
+      expect(sessionFileUri).toStrictEqual(fakeOutputFileUri)
+    })
+
     it('writes cached bytes to session file on serialization and save', async () => {
       const fixture = deepCopyFixture()
 
