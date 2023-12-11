@@ -32,6 +32,7 @@ vi.mock('vscode', () => ({
     fs: { readFile: vi.fn().mockResolvedValue({}), writeFile: vi.fn() },
     onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     applyEdit: vi.fn(),
     getConfiguration: vi.fn().mockReturnValue({
       update: vi.fn(),
@@ -279,7 +280,7 @@ describe('GrpcSerializer', () => {
 
     const fakeOutputFileUri = { fsPath: '/tmp/fake/outputs.md' } as any
 
-    it('writes cached outputs on save', async () => {
+    it('writes cached bytes to session file on serialization and save', async () => {
       const fixture = deepCopyFixture()
 
       const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
@@ -288,8 +289,10 @@ describe('GrpcSerializer', () => {
       serializer.client = {
         serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
       }
-
-      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeOutputFileUri)
+      serializer.sessionFileMapping.set(
+        fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+        fakeOutputFileUri,
+      )
 
       const result = await serializer.serializeNotebook(
         { cells: [], metadata: fixture.metadata } as any,
@@ -303,6 +306,7 @@ describe('GrpcSerializer', () => {
       })
 
       expect(workspace.fs.writeFile).toBeCalledWith(fakeOutputFileUri, fakeCachedBytes)
+      expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
     })
 
     it('derives its path from notebook source document and session', () => {
