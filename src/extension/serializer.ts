@@ -379,6 +379,7 @@ export class GrpcSerializer extends SerializerBase {
   protected readonly outputPersistence: boolean
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly cache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
+  protected readonly mapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
 
@@ -405,6 +406,7 @@ export class GrpcSerializer extends SerializerBase {
 
     this.disposables.push(
       workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
+      workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
     )
   }
 
@@ -416,23 +418,44 @@ export class GrpcSerializer extends SerializerBase {
     this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
-  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+  protected async handleOpenNotebook(doc: NotebookDocument) {
     const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
-    const bytes = this.cache.get(lid ?? '')
 
-    if (!bytes) {
+    if (!lid) {
       this.toggleSessionButton(false)
       return
     }
 
     const runnerEnv = this.kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
+
     if (!sessionId) {
       this.toggleSessionButton(false)
       return
     }
 
     const sessionFile = GrpcSerializer.getOutputsUri(doc.uri, sessionId)
+    this.mapping.set(lid, sessionFile)
+  }
+
+  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+    const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
+    const bytes = this.cache.get(lid ?? '')
+    await this.saveNotebookOutputs(lid, bytes)
+  }
+
+  protected async saveNotebookOutputs(lid: string | undefined, bytes: Uint8Array | undefined) {
+    if (!bytes) {
+      this.toggleSessionButton(false)
+      return
+    }
+
+    const sessionFile = this.mapping.get(lid ?? '')
+    if (!sessionFile) {
+      this.toggleSessionButton(false)
+      return
+    }
+
     await workspace.fs.writeFile(sessionFile, bytes)
     await this.toggleSessionButton(true)
   }
@@ -495,9 +518,11 @@ export class GrpcSerializer extends SerializerBase {
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
-    await Promise.all([output, request])
+    const [, serialResult] = await Promise.all([output, request])
 
-    const { result } = (await request).response
+    // await this.saveNotebookOutputs(lid, outputResult)
+
+    const { result } = serialResult.response
     if (result === undefined) {
       throw new Error('serialization of notebook failed')
     }
@@ -505,9 +530,12 @@ export class GrpcSerializer extends SerializerBase {
     return result
   }
 
-  private async cacheNotebookOutputs(notebook: Notebook, lid: string | undefined) {
+  private async cacheNotebookOutputs(
+    notebook: Notebook,
+    lid: string | undefined,
+  ): Promise<Uint8Array | undefined> {
     if (!this.outputPersistence) {
-      return Promise.resolve()
+      return Promise.resolve(undefined)
     }
 
     const options = <SerializeRequestOptions>{ outputs: { enabled: true, summary: true } }
@@ -526,6 +554,8 @@ export class GrpcSerializer extends SerializerBase {
     } else {
       this.cache.set(lid, bytes)
     }
+
+    return bytes
   }
 
   public static marshalNotebook(data: NotebookData): Notebook {
