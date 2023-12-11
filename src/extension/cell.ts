@@ -34,7 +34,10 @@ const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
 
-  constructor(protected controller: NotebookController) {}
+  constructor(
+    protected controller: NotebookController,
+    protected readonly outputPersistence: boolean,
+  ) {}
 
   registerCell(cell: NotebookCell): NotebookCellOutputManager {
     const existing = this.#data.get(cell)
@@ -42,7 +45,7 @@ export class NotebookCellManager {
       return existing
     }
 
-    const outputs = new NotebookCellOutputManager(cell, this.controller)
+    const outputs = new NotebookCellOutputManager(cell, this.controller, this.outputPersistence)
     this.#data.set(cell, outputs)
 
     return outputs
@@ -99,6 +102,7 @@ export class NotebookCellOutputManager {
   constructor(
     protected cell: NotebookCell,
     protected controller: NotebookController,
+    protected readonly outputPersistence: boolean,
   ) {}
 
   protected generateOutputUnsafe(type: OutputType): NotebookCellOutput | undefined {
@@ -320,7 +324,6 @@ export class NotebookCellOutputManager {
       }
 
       this.onFinish = new Promise<void>(async (resolve) => {
-        // todo: see bug note inside refreshTerminal
         wrapper.onWillEnd(async () => {
           await this.refreshTerminal(this.terminalState)
         })
@@ -383,8 +386,13 @@ export class NotebookCellOutputManager {
    * Unfortunately the replacement behavior appears to be broken
    * which leads to duplication of the output item in the UX
    *
+   * Marking the document dirty instead of replacing the output
+   *
    */
-  async refreshTerminal(terminalState: ITerminalState | undefined) {
+  async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
+    if (!this.outputPersistence) {
+      return Promise.resolve()
+    }
     await this.withLock(async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await this.getExecutionUnsafe(async (exec) => {

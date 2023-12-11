@@ -92,7 +92,7 @@ export class Kernel implements Disposable {
   protected environment?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
 
-  protected cellManager = new NotebookCellManager(this.#controller)
+  protected cellManager: NotebookCellManager
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
   protected panelManager: PanelManager
@@ -106,6 +106,10 @@ export class Kernel implements Disposable {
 
     this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
 
+    this.cellManager = new NotebookCellManager(
+      this.#controller,
+      this.hasExperimentEnabled('outputPersistence') ?? false,
+    )
     this.#controller.supportsExecutionOrder = false
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)

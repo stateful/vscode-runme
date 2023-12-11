@@ -29,7 +29,7 @@ vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 describe('NotebookCellManager', () => {
   it('can register cells', () => {
-    const manager = new NotebookCellManager({} as any)
+    const manager = new NotebookCellManager({} as any, false)
     const cell = {} as any
 
     manager.registerCell(cell)
@@ -79,7 +79,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, createExecution } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const exec1 = mockCellExecution(cell)
     createExecution.mockReturnValue(exec1)
@@ -105,7 +105,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, createExecution } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const runmeExec = await outputs.createNotebookCellExecution()
     expect(runmeExec).toBeTruthy()
@@ -137,7 +137,7 @@ describe('NotebookCellOutputManager', () => {
     })
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce({} as any)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const runmeExec = await outputs.createNotebookCellExecution()
     expect(runmeExec).toBeUndefined()
@@ -157,7 +157,7 @@ describe('NotebookCellOutputManager', () => {
     })
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const runmeExec = await outputs.createNotebookCellExecution()
     expect(runmeExec).toBeUndefined()
@@ -177,7 +177,7 @@ describe('NotebookCellOutputManager', () => {
 
     vi.mocked(commands.getCommands).mockResolvedValueOnce([])
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const runmeExec = await outputs.createNotebookCellExecution()
     expect(runmeExec).toBeUndefined()
@@ -192,7 +192,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, createExecution, exec } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.toggleOutput(OutputType.annotations)
     expect(createExecution).toHaveBeenCalledOnce()
@@ -206,7 +206,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.toggleOutput(OutputType.annotations)
     expect(replaceOutput).toBeCalledWith([], undefined)
@@ -217,7 +217,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.toggleOutput(OutputType.annotations)
     const result = replaceOutput.mock.calls[0][0]
@@ -231,7 +231,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.showOutput(OutputType.annotations)
 
@@ -248,7 +248,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const outputSpy = vi.spyOn(outputs, 'getCellState')
     await outputs.showOutput(OutputType.vercel)
@@ -268,7 +268,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.showOutput(OutputType.deno)
 
@@ -285,7 +285,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     const outputSpy = vi.spyOn(outputs, 'getCellState')
     await outputs.showOutput(OutputType.github)
@@ -305,7 +305,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     outputs.setState({
       type: OutputType.vercel,
@@ -323,7 +323,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.refreshOutput(OutputType.annotations)
     expect(replaceOutput).toHaveBeenCalledTimes(0)
@@ -334,7 +334,7 @@ describe('NotebookCellOutputManager', () => {
 
     const { controller, replaceOutput } = mockNotebookController(cell)
 
-    const outputs = new NotebookCellOutputManager(cell, controller)
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
 
     await outputs.refreshOutput(OutputType.annotations)
     expect(replaceOutput).toHaveBeenCalledTimes(1)
@@ -342,6 +342,28 @@ describe('NotebookCellOutputManager', () => {
 })
 
 describe('RunmeNotebookCellExecution', () => {
+  it('runs onWillEnd ahead of onEnd when end is called', async () => {
+    const exec = mockedNotebookCellExecution()
+    const runmeExec = new RunmeNotebookCellExecution(exec)
+
+    runmeExec.start(100)
+    expect(vi.mocked(exec.start)).toBeCalledTimes(1)
+    expect(vi.mocked(exec.start)).toBeCalledWith(100)
+
+    const onWillEndFunc = vi.fn()
+    runmeExec.onWillEnd(onWillEndFunc)
+    const onEndFunc = vi.fn()
+    runmeExec.onEnd(onEndFunc)
+
+    await runmeExec.end(false, 200)
+    expect(vi.mocked(exec.end)).toBeCalledTimes(1)
+    expect(vi.mocked(exec.end)).toBeCalledWith(false, 200)
+
+    expect(onWillEndFunc).toBeCalledTimes(1)
+    expect(onEndFunc).toBeCalledTimes(1)
+    expect(onEndFunc).toBeCalledWith({ success: false, endTime: 200 })
+  })
+
   it('runs onEnd when end is called', async () => {
     const exec = mockedNotebookCellExecution()
     const runmeExec = new RunmeNotebookCellExecution(exec)
