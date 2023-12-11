@@ -19,6 +19,7 @@ import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } fr
 import { Mutex } from '../utils/sync'
 import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
 
+import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
 import {
   ITerminalState,
@@ -320,9 +321,9 @@ export class NotebookCellOutputManager {
 
       this.onFinish = new Promise<void>(async (resolve) => {
         // todo: see bug note inside refreshTerminal
-        // wrapper.onWillEnd(async () => {
-        //   await this.refreshTerminal(this.terminalState)
-        // })
+        wrapper.onWillEnd(async () => {
+          await this.refreshTerminal(this.terminalState)
+        })
         wrapper.onEnd(async () => {
           await resetExecution()
           resolve()
@@ -418,6 +419,19 @@ export class NotebookCellOutputManager {
         // perhaps https://github.com/microsoft/vscode/issues/173577 ?
         // const newStdoutOutputItem = NotebookCellOutputItem.stdout(strTerminalState)
         // await exec.replaceOutputItems([terminalOutputItem, newStdoutOutputItem], terminalOutput)
+
+        // mark document as dirty instead (prompt user to hit save) to avoid data-loss
+        const revision = this.cell.metadata[RUNME_TRANSIENT_REVISION] ?? 1
+
+        const notebookEdits = NotebookEdit.updateCellMetadata(this.cell.index, {
+          ...(this.cell.metadata || {}),
+          [RUNME_TRANSIENT_REVISION]: revision + 1,
+        } as Serializer.Metadata)
+
+        const edit = new WorkspaceEdit()
+        edit.set(this.cell.notebook.uri, [notebookEdits])
+
+        await workspace.applyEdit(edit)
       })
     })
   }

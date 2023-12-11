@@ -518,9 +518,9 @@ export class GrpcSerializer extends SerializerBase {
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
-    const [, serialResult] = await Promise.all([output, request])
+    const [outputResult, serialResult] = await Promise.all([output, request])
 
-    // await this.saveNotebookOutputs(lid, outputResult)
+    await this.saveNotebookOutputs(lid, outputResult)
 
     const { result } = serialResult.response
     if (result === undefined) {
