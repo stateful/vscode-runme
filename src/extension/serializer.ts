@@ -378,8 +378,8 @@ export class GrpcSerializer extends SerializerBase {
     getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
   protected readonly outputPersistence: boolean
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
-  protected readonly cache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
-  protected readonly mapping: Map<string, Uri> = new Map<string, Uri>()
+  protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
+  protected readonly sessionFileMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
 
@@ -435,12 +435,12 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     const sessionFile = GrpcSerializer.getOutputsUri(doc.uri, sessionId)
-    this.mapping.set(lid, sessionFile)
+    this.sessionFileMapping.set(lid, sessionFile)
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
     const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
-    const bytes = this.cache.get(lid ?? '')
+    const bytes = this.serializerCache.get(lid ?? '')
     await this.saveNotebookOutputs(lid, bytes)
   }
 
@@ -450,7 +450,7 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    const sessionFile = this.mapping.get(lid ?? '')
+    const sessionFile = this.sessionFileMapping.get(lid ?? '')
     if (!sessionFile) {
       this.toggleSessionButton(false)
       return
@@ -552,7 +552,7 @@ export class GrpcSerializer extends SerializerBase {
     if (!lid) {
       console.error('skip caching since no lifecycleId was found')
     } else {
-      this.cache.set(lid, bytes)
+      this.serializerCache.set(lid, bytes)
     }
 
     return bytes
