@@ -14,8 +14,9 @@ runme:
 
 This commands describes your redis instance
 
-```sh {"id":"01HFS20KP4P56TJR8SJ1R5E0RA"}
-gcloud redis instances describe --region=us-central1 runme-redis
+```sh {"id":"01HFS20KP4P56TJR8SJ1R5E0RA","terminalRows":"26"}
+export REDIS_NAME="runme-redis"
+gcloud redis instances describe --region=us-central1 $REDIS_NAME
 ```
 
 `runme-redis` change it to the name of your redis instance.
@@ -24,8 +25,15 @@ gcloud redis instances describe --region=us-central1 runme-redis
 
 An SSH tunnel is a secure method of forwarding network traffic over an encrypted SSH connection. It's essential for connecting to Redis in cloud environments like GCP for several reasons: it encrypts data transmitted to the unsecured Redis service, ensures secure access without exposing Redis directly to the internet, and allows connection to Redis instances within private networks. This method is particularly useful for bypassing firewalls and NATs, making it easier and safer to manage Redis databases remotely.
 
-```sh {"id":"01HFS20KP4P56TJR8SJ527NA6G"}
-ssh -L 16379:10.161.121.6:6379 eddie@34.172.87.12
+```sh
+# what's my jumphost?
+gcloud compute instances list
+```
+
+```sh {"background":"true","id":"01HFS20KP4P56TJR8SJ527NA6G"}
+export JUMP_HOST="eddie@34.172.87.12"
+export REDIS_HOST="10.161.121.6"
+ssh -L 16379:$REDIS_HOST:6379 $JUMP_HOST
 ```
 
 Command: `ssh -L 16379:[REDIS_HOST]:6379 [USER]@[BASTION_HOST_IP]`
@@ -34,7 +42,7 @@ Command: `ssh -L 16379:[REDIS_HOST]:6379 [USER]@[BASTION_HOST_IP]`
 
 Note: Ensure the SSH tunnel is active. keep the terminal with the SSH tunnel open while using the Redis CLI.
 
-```sh {"id":"01HFS20KP4P56TJR8SJ7KQE1C4"}
+```sh {"background":"true","id":"01HFS20KP4P56TJR8SJ7KQE1C4"}
 redis-cli -p 16379
 ```
 
@@ -45,7 +53,7 @@ redis-cli -p 16379
 checking the rate-limiting status typically involves querying a specific key to monitor how many requests a user has made within a set timeframe. This is crucial for implementing API rate limits, ensuring users don't exceed the number of allowed requests, thereby preventing abuse and maintaining server performance. Redis efficiently tracks and updates these counts due to its high-performance nature.
 
 ```sh {"id":"01HFS20KP4P56TJR8SJ9ZFTSE8"}
-GET rate_limit:12345
+redis-cli -p 16379 GET rate_limit:12345
 ```
 
 Command: `GET rate_limit:[user_id]`
@@ -65,7 +73,7 @@ sidenote: The use of KEYS "*" can be resource-intensive on large databases and s
 To get detailed statistics and information about the Redis server's performance and various metrics, use:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJDEWWDKS"}
-INFO
+redis-cli -p 16379 INFO
 ```
 
 sidenote: This command provides a lot of output, and users can specify sections like `INFO memory` for more targeted information
@@ -75,7 +83,7 @@ sidenote: This command provides a lot of output, and users can specify sections 
 ### Setting a Key-Value Pair:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJDY9E68W"}
-SET session_id abc123
+redis-cli -p 16379 SET session_id abc123
 ```
 
 Command: `SET [key] [value]`
@@ -85,7 +93,7 @@ Command: `SET [key] [value]`
 To retrieve the value of key, use:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJHG8E60E"}
-GET session_id
+redis-cli -p 16379 GET session_id
 ```
 
 Command: `GET [key]`
@@ -99,7 +107,7 @@ To add a value message1 to a list named messages, use:
 Command: `LPUSH [list] [value]`
 
 ```sh {"id":"01HFS20KP4P56TJR8SJMHZTDQ5"}
-LPUSH messages message1
+redis-cli -p 16379 LPUSH messages message1
 ```
 
 ## Managing Sets
@@ -109,7 +117,7 @@ Adding Members to a Set
 Example Usage: To add a member user1 to a set named online_users, use:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJR26MWFW"}
-SADD online_users user1
+redis-cli -p 16379 SADD online_users user1
 ```
 
 Command: `SADD [set] [member]`
@@ -121,7 +129,7 @@ Command: `SADD [set] [member]`
 To set a field age with value 30 in a hash user:1001, use:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJS8J1Y5V"}
-HSET user:1001 age 30
+redis-cli -p 16379 HSET user:1001 age 30
 ```
 
 ### HGET:
@@ -129,7 +137,7 @@ HSET user:1001 age 30
 To get the value of age from user:1001, use
 
 ```sh {"id":"01HFS20KP4P56TJR8SJWAGGHHG"}
-HGET user:1001 age
+redis-cli -p 16379 HGET user:1001 age
 ```
 
 ## Administrative Commands
@@ -139,6 +147,8 @@ HGET user:1001 age
 To remove all data from all databases in the Redis server (use with caution)
 
 ```sh {"id":"01HFS20KP4P56TJR8SJXWE6T1Z"}
+# uncomment if you're really sure
+# redis-cli -p 16379 FLUSHALL
 FLUSHALL
 ```
 
@@ -147,5 +157,5 @@ BGSAVE:
 To asynchronously save the dataset to disk, use:
 
 ```sh {"id":"01HFS20KP4P56TJR8SJYYWEPN5"}
-BGSAVE
+redis-cli -p 16379 BGSAVE
 ```
