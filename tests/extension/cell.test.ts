@@ -80,6 +80,10 @@ describe('NotebookCellOutputManager', () => {
     const { controller, createExecution } = mockNotebookController(cell)
 
     const outputs = new NotebookCellOutputManager(cell, controller, true)
+    await outputs.showTerminal(true)
+    const serialize = vi.fn().mockImplementation(() => 'terminal test output')
+    ;(outputs as any).terminalState = { serialize, write: vi.fn() } as any
+
     const exec = mockCellExecution(cell)
     createExecution.mockReturnValue(exec)
 
