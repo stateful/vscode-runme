@@ -74,6 +74,26 @@ function mockNotebookController(cell: NotebookCell) {
 }
 
 describe('NotebookCellOutputManager', () => {
+  it('marks document as dirty as part of refreshing the terminal state', async () => {
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(cell, controller, true)
+    const exec = mockCellExecution(cell)
+    createExecution.mockReturnValue(exec)
+
+    const runmeExec = await outputs.createNotebookCellExecution()
+    expect(runmeExec).toBeDefined()
+
+    const spy = vi.spyOn(outputs, 'refreshTerminal')
+
+    runmeExec!.start()
+    runmeExec!.end(undefined)
+
+    expect(spy).toBeCalledTimes(1)
+  })
+
   it('uses current execution for outputs', async () => {
     const cell = mockCell()
 
