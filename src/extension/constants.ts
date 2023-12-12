@@ -13,3 +13,5 @@ export const ENV_STORE = new Map<string, string>(Object.entries(DEFAULT_ENV))
 export const BOOTFILE = '.runme_bootstrap'
 
 export const BOOTFILE_DEMO = '.runme_bootstrap_demo'
+
+export const RUNME_TRANSIENT_REVISION = 'runme.dev/revision'

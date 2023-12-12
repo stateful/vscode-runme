@@ -19,6 +19,7 @@ import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } fr
 import { Mutex } from '../utils/sync'
 import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
 
+import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
 import {
   ITerminalState,
@@ -33,7 +34,10 @@ const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
 
-  constructor(protected controller: NotebookController) {}
+  constructor(
+    protected controller: NotebookController,
+    protected readonly outputPersistence: boolean,
+  ) {}
 
   registerCell(cell: NotebookCell): NotebookCellOutputManager {
     const existing = this.#data.get(cell)
@@ -41,7 +45,7 @@ export class NotebookCellManager {
       return existing
     }
 
-    const outputs = new NotebookCellOutputManager(cell, this.controller)
+    const outputs = new NotebookCellOutputManager(cell, this.controller, this.outputPersistence)
     this.#data.set(cell, outputs)
 
     return outputs
@@ -98,6 +102,7 @@ export class NotebookCellOutputManager {
   constructor(
     protected cell: NotebookCell,
     protected controller: NotebookController,
+    protected readonly outputPersistence: boolean,
   ) {}
 
   protected generateOutputUnsafe(type: OutputType): NotebookCellOutput | undefined {
@@ -319,10 +324,9 @@ export class NotebookCellOutputManager {
       }
 
       this.onFinish = new Promise<void>(async (resolve) => {
-        // todo: see bug note inside refreshTerminal
-        // wrapper.onWillEnd(async () => {
-        //   await this.refreshTerminal(this.terminalState)
-        // })
+        wrapper.onWillEnd(async () => {
+          await this.refreshTerminal(this.terminalState)
+        })
         wrapper.onEnd(async () => {
           await resetExecution()
           resolve()
@@ -382,8 +386,13 @@ export class NotebookCellOutputManager {
    * Unfortunately the replacement behavior appears to be broken
    * which leads to duplication of the output item in the UX
    *
+   * Marking the document dirty instead of replacing the output
+   *
    */
-  async refreshTerminal(terminalState: ITerminalState | undefined) {
+  async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
+    if (!this.outputPersistence) {
+      return Promise.resolve()
+    }
     await this.withLock(async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await this.getExecutionUnsafe(async (exec) => {
@@ -418,6 +427,19 @@ export class NotebookCellOutputManager {
         // perhaps https://github.com/microsoft/vscode/issues/173577 ?
         // const newStdoutOutputItem = NotebookCellOutputItem.stdout(strTerminalState)
         // await exec.replaceOutputItems([terminalOutputItem, newStdoutOutputItem], terminalOutput)
+
+        // mark document as dirty instead (prompt user to hit save) to avoid data-loss
+        const revision = this.cell.metadata[RUNME_TRANSIENT_REVISION] ?? 1
+
+        const notebookEdits = NotebookEdit.updateCellMetadata(this.cell.index, {
+          ...(this.cell.metadata || {}),
+          [RUNME_TRANSIENT_REVISION]: revision + 1,
+        } as Serializer.Metadata)
+
+        const edit = new WorkspaceEdit()
+        edit.set(this.cell.notebook.uri, [notebookEdits])
+
+        await workspace.applyEdit(edit)
       })
     })
   }

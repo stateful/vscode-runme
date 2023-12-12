@@ -62,7 +62,7 @@
       },
     },
     {
-      "name": "run selected e2e spec",
+      "name": "Run Selected E2E Spec",
       "type": "node",
       "request": "launch",
       "args": ["wdio.conf.ts", "--spec", "${file}"],
