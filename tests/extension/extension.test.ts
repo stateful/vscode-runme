@@ -94,7 +94,7 @@ test('initializes all providers', async () => {
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(31)
+  expect(commands.registerCommand).toBeCalledTimes(32)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
   expect(bootFile).toBeCalledTimes(1)
