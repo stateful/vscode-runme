@@ -396,11 +396,8 @@ export class NotebookCellOutputManager {
     await this.withLock(async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await this.getExecutionUnsafe(async (exec) => {
-        const strTerminalState = terminalState?.serialize() || ''
-
         if (
           !terminalState ||
-          strTerminalState === '' ||
           !this.terminalEnabled ||
           !this.hasOutputTypeUnsafe(OutputType.terminal)
         ) {
@@ -425,6 +422,7 @@ export class NotebookCellOutputManager {
 
         // deactivated due to some duplication behavior
         // perhaps https://github.com/microsoft/vscode/issues/173577 ?
+        // const strTerminalState = terminalState?.serialize() || ''
         // const newStdoutOutputItem = NotebookCellOutputItem.stdout(strTerminalState)
         // await exec.replaceOutputItems([terminalOutputItem, newStdoutOutputItem], terminalOutput)
 
