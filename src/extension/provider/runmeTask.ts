@@ -145,25 +145,24 @@ export class RunmeTaskProvider implements TaskProvider {
     }
 
     const environment = this.kernel?.getRunnerEnvironment()
-    const tasks = await this.tasks
+    const all = await this.tasks
     const includeGenerated = this.treeView.includeUnnamedTasks
 
     try {
-      const runmeTasks = tasks
-        .filter((prjTask) => {
-          return prjTask.isNameGenerated === includeGenerated
-        })
-        .map(
-          async (prjTask) =>
-            await RunmeTaskProvider.newRunmeProjectTask(
-              prjTask,
-              {},
-              token,
-              this.serializer,
-              this.runner!,
-              environment,
-            ),
-        )
+      const filtered = all.filter((prjTask) => prjTask.isNameGenerated === includeGenerated)
+      // show all if there isn't a single named task
+      const listed = filtered.length > 0 ? filtered : all
+      const runmeTasks = listed.map(
+        async (prjTask) =>
+          await RunmeTaskProvider.newRunmeProjectTask(
+            prjTask,
+            {},
+            token,
+            this.serializer,
+            this.runner!,
+            environment,
+          ),
+      )
       return Promise.all(runmeTasks)
     } catch (e) {
       console.error(e)
