@@ -19,7 +19,6 @@ import {
 } from 'vscode'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
 
 import getLogger from '../logger'
