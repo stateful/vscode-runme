@@ -173,7 +173,9 @@ export class RunmeTaskProvider implements TaskProvider {
 
   public resolveTask(task: Task): ProviderResult<Task> {
     /**
-     * ToDo(Christian) fetch terminal from Kernel
+     * ToDo(sebastian): Implement refresh.
+     * This only occurs if the task is no longer known.
+     * Likely a side effect that the markdown file was modified.
      */
     return task
   }
