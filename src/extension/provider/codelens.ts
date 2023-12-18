@@ -208,7 +208,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
             break
           }
 
-          const task = await RunmeTaskProvider.getRunmeTask(
+          const task = await RunmeTaskProvider.newRunmeTask(
             document.uri.fsPath,
             getAnnotations(cell.metadata).name,
             notebook,

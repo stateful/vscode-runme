@@ -11,6 +11,13 @@ import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
 
+vi.mock('../../src/extension/provider/runmeTask', () => {
+  class RunmeTaskProvider {
+    static id = 'runme'
+  }
+  return { RunmeTaskProvider }
+})
+
 vi.mock('../../src/extension/panels/panel', () => {
   class Panel {
     registerBus = vi.fn()
@@ -28,9 +35,15 @@ vi.mock('../../src/extension/grpc/client', () => {
   return {
     ParserServiceClient: MockedParserServiceClient,
     RunnerServiceClient: vi.fn(),
+    ProjectServiceClient: vi.fn(),
     initParserClient: vi.fn(() => ({
       deserialize: vi.fn(() => {
         return { status: { code: 'OK' } }
+      }),
+    })),
+    initProjectClient: vi.fn(() => ({
+      load: vi.fn(() => {
+        return { responses: { onMessage: vi.fn() } }
       }),
     })),
     HealthClient: class {
@@ -81,7 +94,7 @@ test('initializes all providers', async () => {
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(30)
+  expect(commands.registerCommand).toBeCalledTimes(32)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
   expect(bootFile).toBeCalledTimes(1)

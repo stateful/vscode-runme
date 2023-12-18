@@ -137,7 +137,7 @@ class MockedRunmeServer {
 vi.mock('../../src/extension/provider/runmeTask', async () => {
   return {
     RunmeTaskProvider: {
-      getRunmeTask: vi.fn().mockResolvedValue({}),
+      newRunmeTask: vi.fn().mockResolvedValue({}),
     },
   }
 })
@@ -720,7 +720,7 @@ suite('RunmeCodeLensProvider', () => {
       'run',
     )
 
-    expect(RunmeTaskProvider.getRunmeTask).toBeCalledTimes(1)
+    expect(RunmeTaskProvider.newRunmeTask).toBeCalledTimes(1)
 
     expect(isWindows).toBeCalledTimes(1)
 

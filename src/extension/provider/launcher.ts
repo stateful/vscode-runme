@@ -58,6 +58,8 @@ export class RunmeFile extends TreeItem {
 export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Disposable {
   #disposables: Disposable[] = []
 
+  private _includeUnnamedTasks = false
+
   private filesTree: Map<string, TreeFile> = new Map()
   private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
 
@@ -67,6 +69,10 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
       watcher.onDidDelete((file) => this.#onFileChange(file)),
     )
+  }
+
+  public get includeUnnamedTasks(): boolean {
+    return this._includeUnnamedTasks
   }
 
   private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> = new EventEmitter<
@@ -154,6 +160,24 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
     this.defaultItemState = TreeItemCollapsibleState.Expanded
     await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
     this.refresh()
+  }
+
+  async includeUnnamed() {
+    this._includeUnnamedTasks = true
+    await commands.executeCommand(
+      'setContext',
+      'runme.launcher.includeUnnamed',
+      this._includeUnnamedTasks,
+    )
+  }
+
+  async excludeUnnamed() {
+    this._includeUnnamedTasks = false
+    await commands.executeCommand(
+      'setContext',
+      'runme.launcher.includeUnnamed',
+      this._includeUnnamedTasks,
+    )
   }
 
   private async _scanWorkspace() {
