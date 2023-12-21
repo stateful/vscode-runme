@@ -4,7 +4,6 @@ import { ulid } from 'ulidx'
 
 import {
   getTerminalByCell,
-  resetEnv,
   getKey,
   normalizeLanguage,
   getAnnotations,
@@ -114,13 +113,6 @@ test('getTerminalByCell', () => {
       kind: 1,
     } as any),
   ).toBeUndefined()
-})
-
-test('resetEnv', () => {
-  ENV_STORE.set('foo', 'bar')
-  expect(ENV_STORE).toMatchSnapshot()
-  resetEnv()
-  expect(ENV_STORE).toMatchSnapshot()
 })
 
 test('getKey', () => {

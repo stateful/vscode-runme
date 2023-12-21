@@ -27,7 +27,7 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
+import { getDefaultWorkspace, bootFile } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -198,7 +198,7 @@ export class RunmeExtension {
 
       codeLensProvider,
 
-      commands.registerCommand('runme.resetEnv', resetEnv),
+      RunmeExtension.registerCommand('runme.resetEnv', () => kernel.newRunnerEnvironment()),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),

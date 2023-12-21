@@ -2,7 +2,6 @@ import { test, expect, vi, suite, beforeEach } from 'vitest'
 import { window, NotebookCell, workspace } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
-import { resetEnv } from '../../src/extension/utils'
 import executors from '../../src/extension/executors'
 import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
 
@@ -10,7 +9,6 @@ vi.mock('vscode')
 vi.mock('vscode-telemetry')
 vi.mock('../../src/extension/utils', async () => {
   return {
-    resetEnv: vi.fn(),
     getKey: vi.fn((cell) => cell.languageId),
     getAnnotations: vi.fn((cell) => cell.metadata),
     getNotebookCategories: vi.fn().mockResolvedValue([]),
@@ -44,8 +42,11 @@ const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
 
 test('dispose', () => {
   const k = new Kernel({} as any)
+  const reset = vi.fn()
+  ;(k as any).getEnvironmentManager = vi.fn().mockImplementation(() => ({ reset }))
+
   k.dispose()
-  expect(resetEnv).toBeCalledTimes(1)
+  expect(reset).toBeCalledTimes(1)
 })
 
 suite('_executeAll', async () => {

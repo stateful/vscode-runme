@@ -85,7 +85,7 @@
       {
         "command": "runme.resetEnv",
         "category": "Runme",
-        "title": "Reset Environment Variables for current VS Code session"
+        "title": "Reset Session including Environment Variables"
       },
       {
         "command": "runme.surveyWinDefaultShell",

@@ -5,12 +5,13 @@ import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } fro
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
-import { ENV_STORE } from '../constants'
 import type { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 import getLogger from '../logger'
 
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
+
+import { ENV_STORE_MANAGER } from '.'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 const log = getLogger('shellExecutor')
@@ -49,12 +50,14 @@ async function shellExecutor(
 
     // hacky for now, maybe inheritence is a fitting pattern
     if (isVercelDeployScript(script)) {
-      await handleVercelDeployOutput(exec.cell, outputs, outputItems, index, prod, {
-        get: (key) => env[key],
-        set: (key, val = '') => {
-          ENV_STORE.set(key, val)
-        },
-      })
+      await handleVercelDeployOutput(
+        exec.cell,
+        outputs,
+        outputItems,
+        index,
+        prod,
+        ENV_STORE_MANAGER,
+      )
     } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
       item = NotebookCellOutputItem.json(
         <CellOutputPayload<OutputType.outputItems>>{

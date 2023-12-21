@@ -34,7 +34,6 @@ import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
-  resetEnv,
   getKey,
   getAnnotations,
   hashDocumentUri,
@@ -153,7 +152,7 @@ export class Kernel implements Disposable {
   }
 
   dispose() {
-    resetEnv()
+    this.getEnvironmentManager()?.reset()
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
     this.runnerReadyListener?.dispose()
@@ -622,33 +621,41 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
 
     if (this.hasExperimentEnabled('grpcRunner') && runner) {
+      if (this.runner === runner) {
+        return
+      }
+
       this.runner = runner
 
-      this.runnerReadyListener = runner.onReady(async () => {
-        this.runnerEnv = undefined
-
-        try {
-          const runnerEnv = await runner.createEnvironment(
-            // copy env from process naively for now
-            // later we might want a more sophisticated approach/to bring this serverside
-            processEnviron(),
-          )
-
-          if (this.runner !== runner) {
-            return
-          }
-
-          this.runnerEnv = runnerEnv
-        } catch (e: any) {
-          window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
-          log.error('Failed to create gRPC Runner environment', e)
-        }
-      })
+      this.runnerReadyListener = runner.onReady(this.newRunnerEnvironment.bind(this))
     }
   }
 
   getRunnerEnvironment(): IRunnerEnvironment | undefined {
     return this.runnerEnv
+  }
+
+  async newRunnerEnvironment(): Promise<void> {
+    log.info('Requesting new runner environment.')
+    this.runnerEnv = undefined
+
+    try {
+      if (!this.runner) {
+        return
+      }
+
+      const runnerEnv = await this.runner.createEnvironment(
+        // copy env from process naively for now
+        // later we might want a more sophisticated approach/to bring this serverside
+        processEnviron(),
+      )
+
+      this.runnerEnv = runnerEnv
+      log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
+    } catch (e: any) {
+      window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
+      log.error('Failed to create gRPC Runner environment', e)
+    }
   }
 
   // TODO: use better abstraction as part of move away from executor model
@@ -666,6 +673,9 @@ export class Kernel implements Disposable {
             return undefined
           }
           await this.runner?.setEnvironmentVariables(this.runnerEnv, { [key]: val })
+        },
+        reset: async () => {
+          await this.newRunnerEnvironment()
         },
       }
     } else {
