@@ -89,7 +89,7 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   protected runner?: IRunner
-  protected environment?: IRunnerEnvironment
+  protected runnerEnv?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
 
   protected cellManager: NotebookCellManager
@@ -541,7 +541,7 @@ export class Kernel implements Disposable {
           id,
           key,
           outputs,
-          this.environment,
+          this.runnerEnv,
           environmentManager,
         ).catch((e) => {
           if (e instanceof RpcError) {
@@ -625,10 +625,10 @@ export class Kernel implements Disposable {
       this.runner = runner
 
       this.runnerReadyListener = runner.onReady(async () => {
-        this.environment = undefined
+        this.runnerEnv = undefined
 
         try {
-          const env = await runner.createEnvironment(
+          const runnerEnv = await runner.createEnvironment(
             // copy env from process naively for now
             // later we might want a more sophisticated approach/to bring this serverside
             processEnviron(),
@@ -638,7 +638,7 @@ export class Kernel implements Disposable {
             return
           }
 
-          this.environment = env
+          this.runnerEnv = runnerEnv
         } catch (e: any) {
           window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
           log.error('Failed to create gRPC Runner environment', e)
@@ -648,7 +648,7 @@ export class Kernel implements Disposable {
   }
 
   getRunnerEnvironment(): IRunnerEnvironment | undefined {
-    return this.environment
+    return this.runnerEnv
   }
 
   // TODO: use better abstraction as part of move away from executor model
@@ -656,16 +656,16 @@ export class Kernel implements Disposable {
     if (this.runner) {
       return {
         get: async (key) => {
-          if (!this.environment) {
+          if (!this.runnerEnv) {
             return undefined
           }
-          return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
+          return (await this.runner?.getEnvironmentVariables(this.runnerEnv))?.[key]
         },
         set: async (key, val) => {
-          if (!this.environment) {
+          if (!this.runnerEnv) {
             return undefined
           }
-          await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
+          await this.runner?.setEnvironmentVariables(this.runnerEnv, { [key]: val })
         },
       }
     } else {

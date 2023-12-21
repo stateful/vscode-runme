@@ -144,7 +144,7 @@ export class RunmeTaskProvider implements TaskProvider {
       return []
     }
 
-    const environment = this.kernel?.getRunnerEnvironment()
+    const runnerEnv = this.kernel?.getRunnerEnvironment()
     const all = await this.tasks
     const includeGenerated = this.treeView.includeUnnamedTasks
 
@@ -160,7 +160,7 @@ export class RunmeTaskProvider implements TaskProvider {
             token,
             this.serializer,
             this.runner!,
-            environment,
+            runnerEnv,
           ),
       )
       return Promise.all(runmeTasks)
@@ -186,7 +186,7 @@ export class RunmeTaskProvider implements TaskProvider {
     token: CancellationToken,
     serializer: SerializerBase,
     runner: IRunner,
-    environment?: IRunnerEnvironment,
+    runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const { name, documentPath } = projectTask
     const source = path.basename(documentPath)
@@ -231,10 +231,10 @@ export class RunmeTaskProvider implements TaskProvider {
           cellContent,
           languageId,
           promptEnv,
-          new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
+          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
         )
 
-        if (!environment) {
+        if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
 
@@ -242,7 +242,7 @@ export class RunmeTaskProvider implements TaskProvider {
           commandMode,
           convertEol: true,
           cwd,
-          environment,
+          runnerEnv: runnerEnv,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
           exec: { type: 'commands', commands: commands ?? [''] },
           languageId,
@@ -271,7 +271,7 @@ export class RunmeTaskProvider implements TaskProvider {
     cell: NotebookCell | NotebookCellData | Serializer.Cell,
     options: TaskOptions = {},
     runner: IRunner,
-    environment?: IRunnerEnvironment,
+    runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const source = workspace.workspaceFolders?.[0]
       ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
@@ -301,10 +301,10 @@ export class RunmeTaskProvider implements TaskProvider {
           cellContent,
           languageId,
           promptEnv,
-          new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
+          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
         )
 
-        if (!environment) {
+        if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
 
@@ -312,7 +312,7 @@ export class RunmeTaskProvider implements TaskProvider {
           commandMode,
           convertEol: true,
           cwd,
-          environment,
+          runnerEnv: runnerEnv,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
           exec: { type: 'commands', commands: commands ?? [''] },
           languageId,
