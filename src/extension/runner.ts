@@ -501,42 +501,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       throw new Error('Cannot write to closed program session!')
     }
     this.sendRawInput(data)
-
-    // if(this.isPseudoterminal()) {
-    //   switch (data) {
-    //     case '\r': // Enter
-    //       const command = this.buffer + '\n'
-
-    //       // lastCommand = buffer
-    //       console.log("Sending command", command)
-
-    //       this.sendRawInput(command)
-    //         // .then(() => console.log('sent input', command))
-    //       break
-    //     case '\u007F': // Backspace (DEL)
-    //       if (this.buffer.length > 0) {
-    //         this._onDidWrite.fire('\b \b')
-    //         if (this.buffer.length > 0) {
-    //           this.buffer = this.buffer.slice(0, this.buffer.length - 1)
-    //         }
-    //       }
-    //       break
-    //     case '\u0003': // Ctrl+C
-    //       this._onDidWrite.fire('^C')
-    //       break
-    //     default:
-    //       if (
-    //         (data >= String.fromCharCode(0x20) &&
-    //           data <= String.fromCharCode(0x7e)) ||
-    //         data >= '\u00a0'
-    //       ) {
-    //         this.buffer += data
-    //         this._onDidWrite.fire(data)
-    //       }
-    //   }
-    // } else {
-    //   this.sendRawInput(data)
-    // }
   }
 
   protected async sendRawInput(data: string) {
