@@ -377,7 +377,7 @@ export class GrpcSerializer extends SerializerBase {
   protected readonly outputPersistence: boolean
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
-  protected readonly sessionFileMapping: Map<string, Uri> = new Map<string, Uri>()
+  protected readonly lidDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
 
@@ -424,16 +424,7 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    const runnerEnv = this.kernel.getRunnerEnvironment()
-    const sessionId = runnerEnv?.getSessionId()
-
-    if (!sessionId) {
-      this.toggleSessionButton(false)
-      return
-    }
-
-    const sessionFile = GrpcSerializer.getOutputsUri(doc.uri, sessionId)
-    this.sessionFileMapping.set(lid, sessionFile)
+    this.lidDocUriMapping.set(lid, doc.uri)
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
@@ -448,7 +439,20 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    const sessionFile = this.sessionFileMapping.get(lid ?? '')
+    const srcDocUri = this.lidDocUriMapping.get(lid ?? '')
+    if (!srcDocUri) {
+      this.toggleSessionButton(false)
+      return
+    }
+
+    const runnerEnv = this.kernel.getRunnerEnvironment()
+    const sessionId = runnerEnv?.getSessionId()
+    if (!sessionId) {
+      this.toggleSessionButton(false)
+      return
+    }
+
+    const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
       this.toggleSessionButton(false)
       return
@@ -467,8 +471,8 @@ export class GrpcSerializer extends SerializerBase {
     return filePath
   }
 
-  public static getOutputsUri(docUri: Uri, sid: string): Uri {
-    return Uri.parse(this.getOutputsFilePath(docUri.fsPath, sid))
+  public static getOutputsUri(docUri: Uri, sessionId: string): Uri {
+    return Uri.parse(GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId))
   }
 
   protected applyIdentity(data: Notebook): Notebook {

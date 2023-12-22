@@ -269,10 +269,8 @@ export class RunmeExtension {
           if (!e.ui || !sessionId) {
             return
           }
-          const outputFilePath = GrpcSerializer.getOutputsUri(
-            e.notebookEditor.notebookUri,
-            sessionId,
-          )
+          const { notebookUri } = e.notebookEditor
+          const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
