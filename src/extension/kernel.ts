@@ -650,6 +650,8 @@ export class Kernel implements Disposable {
         processEnviron(),
       )
 
+      await commands.executeCommand('notebook.clearAllCellsOutputs')
+
       this.runnerEnv = runnerEnv
       log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
     } catch (e: any) {
