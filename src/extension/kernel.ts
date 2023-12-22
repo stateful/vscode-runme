@@ -636,13 +636,17 @@ export class Kernel implements Disposable {
   }
 
   async newRunnerEnvironment(): Promise<void> {
+    if (!this.runner) {
+      log.error('Skipping new runner environment request since runner is not initialized.')
+      return
+    }
+
     log.info('Requesting new runner environment.')
-    this.runnerEnv = undefined
 
     try {
-      if (!this.runner) {
-        return
-      }
+      this.runnerEnv = undefined
+
+      await commands.executeCommand('notebook.clearAllCellsOutputs')
 
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
@@ -650,9 +654,8 @@ export class Kernel implements Disposable {
         processEnviron(),
       )
 
-      await commands.executeCommand('notebook.clearAllCellsOutputs')
-
       this.runnerEnv = runnerEnv
+
       log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
     } catch (e: any) {
       window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)

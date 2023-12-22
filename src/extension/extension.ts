@@ -48,6 +48,7 @@ import {
   addToRecommendedExtensions,
   openRunmeSettings,
   toggleAutosave,
+  askNewRunnerSession,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -198,7 +199,7 @@ export class RunmeExtension {
 
       codeLensProvider,
 
-      RunmeExtension.registerCommand('runme.resetEnv', () => kernel.newRunnerEnvironment()),
+      RunmeExtension.registerCommand('runme.resetRunnerSession', () => askNewRunnerSession(kernel)),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),

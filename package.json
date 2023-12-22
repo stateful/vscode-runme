@@ -83,7 +83,7 @@
         "title": "Run CLI command in new terminal"
       },
       {
-        "command": "runme.resetEnv",
+        "command": "runme.resetRunnerSession",
         "category": "Runme",
         "title": "Reset Session including Environment Variables"
       },
