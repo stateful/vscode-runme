@@ -24,6 +24,7 @@ import { RunnerServiceClient, RpcError } from './grpc/client'
 import { getSystemShellPath } from './executors/utils'
 import { IServer } from './server/runmeServer'
 import { convertEnvList } from './utils'
+import getLogger from './logger'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -751,6 +752,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 }
 
 export class GrpcRunnerEnvironment implements IRunnerEnvironment {
+  log = getLogger('GrpcRunnerEnvironment')
   initialEnvKeys: Set<string>
 
   constructor(
@@ -773,7 +775,16 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   }
 
   private async delete() {
-    return await this.client.deleteSession({ id: this.getSessionId() })
+    try {
+      return await this.client.deleteSession({ id: this.getSessionId() })
+    } catch (err: any) {
+      // it's not unexpected deletions to fail when server died; trace error
+      let msg = err
+      if (err instanceof Error) {
+        msg = err.message
+      }
+      this.log.error('DeleteSession failed with error:', msg)
+    }
   }
 
   initialEnvs(): Set<string> {
