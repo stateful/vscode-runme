@@ -245,7 +245,7 @@ export function openSplitViewAsMarkdownText(doc: TextDocument) {
 
 export async function askNewRunnerSession(kernel: Kernel) {
   const action = await window.showInformationMessage(
-    'Reseting your Runme session will reset all notebook state and environment variables. Are you sure?',
+    'Reseting your Runme session will remove all notebook state and environment variables. Are you sure?',
     { modal: true },
     'OK',
   )
