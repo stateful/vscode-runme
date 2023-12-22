@@ -644,6 +644,7 @@ export class Kernel implements Disposable {
     log.info('Requesting new runner environment.')
 
     try {
+      this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
       await commands.executeCommand('notebook.clearAllCellsOutputs')
