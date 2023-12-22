@@ -28,6 +28,7 @@ import {
   tryIt,
   openFileInRunme,
   addToRecommendedExtensions,
+  askNewRunnerSession,
 } from '../../../src/extension/commands'
 import {
   getTerminalByCell,
@@ -230,6 +231,28 @@ test('open Runme notebook in text editor toggle', (file: TextDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
   openSplitViewAsMarkdownText(file)
   expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
+})
+
+suite('askNewRunnerSession', () => {
+  test('asks are you sure first', async () => {
+    const newRunnerEnvironment = vi.fn()
+    const kernel = { newRunnerEnvironment }
+    vi.mocked(window.showInformationMessage).mockResolvedValue('OK' as any)
+
+    await askNewRunnerSession(kernel as any)
+
+    expect(newRunnerEnvironment).toBeCalledTimes(1)
+  })
+
+  test('skips if are you sure is canceled', async () => {
+    const newRunnerEnvironment = vi.fn()
+    const kernel = { newRunnerEnvironment }
+    vi.mocked(window.showInformationMessage).mockResolvedValue(undefined)
+
+    await askNewRunnerSession(kernel as any)
+
+    expect(newRunnerEnvironment).toBeCalledTimes(0)
+  })
 })
 
 test('stopBackgroundTask if terminal exists', () => {
