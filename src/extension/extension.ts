@@ -27,7 +27,7 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, resetEnv, bootFile } from './utils'
+import { getDefaultWorkspace, bootFile } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -48,6 +48,7 @@ import {
   addToRecommendedExtensions,
   openRunmeSettings,
   toggleAutosave,
+  askNewRunnerSession,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -198,7 +199,7 @@ export class RunmeExtension {
 
       codeLensProvider,
 
-      commands.registerCommand('runme.resetEnv', resetEnv),
+      RunmeExtension.registerCommand('runme.resetRunnerSession', () => askNewRunnerSession(kernel)),
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),
@@ -269,10 +270,8 @@ export class RunmeExtension {
           if (!e.ui || !sessionId) {
             return
           }
-          const outputFilePath = GrpcSerializer.getOutputsUri(
-            e.notebookEditor.notebookUri,
-            sessionId,
-          )
+          const { notebookUri } = e.notebookEditor
+          const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),

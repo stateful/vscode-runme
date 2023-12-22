@@ -148,35 +148,35 @@ beforeEach(() => {
 })
 
 suite('grpc Runner', () => {
-  test('environment dispose is called on runner dispose', async () => {
+  test('runner environment dispose is called on runner dispose', async () => {
     const { runner } = createGrpcRunner()
-    const environment = (await runner.createEnvironment()) as GrpcRunnerEnvironment
+    const runnerEnv = (await runner.createEnvironment()) as GrpcRunnerEnvironment
 
-    const oldEnvDispose = environment.dispose
+    const oldEnvDispose = runnerEnv.dispose
 
-    const environmentDispose = vi.fn(async () => {
-      await oldEnvDispose.call(environment)
+    const runnerEnvDispose = vi.fn(async () => {
+      await oldEnvDispose.call(runnerEnv)
     })
 
-    environment.dispose = environmentDispose
+    runnerEnv.dispose = runnerEnvDispose
 
     await runner.dispose()
 
-    expect(environmentDispose).toBeCalledTimes(1)
+    expect(runnerEnvDispose).toBeCalledTimes(1)
     expect(deleteSession).toBeCalledTimes(1)
   })
 
-  test('environment has loaded variables', async () => {
+  test('runner environment has loaded variables', async () => {
     const { runner } = createGrpcRunner()
-    const environment = await runner.createEnvironment(['bar=baz'])
+    const runnerEnv = await runner.createEnvironment(['bar=baz'])
 
-    const initialEnvs = environment.initialEnvs()
+    const initialEnvs = runnerEnv.initialEnvs()
 
     // { 'foo': 'bar', 'bar': 'baz' }
     expect(initialEnvs).toStrictEqual(new Set(['foo', 'bar']))
   })
 
-  test('cannot create environment if server not initialized', async () => {
+  test('cannot create runner environment if server not initialized', async () => {
     const { runner } = createGrpcRunner(false)
     await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
   })
@@ -188,14 +188,14 @@ suite('grpc Runner', () => {
     )
   })
 
-  test('cannot get environment variables not initialized', async () => {
+  test('cannot get runner environment variables not initialized', async () => {
     const { runner } = createGrpcRunner(false)
     await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
       'Client is not active!',
     )
   })
 
-  test('cannot create environment if server closed', async () => {
+  test('cannot create runner environment if server closed', async () => {
     const { runner, server } = createGrpcRunner(true)
 
     server._onClose.fire({ code: null })

@@ -47,7 +47,7 @@ export interface RunProgramOptions {
   envs?: string[]
   exec?: RunProgramExecution
   tty?: boolean
-  environment?: IRunnerEnvironment
+  runnerEnv?: IRunnerEnvironment
   terminalDimensions?: TerminalDimensions
   background?: boolean
   convertEol?: boolean
@@ -75,11 +75,11 @@ export interface IRunner extends Disposable {
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
   getEnvironmentVariables(
-    environment: IRunnerEnvironment,
+    runnerEnv: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined>
 
   setEnvironmentVariables(
-    environment: IRunnerEnvironment,
+    runnerEnv: IRunnerEnvironment,
     variables: Record<string, string | undefined>,
   ): Promise<boolean>
 }
@@ -229,10 +229,10 @@ export class GrpcRunner implements IRunner {
             throw new Error('Did not receive session!!')
           }
 
-          const environment = new GrpcRunnerEnvironment(client, session)
+          const runnerEnv = new GrpcRunnerEnvironment(client, session)
 
-          this.registerChild(environment)
-          return environment
+          this.registerChild(runnerEnv)
+          return runnerEnv
         })
         .catch((e) => {
           throw e
@@ -245,15 +245,15 @@ export class GrpcRunner implements IRunner {
   }
 
   async getEnvironmentVariables(
-    environment: IRunnerEnvironment,
+    runnerEnv: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined> {
     GrpcRunner.assertClient(this.client)
 
-    if (!(environment instanceof GrpcRunnerEnvironment)) {
-      throw new Error('Invalid environment!')
+    if (!(runnerEnv instanceof GrpcRunnerEnvironment)) {
+      throw new Error('Invalid runner environment!')
     }
 
-    const id = environment.getSessionId()
+    const id = runnerEnv.getSessionId()
 
     const { session } = await this.client.getSession(GetSessionRequest.create({ id })).response
 
@@ -267,7 +267,7 @@ export class GrpcRunner implements IRunner {
   // TODO: create a gRPC endpoint for this so it can be done without making a
   // new program (and hopefully preventing race conditions etc)
   async setEnvironmentVariables(
-    environment: IRunnerEnvironment,
+    runnerEnv: IRunnerEnvironment,
     variables: Record<string, string | undefined>,
     shellPath?: string,
   ): Promise<boolean> {
@@ -275,7 +275,7 @@ export class GrpcRunner implements IRunner {
 
     const program = await this.createProgramSession({
       programName: shellPath ?? getSystemShellPath() ?? 'sh',
-      environment,
+      runnerEnv,
       exec: {
         type: 'commands',
         commands,
@@ -673,7 +673,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     programName,
     args,
     cwd,
-    environment,
+    runnerEnv,
     exec,
     tty,
     envs,
@@ -684,8 +684,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     languageId,
     commandMode,
   }: RunProgramOptions): ExecuteRequest {
-    if (environment && !(environment instanceof GrpcRunnerEnvironment)) {
-      throw new Error('Expected gRPC environment!')
+    if (runnerEnv && !(runnerEnv instanceof GrpcRunnerEnvironment)) {
+      throw new Error('Expected gRPC runner environment!')
     }
 
     return ExecuteRequest.create({
@@ -693,7 +693,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       envs,
       directory: cwd,
       tty,
-      sessionId: environment?.getSessionId(),
+      sessionId: runnerEnv?.getSessionId(),
       programName,
       background: background,
       ...(exec?.type === 'commands' && { commands: exec.commands }),

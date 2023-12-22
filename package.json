@@ -83,11 +83,6 @@
         "title": "Run CLI command in new terminal"
       },
       {
-        "command": "runme.resetEnv",
-        "category": "Runme",
-        "title": "Reset Environment Variables for current VS Code session"
-      },
-      {
         "command": "runme.surveyWinDefaultShell",
         "category": "Runme",
         "title": "Prompt to participate in Windows Default Shell survey"
@@ -105,8 +100,9 @@
       {
         "command": "runme.surveyFeedbackButton",
         "category": "Runme",
-        "title": "Send Feedback",
-        "icon": "$(feedback)"
+        "title": "Let the Runme team know what you think",
+        "icon": "$(feedback)",
+        "shortTitle": "Send Feedback"
       },
       {
         "command": "runme.surveyShebangComingSoon",
@@ -220,6 +216,13 @@
         "title": "Click to open session outputs",
         "icon": "$(output-view-icon)",
         "shortTitle": "Session Outputs"
+      },
+      {
+        "command": "runme.resetRunnerSession",
+        "category": "Runme",
+        "title": "Reset Session including Environment Variables",
+        "icon": "$(search-refresh)",
+        "shortTitle": "Reset Session"
       }
     ],
     "menus": {
@@ -331,6 +334,11 @@
       "notebook/toolbar": [
         {
           "command": "runme.notebookSessionOutputs",
+          "when": "notebookType == runme && notebookHasRunmeOutputs",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.resetRunnerSession",
           "when": "notebookType == runme && notebookHasRunmeOutputs",
           "group": "navigation"
         },

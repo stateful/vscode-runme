@@ -50,7 +50,7 @@ import {
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
-import { ENV_STORE, DEFAULT_ENV, BOOTFILE, BOOTFILE_DEMO } from './constants'
+import { BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { GrpcRunnerEnvironment } from './runner'
 import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
@@ -143,11 +143,6 @@ export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | un
   return vscode.window.terminals.find((t) => {
     return getTerminalRunmeId(t) === RUNME_ID
   }) as RunmeTerminal | undefined
-}
-
-export function resetEnv() {
-  ;[...ENV_STORE.keys()].forEach((key) => ENV_STORE.delete(key))
-  Object.entries(DEFAULT_ENV).map(([key, val]) => ENV_STORE.set(key, val))
 }
 
 export function isDenoScript(runningCell: vscode.TextDocument) {

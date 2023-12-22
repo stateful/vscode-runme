@@ -34,7 +34,6 @@ import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
-  resetEnv,
   getKey,
   getAnnotations,
   hashDocumentUri,
@@ -89,7 +88,7 @@ export class Kernel implements Disposable {
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
   protected runner?: IRunner
-  protected environment?: IRunnerEnvironment
+  protected runnerEnv?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
 
   protected cellManager: NotebookCellManager
@@ -153,7 +152,7 @@ export class Kernel implements Disposable {
   }
 
   dispose() {
-    resetEnv()
+    this.getEnvironmentManager()?.reset()
     this.#controller.dispose()
     this.#disposables.forEach((d) => d.dispose())
     this.runnerReadyListener?.dispose()
@@ -541,7 +540,7 @@ export class Kernel implements Disposable {
           id,
           key,
           outputs,
-          this.environment,
+          this.runnerEnv,
           environmentManager,
         ).catch((e) => {
           if (e instanceof RpcError) {
@@ -622,33 +621,47 @@ export class Kernel implements Disposable {
     this.runnerReadyListener?.dispose()
 
     if (this.hasExperimentEnabled('grpcRunner') && runner) {
+      if (this.runner === runner) {
+        return
+      }
+
       this.runner = runner
 
-      this.runnerReadyListener = runner.onReady(async () => {
-        this.environment = undefined
-
-        try {
-          const env = await runner.createEnvironment(
-            // copy env from process naively for now
-            // later we might want a more sophisticated approach/to bring this serverside
-            processEnviron(),
-          )
-
-          if (this.runner !== runner) {
-            return
-          }
-
-          this.environment = env
-        } catch (e: any) {
-          window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
-          log.error('Failed to create gRPC Runner environment', e)
-        }
-      })
+      this.runnerReadyListener = runner.onReady(this.newRunnerEnvironment.bind(this))
     }
   }
 
   getRunnerEnvironment(): IRunnerEnvironment | undefined {
-    return this.environment
+    return this.runnerEnv
+  }
+
+  async newRunnerEnvironment(): Promise<void> {
+    if (!this.runner) {
+      log.error('Skipping new runner environment request since runner is not initialized.')
+      return
+    }
+
+    log.info('Requesting new runner environment.')
+
+    try {
+      this.runnerEnv?.dispose()
+      this.runnerEnv = undefined
+
+      await commands.executeCommand('notebook.clearAllCellsOutputs')
+
+      const runnerEnv = await this.runner.createEnvironment(
+        // copy env from process naively for now
+        // later we might want a more sophisticated approach/to bring this serverside
+        processEnviron(),
+      )
+
+      this.runnerEnv = runnerEnv
+
+      log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
+    } catch (e: any) {
+      window.showErrorMessage(`Failed to create environment for gRPC Runner: ${e.message}`)
+      log.error('Failed to create gRPC Runner environment', e)
+    }
   }
 
   // TODO: use better abstraction as part of move away from executor model
@@ -656,16 +669,19 @@ export class Kernel implements Disposable {
     if (this.runner) {
       return {
         get: async (key) => {
-          if (!this.environment) {
+          if (!this.runnerEnv) {
             return undefined
           }
-          return (await this.runner?.getEnvironmentVariables(this.environment))?.[key]
+          return (await this.runner?.getEnvironmentVariables(this.runnerEnv))?.[key]
         },
         set: async (key, val) => {
-          if (!this.environment) {
+          if (!this.runnerEnv) {
             return undefined
           }
-          await this.runner?.setEnvironmentVariables(this.environment, { [key]: val })
+          await this.runner?.setEnvironmentVariables(this.runnerEnv, { [key]: val })
+        },
+        reset: async () => {
+          await this.newRunnerEnvironment()
         },
       }
     } else {

@@ -278,23 +278,24 @@ describe('GrpcSerializer', () => {
       })),
     }))
 
-    const fakeOutputFileUri = { fsPath: '/tmp/fake/outputs.md' } as any
+    const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
 
-    it('maps document lifecylce ids to document URIs on notebook opening', async () => {
+    it("maps document lifecylce ids to source doc's URIs on notebook opening", async () => {
       const fixture = deepCopyFixture()
       const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
 
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       serializer.outputPersistence = true
 
-      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeOutputFileUri)
+      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
 
       await serializer.handleOpenNotebook({
+        uri: fakeSrcDocUri,
         metadata: fixture.metadata,
       })
 
-      const sessionFileUri = serializer.sessionFileMapping.get(lid)
-      expect(sessionFileUri).toStrictEqual(fakeOutputFileUri)
+      const lidDocUri = serializer.lidDocUriMapping.get(lid)
+      expect(lidDocUri).toStrictEqual(fakeSrcDocUri)
     })
 
     it('writes cached bytes to session file on serialization and save', async () => {
@@ -306,10 +307,11 @@ describe('GrpcSerializer', () => {
       serializer.client = {
         serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
       }
-      serializer.sessionFileMapping.set(
+      serializer.lidDocUriMapping.set(
         fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
-        fakeOutputFileUri,
+        fakeSrcDocUri,
       )
+      GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
       const result = await serializer.serializeNotebook(
         { cells: [], metadata: fixture.metadata } as any,
@@ -318,11 +320,11 @@ describe('GrpcSerializer', () => {
       expect(result.length).toStrictEqual(4)
 
       await serializer.handleSaveNotebookOutputs({
-        uri: fakeOutputFileUri,
+        uri: fakeSrcDocUri,
         metadata: fixture.metadata,
       })
 
-      expect(workspace.fs.writeFile).toBeCalledWith(fakeOutputFileUri, fakeCachedBytes)
+      expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
       expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
     })
 

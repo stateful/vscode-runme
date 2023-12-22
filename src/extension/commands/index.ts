@@ -243,6 +243,17 @@ export function openSplitViewAsMarkdownText(doc: TextDocument) {
   openDocumentAs({ text: doc })
 }
 
+export async function askNewRunnerSession(kernel: Kernel) {
+  const action = await window.showInformationMessage(
+    'Resetting your Runme session will remove all notebook state and environment variables. Are you sure?',
+    { modal: true },
+    'OK',
+  )
+  if (action) {
+    await kernel.newRunnerEnvironment()
+  }
+}
+
 export async function createNewRunmeNotebook() {
   const newNotebook = await workspace.openNotebookDocument(
     Kernel.type,

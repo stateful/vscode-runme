@@ -54,7 +54,7 @@ export async function executeRunner(
   cellId: string,
   execKey: string,
   outputs: NotebookCellOutputManager,
-  environment?: IRunnerEnvironment,
+  runnerEnv?: IRunnerEnvironment,
   environmentManager?: IEnvironmentManager,
 ) {
   const annotations = getAnnotations(exec.cell)
@@ -91,7 +91,7 @@ export async function executeRunner(
     cellText,
     execKey, // same as languageId
     skipPromptEnvDocumentLevel === false ? promptEnv : false,
-    new Set([...(environment?.initialEnvs() ?? []), ...Object.keys(envs)]),
+    new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
   )
   if (!commands) {
     return false
@@ -131,7 +131,7 @@ export async function executeRunner(
     commandMode,
     convertEol: !mimeType || mimeType === 'text/plain',
     cwd,
-    environment,
+    runnerEnv,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     exec: execution,
     languageId: exec.cell.document.languageId,
