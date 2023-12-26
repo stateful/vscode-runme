@@ -204,6 +204,37 @@ describe('GrpcSerializer', () => {
     return JSON.parse(JSON.stringify(raw))
   }
 
+  describe('#isDocumentSessionOutputs', () => {
+    it('should return false when frontmatter does not include a session ID', () => {
+      const fixture = deepCopyFixture()
+      const res = GrpcSerializer.isDocumentSessionOutputs(fixture.metadata)
+      expect(res).toBeFalsy()
+    })
+
+    it('should return true when frontmatter does include a session ID', () => {
+      const res = GrpcSerializer.isDocumentSessionOutputs({
+        'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
+      })
+      expect(res).toBeTruthy()
+    })
+  })
+
+  describe('#getDocumentLifecycleId', () => {
+    it('should return the document lifecylce ID if present', () => {
+      const fixture = deepCopyFixture()
+      const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
+      expect(res).toStrictEqual('01HF7B0KJPF469EG9ZWDNKKACQ')
+    })
+
+    it('should return undefined for documents without lifecylce IDs', () => {
+      const fixture = deepCopyFixture()
+      delete fixture.metadata['runme.dev/frontmatterParsed']?.['runme']
+
+      const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
+      expect(res).toBeUndefined()
+    })
+  })
+
   describe('cell execution summary marshaling', () => {
     it('should not misrepresenting uninitialized values', () => {
       // i.e. undefined is not sucess=false

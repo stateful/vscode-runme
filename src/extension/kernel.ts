@@ -196,7 +196,7 @@ export class Kernel implements Disposable {
   }
 
   async #handleOpenNotebook(notebookDocument: NotebookDocument) {
-    const isSessionsOutput = await this.denySessionOutputsNotebook(notebookDocument)
+    const isSessionsOutput = await Kernel.denySessionOutputsNotebook(notebookDocument)
     const { uri, isUntitled, notebookType, getCells } = notebookDocument
     if (isSessionsOutput || notebookType !== Kernel.type) {
       return
@@ -747,7 +747,7 @@ export class Kernel implements Disposable {
     await commands.executeCommand('notebook.cell.focusInOutput')
   }
 
-  private async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
+  private static async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
     if (!GrpcSerializer.isDocumentSessionOutputs(notebookDoc.metadata)) {
       return Promise.resolve(false)
     }
