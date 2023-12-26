@@ -254,6 +254,38 @@ export async function askNewRunnerSession(kernel: Kernel) {
   }
 }
 
+enum PROMPT_OPEN_ORIG_DOC {
+  ORIGINAL = 'Open original document',
+  PRVIEW = 'Preview session outputs',
+}
+
+export async function askAlternativeOutputsAction(notebookDoc: NotebookDocument): Promise<void> {
+  await commands.executeCommand('workbench.action.closeActiveEditor')
+  const action = await window.showWarningMessage(
+    'Opening Session Outputs from a pervious notebook session is not supported yet. What would you like to do instead?',
+    { modal: true },
+    PROMPT_OPEN_ORIG_DOC.PRVIEW,
+    PROMPT_OPEN_ORIG_DOC.ORIGINAL,
+  )
+
+  const { metadata } = notebookDoc
+  const orig =
+    metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['document']?.['relativePath']
+
+  switch (action) {
+    case PROMPT_OPEN_ORIG_DOC.ORIGINAL:
+      let base = path.dirname(notebookDoc.uri.fsPath)
+      let origFilePath = notebookDoc.uri.with({ path: path.join(base, orig) })
+      await commands.executeCommand('vscode.openWith', origFilePath, Kernel.type)
+      break
+    case PROMPT_OPEN_ORIG_DOC.PRVIEW:
+      await commands.executeCommand('markdown.showPreview', notebookDoc.uri)
+      break
+    default:
+      break
+  }
+}
+
 export async function createNewRunmeNotebook() {
   const newNotebook = await workspace.openNotebookDocument(
     Kernel.type,

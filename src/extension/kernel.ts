@@ -63,6 +63,8 @@ import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import { SurveyShebangComingSoon } from './survey'
 import PanelManager from './panels/panelManager'
 import Panel from './panels/panel'
+import { GrpcSerializer } from './serializer'
+import { askAlternativeOutputsAction } from './commands'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -194,8 +196,9 @@ export class Kernel implements Disposable {
   }
 
   async #handleOpenNotebook(notebookDocument: NotebookDocument) {
+    const isSessionsOutput = await this.denySessionOutputsNotebook(notebookDocument)
     const { uri, isUntitled, notebookType, getCells } = notebookDocument
-    if (notebookType !== Kernel.type) {
+    if (isSessionsOutput || notebookType !== Kernel.type) {
       return
     }
     getCells().forEach((cell) => this.registerNotebookCell(cell))
@@ -742,5 +745,15 @@ export class Kernel implements Disposable {
     await commands.executeCommand('notebook.cell.execute')
     await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
+  }
+
+  private async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
+    if (!GrpcSerializer.isDocumentSessionOutputs(notebookDoc.metadata)) {
+      return Promise.resolve(false)
+    }
+
+    await askAlternativeOutputsAction(notebookDoc)
+
+    return true
   }
 }
