@@ -647,8 +647,6 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
-      await commands.executeCommand('notebook.clearAllCellsOutputs')
-
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this serverside
@@ -656,6 +654,9 @@ export class Kernel implements Disposable {
       )
 
       this.runnerEnv = runnerEnv
+
+      // runs this last to not overwrite previous outputs
+      await commands.executeCommand('notebook.clearAllCellsOutputs')
 
       log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
     } catch (e: any) {
