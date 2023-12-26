@@ -572,7 +572,6 @@ export class GrpcSerializer extends SerializerBase {
     })
 
     const request = <SerializeRequest>{ notebook, options }
-    console.log(JSON.stringify(request.options))
     const result = await this.client!.serialize(request)
 
     if (result.response.result === undefined) {
