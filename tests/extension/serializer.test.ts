@@ -261,6 +261,19 @@ describe('GrpcSerializer', () => {
     })
   })
 
+  describe('frontmatter handling', () => {
+    it('should remove parse frontmatter on serialization', () => {
+      const outputsFixture = deepCopyFixture()
+      expect(outputsFixture.cells.length).toBe(2)
+      expect(outputsFixture.metadata['runme.dev/frontmatterParsed']).toBeDefined()
+      expect(Object.keys(outputsFixture.metadata).length).toStrictEqual(3)
+
+      const notebookData = GrpcSerializer.marshalNotebook(outputsFixture)
+      expect(notebookData.metadata['runme.dev/frontmatterParsed']).toBeUndefined()
+      expect(Object.keys(notebookData.metadata).length).toStrictEqual(2)
+    })
+  })
+
   describe('session file', () => {
     const context: any = {
       extensionUri: { fsPath: '/foo/bar' },
@@ -334,6 +347,55 @@ describe('GrpcSerializer', () => {
         '01HGX8KYWM9K41YVYP0CNR3TZW',
       )
       expect(outputFilePath).toStrictEqual('/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md')
+    })
+
+    it('should include session and document info on serialization', async () => {
+      const context: any = {
+        extensionUri: { fsPath: '/foo/bar' },
+      }
+      const fixture = {
+        cells: [],
+        metadata: {
+          'runme.dev/finalLineBreaks': '1',
+          'runme.dev/frontmatter':
+            '---\nrunme:\n  id: 01HF7B0KJPF469EG9ZWDNKKACQ\n  version: v2.0\n---',
+        },
+      }
+
+      const serialize = vi.fn().mockImplementation(() => ({
+        response: {
+          result: new Uint8Array([4, 3, 2, 1]),
+        },
+      }))
+      const ser = new GrpcSerializer(context, new Server(), new Kernel())
+      ;(ser as any).lidDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
+      ;(ser as any).client = { serialize }
+
+      const output = await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
+
+      expect(output).toEqual(new Uint8Array([4, 3, 2, 1]))
+      expect(serialize).toBeCalledWith({
+        notebook: {
+          cells: [],
+          metadata: {
+            'runme.dev/finalLineBreaks': '1',
+            'runme.dev/frontmatter':
+              '---\nrunme:\n  id: 01HF7B0KJPF469EG9ZWDNKKACQ\n  version: v2.0\n---',
+          },
+        },
+        options: {
+          outputs: {
+            enabled: true,
+            summary: true,
+          },
+          session: {
+            document: {
+              relativePath: 'source.md',
+            },
+            id: 'FAKE-SESSION',
+          },
+        },
+      })
     })
   })
 })
