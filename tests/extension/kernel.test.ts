@@ -254,12 +254,24 @@ test('supportedLanguages', async () => {
   expect(k.getSupportedLanguages()![0]).toStrictEqual('shellscript')
 })
 
-test('deny notebook UX view for session outputs files', async () => {
-  const res = await (Kernel as any).denySessionOutputsNotebook({
-    metadata: {
-      'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
-    },
+suite('#denySessionOutputsNotebook', () => {
+  test('allow notebook UX view for non-session outputs files', async () => {
+    const res = await (Kernel as any).denySessionOutputsNotebook({
+      metadata: {
+        'runme.dev/frontmatterParsed': { runme: { id: 'ulid' } },
+      },
+    })
+    expect(askAlternativeOutputsAction).toBeCalledTimes(0)
+    expect(res).toBeFalsy()
   })
-  expect(askAlternativeOutputsAction).toBeCalledTimes(1)
-  expect(res).toBeTruthy()
+
+  test('deny notebook UX view for session outputs files', async () => {
+    const res = await (Kernel as any).denySessionOutputsNotebook({
+      metadata: {
+        'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
+      },
+    })
+    expect(askAlternativeOutputsAction).toBeCalledTimes(1)
+    expect(res).toBeTruthy()
+  })
 })

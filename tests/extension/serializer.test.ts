@@ -342,34 +342,105 @@ describe('GrpcSerializer', () => {
       expect(lidDocUri).toStrictEqual(fakeSrcDocUri)
     })
 
-    it('writes cached bytes to session file on serialization and save', async () => {
-      const fixture = deepCopyFixture()
-
+    describe('#saveNotebookOutputs', () => {
       const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      serializer.outputPersistence = true
-      serializer.client = {
-        serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
-      }
-      serializer.lidDocUriMapping.set(
-        fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
-        fakeSrcDocUri,
-      )
-      GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
+      const toggleSessionButton = vi.fn()
+      serializer.toggleSessionButton = toggleSessionButton
 
-      const result = await serializer.serializeNotebook(
-        { cells: [], metadata: fixture.metadata } as any,
-        new CancellationTokenSource().token,
-      )
-      expect(result.length).toStrictEqual(4)
+      it('skips if notebook has zero bytes', async () => {
+        serializer.client = {
+          serialize: vi.fn().mockResolvedValue({ response: { result: new Uint8Array([]) } }),
+        }
+        await serializer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: {},
+        })
 
-      await serializer.handleSaveNotebookOutputs({
-        uri: fakeSrcDocUri,
-        metadata: fixture.metadata,
+        expect(toggleSessionButton).toBeCalledWith(false)
       })
 
-      expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
-      expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
+      it('skips if uri mapping to lid is unknown', async () => {
+        const fixture = deepCopyFixture()
+        serializer.serializerCache.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeCachedBytes,
+        )
+        await serializer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        })
+
+        expect(toggleSessionButton).toBeCalledWith(false)
+      })
+
+      it('skips if session file mapping is unknown', async () => {
+        const fixture = deepCopyFixture()
+        serializer.lidDocUriMapping.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeSrcDocUri,
+        )
+        serializer.serializerCache.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeCachedBytes,
+        )
+        GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => undefined)
+        await serializer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        })
+
+        expect(toggleSessionButton).toBeCalledWith(false)
+      })
+
+      it('skips if runner env session in unknown', async () => {
+        const fixture = deepCopyFixture()
+        serializer.lidDocUriMapping.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeSrcDocUri,
+        )
+        serializer.serializerCache.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeCachedBytes,
+        )
+        serializer.kernel.getRunnerEnvironment = () => ({
+          getSessionId: vi.fn().mockImplementation(() => undefined),
+        })
+        await serializer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        })
+
+        expect(toggleSessionButton).toBeCalledWith(false)
+      })
+
+      it('writes cached bytes to session file on serialization and save', async () => {
+        const fixture = deepCopyFixture()
+        const writeableSer: any = new GrpcSerializer(context, new Server(), new Kernel())
+        writeableSer.outputPersistence = true
+        writeableSer.client = {
+          serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
+        }
+        writeableSer.lidDocUriMapping.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeSrcDocUri,
+        )
+        GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
+
+        const result = await writeableSer.serializeNotebook(
+          { cells: [], metadata: fixture.metadata } as any,
+          new CancellationTokenSource().token,
+        )
+        expect(result.length).toStrictEqual(4)
+
+        await writeableSer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        })
+
+        expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
+      })
     })
 
     it('derives its path from notebook source document and session', () => {

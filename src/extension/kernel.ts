@@ -749,7 +749,7 @@ export class Kernel implements Disposable {
 
   private static async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
     if (!GrpcSerializer.isDocumentSessionOutputs(notebookDoc.metadata)) {
-      return Promise.resolve(false)
+      return false
     }
 
     await askAlternativeOutputsAction(notebookDoc)
