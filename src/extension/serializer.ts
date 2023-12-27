@@ -514,7 +514,8 @@ export class GrpcSerializer extends SerializerBase {
 
   public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
     if (!metadata) {
-      return true
+      // it's not session outputs unless known
+      return false
     }
     const sessionOutputId = metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['id']
     return Boolean(sessionOutputId)

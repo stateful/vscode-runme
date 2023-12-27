@@ -227,6 +227,11 @@ describe('GrpcSerializer', () => {
       expect(res).toBeFalsy()
     })
 
+    it('should return false for undefined metadata', () => {
+      const res = GrpcSerializer.isDocumentSessionOutputs(undefined)
+      expect(res).toBeFalsy()
+    })
+
     it('should return true when frontmatter does include a session ID', () => {
       const res = GrpcSerializer.isDocumentSessionOutputs({
         'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
