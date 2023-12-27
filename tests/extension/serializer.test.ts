@@ -204,6 +204,22 @@ describe('GrpcSerializer', () => {
     return JSON.parse(JSON.stringify(raw))
   }
 
+  const context: any = {
+    extensionUri: { fsPath: '/foo/bar' },
+  }
+
+  const Server = vi.fn().mockImplementation(() => ({
+    onTransportReady: vi.fn(),
+    ready: vi.fn().mockResolvedValue(null),
+  }))
+
+  const Kernel = vi.fn().mockImplementation(() => ({
+    hasExperimentEnabled: vi.fn().mockReturnValue(true),
+    getRunnerEnvironment: vi.fn().mockImplementation(() => ({
+      getSessionId: vi.fn().mockImplementation(() => 'FAKE-SESSION'),
+    })),
+  }))
+
   describe('#isDocumentSessionOutputs', () => {
     it('should return false when frontmatter does not include a session ID', () => {
       const fixture = deepCopyFixture()
@@ -231,6 +247,11 @@ describe('GrpcSerializer', () => {
       delete fixture.metadata['runme.dev/frontmatterParsed']?.['runme']
 
       const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
+      expect(res).toBeUndefined()
+    })
+
+    it('should return undefined for undefined metadata', () => {
+      const res = GrpcSerializer.getDocumentLifecycleId(undefined)
       expect(res).toBeUndefined()
     })
   })
@@ -306,22 +327,6 @@ describe('GrpcSerializer', () => {
   })
 
   describe('session file', () => {
-    const context: any = {
-      extensionUri: { fsPath: '/foo/bar' },
-    }
-
-    const Server = vi.fn().mockImplementation(() => ({
-      onTransportReady: vi.fn(),
-      ready: vi.fn().mockResolvedValue(null),
-    }))
-
-    const Kernel = vi.fn().mockImplementation(() => ({
-      hasExperimentEnabled: vi.fn().mockReturnValue(true),
-      getRunnerEnvironment: vi.fn().mockImplementation(() => ({
-        getSessionId: vi.fn().mockImplementation(() => 'FAKE-SESSION'),
-      })),
-    }))
-
     const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
 
     it("maps document lifecylce ids to source doc's URIs on notebook opening", async () => {
@@ -497,6 +502,63 @@ describe('GrpcSerializer', () => {
             id: 'FAKE-SESSION',
           },
         },
+      })
+    })
+  })
+
+  describe('apply cell lifecycle identity', () => {
+    it('skips cells if identity does not require it', async () => {
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      serializer.lifecycleIdentity = 2 // DOC identity which excludes cells
+      const fixture = deepCopyFixture()
+
+      fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
+        cell.metadata['runme.dev/id'] = cell.metadata['id']
+        delete cell.metadata['id']
+        expect(cell.metadata['id']).toBeUndefined()
+      })
+
+      const applied = serializer.applyIdentity(fixture)
+
+      applied.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
+        expect(cell.metadata['id']).toBeUndefined()
+      })
+    })
+
+    it('skips non-code cells', async () => {
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const fixture = deepCopyFixture()
+
+      fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
+        cell.kind = 1
+        cell.metadata['runme.dev/id'] = cell.metadata['id']
+        delete cell.metadata['id']
+        expect(cell.metadata['id']).toBeUndefined()
+      })
+
+      const applied = serializer.applyIdentity(fixture)
+
+      applied.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
+        expect(cell.metadata['id']).toBeUndefined()
+      })
+    })
+
+    it('populates code cells with id where deserializer returned runme.dev/id', async () => {
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const fixture = deepCopyFixture()
+
+      fixture.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
+        cell.metadata['runme.dev/id'] = cell.metadata['id']
+        delete cell.metadata['id']
+        expect(cell.metadata['id']).toBeUndefined()
+      })
+
+      const applied = serializer.applyIdentity(fixture)
+
+      const ref = deepCopyFixture()
+      applied.cells.forEach((cell: { metadata: { [x: string]: any } }, i: number) => {
+        expect(cell.metadata['id']).toBeDefined()
+        expect(cell.metadata['id']).toStrictEqual(ref.cells[i].metadata['id'])
       })
     })
   })
