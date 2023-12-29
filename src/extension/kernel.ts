@@ -111,7 +111,7 @@ export class Kernel implements Disposable {
       this.#controller,
       this.hasExperimentEnabled('outputPersistence') ?? false,
     )
-    this.#controller.supportsExecutionOrder = false
+    this.#controller.supportsExecutionOrder = true
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
@@ -526,6 +526,8 @@ export class Kernel implements Disposable {
     const environmentManager = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
+    // exec.executionOrder = this.incrementOrderCounter()
+
     if (
       this.runner &&
       // hard disable gRPC runner on windows
@@ -652,11 +654,13 @@ export class Kernel implements Disposable {
 
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this serverside
+        // later we might want a more sophisticated approach/to bring this server-side
         processEnviron(),
       )
 
       this.runnerEnv = runnerEnv
+
+      this.cellManager.setRunnerEnv(runnerEnv)
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')

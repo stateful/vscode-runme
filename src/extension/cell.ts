@@ -28,11 +28,15 @@ import {
   XTermState,
 } from './terminal/terminalState'
 import ContextState from './contextState'
+import { IRunnerEnvironment } from './runner'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
 export class NotebookCellManager {
   #data = new WeakMap<NotebookCell, NotebookCellOutputManager>()
+  #runnerEnv: IRunnerEnvironment | undefined
+  #executionSessionOrder = new Map<string, number>()
+  #mruSessionId = ''
 
   constructor(
     protected controller: NotebookController,
@@ -51,8 +55,23 @@ export class NotebookCellManager {
     return outputs
   }
 
-  async createNotebookCellExecution(cell: NotebookCell) {
+  setRunnerEnv(runnerEnv: IRunnerEnvironment) {
+    this.#runnerEnv = runnerEnv
+    this.#mruSessionId = runnerEnv.getSessionId()
+    this.#executionSessionOrder.set(this.#mruSessionId, 0)
+  }
+
+  incrementExecutionOrder(outputs: NotebookCellOutputManager): void {
+    let order = this.#executionSessionOrder.get(this.#mruSessionId) ?? 0
+    this.#executionSessionOrder.set(this.#mruSessionId, ++order)
+    outputs.setSessionExecutionOrder(this.#mruSessionId, order)
+  }
+
+  async createNotebookCellExecution(
+    cell: NotebookCell,
+  ): Promise<RunmeNotebookCellExecution | undefined> {
     const outputs = await this.getNotebookOutputs(cell)
+    this.incrementExecutionOrder(outputs)
     return outputs.createNotebookCellExecution()
   }
 
@@ -60,6 +79,8 @@ export class NotebookCellManager {
     const outputs = this.#data.get(cell)
     if (!outputs) {
       console.error(`cell at index ${cell.index} has not been registered!`)
+    } else {
+      outputs.setMruSessionId(this.#mruSessionId)
     }
 
     return outputs ?? this.registerCell(cell)
@@ -87,6 +108,9 @@ export class NotebookCellOutputManager {
     [OutputType.vercel, false],
     [OutputType.github, false],
   ])
+
+  protected sessionExecutionOrder = new Map<string, number | undefined>()
+  protected mruSessionId = ''
 
   protected cellState?: ICellState
 
@@ -311,6 +335,7 @@ export class NotebookCellOutputManager {
         return undefined
       }
 
+      execution.executionOrder = this.currentExecutionOrder()
       this.execution = execution
 
       const wrapper = new RunmeNotebookCellExecution(execution)
@@ -460,7 +485,7 @@ export class NotebookCellOutputManager {
   }
 
   /**
-   * Internal refresh ouptut function. Runs under mutex.
+   * Internal refresh output function. Runs under mutex.
    *
    * @param mutater Optional callback, which runs after enabled outputs are
    * retrieved, but before outputs are replaced. This function should be used to
@@ -474,6 +499,7 @@ export class NotebookCellOutputManager {
   protected async refreshOutputInternal(mutater?: () => Promise<boolean | void> | boolean | void) {
     await this.withLock(async () => {
       await this.getExecutionUnsafe(async (exec) => {
+        exec.executionOrder = this.currentExecutionOrder()
         for (const key of [...this.enabledOutputs.keys()]) {
           this.enabledOutputs.set(key, this.hasOutputTypeUnsafe(key))
         }
@@ -531,6 +557,24 @@ export class NotebookCellOutputManager {
     } finally {
       exec.end(true)
     }
+  }
+
+  setSessionExecutionOrder(sessionId: string, order: number | undefined): number | undefined {
+    this.sessionExecutionOrder.set(sessionId, order)
+    this.setMruSessionId(sessionId)
+    return order
+  }
+
+  setMruSessionId(sessionId: string): void {
+    if (this.mruSessionId === sessionId) {
+      return
+    }
+    this.mruSessionId = sessionId
+  }
+
+  protected currentExecutionOrder(): number | undefined {
+    const mruExecOrder = this.sessionExecutionOrder.get(this.mruSessionId)
+    return mruExecOrder
   }
 
   setState(state: ICellState) {
