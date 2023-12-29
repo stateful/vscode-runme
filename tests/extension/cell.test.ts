@@ -7,6 +7,7 @@ import {
   NotebookCellOutputManager,
   RunmeNotebookCellExecution,
 } from '../../src/extension/cell'
+import { IRunnerEnvironment } from '../../src/extension/runner'
 
 function mockedNotebookCellExecution(): NotebookCellExecution {
   return {
@@ -28,17 +29,38 @@ vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 describe('NotebookCellManager', () => {
-  it('can register cells', () => {
+  it('can register cells', async () => {
     const manager = new NotebookCellManager({} as any, false)
     const cell = {} as any
 
     manager.registerCell(cell)
-    expect(manager.getNotebookOutputs(cell)).toBeTruthy()
+    expect(await manager.getNotebookOutputs(cell)).toBeTruthy()
 
     const errorMock = vi.spyOn(console, 'error')
 
     expect(manager.getNotebookOutputs({} as any)).resolves.toBeInstanceOf(NotebookCellOutputManager)
     expect(errorMock.mock.calls[0][0]).toMatch('has not been registered')
+  })
+
+  it('set mru session id on outputs whenever they are being used', async () => {
+    const manager = new NotebookCellManager({} as any, false)
+    manager.setRunnerEnv(<IRunnerEnvironment>{
+      getSessionId: () => 'session-id1',
+    })
+    const cell = {} as any
+
+    manager.registerCell(cell)
+    let outputs = await manager.getNotebookOutputs(cell)
+    expect((outputs as any).mruSessionId).toStrictEqual('session-id1')
+    expect(outputs).toBeTruthy()
+
+    manager.setRunnerEnv(<IRunnerEnvironment>{
+      getSessionId: () => 'session-id2',
+    })
+
+    const outputsP = manager.getNotebookOutputs(cell)
+    expect(outputsP).resolves.toBeInstanceOf(NotebookCellOutputManager)
+    expect(((await outputsP) as any).mruSessionId).toStrictEqual('session-id2')
   })
 })
 
