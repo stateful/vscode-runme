@@ -28,6 +28,7 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
+import { getNotebookExecutionOrder } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
@@ -111,7 +112,7 @@ export class Kernel implements Disposable {
       this.#controller,
       this.hasExperimentEnabled('outputPersistence') ?? false,
     )
-    this.#controller.supportsExecutionOrder = true
+    this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
