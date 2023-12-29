@@ -249,7 +249,7 @@ suite('askAlternativeOutputsAction', () => {
   test('will open preview when chosen', async () => {
     const warning = vi.mocked(window.showWarningMessage)
 
-    warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.PRVIEW as any)
+    warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.PREVIEW as any)
     await askAlternativeOutputsAction({ uri, metadata } as any)
 
     expect(commands.executeCommand).toBeCalledWith('workbench.action.closeActiveEditor')

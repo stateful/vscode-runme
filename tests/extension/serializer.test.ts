@@ -241,13 +241,13 @@ describe('GrpcSerializer', () => {
   })
 
   describe('#getDocumentLifecycleId', () => {
-    it('should return the document lifecylce ID if present', () => {
+    it('should return the document lifecycle ID if present', () => {
       const fixture = deepCopyFixture()
       const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
       expect(res).toStrictEqual('01HF7B0KJPF469EG9ZWDNKKACQ')
     })
 
-    it('should return undefined for documents without lifecylce IDs', () => {
+    it('should return undefined for documents without lifecycle IDs', () => {
       const fixture = deepCopyFixture()
       delete fixture.metadata['runme.dev/frontmatterParsed']?.['runme']
 
@@ -334,7 +334,7 @@ describe('GrpcSerializer', () => {
   describe('session file', () => {
     const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
 
-    it("maps document lifecylce ids to source doc's URIs on notebook opening", async () => {
+    it("maps document lifecycle ids to source doc's URIs on notebook opening", async () => {
       const fixture = deepCopyFixture()
       const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
 

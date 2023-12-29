@@ -256,15 +256,15 @@ export async function askNewRunnerSession(kernel: Kernel) {
 
 export enum ASK_ALT_OUTPUTS_ACTION {
   ORIGINAL = 'Open original document',
-  PRVIEW = 'Preview session outputs',
+  PREVIEW = 'Preview session outputs',
 }
 
 export async function askAlternativeOutputsAction(notebookDoc: NotebookDocument): Promise<void> {
   await commands.executeCommand('workbench.action.closeActiveEditor')
   const action = await window.showWarningMessage(
-    'Opening Session Outputs from a pervious notebook session is not supported yet. What would you like to do instead?',
+    'Opening Session Outputs from a previous notebook session is not supported yet. What would you like to do instead?',
     { modal: true },
-    ASK_ALT_OUTPUTS_ACTION.PRVIEW,
+    ASK_ALT_OUTPUTS_ACTION.PREVIEW,
     ASK_ALT_OUTPUTS_ACTION.ORIGINAL,
   )
 
@@ -274,11 +274,11 @@ export async function askAlternativeOutputsAction(notebookDoc: NotebookDocument)
 
   switch (action) {
     case ASK_ALT_OUTPUTS_ACTION.ORIGINAL:
-      let base = path.dirname(notebookDoc.uri.fsPath)
-      let origFilePath = notebookDoc.uri.with({ path: path.join(base, orig) })
+      const base = path.dirname(notebookDoc.uri.fsPath)
+      const origFilePath = notebookDoc.uri.with({ path: path.join(base, orig) })
       await commands.executeCommand('vscode.openWith', origFilePath, Kernel.type)
       break
-    case ASK_ALT_OUTPUTS_ACTION.PRVIEW:
+    case ASK_ALT_OUTPUTS_ACTION.PREVIEW:
       await commands.executeCommand('markdown.showPreview', notebookDoc.uri)
       break
   }
