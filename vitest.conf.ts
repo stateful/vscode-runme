@@ -9,6 +9,7 @@ export default defineConfig({
       '**/node_modules/**', 'examples/**'
     ],
     coverage: {
+      reporter: ['html', 'lcov'],
       enabled: true,
       exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts'],
       statements: 43,
