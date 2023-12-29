@@ -4,6 +4,7 @@ import { window, NotebookCell, workspace } from 'vscode'
 import { Kernel } from '../../src/extension/kernel'
 import executors from '../../src/extension/executors'
 import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
+import { askAlternativeOutputsAction } from '../../src/extension/commands'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -23,6 +24,7 @@ vi.mock('../../src/extension/executors/index.js', () => ({
 vi.mock('../../src/extension/runner', () => ({}))
 
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../src/extension/commands', () => ({ askAlternativeOutputsAction: vi.fn() }))
 
 const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
   [...new Array(cnt)].map(
@@ -250,4 +252,26 @@ test('supportedLanguages', async () => {
   const k = new Kernel({} as any)
 
   expect(k.getSupportedLanguages()![0]).toStrictEqual('shellscript')
+})
+
+suite('#denySessionOutputsNotebook', () => {
+  test('allow notebook UX view for non-session outputs files', async () => {
+    const res = await (Kernel as any).denySessionOutputsNotebook({
+      metadata: {
+        'runme.dev/frontmatterParsed': { runme: { id: 'ulid' } },
+      },
+    })
+    expect(askAlternativeOutputsAction).toBeCalledTimes(0)
+    expect(res).toBeFalsy()
+  })
+
+  test('deny notebook UX view for session outputs files', async () => {
+    const res = await (Kernel as any).denySessionOutputsNotebook({
+      metadata: {
+        'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
+      },
+    })
+    expect(askAlternativeOutputsAction).toBeCalledTimes(1)
+    expect(res).toBeTruthy()
+  })
 })

@@ -63,6 +63,8 @@ import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import { SurveyShebangComingSoon } from './survey'
 import PanelManager from './panels/panelManager'
 import Panel from './panels/panel'
+import { GrpcSerializer } from './serializer'
+import { askAlternativeOutputsAction } from './commands'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -194,8 +196,9 @@ export class Kernel implements Disposable {
   }
 
   async #handleOpenNotebook(notebookDocument: NotebookDocument) {
+    const isSessionsOutput = await Kernel.denySessionOutputsNotebook(notebookDocument)
     const { uri, isUntitled, notebookType, getCells } = notebookDocument
-    if (notebookType !== Kernel.type) {
+    if (isSessionsOutput || notebookType !== Kernel.type) {
       return
     }
     getCells().forEach((cell) => this.registerNotebookCell(cell))
@@ -647,8 +650,6 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
-      await commands.executeCommand('notebook.clearAllCellsOutputs')
-
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this serverside
@@ -656,6 +657,9 @@ export class Kernel implements Disposable {
       )
 
       this.runnerEnv = runnerEnv
+
+      // runs this last to not overwrite previous outputs
+      await commands.executeCommand('notebook.clearAllCellsOutputs')
 
       log.info('New runner environment assigned with session ID:', runnerEnv.getSessionId())
     } catch (e: any) {
@@ -741,5 +745,15 @@ export class Kernel implements Disposable {
     await commands.executeCommand('notebook.cell.execute')
     await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
+  }
+
+  private static async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
+    if (!GrpcSerializer.isDocumentSessionOutputs(notebookDoc.metadata)) {
+      return false
+    }
+
+    await askAlternativeOutputsAction(notebookDoc)
+
+    return true
   }
 }

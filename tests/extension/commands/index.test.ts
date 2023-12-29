@@ -29,6 +29,8 @@ import {
   openFileInRunme,
   addToRecommendedExtensions,
   askNewRunnerSession,
+  askAlternativeOutputsAction,
+  ASK_ALT_OUTPUTS_ACTION,
 } from '../../../src/extension/commands'
 import {
   getTerminalByCell,
@@ -231,6 +233,41 @@ test('open Runme notebook in text editor toggle', (file: TextDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
   openSplitViewAsMarkdownText(file)
   expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
+})
+
+suite('askAlternativeOutputsAction', () => {
+  const orig = 'orig.md'
+  const metadata = {
+    'runme.dev/frontmatterParsed': {
+      runme: { session: { document: { relativePath: orig } } },
+    },
+  }
+
+  const withFn = vi.fn()
+  const uri = { fsPath: orig, with: withFn }
+
+  test('will open preview when chosen', async () => {
+    const warning = vi.mocked(window.showWarningMessage)
+
+    warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.PREVIEW as any)
+    await askAlternativeOutputsAction({ uri, metadata } as any)
+
+    expect(commands.executeCommand).toBeCalledWith('workbench.action.closeActiveEditor')
+    expect(commands.executeCommand).toBeCalledWith('markdown.showPreview', uri)
+    expect(warning).toBeCalledTimes(1)
+  })
+
+  test('will open original in notebook UX when chosen', async () => {
+    const warning = vi.mocked(window.showWarningMessage)
+
+    warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.ORIGINAL as any)
+    withFn.mockReturnValue(uri)
+    await askAlternativeOutputsAction({ uri, metadata } as any)
+
+    expect(commands.executeCommand).toBeCalledWith('workbench.action.closeActiveEditor')
+    expect(commands.executeCommand).toBeCalledWith('vscode.openWith', uri, 'runme')
+    expect(warning).toBeCalledTimes(1)
+  })
 })
 
 suite('askNewRunnerSession', () => {

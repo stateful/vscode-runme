@@ -60,7 +60,6 @@ vi.mock('../../src/extension/grpc/client', () => {
 
 vi.mock('../../src/extension/utils', async () => ({
   getDefaultWorkspace: vi.fn(),
-  resetEnv: vi.fn(),
   initWasm: vi.fn(),
   getNamespacedMid: vi.fn(),
   isWindows: vi.fn().mockReturnValue(false),

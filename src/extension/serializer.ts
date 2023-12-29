@@ -34,6 +34,7 @@ import {
   CellKind,
   CellOutput,
   SerializeRequestOptions,
+  RunmeSession,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient, type ReadyPromise } from './grpc/client'
 import Languages from './languages'
@@ -424,6 +425,11 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
+    if (GrpcSerializer.isDocumentSessionOutputs(doc.metadata)) {
+      this.toggleSessionButton(false)
+      return
+    }
+
     this.lidDocUriMapping.set(lid, doc.uri)
   }
 
@@ -506,6 +512,15 @@ export class GrpcSerializer extends SerializerBase {
     return metadata['runme.dev/frontmatterParsed']?.['runme']?.['id']
   }
 
+  public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
+    if (!metadata) {
+      // it's not session outputs unless known
+      return false
+    }
+    const sessionOutputId = metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['id']
+    return Boolean(sessionOutputId)
+  }
+
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -540,9 +555,24 @@ export class GrpcSerializer extends SerializerBase {
       return Promise.resolve(undefined)
     }
 
-    const options = <SerializeRequestOptions>{ outputs: { enabled: true, summary: true } }
-    const request = <SerializeRequest>{ notebook, options }
+    let session: RunmeSession | undefined
+    const docUri = this.lidDocUriMapping.get(lid ?? '')
+    const sid = this.kernel.getRunnerEnvironment()?.getSessionId()
+    if (sid && docUri) {
+      const relativePath = path.basename(docUri.fsPath)
+      session = {
+        id: sid,
+        document: { relativePath },
+      }
+    }
 
+    const outputs = { enabled: true, summary: true }
+    const options = SerializeRequestOptions.clone({
+      outputs,
+      session,
+    })
+
+    const request = <SerializeRequest>{ notebook, options }
     const result = await this.client!.serialize(request)
 
     if (result.response.result === undefined) {
@@ -563,6 +593,11 @@ export class GrpcSerializer extends SerializerBase {
   public static marshalNotebook(data: NotebookData): Notebook {
     // the bulk copies cleanly except for what's below
     const notebook = Notebook.clone(data as any)
+
+    // cannot gurantee it wasn't changed
+    if (notebook.metadata['runme.dev/frontmatterParsed']) {
+      delete notebook.metadata['runme.dev/frontmatterParsed']
+    }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
       const dataExecSummary = data.cells[cellIdx].executionSummary
