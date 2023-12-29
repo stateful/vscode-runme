@@ -526,8 +526,6 @@ export class Kernel implements Disposable {
     const environmentManager = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
-    // exec.executionOrder = this.incrementOrderCounter()
-
     if (
       this.runner &&
       // hard disable gRPC runner on windows
