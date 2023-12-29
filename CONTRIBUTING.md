@@ -179,6 +179,12 @@ export NODE_OPTIONS="--experimental-specifier-resolution=node"
 npx vitest -c ./vitest.conf.ts --run
 ```
 
+The test coverage report is easy to access at:
+
+```sh {"id":"01HJVVP86RWEMH7QM80EPK266B","name":"test:report"}
+open coverage/lcov-report/index.html
+```
+
 #### E2E Testing
 
 We use WebdriverIO to run e2e tests on the VS Code extension:
