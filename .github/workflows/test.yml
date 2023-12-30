@@ -60,7 +60,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage
-          path: .
+          path: ./coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.1.1
