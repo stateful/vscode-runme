@@ -14,6 +14,7 @@ import {
   getNotebookTerminalConfigurations,
   getCodeLensEnabled,
   getCLIUseIntegratedRunme,
+  getNotebookExecutionOrder,
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
 import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
@@ -140,6 +141,10 @@ suite('Configuration', () => {
 
   test('getCodeLensEnabled should return true by default', () => {
     expect(getCodeLensEnabled()).toStrictEqual(true)
+  })
+
+  test('getNotebookExecutionOrder should return true by default', () => {
+    expect(getNotebookExecutionOrder()).toStrictEqual(true)
   })
 
   test('getCLIUseIntegratedRunme should return false by default', () => {

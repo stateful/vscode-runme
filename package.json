@@ -614,6 +614,11 @@
             ],
             "markdownDescription": "Default behavior of Open In Editor action button"
           },
+          "runme.notebook.executionOrder": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Enable execution order counter per cell in notebook UX"
+          },
           "runme.codelens.enable": {
             "type": "boolean",
             "default": true,

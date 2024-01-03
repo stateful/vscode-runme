@@ -28,6 +28,7 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
+import { getNotebookExecutionOrder } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
@@ -111,7 +112,7 @@ export class Kernel implements Disposable {
       this.#controller,
       this.hasExperimentEnabled('outputPersistence') ?? false,
     )
-    this.#controller.supportsExecutionOrder = false
+    this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
@@ -652,11 +653,13 @@ export class Kernel implements Disposable {
 
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this serverside
+        // later we might want a more sophisticated approach/to bring this server-side
         processEnviron(),
       )
 
       this.runnerEnv = runnerEnv
+
+      this.cellManager.setRunnerEnv(runnerEnv)
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')
