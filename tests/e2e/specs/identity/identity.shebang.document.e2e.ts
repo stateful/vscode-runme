@@ -62,7 +62,7 @@ describe('Test suite: Shebang with setting Document only (2)', async () => {
       `---
       runme:
         id: 01HEXJ9KWG7BYSFYCNKSRE4JZR
-        version: v2.1
+        version: v2.2
       ---
 
       ## Shebang

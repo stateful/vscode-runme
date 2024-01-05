@@ -65,7 +65,7 @@ describe('Test suite: Document with existent identity and setting Document only 
         bar: baz
       runme:
         id: 01HEJKW175Z0SYY4SJCA86J0TF
-        version: v2.1
+        version: v2.2
       ---
 
       ## Document with id
