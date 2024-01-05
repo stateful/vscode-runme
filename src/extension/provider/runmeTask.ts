@@ -126,7 +126,14 @@ export class RunmeTaskProvider implements TaskProvider {
     })
 
     const dirProx = (pt: ProjectTask) => {
-      return pt.documentPath.split(separator).length
+      const { relativePath, outside } = RunmeTaskProvider.asRelativePath(pt.documentPath)
+      const len = relativePath.split(separator).length
+      if (outside) {
+        // penalty for being outside of base path
+        // todo(sebastian): perhaps skip?
+        return 10 * len
+      }
+      return len
     }
 
     return task$.pipe(
@@ -180,6 +187,14 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
+  static asRelativePath(documentPath: string): { relativePath: string; outside: boolean } {
+    const relativePath = workspace.asRelativePath(documentPath)
+    if (relativePath === documentPath) {
+      return { relativePath: path.basename(documentPath), outside: true }
+    }
+    return { relativePath, outside: false }
+  }
+
   static async newRunmeProjectTask(
     projectTask: ProjectTask,
     options: TaskOptions = {},
@@ -189,7 +204,7 @@ export class RunmeTaskProvider implements TaskProvider {
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const { name, documentPath } = projectTask
-    const source = path.basename(documentPath)
+    const { relativePath: source } = RunmeTaskProvider.asRelativePath(documentPath)
 
     const task = new Task(
       { type: 'runme', name, command: name },
