@@ -129,8 +129,6 @@ export class RunmeTaskProvider implements TaskProvider {
       const { relativePath, outside } = asWorkspaceRelativePath(pt.documentPath)
       const len = relativePath.split(separator).length
       if (outside) {
-        // penalty for being outside of base path
-        // todo(sebastian): perhaps skip?
         return 100 * len
       }
       return len
@@ -153,10 +151,16 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const runnerEnv = this.kernel?.getRunnerEnvironment()
     const all = await this.tasks
-    const includeGenerated = this.treeView.includeUnnamedTasks
+    const includeAllTasks = this.treeView.includeAllTasks
 
     try {
-      const filtered = all.filter((prjTask) => prjTask.isNameGenerated === includeGenerated)
+      const filtered = all.filter((prjTask) => {
+        if (includeAllTasks) {
+          return true
+        }
+        const { outside } = asWorkspaceRelativePath(prjTask.documentPath)
+        return !prjTask.isNameGenerated && !outside
+      })
       // show all if there isn't a single named task
       const listed = filtered.length > 0 ? filtered : all
       const runmeTasks = listed.map(
