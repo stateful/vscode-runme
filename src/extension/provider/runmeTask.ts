@@ -131,7 +131,7 @@ export class RunmeTaskProvider implements TaskProvider {
       if (outside) {
         // penalty for being outside of base path
         // todo(sebastian): perhaps skip?
-        return 10 * len
+        return 100 * len
       }
       return len
     }
