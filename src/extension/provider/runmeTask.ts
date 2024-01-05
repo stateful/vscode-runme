@@ -22,7 +22,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
 
 import getLogger from '../logger'
-import { getAnnotations, getWorkspaceEnvs } from '../utils'
+import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
@@ -126,7 +126,7 @@ export class RunmeTaskProvider implements TaskProvider {
     })
 
     const dirProx = (pt: ProjectTask) => {
-      const { relativePath, outside } = RunmeTaskProvider.asRelativePath(pt.documentPath)
+      const { relativePath, outside } = asWorkspaceRelativePath(pt.documentPath)
       const len = relativePath.split(separator).length
       if (outside) {
         // penalty for being outside of base path
@@ -187,14 +187,6 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static asRelativePath(documentPath: string): { relativePath: string; outside: boolean } {
-    const relativePath = workspace.asRelativePath(documentPath)
-    if (relativePath === documentPath) {
-      return { relativePath: path.basename(documentPath), outside: true }
-    }
-    return { relativePath, outside: false }
-  }
-
   static async newRunmeProjectTask(
     projectTask: ProjectTask,
     options: TaskOptions = {},
@@ -204,7 +196,7 @@ export class RunmeTaskProvider implements TaskProvider {
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const { name, documentPath } = projectTask
-    const { relativePath: source } = RunmeTaskProvider.asRelativePath(documentPath)
+    const { relativePath: source } = asWorkspaceRelativePath(documentPath)
 
     const task = new Task(
       { type: 'runme', name, command: name },

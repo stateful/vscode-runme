@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import vscode, { ExtensionContext, FileType, Uri, commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 import { ulid } from 'ulidx'
@@ -23,6 +25,7 @@ import {
   fileOrDirectoryExists,
   isMultiRootWorkspace,
   convertEnvList,
+  asWorkspaceRelativePath,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -63,6 +66,7 @@ vi.mock('vscode', async () => {
       },
     },
     workspace: {
+      asRelativePath: vi.fn(),
       getConfiguration: vi.fn().mockReturnValue(new Map()),
       fs: mocked.workspace.fs,
       workspaceFolders: [],
@@ -618,6 +622,26 @@ suite('convertEnvList', () => {
       a: '1',
       b: '2',
       c: '3\n4',
+    })
+  })
+})
+
+suite('asWorkspaceRelativePath', () => {
+  test('return relative path if sub-path inside workspace base', () => {
+    const relativePath = '/to/a/repo'
+    vi.mocked(workspace.asRelativePath).mockReturnValue(relativePath)
+    expect(asWorkspaceRelativePath('/this/is/a/workspace/path/to/a/repo')).toStrictEqual({
+      relativePath,
+      outside: false,
+    })
+  })
+
+  test('return basename if sub-path outside workspace base', () => {
+    const absolutePath = '/this/is/a/workspace/path/outside/a/repo'
+    vi.mocked(workspace.asRelativePath).mockReturnValue(absolutePath)
+    expect(asWorkspaceRelativePath(absolutePath)).toStrictEqual({
+      relativePath: path.basename(absolutePath),
+      outside: true,
     })
   })
 })
