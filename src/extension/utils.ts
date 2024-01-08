@@ -584,3 +584,14 @@ export async function handleNotebookAutosaveSettings() {
   ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
   await commands.executeCommand('setContext', NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
+
+export function asWorkspaceRelativePath(documentPath: string): {
+  relativePath: string
+  outside: boolean
+} {
+  const relativePath = workspace.asRelativePath(documentPath)
+  if (relativePath === documentPath) {
+    return { relativePath: path.basename(documentPath), outside: true }
+  }
+  return { relativePath, outside: false }
+}

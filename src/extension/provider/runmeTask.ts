@@ -22,7 +22,7 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
 
 import getLogger from '../logger'
-import { getAnnotations, getWorkspaceEnvs } from '../utils'
+import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, IRunnerEnvironment, RunProgramOptions } from '../runner'
@@ -126,7 +126,12 @@ export class RunmeTaskProvider implements TaskProvider {
     })
 
     const dirProx = (pt: ProjectTask) => {
-      return pt.documentPath.split(separator).length
+      const { relativePath, outside } = asWorkspaceRelativePath(pt.documentPath)
+      const len = relativePath.split(separator).length
+      if (outside) {
+        return 100 * len
+      }
+      return len
     }
 
     return task$.pipe(
@@ -146,10 +151,16 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const runnerEnv = this.kernel?.getRunnerEnvironment()
     const all = await this.tasks
-    const includeGenerated = this.treeView.includeUnnamedTasks
+    const includeAllTasks = this.treeView.includeAllTasks
 
     try {
-      const filtered = all.filter((prjTask) => prjTask.isNameGenerated === includeGenerated)
+      const filtered = all.filter((prjTask) => {
+        if (includeAllTasks) {
+          return true
+        }
+        const { outside } = asWorkspaceRelativePath(prjTask.documentPath)
+        return !prjTask.isNameGenerated && !outside
+      })
       // show all if there isn't a single named task
       const listed = filtered.length > 0 ? filtered : all
       const runmeTasks = listed.map(
@@ -189,7 +200,7 @@ export class RunmeTaskProvider implements TaskProvider {
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const { name, documentPath } = projectTask
-    const source = path.basename(documentPath)
+    const { relativePath: source } = asWorkspaceRelativePath(documentPath)
 
     const task = new Task(
       { type: 'runme', name, command: name },
