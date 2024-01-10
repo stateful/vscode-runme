@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7VQMH8ESX1EFV4QCBTXB1Y
-  version: v2.0
+  version: v2.2
 ---
 
 # Contributing to `vscode-runme`
@@ -121,6 +121,14 @@ npm run watch
 ```
 
 You can also run the extension in the Extension Development Host, which is a separate VS Code instance, by pressing `F5` or `Ctrl+Shift+D` and then selecting `Run Extension` from the dropdown.
+
+If you want to run the extension against a specific runme kernel binary, you can set this option in .vscode/settings.json: 
+
+```
+{
+  "runme.server.binaryPath": "path/to/bin",
+}
+```
 
 ### Build Project
 
