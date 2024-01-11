@@ -63,7 +63,7 @@ describe('Test suite: Cell with existent identity and setting document only (2)'
       ---
       runme:
         id: 01HEXJ9KWG7BYSFYCNKSRE4JZR
-        version: v2.0
+        version: v2.2
       ---
 
       ## Existent ID
