@@ -1,7 +1,12 @@
 import { DefaultTreeItem } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 
-import { tryExecuteCommand, clearAllOutputs, getTerminalText, killAllTerminals } from '../helpers/index.js'
+import {
+  tryExecuteCommand,
+  clearAllOutputs,
+  getTerminalText,
+  killAllTerminals,
+} from '../helpers/index.js'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { OutputType, StatusBarElements } from '../pageobjects/cell.page.js'
 
