@@ -18,20 +18,16 @@ import { Key } from 'webdriverio'
  * ```
  */
 export async function getTerminalText(workbench: Workbench) {
-  const bottomBar = workbench.getBottomBar()
-  await bottomBar.openTerminalView()
-
-  await workbench.executeCommand('Terminal select all')
+  await workbench.executeCommand('Terminal: Focus on Terminal View')
+  await workbench.executeCommand('Terminal: Select All')
   await workbench.executeCommand('Copy')
   const text = await clipboard.read()
   await clipboard.write('')
   return text
 }
 
-export async function killAllTerminals(workbench: Workbench) {
-  const bottomBar = workbench.getBottomBar()
-  await bottomBar.openTerminalView()
-  await workbench.executeCommand('Terminal kill all')
+export function killAllTerminals(workbench: Workbench) {
+  return workbench.executeCommand('Terminal: Kill All Terminals')
 }
 
 export async function tryExecuteCommand(workbench: Workbench, command: string) {
