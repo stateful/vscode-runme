@@ -11,7 +11,7 @@
     "expect-webdriverio": "^4.2.7",
     "runme": "^3.0.1",
     "ts-node": "^10.9.1",
-    "wdio-vscode-service": "^5.2.1",
+    "wdio-vscode-service": "^5.2.2",
     "webdriverio": "^8.15.4"
   }
 }
