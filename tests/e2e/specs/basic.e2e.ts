@@ -1,7 +1,12 @@
 import { DefaultTreeItem } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 
-import { tryExecuteCommand, clearAllOutputs, getTerminalText } from '../helpers/index.js'
+import {
+  tryExecuteCommand,
+  clearAllOutputs,
+  getTerminalText,
+  killAllTerminals,
+} from '../helpers/index.js'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { OutputType, StatusBarElements } from '../pageobjects/cell.page.js'
 
@@ -330,9 +335,10 @@ describe('Runme VS Code Extension', async () => {
         'echo Rows: \\$(tput lines)\necho Columns: \\$(tput cols)',
       )
 
-      await cell.run(false)
-
+      await cell.run(true)
       const text = await getTerminalText(workbench)
+      await killAllTerminals(workbench)
+
       const regex = /Rows:\s+(\d+)\s+Columns:\s+(\d+)/
 
       expect(text).toMatch(regex)
