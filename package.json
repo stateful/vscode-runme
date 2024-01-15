@@ -879,6 +879,8 @@
     ]
   },
   "scripts": {
+    "ci:local": "./scripts/local-ci.sh",
+    "ci:local:restore": "./scripts/restore-ci.sh",
     "build": "run-s build:dev",
     "build:dev": "webpack --mode development --node-env development",
     "build:prod": "webpack --mode production --node-env production",
