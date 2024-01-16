@@ -905,7 +905,7 @@
     "@types/vscode": "1.72.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
     "@types/webpack-env": "^1.18.1",
-    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.6.0",
     "@vitest/coverage-v8": "^0.34.3",
     "@vscode/vsce": "^2.21.0",
