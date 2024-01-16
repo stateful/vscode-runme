@@ -1,0 +1,53 @@
+name: Test inputs
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: "Runme release version"
+        required: true
+        type: string
+        default: latest
+      releaseType:
+        description: "Release Type"
+        required: true
+        type: choice
+        default: "patch"
+        options:
+          - patch
+          - minor
+          - major
+      releaseChannel:
+        description: "Release Channel"
+        required: true
+        type: choice
+        default: stable
+        options:
+          - stable
+          - edge
+      publishMarketplace:
+        description: "Publish on Visual Studio Marketplace?"
+        required: true
+        type: choice
+        default: "yes"
+        options:
+          - "yes"
+          - "no"
+      publishOpenVSX:
+        description: "Publish on Open VSX Registry?"
+        required: true
+        type: choice
+        default: "yes"
+        options:
+          - "yes"
+          - "no"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      REPOSITORY: runme
+    steps:
+      - name: Print inputs
+        run: |
+          echo "${{ toJSON(github.event.inputs) }}"
