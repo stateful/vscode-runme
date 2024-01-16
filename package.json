@@ -961,7 +961,7 @@
     "octokit": "^3.1.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.2.1",
-    "undici": "^5.23.0",
+    "undici": "^6.3.0",
     "uuid": "^9.0.1",
     "vscode-telemetry": "^1.0.2",
     "xterm": "^5.3.0",
