@@ -14,7 +14,6 @@ permissions:
 jobs:
   dependencies:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
 
     steps:
       - name: Fetch PR metadata
@@ -26,7 +25,6 @@ jobs:
       - name: Wait for PR CI
         # Don't merge updates to GitHub Actions versions automatically.
         # (Some repos may wish to limit by version range (major/minor/patch), or scope (dep vs dev-dep), too.)
-        if: contains(steps.metadata.outputs.package-ecosystem, 'npm')
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -38,7 +36,6 @@ jobs:
       - name: Auto-merge dependabot PRs
         # Don't merge updates to GitHub Actions versions automatically.
         # (Some repos may wish to limit by version range (major/minor/patch), or scope (dep vs dev-dep), too.)
-        if: contains(steps.metadata.outputs.package-ecosystem, 'npm')
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
