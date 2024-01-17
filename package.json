@@ -935,7 +935,7 @@
     "unzipper": "^0.10.14",
     "vitest": "^0.34.3",
     "vscode-uri": "^3.0.7",
-    "wdio-vscode-service": "^5.2.2",
+    "wdio-vscode-service": "^5.2.3",
     "webdriverio": "^8.20.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
