@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KJV2FA10WJP6RHKEJTE
-  version: v2.0
+  version: v2.2
 ---
 
 [![](https://badgen.net/badge/Open%20with/Runme/5B3ADF?icon=https://runme.dev/img/logo.svg)](https%3A%2F%2Fgithub.com%2Fstateful%2Fhardening-ubuntu-server%2Fblob%2Fmain%2FREADME.md)

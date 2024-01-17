@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KJQ8625WYMCRVJADMQF
-  version: v2.0
+  version: v2.2
 ---
 
 # Runme Language Support

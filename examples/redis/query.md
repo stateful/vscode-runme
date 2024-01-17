@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HFBZHZ5QQQXP99SE2TD4SC6G
-  version: v2.0
+  version: v2.2
 ---
 
 # Redis Query Runbook for Runme Cloud

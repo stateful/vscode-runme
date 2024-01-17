@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KK19BHGNZ0X1W17ZEYB
-  version: v2.0
+  version: v2.2
 ---
 
 # Enter BranchGPT
