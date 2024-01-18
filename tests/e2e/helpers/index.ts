@@ -86,7 +86,7 @@ function sanitizeOutput(output: string) {
   return output.trim().replace(/^\s+/gm, '')
 }
 
-export async function assertDocumentContains(absDocPath: string, matcher: string) {
+async function assertDocumentContains(absDocPath: string, matcher: string) {
   const source = await fs.readFile(absDocPath, 'utf-8')
   const savedContent = sanitizeOutput(source.toString()).split('\n')
   const matcherParts = sanitizeOutput(matcher).split('\n')
