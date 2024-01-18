@@ -5,7 +5,7 @@ import url from 'node:url'
 
 import * as jsonc from 'comment-json'
 import clipboard from 'clipboardy'
-import type { Workbench } from 'wdio-vscode-service'
+import { sleep, type Workbench } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 
 /**
@@ -98,6 +98,24 @@ export async function assertDocumentContains(absDocPath: string, matcher: string
     } else {
       await expect(savedContent[index]).toMatch(matcherParts[index])
     }
+  }
+}
+
+export async function assertDocumentContainsSpinner(
+  absDocPath: string,
+  matcher: string,
+  retries: number = 2, // three tries in total
+  interval: number = 100,
+) {
+  try {
+    await assertDocumentContains(absDocPath, matcher)
+  } catch (err: any) {
+    if (retries <= 0) {
+      console.warn(`Retrying assertDocumentContainsSpinner: ${err.message}`)
+      throw err
+    }
+    await sleep(interval)
+    await assertDocumentContainsSpinner(absDocPath, matcher, retries - 1, interval)
   }
 }
 

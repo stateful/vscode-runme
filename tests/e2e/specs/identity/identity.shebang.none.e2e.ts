@@ -2,7 +2,7 @@ import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import {
-  assertDocumentContains,
+  assertDocumentContainsSpinner,
   revertChanges,
   saveFile,
   updateLifecycleIdentitySetting,
@@ -56,7 +56,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
     await cell.focus()
     await saveFile(browser)
 
-    await assertDocumentContains(
+    await assertDocumentContainsSpinner(
       absDocPath,
       `
       ## Shebang

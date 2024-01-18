@@ -1,7 +1,7 @@
 import { Key } from 'webdriverio'
 
 import {
-  assertDocumentContains,
+  assertDocumentContainsSpinner,
   revertChanges,
   saveFile,
   updateLifecycleIdentitySetting,
@@ -48,7 +48,7 @@ describe('Test suite: Empty file with setting Document (2)', async () => {
     await updateLifecycleIdentitySetting(2)
     await reloadWindow()
     await saveFile(browser)
-    await assertDocumentContains(absDocPath, '')
+    await assertDocumentContainsSpinner(absDocPath, '')
   })
 
   after(() => {
