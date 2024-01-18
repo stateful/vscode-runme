@@ -223,6 +223,11 @@
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
         "shortTitle": "Reset Session"
+      },
+      {
+        "command": "runme.resetLoginPrompt",
+        "category": "Runme",
+        "title": "Reset login prompt when asking to Signin with GitHub"
       }
     ],
     "menus": {

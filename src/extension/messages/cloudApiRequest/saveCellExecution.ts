@@ -1,6 +1,11 @@
 import { TelemetryReporter } from 'vscode-telemetry'
+import { AuthenticationSession, window } from 'vscode'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
+import {
+  ClientMessages,
+  NOTEBOOK_AUTOSAVE_ON,
+  SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY,
+} from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import { CreateCellExecutionDocument, NotebookInput } from '../../__generated__/graphql'
@@ -14,6 +19,39 @@ import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
+/**
+ * Handles the first time experience for saving a cell.
+ * It informs the user that a Login with a GitHub account is required before prompting the user.
+ * This only happens once. Subsequent saves will not display the prompt.
+ * @returns AuthenticationSession
+ */
+async function getSession(): Promise<AuthenticationSession | undefined> {
+  let session = await getAuthSession(false)
+  const displayLoginPrompt = ContextState.getKey(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY)
+  if (!session && displayLoginPrompt !== false) {
+    const option = await window.showInformationMessage(
+      `You are about to securely store your cell output on the Runme Cloud.
+      authenticating with GitHub is required, do you want to proceed?`,
+      'Yes',
+      'Dismiss',
+    )
+    if (!option || option === 'Dismiss') {
+      throw new Error('Failed to save cell output, authenticating with GitHub denied')
+    }
+
+    session = await getAuthSession(true)
+    if (!session) {
+      throw new Error('You must authenticate with your GitHub account')
+    } else {
+      await ContextState.addKey(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY, false)
+    }
+  } else {
+    session = await getAuthSession(true)
+  }
+
+  return session
+}
+
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
@@ -21,8 +59,7 @@ export default async function saveCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await getAuthSession()
-
+    const session = await getSession()
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
     }
@@ -51,6 +88,7 @@ export default async function saveCellExecution(
     if (!runmeTokenResponse) {
       throw new Error('Unable to retrieve an access token')
     }
+
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
     const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
 
