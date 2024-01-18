@@ -2,7 +2,7 @@ import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import {
-  assertDocumentContains,
+  assertDocumentContainsSpinner,
   revertChanges,
   saveFile,
   updateLifecycleIdentitySetting,
@@ -57,7 +57,7 @@ describe('Test suite: Cell with existent identity and setting document only (2)'
     await cell.focus()
     await saveFile(browser)
 
-    await assertDocumentContains(
+    await assertDocumentContainsSpinner(
       absDocPath,
       `
       ---
