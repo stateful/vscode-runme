@@ -16,6 +16,7 @@ export function InitializeClient({
     return {
       headers: {
         ...headers,
+        'Auth-Provider': 'auth0',
         authorization: runmeToken ? `Bearer ${runmeToken}` : '',
       },
     }

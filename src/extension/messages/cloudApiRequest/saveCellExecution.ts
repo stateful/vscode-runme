@@ -3,7 +3,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
-import { CreateCellExecutionDocument, NotebookInput } from '../../__generated__/graphql'
+import { CreateCellExecutionDocument, CreateNotebookInput } from '../../__generated__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
@@ -56,7 +56,7 @@ export default async function saveCellExecution(
 
     const fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
 
-    let notebookInput: NotebookInput | undefined
+    let notebookInput: CreateNotebookInput | undefined
 
     if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
       notebookInput = {
@@ -68,7 +68,7 @@ export default async function saveCellExecution(
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
-        data: {
+        input: {
           stdout: terminalContents,
           stderr: Array.from([]), // stderr will become applicable for non-terminal
           exitCode,

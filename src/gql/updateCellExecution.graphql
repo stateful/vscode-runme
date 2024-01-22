@@ -1,5 +1,5 @@
-mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {
-  updateCellExecution(id: $id, data: $data) {
+mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {
+  updateCellExecution(id: $id, input: $input) {
    id,
    htmlUrl
   }

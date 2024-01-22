@@ -24,8 +24,8 @@ const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
 const DEFAULT_RUNME_REMOTE_DEV = 'staging.runme.dev'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
-  ['api.', ':4000'],
-  ['app.', ':4001'],
+  ['api.', ':8911'],
+  ['app.', ':8910'],
 ])
 
 type NotebookTerminalValue = keyof typeof notebookTerminalSchema

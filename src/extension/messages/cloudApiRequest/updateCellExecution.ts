@@ -44,7 +44,7 @@ export default async function updateCellExecution(
       mutation: UpdateCellExecutionDocument,
       variables: {
         id: message.output.data.id,
-        data: {
+        input: {
           isPrivate: false,
         },
       },
