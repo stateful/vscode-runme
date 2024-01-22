@@ -1,3 +1,9 @@
+---
+runme:
+  id: 01HMRR0QFNQ7EK9KVJH8K94QM0
+  version: v2.2
+---
+
 # [Runme](http://runme.dev) for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
 
 This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code notebooks (with the click of a `play` button). Annotating markdown code blocks repo maintainers can enhance the interactive runbook-like experience of their markdown notebooks while they will continue to render properly in markdown viewers. Runme is [open source](https://docs.runme.dev/open-source) and licensed under APL2.0.
@@ -43,7 +49,7 @@ For instance, the following annotation will run the command in the background, g
 
 RUNME does not just retain frontmatter, it supports top-level settings that will affect all cells in the document.
 
-``` {"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"}
+```{"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"} {"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"}
 ---
 shell: bash
 # or
@@ -55,7 +61,7 @@ shell: /bin/ksh
 
 Check the complete list of configuration options at https://docs.runme.dev/configuration or take a look at the [examples](https://github.com/stateful/vscode-runme/tree/main/examples) which are also illustrated in [Runme's integration docs](https://docs.runme.dev/integrations).
 
-## Frequently Asked Questions
+ ## Frequently Asked Questions
 
 Chances are, you're not the first trailblazer to wander through here – someone might have already asked that burning question of yours, and we've got it covered. But hey, you might just be the pioneer with a fresh perspective! So feel free to ask away – your question could be the start of something new, and we're all ears! [Checkout out our official FAQ](https://docs.runme.dev/faq)
 
