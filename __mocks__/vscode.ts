@@ -280,7 +280,8 @@ export enum TaskScope {
 export const ShellExecution = vi.fn()
 export const Task = vi.fn()
 export const authentication = {
-  getSession: vi.fn()
+  getSession: vi.fn(),
+  onDidChangeSessions: vi.fn()
 }
 
 export class WorkspaceEdit {

@@ -1069,3 +1069,5 @@ export enum WebViews {
 export const CATEGORY_SEPARATOR = ','
 export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'
 export const EXECUTION_CELL_CREATION_DATE_STORAGE_KEY = 'executionCellCreationDate'
+export const SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY = 'loginConsent'
+export const CLOUD_USER_SIGNED_IN = 'userSignedIn'

@@ -23,7 +23,12 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ulid } from 'ulidx'
 
 import { Serializer } from '../types'
-import { NOTEBOOK_HAS_OUTPUTS, OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
+import {
+  NOTEBOOK_AUTOSAVE_ON,
+  NOTEBOOK_HAS_OUTPUTS,
+  OutputType,
+  VSCODE_LANGUAGEID_MAP,
+} from '../constants'
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
 
 import {
@@ -44,6 +49,7 @@ import { IServer } from './server/runmeServer'
 import { Kernel } from './kernel'
 import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
+import ContextState from './contextState'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -375,7 +381,6 @@ export class GrpcSerializer extends SerializerBase {
   protected ready: ReadyPromise
   protected readonly lifecycleIdentity: ServerLifecycleIdentity =
     getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
-  protected readonly outputPersistence: boolean
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
   protected readonly lidDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
@@ -388,9 +393,6 @@ export class GrpcSerializer extends SerializerBase {
     kernel: Kernel,
   ) {
     super(context, kernel)
-
-    this.outputPersistence = this.kernel.hasExperimentEnabled('outputPersistence') ?? false
-    this.toggleSessionButton(this.outputPersistence)
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -409,12 +411,12 @@ export class GrpcSerializer extends SerializerBase {
     )
   }
 
-  public toggleSessionButton(state: boolean) {
-    return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
-  }
-
   private async initParserClient(transport?: GrpcTransport) {
     this.client = initParserClient(transport ?? (await this.server.transport()))
+  }
+
+  public toggleSessionButton(state: boolean) {
+    return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
   }
 
   protected async handleOpenNotebook(doc: NotebookDocument) {
@@ -465,7 +467,7 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
-    await this.toggleSessionButton(true)
+    this.toggleSessionButton(true)
   }
 
   public static getOutputsFilePath(fsPath: string, sid: string): string {
@@ -547,11 +549,15 @@ export class GrpcSerializer extends SerializerBase {
     return result
   }
 
+  public outputPersistence() {
+    return ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+  }
+
   private async cacheNotebookOutputs(
     notebook: Notebook,
     lid: string | undefined,
   ): Promise<Uint8Array | undefined> {
-    if (!this.outputPersistence) {
+    if (!this.outputPersistence()) {
       return Promise.resolve(undefined)
     }
 

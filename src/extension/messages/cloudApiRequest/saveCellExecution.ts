@@ -21,10 +21,17 @@ export default async function saveCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await getAuthSession()
-
+    const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const session = await getAuthSession(
+      !message.output.data.isUserAction && autoSaveIsOn ? false : true,
+    )
     if (!session) {
-      throw new Error('You must authenticate with your GitHub account')
+      return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+        data: {
+          displayShare: false,
+        },
+        id: message.output.id,
+      })
     }
     const cell = await getCellById({ editor, id: message.output.id })
     if (!cell) {

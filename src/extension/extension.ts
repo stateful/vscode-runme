@@ -49,6 +49,7 @@ import {
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
+  resetLoginPrompt,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -59,6 +60,7 @@ import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
+import { CloudAuthProvider } from './provider/cloudAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -159,8 +161,6 @@ export class RunmeExtension {
 
     registerExtensionEnvironmentVariables(context)
 
-    const transientOutputs = !kernel.hasExperimentEnabled('outputPersistence')
-
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/id']: undefined,
@@ -176,7 +176,6 @@ export class RunmeExtension {
       ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
-        transientOutputs,
         transientCellMetadata,
       }),
 
@@ -275,6 +274,10 @@ export class RunmeExtension {
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
+      RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
+      RunmeExtension.registerCommand('runme.runmeCloudSignedOut', () => {}),
+      RunmeExtension.registerCommand('runme.runmeCloudSignedIn', () => {}),
+      new CloudAuthProvider(),
     )
     await await bootFile(context)
   }

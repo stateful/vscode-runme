@@ -339,7 +339,6 @@ describe('GrpcSerializer', () => {
       const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
 
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      serializer.outputPersistence = true
 
       vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
 
@@ -427,7 +426,6 @@ describe('GrpcSerializer', () => {
       it('writes cached bytes to session file on serialization and save', async () => {
         const fixture = deepCopyFixture()
         const writeableSer: any = new GrpcSerializer(context, new Server(), new Kernel())
-        writeableSer.outputPersistence = true
         writeableSer.client = {
           serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
         }
@@ -435,6 +433,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
+        writeableSer.outputPersistence = vi.fn().mockReturnValue(true)
         GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
         const result = await writeableSer.serializeNotebook(
@@ -482,6 +481,7 @@ describe('GrpcSerializer', () => {
       const ser = new GrpcSerializer(context, new Server(), new Kernel())
       ;(ser as any).lidDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
+      ser.outputPersistence = vi.fn().mockReturnValue(true)
 
       const output = await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
 

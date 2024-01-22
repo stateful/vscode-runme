@@ -125,6 +125,18 @@
         "icon": "$(markdown)"
       },
       {
+        "command": "runme.runmeCloudSignedIn",
+        "category": "Runme",
+        "title": "Connected to Runme Cloud",
+        "icon": "$(cloud)"
+      },
+      {
+        "command": "runme.runmeCloudSignedOut",
+        "category": "Runme",
+        "title": "Disconnected from Runme Cloud",
+        "icon": "$(debug-disconnect)"
+      },
+      {
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
@@ -223,6 +235,11 @@
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
         "shortTitle": "Reset Session"
+      },
+      {
+        "command": "runme.resetLoginPrompt",
+        "category": "Runme",
+        "title": "Reset login prompt when asking to Signin with GitHub"
       }
     ],
     "menus": {
@@ -293,6 +310,16 @@
         {
           "when": "notebookType == runme",
           "command": "runme.openSplitViewAsMarkdownText",
+          "group": "navigation"
+        },
+        {
+          "when": "notebookType == runme && userSignedIn",
+          "command": "runme.runmeCloudSignedIn",
+          "group": "navigation"
+        },
+        {
+          "when": "notebookType == runme && !userSignedIn",
+          "command": "runme.runmeCloudSignedOut",
           "group": "navigation"
         }
       ],
@@ -459,12 +486,6 @@
             "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
-          },
-          "runme.experiments.outputPersistence": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           },
           "runme.checkout.projectDir": {
             "type": "string",

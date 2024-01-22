@@ -18,6 +18,7 @@ import vscode, {
   WorkspaceFolder,
   ExtensionContext,
   authentication,
+  AuthenticationSession,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -37,6 +38,8 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
+  SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY,
+  CLOUD_USER_SIGNED_IN,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -594,4 +597,46 @@ export function asWorkspaceRelativePath(documentPath: string): {
     return { relativePath: path.basename(documentPath), outside: true }
   }
   return { relativePath, outside: false }
+}
+
+/**
+ * Handles the first time experience for saving a cell.
+ * It informs the user that a Login with a GitHub account is required before prompting the user.
+ * This only happens once. Subsequent saves will not display the prompt.
+ * @returns AuthenticationSession
+ */
+export async function promptUserSession(
+  context: ExtensionContext,
+): Promise<AuthenticationSession | undefined> {
+  let session = await getAuthSession(false)
+  const displayLoginPrompt = await context.globalState.get(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY)
+  if (!session && displayLoginPrompt !== false) {
+    const option = await window.showInformationMessage(
+      `Securely store your cell output on the Runme Cloud.
+      Authenticating with GitHub is required, do you want to proceed?`,
+      'Yes',
+      'Dismiss',
+      "Don't ask again",
+    )
+    if (!option || option === 'Dismiss') {
+      return
+    }
+
+    if (option === "Don't ask again") {
+      await context.globalState.update(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY, false)
+      return
+    }
+
+    session = await getAuthSession(true)
+    if (!session) {
+      throw new Error('You must authenticate with your GitHub account')
+    }
+  }
+
+  return session
+}
+
+export async function checkSession() {
+  const session = await getAuthSession(false)
+  ContextState.addKey(CLOUD_USER_SIGNED_IN, !!session)
 }

@@ -64,6 +64,8 @@ vi.mock('../../src/extension/utils', async () => ({
   getNamespacedMid: vi.fn(),
   isWindows: vi.fn().mockReturnValue(false),
   bootFile: vi.fn().mockResolvedValue(undefined),
+  checkSession: vi.fn(),
+  toggleSessionButton: vi.fn(),
 }))
 
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
@@ -93,7 +95,7 @@ test('initializes all providers', async () => {
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(32)
+  expect(commands.registerCommand).toBeCalledTimes(35)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
   expect(bootFile).toBeCalledTimes(1)

@@ -38,10 +38,7 @@ export class NotebookCellManager {
   #executionSessionOrder = new Map<string, number>()
   #mruSessionId = ''
 
-  constructor(
-    protected controller: NotebookController,
-    protected readonly outputPersistence: boolean,
-  ) {}
+  constructor(protected controller: NotebookController) {}
 
   registerCell(cell: NotebookCell): NotebookCellOutputManager {
     const existing = this.#data.get(cell)
@@ -49,7 +46,7 @@ export class NotebookCellManager {
       return existing
     }
 
-    const outputs = new NotebookCellOutputManager(cell, this.controller, this.outputPersistence)
+    const outputs = new NotebookCellOutputManager(cell, this.controller)
     this.#data.set(cell, outputs)
 
     return outputs
@@ -126,7 +123,6 @@ export class NotebookCellOutputManager {
   constructor(
     protected cell: NotebookCell,
     protected controller: NotebookController,
-    protected readonly outputPersistence: boolean,
   ) {}
 
   protected generateOutputUnsafe(type: OutputType): NotebookCellOutput | undefined {
@@ -415,7 +411,7 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    if (!this.outputPersistence) {
+    if (!ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)) {
       return Promise.resolve()
     }
     await this.withLock(async () => {

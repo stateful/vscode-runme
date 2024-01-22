@@ -456,6 +456,14 @@ export class TerminalView extends LitElement {
               if (e.output.hasErrors) {
                 return postClientMessage(ctx, ClientMessages.errorMessage, e.output.data)
               }
+
+              if (
+                e.output.data.hasOwnProperty('displayShare') &&
+                e.output.data.displayShare === false
+              ) {
+                return
+              }
+
               const { data } = e.output.data
               if (data.createCellExecution) {
                 const {
@@ -515,7 +523,7 @@ export class TerminalView extends LitElement {
               return
             }
             this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
-            return this.#shareCellOutput()
+            return this.#shareCellOutput(false)
           }
         }
       }),
@@ -717,7 +725,14 @@ export class TerminalView extends LitElement {
     })
   }
 
-  async #shareCellOutput(): Promise<boolean | void | undefined> {
+  async #triggerShareCellOutput(): Promise<boolean | void | undefined> {
+    return this.#shareCellOutput(true)
+  }
+
+  /**
+   * @param isUserAction Indicates if the user clicked the save button directly
+   */
+  async #shareCellOutput(isUserAction: boolean): Promise<boolean | void | undefined> {
     const ctx = getContext()
     if (!ctx.postMessage) {
       return
@@ -744,6 +759,7 @@ export class TerminalView extends LitElement {
       await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
         data: {
           stdout: contentWithAnsi,
+          isUserAction,
         },
         id: this.id!,
         method: APIMethod.CreateCellExecution,
@@ -788,7 +804,7 @@ export class TerminalView extends LitElement {
               ?disabled=${this.isCloudApiLoading}
               ?displayShareIcon=${this.isShareReady}
               shareText="${this.isCloudApiLoading ? 'Saving ...' : this.shareText}"
-              @onShare="${this.#shareCellOutput}"
+              @onShare="${this.#triggerShareCellOutput}"
             >
             </share-cell>`,
           () => html``,
