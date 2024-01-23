@@ -124,11 +124,11 @@ export class Annotations extends LitElement {
   readonly #details: { [id: string]: configDetails } = {
     background: {
       description: 'Run the cell as background process.',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/configuration/cell-level#handle-long-running-processes',
     },
     interactive: {
       description: 'Run cell inside terminal to allow for interactive input.',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/getting-started/vs-code#interactive-mode',
     },
     closeTerminalOnSuccess: {
       description: 'Hide terminal after cell successful execution.',
@@ -136,11 +136,11 @@ export class Annotations extends LitElement {
     },
     promptEnv: {
       description: 'Prompt user input for exported environment variables.',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/features#environment-variable-prompts',
     },
     mimeType: {
       description: "Cell's output content MIME type.",
-      docs: 'https://docs.runme.dev/configuration#supported-mime-types',
+      docs: 'https://docs.runme.dev/configuration/reference#supported-mime-types',
     },
     name: {
       description: "Cell's canonical name for easy referencing in the CLI.",
@@ -148,15 +148,15 @@ export class Annotations extends LitElement {
     },
     interpreter: {
       description: 'Inserted into shebang (aka #!) line',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/configuration/shebang',
     },
     category: {
       description: 'Execute this code cell within a category. (no comma or spaces allowed)',
-      docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
+      docs: 'https://docs.runme.dev/configuration/cell-level#run-all-cells-by-category',
     },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/configuration/cell-level#exclude-cell-from-run-all',
     },
     terminalRows: {
       description: 'Number of rows to display in the notebook terminal.',
