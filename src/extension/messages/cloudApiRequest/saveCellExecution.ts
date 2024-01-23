@@ -42,8 +42,8 @@ export default async function saveCellExecution(
       runnerExitStatus?.type === 'exit'
         ? runnerExitStatus.code
         : runnerExitStatus?.type === 'error'
-        ? 1
-        : 0
+          ? 1
+          : 0
     const annotations = getAnnotations(cell)
     delete annotations['runme.dev/id']
     const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
