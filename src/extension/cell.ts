@@ -14,7 +14,7 @@ import {
   WorkspaceEdit,
 } from 'vscode'
 
-import { NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
+import { CLOUD_USER_SIGNED_IN, NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
 import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
 import { Mutex } from '../utils/sync'
 import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
@@ -195,7 +195,9 @@ export class NotebookCellOutputManager {
                 content: stdoutBase64,
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
-                isAutoSaveEnabled: ContextState.getKey(NOTEBOOK_AUTOSAVE_ON),
+                isAutoSaveEnabled: ContextState.getKey(CLOUD_USER_SIGNED_IN)
+                  ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+                  : false,
                 ...terminalConfigurations,
               },
             }

@@ -394,6 +394,8 @@ export class GrpcSerializer extends SerializerBase {
   ) {
     super(context, kernel)
 
+    this.toggleSessionButton(this.outputPersistence())
+
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
         disposable.dispose()
@@ -437,6 +439,12 @@ export class GrpcSerializer extends SerializerBase {
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
     const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
+    /**
+     * Remove cache if output persistence is disabled
+     */
+    if (!this.outputPersistence() && lid) {
+      this.serializerCache.delete(lid)
+    }
     const bytes = this.serializerCache.get(lid ?? '')
     await this.saveNotebookOutputs(lid, bytes)
   }
@@ -533,7 +541,7 @@ export class GrpcSerializer extends SerializerBase {
     const lid = GrpcSerializer.getDocumentLifecycleId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    const output = this.cacheNotebookOutputs(notebook, lid)
+    const output = await this.cacheNotebookOutputs(notebook, lid)
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
