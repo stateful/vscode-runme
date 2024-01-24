@@ -584,8 +584,15 @@ export function suggestCategories(categories: string[], title: string, placehold
 export async function handleNotebookAutosaveSettings(context: ExtensionContext) {
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  const autoSaveStatus = autoSaveIsOn || context.globalState.get(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  const autoSaveStatus = autoSaveIsOn && context.globalState.get(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveStatus)
+}
+
+export async function resetNotebookAutosaveSettings(context: ExtensionContext) {
+  const configAutoSaveSetting = getNotebookAutoSave()
+  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  await context.globalState.update(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
 
 export function asWorkspaceRelativePath(documentPath: string): {

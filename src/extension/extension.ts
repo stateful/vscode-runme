@@ -27,7 +27,7 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, bootFile } from './utils'
+import { getDefaultWorkspace, bootFile, resetNotebookAutosaveSettings } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -160,6 +160,7 @@ export class RunmeExtension {
     )
 
     registerExtensionEnvironmentVariables(context)
+    await resetNotebookAutosaveSettings(context)
 
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
