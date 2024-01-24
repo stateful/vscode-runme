@@ -1,6 +1,6 @@
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
-import fetch from 'cross-fetch'
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
+import fetch from 'cross-fetch'
 import { Uri } from 'vscode'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
@@ -16,7 +16,7 @@ export function InitializeClient({
     return {
       headers: {
         ...headers,
-        'Auth-Provider': 'auth0',
+        'Auth-Provider': 'vscode',
         authorization: runmeToken ? `Bearer ${runmeToken}` : '',
       },
     }

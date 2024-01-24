@@ -16,8 +16,8 @@ export type Scalars = {
   Float: { input: number; output: number; }
   /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
   BigInt: { input: any; output: any; }
-  /** The `Byte` scalar type represents byte value as a Buffer */
   Byte: { input: any; output: any; }
+  Bytes: { input: any; output: any; }
   /** A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
   Date: { input: any; output: any; }
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
@@ -48,25 +48,42 @@ export type AssistantSearchArgs = {
 
 export type CellExecution = {
   __typename?: 'CellExecution';
-  Notebook?: Maybe<Notebook>;
   archivedTime?: Maybe<Scalars['DateTime']['output']>;
-  autoSave?: Maybe<Scalars['Boolean']['output']>;
-  createTime?: Maybe<Scalars['DateTime']['output']>;
-  exitCode?: Maybe<Scalars['Int']['output']>;
-  htmlUrl: Scalars['String']['output'];
+  autoSave: Scalars['Boolean']['output'];
+  createTime: Scalars['DateTime']['output'];
+  exitCode: Scalars['Int']['output'];
+  history?: Maybe<Array<Maybe<CellExecution>>>;
+  htmlUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
-  inputData: Scalars['Byte']['output'];
+  input?: Maybe<Scalars['String']['output']>;
+  isOwner?: Maybe<Scalars['Boolean']['output']>;
   isPrivate?: Maybe<Scalars['Boolean']['output']>;
   languageId?: Maybe<Scalars['String']['output']>;
   lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
-  metadata?: Maybe<Scalars['JSON']['output']>;
+  metadata?: Maybe<Metadata>;
+  notebook?: Maybe<Notebook>;
   notebookId?: Maybe<Scalars['String']['output']>;
+  owner?: Maybe<Owner>;
   pid?: Maybe<Scalars['Int']['output']>;
-  stderrData: Scalars['Byte']['output'];
-  stdoutData: Scalars['Byte']['output'];
+  stderr?: Maybe<Scalars['Bytes']['output']>;
+  stdout?: Maybe<Scalars['Bytes']['output']>;
   updateTime?: Maybe<Scalars['DateTime']['output']>;
   user: User;
   userId: Scalars['String']['output'];
+};
+
+
+export type CellExecutionHistoryArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CellExecutionList = {
+  __typename?: 'CellExecutionList';
+  data?: Maybe<Array<Maybe<CellExecution>>>;
+  totalActive?: Maybe<Scalars['Int']['output']>;
+  totalArchived?: Maybe<Scalars['Int']['output']>;
+  totalCount?: Maybe<Scalars['Int']['output']>;
 };
 
 export type Chat = {
@@ -109,14 +126,14 @@ export type CreateCellExecutionInput = {
   createTime?: InputMaybe<Scalars['DateTime']['input']>;
   exitCode?: InputMaybe<Scalars['Int']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
-  input: Scalars['Byte']['input'];
+  input: Scalars['Bytes']['input'];
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
   languageId?: InputMaybe<Scalars['String']['input']>;
   metadata: MetadataInput;
   notebook?: InputMaybe<CreateNotebookInput>;
-  pid?: InputMaybe<Scalars['Int']['input']>;
-  stderr: Scalars['Byte']['input'];
-  stdout: Scalars['Byte']['input'];
+  pid: Scalars['Int']['input'];
+  stderr: Scalars['Bytes']['input'];
+  stdout: Scalars['Bytes']['input'];
   updateTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
@@ -126,7 +143,7 @@ export type CreateGithubInstallationInput = {
   accountName: Scalars['String']['input'];
   appId: Scalars['Int']['input'];
   appSlug: Scalars['String']['input'];
-  createTime: Scalars['DateTime']['input'];
+  createTime?: InputMaybe<Scalars['DateTime']['input']>;
   installationId: Scalars['Int']['input'];
   permissions: Scalars['JSON']['input'];
   repositorySelection: Scalars['String']['input'];
@@ -152,7 +169,7 @@ export type CreateSlackInstallationInput = {
   scopes: Scalars['String']['input'];
   teamId: Scalars['String']['input'];
   teamName: Scalars['String']['input'];
-  token: Scalars['Byte']['input'];
+  token: Scalars['Bytes']['input'];
   tokenType?: InputMaybe<SlackTokenType>;
   updateTime?: InputMaybe<Scalars['DateTime']['input']>;
   userId: Scalars['String']['input'];
@@ -198,9 +215,10 @@ export type GithubInstallation = {
   appId: Scalars['Int']['output'];
   appSlug: Scalars['String']['output'];
   createTime: Scalars['DateTime']['output'];
+  documents?: Maybe<Array<Maybe<GithubMarkdown>>>;
   id: Scalars['String']['output'];
   installationId: Scalars['Int']['output'];
-  permissions: Scalars['JSON']['output'];
+  permissions: GithubInstallationPermissions;
   repositorySelection: Scalars['String']['output'];
   suspendedAt?: Maybe<Scalars['DateTime']['output']>;
   suspendedBy?: Maybe<Scalars['String']['output']>;
@@ -211,10 +229,54 @@ export type GithubInstallation = {
   userId: Scalars['String']['output'];
 };
 
+export type GithubInstallationPermissions = {
+  __typename?: 'GithubInstallationPermissions';
+  contents?: Maybe<Scalars['String']['output']>;
+  metadata?: Maybe<Scalars['String']['output']>;
+};
+
+export type GithubMarkdown = {
+  __typename?: 'GithubMarkdown';
+  git_url: Scalars['String']['output'];
+  html_url: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  repository: GithubRepository;
+  sha: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type GithubRepository = {
+  __typename?: 'GithubRepository';
+  description?: Maybe<Scalars['String']['output']>;
+  full_name?: Maybe<Scalars['String']['output']>;
+  html_url?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  owner?: Maybe<GithubRepositoryOwner>;
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+export type GithubRepositoryOwner = {
+  __typename?: 'GithubRepositoryOwner';
+  avatar_url?: Maybe<Scalars['String']['output']>;
+  gravatar_id?: Maybe<Scalars['String']['output']>;
+  html_url?: Maybe<Scalars['String']['output']>;
+  id?: Maybe<Scalars['String']['output']>;
+  login?: Maybe<Scalars['String']['output']>;
+  type?: Maybe<Scalars['String']['output']>;
+  url?: Maybe<Scalars['String']['output']>;
+};
+
 export enum GithubTargetType {
   GithubOrganization = 'GITHUB_ORGANIZATION',
   GithubUser = 'GITHUB_USER'
 }
+
+export type HandleGithubInstallationInput = {
+  installationId: Scalars['Int']['input'];
+  setupAction: Scalars['String']['input'];
+};
 
 export type Hit = {
   __typename?: 'Hit';
@@ -255,6 +317,8 @@ export type Mutation = {
   deleteNotebook: Notebook;
   deleteSlackInstallation: SlackInstallation;
   deleteUser: User;
+  handleGithubInstallation: GithubInstallation;
+  unArchiveCellExecution?: Maybe<CellExecution>;
   updateCellExecution: CellExecution;
   updateGithubInstallation: GithubInstallation;
   updateNotebook: Notebook;
@@ -319,9 +383,21 @@ export type MutationDeleteUserArgs = {
 };
 
 
+export type MutationHandleGithubInstallationArgs = {
+  input: HandleGithubInstallationInput;
+};
+
+
+export type MutationUnArchiveCellExecutionArgs = {
+  all?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateCellExecutionArgs = {
   id: Scalars['String']['input'];
   input: UpdateCellExecutionInput;
+  notifySlack?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -338,7 +414,6 @@ export type MutationUpdateNotebookArgs = {
 
 
 export type MutationUpdateSlackInstallationArgs = {
-  id: Scalars['String']['input'];
   input: UpdateSlackInstallationInput;
 };
 
@@ -359,12 +434,25 @@ export type Notebook = {
   userId: Scalars['String']['output'];
 };
 
+export type Owner = {
+  __typename?: 'Owner';
+  bio?: Maybe<Scalars['String']['output']>;
+  company?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  githubUsername?: Maybe<Scalars['String']['output']>;
+  linkedin?: Maybe<Scalars['String']['output']>;
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  siteUrl?: Maybe<Scalars['String']['output']>;
+  twitter?: Maybe<Scalars['String']['output']>;
+};
+
 /** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
   assistant?: Maybe<Assistant>;
   cellExecution?: Maybe<CellExecution>;
-  cellExecutions: Array<CellExecution>;
+  cellExecutions: CellExecutionList;
+  getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
   githubInstallation?: Maybe<GithubInstallation>;
   githubInstallations: Array<GithubInstallation>;
   notebook?: Maybe<Notebook>;
@@ -385,6 +473,13 @@ export type QueryCellExecutionArgs = {
 
 
 /** About the Redwood queries. */
+export type QueryCellExecutionsArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+/** About the Redwood queries. */
 export type QueryGithubInstallationArgs = {
   id: Scalars['String']['input'];
 };
@@ -398,12 +493,6 @@ export type QueryNotebookArgs = {
 
 /** About the Redwood queries. */
 export type QuerySlackInstallationArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-/** About the Redwood queries. */
-export type QueryUserArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -445,6 +534,12 @@ export enum SignupOrigin {
   Unknown = 'UNKNOWN'
 }
 
+export type SlackChannel = {
+  __typename?: 'SlackChannel';
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type SlackInstallation = {
   __typename?: 'SlackInstallation';
   appId: Scalars['String']['output'];
@@ -456,7 +551,7 @@ export type SlackInstallation = {
   scopes: Scalars['String']['output'];
   teamId: Scalars['String']['output'];
   teamName: Scalars['String']['output'];
-  token: Scalars['Byte']['output'];
+  token: Scalars['Bytes']['output'];
   tokenType?: Maybe<SlackTokenType>;
   updateTime: Scalars['DateTime']['output'];
   user: User;
@@ -474,21 +569,7 @@ export type Subscription = {
 };
 
 export type UpdateCellExecutionInput = {
-  archivedTime?: InputMaybe<Scalars['DateTime']['input']>;
-  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  exitCode?: InputMaybe<Scalars['Int']['input']>;
-  inputData?: InputMaybe<Scalars['Byte']['input']>;
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
-  languageId?: InputMaybe<Scalars['String']['input']>;
-  lifecycleIdentityId?: InputMaybe<Scalars['String']['input']>;
-  metadata?: InputMaybe<Scalars['JSON']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  pid?: InputMaybe<Scalars['Int']['input']>;
-  stderrData?: InputMaybe<Scalars['Byte']['input']>;
-  stdoutData?: InputMaybe<Scalars['Byte']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateGithubInstallationInput = {
@@ -517,18 +598,8 @@ export type UpdateNotebookInput = {
 };
 
 export type UpdateSlackInstallationInput = {
-  appId?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  data?: InputMaybe<Scalars['JSON']['input']>;
   defaultChannelId?: InputMaybe<Scalars['String']['input']>;
   defaultChannelName?: InputMaybe<Scalars['String']['input']>;
-  scopes?: InputMaybe<Scalars['String']['input']>;
-  teamId?: InputMaybe<Scalars['String']['input']>;
-  teamName?: InputMaybe<Scalars['String']['input']>;
-  token?: InputMaybe<Scalars['Byte']['input']>;
-  tokenType?: InputMaybe<SlackTokenType>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateUserInput = {
@@ -559,7 +630,6 @@ export type UpdateUserInput = {
 
 export type User = {
   __typename?: 'User';
-  GithubInstallations: Array<Maybe<GithubInstallation>>;
   Notebook: Array<Maybe<Notebook>>;
   SlackInstallations: Array<Maybe<SlackInstallation>>;
   auth0Id?: Maybe<Scalars['String']['output']>;
@@ -572,6 +642,7 @@ export type User = {
   emailVerified?: Maybe<Scalars['Boolean']['output']>;
   firebaseRefreshTime?: Maybe<Scalars['DateTime']['output']>;
   githubId?: Maybe<Scalars['String']['output']>;
+  githubInstallations: Array<Maybe<GithubInstallation>>;
   githubRefreshTime?: Maybe<Scalars['DateTime']['output']>;
   githubUsername?: Maybe<Scalars['String']['output']>;
   googleId?: Maybe<Scalars['String']['output']>;
@@ -601,7 +672,7 @@ export type CreateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl: string } };
+export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } };
 
 export type UpdateCellExecutionMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -609,7 +680,7 @@ export type UpdateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl: string } };
+export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } };
 
 
 export const ArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellExecutionMutation, ArchiveCellExecutionMutationVariables>;
