@@ -224,7 +224,7 @@ export class Kernel implements Disposable {
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
-    await handleNotebookAutosaveSettings()
+    await handleNotebookAutosaveSettings(this.context)
   }
 
   // eslint-disable-next-line max-len
