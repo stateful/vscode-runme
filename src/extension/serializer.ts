@@ -23,13 +23,12 @@ import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ulid } from 'ulidx'
 
 import { Serializer } from '../types'
+import { NOTEBOOK_HAS_OUTPUTS, OutputType, VSCODE_LANGUAGEID_MAP } from '../constants'
 import {
-  NOTEBOOK_AUTOSAVE_ON,
-  NOTEBOOK_HAS_OUTPUTS,
-  OutputType,
-  VSCODE_LANGUAGEID_MAP,
-} from '../constants'
-import { ServerLifecycleIdentity, getServerConfigurationValue } from '../utils/configuration'
+  ServerLifecycleIdentity,
+  getOutputPersistence,
+  getServerConfigurationValue,
+} from '../utils/configuration'
 
 import {
   DeserializeRequest,
@@ -49,7 +48,6 @@ import { IServer } from './server/runmeServer'
 import { Kernel } from './kernel'
 import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
-import ContextState from './contextState'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -558,7 +556,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   public outputPersistence() {
-    return ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    return getOutputPersistence()
   }
 
   private async cacheNotebookOutputs(

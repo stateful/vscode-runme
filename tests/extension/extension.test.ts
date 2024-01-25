@@ -91,6 +91,9 @@ test('initializes all providers', async () => {
       append: vi.fn(),
       replace: vi.fn(),
     },
+    globalState: {
+      get: vi.fn(),
+    },
   }
   const ext = new RunmeExtension()
   await ext.initialize(context)

@@ -641,7 +641,8 @@ export async function promptUserSession(
   return session
 }
 
-export async function checkSession() {
+export async function checkSession(context: ExtensionContext) {
   const session = await getAuthSession(false)
+  context.globalState.update(CLOUD_USER_SIGNED_IN, !!session)
   ContextState.addKey(CLOUD_USER_SIGNED_IN, !!session)
 }

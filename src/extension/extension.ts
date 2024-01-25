@@ -278,7 +278,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
       RunmeExtension.registerCommand('runme.runmeCloudSignedOut', () => {}),
       RunmeExtension.registerCommand('runme.runmeCloudSignedIn', () => {}),
-      new CloudAuthProvider(),
+      new CloudAuthProvider(context),
     )
     await await bootFile(context)
   }
