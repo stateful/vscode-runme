@@ -2,7 +2,7 @@
   "name": "runme",
   "version": "2.2.1",
   "publisher": "stateful",
-  "displayName": "Runme runs Markdown",
+  "displayName": "Runme Infra Notebooks",
   "description": "Execute your runbooks, docs, and READMEs.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
@@ -27,8 +27,8 @@
     "theme": "dark"
   },
   "keywords": [
-    "runme",
-    "readme",
+    "infra",
+    "cloud",
     "runbooks",
     "jupyter",
     "documentation",
