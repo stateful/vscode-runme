@@ -581,17 +581,15 @@ export function suggestCategories(categories: string[], title: string, placehold
   })
 }
 
-export async function handleNotebookAutosaveSettings(context: ExtensionContext) {
+export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  const autoSaveStatus = autoSaveIsOn && context.globalState.get(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
-  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveStatus)
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
 
-export async function resetNotebookAutosaveSettings(context: ExtensionContext) {
+export async function resetNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  await context.globalState.update(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
 

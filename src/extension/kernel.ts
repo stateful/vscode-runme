@@ -209,6 +209,7 @@ export class Kernel implements Disposable {
     await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
+    await handleNotebookAutosaveSettings()
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
       'notebook.hashedUri': hashed,
       'notebook.isReadme': isReadme.toString(),
@@ -224,7 +225,6 @@ export class Kernel implements Disposable {
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
-    await handleNotebookAutosaveSettings(this.context)
   }
 
   // eslint-disable-next-line max-len

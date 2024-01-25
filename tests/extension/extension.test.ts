@@ -66,6 +66,7 @@ vi.mock('../../src/extension/utils', async () => ({
   bootFile: vi.fn().mockResolvedValue(undefined),
   checkSession: vi.fn(),
   toggleSessionButton: vi.fn(),
+  resetNotebookAutosaveSettings: vi.fn(),
 }))
 
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))

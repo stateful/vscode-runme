@@ -354,8 +354,7 @@ export async function toggleAutosave(context: ExtensionContext, autoSaveIsOn: bo
   if (autoSaveIsOn) {
     await promptUserSession(context)
   }
-  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
-  return context.globalState.update(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
 
 export async function resetLoginPrompt(context: ExtensionContext) {

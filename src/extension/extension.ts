@@ -160,7 +160,7 @@ export class RunmeExtension {
     )
 
     registerExtensionEnvironmentVariables(context)
-    await resetNotebookAutosaveSettings(context)
+    await resetNotebookAutosaveSettings()
 
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
