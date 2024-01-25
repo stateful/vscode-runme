@@ -313,8 +313,8 @@ export async function executeRunner(
       reveal: revealNotebookTerminal
         ? TaskRevealKind.Never
         : background
-        ? TaskRevealKind.Never
-        : TaskRevealKind.Always,
+          ? TaskRevealKind.Never
+          : TaskRevealKind.Always,
       panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
     }
 

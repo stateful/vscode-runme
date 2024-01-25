@@ -125,18 +125,6 @@
         "icon": "$(markdown)"
       },
       {
-        "command": "runme.runmeCloudSignedIn",
-        "category": "Runme",
-        "title": "Connected to Runme Cloud",
-        "icon": "$(cloud)"
-      },
-      {
-        "command": "runme.runmeCloudSignedOut",
-        "category": "Runme",
-        "title": "Disconnected from Runme Cloud",
-        "icon": "$(debug-disconnect)"
-      },
-      {
         "command": "runme.stopBackgroundTask",
         "category": "Runme",
         "title": "Dispose terminal session to stop background task."
@@ -310,16 +298,6 @@
         {
           "when": "notebookType == runme",
           "command": "runme.openSplitViewAsMarkdownText",
-          "group": "navigation"
-        },
-        {
-          "when": "notebookType == runme && userSignedIn",
-          "command": "runme.runmeCloudSignedIn",
-          "group": "navigation"
-        },
-        {
-          "when": "notebookType == runme && !userSignedIn",
-          "command": "runme.runmeCloudSignedOut",
           "group": "navigation"
         }
       ],
@@ -695,7 +673,7 @@
             "default": "no",
             "markdownDescription": "Automatically save cell execution output"
           },
-          "runme.app.outputPersistence": {
+          "runme.app.sessionOutputs": {
             "type": "boolean",
             "scope": "window",
             "default": true,

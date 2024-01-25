@@ -14,6 +14,7 @@ import Channel from 'tangle/webviews'
 import { Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
+  getSessionOutputs,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
@@ -162,6 +163,8 @@ export class RunmeExtension {
     registerExtensionEnvironmentVariables(context)
     await resetNotebookAutosaveSettings()
 
+    const transientOutputs = !getSessionOutputs()
+
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/id']: undefined,
@@ -178,6 +181,7 @@ export class RunmeExtension {
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientCellMetadata,
+        transientOutputs,
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider(
@@ -276,8 +280,6 @@ export class RunmeExtension {
         },
       ),
       RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
-      RunmeExtension.registerCommand('runme.runmeCloudSignedOut', () => {}),
-      RunmeExtension.registerCommand('runme.runmeCloudSignedIn', () => {}),
       new CloudAuthProvider(context),
     )
     await await bootFile(context)

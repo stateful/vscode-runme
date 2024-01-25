@@ -251,6 +251,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
     'OK',
   )
   if (action) {
+    await commands.executeCommand('workbench.action.files.save')
     await kernel.newRunnerEnvironment()
     await commands.executeCommand('workbench.action.files.save')
   }
