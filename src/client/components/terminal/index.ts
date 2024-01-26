@@ -461,6 +461,7 @@ export class TerminalView extends LitElement {
                 e.output.data.hasOwnProperty('displayShare') &&
                 e.output.data.displayShare === false
               ) {
+                this.shareText = this.saveText
                 return
               }
 
