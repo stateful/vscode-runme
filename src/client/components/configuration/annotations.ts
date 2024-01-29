@@ -140,7 +140,7 @@ export class Annotations extends LitElement {
     },
     mimeType: {
       description: "Cell's output content MIME type.",
-      docs: 'https://docs.runme.dev/configuration/reference#supported-mime-types',
+      docs: 'https://docs.runme.dev/configuration#supported-mime-types',
     },
     name: {
       description: "Cell's canonical name for easy referencing in the CLI.",
@@ -152,7 +152,7 @@ export class Annotations extends LitElement {
     },
     category: {
       description: 'Execute this code cell within a category. (no comma or spaces allowed)',
-      docs: 'https://docs.runme.dev/configuration/cell-level#run-all-cells-by-category',
+      docs: 'https://docs.runme.dev/configuration#run-all-cells-by-category',
     },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',
