@@ -282,7 +282,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
       new CloudAuthProvider(context),
     )
-    await await bootFile(context)
+    await bootFile(context)
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
