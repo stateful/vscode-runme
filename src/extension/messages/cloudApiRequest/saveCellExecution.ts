@@ -12,7 +12,7 @@ import { Kernel } from '../../kernel'
 import { RunmeService } from '../../services/runme'
 import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
 
-type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
+export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,

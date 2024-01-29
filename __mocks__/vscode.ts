@@ -24,6 +24,12 @@ export class Uri extends URI {
   static parse = vi.fn(super.parse)
 
   static joinPath = vi.fn((uri: Uri, ...paths: string[]) => {
+    /**
+     * Allow testing against http endpoints
+     */
+    if (uri.authority?.includes('.runme.dev')) {
+      return  `https://testing.runme.dev${path.join(...paths)}`
+    }
     return super.file(path.join(uri.fsPath, ...paths))
   })
 }
