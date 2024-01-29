@@ -620,10 +620,10 @@ export async function promptUserSession(
       `Securely store your cell output on the Runme Cloud.
       Authenticating with GitHub is required, do you want to proceed?`,
       'Yes',
-      'Dismiss',
+      'No',
       "Don't ask again",
     )
-    if (!option || option === 'Dismiss') {
+    if (!option || option === 'No') {
       return
     }
 

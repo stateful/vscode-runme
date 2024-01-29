@@ -545,7 +545,7 @@ export class GrpcSerializer extends SerializerBase {
     const lid = GrpcSerializer.getDocumentLifecycleId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    const output = await this.cacheNotebookOutputs(notebook, lid)
+    const output = this.cacheNotebookOutputs(notebook, lid)
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
