@@ -104,14 +104,10 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
-    this.#experiments.set('outputPersistence', config.get<boolean>('outputPersistence', false))
 
     this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
 
-    this.cellManager = new NotebookCellManager(
-      this.#controller,
-      this.hasExperimentEnabled('outputPersistence') ?? false,
-    )
+    this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
@@ -213,6 +209,7 @@ export class Kernel implements Disposable {
     await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
+    await handleNotebookAutosaveSettings()
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
       'notebook.hashedUri': hashed,
       'notebook.isReadme': isReadme.toString(),
@@ -228,7 +225,6 @@ export class Kernel implements Disposable {
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
-    await handleNotebookAutosaveSettings()
   }
 
   // eslint-disable-next-line max-len

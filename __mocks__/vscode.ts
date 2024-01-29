@@ -24,6 +24,12 @@ export class Uri extends URI {
   static parse = vi.fn(super.parse)
 
   static joinPath = vi.fn((uri: Uri, ...paths: string[]) => {
+    /**
+     * Allow testing against http endpoints
+     */
+    if (uri.authority?.includes('.runme.dev')) {
+      return  `https://testing.runme.dev${path.join(...paths)}`
+    }
     return super.file(path.join(uri.fsPath, ...paths))
   })
 }
@@ -280,7 +286,8 @@ export enum TaskScope {
 export const ShellExecution = vi.fn()
 export const Task = vi.fn()
 export const authentication = {
-  getSession: vi.fn()
+  getSession: vi.fn(),
+  onDidChangeSessions: vi.fn()
 }
 
 export class WorkspaceEdit {
