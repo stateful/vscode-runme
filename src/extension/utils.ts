@@ -617,8 +617,8 @@ export async function promptUserSession(
   const displayLoginPrompt = await context.globalState.get(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY)
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
-      `Securely store your cell output on the Runme Cloud.
-      Authenticating with GitHub is required, do you want to proceed?`,
+      `Securely store your cell output in the Runme Cloud.
+      Sign in with GitHub is required, do you want to proceed?`,
       'Yes',
       'No',
       "Don't ask again",
