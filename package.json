@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "2.2.2",
+  "version": "2.2.3-edge.0",
   "publisher": "stateful",
   "displayName": "Runme Infra Notebooks",
   "description": "Execute your runbooks, docs, and READMEs.",
