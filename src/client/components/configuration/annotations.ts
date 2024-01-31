@@ -144,7 +144,7 @@ export class Annotations extends LitElement {
     },
     name: {
       description: "Cell's canonical name for easy referencing in the CLI.",
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/configuration/cell-level#unnamed-vs-named-cells',
     },
     interpreter: {
       description: 'Inserted into shebang (aka #!) line',
