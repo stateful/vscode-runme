@@ -15,7 +15,14 @@ import {
 } from 'vscode'
 
 import { CLOUD_USER_SIGNED_IN, NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
-import { CellOutputPayload, DenoState, GitHubState, Serializer, VercelState } from '../types'
+import {
+  CellOutputPayload,
+  DenoState,
+  GKEState,
+  GitHubState,
+  Serializer,
+  VercelState,
+} from '../types'
 import { Mutex } from '../utils/sync'
 import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
 
@@ -94,7 +101,7 @@ interface ICellOption {
 interface ICellState {
   type: OutputType
   // TODO: Define a better abstraction for integration states.
-  state: GitHubState | DenoState | VercelState
+  state: GitHubState | DenoState | VercelState | GKEState
 }
 
 export class NotebookCellOutputManager {
@@ -105,6 +112,7 @@ export class NotebookCellOutputManager {
     [OutputType.deno, false],
     [OutputType.vercel, false],
     [OutputType.github, false],
+    [OutputType.gke, false],
   ])
 
   protected sessionExecutionOrder = new Map<string, number | undefined>()
@@ -238,6 +246,15 @@ export class NotebookCellOutputManager {
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.github)])
+      }
+
+      case OutputType.gke: {
+        const payload: CellOutputPayload<OutputType.gke> = {
+          type: OutputType.gke,
+          output: this.getCellState(type),
+        }
+
+        return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.gke)])
       }
 
       default: {

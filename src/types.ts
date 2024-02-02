@@ -19,6 +19,7 @@ import { IWorkflowRun } from './extension/services/types'
 import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
+import { GKESupportedView } from './extension/resolvers/gkeResolver'
 
 export interface SyncSchema {
   onCommand?: {
@@ -78,6 +79,7 @@ export namespace Serializer {
     ['runme.dev/githubState']?: GitHubState
     ['runme.dev/frontmatterParsed']?: Grpc.Frontmatter
     ['runme.dev/textRange']?: Grpc.Cell['textRange']
+    ['runme.dev/gkeState']?: GKEState
   }
 }
 
@@ -115,6 +117,44 @@ export interface GitHubState {
   cellId?: string
 }
 
+export interface StringIndexable {
+  [key: string]: any
+}
+
+export interface GKECluster extends StringIndexable {
+  clusterId: string
+  status: string
+  name: string
+  location: string
+  nodes: number
+  clusterLink: string
+  vCPUs: number
+  totalMemory: number
+  mode: string
+  labels?: { [k: string]: string } | null
+  statusMessage: string | null | undefined
+}
+
+export interface GKEClustersState {
+  project?: string
+  zone?: string
+  clusters?: GKECluster[]
+  view: GKESupportedView.CLUSTERS
+  cellId: string
+}
+
+export interface GKEClusterState {
+  project?: string
+  zone?: string
+  cluster?: string | undefined
+  clusterDetails?: any
+  cellId: string
+  view: GKESupportedView.CLUSTER
+  location?: string | undefined
+}
+
+export type GKEState = GKEClustersState | GKEClusterState
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
@@ -134,6 +174,7 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
+  [OutputType.gke]?: GKEClusterState | GKEClustersState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -245,6 +286,7 @@ export interface ClientMessagePayload {
     title: string
     id: string
     options: any[]
+    modal?: boolean
     telemetryEvent?: string
   }
   [ClientMessages.onOptionsMessage]: {
@@ -265,6 +307,39 @@ export interface ClientMessagePayload {
   [ClientMessages.tangleEvent]: {
     data: any
     webviewId: string
+  }
+  [ClientMessages.gkeClusterCheckStatus]: {
+    clusterName: string
+    projectId: string
+    location: string
+    cellId: string
+    clusterId: string
+    status: string
+  }
+  [ClientMessages.gkeClusterStatusChanged]: {
+    clusterId: string
+    status: string
+    cellId: string
+  }
+  [ClientMessages.gkeClusterDetails]: {
+    cellId: string
+    cluster: string
+    location: string
+    projectId: string
+  }
+  [ClientMessages.gkeClusterDetailsResponse]: {
+    cellId: string
+    itFailed: boolean
+    reason: string
+    data: any
+    executedInNewCell: boolean
+    cluster: string
+  }
+  [ClientMessages.gkeClusterDetailsNewCell]: {
+    cellId: string
+    cluster: string
+    location: string
+    project: string
   }
 }
 
