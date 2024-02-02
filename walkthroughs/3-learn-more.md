@@ -1,15 +1,8 @@
----
-runme:
-  id: 01HNMWPP7KTZP1J9ECK4B19S2X
-  version: v2.2
----
-
-# Learn more
 
 
-Fantastic work! 
+Fantastic work!
 
-You've now begun using Runme, but don't stop there. We have just touched the surface of what Runme can accomplish for you. 
+You've now begun using Runme, but don't stop there. We have just touched the surface of what Runme can accomplish for you.
 
 Learn more about Runme by visiting the [official docs](https://docs.runme.dev) and subscribe to the official Runme [newsletter](https://runme.dev/list) to not miss any updates.
 

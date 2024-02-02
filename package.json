@@ -685,13 +685,13 @@
     "walkthroughs": [
       {
         "id": "runme.welcome",
-        "title": "Get Started with creating Runme Notebooks",
+        "title": "Get Started with Runme Notebooks",
         "description": "Runme allows to create interactive runbooks for VS Code.",
         "steps": [
           {
             "id": "runme.welcome.why",
-            "title": "Why Runme?",
-            "description": "Runme provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart",
+            "title": "Creating Runme Notebooks",
+            "description": "Learn how you can use the Runme Notebook extension to run interactive runbooks right in your code editor!",
             "media": {
               "markdown": "walkthroughs/0-intro.md"
             }
@@ -704,14 +704,7 @@
               "markdown": "walkthroughs/1-features.md"
             }
           },
-          {
-            "id": "runme.welcome.annotations",
-            "title": "Cell Configuration",
-            "description": "To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.",
-            "media": {
-              "markdown": "walkthroughs/2-annotations.md"
-            }
-          },
+
           {
             "id": "runme.welcome.learn",
             "title": "Learn more",

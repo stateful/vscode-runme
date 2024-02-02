@@ -1,8 +1,4 @@
----
-runme:
-  id: 01HNMY4F9AG72Z3G886R45A7GS
-  version: v2.2
----
+
 
 Here is a glimpse of the key features available in the [VSCode extension](https://docs.runme.dev/features) .
 

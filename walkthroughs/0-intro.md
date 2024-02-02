@@ -1,8 +1,4 @@
----
-runme:
-  id: 01HNMWJNDT259Y2HGGEMXNXEKA
-  version: v2.2
----
+
 
 Runme extension enables you to create and manage interactive runbooks within your code editor. With this extension, you can perform various runbook operations, including editing, saving output, creating and updating documents, choosing custom interpreters and supported languages, debugging, and more—all within your VSCode.
 
