@@ -1,27 +1,32 @@
-# Why Runme?
+---
+runme:
+  id: 01HNMWJNDT259Y2HGGEMXNXEKA
+  version: v2.2
+---
 
-Thank you for interest in Runme 💟!
+Runme extension enables you to create and manage interactive runbooks within your code editor. With this extension, you can perform various runbook operations, including editing, saving output, creating and updating documents, choosing custom interpreters and supported languages, debugging, and more—all within your VSCode.
 
-Runme is a tool that makes runbooks actually runnable, making it easier to follow step-by-step instructions. Users can execute instructions, check intermediate results, and ensure the desired outputs are achieved. Authors can create predefined golden paths and share them with others. Runme combines the guardrails of a pipeline with the flexibility of scripting, where users can check intermediary results before moving on.
+## **How Runme process your markdown**
 
-Runme achieves this by literally running markdown (ubiquitous for docs inside repos). More specifically, Runme runs your commands inside your fenced code blocks (shell, bash, zsh). It's 100% compatible with your programming language's task definitions (Makefile, Gradle, Grunt, NPM scripts, Pipfile or Deno tasks, etc.). Runme persists your runbooks in markdown, which your docs are likely already using.
+When you install the Runme VSCode extension, every markdown file opened with the runbook extension in your code editor will be displayed as a runbook (confirm if this term is accurate). This means your markdown file automatically turns into an interactive runbook where you can easily add code snippets, markdown documents, and access other amazing features of Runme.
 
-<div align="center">
-  <img src="https://docs.runme.dev/img/venn.png" />
-  <a href="command:runme.try">Give Runme a try</a>
-</div>
+## **Set Runme Notebook as Default Markdown Viewer**
 
-## What is Runme? 🤔​
+Configure your code editor to make Runme Notebook as your default markdown viewer. Once set, Runme Notebook will automatically open whenever you open a markdown file.
 
-Runme has interfaces for terminal, editor, and notebooks attached to a kernel, making them interoperable. While all client interfaces share core features, namely execution, they excel in different use cases.
+Follow these simple steps to set Runme Notebook as your default viewer:
 
-> 💡 Runme is like Jupyter but with a Shell/Bash Kernel and lightweight dependencies.
+- Right click your`.md` file to open a context menu.
+- From the list of options, select “**Open with...”.** This will open a submenu with additional choices.
 
-Runme runs your runbooks everywhere, irrespective of the environment: a local laptop, a VM, a Devcontainer, Cloud Development Environment, or attached to a remote host via SSH:
+![defualt viewer ](https://github.com/stateful/vscode-runme/assets/36479528/aeedcacb-4313-4fa6-ab32-4ba405f13fd3)
 
-- Split loose scripts into runbooks with separate cells, intermediate outputs, and controls to check before moving on.
-- Get ahead of bit-rot and reverse-engineering runbooks executing them directly from markdown inside your project's repo.
-- Increase shareability of runbooks by decoupling them from personal dotfiles or bash_history's without getting in the way.
-- Codify golden paths without overly restricting the flexibility of "scripting".
+- Click on “**Configure default editor for '*md'"**.
+
+![for-md](https://github.com/stateful/vscode-runme/assets/36479528/04ef7714-c01e-476b-810c-f31e4b9383ea)
+
+- Lastly, select “Runme Infra Notebooks” as your default markdown viewer.
+
+With these simple steps, you would not have to manually choose Runme Notebook every time you want to view a markdown file; it becomes the automatic and permanent default markdown view.
 
 Read more about Runme in the [official documentation](https://docs.runme.dev/).
