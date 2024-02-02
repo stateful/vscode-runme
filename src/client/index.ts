@@ -119,6 +119,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
 
           element.appendChild(terminalElement)
           break
+
         case OutputType.error:
           renderError(payload.output)
           break
@@ -128,6 +129,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             githubElement.setAttribute('state', JSON.stringify(payload.output))
           }
           element.appendChild(githubElement)
+          break
+        case OutputType.gke:
+          const gkeElement = document.createElement(RENDERERS.GKEView)
+          if (payload.output) {
+            gkeElement.setAttribute('state', JSON.stringify(payload.output))
+          }
+          element.appendChild(gkeElement)
           break
         default:
           element.innerHTML = 'No renderer found!'

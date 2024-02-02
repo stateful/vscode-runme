@@ -12,6 +12,7 @@ export enum OutputType {
   error = 'stateful.runme/error',
   github = 'stateful.runme/github-stdout',
   stdout = 'application/vnd.code.notebook.stdout',
+  gke = 'stateful.runme/gke',
 }
 
 export enum ClientMessages {
@@ -50,6 +51,11 @@ export enum ClientMessages {
   githubWorkflowDeploy = 'github:workflowDeploy',
   githubWorkflowStatusUpdate = 'github:workflowStatusUpdate',
   tangleEvent = 'tangle:event',
+  gkeClusterStatusChanged = 'gke:clusterStatusChanged',
+  gkeClusterCheckStatus = 'gke:clusterCheckStatus',
+  gkeClusterDetails = 'gke:clusterDetails',
+  gkeClusterDetailsNewCell = 'gke:clusterDetailsNewCell',
+  gkeClusterDetailsResponse = 'gke:clusterDetailsResponse',
 }
 
 // [pretty print, languageId, destination]
@@ -139,6 +145,7 @@ export enum RENDERERS {
   EditAnnotations = 'edit-annotations',
   TerminalView = 'terminal-view',
   GitHubWorkflowViewer = 'github-workflow-viewer',
+  GKEView = 'gke-view',
 }
 
 export enum AuthenticationProviders {
