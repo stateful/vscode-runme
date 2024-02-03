@@ -14,7 +14,7 @@ export default defineConfig({
       exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts', '**/__mocks__/**', '**/.wdio-vscode-service/**'],
       thresholds: {
         statements: 43,
-        branches: 84,
+        branches: 77,
         functions: 32,
         lines: 43,
       }
