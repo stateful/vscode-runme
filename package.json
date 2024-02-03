@@ -905,7 +905,7 @@
     "@graphql-codegen/client-preset": "^4.1.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@octokit/rest": "^19.0.13",
-    "@types/node": "^16.11.7",
+    "@types/node": "^18.19.14",
     "@types/uuid": "^9.0.7",
     "@types/vscode": "1.72.0",
     "@types/vscode-notebook-renderer": "^1.72.0",
