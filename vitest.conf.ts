@@ -11,11 +11,23 @@ export default defineConfig({
     coverage: {
       reporter: ['lcov'],
       enabled: true,
-      exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts', '**/__mocks__/**'],
-      statements: 43,
-      branches: 84,
-      functions: 32,
-      lines: 43
+      include: [
+        'src/**'
+      ],
+      exclude: [
+        '**/build/**',
+        '**/__fixtures__/**',
+        '**/*.test.ts',
+        '**/__mocks__/**',
+        '**/.wdio-vscode-service/**',
+        '**/node_modules/**',
+      ],
+      thresholds: {
+        statements: 43,
+        branches: 81,
+        functions: 32,
+        lines: 43,
+      }
     }
   }
 })
