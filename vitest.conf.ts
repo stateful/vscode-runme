@@ -12,10 +12,12 @@ export default defineConfig({
       reporter: ['lcov'],
       enabled: true,
       exclude: ['**/build/**', '**/__fixtures__/**', '**/*.test.ts', '**/__mocks__/**'],
-      statements: 43,
-      branches: 84,
-      functions: 32,
-      lines: 43
+      thresholds: {
+        statements: 43,
+        branches: 84,
+        functions: 32,
+        lines: 43,
+      }
     }
   }
 })

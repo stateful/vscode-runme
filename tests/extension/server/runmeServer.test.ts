@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 import fs from 'node:fs/promises'
 
 import { suite, test, expect, vi, beforeEach } from 'vitest'
@@ -204,18 +205,18 @@ suite('Runme server accept connections', () => {
   })
 
   test('Should wait until server accepts connection', async () => {
-    server.start = vi.fn().mockResolvedValue('localhost:8080')
-    server.isRunning = vi.fn().mockResolvedValue(true)
+    ;(server as any).start = vi.fn().mockResolvedValue('localhost:8080')(server as any).isRunning =
+      vi.fn().mockResolvedValue(true)
 
     await expect(server.launch()).resolves.toBe('localhost:8080')
   })
 
   test('Should wait throw error when server never accepts connection', async () => {
-    server.start = vi.fn().mockResolvedValue('localhost:8080')
-    server.isRunning = vi.fn().mockResolvedValue(false)
+    ;(server as any).start = vi.fn().mockResolvedValue('localhost:8080')(server as any).isRunning =
+      vi.fn().mockResolvedValue(false)
 
     await expect(server.launch()).rejects.toThrowErrorMatchingInlineSnapshot(
-      '"Server did not accept connections after 0.2s"',
+      `[RunmeServerError: Server did not accept connections after 0.2s]`,
     )
   })
 })
