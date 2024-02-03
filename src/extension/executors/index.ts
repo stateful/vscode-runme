@@ -1,4 +1,13 @@
+import {
+  ExtensionContext,
+  NotebookCellExecution,
+  NotebookRendererMessaging,
+  TextDocument,
+} from 'vscode'
+
 import { ENV_STORE, DEFAULT_ENV } from '../constants'
+import { NotebookCellOutputManager } from '../cell'
+import { Kernel } from '../kernel'
 
 import { sh, bash } from './task'
 import { vercel } from './vercel'
@@ -10,6 +19,17 @@ export interface IEnvironmentManager {
   set(key: string, value: string | undefined): Promise<void> | void
   get(key: string): Promise<string | undefined> | string | undefined
   reset(): Promise<void> | void
+}
+
+export interface IKernelExecutor {
+  context: ExtensionContext
+  kernel: Kernel
+  doc: TextDocument
+  exec: NotebookCellExecution
+  outputs: NotebookCellOutputManager
+  messaging: NotebookRendererMessaging
+  environment: IEnvironmentManager
+  runScript?: () => Promise<boolean>
 }
 
 export const ENV_STORE_MANAGER: IEnvironmentManager = {

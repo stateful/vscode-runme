@@ -584,25 +584,30 @@ export class Kernel implements Disposable {
       if (isShellLanguage(execKey) || !(execKey in executor)) {
         successfulCellExecution = await runScript(execKey)
       } else {
-        successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-          this,
+        successfulCellExecution = await executor[execKey as keyof typeof executor]({
+          context: this.context,
+          kernel: this,
+          doc: runningCell,
           exec,
-          runningCell,
           outputs,
+          messaging: this.messaging,
+          environment: environmentManager,
           runScript,
-          environmentManager,
-        )
+        })
       }
     } else if (execKey in executor) {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-        this,
+      successfulCellExecution = await executor[execKey as keyof typeof executor]({
+        context: this.context,
+        kernel: this,
+        doc: runningCell,
         exec,
-        runningCell,
         outputs,
-      )
+        messaging: this.messaging,
+        environment: environmentManager,
+      })
     } else {
       window.showErrorMessage('Cell language is not executable')
 

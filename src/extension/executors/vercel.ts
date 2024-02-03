@@ -1,21 +1,15 @@
-import { TextDocument, NotebookCellExecution, NotebookCell } from 'vscode'
+import { NotebookCell } from 'vscode'
 
-import type { Kernel } from '../kernel'
 import { VercelState } from '../../types'
 import { NotebookCellOutputManager, updateCellMetadata } from '../cell'
 import { OutputType } from '../../constants'
 
 import { bash } from './task'
 
-import type { IEnvironmentManager } from '.'
+import type { IEnvironmentManager, IKernelExecutor } from '.'
 
-export async function vercel(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  doc: TextDocument,
-  outputs: NotebookCellOutputManager,
-  runScript?: () => Promise<boolean>,
-): Promise<boolean> {
+export async function vercel(executor: IKernelExecutor): Promise<boolean> {
+  const { doc, exec, outputs, runScript } = executor
   const command = doc.getText()
 
   try {
@@ -29,7 +23,7 @@ export async function vercel(
     /**
      * other commands passed to the CLI
      */
-    return runScript?.() ?? bash.call(this, exec, doc, outputs)
+    return runScript?.() ?? bash(executor)
   } catch (err: any) {
     updateCellMetadata(exec.cell, {
       'runme.dev/vercelState': { error: err.message, outputItems: [] },

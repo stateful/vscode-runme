@@ -2,8 +2,6 @@ import path from 'node:path'
 
 import {
   Task,
-  TextDocument,
-  NotebookCellExecution,
   TaskScope,
   tasks,
   window,
@@ -13,14 +11,13 @@ import {
 } from 'vscode'
 
 import getLogger from '../logger'
-// import { ExperimentalTerminal } from "../terminal"
 import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
-import type { Kernel } from '../kernel'
-import { NotebookCellOutputManager } from '../cell'
 
 import { getCmdShellSeq, retrieveShellCommand } from './utils'
 import { sh as inlineSh } from './shell'
+
+import { IKernelExecutor } from '.'
 
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const LABEL_LIMIT = 15
@@ -37,12 +34,8 @@ export function closeTerminalByEnvID(id: string, kill?: boolean) {
   }
 }
 
-async function taskExecutor(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  doc: TextDocument,
-  outputs: NotebookCellOutputManager,
-): Promise<boolean> {
+async function taskExecutor(executor: IKernelExecutor): Promise<boolean> {
+  const { context, exec, doc } = executor
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
 
   const cwd = path.dirname(doc.uri.fsPath)
@@ -68,13 +61,13 @@ async function taskExecutor(
     return Promise.resolve(true)
   }
 
-  const cmdLine = getCmdShellSeq(cellText, PLATFORM_OS)
+  const script = getCmdShellSeq(cellText, PLATFORM_OS)
   /**
    * run as non interactive shell script if set as configuration or annotated
    * in markdown section
    */
   if (!isInteractive) {
-    return inlineSh.call(this, exec, cmdLine, cwd, env, outputs)
+    return inlineSh({ ...executor, script, cwd, env })
   }
 
   const taskExecution = new Task(
@@ -82,11 +75,7 @@ async function taskExecutor(
     TaskScope.Workspace,
     cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText,
     'exec',
-    new ShellExecution(cmdLine, { cwd, env }),
-    // experimental only
-    // new CustomExecution(async (): Promise<Pseudoterminal> => {
-    //   return new ExperimentalTerminal(scriptFile.fsPath, { cwd, env })
-    // })
+    new ShellExecution(script, { cwd, env }),
   )
   const annotations = getAnnotations(exec.cell)
   taskExecution.isBackground = annotations.background
@@ -99,7 +88,7 @@ async function taskExecutor(
   const execution = await tasks.executeTask(taskExecution)
 
   const p = new Promise<number>((resolve) => {
-    this.context.subscriptions.push(
+    context.subscriptions.push(
       exec.token.onCancellationRequested(() => {
         try {
           execution.terminate()
@@ -158,7 +147,7 @@ async function taskExecutor(
    * push task as disposable to context so that it is being closed
    * when extension terminates
    */
-  this.context.subscriptions.push({
+  context.subscriptions.push({
     dispose: () => execution.terminate(),
   })
 
