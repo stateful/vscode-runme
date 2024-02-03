@@ -908,7 +908,7 @@
     "@types/node": "^18.19.14",
     "@types/uuid": "^9.0.7",
     "@types/vscode": "1.72.0",
-    "@types/vscode-notebook-renderer": "^1.72.0",
+    "@types/vscode-notebook-renderer": "^1.72.3",
     "@types/webpack-env": "^1.18.1",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.6.0",
