@@ -13,13 +13,12 @@ import {
 } from 'vscode'
 import { URI } from 'vscode-uri'
 
-import {
-  GrpcRunner,
-  GrpcRunnerClient,
+import { GrpcRunnerClient } from '../../../src/extension/runner/client'
+import GrpcRunner, {
   GrpcRunnerProgramSession,
   IRunner,
   RunProgramOptions,
-} from '../../../src/extension/runner/program'
+} from '../../../src/extension/runner'
 import { GrpcRunnerEnvironment } from '../../../src/extension/runner/environment'
 import type { ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../../src/extension/provider/codelens'

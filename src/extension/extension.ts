@@ -55,7 +55,7 @@ import {
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
-import { GrpcRunner, IRunner } from './runner/program'
+import GrpcRunner, { IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'

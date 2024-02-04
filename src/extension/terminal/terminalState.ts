@@ -2,7 +2,7 @@ import { Terminal as XTerm } from 'xterm-headless'
 import { SerializeAddon } from 'xterm-addon-serialize'
 
 import { OutputType } from '../../constants'
-import { RunnerExitReason } from '../runner/program'
+import { RunnerExitReason } from '../runner'
 
 export type NotebookTerminalType = 'xterm' | 'local'
 
