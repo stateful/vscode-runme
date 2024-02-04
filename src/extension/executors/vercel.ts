@@ -8,7 +8,7 @@ import { bash } from './task'
 
 import type { IEnvironmentManager, IKernelExecutor } from '.'
 
-export async function vercel(executor: IKernelExecutor): Promise<boolean> {
+export const vercel: IKernelExecutor = async (executor) => {
   const { doc, exec, outputs, runScript } = executor
   const command = doc.getText()
 

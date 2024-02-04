@@ -7,7 +7,7 @@ import { deploy } from './deno/deploy'
 
 import { IKernelExecutor } from '.'
 
-export async function deno(executor: IKernelExecutor): Promise<boolean> {
+export const deno: IKernelExecutor = async (executor) => {
   const { environment, runScript } = executor
   /**
    * ensure token is set for operations

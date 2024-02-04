@@ -6,7 +6,7 @@ import { ENV_STORE_MANAGER, IKernelExecutor } from '..'
 import { postClientMessage } from '../../../utils/messaging'
 import { updateCellMetadata } from '../../cell'
 
-export async function deploy(executor: IKernelExecutor): Promise<boolean> {
+export const deploy: IKernelExecutor = async (executor) => {
   const { exec, outputs, messaging } = executor
   let { environment } = executor
   environment ??= ENV_STORE_MANAGER

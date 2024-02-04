@@ -21,7 +21,7 @@ export interface IEnvironmentManager {
   reset(): Promise<void> | void
 }
 
-export interface IKernelExecutor {
+export interface IKernelExecutorArgs {
   context: ExtensionContext
   kernel: Kernel
   doc: TextDocument
@@ -31,6 +31,8 @@ export interface IKernelExecutor {
   environment: IEnvironmentManager
   runScript?: () => Promise<boolean>
 }
+
+export type IKernelExecutor = (executor: IKernelExecutorArgs) => Promise<boolean>
 
 export const ENV_STORE_MANAGER: IEnvironmentManager = {
   get: (key) => ENV_STORE.get(key),

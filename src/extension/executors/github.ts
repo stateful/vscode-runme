@@ -6,7 +6,7 @@ import { parseGitHubURL, getYamlFileContents, getService } from './github/workfl
 
 import { IKernelExecutor } from '.'
 
-export async function github(executor: IKernelExecutor): Promise<boolean> {
+export const github: IKernelExecutor = async (executor) => {
   const { doc, exec, outputs } = executor
   try {
     await getService(true)

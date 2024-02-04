@@ -34,7 +34,7 @@ export function closeTerminalByEnvID(id: string, kill?: boolean) {
   }
 }
 
-async function taskExecutor(executor: IKernelExecutor): Promise<boolean> {
+export const taskExecutor: IKernelExecutor = async (executor) => {
   const { context, exec, doc } = executor
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
 
