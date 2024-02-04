@@ -19,12 +19,12 @@ import {
   GrpcRunnerProgramSession,
   IRunner,
   RunProgramOptions,
-} from '../../src/extension/runner'
-import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
-import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
-import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
-import { isWindows } from '../../src/extension/utils'
-import { SurveyWinCodeLensRun } from '../../src/extension/survey'
+} from '../../../src/extension/runner/program'
+import type { ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
+import { ActionCommand, RunmeCodeLensProvider } from '../../../src/extension/provider/codelens'
+import { RunmeTaskProvider } from '../../../src/extension/provider/runmeTask'
+import { isWindows } from '../../../src/extension/utils'
+import { SurveyWinCodeLensRun } from '../../../src/extension/survey'
 
 vi.mock('../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),

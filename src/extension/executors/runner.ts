@@ -15,7 +15,12 @@ import getLogger from '../logger'
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerEnvironment, IRunnerProgramSession, RunProgramExecution } from '../runner'
+import {
+  IRunner,
+  IRunnerEnvironment,
+  IRunnerProgramSession,
+  RunProgramExecution,
+} from '../runner/program'
 import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'

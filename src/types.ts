@@ -13,7 +13,7 @@ import { Bus } from 'tangle'
 
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
-import type { IRunnerProgramSession } from './extension/runner'
+import type { IRunnerProgramSession } from './extension/runner/program'
 import type * as Grpc from './extension/grpc/serializerTypes'
 import { IWorkflowRun } from './extension/services/types'
 import { Kernel } from './extension/kernel'

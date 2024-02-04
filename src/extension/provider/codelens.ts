@@ -22,7 +22,7 @@ import {
 
 import { SerializerBase } from '../serializer'
 import type { runCLICommand } from '../commands'
-import { IRunner } from '../runner'
+import { IRunner } from '../runner/program'
 import { Kernel } from '../kernel'
 import { getAnnotations, getRunnerSessionEnvs } from '../utils'
 import { Serializer } from '../../types'

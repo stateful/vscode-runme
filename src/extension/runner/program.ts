@@ -8,8 +8,7 @@ import {
   EventEmitter,
 } from 'vscode'
 
-import type { DisposableAsync } from '../types'
-
+import type { DisposableAsync } from '../../types'
 import {
   CommandMode,
   CreateSessionRequest,
@@ -19,12 +18,12 @@ import {
   GetSessionRequest,
   Session,
   Winsize,
-} from './grpc/runnerTypes'
-import { RunnerServiceClient, RpcError } from './grpc/client'
-import { getSystemShellPath } from './executors/utils'
-import { IServer } from './server/runmeServer'
-import { convertEnvList } from './utils'
-import getLogger from './logger'
+} from '../grpc/runnerTypes'
+import { RunnerServiceClient, RpcError } from '../grpc/client'
+import { getSystemShellPath } from '../executors/utils'
+import { IServer } from '../server/runmeServer'
+import { convertEnvList } from '../utils'
+import getLogger from '../logger'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 

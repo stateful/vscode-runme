@@ -48,7 +48,7 @@ import {
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
-import { IRunner, IRunnerEnvironment } from './runner'
+import { IRunner, IRunnerEnvironment } from './runner/program'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import {
