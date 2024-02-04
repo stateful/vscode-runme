@@ -32,7 +32,7 @@ import { getNotebookExecutionOrder } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
-import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
+import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   getKey,
@@ -584,7 +584,8 @@ export class Kernel implements Disposable {
       if (isShellLanguage(execKey) || !(execKey in executor)) {
         successfulCellExecution = await runScript(execKey)
       } else {
-        successfulCellExecution = await executor[execKey as keyof typeof executor]({
+        const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+        successfulCellExecution = await executorByKey({
           context: this.context,
           kernel: this,
           doc: runningCell,
@@ -599,7 +600,8 @@ export class Kernel implements Disposable {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor]({
+      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+      successfulCellExecution = await executorByKey({
         context: this.context,
         kernel: this,
         doc: runningCell,

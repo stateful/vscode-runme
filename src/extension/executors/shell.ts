@@ -14,15 +14,15 @@ import { ENV_STORE_MANAGER, IKernelExecutorArgs } from '.'
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 const log = getLogger('shellExecutor')
 
-interface IShellKernelExecutorArgs extends IKernelExecutorArgs {
+interface IKernelShellExecutorArgs extends IKernelExecutorArgs {
   script: string
   cwd: string
   env: Record<string, string>
 }
 
-type IShellKernelExecutor = (executor: IShellKernelExecutorArgs) => Promise<boolean>
+type IKernelShellExecutor = (executor: IKernelShellExecutorArgs) => Promise<boolean>
 
-const shellExecutor: IShellKernelExecutor = async (executor) => {
+const shellExecutor: IKernelShellExecutor = async (executor) => {
   const { exec, outputs, script, cwd, env } = executor
   let postScript = script
   let prod = false
