@@ -26,7 +26,7 @@ import { RunmeTaskProvider } from '../../../src/extension/provider/runmeTask'
 import { isWindows } from '../../../src/extension/utils'
 import { SurveyWinCodeLensRun } from '../../../src/extension/survey'
 
-vi.mock('../../src/extension/utils', () => ({
+vi.mock('../../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
   getAnnotations: vi.fn().mockReturnValue({}),
   isWindows: vi.fn().mockReturnValue(false),
@@ -89,7 +89,7 @@ class MockedDuplexClientStream {
   }
 }
 
-vi.mock('../../src/extension/grpc/client', () => ({
+vi.mock('../../../src/extension/grpc/client', () => ({
   RunnerServiceClient: class {
     constructor() {}
 
@@ -134,7 +134,7 @@ class MockedRunmeServer {
   onClose = this._onClose.event
 }
 
-vi.mock('../../src/extension/provider/runmeTask', async () => {
+vi.mock('../../../src/extension/provider/runmeTask', async () => {
   return {
     RunmeTaskProvider: {
       newRunmeTask: vi.fn().mockResolvedValue({}),
