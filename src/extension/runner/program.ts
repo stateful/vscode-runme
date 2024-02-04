@@ -16,14 +16,15 @@ import {
   ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
-  Session,
   Winsize,
 } from '../grpc/runnerTypes'
 import { RunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
-import getLogger from '../logger'
+
+import { IRunnerChild, TerminalWindowState } from './types'
+import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -81,13 +82,6 @@ export interface IRunner extends Disposable {
     runnerEnv: IRunnerEnvironment,
     variables: Record<string, string | undefined>,
   ): Promise<boolean>
-}
-
-interface IRunnerChild extends DisposableAsync {}
-
-export interface IRunnerEnvironment extends IRunnerChild {
-  getSessionId(): string
-  initialEnvs(): Set<string>
 }
 
 export type RunnerExitReason =
@@ -317,16 +311,6 @@ export class GrpcRunner implements IRunner {
     this.disposables.push(d)
     return d
   }
-}
-
-interface TerminalWindowState {
-  dimensions?: TerminalDimensions
-  opened: boolean
-  /**
-   * Used in VSCode to determine if this is part of the initial call to
-   * `setDimensions`, which generally should be ignored
-   */
-  hasSetDimensions?: boolean
 }
 
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
@@ -711,47 +695,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   protected get convertEol() {
     return this.opts.convertEol ?? true
-  }
-}
-
-export class GrpcRunnerEnvironment implements IRunnerEnvironment {
-  log = getLogger('GrpcRunnerEnvironment')
-  initialEnvKeys: Set<string>
-
-  constructor(
-    private readonly client: RunnerServiceClient,
-    private readonly session: Session,
-  ) {
-    this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))
-  }
-
-  getRunmeSession(): Session {
-    return this.session
-  }
-
-  getSessionId(): string {
-    return this.session.id
-  }
-
-  async dispose() {
-    await this.delete()
-  }
-
-  private async delete() {
-    try {
-      return await this.client.deleteSession({ id: this.getSessionId() })
-    } catch (err: any) {
-      // it's not unexpected deletions to fail when server died; trace error
-      let msg = err
-      if (err instanceof Error) {
-        msg = err.message
-      }
-      this.log.error('DeleteSession failed with error:', msg)
-    }
-  }
-
-  initialEnvs(): Set<string> {
-    return this.initialEnvKeys
   }
 }
 

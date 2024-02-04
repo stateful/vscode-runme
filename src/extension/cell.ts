@@ -28,7 +28,7 @@ import {
   XTermState,
 } from './terminal/terminalState'
 import ContextState from './contextState'
-import { IRunnerEnvironment } from './runner/program'
+import { IRunnerEnvironment } from './runner/environment'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
