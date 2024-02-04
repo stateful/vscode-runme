@@ -1,4 +1,4 @@
-import { RunnerServiceClient } from '../grpc/client'
+import { IRunnerServiceClient } from '../grpc/client'
 import { Session } from '../grpc/runnerTypes'
 import getLogger from '../logger'
 import { convertEnvList } from '../utils'
@@ -15,7 +15,7 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
   initialEnvKeys: Set<string>
 
   constructor(
-    private readonly client: RunnerServiceClient,
+    private readonly client: IRunnerServiceClient,
     private readonly session: Session,
   ) {
     this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))

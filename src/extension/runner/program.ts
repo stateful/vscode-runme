@@ -7,18 +7,27 @@ import {
   type TerminalDimensions,
   EventEmitter,
 } from 'vscode'
+import { RpcOptions, UnaryCall } from '@protobuf-ts/runtime-rpc'
 
 import type { DisposableAsync } from '../../types'
 import {
   CommandMode,
   CreateSessionRequest,
+  CreateSessionResponse,
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   ExecuteRequest,
   ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
+  GetSessionResponse,
+  ListSessionsRequest,
+  ListSessionsResponse,
+  ResolveVarsRequest,
+  ResolveVarsResponse,
   Winsize,
 } from '../grpc/runnerTypes'
-import { RunnerServiceClient, RpcError } from '../grpc/client'
+import { IRunnerServiceClient, RunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
@@ -160,25 +169,31 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   ): void | Promise<void>
 }
 
-export class GrpcRunner implements IRunner {
-  protected client?: RunnerServiceClient
+type IRunnerClient = IRunnerServiceClient & Disposable
 
-  private children: WeakRef<IRunnerChild>[] = []
+export class GrpcRunnerClient implements IRunnerClient {
   private disposables: Disposable[] = []
 
-  protected _onReady = this.register(new EventEmitter<void>())
-  onReady = this._onReady.event
+  protected client?: RunnerServiceClient
+  protected _onReady: EventEmitter<void>
 
-  constructor(protected server: IServer) {
+  constructor(
+    protected server: IServer,
+    ready: EventEmitter<void>,
+  ) {
+    this._onReady = ready
     this.disposables.push(
       server.onTransportReady(({ transport }) => this.initRunnerClient(transport)),
     )
 
-    this.disposables.push(server.onClose(() => this.deinitRunnerClient()))
+    this.disposables.push(
+      server.onClose(() => {
+        return this.deinitRunnerClient()
+      }),
+    )
   }
 
   private deinitRunnerClient() {
-    this.disposeChildren()
     this.client = undefined
   }
 
@@ -188,15 +203,82 @@ export class GrpcRunner implements IRunner {
     this._onReady.fire()
   }
 
-  protected static assertClient(client: RunnerServiceClient | undefined): asserts client {
+  static assertClient(client: RunnerServiceClient | undefined): asserts client {
     if (!client) {
       throw new Error('Client is not active!')
     }
   }
 
-  async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
-    GrpcRunner.assertClient(this.client)
+  protected register<T extends Disposable>(d: T): T {
+    this.disposables.push(d)
+    return d
+  }
 
+  async dispose(): Promise<void> {
+    this.disposables.forEach((d) => d.dispose())
+  }
+
+  createSession(
+    input: CreateSessionRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<CreateSessionRequest, CreateSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.createSession(input, options)
+  }
+
+  getSession(
+    input: GetSessionRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<GetSessionRequest, GetSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.getSession(input, options)
+  }
+
+  listSessions(
+    input: ListSessionsRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<ListSessionsRequest, ListSessionsResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.listSessions(input, options)
+  }
+
+  deleteSession(
+    input: DeleteSessionRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<DeleteSessionRequest, DeleteSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.deleteSession(input, options)
+  }
+
+  execute(options?: RpcOptions | undefined): DuplexStreamingCall<ExecuteRequest, ExecuteResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.execute(options)
+  }
+
+  resolveVars(
+    input: ResolveVarsRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<ResolveVarsRequest, ResolveVarsResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.resolveVars(input, options)
+  }
+}
+
+export class GrpcRunner implements IRunner {
+  protected client: IRunnerClient
+
+  private children: WeakRef<IRunnerChild>[] = []
+  private disposables: Disposable[] = []
+
+  protected _onReady = this.register(new EventEmitter<void>())
+  onReady = this._onReady.event
+
+  constructor(protected server: IServer) {
+    this.client = new GrpcRunnerClient(server, this._onReady)
+    this.register(this.client)
+  }
+
+  async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
     const session = new GrpcRunnerProgramSession(this.client, opts)
 
     this.registerChild(session)
@@ -205,8 +287,6 @@ export class GrpcRunner implements IRunner {
   }
 
   async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
-    GrpcRunner.assertClient(this.client)
-
     const request = CreateSessionRequest.create({
       metadata,
       envs,
@@ -240,8 +320,6 @@ export class GrpcRunner implements IRunner {
   async getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined> {
-    GrpcRunner.assertClient(this.client)
-
     if (!(runnerEnv instanceof GrpcRunnerEnvironment)) {
       throw new Error('Invalid runner environment!')
     }
@@ -347,7 +425,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   pid = new Promise<number | undefined>(this._onPid.event)
 
   constructor(
-    private readonly client: RunnerServiceClient,
+    private readonly client: IRunnerServiceClient,
     protected opts: RunProgramOptions,
   ) {
     this.session = client.execute()
