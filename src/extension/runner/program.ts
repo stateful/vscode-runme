@@ -175,11 +175,11 @@ export class GrpcRunnerClient implements IRunnerClient {
   private disposables: Disposable[] = []
 
   protected client?: RunnerServiceClient
-  protected _onReady: EventEmitter<void>
+  protected _onReady?: EventEmitter<void>
 
   constructor(
     protected server: IServer,
-    ready: EventEmitter<void>,
+    ready?: EventEmitter<void>,
   ) {
     this._onReady = ready
     this.disposables.push(
@@ -200,7 +200,7 @@ export class GrpcRunnerClient implements IRunnerClient {
   private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
     this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
-    this._onReady.fire()
+    this._onReady?.fire()
   }
 
   static assertClient(client: RunnerServiceClient | undefined): asserts client {
