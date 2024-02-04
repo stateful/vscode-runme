@@ -14,13 +14,6 @@ import { vercel } from './vercel'
 import { deno } from './deno'
 import { github } from './github'
 
-// TODO: want to use a better abstraction than this
-export interface IEnvironmentManager {
-  set(key: string, value: string | undefined): Promise<void> | void
-  get(key: string): Promise<string | undefined> | string | undefined
-  reset(): Promise<void> | void
-}
-
 export interface IKernelExecutorArgs {
   context: ExtensionContext
   kernel: Kernel
@@ -28,11 +21,18 @@ export interface IKernelExecutorArgs {
   exec: NotebookCellExecution
   outputs: NotebookCellOutputManager
   messaging: NotebookRendererMessaging
-  environment: IEnvironmentManager
+  envMgr: IEnvironmentManager
   runScript?: () => Promise<boolean>
 }
 
 export type IKernelExecutor = (executor: IKernelExecutorArgs) => Promise<boolean>
+
+// TODO: want to use a better abstraction than this
+export interface IEnvironmentManager {
+  set(key: string, value: string | undefined): Promise<void> | void
+  get(key: string): Promise<string | undefined> | string | undefined
+  reset(): Promise<void> | void
+}
 
 export const ENV_STORE_MANAGER: IEnvironmentManager = {
   get: (key) => ENV_STORE.get(key),

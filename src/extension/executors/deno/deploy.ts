@@ -8,11 +8,11 @@ import { updateCellMetadata } from '../../cell'
 
 export const deploy: IKernelExecutor = async (executor) => {
   const { exec, outputs, messaging } = executor
-  let { environment } = executor
-  environment ??= ENV_STORE_MANAGER
+  let { envMgr } = executor
+  envMgr ??= ENV_STORE_MANAGER
 
-  let token = await environment?.get(DENO_ACCESS_TOKEN_KEY)
-  const pname = await environment?.get(DENO_PROJECT_NAME_KEY)
+  let token = await envMgr?.get(DENO_ACCESS_TOKEN_KEY)
+  const pname = await envMgr?.get(DENO_PROJECT_NAME_KEY)
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() => reject(new Error('Canceled by user'))),

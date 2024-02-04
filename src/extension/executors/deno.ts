@@ -8,18 +8,18 @@ import { deploy } from './deno/deploy'
 import { IKernelExecutor } from '.'
 
 export const deno: IKernelExecutor = async (executor) => {
-  const { environment, runScript } = executor
+  const { envMgr, runScript } = executor
   /**
    * ensure token is set for operations
    */
-  const token = await environment?.get(DENO_ACCESS_TOKEN_KEY)
+  const token = await envMgr?.get(DENO_ACCESS_TOKEN_KEY)
   if (!token) {
     const userInput = await window.showInputBox({
       title: 'Deno Access Token',
       prompt: 'Please enter a valid access token to run a Deno deployment.',
       ignoreFocusOut: true,
     })
-    userInput && (await environment?.set(DENO_ACCESS_TOKEN_KEY, userInput))
+    userInput && (await envMgr?.set(DENO_ACCESS_TOKEN_KEY, userInput))
   }
 
   return Promise.all([

@@ -520,7 +520,7 @@ export class Kernel implements Disposable {
 
     let successfulCellExecution: boolean
 
-    const environmentManager = this.getEnvironmentManager()
+    const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
     if (
@@ -530,19 +530,20 @@ export class Kernel implements Disposable {
       !isWindows()
     ) {
       const runScript = (key: string = execKey) =>
-        executeRunner(
-          this,
-          this.context,
-          this.runner!,
+        executeRunner({
+          kernel: this,
+          doc: cell.document,
+          context: this.context,
+          runner: this.runner!,
           exec,
           runningCell,
-          this.messaging,
-          id,
-          key,
+          messaging: this.messaging,
+          cellId: id,
+          execKey: key,
           outputs,
-          this.runnerEnv,
-          environmentManager,
-        ).catch((e) => {
+          runnerEnv: this.runnerEnv,
+          envMgr,
+        }).catch((e) => {
           if (e instanceof RpcError) {
             if (e.message.includes('invalid LanguageId')) {
               // todo(sebastian): provide "Configure" button to trigger foldout
@@ -592,7 +593,7 @@ export class Kernel implements Disposable {
           exec,
           outputs,
           messaging: this.messaging,
-          environment: environmentManager,
+          envMgr,
           runScript,
         })
       }
@@ -608,7 +609,7 @@ export class Kernel implements Disposable {
         exec,
         outputs,
         messaging: this.messaging,
-        environment: environmentManager,
+        envMgr,
       })
     } else {
       window.showErrorMessage('Cell language is not executable')

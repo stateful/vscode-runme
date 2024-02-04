@@ -7,10 +7,7 @@ import {
   TaskRevealKind,
   TaskPanelKind,
   tasks,
-  NotebookCellExecution,
   TextDocument,
-  ExtensionContext,
-  NotebookRendererMessaging,
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
@@ -22,10 +19,8 @@ import { IRunner, IRunnerEnvironment, IRunnerProgramSession, RunProgramExecution
 import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
-import { Kernel } from '../kernel'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
-import { NotebookCellOutputManager } from '../cell'
 
 import { closeTerminalByEnvID } from './task'
 import {
@@ -37,26 +32,36 @@ import {
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
-import type { IEnvironmentManager } from '.'
+import type { IKernelExecutorArgs } from '.'
 
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
-export async function executeRunner(
-  kernel: Kernel,
-  context: ExtensionContext,
-  runner: IRunner,
-  exec: NotebookCellExecution,
-  runningCell: TextDocument,
-  messaging: NotebookRendererMessaging,
-  cellId: string,
-  execKey: string,
-  outputs: NotebookCellOutputManager,
-  runnerEnv?: IRunnerEnvironment,
-  environmentManager?: IEnvironmentManager,
-) {
+interface IKernelRunnerArgs extends IKernelExecutorArgs {
+  runner: IRunner
+  runningCell: TextDocument
+  cellId: string
+  execKey: string
+  runnerEnv?: IRunnerEnvironment
+}
+
+type IKernelRunner = (executor: IKernelRunnerArgs) => Promise<boolean>
+
+export const executeRunner: IKernelRunner = async ({
+  kernel,
+  context,
+  runner,
+  exec,
+  runningCell,
+  messaging,
+  cellId,
+  execKey,
+  outputs,
+  runnerEnv,
+  envMgr,
+}: IKernelRunnerArgs) => {
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
   // Document level settings
@@ -265,7 +270,7 @@ export async function executeRunner(
           output,
           exec.cell.index,
           vercelProd,
-          environmentManager,
+          envMgr,
         )
 
         item = undefined
