@@ -14,7 +14,7 @@ import { vercel } from './vercel'
 import { deno } from './deno'
 import { github } from './github'
 
-export interface IKernelExecutorArgs {
+export interface IKernelExecutorOptions {
   context: ExtensionContext
   kernel: Kernel
   doc: TextDocument
@@ -25,7 +25,7 @@ export interface IKernelExecutorArgs {
   runScript?: () => Promise<boolean>
 }
 
-export type IKernelExecutor = (executor: IKernelExecutorArgs) => Promise<boolean>
+export type IKernelExecutor = (executor: IKernelExecutorOptions) => Promise<boolean>
 
 // TODO: want to use a better abstraction than this
 export interface IEnvironmentManager {

@@ -37,14 +37,14 @@ import {
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
-import type { IKernelExecutorArgs } from '.'
+import type { IKernelExecutorOptions } from '.'
 
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
-interface IKernelRunnerArgs extends IKernelExecutorArgs {
+interface IKernelRunnerOptions extends IKernelExecutorOptions {
   runner: IRunner
   runningCell: TextDocument
   cellId: string
@@ -52,7 +52,7 @@ interface IKernelRunnerArgs extends IKernelExecutorArgs {
   runnerEnv?: IRunnerEnvironment
 }
 
-type IKernelRunner = (executor: IKernelRunnerArgs) => Promise<boolean>
+type IKernelRunner = (executor: IKernelRunnerOptions) => Promise<boolean>
 
 export const executeRunner: IKernelRunner = async ({
   kernel,
@@ -66,7 +66,7 @@ export const executeRunner: IKernelRunner = async ({
   outputs,
   runnerEnv,
   envMgr,
-}: IKernelRunnerArgs) => {
+}: IKernelRunnerOptions) => {
   const annotations = getAnnotations(exec.cell)
   const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
   // Document level settings

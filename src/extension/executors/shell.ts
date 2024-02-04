@@ -9,18 +9,18 @@ import getLogger from '../logger'
 
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
-import { ENV_STORE_MANAGER, IKernelExecutorArgs } from '.'
+import { ENV_STORE_MANAGER, IKernelExecutorOptions } from '.'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 const log = getLogger('shellExecutor')
 
-interface IKernelShellExecutorArgs extends IKernelExecutorArgs {
+interface IKernelShellExecutorOptions extends IKernelExecutorOptions {
   script: string
   cwd: string
   env: Record<string, string>
 }
 
-type IKernelShellExecutor = (executor: IKernelShellExecutorArgs) => Promise<boolean>
+type IKernelShellExecutor = (executor: IKernelShellExecutorOptions) => Promise<boolean>
 
 const shellExecutor: IKernelShellExecutor = async (executor) => {
   const { exec, outputs, script, cwd, env } = executor
