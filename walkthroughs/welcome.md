@@ -1,8 +1,3 @@
----
-runme:
-  id: 01HNN77NHH3Y67SVE3D9XH4W6Z
-  version: v2.2
----
 
 # ![Runme](https://runme.dev/runme_logo.svg "Runme") Welcome to Runme
 
