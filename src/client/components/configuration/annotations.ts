@@ -136,7 +136,7 @@ export class Annotations extends LitElement {
     },
     promptEnv: {
       description: 'Prompt user input for exported environment variables.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#terminal-visibility-post-execution',
+      docs: 'https://docs.runme.dev/configuration/cell-level#set-environment-variables',
     },
     mimeType: {
       description: "Cell's output content MIME type.",
