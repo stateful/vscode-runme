@@ -1,4 +1,8 @@
-# Learn more
+
+
+Fantastic work!
+
+You've now begun using Runme, but don't stop there. We have just touched the surface of what Runme can accomplish for you.
 
 Learn more about Runme by visiting the [official docs](https://docs.runme.dev) and subscribe to the official Runme [newsletter](https://runme.dev/list) to not miss any updates.
 
