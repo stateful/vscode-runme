@@ -13,6 +13,7 @@ import {
   TaskScope,
   ShellExecution,
   tasks,
+  EventEmitter,
 } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
@@ -35,24 +36,31 @@ import {
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 const log = getLogger('RunmeUriHandler')
 
-export class RunmeUriHandler implements UriHandler {
+export class RunmeUriHandler extends EventEmitter<Uri> implements UriHandler {
   constructor(
     private context: ExtensionContext,
     private kernel: Kernel,
     private forceNewWindow: boolean,
-  ) {}
+  ) {
+    super()
+  }
 
   async handleUri(uri: Uri) {
     log.info(`triggered RunmeUriHandler with ${uri}`)
     const params = new URLSearchParams(uri.query)
+    const windowId = params.get('windowId')
+    const state = params.get('state')
+    const code = params.get('code')
     const command = params.get('command')
 
     if (!command) {
       window.showErrorMessage('No query parameter "command" provided')
       return
     }
-
-    if (command === 'setup') {
+    if (command === 'auth' && windowId && state && code) {
+      this.fire(uri)
+      return
+    } else if (command === 'setup') {
       const { fileToOpen, repository } = parseParams(params)
       if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
         TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'file' })
@@ -63,9 +71,7 @@ export class RunmeUriHandler implements UriHandler {
       TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'project' })
       await this._setupProject(fileToOpen, repository)
       return
-    }
-
-    if (command === 'demo') {
+    } else if (command === 'demo') {
       try {
         const { fileToOpen, repository, cell } = parseParams(params)
         if (!repository) {

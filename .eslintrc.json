@@ -21,7 +21,10 @@
       "newlines-between": "always"
     }],
     "unicorn/prefer-node-protocol": ["error"],
-    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-unused-vars": [
+			"error",
+			{ "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }
+		],
     "@typescript-eslint/semi": ["error", "never"],
     "@typescript-eslint/naming-convention": "off",
     "no-unused-vars": "off",
