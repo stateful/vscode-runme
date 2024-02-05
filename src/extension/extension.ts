@@ -7,6 +7,7 @@ import {
   tasks,
   window,
   Uri,
+  authentication,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -62,6 +63,7 @@ import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { CloudAuthProvider } from './provider/cloudAuth'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -281,7 +283,31 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
       new CloudAuthProvider(context),
+      RunmeExtension.registerCommand('vscode-stateful-authprovider.signIn', async () => {
+        const session = await authentication.getSession('stateful', [], { createIfNone: true })
+        console.log(session)
+      }),
+      new StatefulAuthProvider(context, uriHandler),
     )
+
+    const getAuthSession = async () => {
+      const session = await authentication.getSession('stateful', ['profile'], {
+        createIfNone: false,
+      })
+      if (session) {
+        window.showInformationMessage(`Welcome back ${session.account.label}`)
+      }
+    }
+
+    getAuthSession()
+
+    context.subscriptions.push(
+      authentication.onDidChangeSessions(async (e) => {
+        console.log(e)
+        getAuthSession()
+      }),
+    )
+
     await bootFile(context)
   }
 

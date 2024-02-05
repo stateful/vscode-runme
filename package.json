@@ -228,6 +228,12 @@
         "command": "runme.resetLoginPrompt",
         "category": "Runme",
         "title": "Reset login prompt when asking to Signin with GitHub"
+      },
+      {
+        "command": "vscode-stateful-authprovider.signIn",
+        "title": "Sign in",
+        "category": "Stateful",
+        "icon": "$(sign-in)"
       }
     ],
     "menus": {
@@ -327,6 +333,10 @@
           "command": "runme.tasksExcludeUnnamed",
           "when": "view == runme.launcher && runme.launcher.includeUnnamed",
           "group": "navigation"
+        },
+        {
+          "command": "vscode-stateful-authprovider.signIn",
+          "group": "navigation@10"
         }
       ],
       "explorer/context": [
