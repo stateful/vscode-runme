@@ -160,7 +160,7 @@ export class Annotations extends LitElement {
     },
     terminalRows: {
       description: 'Number of rows to display in the notebook terminal.',
-      docs: 'https://docs.runme.dev/configuration#cell-options',
+      docs: 'https://docs.runme.dev/configuration/cell-level#terminal-row',
     },
   }
 
