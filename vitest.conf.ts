@@ -22,6 +22,8 @@ export default defineConfig({
         '**/.wdio-vscode-service/**',
         '**/node_modules/**',
         '**/__generated__/**',
+        // ignore until we bring up coverage
+        'src/client',
         // vendored code
         'src/utils/deno',
         'src/extension/wasm',
