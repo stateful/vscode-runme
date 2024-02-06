@@ -1,43 +1,35 @@
-import { NotebookCellExecution, TextDocument, window } from 'vscode'
+import { window } from 'vscode'
 
 import { DENO_ACCESS_TOKEN_KEY } from '../constants'
-import type { Kernel } from '../kernel'
-import { NotebookCellOutputManager } from '../cell'
 
 import { bash } from './task'
 import { deploy } from './deno/deploy'
 
-import { ENV_STORE_MANAGER } from '.'
+import { IKernelExecutor } from '.'
 
-export async function deno(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  doc: TextDocument,
-  outputs: NotebookCellOutputManager,
-  runScript?: () => Promise<boolean>,
-  environment = ENV_STORE_MANAGER,
-): Promise<boolean> {
+export const deno: IKernelExecutor = async (executor) => {
+  const { envMgr, runScript } = executor
   /**
    * ensure token is set for operations
    */
-  const token = await environment?.get(DENO_ACCESS_TOKEN_KEY)
+  const token = await envMgr?.get(DENO_ACCESS_TOKEN_KEY)
   if (!token) {
     const userInput = await window.showInputBox({
       title: 'Deno Access Token',
       prompt: 'Please enter a valid access token to run a Deno deployment.',
       ignoreFocusOut: true,
     })
-    userInput && (await environment?.set(DENO_ACCESS_TOKEN_KEY, userInput))
+    userInput && (await envMgr?.set(DENO_ACCESS_TOKEN_KEY, userInput))
   }
 
   return Promise.all([
     /**
      * run actual deno deployment as bash script
      */
-    runScript?.() ?? bash.call(this, exec, doc, outputs),
+    runScript?.() ?? bash(executor),
     /**
      * fetch data and render custom output
      */
-    deploy.call(this, exec, outputs, environment),
+    deploy(executor),
   ]).then(([bashSuccess, deploySuccess]) => bashSuccess && deploySuccess)
 }

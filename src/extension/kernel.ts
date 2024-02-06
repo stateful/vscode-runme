@@ -32,7 +32,7 @@ import { getNotebookExecutionOrder } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
-import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
+import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   getKey,
@@ -48,7 +48,8 @@ import {
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
-import { IRunner, IRunnerEnvironment } from './runner'
+import { IRunner } from './runner'
+import { IRunnerEnvironment } from './runner/environment'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import {
@@ -520,7 +521,7 @@ export class Kernel implements Disposable {
 
     let successfulCellExecution: boolean
 
-    const environmentManager = this.getEnvironmentManager()
+    const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
     if (
@@ -530,19 +531,20 @@ export class Kernel implements Disposable {
       !isWindows()
     ) {
       const runScript = (key: string = execKey) =>
-        executeRunner(
-          this,
-          this.context,
-          this.runner!,
+        executeRunner({
+          kernel: this,
+          doc: cell.document,
+          context: this.context,
+          runner: this.runner!,
           exec,
           runningCell,
-          this.messaging,
-          id,
-          key,
+          messaging: this.messaging,
+          cellId: id,
+          execKey: key,
           outputs,
-          this.runnerEnv,
-          environmentManager,
-        ).catch((e) => {
+          runnerEnv: this.runnerEnv,
+          envMgr,
+        }).catch((e) => {
           if (e instanceof RpcError) {
             if (e.message.includes('invalid LanguageId')) {
               // todo(sebastian): provide "Configure" button to trigger foldout
@@ -584,25 +586,32 @@ export class Kernel implements Disposable {
       if (isShellLanguage(execKey) || !(execKey in executor)) {
         successfulCellExecution = await runScript(execKey)
       } else {
-        successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-          this,
+        const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+        successfulCellExecution = await executorByKey({
+          context: this.context,
+          kernel: this,
+          doc: runningCell,
           exec,
-          runningCell,
           outputs,
+          messaging: this.messaging,
+          envMgr,
           runScript,
-          environmentManager,
-        )
+        })
       }
     } else if (execKey in executor) {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-        this,
+      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+      successfulCellExecution = await executorByKey({
+        context: this.context,
+        kernel: this,
+        doc: runningCell,
         exec,
-        runningCell,
         outputs,
-      )
+        messaging: this.messaging,
+        envMgr,
+      })
     } else {
       window.showErrorMessage('Cell language is not executable')
 

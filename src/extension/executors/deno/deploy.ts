@@ -1,24 +1,18 @@
-import { NotebookCellExecution } from 'vscode'
-
 import { OutputType, ClientMessages } from '../../../constants'
 import { DENO_ACCESS_TOKEN_KEY, DENO_PROJECT_NAME_KEY } from '../../constants'
 import { API } from '../../../utils/deno/api'
-import type { Kernel } from '../../kernel'
 import type { DenoState } from '../../../types'
-import { ENV_STORE_MANAGER, type IEnvironmentManager } from '..'
+import { ENV_STORE_MANAGER, IKernelExecutor } from '..'
 import { postClientMessage } from '../../../utils/messaging'
-import { NotebookCellOutputManager, updateCellMetadata } from '../../cell'
+import { updateCellMetadata } from '../../cell'
 
-export async function deploy(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  outputs: NotebookCellOutputManager,
-  environment?: IEnvironmentManager,
-): Promise<boolean> {
-  environment ??= ENV_STORE_MANAGER
+export const deploy: IKernelExecutor = async (executor) => {
+  const { exec, outputs, messaging } = executor
+  let { envMgr } = executor
+  envMgr ??= ENV_STORE_MANAGER
 
-  let token = await environment?.get(DENO_ACCESS_TOKEN_KEY)
-  const pname = await environment?.get(DENO_PROJECT_NAME_KEY)
+  let token = await envMgr?.get(DENO_ACCESS_TOKEN_KEY)
+  const pname = await envMgr?.get(DENO_PROJECT_NAME_KEY)
 
   const cancel = new Promise<void>((_, reject) =>
     exec.token.onCancellationRequested(() => reject(new Error('Canceled by user'))),
@@ -67,7 +61,7 @@ export async function deploy(
       }
 
       updateCellMetadata(exec.cell, { 'runme.dev/denoState': denoState })
-      postClientMessage(this.messaging, ClientMessages.denoUpdate, denoState)
+      postClientMessage(messaging, ClientMessages.denoUpdate, denoState)
 
       // keep going slower after 20 loops
       const timeout = 1000 + Math.max(0, iteration - 20) * 1000

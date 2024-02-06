@@ -1,17 +1,13 @@
-import { NotebookCellExecution, TextDocument, window } from 'vscode'
+import { window } from 'vscode'
 
-import type { Kernel } from '../kernel'
-import { NotebookCellOutputManager } from '../cell'
 import { OutputType } from '../../constants'
 
 import { parseGitHubURL, getYamlFileContents, getService } from './github/workflows'
 
-export async function github(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  doc: TextDocument,
-  outputs: NotebookCellOutputManager,
-): Promise<boolean> {
+import { IKernelExecutor } from '.'
+
+export const github: IKernelExecutor = async (executor) => {
+  const { doc, exec, outputs } = executor
   try {
     await getService(true)
     const { owner, repo, path, ref } = parseGitHubURL(doc.getText())

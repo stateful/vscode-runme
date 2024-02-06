@@ -21,6 +21,10 @@ export default defineConfig({
         '**/__mocks__/**',
         '**/.wdio-vscode-service/**',
         '**/node_modules/**',
+        '**/__generated__/**',
+        // vendored code
+        'src/utils/deno',
+        'src/extension/wasm',
       ],
       thresholds: {
         statements: 43,

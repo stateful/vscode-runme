@@ -11,6 +11,7 @@ import { expect, suite, vi, test } from 'vitest'
 import * as CellManager from '../../src/extension/cell'
 import { github } from '../../src/extension/executors/github'
 import { Kernel } from '../../src/extension/kernel'
+import { IKernelExecutor } from '../../src/extension/executors'
 
 vi.mock('vscode', async () => {
   const vscode = await import('../../__mocks__/vscode')
@@ -60,7 +61,7 @@ function mockCell(outputs: any[] = [], metadata: any = {}, documentText?: string
   return {
     outputs,
     metadata,
-    document: {
+    doc: {
       getText: vi.fn().mockReturnValue(documentText),
     },
     notebook: {
@@ -84,12 +85,13 @@ function mockNotebookController(cell: NotebookCell) {
 
 test("It fails when a GitHub session can't be stablished", async () => {
   const cell = mockCell([{ items: [] }])
+  const { doc } = cell
   const { controller, createExecution } = mockNotebookController(cell)
   const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
   const exec = createExecution()
   const kernel = new Kernel({} as any)
   vi.mocked(authentication.getSession).mockRejectedValue('Authentication cancelled by user')
-  const executionResult = await github.call(kernel, exec, cell.document, outputs)
+  const executionResult = await github({ kernel, exec, doc, outputs } as unknown as IKernelExecutor)
   expect(executionResult).toBe(false)
   expect(window.showErrorMessage).toBeCalled()
 })
@@ -97,6 +99,7 @@ test("It fails when a GitHub session can't be stablished", async () => {
 suite('When a valid session is stablished', () => {
   test('It fails for incomplete workflow file URL Schema', async () => {
     const cell = mockCell([{ items: [] }], {}, 'https://github.com/')
+    const { doc } = cell
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -111,7 +114,12 @@ suite('When a valid session is stablished', () => {
       },
     }
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-    const executionResult = await github.call(kernel, exec, cell.document, outputs)
+    const executionResult = await github({
+      kernel,
+      exec,
+      doc,
+      outputs,
+    } as unknown as IKernelExecutor)
     expect(executionResult).toBe(false)
     expect(window.showErrorMessage).toBeCalled()
   })
@@ -120,6 +128,7 @@ suite('When a valid session is stablished', () => {
     const workflowSourceFile =
       'https://github.com/stateful/vscode-runme/blob/main/.github/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
+    const { doc } = cell
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -135,7 +144,12 @@ suite('When a valid session is stablished', () => {
     }
     const outputSpy = vi.spyOn(outputs, 'setState')
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-    const executionResult = await github.call(kernel, exec, cell.document, outputs)
+    const executionResult = await github({
+      kernel,
+      exec,
+      doc,
+      outputs,
+    } as unknown as IKernelExecutor)
     expect(outputSpy).toBeCalledTimes(1)
     expect(executionResult).toBe(true)
   })
@@ -144,6 +158,7 @@ suite('When a valid session is stablished', () => {
     const workflowSourceFile =
       'https://github.com/stateful/vscode-runme/actions/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
+    const { doc } = cell
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -159,7 +174,12 @@ suite('When a valid session is stablished', () => {
     }
     const outputSpy = vi.spyOn(outputs, 'setState')
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-    const executionResult = await github.call(kernel, exec, cell.document, outputs)
+    const executionResult = await github({
+      kernel,
+      exec,
+      doc,
+      outputs,
+    } as unknown as IKernelExecutor)
     expect(outputSpy).toBeCalledTimes(1)
     expect(executionResult).toBe(true)
   })

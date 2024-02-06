@@ -1,29 +1,29 @@
 import { spawn } from 'node:child_process'
 
-import { NotebookCellOutput, NotebookCellOutputItem, NotebookCellExecution } from 'vscode'
+import { NotebookCellOutput, NotebookCellOutputItem } from 'vscode'
 
 import { OutputType } from '../../constants'
 import type { CellOutputPayload } from '../../types'
-import { NotebookCellOutputManager } from '../cell'
-import type { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 import getLogger from '../logger'
 
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
-import { ENV_STORE_MANAGER } from '.'
+import { ENV_STORE_MANAGER, IKernelExecutorOptions } from '.'
 
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 const log = getLogger('shellExecutor')
 
-async function shellExecutor(
-  this: Kernel,
-  exec: NotebookCellExecution,
-  script: string,
-  cwd: string,
-  env: Record<string, string>,
-  outputs: NotebookCellOutputManager,
-): Promise<boolean> {
+interface IKernelShellExecutorOptions extends IKernelExecutorOptions {
+  script: string
+  cwd: string
+  env: Record<string, string>
+}
+
+type IKernelShellExecutor = (executor: IKernelShellExecutorOptions) => Promise<boolean>
+
+const shellExecutor: IKernelShellExecutor = async (executor) => {
+  const { exec, outputs, script, cwd, env } = executor
   let postScript = script
   let prod = false
   if (process.env['vercelProd'] === 'true') {
