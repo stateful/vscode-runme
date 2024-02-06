@@ -18,7 +18,7 @@ import {
   getSessionOutputs,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
-import { WebViews } from '../constants'
+import { AuthenticationProviders, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import RunmeServer from './server/runmeServer'
@@ -62,7 +62,6 @@ import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
-import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 
 export class RunmeExtension {
@@ -282,9 +281,10 @@ export class RunmeExtension {
         },
       ),
       RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
-      new CloudAuthProvider(context),
       RunmeExtension.registerCommand('vscode-stateful-authprovider.signIn', async () => {
-        const session = await authentication.getSession('stateful', [], { createIfNone: true })
+        const session = await authentication.getSession(AuthenticationProviders.Stateful, [], {
+          createIfNone: true,
+        })
         console.log(session)
       }),
       new StatefulAuthProvider(context, uriHandler),

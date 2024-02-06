@@ -13,7 +13,7 @@ export interface IAppToken {
 
 export class RunmeService {
   protected githubAccessToken: string
-  private readonly apiBase = Uri.parse(getRunmeAppUrl(['api']), true)
+  private readonly apiBase = Uri.parse(getRunmeAppUrl(['api.platform']), true)
 
   constructor({ githubAccessToken }: { githubAccessToken: string }) {
     this.githubAccessToken = githubAccessToken

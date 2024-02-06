@@ -1,12 +1,12 @@
-import path from 'node:path'
 import os from 'node:os'
+import path from 'node:path'
 
 import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
-import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
 import { RunmeIdentity } from '../extension/grpc/serializerTypes'
+import { getAnnotations, isWindows } from '../extension/utils'
 import { NotebookAutoSaveSetting } from '../types'
 
 const ACTIONS_SECTION_NAME = 'runme.actions'
@@ -27,6 +27,8 @@ const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
+  ['api.platform.', ':8911'],
+  ['platform.', ':8910'],
 ])
 
 type NotebookTerminalValue = keyof typeof notebookTerminalSchema
@@ -373,27 +375,27 @@ const getSessionOutputs = (): boolean => {
 }
 
 export {
-  getPortNumber,
-  getBinaryPath,
   enableServerLogs,
-  getServerConfigurationValue,
-  isNotebookTerminalFeatureEnabled,
-  isNotebookTerminalEnabledForCell,
-  getTLSEnabled,
-  getTLSDir,
-  getNotebookTerminalConfigurations,
+  getActionsOpenViewInEditor,
+  getBinaryPath,
+  getCLIUseIntegratedRunme,
   getCodeLensEnabled,
   getNotebookExecutionOrder,
-  registerExtensionEnvironmentVariables,
   getCustomServerAddress,
-  getActionsOpenViewInEditor,
-  getEnvWorkspaceFileOrder,
   getEnvLoadWorkspaceFiles,
-  getCLIUseIntegratedRunme,
-  getRunmeAppUrl,
-  getRunmePanelIdentifier,
-  isRunmeAppButtonsEnabled,
+  getEnvWorkspaceFileOrder,
   getForceNewWindowConfig,
   getNotebookAutoSave,
+  getNotebookTerminalConfigurations,
+  getPortNumber,
+  getRunmeAppUrl,
+  getRunmePanelIdentifier,
+  getServerConfigurationValue,
+  getTLSDir,
+  getTLSEnabled,
+  isNotebookTerminalEnabledForCell,
+  isNotebookTerminalFeatureEnabled,
+  isRunmeAppButtonsEnabled,
+  registerExtensionEnvironmentVariables,
   getSessionOutputs,
 }
