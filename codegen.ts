@@ -5,7 +5,7 @@ const config: CodegenConfig = {
   overwrite: true,
   schema: [
    {
-    [process.env.GRAPHQL_SERVER || 'http://localhost:8911/graphql']: {
+    [process.env.GRAPHQL_SERVER || 'http://localhost:4000/graphql']: {
       headers: {
         Authorization: `Bearer ${process.env.RUNME_TOKEN}`
       }
