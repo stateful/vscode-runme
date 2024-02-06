@@ -25,7 +25,7 @@ export interface InitPayload {
 }
 
 class PanelBase extends TelemetryViewProvider implements Disposable {
-  protected readonly appUrl: string = getRunmeAppUrl(['app'])
+  protected readonly appUrl: string = getRunmeAppUrl(['platform'])
   protected readonly defaultUx: DefaultUx = 'panels'
 
   constructor(protected readonly context: ExtensionContext) {

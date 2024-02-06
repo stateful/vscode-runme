@@ -61,8 +61,8 @@ import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
-import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
+import { CloudAuthProvider } from './provider/cloudAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -277,10 +277,6 @@ export class RunmeExtension {
         },
       ),
       new CloudAuthProvider(context),
-      RunmeExtension.registerCommand('vscode-stateful-authprovider.signIn', async () => {
-        const session = await authentication.getSession('stateful', [], { createIfNone: true })
-        console.log(session)
-      }),
       new StatefulAuthProvider(context, uriHandler),
     )
 

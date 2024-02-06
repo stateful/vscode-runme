@@ -17,13 +17,14 @@ import { v4 as uuid } from 'uuid'
 import fetch from 'node-fetch'
 
 import { PromiseAdapter, promiseFromEvent } from '../util'
+import { getRunmeAppUrl } from '../../utils/configuration'
+import { AuthenticationProviders } from '../../constants'
 
-export const AUTH_TYPE = 'stateful'
 const AUTH_NAME = 'Stateful'
-const CLIENT_ID = '<ASK FOR IT>'
-const AUTH0_DOMAIN = '<ASK FOR IT>'
-const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`
-const REDIRECT_URL = '<ASK FOR IT>'
+const CLIENT_ID = '<ask for it>'
+const AUTH0_DOMAIN = '<ask for it>'
+const AUTH0_AUDIENCE = '<ask for it>'
+const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
 let remoteOutput = window.createOutputChannel('stateful')
 
@@ -55,9 +56,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   ) {
     this._uriHandler = uriHandler
     this._disposable = Disposable.from(
-      authentication.registerAuthenticationProvider(AUTH_TYPE, AUTH_NAME, this, {
-        supportsMultipleAccounts: false,
-      }),
+      authentication.registerAuthenticationProvider(
+        AuthenticationProviders.Stateful,
+        AUTH_NAME,
+        this,
+        {
+          supportsMultipleAccounts: false,
+        },
+      ),
     )
   }
 
@@ -224,12 +230,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         const searchParams = new URLSearchParams([
           ['response_type', 'code'],
           ['client_id', CLIENT_ID],
-          ['redirect_uri', REDIRECT_URL],
+          ['redirect_uri', `${getRunmeAppUrl(['platform'])}ide-callback`],
           ['state', encodeURIComponent(callbackUri.toString(true))],
           ['scope', scopes.join(' ')],
           ['prompt', 'login'],
           ['code_challenge_method', 'S256'],
           ['code_challenge', codeChallenge],
+          ['audience', AUTH0_AUDIENCE],
         ])
         const uri = Uri.parse(`https://${AUTH0_DOMAIN}/authorize?${searchParams.toString()}`)
 
@@ -299,7 +306,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         client_id: CLIENT_ID,
         code,
         code_verifier: codeVerifier,
-        redirect_uri: REDIRECT_URL,
+        redirect_uri: `${getRunmeAppUrl(['platform'])}ide-callback`,
       }).toString()
 
       const response = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {

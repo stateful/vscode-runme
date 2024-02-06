@@ -141,6 +141,7 @@ export enum RENDERERS {
 
 export enum AuthenticationProviders {
   GitHub = 'github',
+  Stateful = 'stateful',
 }
 export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
 export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'

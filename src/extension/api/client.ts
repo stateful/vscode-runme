@@ -1,6 +1,6 @@
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client'
-import fetch from 'cross-fetch'
+import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
+import fetch from 'cross-fetch'
 import { Uri } from 'vscode'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
@@ -16,11 +16,15 @@ export function InitializeClient({
     return {
       headers: {
         ...headers,
+        'Auth-Provider': 'auth0',
         authorization: runmeToken ? `Bearer ${runmeToken}` : '',
       },
     }
   })
-  const appApiUrl = Uri.joinPath(Uri.parse(getRunmeAppUrl(['api']), true), '/graphql').toString()
+  const appApiUrl = Uri.joinPath(
+    Uri.parse(getRunmeAppUrl(['api.platform']), true),
+    '/graphql',
+  ).toString()
   const link = new HttpLink({ fetch, uri: uri || appApiUrl })
   const client = new ApolloClient({
     cache: new InMemoryCache(),
