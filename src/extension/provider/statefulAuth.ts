@@ -20,10 +20,9 @@ import { PromiseAdapter, promiseFromEvent } from '../util'
 import { getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders } from '../../constants'
 
+import { CLIENT_ID, AUTH0_DOMAIN, AUTH0_AUDIENCE } from './secrets'
 const AUTH_NAME = 'Stateful'
-const CLIENT_ID = '<ask for it>'
-const AUTH0_DOMAIN = '<ask for it>'
-const AUTH0_AUDIENCE = '<ask for it>'
+
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
 let remoteOutput = window.createOutputChannel('stateful')
