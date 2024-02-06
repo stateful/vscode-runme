@@ -7,7 +7,6 @@ import {
   tasks,
   window,
   Uri,
-  authentication,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -16,6 +15,7 @@ import { Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
+  isPlatformAuthEnabled,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
@@ -61,8 +61,8 @@ import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
-import { StatefulAuthProvider } from './provider/statefulAuth'
 import { CloudAuthProvider } from './provider/cloudAuth'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -276,27 +276,34 @@ export class RunmeExtension {
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
-      new CloudAuthProvider(context),
-      new StatefulAuthProvider(context, uriHandler),
     )
 
-    const getAuthSession = async () => {
-      const session = await authentication.getSession('stateful', ['profile'], {
-        createIfNone: false,
-      })
-      if (session) {
-        window.showInformationMessage(`Welcome back ${session.account.label}`)
-      }
+    if (isPlatformAuthEnabled()) {
+      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      // const getAuthSession = async () => {
+      //   const session = await authentication.getSession(
+      //     AuthenticationProviders.Stateful,
+      //     ['profile'],
+      //     {
+      //       createIfNone: false,
+      //     },
+      //   )
+      //   if (session) {
+      //     window.showInformationMessage(`Welcome back ${session.account.label}`)
+      //   }
+      // }
+
+      // getAuthSession()
+
+      // context.subscriptions.push(
+      //   authentication.onDidChangeSessions(async (e) => {
+      //     console.log(e)
+      //     getAuthSession()
+      //   }),
+      // )
+    } else {
+      context.subscriptions.push(new CloudAuthProvider(context))
     }
-
-    getAuthSession()
-
-    context.subscriptions.push(
-      authentication.onDidChangeSessions(async (e) => {
-        console.log(e)
-        getAuthSession()
-      }),
-    )
 
     await bootFile(context)
   }

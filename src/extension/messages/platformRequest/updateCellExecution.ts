@@ -1,16 +1,17 @@
+import { authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellById } from '../../cell'
-import { getAuthSession, getCellRunmeId } from '../../utils'
+import { getCellRunmeId } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
-import { UpdateCellExecutionDocument } from '../../__generated__/graphql'
+import { UpdateCellExecutionDocument } from '../../__generated-platform__/graphql'
 import { Kernel } from '../../kernel'
 
-type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
+type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 export default async function updateCellExecution(
   requestMessage: APIRequestMessage,
@@ -19,7 +20,9 @@ export default async function updateCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await getAuthSession()
+    const session = await authentication.getSession('stateful', ['profile'], {
+      createIfNone: true,
+    })
 
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
@@ -44,19 +47,19 @@ export default async function updateCellExecution(
       mutation: UpdateCellExecutionDocument,
       variables: {
         id: message.output.data.id,
-        data: {
+        input: {
           isPrivate: false,
         },
       },
     })
     TelemetryReporter.sendTelemetryEvent('app.update')
-    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: result,
       id: message.output.id,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.update.error')
-    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
       id: message.output.id,
       hasErrors: true,

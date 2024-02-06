@@ -13,7 +13,8 @@ export interface IAppToken {
 
 export class RunmeService {
   protected githubAccessToken: string
-  private readonly apiBase = Uri.parse(getRunmeAppUrl(['api.platform']), true)
+  // TODO(cpda): Use Platform App URL
+  private readonly apiBase = Uri.parse(getRunmeAppUrl(['api']), true)
 
   constructor({ githubAccessToken }: { githubAccessToken: string }) {
     this.githubAccessToken = githubAccessToken

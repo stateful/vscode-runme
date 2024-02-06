@@ -322,10 +322,6 @@
           "command": "runme.tasksExcludeUnnamed",
           "when": "view == runme.launcher && runme.launcher.includeUnnamed",
           "group": "navigation"
-        },
-        {
-          "command": "vscode-stateful-authprovider.signIn",
-          "group": "navigation@10"
         }
       ],
       "explorer/context": [
@@ -683,6 +679,12 @@
             "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, a login prompt will appear anytime Auto-Save is switched on"
+          },
+          "runme.app.platformAuth": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           }
         }
       }
@@ -895,7 +897,8 @@
     "vscode:prepublish": "npm run prepare-binary",
     "download:binary": "npm run prepare-binary",
     "prepare-binary": "node .github/scripts/downloadAndExtract.js -b bin -n runme",
-    "codegen": "RUNME_TOKEN=$(runme token --api-url https://api.staging.runme.dev --insecure) graphql-codegen --config codegen.ts"
+    "codegen:runme": "RUNME_TOKEN=$(runme token --api-url https://api.staging.runme.dev --insecure) graphql-codegen --config codegen.ts",
+    "codegen:platform": "graphql-codegen --config codegenPlatform.ts"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.0",

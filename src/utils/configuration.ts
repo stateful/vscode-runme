@@ -87,6 +87,7 @@ const configurationSchema = {
       .default(NotebookAutoSaveSetting.No),
     sessionOutputs: z.boolean().default(false),
     loginPrompt: z.boolean().default(true),
+    platformAuth: z.boolean().default(false),
   },
 }
 
@@ -379,6 +380,10 @@ const getLoginPrompt = (): boolean => {
   return getCloudConfigurationValue('loginPrompt', true)
 }
 
+const isPlatformAuthEnabled = (): boolean => {
+  return getCloudConfigurationValue('platformAuth', false)
+}
+
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
@@ -401,6 +406,7 @@ export {
   isNotebookTerminalEnabledForCell,
   isNotebookTerminalFeatureEnabled,
   isRunmeAppButtonsEnabled,
+  isPlatformAuthEnabled,
   registerExtensionEnvironmentVariables,
   getSessionOutputs,
   getLoginPrompt,

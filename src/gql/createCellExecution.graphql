@@ -1,5 +1,5 @@
-mutation CreateCellExecution($input: CreateCellExecutionInput!) {
-  createCellExecution(input: $input) {
+mutation CreateCellExecution($data: CellExecutionInput!) {
+  createCellExecution(data: $data) {
    id,
    htmlUrl
   }

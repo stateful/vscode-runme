@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context'
 import fetch from 'cross-fetch'
 import { Uri } from 'vscode'
 
-import { getRunmeAppUrl } from '../../utils/configuration'
+import { getRunmeAppUrl, isPlatformAuthEnabled } from '../../utils/configuration'
 
 export function InitializeClient({
   uri,
@@ -22,7 +22,7 @@ export function InitializeClient({
     }
   })
   const appApiUrl = Uri.joinPath(
-    Uri.parse(getRunmeAppUrl(['api.platform']), true),
+    Uri.parse(getRunmeAppUrl([isPlatformAuthEnabled() ? 'api.platform' : 'api']), true),
     '/graphql',
   ).toString()
   const link = new HttpLink({ fetch, uri: uri || appApiUrl })

@@ -1,18 +1,21 @@
+import { authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
+import { AuthenticationProviders, ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
-import { CreateCellExecutionDocument, NotebookInput } from '../../__generated__/graphql'
+import {
+  CreateCellExecutionDocument,
+  CreateNotebookInput,
+} from '../../__generated-platform__/graphql'
 import { InitializeClient } from '../../api/client'
 import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
-import { RunmeService } from '../../services/runme'
-import { getAnnotations, getAuthSession, getCellRunmeId } from '../../utils'
+import { getAnnotations, getCellRunmeId } from '../../utils'
 
-export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.cloudApiRequest>>
+export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
@@ -22,11 +25,12 @@ export default async function saveCellExecution(
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const session = await getAuthSession(
-      !message.output.data.isUserAction && autoSaveIsOn ? false : true,
-    )
+    const session = await authentication.getSession(AuthenticationProviders.Stateful, ['profile'], {
+      createIfNone: !message.output.data.isUserAction && autoSaveIsOn ? false : true,
+    })
+
     if (!session) {
-      return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
         data: {
           displayShare: false,
         },
@@ -53,17 +57,13 @@ export default async function saveCellExecution(
           : 0
     const annotations = getAnnotations(cell)
     delete annotations['runme.dev/id']
-    const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
-    const runmeTokenResponse = await runmeService.getUserToken()
-    if (!runmeTokenResponse) {
-      throw new Error('Unable to retrieve an access token')
-    }
-    const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
+    const graphClient = InitializeClient({ runmeToken: session.accessToken })
+
     const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
 
     const fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
 
-    let notebookInput: NotebookInput | undefined
+    let notebookInput: CreateNotebookInput | undefined
 
     if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
       notebookInput = {
@@ -75,7 +75,7 @@ export default async function saveCellExecution(
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
-        data: {
+        input: {
           stdout: terminalContents,
           stderr: Array.from([]), // stderr will become applicable for non-terminal
           exitCode,

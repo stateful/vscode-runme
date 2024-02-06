@@ -14,20 +14,25 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
-  BigInt: { input: any; output: any; }
-  Byte: { input: any; output: any; }
   Bytes: { input: any; output: any; }
-  /** A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
-  Date: { input: any; output: any; }
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
   DateTime: { input: any; output: any; }
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSON: { input: any; output: any; }
-  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSONObject: { input: any; output: any; }
-  /** A time string at UTC, such as 10:15:30Z, compliant with the `full-time` format outlined in section 5.6 of the RFC 3339profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
-  Time: { input: any; output: any; }
+};
+
+export type Admin = {
+  __typename?: 'Admin';
+  users?: Maybe<Array<Maybe<User>>>;
+};
+
+export type Anonymous = {
+  __typename?: 'Anonymous';
+  cellExecution?: Maybe<CellExecution>;
+  id?: Maybe<Scalars['String']['output']>;
+};
+
+
+export type AnonymousCellExecutionArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type Assistant = {
@@ -52,23 +57,23 @@ export type CellExecution = {
   autoSave: Scalars['Boolean']['output'];
   createTime: Scalars['DateTime']['output'];
   exitCode: Scalars['Int']['output'];
+  /** Cell execution history */
   history?: Maybe<Array<Maybe<CellExecution>>>;
-  htmlUrl?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  input?: Maybe<Scalars['String']['output']>;
-  isOwner?: Maybe<Scalars['Boolean']['output']>;
-  isPrivate?: Maybe<Scalars['Boolean']['output']>;
+  htmlUrl: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  input: Scalars['String']['output'];
+  isOwner: Scalars['Boolean']['output'];
+  isPrivate: Scalars['Boolean']['output'];
   languageId?: Maybe<Scalars['String']['output']>;
   lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
   metadata?: Maybe<Metadata>;
   notebook?: Maybe<Notebook>;
-  notebookId?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<Owner>;
-  pid?: Maybe<Scalars['Int']['output']>;
-  stderr?: Maybe<Scalars['Bytes']['output']>;
-  stdout?: Maybe<Scalars['Bytes']['output']>;
-  updateTime?: Maybe<Scalars['DateTime']['output']>;
-  user: User;
+  pid: Scalars['Int']['output'];
+  stderr: Scalars['Bytes']['output'];
+  stdout: Scalars['Bytes']['output'];
+  updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
   userId: Scalars['String']['output'];
 };
 
@@ -78,12 +83,28 @@ export type CellExecutionHistoryArgs = {
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type CellExecutionInput = {
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+  exitCode: Scalars['Int']['input'];
+  id?: InputMaybe<Scalars['String']['input']>;
+  input: Scalars['String']['input'];
+  isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
+  languageId?: InputMaybe<Scalars['String']['input']>;
+  metadata: MetadataInput;
+  notebook?: InputMaybe<NotebookInput>;
+  pid: Scalars['Int']['input'];
+  stderr: Scalars['Bytes']['input'];
+  stdout: Scalars['Bytes']['input'];
+};
+
 export type CellExecutionList = {
   __typename?: 'CellExecutionList';
   data?: Maybe<Array<Maybe<CellExecution>>>;
-  totalActive?: Maybe<Scalars['Int']['output']>;
-  totalArchived?: Maybe<Scalars['Int']['output']>;
   totalCount?: Maybe<Scalars['Int']['output']>;
+};
+
+export type CellExecutionUpdateInput = {
+  isPrivate: Scalars['Boolean']['input'];
 };
 
 export type Chat = {
@@ -120,162 +141,10 @@ export type ChatSessionInput = {
   id: Scalars['ID']['input'];
 };
 
-export type CreateCellExecutionInput = {
-  archivedTime?: InputMaybe<Scalars['DateTime']['input']>;
-  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  exitCode?: InputMaybe<Scalars['Int']['input']>;
-  id?: InputMaybe<Scalars['String']['input']>;
-  input: Scalars['Bytes']['input'];
-  isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
-  languageId?: InputMaybe<Scalars['String']['input']>;
-  metadata: MetadataInput;
-  notebook?: InputMaybe<CreateNotebookInput>;
-  pid: Scalars['Int']['input'];
-  stderr: Scalars['Bytes']['input'];
-  stdout: Scalars['Bytes']['input'];
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
-export type CreateGithubInstallationInput = {
-  accountAvatarUrl: Scalars['String']['input'];
-  accountId: Scalars['Int']['input'];
-  accountName: Scalars['String']['input'];
-  appId: Scalars['Int']['input'];
-  appSlug: Scalars['String']['input'];
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  installationId: Scalars['Int']['input'];
-  permissions: Scalars['JSON']['input'];
-  repositorySelection: Scalars['String']['input'];
-  suspendedAt?: InputMaybe<Scalars['DateTime']['input']>;
-  suspendedBy?: InputMaybe<Scalars['String']['input']>;
-  targetId: Scalars['Int']['input'];
-  targetType: GithubTargetType;
-  updateTime: Scalars['DateTime']['input'];
-  userId: Scalars['String']['input'];
-};
-
-export type CreateNotebookInput = {
-  id: Scalars['String']['input'];
-  runmeVersion: Scalars['String']['input'];
-};
-
-export type CreateSlackInstallationInput = {
-  appId: Scalars['String']['input'];
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  data: Scalars['JSON']['input'];
-  defaultChannelId?: InputMaybe<Scalars['String']['input']>;
-  defaultChannelName?: InputMaybe<Scalars['String']['input']>;
-  scopes: Scalars['String']['input'];
-  teamId: Scalars['String']['input'];
-  teamName: Scalars['String']['input'];
-  token: Scalars['Bytes']['input'];
-  tokenType?: InputMaybe<SlackTokenType>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  userId: Scalars['String']['input'];
-};
-
-export type CreateUserInput = {
-  auth0Id?: InputMaybe<Scalars['String']['input']>;
-  bio?: InputMaybe<Scalars['String']['input']>;
-  company?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  email: Scalars['String']['input'];
-  emailVerified?: InputMaybe<Scalars['Boolean']['input']>;
-  firebaseRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  githubId?: InputMaybe<Scalars['String']['input']>;
-  githubRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  githubUsername?: InputMaybe<Scalars['String']['input']>;
-  googleId?: InputMaybe<Scalars['String']['input']>;
-  googleRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  linkedin?: InputMaybe<Scalars['String']['input']>;
-  microsoftId?: InputMaybe<Scalars['String']['input']>;
-  microsoftRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  photoUrl?: InputMaybe<Scalars['String']['input']>;
-  signupOrigin?: InputMaybe<SignupOrigin>;
-  siteAdmin?: InputMaybe<Scalars['Boolean']['input']>;
-  siteUrl?: InputMaybe<Scalars['String']['input']>;
-  twitter?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  username?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type DocMetadata = {
   __typename?: 'DocMetadata';
   key: Scalars['String']['output'];
   value: Scalars['String']['output'];
-};
-
-export type GithubInstallation = {
-  __typename?: 'GithubInstallation';
-  accountAvatarUrl: Scalars['String']['output'];
-  accountId: Scalars['Int']['output'];
-  accountName: Scalars['String']['output'];
-  appId: Scalars['Int']['output'];
-  appSlug: Scalars['String']['output'];
-  createTime: Scalars['DateTime']['output'];
-  documents?: Maybe<Array<Maybe<GithubMarkdown>>>;
-  id: Scalars['String']['output'];
-  installationId: Scalars['Int']['output'];
-  permissions: GithubInstallationPermissions;
-  repositorySelection: Scalars['String']['output'];
-  suspendedAt?: Maybe<Scalars['DateTime']['output']>;
-  suspendedBy?: Maybe<Scalars['String']['output']>;
-  targetId: Scalars['Int']['output'];
-  targetType: GithubTargetType;
-  updateTime: Scalars['DateTime']['output'];
-  user: User;
-  userId: Scalars['String']['output'];
-};
-
-export type GithubInstallationPermissions = {
-  __typename?: 'GithubInstallationPermissions';
-  contents?: Maybe<Scalars['String']['output']>;
-  metadata?: Maybe<Scalars['String']['output']>;
-};
-
-export type GithubMarkdown = {
-  __typename?: 'GithubMarkdown';
-  git_url: Scalars['String']['output'];
-  html_url: Scalars['String']['output'];
-  name: Scalars['String']['output'];
-  path: Scalars['String']['output'];
-  repository: GithubRepository;
-  sha: Scalars['String']['output'];
-  url: Scalars['String']['output'];
-};
-
-export type GithubRepository = {
-  __typename?: 'GithubRepository';
-  description?: Maybe<Scalars['String']['output']>;
-  full_name?: Maybe<Scalars['String']['output']>;
-  html_url?: Maybe<Scalars['String']['output']>;
-  id?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  owner?: Maybe<GithubRepositoryOwner>;
-  url?: Maybe<Scalars['String']['output']>;
-};
-
-export type GithubRepositoryOwner = {
-  __typename?: 'GithubRepositoryOwner';
-  avatar_url?: Maybe<Scalars['String']['output']>;
-  gravatar_id?: Maybe<Scalars['String']['output']>;
-  html_url?: Maybe<Scalars['String']['output']>;
-  id?: Maybe<Scalars['String']['output']>;
-  login?: Maybe<Scalars['String']['output']>;
-  type?: Maybe<Scalars['String']['output']>;
-  url?: Maybe<Scalars['String']['output']>;
-};
-
-export enum GithubTargetType {
-  GithubOrganization = 'GITHUB_ORGANIZATION',
-  GithubUser = 'GITHUB_USER'
-}
-
-export type HandleGithubInstallationInput = {
-  installationId: Scalars['Int']['input'];
-  setupAction: Scalars['String']['input'];
 };
 
 export type Hit = {
@@ -283,6 +152,10 @@ export type Hit = {
   distance?: Maybe<Scalars['Float']['output']>;
   document: Scalars['String']['output'];
   metadata: Array<DocMetadata>;
+};
+
+export type IdConnect = {
+  id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type Metadata = {
@@ -307,23 +180,21 @@ export type MetadataInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   archiveCellExecution?: Maybe<CellExecution>;
-  createCellExecution: CellExecution;
-  deleteCellExecution: CellExecution;
-  handleGithubInstallation: GithubInstallation;
-  unArchiveCellExecution?: Maybe<CellExecution>;
-  updateCellExecution: CellExecution;
-  updateSlackInstallation: SlackInstallation;
+  createCellExecution?: Maybe<CellExecution>;
+  deleteCellExecution?: Maybe<CellExecution>;
+  deleteSlackInstallation?: Maybe<SlackInstallation>;
+  updateCellExecution?: Maybe<CellExecution>;
+  updateSlackInstallation?: Maybe<SlackInstallation>;
 };
 
 
 export type MutationArchiveCellExecutionArgs = {
-  all?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['String']['input'];
 };
 
 
 export type MutationCreateCellExecutionArgs = {
-  input: CreateCellExecutionInput;
+  data: CellExecutionInput;
 };
 
 
@@ -332,37 +203,33 @@ export type MutationDeleteCellExecutionArgs = {
 };
 
 
-export type MutationHandleGithubInstallationArgs = {
-  input: HandleGithubInstallationInput;
-};
-
-
-export type MutationUnArchiveCellExecutionArgs = {
-  all?: InputMaybe<Scalars['Boolean']['input']>;
+export type MutationDeleteSlackInstallationArgs = {
   id: Scalars['String']['input'];
 };
 
 
 export type MutationUpdateCellExecutionArgs = {
+  data: CellExecutionUpdateInput;
   id: Scalars['String']['input'];
-  input: UpdateCellExecutionInput;
   notifySlack?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
 export type MutationUpdateSlackInstallationArgs = {
-  input: UpdateSlackInstallationInput;
+  data: SlackInstallationUpdateInput;
 };
 
 export type Notebook = {
   __typename?: 'Notebook';
-  cellExecutions?: Maybe<Array<Maybe<CellExecution>>>;
   createTime?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['String']['output'];
   runmeVersion?: Maybe<Scalars['String']['output']>;
   updateTime?: Maybe<Scalars['DateTime']['output']>;
-  user: User;
-  userId: Scalars['String']['output'];
+};
+
+export type NotebookInput = {
+  id?: InputMaybe<Scalars['String']['input']>;
+  runmeVersion?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Owner = {
@@ -377,45 +244,18 @@ export type Owner = {
   twitter?: Maybe<Scalars['String']['output']>;
 };
 
-/** About the Redwood queries. */
 export type Query = {
   __typename?: 'Query';
+  admin?: Maybe<Admin>;
+  anonymous?: Maybe<Anonymous>;
   assistant?: Maybe<Assistant>;
-  cellExecution?: Maybe<CellExecution>;
-  cellExecutions: CellExecutionList;
   getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
-  githubInstallation?: Maybe<GithubInstallation>;
-  /** Fetches the Redwood root schema. */
-  redwood?: Maybe<Redwood>;
-  slackInstallation?: Maybe<SlackInstallation>;
+  user?: Maybe<User>;
 };
 
 
-/** About the Redwood queries. */
-export type QueryCellExecutionArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-/** About the Redwood queries. */
-export type QueryCellExecutionsArgs = {
-  archived?: InputMaybe<Scalars['Boolean']['input']>;
-  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-/**
- * The RedwoodJS Root Schema
- *
- * Defines details about RedwoodJS such as the current user and version information.
- */
-export type Redwood = {
-  __typename?: 'Redwood';
-  /** The current user. */
-  currentUser?: Maybe<Scalars['JSON']['output']>;
-  /** The version of Prisma. */
-  prismaVersion?: Maybe<Scalars['String']['output']>;
-  /** The version of Redwood. */
-  version?: Maybe<Scalars['String']['output']>;
+export type QueryUserArgs = {
+  id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Search = {
@@ -433,14 +273,6 @@ export type SearchInput = {
   query: Scalars['String']['input'];
 };
 
-export enum SignupOrigin {
-  RunmeApp = 'RUNME_APP',
-  RunmeCli = 'RUNME_CLI',
-  RunmeFirebase = 'RUNME_FIREBASE',
-  RunmeVscode = 'RUNME_VSCODE',
-  Unknown = 'UNKNOWN'
-}
-
 export type SlackChannel = {
   __typename?: 'SlackChannel';
   id: Scalars['String']['output'];
@@ -449,122 +281,63 @@ export type SlackChannel = {
 
 export type SlackInstallation = {
   __typename?: 'SlackInstallation';
-  appId: Scalars['String']['output'];
+  app_id: Scalars['String']['output'];
   createTime: Scalars['DateTime']['output'];
-  data: Scalars['JSON']['output'];
-  defaultChannelId?: Maybe<Scalars['String']['output']>;
-  defaultChannelName?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
+  default_channel_id?: Maybe<Scalars['String']['output']>;
+  default_channel_name?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
   scopes: Scalars['String']['output'];
-  teamId: Scalars['String']['output'];
-  teamName: Scalars['String']['output'];
-  token: Scalars['Bytes']['output'];
-  tokenType?: Maybe<SlackTokenType>;
+  team_id: Scalars['String']['output'];
+  team_name: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
-  user: User;
-  userId: Scalars['String']['output'];
+  user?: Maybe<User>;
 };
 
-export enum SlackTokenType {
-  SlackBot = 'SLACK_BOT',
-  SlackUser = 'SLACK_USER'
-}
+export type SlackInstallationUpdateInput = {
+  default_channel_id: Scalars['String']['input'];
+  default_channel_name: Scalars['String']['input'];
+};
 
 export type Subscription = {
   __typename?: 'Subscription';
   chat?: Maybe<ChatMessage>;
 };
 
-export type UpdateCellExecutionInput = {
-  isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-export type UpdateGithubInstallationInput = {
-  accountAvatarUrl?: InputMaybe<Scalars['String']['input']>;
-  accountId?: InputMaybe<Scalars['Int']['input']>;
-  accountName?: InputMaybe<Scalars['String']['input']>;
-  appId?: InputMaybe<Scalars['Int']['input']>;
-  appSlug?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  installationId?: InputMaybe<Scalars['Int']['input']>;
-  permissions?: InputMaybe<Scalars['JSON']['input']>;
-  repositorySelection?: InputMaybe<Scalars['String']['input']>;
-  suspendedAt?: InputMaybe<Scalars['DateTime']['input']>;
-  suspendedBy?: InputMaybe<Scalars['String']['input']>;
-  targetId?: InputMaybe<Scalars['Int']['input']>;
-  targetType?: InputMaybe<GithubTargetType>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateNotebookInput = {
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  runmeVersion?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateSlackInstallationInput = {
-  defaultChannelId?: InputMaybe<Scalars['String']['input']>;
-  defaultChannelName?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateUserInput = {
-  auth0Id?: InputMaybe<Scalars['String']['input']>;
-  bio?: InputMaybe<Scalars['String']['input']>;
-  company?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  displayName?: InputMaybe<Scalars['String']['input']>;
-  email?: InputMaybe<Scalars['String']['input']>;
-  emailVerified?: InputMaybe<Scalars['Boolean']['input']>;
-  firebaseRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  githubId?: InputMaybe<Scalars['String']['input']>;
-  githubRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  githubUsername?: InputMaybe<Scalars['String']['input']>;
-  googleId?: InputMaybe<Scalars['String']['input']>;
-  googleRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  linkedin?: InputMaybe<Scalars['String']['input']>;
-  microsoftId?: InputMaybe<Scalars['String']['input']>;
-  microsoftRefreshTime?: InputMaybe<Scalars['DateTime']['input']>;
-  photoUrl?: InputMaybe<Scalars['String']['input']>;
-  signupOrigin?: InputMaybe<SignupOrigin>;
-  siteAdmin?: InputMaybe<Scalars['Boolean']['input']>;
-  siteUrl?: InputMaybe<Scalars['String']['input']>;
-  twitter?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  username?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type User = {
   __typename?: 'User';
-  Notebook: Array<Maybe<Notebook>>;
-  SlackInstallations: Array<Maybe<SlackInstallation>>;
-  auth0Id?: Maybe<Scalars['String']['output']>;
   bio?: Maybe<Scalars['String']['output']>;
-  cellExecutions: Array<Maybe<CellExecution>>;
+  cellExecution?: Maybe<CellExecution>;
+  /** Cells executed by the user */
+  cellExecutions?: Maybe<CellExecutionList>;
   company?: Maybe<Scalars['String']['output']>;
-  createTime?: Maybe<Scalars['DateTime']['output']>;
+  create_time: Scalars['DateTime']['output'];
   displayName?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
   emailVerified?: Maybe<Scalars['Boolean']['output']>;
-  firebaseRefreshTime?: Maybe<Scalars['DateTime']['output']>;
+  firebase_refresh_time?: Maybe<Scalars['DateTime']['output']>;
   githubId?: Maybe<Scalars['String']['output']>;
-  githubInstallations: Array<Maybe<GithubInstallation>>;
-  githubRefreshTime?: Maybe<Scalars['DateTime']['output']>;
-  githubUsername?: Maybe<Scalars['String']['output']>;
-  googleId?: Maybe<Scalars['String']['output']>;
-  googleRefreshTime?: Maybe<Scalars['DateTime']['output']>;
-  id: Scalars['String']['output'];
+  githubUsername?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
   linkedin?: Maybe<Scalars['String']['output']>;
-  microsoftId?: Maybe<Scalars['String']['output']>;
-  microsoftRefreshTime?: Maybe<Scalars['DateTime']['output']>;
   photoUrl?: Maybe<Scalars['String']['output']>;
-  signupOrigin?: Maybe<SignupOrigin>;
-  siteAdmin?: Maybe<Scalars['Boolean']['output']>;
+  siteAdmin: Scalars['Boolean']['output'];
   siteUrl?: Maybe<Scalars['String']['output']>;
+  /** Slack installation for the user */
+  slackInstallation?: Maybe<SlackInstallation>;
+  totalArchived?: Maybe<Scalars['Int']['output']>;
   twitter?: Maybe<Scalars['String']['output']>;
-  updateTime?: Maybe<Scalars['DateTime']['output']>;
-  username?: Maybe<Scalars['String']['output']>;
+  update_time: Scalars['DateTime']['output'];
+};
+
+
+export type UserCellExecutionArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type UserCellExecutionsArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type ArchiveCellExecutionMutationVariables = Exact<{
@@ -575,21 +348,21 @@ export type ArchiveCellExecutionMutationVariables = Exact<{
 export type ArchiveCellExecutionMutation = { __typename?: 'Mutation', archiveCellExecution?: { __typename?: 'CellExecution', id: string } | null };
 
 export type CreateCellExecutionMutationVariables = Exact<{
-  input: CreateCellExecutionInput;
+  data: CellExecutionInput;
 }>;
 
 
-export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } };
+export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl: string } | null };
 
 export type UpdateCellExecutionMutationVariables = Exact<{
   id: Scalars['String']['input'];
-  input: UpdateCellExecutionInput;
+  data: CellExecutionUpdateInput;
 }>;
 
 
-export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null } };
+export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution?: { __typename?: 'CellExecution', id: string, htmlUrl: string } | null };
 
 
 export const ArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellExecutionMutation, ArchiveCellExecutionMutationVariables>;
-export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
-export const UpdateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}}]}}]}}]} as unknown as DocumentNode<UpdateCellExecutionMutation, UpdateCellExecutionMutationVariables>;
+export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
+export const UpdateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"data"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CellExecutionUpdateInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"data"},"value":{"kind":"Variable","name":{"kind":"Name","value":"data"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}}]}}]}}]} as unknown as DocumentNode<UpdateCellExecutionMutation, UpdateCellExecutionMutationVariables>;

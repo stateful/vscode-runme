@@ -28,7 +28,7 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import { getNotebookExecutionOrder } from '../utils/configuration'
+import { getNotebookExecutionOrder, isPlatformAuthEnabled } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
@@ -67,6 +67,7 @@ import PanelManager from './panels/panelManager'
 import Panel from './panels/panel'
 import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction } from './commands'
+import { handlePlatformApiMessage } from './messages/platformRequest'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -365,6 +366,15 @@ export class Kernel implements Disposable {
         }
       })
     } else if (message.type === ClientMessages.cloudApiRequest) {
+      if (isPlatformAuthEnabled()) {
+        return handlePlatformApiMessage({
+          messaging: this.messaging,
+          message: { ...message, type: ClientMessages.platformApiRequest },
+          editor,
+          kernel: this,
+        })
+      }
+
       return handleCloudApiMessage({
         messaging: this.messaging,
         message,

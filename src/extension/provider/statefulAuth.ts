@@ -20,10 +20,13 @@ import { PromiseAdapter, promiseFromEvent } from '../util'
 import { getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders } from '../../constants'
 
+// TODO(cpda): Move to configuration
+const CLIENT_ID = '<ASK FOR IT>'
+const AUTH0_DOMAIN = 'stateful-inc.us.auth0.com'
+const AUTH0_AUDIENCE = 'https://platform.stateful.com/'
+
 const AUTH_NAME = 'Stateful'
-const CLIENT_ID = '<ask for it>'
-const AUTH0_DOMAIN = '<ask for it>'
-const AUTH0_AUDIENCE = '<ask for it>'
+
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
 let remoteOutput = window.createOutputChannel('stateful')
