@@ -308,22 +308,11 @@ export type Mutation = {
   __typename?: 'Mutation';
   archiveCellExecution?: Maybe<CellExecution>;
   createCellExecution: CellExecution;
-  createGithubInstallation: GithubInstallation;
-  createNotebook: Notebook;
-  createSlackInstallation: SlackInstallation;
-  createUser: User;
   deleteCellExecution: CellExecution;
-  deleteGithubInstallation: GithubInstallation;
-  deleteNotebook: Notebook;
-  deleteSlackInstallation: SlackInstallation;
-  deleteUser: User;
   handleGithubInstallation: GithubInstallation;
   unArchiveCellExecution?: Maybe<CellExecution>;
   updateCellExecution: CellExecution;
-  updateGithubInstallation: GithubInstallation;
-  updateNotebook: Notebook;
   updateSlackInstallation: SlackInstallation;
-  updateUser: User;
 };
 
 
@@ -338,47 +327,7 @@ export type MutationCreateCellExecutionArgs = {
 };
 
 
-export type MutationCreateGithubInstallationArgs = {
-  input: CreateGithubInstallationInput;
-};
-
-
-export type MutationCreateNotebookArgs = {
-  input: CreateNotebookInput;
-};
-
-
-export type MutationCreateSlackInstallationArgs = {
-  input: CreateSlackInstallationInput;
-};
-
-
-export type MutationCreateUserArgs = {
-  input: CreateUserInput;
-};
-
-
 export type MutationDeleteCellExecutionArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-export type MutationDeleteGithubInstallationArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-export type MutationDeleteNotebookArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-export type MutationDeleteSlackInstallationArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-export type MutationDeleteUserArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -401,26 +350,8 @@ export type MutationUpdateCellExecutionArgs = {
 };
 
 
-export type MutationUpdateGithubInstallationArgs = {
-  id: Scalars['String']['input'];
-  input: UpdateGithubInstallationInput;
-};
-
-
-export type MutationUpdateNotebookArgs = {
-  id: Scalars['String']['input'];
-  input: UpdateNotebookInput;
-};
-
-
 export type MutationUpdateSlackInstallationArgs = {
   input: UpdateSlackInstallationInput;
-};
-
-
-export type MutationUpdateUserArgs = {
-  id: Scalars['String']['input'];
-  input: UpdateUserInput;
 };
 
 export type Notebook = {
@@ -454,15 +385,9 @@ export type Query = {
   cellExecutions: CellExecutionList;
   getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
   githubInstallation?: Maybe<GithubInstallation>;
-  githubInstallations: Array<GithubInstallation>;
-  notebook?: Maybe<Notebook>;
-  notebooks: Array<Notebook>;
   /** Fetches the Redwood root schema. */
   redwood?: Maybe<Redwood>;
   slackInstallation?: Maybe<SlackInstallation>;
-  slackInstallations: Array<SlackInstallation>;
-  user?: Maybe<User>;
-  users: Array<User>;
 };
 
 
@@ -476,24 +401,6 @@ export type QueryCellExecutionArgs = {
 export type QueryCellExecutionsArgs = {
   archived?: InputMaybe<Scalars['Boolean']['input']>;
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
-
-/** About the Redwood queries. */
-export type QueryGithubInstallationArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-/** About the Redwood queries. */
-export type QueryNotebookArgs = {
-  id: Scalars['String']['input'];
-};
-
-
-/** About the Redwood queries. */
-export type QuerySlackInstallationArgs = {
-  id: Scalars['String']['input'];
 };
 
 /**
