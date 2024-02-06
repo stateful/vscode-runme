@@ -84,6 +84,7 @@ const configurationSchema = {
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
       .default(NotebookAutoSaveSetting.No),
     sessionOutputs: z.boolean().default(false),
+    loginPrompt: z.boolean().default(true),
   },
 }
 
@@ -372,6 +373,10 @@ const getSessionOutputs = (): boolean => {
   return getCloudConfigurationValue('sessionOutputs', false)
 }
 
+const getLoginPrompt = (): boolean => {
+  return getCloudConfigurationValue('loginPrompt', true)
+}
+
 export {
   getPortNumber,
   getBinaryPath,
@@ -396,4 +401,5 @@ export {
   getForceNewWindowConfig,
   getNotebookAutoSave,
   getSessionOutputs,
+  getLoginPrompt,
 }
