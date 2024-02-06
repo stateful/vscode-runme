@@ -50,7 +50,6 @@ import {
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
-  resetLoginPrompt,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -260,12 +259,8 @@ export class RunmeExtension {
       ),
       createDemoFileRunnerForActiveNotebook(context, kernel),
       createDemoFileRunnerWatcher(context, kernel),
-      RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () =>
-        toggleAutosave(context, false),
-      ),
-      RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () =>
-        toggleAutosave(context, true),
-      ),
+      RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
+      RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
       RunmeExtension.registerCommand(
         'runme.notebookSessionOutputs',
         (e: { notebookEditor: { notebookUri: Uri }; ui: boolean }) => {
@@ -279,7 +274,6 @@ export class RunmeExtension {
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
-      RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
       new CloudAuthProvider(context),
     )
     await bootFile(context)

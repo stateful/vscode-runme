@@ -223,11 +223,6 @@
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
         "shortTitle": "Reset Session"
-      },
-      {
-        "command": "runme.resetLoginPrompt",
-        "category": "Runme",
-        "title": "Reset login prompt when asking to Signin with GitHub"
       }
     ],
     "menus": {
@@ -678,6 +673,12 @@
             "scope": "window",
             "default": false,
             "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
+          },
+          "runme.app.loginPrompt": {
+            "type": "boolean",
+            "scope": "window",
+            "default": true,
+            "markdownDescription": "If set to `true`, a login prompt will appear anytime Auto-Save is switched on"
           }
         }
       }
@@ -704,7 +705,6 @@
               "markdown": "walkthroughs/1-features.md"
             }
           },
-
           {
             "id": "runme.welcome.learn",
             "title": "Learn more",

@@ -39,7 +39,7 @@ import IServer from '../server/runmeServer'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
-import { NOTEBOOK_AUTOSAVE_ON, SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY } from '../../constants'
+import { NOTEBOOK_AUTOSAVE_ON } from '../../constants'
 import ContextState from '../contextState'
 
 const log = getLogger('Commands')
@@ -352,13 +352,9 @@ export async function addToRecommendedExtensions(context: ExtensionContext) {
   }).display()
 }
 
-export async function toggleAutosave(context: ExtensionContext, autoSaveIsOn: boolean) {
+export async function toggleAutosave(autoSaveIsOn: boolean) {
   if (autoSaveIsOn) {
-    await promptUserSession(context)
+    await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
-}
-
-export async function resetLoginPrompt(context: ExtensionContext) {
-  return context.globalState.update(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY, undefined)
 }

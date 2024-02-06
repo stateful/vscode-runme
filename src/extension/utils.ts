@@ -38,12 +38,12 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
-  SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY,
   CLOUD_USER_SIGNED_IN,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
+  getLoginPrompt,
   getNotebookAutoSave,
   getPortNumber,
   getTLSDir,
@@ -610,26 +610,23 @@ export function asWorkspaceRelativePath(documentPath: string): {
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
-export async function promptUserSession(
-  context: ExtensionContext,
-): Promise<AuthenticationSession | undefined> {
+export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
   let session = await getAuthSession(false)
-  const displayLoginPrompt = await context.globalState.get(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY)
+  const displayLoginPrompt = getLoginPrompt()
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell output in the Runme Cloud.
       Sign in with GitHub is required, do you want to proceed?`,
       'Yes',
       'No',
-      "Don't ask again",
+      'Open Settings',
     )
     if (!option || option === 'No') {
       return
     }
 
-    if (option === "Don't ask again") {
-      await context.globalState.update(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY, false)
-      return
+    if (option === 'Open Settings') {
+      return commands.executeCommand('runme.openSettings', 'runme.app.loginPrompt')
     }
 
     session = await getAuthSession(true)
