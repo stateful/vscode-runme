@@ -1,8 +1,8 @@
 {
   "name": "runme",
-  "version": "2.1.7",
+  "version": "2.2.3-edge.1",
   "publisher": "stateful",
-  "displayName": "Runme runs Markdown",
+  "displayName": "Runme Infra Notebooks",
   "description": "Execute your runbooks, docs, and READMEs.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
@@ -27,8 +27,8 @@
     "theme": "dark"
   },
   "keywords": [
-    "runme",
-    "readme",
+    "infra",
+    "cloud",
     "runbooks",
     "jupyter",
     "documentation",
@@ -223,6 +223,11 @@
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
         "shortTitle": "Reset Session"
+      },
+      {
+        "command": "runme.resetLoginPrompt",
+        "category": "Runme",
+        "title": "Reset login prompt when asking to Signin with GitHub"
       }
     ],
     "menus": {
@@ -339,7 +344,7 @@
         },
         {
           "command": "runme.resetRunnerSession",
-          "when": "notebookType == runme && notebookHasRunmeOutputs",
+          "when": "notebookType == runme",
           "group": "navigation"
         },
         {
@@ -459,12 +464,6 @@
             "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
-          },
-          "runme.experiments.outputPersistence": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           },
           "runme.checkout.projectDir": {
             "type": "string",
@@ -614,6 +613,11 @@
             ],
             "markdownDescription": "Default behavior of Open In Editor action button"
           },
+          "runme.notebook.executionOrder": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Enable execution order counter per cell in notebook UX"
+          },
           "runme.codelens.enable": {
             "type": "boolean",
             "default": true,
@@ -668,6 +672,12 @@
             ],
             "default": "no",
             "markdownDescription": "Automatically save cell execution output"
+          },
+          "runme.app.sessionOutputs": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           }
         }
       }
@@ -675,13 +685,13 @@
     "walkthroughs": [
       {
         "id": "runme.welcome",
-        "title": "Get Started with creating Runme Notebooks",
+        "title": "Get Started with Runme Notebooks",
         "description": "Runme allows to create interactive runbooks for VS Code.",
         "steps": [
           {
             "id": "runme.welcome.why",
-            "title": "Why Runme?",
-            "description": "Runme provides developers with the ability to navigate workflows center around code repositories by making Readme markdown files interactive and smart",
+            "title": "Creating Runme Notebooks",
+            "description": "Learn how you can use the Runme Notebook extension to run interactive runbooks right in your code editor!",
             "media": {
               "markdown": "walkthroughs/0-intro.md"
             }
@@ -694,14 +704,7 @@
               "markdown": "walkthroughs/1-features.md"
             }
           },
-          {
-            "id": "runme.welcome.annotations",
-            "title": "Cell Configuration",
-            "description": "To provide the best possible README (interactive markdown) experience to your users, be sure to configure your document's cells.",
-            "media": {
-              "markdown": "walkthroughs/2-annotations.md"
-            }
-          },
+
           {
             "id": "runme.welcome.learn",
             "title": "Learn more",
@@ -895,31 +898,33 @@
     "@graphql-codegen/client-preset": "^4.1.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@octokit/rest": "^19.0.13",
-    "@types/node": "^16.11.7",
+    "@types/node": "^18.19.14",
     "@types/uuid": "^9.0.7",
     "@types/vscode": "1.72.0",
-    "@types/vscode-notebook-renderer": "^1.72.0",
+    "@types/vscode-notebook-renderer": "^1.72.3",
     "@types/webpack-env": "^1.18.1",
-    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.6.0",
-    "@vitest/coverage-v8": "^0.34.3",
+    "@vitest/coverage-v8": "^1.2.2",
     "@vscode/vsce": "^2.21.0",
-    "@wdio/cli": "^8.16.5",
-    "@wdio/local-runner": "^8.16.5",
-    "@wdio/mocha-framework": "^8.16.3",
-    "@wdio/spec-reporter": "^8.16.3",
+    "@wdio/cli": "^8.27.2",
+    "@wdio/local-runner": "^8.27.2",
+    "@wdio/mocha-framework": "^8.27.2",
+    "@wdio/spec-reporter": "^8.27.2",
+    "chromedriver": "^121.0.0",
     "comment-json": "^4.2.3",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.0",
     "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-unicorn": "^48.0.1",
+    "eslint-plugin-unicorn": "^50.0.1",
     "eslint-plugin-unused-imports": "^3.0.0",
     "expect-webdriverio": "^4.2.7",
     "fork-ts-checker-webpack-plugin": "^9.0.0",
-    "husky": "^8.0.3",
+    "husky": "^9.0.10",
+    "msw": "^2.1.5",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.0.3",
+    "prettier": "^3.2.4",
     "runme": "^3.1.0",
     "semver": "^7.5.4",
     "tar-fs": "^3.0.4",
@@ -927,16 +932,16 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "unzipper": "^0.10.14",
-    "vitest": "^0.34.3",
+    "vitest": "^1.2.2",
     "vscode-uri": "^3.0.7",
-    "wdio-vscode-service": "^5.2.1",
-    "webdriverio": "^8.16.5",
+    "wdio-vscode-service": "^5.2.3",
+    "webdriverio": "^8.20.4",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@apollo/client": "^3.8.3",
-    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.1-20230830152835-a5b3a068eb8c.1",
+    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.3-20240109204259-575a337f8c49.1",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.3-20231228201231-1e8328c590ec.1",
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
@@ -955,7 +960,7 @@
     "octokit": "^3.1.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.2.1",
-    "undici": "^5.23.0",
+    "undici": "^6.3.0",
     "uuid": "^9.0.1",
     "vscode-telemetry": "^1.0.2",
     "xterm": "^5.3.0",

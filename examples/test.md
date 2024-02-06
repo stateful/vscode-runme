@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KJM3HHFDVSXA6E12JM3
-  version: v2.0
+  version: v2.2
 ---
 
 # Runme Examples
@@ -26,5 +26,5 @@ export FOO="don't prompt me"
 # GitHub Action Integration
 
 ```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
-https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml
+https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
 ```

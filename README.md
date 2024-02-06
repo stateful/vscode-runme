@@ -4,7 +4,7 @@ This VS Code extension transparently opens markdown files (i.e. README.md) as ru
 
 > 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
 
-![Text and notebook view side-by-side](https://runme.dev/img/short.gif)
+![Text and notebook view side-by-side](https://runme.dev/img/intro.gif)
 
 ## Documentation
 
@@ -59,9 +59,9 @@ Check the complete list of configuration options at https://docs.runme.dev/confi
 
 Chances are, you're not the first trailblazer to wander through here – someone might have already asked that burning question of yours, and we've got it covered. But hey, you might just be the pioneer with a fresh perspective! So feel free to ask away – your question could be the start of something new, and we're all ears! [Checkout out our official FAQ](https://docs.runme.dev/faq)
 
-## Maturing Software
+## Let Us Know What You Think
 
-Runme is in rapid development. Please be aware of following known limitations:
+Runme is under active development. Please be aware of following known limitations:
 
 - Only shell is currently supported on macOS, Linux, and Windows ([WSL]([url](https://learn.microsoft.com/en-us/windows/wsl/))). PowerShell is not supported yet
 - Be aware of edge cases. Let us know when you hit any snags. We appreciate it!

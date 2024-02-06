@@ -13,6 +13,7 @@ const ACTIONS_SECTION_NAME = 'runme.actions'
 const SERVER_SECTION_NAME = 'runme.server'
 const TERMINAL_SECTION_NAME = 'runme.terminal'
 const CODELENS_SECTION_NAME = 'runme.codelens'
+const NOTEBOOK_SECTION_NAME = 'runme.notebook'
 const ENV_SECTION_NAME = 'runme.env'
 const CLI_SECTION_NAME = 'runme.cli'
 const APP_SECTION_NAME = 'runme.app'
@@ -64,6 +65,9 @@ const configurationSchema = {
   codelens: {
     enable: z.boolean().default(true),
   },
+  notebook: {
+    executionOrder: z.boolean().default(true),
+  },
   env: {
     workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
     loadWorkspaceFiles: z.boolean().default(true),
@@ -79,6 +83,7 @@ const configurationSchema = {
     notebookAutoSave: z
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
       .default(NotebookAutoSaveSetting.No),
+    sessionOutputs: z.boolean().default(false),
   },
 }
 
@@ -135,6 +140,19 @@ const getCodeLensConfigurationValue = <T>(
   const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
   const configurationValue = configurationSection.get<T>(configName)!
   const parseResult = configurationSchema.codelens[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
+  }
+  return defaultValue
+}
+
+const getNotebookConfigurationValue = <T>(
+  configName: keyof typeof configurationSchema.notebook,
+  defaultValue: T,
+) => {
+  const configurationSection = workspace.getConfiguration(NOTEBOOK_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.notebook[configName].safeParse(configurationValue)
   if (parseResult.success) {
     return parseResult.data as T
   }
@@ -257,6 +275,10 @@ const getCodeLensEnabled = (): boolean => {
   return getCodeLensConfigurationValue<boolean>('enable', true)
 }
 
+const getNotebookExecutionOrder = (): boolean => {
+  return getNotebookConfigurationValue<boolean>('executionOrder', true)
+}
+
 const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
   context.environmentVariableCollection.prepend(
     'PATH',
@@ -346,12 +368,17 @@ const getNotebookAutoSave = (): NotebookAutoSaveSetting => {
   return getCloudConfigurationValue('notebookAutoSave', NotebookAutoSaveSetting.No)
 }
 
+const getSessionOutputs = (): boolean => {
+  return getCloudConfigurationValue('sessionOutputs', false)
+}
+
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
   getCodeLensEnabled,
+  getNotebookExecutionOrder,
   getCustomServerAddress,
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
@@ -368,4 +395,5 @@ export {
   isNotebookTerminalFeatureEnabled,
   isRunmeAppButtonsEnabled,
   registerExtensionEnvironmentVariables,
+  getSessionOutputs,
 }

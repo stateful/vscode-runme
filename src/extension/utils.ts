@@ -18,6 +18,7 @@ import vscode, {
   WorkspaceFolder,
   ExtensionContext,
   authentication,
+  AuthenticationSession,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -37,6 +38,8 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
+  SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY,
+  CLOUD_USER_SIGNED_IN,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -51,7 +54,7 @@ import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
 import { BOOTFILE, BOOTFILE_DEMO } from './constants'
-import { GrpcRunnerEnvironment } from './runner'
+import { GrpcRunnerEnvironment } from './runner/environment'
 import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
@@ -581,6 +584,65 @@ export function suggestCategories(categories: string[], title: string, placehold
 export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
-  await commands.executeCommand('setContext', NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+}
+
+export async function resetNotebookAutosaveSettings() {
+  const configAutoSaveSetting = getNotebookAutoSave()
+  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+}
+
+export function asWorkspaceRelativePath(documentPath: string): {
+  relativePath: string
+  outside: boolean
+} {
+  const relativePath = workspace.asRelativePath(documentPath)
+  if (relativePath === documentPath) {
+    return { relativePath: path.basename(documentPath), outside: true }
+  }
+  return { relativePath, outside: false }
+}
+
+/**
+ * Handles the first time experience for saving a cell.
+ * It informs the user that a Login with a GitHub account is required before prompting the user.
+ * This only happens once. Subsequent saves will not display the prompt.
+ * @returns AuthenticationSession
+ */
+export async function promptUserSession(
+  context: ExtensionContext,
+): Promise<AuthenticationSession | undefined> {
+  let session = await getAuthSession(false)
+  const displayLoginPrompt = await context.globalState.get(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY)
+  if (!session && displayLoginPrompt !== false) {
+    const option = await window.showInformationMessage(
+      `Securely store your cell output in the Runme Cloud.
+      Sign in with GitHub is required, do you want to proceed?`,
+      'Yes',
+      'No',
+      "Don't ask again",
+    )
+    if (!option || option === 'No') {
+      return
+    }
+
+    if (option === "Don't ask again") {
+      await context.globalState.update(SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY, false)
+      return
+    }
+
+    session = await getAuthSession(true)
+    if (!session) {
+      throw new Error('You must authenticate with your GitHub account')
+    }
+  }
+
+  return session
+}
+
+export async function checkSession(context: ExtensionContext) {
+  const session = await getAuthSession(false)
+  context.globalState.update(CLOUD_USER_SIGNED_IN, !!session)
+  ContextState.addKey(CLOUD_USER_SIGNED_IN, !!session)
 }

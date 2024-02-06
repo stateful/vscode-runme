@@ -1,4 +1,3 @@
-import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
   type Pseudoterminal,
@@ -8,8 +7,7 @@ import {
   EventEmitter,
 } from 'vscode'
 
-import type { DisposableAsync } from '../types'
-
+import type { DisposableAsync } from '../../types'
 import {
   CommandMode,
   CreateSessionRequest,
@@ -17,14 +15,16 @@ import {
   ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
-  Session,
   Winsize,
-} from './grpc/runnerTypes'
-import { RunnerServiceClient, RpcError } from './grpc/client'
-import { getSystemShellPath } from './executors/utils'
-import { IServer } from './server/runmeServer'
-import { convertEnvList } from './utils'
-import getLogger from './logger'
+} from '../grpc/runnerTypes'
+import { IRunnerServiceClient, RpcError } from '../grpc/client'
+import { getSystemShellPath } from '../executors/utils'
+import { IServer } from '../server/runmeServer'
+import { convertEnvList } from '../utils'
+
+import { IRunnerChild, TerminalWindowState } from './types'
+import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
+import { IRunnerClient, GrpcRunnerClient } from './client'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -82,13 +82,6 @@ export interface IRunner extends Disposable {
     runnerEnv: IRunnerEnvironment,
     variables: Record<string, string | undefined>,
   ): Promise<boolean>
-}
-
-interface IRunnerChild extends DisposableAsync {}
-
-export interface IRunnerEnvironment extends IRunnerChild {
-  getSessionId(): string
-  initialEnvs(): Set<string>
 }
 
 export type RunnerExitReason =
@@ -167,8 +160,8 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   ): void | Promise<void>
 }
 
-export class GrpcRunner implements IRunner {
-  protected client?: RunnerServiceClient
+export default class GrpcRunner implements IRunner {
+  protected client: IRunnerClient
 
   private children: WeakRef<IRunnerChild>[] = []
   private disposables: Disposable[] = []
@@ -177,33 +170,11 @@ export class GrpcRunner implements IRunner {
   onReady = this._onReady.event
 
   constructor(protected server: IServer) {
-    this.disposables.push(
-      server.onTransportReady(({ transport }) => this.initRunnerClient(transport)),
-    )
-
-    this.disposables.push(server.onClose(() => this.deinitRunnerClient()))
-  }
-
-  private deinitRunnerClient() {
-    this.disposeChildren()
-    this.client = undefined
-  }
-
-  private async initRunnerClient(transport?: GrpcTransport) {
-    this.deinitRunnerClient()
-    this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
-    this._onReady.fire()
-  }
-
-  protected static assertClient(client: RunnerServiceClient | undefined): asserts client {
-    if (!client) {
-      throw new Error('Client is not active!')
-    }
+    this.client = new GrpcRunnerClient(server, this._onReady)
+    this.register(this.client)
   }
 
   async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
-    GrpcRunner.assertClient(this.client)
-
     const session = new GrpcRunnerProgramSession(this.client, opts)
 
     this.registerChild(session)
@@ -212,8 +183,6 @@ export class GrpcRunner implements IRunner {
   }
 
   async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
-    GrpcRunner.assertClient(this.client)
-
     const request = CreateSessionRequest.create({
       metadata,
       envs,
@@ -247,8 +216,6 @@ export class GrpcRunner implements IRunner {
   async getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
   ): Promise<Record<string, string> | undefined> {
-    GrpcRunner.assertClient(this.client)
-
     if (!(runnerEnv instanceof GrpcRunnerEnvironment)) {
       throw new Error('Invalid runner environment!')
     }
@@ -320,16 +287,6 @@ export class GrpcRunner implements IRunner {
   }
 }
 
-interface TerminalWindowState {
-  dimensions?: TerminalDimensions
-  opened: boolean
-  /**
-   * Used in VSCode to determine if this is part of the initial call to
-   * `setDimensions`, which generally should be ignored
-   */
-  hasSetDimensions?: boolean
-}
-
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   private disposables: Disposable[] = []
 
@@ -364,7 +321,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   pid = new Promise<number | undefined>(this._onPid.event)
 
   constructor(
-    private readonly client: RunnerServiceClient,
+    private readonly client: IRunnerServiceClient,
     protected opts: RunProgramOptions,
   ) {
     this.session = client.execute()
@@ -712,47 +669,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   protected get convertEol() {
     return this.opts.convertEol ?? true
-  }
-}
-
-export class GrpcRunnerEnvironment implements IRunnerEnvironment {
-  log = getLogger('GrpcRunnerEnvironment')
-  initialEnvKeys: Set<string>
-
-  constructor(
-    private readonly client: RunnerServiceClient,
-    private readonly session: Session,
-  ) {
-    this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))
-  }
-
-  getRunmeSession(): Session {
-    return this.session
-  }
-
-  getSessionId(): string {
-    return this.session.id
-  }
-
-  async dispose() {
-    await this.delete()
-  }
-
-  private async delete() {
-    try {
-      return await this.client.deleteSession({ id: this.getSessionId() })
-    } catch (err: any) {
-      // it's not unexpected deletions to fail when server died; trace error
-      let msg = err
-      if (err instanceof Error) {
-        msg = err.message
-      }
-      this.log.error('DeleteSession failed with error:', msg)
-    }
-  }
-
-  initialEnvs(): Set<string> {
-    return this.initialEnvKeys
   }
 }
 

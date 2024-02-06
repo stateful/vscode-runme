@@ -1,9 +1,31 @@
+import {
+  ExtensionContext,
+  NotebookCellExecution,
+  NotebookRendererMessaging,
+  TextDocument,
+} from 'vscode'
+
 import { ENV_STORE, DEFAULT_ENV } from '../constants'
+import { NotebookCellOutputManager } from '../cell'
+import { Kernel } from '../kernel'
 
 import { sh, bash } from './task'
 import { vercel } from './vercel'
 import { deno } from './deno'
 import { github } from './github'
+
+export interface IKernelExecutorOptions {
+  context: ExtensionContext
+  kernel: Kernel
+  doc: TextDocument
+  exec: NotebookCellExecution
+  outputs: NotebookCellOutputManager
+  messaging: NotebookRendererMessaging
+  envMgr: IEnvironmentManager
+  runScript?: () => Promise<boolean>
+}
+
+export type IKernelExecutor = (executor: IKernelExecutorOptions) => Promise<boolean>
 
 // TODO: want to use a better abstraction than this
 export interface IEnvironmentManager {

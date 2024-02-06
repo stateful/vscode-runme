@@ -64,6 +64,9 @@ vi.mock('../../src/extension/utils', async () => ({
   getNamespacedMid: vi.fn(),
   isWindows: vi.fn().mockReturnValue(false),
   bootFile: vi.fn().mockResolvedValue(undefined),
+  checkSession: vi.fn(),
+  toggleSessionButton: vi.fn(),
+  resetNotebookAutosaveSettings: vi.fn(),
 }))
 
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
@@ -88,12 +91,15 @@ test('initializes all providers', async () => {
       append: vi.fn(),
       replace: vi.fn(),
     },
+    globalState: {
+      get: vi.fn(),
+    },
   }
   const ext = new RunmeExtension()
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
-  expect(commands.registerCommand).toBeCalledTimes(32)
+  expect(commands.registerCommand).toBeCalledTimes(33)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)
   expect(window.registerUriHandler).toBeCalledTimes(1)
   expect(bootFile).toBeCalledTimes(1)

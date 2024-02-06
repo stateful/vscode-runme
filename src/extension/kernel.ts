@@ -28,10 +28,11 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
+import { getNotebookExecutionOrder } from '../utils/configuration'
 
 import * as survey from './survey'
 import getLogger from './logger'
-import executor, { type IEnvironmentManager, ENV_STORE_MANAGER } from './executors'
+import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   getKey,
@@ -47,7 +48,8 @@ import {
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
-import { IRunner, IRunnerEnvironment } from './runner'
+import { IRunner } from './runner'
+import { IRunnerEnvironment } from './runner/environment'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import {
@@ -103,15 +105,11 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
-    this.#experiments.set('outputPersistence', config.get<boolean>('outputPersistence', false))
 
     this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
 
-    this.cellManager = new NotebookCellManager(
-      this.#controller,
-      this.hasExperimentEnabled('outputPersistence') ?? false,
-    )
-    this.#controller.supportsExecutionOrder = false
+    this.cellManager = new NotebookCellManager(this.#controller)
+    this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
     this.#controller.description = 'Run your Markdown'
     this.#controller.executeHandler = this._executeAll.bind(this)
 
@@ -212,6 +210,7 @@ export class Kernel implements Disposable {
     await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
     const hashed = hashDocumentUri(uri.toString())
+    await handleNotebookAutosaveSettings()
     TelemetryReporter.sendTelemetryEvent('notebook.open', {
       'notebook.hashedUri': hashed,
       'notebook.isReadme': isReadme.toString(),
@@ -227,7 +226,6 @@ export class Kernel implements Disposable {
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)
-    await handleNotebookAutosaveSettings()
   }
 
   // eslint-disable-next-line max-len
@@ -523,7 +521,7 @@ export class Kernel implements Disposable {
 
     let successfulCellExecution: boolean
 
-    const environmentManager = this.getEnvironmentManager()
+    const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
     if (
@@ -533,19 +531,20 @@ export class Kernel implements Disposable {
       !isWindows()
     ) {
       const runScript = (key: string = execKey) =>
-        executeRunner(
-          this,
-          this.context,
-          this.runner!,
+        executeRunner({
+          kernel: this,
+          doc: cell.document,
+          context: this.context,
+          runner: this.runner!,
           exec,
           runningCell,
-          this.messaging,
-          id,
-          key,
+          messaging: this.messaging,
+          cellId: id,
+          execKey: key,
           outputs,
-          this.runnerEnv,
-          environmentManager,
-        ).catch((e) => {
+          runnerEnv: this.runnerEnv,
+          envMgr,
+        }).catch((e) => {
           if (e instanceof RpcError) {
             if (e.message.includes('invalid LanguageId')) {
               // todo(sebastian): provide "Configure" button to trigger foldout
@@ -587,25 +586,32 @@ export class Kernel implements Disposable {
       if (isShellLanguage(execKey) || !(execKey in executor)) {
         successfulCellExecution = await runScript(execKey)
       } else {
-        successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-          this,
+        const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+        successfulCellExecution = await executorByKey({
+          context: this.context,
+          kernel: this,
+          doc: runningCell,
           exec,
-          runningCell,
           outputs,
+          messaging: this.messaging,
+          envMgr,
           runScript,
-          environmentManager,
-        )
+        })
       }
     } else if (execKey in executor) {
       /**
        * check if user is running experiment to execute shell via runme cli
        */
-      successfulCellExecution = await executor[execKey as keyof typeof executor].call(
-        this,
+      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+      successfulCellExecution = await executorByKey({
+        context: this.context,
+        kernel: this,
+        doc: runningCell,
         exec,
-        runningCell,
         outputs,
-      )
+        messaging: this.messaging,
+        envMgr,
+      })
     } else {
       window.showErrorMessage('Cell language is not executable')
 
@@ -652,11 +658,13 @@ export class Kernel implements Disposable {
 
       const runnerEnv = await this.runner.createEnvironment(
         // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this serverside
+        // later we might want a more sophisticated approach/to bring this server-side
         processEnviron(),
       )
 
       this.runnerEnv = runnerEnv
+
+      this.cellManager.setRunnerEnv(runnerEnv)
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')

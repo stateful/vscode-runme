@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7VQMH8ESX1EFV4QCBTXB1Y
-  version: v2.0
+  version: v2.2
 ---
 
 # Contributing to `vscode-runme`
@@ -120,6 +120,16 @@ Then just run the watcher and you're off to the races.
 npm run watch
 ```
 
+You can also run the extension in the Extension Development Host, which is a separate VS Code instance, by pressing `F5` or `Ctrl+Shift+D` and then selecting `Run Extension` from the dropdown.
+
+If you want to run the extension against a specific runme kernel binary, you can set this option in .vscode/settings.json:
+
+```
+{
+  "runme.server.binaryPath": "path/to/bin",
+}
+```
+
 ### Build Project
 
 To compile all extension files, run:
@@ -177,6 +187,12 @@ We use [Vitest](https://vitest.dev/) for running unit tests via:
 ```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"false"}
 export NODE_OPTIONS="--experimental-specifier-resolution=node"
 npx vitest -c ./vitest.conf.ts --run
+```
+
+The test coverage report is easy to access at:
+
+```sh {"id":"01HJVVP86RWEMH7QM80EPK266B","name":"test:report"}
+open coverage/lcov-report/index.html
 ```
 
 #### E2E Testing

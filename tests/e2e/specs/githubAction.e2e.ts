@@ -36,7 +36,7 @@ describe('Runme GitHub Workflow Integration', async () => {
     before(async () => {
       await notebook.focusDocument()
       cell = await notebook.getCell(
-        'https://github.com/stateful/runme-canary/actions/workflows/test-inputs.yml',
+        'https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml',
       )
     })
 

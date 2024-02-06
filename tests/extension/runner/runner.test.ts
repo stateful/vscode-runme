@@ -13,20 +13,20 @@ import {
 } from 'vscode'
 import { URI } from 'vscode-uri'
 
-import {
-  GrpcRunner,
-  GrpcRunnerEnvironment,
+import { GrpcRunnerClient } from '../../../src/extension/runner/client'
+import GrpcRunner, {
   GrpcRunnerProgramSession,
   IRunner,
   RunProgramOptions,
-} from '../../src/extension/runner'
-import type { ExecuteResponse } from '../../src/extension/grpc/runnerTypes'
-import { ActionCommand, RunmeCodeLensProvider } from '../../src/extension/provider/codelens'
-import { RunmeTaskProvider } from '../../src/extension/provider/runmeTask'
-import { isWindows } from '../../src/extension/utils'
-import { SurveyWinCodeLensRun } from '../../src/extension/survey'
+} from '../../../src/extension/runner'
+import { GrpcRunnerEnvironment } from '../../../src/extension/runner/environment'
+import type { ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
+import { ActionCommand, RunmeCodeLensProvider } from '../../../src/extension/provider/codelens'
+import { RunmeTaskProvider } from '../../../src/extension/provider/runmeTask'
+import { isWindows } from '../../../src/extension/utils'
+import { SurveyWinCodeLensRun } from '../../../src/extension/survey'
 
-vi.mock('../../src/extension/utils', () => ({
+vi.mock('../../../src/extension/utils', () => ({
   getGrpcHost: vi.fn().mockReturnValue('127.0.0.1:7863'),
   getAnnotations: vi.fn().mockReturnValue({}),
   isWindows: vi.fn().mockReturnValue(false),
@@ -89,7 +89,7 @@ class MockedDuplexClientStream {
   }
 }
 
-vi.mock('../../src/extension/grpc/client', () => ({
+vi.mock('../../../src/extension/grpc/client', () => ({
   RunnerServiceClient: class {
     constructor() {}
 
@@ -134,7 +134,7 @@ class MockedRunmeServer {
   onClose = this._onClose.event
 }
 
-vi.mock('../../src/extension/provider/runmeTask', async () => {
+vi.mock('../../../src/extension/provider/runmeTask', async () => {
   return {
     RunmeTaskProvider: {
       newRunmeTask: vi.fn().mockResolvedValue({}),
@@ -147,7 +147,23 @@ beforeEach(() => {
   deleteSession.mockClear()
 })
 
-suite('grpc Runner', () => {
+suite('grpc runner client', () => {
+  test('cannot get runner environment variables not initialized', async () => {
+    const { runner } = createGrpcRunner(false)
+    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
+      'Invalid runner environment!',
+    )
+  })
+
+  test('cannot use client if server is closed', async () => {
+    const { client, server } = createGrpcRunnerClient(true)
+
+    server._onClose.fire({ code: null })
+    await expect(() => client.execute()).toThrowError('Client is not active!')
+  })
+})
+
+suite('grpc runner', () => {
   test('runner environment dispose is called on runner dispose', async () => {
     const { runner } = createGrpcRunner()
     const runnerEnv = (await runner.createEnvironment()) as GrpcRunnerEnvironment
@@ -188,13 +204,6 @@ suite('grpc Runner', () => {
     )
   })
 
-  test('cannot get runner environment variables not initialized', async () => {
-    const { runner } = createGrpcRunner(false)
-    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
-      'Client is not active!',
-    )
-  })
-
   test('cannot create runner environment if server closed', async () => {
     const { runner, server } = createGrpcRunner(true)
 
@@ -207,15 +216,6 @@ suite('grpc Runner', () => {
 
     server._onClose.fire({ code: null })
     await expect(runner.createProgramSession({ programName: 'sh' })).rejects.toThrowError(
-      'Client is not active!',
-    )
-  })
-
-  test('cannot get environment variables if server closed', async () => {
-    const { runner, server } = createGrpcRunner(true)
-
-    server._onClose.fire({ code: null })
-    await expect(runner.getEnvironmentVariables({} as any)).rejects.toThrowError(
       'Client is not active!',
     )
   })
@@ -780,6 +780,17 @@ function createGrpcRunner(initialize = true) {
   }
 
   return { server, runner }
+}
+
+function createGrpcRunnerClient(initialize = true) {
+  const server = new MockedRunmeServer()
+  const client = new GrpcRunnerClient(server as any)
+
+  if (initialize) {
+    server._onTransportReady.fire({ transport: {} as any })
+  }
+
+  return { server, client }
 }
 
 async function createNewSession(

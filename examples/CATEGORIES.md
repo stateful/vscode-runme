@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KK745EFJMMTRV4WKYVK
-  version: v2.0
+  version: v2.2
 sidebar_position: 1
 title: Examples
 ---

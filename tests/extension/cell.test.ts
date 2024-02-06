@@ -7,6 +7,7 @@ import {
   NotebookCellOutputManager,
   RunmeNotebookCellExecution,
 } from '../../src/extension/cell'
+import { IRunnerEnvironment } from '../../src/extension/runner'
 
 function mockedNotebookCellExecution(): NotebookCellExecution {
   return {
@@ -28,17 +29,65 @@ vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 
 describe('NotebookCellManager', () => {
-  it('can register cells', () => {
+  it('can register cells', async () => {
     const manager = new NotebookCellManager({} as any, false)
     const cell = {} as any
 
     manager.registerCell(cell)
-    expect(manager.getNotebookOutputs(cell)).toBeTruthy()
+    expect(await manager.getNotebookOutputs(cell)).toBeTruthy()
 
     const errorMock = vi.spyOn(console, 'error')
 
     expect(manager.getNotebookOutputs({} as any)).resolves.toBeInstanceOf(NotebookCellOutputManager)
     expect(errorMock.mock.calls[0][0]).toMatch('has not been registered')
+  })
+
+  it('returns existing outputs on cell re-register', async () => {
+    const manager = new NotebookCellManager({} as any, false)
+    const cell = {} as any
+
+    const outputs1 = manager.registerCell(cell)
+    expect(outputs1).toBeTruthy()
+    const outputs2 = manager.registerCell(cell)
+    expect(outputs2).toBeTruthy()
+
+    expect(outputs1).toStrictEqual(outputs2)
+  })
+
+  it('set mru session id on outputs whenever they are being used', async () => {
+    const manager = new NotebookCellManager({} as any, false)
+    manager.setRunnerEnv(<IRunnerEnvironment>{ getSessionId: () => 'session-id1' })
+    const cell = {} as any
+
+    manager.registerCell(cell)
+    let outputs = await manager.getNotebookOutputs(cell)
+    expect((outputs as any).mruSessionId).toStrictEqual('session-id1')
+    expect(outputs).toBeTruthy()
+
+    manager.setRunnerEnv(<IRunnerEnvironment>{ getSessionId: () => 'session-id2' })
+
+    const outputsP = manager.getNotebookOutputs(cell)
+    expect(outputsP).resolves.toBeInstanceOf(NotebookCellOutputManager)
+    expect(((await outputsP) as any).mruSessionId).toStrictEqual('session-id2')
+  })
+
+  it('increment order for session id when an execution is created', async () => {
+    const createNotebookCellExecution = vi.fn()
+    const manager = new NotebookCellManager({ createNotebookCellExecution } as any, false)
+    manager.setRunnerEnv(<IRunnerEnvironment>{ getSessionId: () => 'session-id1' })
+    const cell = {} as any
+
+    manager.registerCell(cell)
+    const outputs = await manager.getNotebookOutputs(cell)
+    expect((outputs as any).mruSessionId).toStrictEqual('session-id1')
+    expect(outputs).toBeTruthy()
+
+    await manager.createNotebookCellExecution(cell)
+    await manager.createNotebookCellExecution(cell)
+    await manager.createNotebookCellExecution(cell)
+
+    expect((outputs as any).currentExecutionOrder()).toStrictEqual(3)
+    expect(createNotebookCellExecution).toBeCalledTimes(3)
   })
 })
 
@@ -362,6 +411,59 @@ describe('NotebookCellOutputManager', () => {
 
     await outputs.refreshOutput(OutputType.annotations)
     expect(replaceOutput).toHaveBeenCalledTimes(1)
+  })
+
+  describe('exec and order', () => {
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(cell, controller, false)
+
+    it('sets mru session ID and order', () => {
+      outputs.setSessionExecutionOrder('session-id1', 3641)
+      expect((outputs as any).currentExecutionOrder()).toStrictEqual(3641)
+    })
+
+    it('resets order when mru session ID changes', () => {
+      outputs.setMruSessionId('session-id2')
+      expect((outputs as any).currentExecutionOrder()).toStrictEqual(undefined)
+    })
+
+    it('applies current session order to execution', async () => {
+      outputs.setSessionExecutionOrder('session-id1', 1337)
+      const exec1 = mockCellExecution(cell)
+      createExecution.mockReturnValue(exec1)
+
+      const runmeExec = await outputs.createNotebookCellExecution()
+      expect(runmeExec).toBeTruthy()
+
+      expect(runmeExec!.underlyingExecution.executionOrder).toStrictEqual(1337)
+    })
+  })
+
+  describe('outputs and order', () => {
+    it('retains session order for outputs', async () => {
+      const cell = mockCell()
+
+      const { controller, createExecution } = mockNotebookController(cell)
+
+      const outputs = new NotebookCellOutputManager(cell, controller, false)
+      outputs.setSessionExecutionOrder('session-id', 1337)
+
+      const exec1 = mockCellExecution(cell)
+      createExecution.mockReturnValue(exec1)
+
+      const runmeExec = await outputs.createNotebookCellExecution()
+      expect(runmeExec).toBeTruthy()
+
+      runmeExec!.start()
+
+      await outputs.toggleOutput(OutputType.annotations)
+      expect(exec1.executionOrder).toStrictEqual(1337)
+
+      runmeExec!.end(undefined)
+    })
   })
 })
 

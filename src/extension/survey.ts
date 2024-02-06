@@ -345,7 +345,8 @@ export class SurveyNotifyV2 extends Survey {
   constructor(protected context: ExtensionContext) {
     super(context, SurveyNotifyV2.#id)
     this.disposables.push(
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
+      // decommission auto-open for now
+      // workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       commands.registerCommand(SurveyNotifyV2.#id, this.prompt.bind(this)),
     )
   }

@@ -14,6 +14,7 @@ import Channel from 'tangle/webviews'
 import { Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
+  getSessionOutputs,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
@@ -27,7 +28,7 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, bootFile } from './utils'
+import { getDefaultWorkspace, bootFile, resetNotebookAutosaveSettings } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -49,16 +50,18 @@ import {
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
+  resetLoginPrompt,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
-import { GrpcRunner, IRunner } from './runner'
+import GrpcRunner, { IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
+import { CloudAuthProvider } from './provider/cloudAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -158,8 +161,9 @@ export class RunmeExtension {
     )
 
     registerExtensionEnvironmentVariables(context)
+    await resetNotebookAutosaveSettings()
 
-    const transientOutputs = !kernel.hasExperimentEnabled('outputPersistence')
+    const transientOutputs = !getSessionOutputs()
 
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
@@ -176,8 +180,8 @@ export class RunmeExtension {
       ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
-        transientOutputs,
         transientCellMetadata,
+        transientOutputs,
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider(
@@ -275,8 +279,10 @@ export class RunmeExtension {
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
+      RunmeExtension.registerCommand('runme.resetLoginPrompt', () => resetLoginPrompt(context)),
+      new CloudAuthProvider(context),
     )
-    await await bootFile(context)
+    await bootFile(context)
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
