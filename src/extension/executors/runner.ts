@@ -96,13 +96,21 @@ export const executeRunner: IKernelRunner = async ({
   const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
   const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
-  const execution = await resolveRunProgramExecution(
-    cellText,
-    execKey, // same as languageId
-    commandMode,
-    promptForEnv,
-    envKeys,
-  )
+  let execution: RunProgramExecution
+  try {
+    execution = await resolveRunProgramExecution(
+      cellText,
+      execKey, // same as languageId
+      commandMode,
+      promptForEnv,
+      envKeys,
+    )
+  } catch (err) {
+    if (err instanceof Error) {
+      log.error(err.message)
+    }
+    return false
+  }
 
   const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
   const program = await runner.createProgramSession({
@@ -112,7 +120,7 @@ export const executeRunner: IKernelRunner = async ({
     cwd,
     runnerEnv,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution,
+    exec: execution!,
     languageId: exec.cell.document.languageId,
     programName,
     storeLastOutput: true,
@@ -451,7 +459,7 @@ export async function resolveRunProgramExecution(
     const commands = await parseCommandSeq(script, languageId, promptForEnv, skipEnvs)
 
     if (!commands) {
-      throw new Error('cannot execute cell without commands')
+      throw new Error('Cannot run cell due to canceled prompt')
     }
 
     if (commands.length === 0) {

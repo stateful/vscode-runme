@@ -7,6 +7,27 @@ vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')
 
 suite('resolveRunProgramExecution', () => {
+  test('resolves inline export block', async () => {
+    const execution = await resolveRunProgramExecution(
+      'export TEST="test\n123\n456\n"',
+      'sh',
+      1,
+      true,
+      new Set<string>(),
+    )
+    expect(execution).toMatchInlineSnapshot(`
+      {
+        "commands": [
+          "export TEST="test",
+          "123",
+          "456",
+          """,
+        ],
+        "type": "commands",
+      }
+    `)
+  })
+
   test('resolves inline script without exports', async () => {
     const execution = await resolveRunProgramExecution(
       'echo "Hello World!"',
@@ -23,6 +44,18 @@ suite('resolveRunProgramExecution', () => {
         "type": "commands",
       }
     `)
+  })
+
+  test('rejects when a input box was canceled', async () => {
+    vi.mocked(window.showInputBox).mockResolvedValueOnce(undefined)
+    const execution = resolveRunProgramExecution(
+      'export TEST="return undefined"',
+      'sh',
+      1,
+      true,
+      new Set<string>(),
+    )
+    expect(execution).rejects.toThrowError('Cannot run cell due to canceled prompt')
   })
 
   test('resolves inline script with exports', async () => {
