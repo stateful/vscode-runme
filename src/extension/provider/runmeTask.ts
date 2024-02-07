@@ -25,12 +25,7 @@ import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
-import {
-  getCellCwd,
-  getCellProgram,
-  getNotebookSkipPromptEnvSetting,
-  parseCommandSeq,
-} from '../executors/utils'
+import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
@@ -327,8 +322,6 @@ export class RunmeTaskProvider implements TaskProvider {
 
     const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
     const isBackground = options.isBackground || background
-    const languageId = ('languageId' in cell && cell.languageId) || 'sh'
-    const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
 
     const name = `${command}`
 
@@ -338,23 +331,31 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
+        const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
+        const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
+        const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
+        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
+        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
-        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(
-          cellContent,
-          languageId,
-          promptEnv,
-          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
-        )
+        const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
+
+        // todo(sebastian): re-prompt the best solution here?
+        const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+          cellText,
+          languageId,
+          commandMode,
+          promptForEnv,
+          envKeys,
+        )
 
         const runOpts: RunProgramOptions = {
           commandMode,
@@ -362,7 +363,7 @@ export class RunmeTaskProvider implements TaskProvider {
           cwd,
           runnerEnv: runnerEnv,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-          exec: { type: 'commands', commands: commands ?? [''] },
+          exec: execution,
           languageId,
           programName,
           storeLastOutput: true,
