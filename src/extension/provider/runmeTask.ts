@@ -200,14 +200,14 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   static async newRunmeProjectTask(
-    projectTask: ProjectTask,
+    knownTask: Pick<ProjectTask, 'id' | 'name' | 'documentPath'>,
     options: TaskOptions = {},
     token: CancellationToken,
     serializer: SerializerBase,
     runner: IRunner,
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
-    const { name, documentPath } = projectTask
+    const { id, name, documentPath } = knownTask
     const { relativePath: source } = asWorkspaceRelativePath(documentPath)
 
     const task = new Task(
@@ -229,9 +229,7 @@ export class RunmeTaskProvider implements TaskProvider {
         const notebook = await serializer.deserializeNotebook(mdBuf, token)
 
         const cell: Serializer.Cell = notebook.cells.find((cell) => {
-          return (
-            cell.metadata?.['id'] === projectTask.id || cell.metadata?.['runme.dev/name'] === name
-          )
+          return cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name
         })!
 
         const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
@@ -254,6 +252,7 @@ export class RunmeTaskProvider implements TaskProvider {
           Object.assign(envs, process.env)
         }
 
+        // todo(sebastian): re-prompt the best solution here?
         const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
           cellText,
           languageId,
