@@ -17,13 +17,8 @@ import { v4 as uuid } from 'uuid'
 import fetch from 'node-fetch'
 
 import { PromiseAdapter, promiseFromEvent } from '../util'
-import { getRunmeAppUrl } from '../../utils/configuration'
+import { getIdpConfig, getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders } from '../../constants'
-
-// TODO(cpda): Move to configuration
-const CLIENT_ID = '<ASK FOR IT>'
-const AUTH0_DOMAIN = 'stateful-inc.us.auth0.com'
-const AUTH0_AUDIENCE = 'https://platform.stateful.com/'
 
 const AUTH_NAME = 'Stateful'
 
@@ -103,7 +98,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
           if (session && session.refreshToken) {
             const refreshToken = session.refreshToken
-            const { access_token } = await this.getAccessToken(refreshToken, CLIENT_ID)
+            const { idpClientId } = getIdpConfig()
+            const { access_token } = await this.getAccessToken(refreshToken, idpClientId)
 
             if (access_token) {
               const updatedSession = Object.assign({}, session, {
@@ -229,19 +225,20 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         this._pendingStates.push(stateId)
         this._codeVerfifiers.set(stateId, codeVerifier)
         this._scopes.set(stateId, scopes)
+        const { idpClientId, idpDomain, idpAudience } = getIdpConfig()
 
         const searchParams = new URLSearchParams([
           ['response_type', 'code'],
-          ['client_id', CLIENT_ID],
+          ['client_id', idpClientId],
           ['redirect_uri', `${getRunmeAppUrl(['platform'])}ide-callback`],
           ['state', encodeURIComponent(callbackUri.toString(true))],
           ['scope', scopes.join(' ')],
           ['prompt', 'login'],
           ['code_challenge_method', 'S256'],
           ['code_challenge', codeChallenge],
-          ['audience', AUTH0_AUDIENCE],
+          ['audience', idpAudience],
         ])
-        const uri = Uri.parse(`https://${AUTH0_DOMAIN}/authorize?${searchParams.toString()}`)
+        const uri = Uri.parse(`https://${idpDomain}/authorize?${searchParams.toString()}`)
 
         remoteOutput.appendLine(`Login URI: ${uri.toString(true)}`)
 
@@ -304,15 +301,17 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         return
       }
 
+      const { idpClientId, idpDomain } = getIdpConfig()
+
       const postData = new URLSearchParams({
         grant_type: 'authorization_code',
-        client_id: CLIENT_ID,
+        client_id: idpClientId,
         code,
         code_verifier: codeVerifier,
         redirect_uri: `${getRunmeAppUrl(['platform'])}ide-callback`,
       }).toString()
 
-      const response = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {
+      const response = await fetch(`https://${idpDomain}/oauth/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -335,7 +334,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @returns
    */
   private async getUserInfo(token: string) {
-    const response = await fetch(`https://${AUTH0_DOMAIN}/userinfo`, {
+    const { idpDomain } = getIdpConfig()
+
+    const response = await fetch(`https://${idpDomain}/userinfo`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -373,13 +374,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @returns
    */
   private async getAccessToken(refreshToken: string, clientId: string): Promise<TokenInformation> {
+    const { idpDomain } = getIdpConfig()
     const postData = new URLSearchParams({
       grant_type: 'refresh_token',
       client_id: clientId,
       refresh_token: refreshToken,
     }).toString()
 
-    const response = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {
+    const response = await fetch(`https://${idpDomain}/oauth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
