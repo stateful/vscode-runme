@@ -25,14 +25,21 @@ import getLogger from '../logger'
 import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
-import type { IRunner, RunProgramOptions } from '../runner'
+import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
-import { getCellCwd, getCellProgram, parseCommandSeq } from '../executors/utils'
+import {
+  getCellCwd,
+  getCellProgram,
+  getNotebookSkipPromptEnvSetting,
+  parseCommandSeq,
+} from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
+import { resolveRunProgramExecution } from '../executors/runner'
+import { CommandMode } from '../grpc/runnerTypes'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -228,27 +235,32 @@ export class RunmeTaskProvider implements TaskProvider {
         })!
 
         const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
-
+        const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(documentPath)))
-
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(documentPath))),
         }
 
-        const cellContent = cell.value
-        const commands = await parseCommandSeq(
-          cellContent,
-          languageId,
-          promptEnv,
-          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
-        )
+        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
+        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(documentPath)))
+
+        const cellText = cell.value
 
         if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
+
+        const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+          cellText,
+          languageId,
+          commandMode,
+          promptForEnv,
+          envKeys,
+        )
 
         const runOpts: RunProgramOptions = {
           commandMode,
@@ -256,7 +268,7 @@ export class RunmeTaskProvider implements TaskProvider {
           cwd,
           runnerEnv: runnerEnv,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-          exec: { type: 'commands', commands: commands ?? [''] },
+          exec: execution,
           languageId,
           background,
           programName,
@@ -274,6 +286,35 @@ export class RunmeTaskProvider implements TaskProvider {
     )
 
     return task
+  }
+
+  static async resolveRunProgramExecutionWithRetry(
+    script: string,
+    languageId: string,
+    commandMode: CommandMode,
+    promptForEnv: boolean,
+    skipEnvs?: Set<string>,
+  ): Promise<RunProgramExecution> {
+    try {
+      return await resolveRunProgramExecution(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        log.error(err.message)
+      }
+      return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
+    }
   }
 
   static async newRunmeTask(
