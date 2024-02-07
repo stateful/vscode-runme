@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import {
   ExtensionContext,
   ProviderResult,
@@ -325,9 +323,7 @@ export class RunmeTaskProvider implements TaskProvider {
     runner: IRunner,
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
-    const source = workspace.workspaceFolders?.[0]
-      ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
-      : path.basename(filePath)
+    const source = asWorkspaceRelativePath(filePath).relativePath
 
     const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
     const isBackground = options.isBackground || background
