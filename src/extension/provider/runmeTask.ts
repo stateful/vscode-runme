@@ -279,26 +279,17 @@ export class RunmeTaskProvider implements TaskProvider {
     const source = asWorkspaceRelativePath(filePath).relativePath
     const name = `${command}`
 
+    notebookish = !isObservable(notebookish) ? of(notebookish) : notebookish
+    cellish = !isObservable(cellish) ? of(cellish) : cellish
+
     const task = new Task(
       { type: 'runme', name, command: name },
       TaskScope.Workspace,
       name,
       source,
       new CustomExecution(async () => {
-        let notebook: TaskNotebook | undefined = undefined
-        let cell: TaskCell | undefined = undefined
-
-        if (isObservable(notebookish)) {
-          notebook = await firstValueFrom<TaskNotebook>(notebookish as any)
-        } else {
-          notebook = notebookish as TaskNotebook
-        }
-
-        if (isObservable(cellish)) {
-          cell = await firstValueFrom<TaskCell>(cellish as any)
-        } else {
-          cell = cellish as TaskCell
-        }
+        const notebook = await firstValueFrom<TaskNotebook>(notebookish as any)
+        const cell = await firstValueFrom<TaskCell>(cellish as any)
 
         const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
         const isBackground = options.isBackground || background
