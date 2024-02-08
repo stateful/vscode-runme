@@ -29,10 +29,12 @@ let remoteOutput = window.createOutputChannel('stateful')
 interface TokenInformation {
   access_token: string
   refresh_token: string
+  expires_in: number
 }
 
 interface StatefulAuthSession extends AuthenticationSession {
   refreshToken: string
+  expiresIn: number
 }
 
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
@@ -89,30 +91,37 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         return []
       }
 
+      const sessions = JSON.parse(allSessions) as StatefulAuthSession[]
+      if (!sessions.length) {
+        return []
+      }
+
       // Get all required scopes
       const allScopes = this.getScopes(scopes || []) as string[]
 
-      const sessions = JSON.parse(allSessions) as StatefulAuthSession[]
-      if (sessions) {
-        if (allScopes && scopes) {
-          const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
-          if (session && session.refreshToken) {
-            const refreshToken = session.refreshToken
-            const { idpClientId } = getIdpConfig()
-            const { access_token } = await this.getAccessToken(refreshToken, idpClientId)
+      if (allScopes.length && scopes?.length) {
+        const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
+        if (session && session.refreshToken) {
+          const refreshToken = session.refreshToken
+          const { idpClientId } = getIdpConfig()
+          const json = await this.getAccessToken(refreshToken, idpClientId)
 
-            if (access_token) {
-              const updatedSession = Object.assign({}, session, {
-                accessToken: access_token,
-                scopes: scopes,
-              })
-              return [updatedSession]
-            } else {
-              this.removeSession(session.id)
+          const { access_token, refresh_token } = json
+
+          if (access_token) {
+            const updatedSession = {
+              ...session,
+              accessToken: access_token,
+              refreshToken: refresh_token,
+              scopes: scopes,
             }
+
+            this.updateSession(updatedSession)
+
+            return [updatedSession]
+          } else {
+            this.removeSession(session.id)
           }
-        } else {
-          return sessions
         }
       }
     } catch (e) {
@@ -129,15 +138,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    */
   public async createSession(scopes: string[]): Promise<StatefulAuthSession> {
     try {
-      const { access_token, refresh_token } = await this.login(scopes)
+      const { access_token, refresh_token, expires_in } = await this.login(scopes)
       if (!access_token) {
         throw new Error('Stateful login failure')
       }
 
       const userinfo: { name: string; email: string } = await this.getUserInfo(access_token)
-
       const session: StatefulAuthSession = {
         id: uuid(),
+        expiresIn: expires_in,
         accessToken: access_token,
         refreshToken: refresh_token,
         account: {
@@ -155,6 +164,28 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     } catch (e) {
       window.showErrorMessage(`Sign in failed: ${e}`)
       throw e
+    }
+  }
+
+  /**
+   * Update an existing session
+   * @param session
+   */
+  private async updateSession(session: StatefulAuthSession): Promise<void> {
+    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
+
+    if (allSessions) {
+      let sessions = JSON.parse(allSessions) as AuthenticationSession[]
+      const sessionIdx = sessions.findIndex((s) => s.id === session.id)
+
+      sessions.splice(sessionIdx, 1)
+      sessions.push(session)
+
+      await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify(sessions))
+
+      if (session) {
+        this._sessionChangeEmitter.fire({ added: [], removed: [], changed: [session] })
+      }
     }
   }
 
@@ -320,11 +351,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         body: postData,
       })
 
-      const { access_token, refresh_token } = await response.json()
+      const { access_token, refresh_token, expires_in } = await response.json()
 
       resolve({
         access_token,
         refresh_token,
+        expires_in,
       })
     }
 
@@ -390,9 +422,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       body: postData,
     })
 
-    const { access_token } = await response.json()
-
-    return { access_token, refresh_token: '' }
+    const { access_token, refresh_token, expires_in } = await response.json()
+    return { access_token, refresh_token, expires_in }
   }
 }
 

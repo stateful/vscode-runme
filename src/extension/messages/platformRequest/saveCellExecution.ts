@@ -25,9 +25,13 @@ export default async function saveCellExecution(
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const session = await authentication.getSession(AuthenticationProviders.Stateful, ['profile'], {
-      createIfNone: !message.output.data.isUserAction && autoSaveIsOn ? false : true,
-    })
+    const session = await authentication.getSession(
+      AuthenticationProviders.Stateful,
+      ['profile', 'offline_access'],
+      {
+        createIfNone: !message.output.data.isUserAction && autoSaveIsOn ? false : true,
+      },
+    )
 
     if (!session) {
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
