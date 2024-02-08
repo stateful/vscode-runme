@@ -101,27 +101,33 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
       if (allScopes.length && scopes?.length) {
         const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
-        if (session && session.refreshToken) {
-          const refreshToken = session.refreshToken
-          const { idpClientId } = getIdpConfig()
-          const json = await this.getAccessToken(refreshToken, idpClientId)
+        if (!session) {
+          return []
+        }
 
-          const { access_token, refresh_token } = json
+        if (this.isTokenNotExpired(session.expiresIn)) {
+          return [session]
+        }
 
-          if (access_token) {
-            const updatedSession = {
-              ...session,
-              accessToken: access_token,
-              refreshToken: refresh_token,
-              scopes: scopes,
-            }
+        const refreshToken = session.refreshToken
+        const { idpClientId } = getIdpConfig()
+        const token = await this.getAccessToken(refreshToken, idpClientId)
+        const { access_token, refresh_token, expires_in } = token
 
-            this.updateSession(updatedSession)
-
-            return [updatedSession]
-          } else {
-            this.removeSession(session.id)
+        if (access_token) {
+          const updatedSession = {
+            ...session,
+            accessToken: access_token,
+            refreshToken: refresh_token,
+            expiresIn: secsToUnixTime(expires_in),
+            scopes: scopes,
           }
+
+          this.updateSession(updatedSession)
+
+          return [updatedSession]
+        } else {
+          this.removeSession(session.id)
         }
       }
     } catch (e) {
@@ -144,9 +150,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       }
 
       const userinfo: { name: string; email: string } = await this.getUserInfo(access_token)
+
       const session: StatefulAuthSession = {
         id: uuid(),
-        expiresIn: expires_in,
+        expiresIn: secsToUnixTime(expires_in),
         accessToken: access_token,
         refreshToken: refresh_token,
         account: {
@@ -425,6 +432,28 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     const { access_token, refresh_token, expires_in } = await response.json()
     return { access_token, refresh_token, expires_in }
   }
+
+  /**
+   * Checks if the token is not expired, considering it invalid one hour before its actual expiration time.
+   * This validation is typically used for refreshing access tokens to avoid race conditions.
+   * @param expirationTime The expiration time of the token in milliseconds since Unix epoch.
+   * @returns True if the token is not expired, false otherwise.
+   */
+  private isTokenNotExpired(expirationTime: number) {
+    // Get the current time in milliseconds since Unix epoch
+    const currentTime = new Date().getTime()
+
+    // Calculate the time one hour before the token expiration time
+    const oneHourBeforeExpiration = expirationTime - 60 * 60 * 1000 // Subtract one hour in milliseconds
+
+    // Check if the current time is before one hour before the token expiration time
+    return currentTime < oneHourBeforeExpiration
+  }
+}
+
+function secsToUnixTime(seconds: number) {
+  const now = new Date()
+  return new Date(now.getTime() + seconds * 1000).getTime()
 }
 
 export function toBase64UrlEncoding(buffer: Buffer) {
