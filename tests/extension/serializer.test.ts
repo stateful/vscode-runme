@@ -433,7 +433,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
-        writeableSer.outputPersistence = vi.fn().mockReturnValue(true)
+        GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
         GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
         const result = await writeableSer.serializeNotebook(
@@ -481,7 +481,7 @@ describe('GrpcSerializer', () => {
       const ser = new GrpcSerializer(context, new Server(), new Kernel())
       ;(ser as any).lidDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
-      ser.outputPersistence = vi.fn().mockReturnValue(true)
+      GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
 
       const output = await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
 

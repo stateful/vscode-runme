@@ -398,7 +398,7 @@ export class GrpcSerializer extends SerializerBase {
   ) {
     super(context, kernel)
 
-    this.toggleSessionButton(this.outputPersistence())
+    this.toggleSessionButton(GrpcSerializer.sessionOutputsEnabled())
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -446,7 +446,7 @@ export class GrpcSerializer extends SerializerBase {
     /**
      * Remove cache if output persistence is disabled
      */
-    if (!this.outputPersistence() && lid) {
+    if (!GrpcSerializer.sessionOutputsEnabled() && lid) {
       this.serializerCache.delete(lid)
     }
     const bytes = this.serializerCache.get(lid ?? '')
@@ -561,7 +561,7 @@ export class GrpcSerializer extends SerializerBase {
     return result
   }
 
-  public outputPersistence() {
+  static sessionOutputsEnabled() {
     return getSessionOutputs() && ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
   }
 
@@ -569,7 +569,7 @@ export class GrpcSerializer extends SerializerBase {
     notebook: Notebook,
     lid: string | undefined,
   ): Promise<Uint8Array | undefined> {
-    if (!this.outputPersistence()) {
+    if (!GrpcSerializer.sessionOutputsEnabled()) {
       return Promise.resolve(undefined)
     }
 
