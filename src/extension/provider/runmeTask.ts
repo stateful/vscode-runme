@@ -201,83 +201,22 @@ export class RunmeTaskProvider implements TaskProvider {
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
     const { id, name, documentPath } = knownTask
-    const { relativePath: source } = asWorkspaceRelativePath(documentPath)
+    let mdBuffer: Uint8Array
+    try {
+      mdBuffer = await workspace.fs.readFile(Uri.parse(documentPath))
+    } catch (err: any) {
+      if (err.code !== 'FileNotFound') {
+        log.error(`${err.message}`)
+      }
+      throw err
+    }
 
-    const task = new Task(
-      { type: 'runme', name, command: name },
-      TaskScope.Workspace,
-      name,
-      source,
-      new CustomExecution(async () => {
-        let mdBuf: Uint8Array
-        try {
-          mdBuf = await workspace.fs.readFile(Uri.parse(documentPath))
-        } catch (err: any) {
-          if (err.code !== 'FileNotFound') {
-            log.error(`${err.message}`)
-          }
-          throw err
-        }
+    const notebook = await serializer.deserializeNotebook(mdBuffer, token)
+    const cell: Serializer.Cell = notebook.cells.find((cell) => {
+      return cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name
+    })!
 
-        const notebook = await serializer.deserializeNotebook(mdBuf, token)
-
-        const cell: Serializer.Cell = notebook.cells.find((cell) => {
-          return cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name
-        })!
-
-        const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
-        const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
-        const languageId = ('languageId' in cell && cell.languageId) || 'sh'
-
-        const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const envs: Record<string, string> = {
-          ...(await getWorkspaceEnvs(Uri.file(documentPath))),
-        }
-
-        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
-        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(documentPath)))
-
-        const cellText = cell.value
-
-        if (!runnerEnv) {
-          Object.assign(envs, process.env)
-        }
-
-        // todo(sebastian): re-prompt the best solution here?
-        const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
-          cellText,
-          languageId,
-          commandMode,
-          promptForEnv,
-          envKeys,
-        )
-
-        const runOpts: RunProgramOptions = {
-          commandMode,
-          convertEol: true,
-          cwd,
-          runnerEnv: runnerEnv,
-          envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-          exec: execution,
-          languageId,
-          background,
-          programName,
-          storeLastOutput: true,
-          tty: interactive,
-        }
-
-        const program = await runner.createProgramSession(runOpts)
-
-        program.registerTerminalWindow('vscode')
-        program.setActiveTerminalWindow('vscode')
-
-        return program
-      }),
-    )
-
-    return task
+    return this.newRunmeTask(documentPath, name, notebook, cell, options, runner, runnerEnv)
   }
 
   static async resolveRunProgramExecutionWithRetry(
@@ -383,7 +322,7 @@ export class RunmeTaskProvider implements TaskProvider {
     task.presentationOptions = {
       focus: true,
       // why doesn't this work with Silent?
-      reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
+      reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Silent,
       panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
     }
 
