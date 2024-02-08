@@ -238,35 +238,6 @@ export class RunmeTaskProvider implements TaskProvider {
     return this.newRunmeTask(documentPath, name, notebook, cell, options, runner, runnerEnv)
   }
 
-  static async resolveRunProgramExecutionWithRetry(
-    script: string,
-    languageId: string,
-    commandMode: CommandMode,
-    promptForEnv: boolean,
-    skipEnvs?: Set<string>,
-  ): Promise<RunProgramExecution> {
-    try {
-      return await resolveRunProgramExecution(
-        script,
-        languageId,
-        commandMode,
-        promptForEnv,
-        skipEnvs,
-      )
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        log.error(err.message)
-      }
-      return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
-        script,
-        languageId,
-        commandMode,
-        promptForEnv,
-        skipEnvs,
-      )
-    }
-  }
-
   static async newRunmeTask(
     filePath: string,
     command: string,
@@ -351,5 +322,34 @@ export class RunmeTaskProvider implements TaskProvider {
     )
 
     return task
+  }
+
+  static async resolveRunProgramExecutionWithRetry(
+    script: string,
+    languageId: string,
+    commandMode: CommandMode,
+    promptForEnv: boolean,
+    skipEnvs?: Set<string>,
+  ): Promise<RunProgramExecution> {
+    try {
+      return await resolveRunProgramExecution(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        log.error(err.message)
+      }
+      return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
+    }
   }
 }
