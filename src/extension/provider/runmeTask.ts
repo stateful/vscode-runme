@@ -17,7 +17,17 @@ import {
 } from 'vscode'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
+import {
+  Observable,
+  of,
+  from,
+  scan,
+  map,
+  takeLast,
+  firstValueFrom,
+  lastValueFrom,
+  isObservable,
+} from 'rxjs'
 
 import getLogger from '../logger'
 import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
@@ -46,6 +56,10 @@ export interface RunmeTask extends Task {
 type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
 
 type ProjectTask = LoadEventFoundTask
+
+type TaskNotebook = NotebookData | Serializer.Notebook
+
+type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
 
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
@@ -211,10 +225,15 @@ export class RunmeTaskProvider implements TaskProvider {
       throw err
     }
 
-    const notebook = await serializer.deserializeNotebook(mdBuffer, token)
-    const cell: Serializer.Cell = notebook.cells.find((cell) => {
-      return cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name
-    })!
+    const notebook = from(serializer.deserializeNotebook(mdBuffer, token))
+    const cell = notebook.pipe(
+      map((n) => {
+        console.log(documentPath)
+        return n.cells.find(
+          (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
+        )!
+      }),
+    )
 
     return this.newRunmeTask(documentPath, name, notebook, cell, options, runner, runnerEnv)
   }
@@ -251,17 +270,13 @@ export class RunmeTaskProvider implements TaskProvider {
   static async newRunmeTask(
     filePath: string,
     command: string,
-    notebook: NotebookData | Serializer.Notebook,
-    cell: NotebookCell | NotebookCellData | Serializer.Cell,
+    notebookish: TaskNotebook | Observable<TaskNotebook>,
+    cellish: TaskCell | Observable<TaskCell>,
     options: TaskOptions = {},
     runner: IRunner,
-    runnerEnv?: IRunnerEnvironment,
+    runnerEnv: IRunnerEnvironment | undefined,
   ): Promise<Task> {
     const source = asWorkspaceRelativePath(filePath).relativePath
-
-    const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
-    const isBackground = options.isBackground || background
-
     const name = `${command}`
 
     const task = new Task(
@@ -270,6 +285,24 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
+        let notebook: TaskNotebook | undefined = undefined
+        let cell: TaskCell | undefined = undefined
+
+        if (isObservable(notebookish)) {
+          notebook = await firstValueFrom<TaskNotebook>(notebookish as any)
+        } else {
+          notebook = notebookish as TaskNotebook
+        }
+
+        if (isObservable(cellish)) {
+          cell = await firstValueFrom<TaskCell>(cellish as any)
+        } else {
+          cell = cellish as TaskCell
+        }
+
+        const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
+        const isBackground = options.isBackground || background
+
         const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
@@ -314,17 +347,17 @@ export class RunmeTaskProvider implements TaskProvider {
         program.registerTerminalWindow('vscode')
         program.setActiveTerminalWindow('vscode')
 
+        task.isBackground = isBackground
+        task.presentationOptions = {
+          focus: true,
+          // why doesn't this work with Silent?
+          reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Silent,
+          panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+        }
+
         return program
       }),
     )
-
-    task.isBackground = isBackground
-    task.presentationOptions = {
-      focus: true,
-      // why doesn't this work with Silent?
-      reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Silent,
-      panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
-    }
 
     return task
   }
