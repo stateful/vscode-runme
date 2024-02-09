@@ -106,6 +106,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         }
 
         if (this.isTokenNotExpired(session.expiresIn)) {
+          // Emit a 'session changed' event to notify that the token has been accessed.
+          // This ensures that any components listening for session changes are notified appropriately.
+          this._sessionChangeEmitter.fire({ added: [], removed: [], changed: [session] })
           return [session]
         }
 
@@ -124,7 +127,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           }
 
           this.updateSession(updatedSession)
-
           return [updatedSession]
         } else {
           this.removeSession(session.id)

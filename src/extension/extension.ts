@@ -29,7 +29,12 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, bootFile, resetNotebookAutosaveSettings } from './utils'
+import {
+  getDefaultWorkspace,
+  bootFile,
+  resetNotebookAutosaveSettings,
+  getPlatformAuthSession,
+} from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -280,6 +285,8 @@ export class RunmeExtension {
 
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      // Required to populate the Accounts Menu in the Activity Bar
+      getPlatformAuthSession(false)
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
     }
