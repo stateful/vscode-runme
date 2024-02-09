@@ -99,7 +99,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       // Get all required scopes
       const allScopes = this.getScopes(scopes || []) as string[]
 
-      if (allScopes.length && scopes?.length) {
+      if (allScopes.length) {
+        if (!scopes?.length) {
+          return sessions
+        }
+
         const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
         if (!session) {
           return []
