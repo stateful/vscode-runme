@@ -1,11 +1,10 @@
-import { authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
 import { getCellById } from '../../cell'
-import { getCellRunmeId } from '../../utils'
+import { getCellRunmeId, getPlatformAuthSession } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { RunmeService } from '../../services/runme'
 import { UpdateCellExecutionDocument } from '../../__generated-platform__/graphql'
@@ -20,9 +19,7 @@ export default async function updateCellExecution(
   const { messaging, message, editor } = requestMessage
 
   try {
-    const session = await authentication.getSession('stateful', ['profile'], {
-      createIfNone: true,
-    })
+    const session = await getPlatformAuthSession()
 
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')

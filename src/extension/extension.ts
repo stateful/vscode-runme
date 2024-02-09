@@ -280,27 +280,6 @@ export class RunmeExtension {
 
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-      // const getAuthSession = async () => {
-      //   const session = await authentication.getSession(
-      //     AuthenticationProviders.Stateful,
-      //     ['profile'],
-      //     {
-      //       createIfNone: false,
-      //     },
-      //   )
-      //   if (session) {
-      //     window.showInformationMessage(`Welcome back ${session.account.label}`)
-      //   }
-      // }
-
-      // getAuthSession()
-
-      // context.subscriptions.push(
-      //   authentication.onDidChangeSessions(async (e) => {
-      //     console.log(e)
-      //     getAuthSession()
-      //   }),
-      // )
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
     }

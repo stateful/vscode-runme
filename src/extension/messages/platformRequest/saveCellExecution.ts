@@ -1,7 +1,6 @@
-import { authentication } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { AuthenticationProviders, ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
+import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import {
@@ -13,7 +12,7 @@ import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
-import { getAnnotations, getCellRunmeId } from '../../utils'
+import { getAnnotations, getCellRunmeId, getPlatformAuthSession } from '../../utils'
 
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
@@ -25,13 +24,8 @@ export default async function saveCellExecution(
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const session = await authentication.getSession(
-      AuthenticationProviders.Stateful,
-      ['profile', 'offline_access'],
-      {
-        createIfNone: !message.output.data.isUserAction && autoSaveIsOn ? false : true,
-      },
-    )
+    const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
+    const session = await getPlatformAuthSession(createIfNone)
 
     if (!session) {
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {

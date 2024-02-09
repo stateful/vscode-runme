@@ -19,6 +19,7 @@ import vscode, {
   ExtensionContext,
   authentication,
   AuthenticationSession,
+  AuthenticationGetSessionOptions,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -48,6 +49,7 @@ import {
   getPortNumber,
   getTLSDir,
   getTLSEnabled,
+  isPlatformAuthEnabled,
 } from '../utils/configuration'
 
 import CategoryQuickPickItem from './quickPickItems/category'
@@ -58,6 +60,7 @@ import { GrpcRunnerEnvironment } from './runner/environment'
 import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
+import { RunmeService } from './services/runme'
 
 declare var globalThis: any
 
@@ -503,6 +506,55 @@ export function getAuthSession(createIfNone: boolean = true) {
   return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
     createIfNone,
   })
+}
+
+export async function getPlatformAuthSession(createIfNone: boolean = true) {
+  const scopes = ['profile', 'offline_access']
+  const options: AuthenticationGetSessionOptions = { createIfNone }
+
+  return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
+}
+
+export async function resolveAuthToken(createIfNone: boolean = true) {
+  let session: AuthenticationSession | undefined
+
+  if (isPlatformAuthEnabled()) {
+    session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      throw new Error('You must authenticate with your Stateful account')
+    }
+
+    return session.accessToken
+  }
+
+  session = await getAuthSession(createIfNone)
+  if (!session) {
+    throw new Error('You must authenticate with your GitHub account')
+  }
+
+  const service = new RunmeService({ githubAccessToken: session.accessToken })
+  const response = await service.getUserToken()
+  if (!response) {
+    throw new Error('Unable to retrieve an access token')
+  }
+
+  return response.token
+}
+
+export async function resolveAppToken(createIfNone: boolean = true) {
+  const token = await resolveAuthToken(createIfNone)
+
+  if (isPlatformAuthEnabled()) {
+    return { token: token }
+  }
+
+  const service = new RunmeService({ githubAccessToken: token })
+  const runmeTokenResponse = await service.getUserToken()
+  if (!runmeTokenResponse) {
+    throw new Error('Unable to retrieve an access token')
+  }
+
+  return await service.getAppToken({ token: token })
 }
 
 export function fetchStaticHtml(appUrl: string) {
