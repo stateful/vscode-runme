@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit'
+import { LitElement, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
@@ -17,6 +17,7 @@ import { ExternalLinkIcon } from '../icons/external'
 
 import '../closeCellButton'
 import './categorySelector'
+import styles from './styles'
 
 type AnnotationsMutation = Partial<CellAnnotations>
 type AnnotationsKey = keyof typeof AnnotationSchema
@@ -34,92 +35,14 @@ interface configDetails {
   docs: string
 }
 
+interface DropdownListOption {
+  text: string
+  value: string
+}
+
 @customElement(RENDERERS.EditAnnotations)
 export class Annotations extends LitElement {
-  // Define scoped styles right with your component, in plain CSS
-  static styles = css`
-    :host {
-      display: block;
-      font-family: Arial;
-    }
-
-    .annotation-container {
-      padding: 1rem;
-      border: 1px solid var(--vscode-focusBorder);
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1rem;
-      width: inherited;
-      position: relative;
-    }
-
-    .annotation-container h4 {
-      margin-block: 0;
-    }
-
-    .annotation-item::part(control) {
-      background-color: var(--theme-input-background);
-      color: var(--vscode-foreground);
-      border: 1px solid var(--vscode-settings-numberInputBorder, transparent);
-      min-width: fit-content;
-      max-width: calc(65% - 10px);
-    }
-
-    .annotation-item::part(root) {
-      background: transparent;
-      border: none;
-      color: var(--vscode-foreground);
-    }
-
-    .annotation-item::part(label) {
-      color: var(--vscode-foreground);
-    }
-
-    .annotation-item::part(checked-indicator) {
-      fill: var(--vscode-foreground);
-    }
-
-    .error-item {
-      color: var(--vscode-errorForeground);
-    }
-
-    .has-errors,
-    .error-container {
-      border: solid 1px var(--vscode-errorForeground);
-    }
-
-    .error-container {
-      padding: 0.1rem;
-    }
-
-    .current-value-error {
-      padding: 1rem;
-    }
-
-    .grid {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      width: 100%;
-    }
-
-    .box {
-      width: calc(50% - 10px);
-      padding: 4px;
-      box-sizing: border-box;
-      overflow-x: auto;
-      margin-top: 12px;
-    }
-
-    .themeText {
-      color: var(--vscode-foreground);
-    }
-
-    .noSelect {
-      user-select: none;
-    }
-  `
+  static styles = styles
 
   readonly #details: { [id: string]: configDetails } = {
     background: {
@@ -171,7 +94,7 @@ export class Annotations extends LitElement {
   @property({ type: Object, reflect: true })
   validationErrors?: CellAnnotationsErrorResult
 
-  @property()
+  @property({ type: Array })
   categories: string[] = []
 
   #getTargetValue(e: Target) {
@@ -252,6 +175,34 @@ export class Annotations extends LitElement {
     >`
   }
 
+  private setControlValue(key: string, e: Target) {
+    const propVal: any = { 'runme.dev/id': this.annotations!['runme.dev/id'] }
+    propVal[key] = e.target?.value
+    return this.#dispatch(propVal)
+  }
+
+  private renderDropdownList(
+    group: string,
+    groupLabel: string,
+    options: DropdownListOption[],
+    defaultValue: string,
+  ) {
+    return html`
+      <div class="dropdown-container">
+        <label slot="label">${groupLabel}</label>
+        <div class="setting-item-control select-container">
+          <select @change=${(e: Target) => this.setControlValue(group, e)}>
+            ${options.map(({ text, value }: DropdownListOption) => {
+              return value === defaultValue
+                ? html`<option value="${value}" selected>${text}</option>`
+                : html`<option value="${value}">${text}</option>`
+            })}
+          </select>
+        </div>
+      </div>
+    `
+  }
+
   renderTextField(id: string, text: string, placeHolder: string = '') {
     const details = this.#details?.[id] as any
 
@@ -298,6 +249,20 @@ export class Annotations extends LitElement {
     </div> `
   }
 
+  renderDropdownListTabEntry(id: AnnotationsKey, options: DropdownListOption[]) {
+    const value = this.annotations?.[id] || ''
+    const details = this.#details?.[id]
+
+    return html`<div>
+      <div class="themeText" style="font-weight:600">
+        ${id} ${this.renderDocsLink(details.docs)}
+      </div>
+      <div style="padding-top:4px">
+        ${this.renderDropdownList(id, details.description, options, value?.toString())}
+      </div>
+    </div> `
+  }
+
   renderTextFieldTabEntry(id: AnnotationsKey) {
     const value = this.annotations?.[id]
     const details = this.#details?.[id]
@@ -334,7 +299,7 @@ export class Annotations extends LitElement {
           categories="${this.categories}"
           createNewCategoryText="Add ${id}"
           selectCategoryText="Select ${id}"
-          selectedCategory="${value}"
+          selectedCategory="${value!}"
           description="${details.description}"
           identifier="${id}"
           @onChange=${this.onCategorySelectorChange}
