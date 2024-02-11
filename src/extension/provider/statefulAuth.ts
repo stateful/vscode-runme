@@ -314,7 +314,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   /**
-   * Handle the redirect to VS Code (after sign in from Staeful)
+   * Handle the redirect to VS Code (after sign in from Stateful)
    * @param scopes
    * @returns
    */
