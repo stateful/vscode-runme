@@ -1,5 +1,3 @@
-import { fetch, Response } from 'undici'
-
 import { Deployment, ManifestEntry, Project } from './api_types'
 
 export interface RequestOptions {
