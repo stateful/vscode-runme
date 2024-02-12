@@ -14,6 +14,7 @@ import {
   ShellExecution,
   tasks,
   EventEmitter,
+  Disposable,
 } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
@@ -21,6 +22,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import getLogger from '../logger'
 import { Kernel } from '../kernel'
+import { AuthenticationProviders } from '../../constants'
 
 import {
   getProjectDir,
@@ -36,14 +38,16 @@ import {
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 const log = getLogger('RunmeUriHandler')
 
-export class RunmeUriHandler extends EventEmitter<Uri> implements UriHandler {
+export class RunmeUriHandler implements UriHandler, Disposable {
+  #disposables: Disposable[] = []
+  readonly #onAuth = this.register(new EventEmitter<Uri>())
+  readonly onAuthEvent = this.#onAuth.event
+
   constructor(
     private context: ExtensionContext,
     private kernel: Kernel,
     private forceNewWindow: boolean,
-  ) {
-    super()
-  }
+  ) {}
 
   async handleUri(uri: Uri) {
     log.info(`triggered RunmeUriHandler with ${uri}`)
@@ -58,7 +62,11 @@ export class RunmeUriHandler extends EventEmitter<Uri> implements UriHandler {
       return
     }
     if (command === 'auth' && windowId && state && code) {
-      this.fire(uri)
+      TelemetryReporter.sendTelemetryEvent('extension.uriHandler', {
+        command,
+        type: AuthenticationProviders.Stateful,
+      })
+      this.#onAuth.fire(uri)
       return
     } else if (command === 'setup') {
       const { fileToOpen, repository } = parseParams(params)
@@ -249,5 +257,14 @@ export class RunmeUriHandler extends EventEmitter<Uri> implements UriHandler {
     }
 
     return Uri.joinPath(projectDirUri, 'demo', projectName)
+  }
+
+  protected register<T extends Disposable>(disposable: T): T {
+    this.#disposables.push(disposable)
+    return disposable
+  }
+
+  public async dispose() {
+    this.#disposables.forEach((d) => d.dispose())
   }
 }

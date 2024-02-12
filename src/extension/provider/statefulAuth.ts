@@ -3,8 +3,6 @@ import * as crypto from 'node:crypto'
 import {
   authentication,
   AuthenticationProvider,
-  AuthenticationProviderAuthenticationSessionsChangeEvent,
-  AuthenticationSession,
   Disposable,
   env,
   EventEmitter,
@@ -12,19 +10,19 @@ import {
   ProgressLocation,
   Uri,
   window,
+  AuthenticationSession,
+  AuthenticationProviderAuthenticationSessionsChangeEvent,
+  Event,
 } from 'vscode'
 import { v4 as uuid } from 'uuid'
 import fetch from 'node-fetch'
 
-import { PromiseAdapter, promiseFromEvent } from '../util'
 import { getIdpConfig, getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders } from '../../constants'
+import { RunmeUriHandler } from '../handler/uri'
 
 const AUTH_NAME = 'Stateful'
-
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
-
-let remoteOutput = window.createOutputChannel('stateful')
 
 interface TokenInformation {
   access_token: string
@@ -37,38 +35,57 @@ interface StatefulAuthSession extends AuthenticationSession {
   expiresIn: number
 }
 
+// Interface declaration for a PromiseAdapter
+interface PromiseAdapter<T, U> {
+  // Function signature of the PromiseAdapter
+  (
+    // Input value of type T that the adapter function will process
+    value: T,
+    // Function to resolve the promise with a value of type U or a promise that resolves to type U
+    resolve: (value: U | PromiseLike<U>) => void,
+    // Function to reject the promise with a reason of any type
+    reject: (reason: any) => void,
+  ): any // The function can return a value of any type
+}
+
+const passthrough = (value: any, resolve: (value?: any) => void) => resolve(value)
+
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
-  private _sessionChangeEmitter =
-    new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>()
-  private _disposable: Disposable
-  private _pendingStates: string[] = []
-  private _codeExchangePromises = new Map<
+  #disposables: Disposable[] = []
+  #pendingStates: string[] = []
+  #codeVerfifiers = new Map<string, string>()
+  #scopes = new Map<string, string[]>()
+  #uriHandler: RunmeUriHandler
+  #codeExchangePromises = new Map<
     string,
     { promise: Promise<TokenInformation>; cancel: EventEmitter<void> }
   >()
-  private _codeVerfifiers = new Map<string, string>()
-  private _scopes = new Map<string, string[]>()
-  private _uriHandler: any
+
+  readonly #onSessionChange = this.register(
+    new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>(),
+  )
 
   constructor(
     private readonly context: ExtensionContext,
     uriHandler: any,
   ) {
-    this._uriHandler = uriHandler
-    this._disposable = Disposable.from(
-      authentication.registerAuthenticationProvider(
-        AuthenticationProviders.Stateful,
-        AUTH_NAME,
-        this,
-        {
-          supportsMultipleAccounts: false,
-        },
+    this.#uriHandler = uriHandler
+    this.#disposables.push(
+      Disposable.from(
+        authentication.registerAuthenticationProvider(
+          AuthenticationProviders.Stateful,
+          AUTH_NAME,
+          this,
+          {
+            supportsMultipleAccounts: false,
+          },
+        ),
       ),
     )
   }
 
   get onDidChangeSessions() {
-    return this._sessionChangeEmitter.event
+    return this.#onSessionChange.event
   }
 
   get redirectUri() {
@@ -86,12 +103,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    */
   public async getSessions(scopes?: string[]): Promise<readonly StatefulAuthSession[]> {
     try {
-      const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
-      if (!allSessions) {
-        return []
-      }
-
-      const sessions = JSON.parse(allSessions) as StatefulAuthSession[]
+      const sessions = await this.getAllSessions()
       if (!sessions.length) {
         return []
       }
@@ -112,7 +124,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         if (this.isTokenNotExpired(session.expiresIn)) {
           // Emit a 'session changed' event to notify that the token has been accessed.
           // This ensures that any components listening for session changes are notified appropriately.
-          this._sessionChangeEmitter.fire({ added: [], removed: [], changed: [session] })
+          this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
           return [session]
         }
 
@@ -130,7 +142,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
             scopes: scopes,
           }
 
-          this.updateSession(updatedSession)
+          await this.updateSession(updatedSession)
           return [updatedSession]
         } else {
           this.removeSession(session.id)
@@ -169,10 +181,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         scopes: this.getScopes(scopes),
       }
 
-      await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify([session]))
-
-      this._sessionChangeEmitter.fire({ added: [session], removed: [], changed: [] })
-
+      await this.persistSessions([session], { added: [session], removed: [], changed: [] })
       return session
     } catch (e) {
       window.showErrorMessage(`Sign in failed: ${e}`)
@@ -185,21 +194,18 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param session
    */
   private async updateSession(session: StatefulAuthSession): Promise<void> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
-
-    if (allSessions) {
-      let sessions = JSON.parse(allSessions) as AuthenticationSession[]
-      const sessionIdx = sessions.findIndex((s) => s.id === session.id)
-
-      sessions.splice(sessionIdx, 1)
-      sessions.push(session)
-
-      await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify(sessions))
-
-      if (session) {
-        this._sessionChangeEmitter.fire({ added: [], removed: [], changed: [session] })
-      }
+    const sessions = await this.getAllSessions()
+    if (!sessions.length) {
+      return
     }
+
+    const sessionIdx = await this.findSessionIndex(sessions, session)
+    if (sessionIdx < 0) {
+      return
+    }
+
+    sessions[sessionIdx] = session
+    await this.persistSessions(sessions, { added: [], removed: [], changed: [session] })
   }
 
   /**
@@ -207,26 +213,27 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param sessionId
    */
   public async removeSession(sessionId: string): Promise<void> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
-    if (allSessions) {
-      let sessions = JSON.parse(allSessions) as AuthenticationSession[]
-      const sessionIdx = sessions.findIndex((s) => s.id === sessionId)
-      const session = sessions[sessionIdx]
-      sessions.splice(sessionIdx, 1)
-
-      await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify(sessions))
-
-      if (session) {
-        this._sessionChangeEmitter.fire({ added: [], removed: [session], changed: [] })
-      }
+    const sessions = await this.getAllSessions()
+    if (!sessions.length) {
+      return
     }
+
+    const sessionIdx = await this.findSessionIndexById(sessions, sessionId)
+    if (sessionIdx < 0) {
+      return
+    }
+
+    const session = sessions[sessionIdx]
+    sessions.splice(sessionIdx, 1)
+
+    await this.persistSessions(sessions, { added: [], removed: [session], changed: [] })
   }
 
   /**
    * Dispose the registered services
    */
   public async dispose() {
-    this._disposable.dispose()
+    this.#disposables.forEach((d) => d.dispose())
   }
 
   /**
@@ -243,22 +250,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         const nonceId = uuid()
 
         const scopeString = scopes.join(' ')
-
-        // Retrieve all required scopes
         scopes = this.getScopes(scopes)
 
         const codeVerifier = toBase64UrlEncoding(crypto.randomBytes(32))
         const codeChallenge = toBase64UrlEncoding(sha256(codeVerifier))
 
         let callbackUri = await env.asExternalUri(Uri.parse(this.redirectUri))
-
-        remoteOutput.appendLine(`Callback URI: ${callbackUri.toString(true)}`)
-
         const callbackQuery = new URLSearchParams(callbackUri.query)
         const stateId = callbackQuery.get('state') || nonceId
-
-        remoteOutput.appendLine(`State ID: ${stateId}`)
-        remoteOutput.appendLine(`Nonce ID: ${nonceId}`)
 
         callbackQuery.set('state', encodeURIComponent(stateId))
         callbackQuery.set('nonce', encodeURIComponent(nonceId))
@@ -266,9 +265,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           query: callbackQuery.toString(),
         })
 
-        this._pendingStates.push(stateId)
-        this._codeVerfifiers.set(stateId, codeVerifier)
-        this._scopes.set(stateId, scopes)
+        this.#pendingStates.push(stateId)
+        this.#codeVerfifiers.set(stateId, codeVerifier)
+        this.#scopes.set(stateId, scopes)
         const { idpClientId, idpDomain, idpAudience } = getIdpConfig()
 
         const searchParams = new URLSearchParams([
@@ -282,32 +281,48 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           ['code_challenge', codeChallenge],
           ['audience', idpAudience],
         ])
+
         const uri = Uri.parse(`https://${idpDomain}/authorize?${searchParams.toString()}`)
-
-        remoteOutput.appendLine(`Login URI: ${uri.toString(true)}`)
-
         await env.openExternal(uri)
 
-        let codeExchangePromise = this._codeExchangePromises.get(scopeString)
+        // Retrieving the codeExchangePromise corresponding to the scopeString from the map
+        let codeExchangePromise = this.#codeExchangePromises.get(scopeString)
+        // Checking if codeExchangePromise is not found
         if (!codeExchangePromise) {
-          codeExchangePromise = promiseFromEvent(this._uriHandler.event, this.handleUri(scopes))
-          this._codeExchangePromises.set(scopeString, codeExchangePromise)
+          // Creating a new codeExchangePromise using promiseFromEvent and setting up
+          // event handling with handleUri function
+          codeExchangePromise = promiseFromEvent(
+            this.#uriHandler.onAuthEvent,
+            this.handleUri(scopes),
+          )
+          // Storing the newly created codeExchangePromise in the map with the corresponding scopeString
+          this.#codeExchangePromises.set(scopeString, codeExchangePromise)
         }
 
         try {
+          // Returning the result of the first resolved promise or the first rejected promise among multiple promises
           return await Promise.race([
+            // Waiting for the codeExchangePromise to resolve
             codeExchangePromise.promise,
+            // Creating a new promise that rejects after 60000 milliseconds
             new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 60000)),
+            // Creating a promise based on an event, rejecting with 'User Cancelled' when
+            // token.onCancellationRequested event occurs
             promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => {
               reject('User Cancelled')
             }).promise,
           ])
         } finally {
-          this._pendingStates = this._pendingStates.filter((n) => n !== stateId)
+          // Filtering out the current stateId from the array of pendingStates
+          this.#pendingStates = this.#pendingStates.filter((n) => n !== stateId)
+          // Firing the cancel event of codeExchangePromise if it exists
           codeExchangePromise?.cancel.fire()
-          this._codeExchangePromises.delete(scopeString)
-          this._codeVerfifiers.delete(stateId)
-          this._scopes.delete(stateId)
+          // Deleting the codeExchangePromise corresponding to scopeString from the map
+          this.#codeExchangePromises.delete(scopeString)
+          // Deleting the codeVerifier corresponding to stateId from the map
+          this.#codeVerfifiers.delete(stateId)
+          // Deleting the scope corresponding to stateId from the map
+          this.#scopes.delete(stateId)
         }
       },
     )
@@ -333,14 +348,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         return
       }
 
-      const codeVerifier = this._codeVerfifiers.get(stateId)
+      const codeVerifier = this.#codeVerfifiers.get(stateId)
       if (!codeVerifier) {
         reject(new Error('No code verifier'))
         return
       }
 
       // Check if it is a valid auth request started by the extension
-      if (!this._pendingStates.some((n) => n === stateId)) {
+      if (!this.#pendingStates.some((n) => n === stateId)) {
         reject(new Error('State not found'))
         return
       }
@@ -394,7 +409,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param scopes
    */
   private getScopes(scopes: string[] = []): string[] {
-    let modifiedScopes = [...scopes]
+    const modifiedScopes = [...scopes]
 
     if (!modifiedScopes.includes('offline_access')) {
       modifiedScopes.push('offline_access')
@@ -454,6 +469,99 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     // Check if the current time is before one hour before the token expiration time
     return currentTime < oneHourBeforeExpiration
+  }
+
+  private async getAllSessions(): Promise<StatefulAuthSession[]> {
+    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
+    if (!allSessions) {
+      return []
+    }
+
+    try {
+      const sessions = JSON.parse(allSessions) as StatefulAuthSession[]
+      return sessions
+    } catch (e) {
+      return []
+    }
+  }
+
+  private async findSessionIndex(sessions: StatefulAuthSession[], session: StatefulAuthSession) {
+    return sessions.findIndex((s) => s.id === session.id)
+  }
+
+  private async findSessionIndexById(sessions: StatefulAuthSession[], id: string) {
+    return sessions.findIndex((s) => s.id === id)
+  }
+
+  private async persistSessions(
+    sessions: StatefulAuthSession[],
+    changes: {
+      added: StatefulAuthSession[]
+      removed: StatefulAuthSession[]
+      changed: StatefulAuthSession[]
+    },
+  ) {
+    await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify(sessions))
+    this.#onSessionChange.fire(changes)
+  }
+
+  protected register<T extends Disposable>(disposable: T): T {
+    this.#disposables.push(disposable)
+    return disposable
+  }
+}
+
+/**
+ * Return a promise that resolves with the next emitted event, or with some future
+ * event as decided by an adapter.
+ *
+ * If specified, the adapter is a function that will be called with
+ * `(event, resolve, reject)`. It will be called once per event until it resolves or
+ * rejects.
+ *
+ * The default adapter is the passthrough function `(value, resolve) => resolve(value)`.
+ *
+ * @param event the event
+ * @param adapter controls resolution of the returned promise
+ * @returns a promise that resolves or rejects as specified by the adapter
+ */
+function promiseFromEvent<T, U>(
+  event: Event<T>,
+  adapter: PromiseAdapter<T, U> = passthrough,
+): { promise: Promise<U>; cancel: EventEmitter<void> } {
+  let subscription: Disposable
+  let cancel = new EventEmitter<void>()
+
+  // Return an object containing a promise and a cancel EventEmitter
+  return {
+    // Creating a new Promise
+    promise: new Promise<U>((resolve, reject) => {
+      // Listening for the cancel event and rejecting the promise with 'Cancelled' when it occurs
+      cancel.event((_) => reject('Cancelled'))
+      // Subscribing to the event
+      subscription = event((value: T) => {
+        try {
+          // Resolving the promise with the result of the adapter function
+          Promise.resolve(adapter(value, resolve, reject)).catch(reject)
+        } catch (error) {
+          // Rejecting the promise if an error occurs during execution
+          reject(error)
+        }
+      })
+    }).then(
+      // Disposing the subscription and returning the result when the promise resolves
+      (result: U) => {
+        subscription.dispose()
+        return result
+      },
+      // Disposing the subscription and re-throwing the error when the promise rejects
+      (error) => {
+        subscription.dispose()
+        throw error
+      },
+    ),
+    // Returning the cancel EventEmitter
+    cancel,
   }
 }
 
