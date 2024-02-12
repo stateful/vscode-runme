@@ -896,7 +896,7 @@
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/client-preset": "^4.1.0",
-    "@graphql-codegen/typescript": "4.0.1",
+    "@graphql-codegen/typescript": "4.0.4",
     "@octokit/rest": "^19.0.13",
     "@types/node": "^18.19.14",
     "@types/uuid": "^9.0.7",
