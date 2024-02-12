@@ -67,7 +67,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
   constructor(
     private readonly context: ExtensionContext,
-    uriHandler: any,
+    uriHandler: RunmeUriHandler,
   ) {
     this.#uriHandler = uriHandler
     this.#disposables.push(
