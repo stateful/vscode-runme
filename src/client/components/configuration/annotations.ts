@@ -66,7 +66,7 @@ export class Annotations extends LitElement {
       docs: 'https://docs.runme.dev/configuration/reference#supported-mime-types',
     },
     name: {
-      description: "Cell's canonical name for easy referencing in the CLI.",
+      description: "Cell's canonical name for easy referencing.",
       docs: 'https://docs.runme.dev/configuration/cell-level#unnamed-vs-named-cells',
     },
     interpreter: {
@@ -264,7 +264,8 @@ export class Annotations extends LitElement {
   }
 
   renderTextFieldTabEntry(id: AnnotationsKey) {
-    const value = this.annotations?.[id]
+    let value = this.annotations?.[id]
+    let nameGenerated = this.annotations?.['runme.dev/nameGenerated']
     const details = this.#details?.[id]
 
     const errors: string[] = this.validationErrors?.errors
@@ -274,11 +275,17 @@ export class Annotations extends LitElement {
       ? this.validationErrors?.originalAnnotations[id as keyof CellAnnotations]
       : value
 
+    let placeHolder = ''
+    if (id === 'name' && nameGenerated && value === this.annotations?.['runme.dev/name']) {
+      placeHolder = value as string
+      value = ''
+    }
+
     return html`<div>
         <div style="font-weight:600" class="themeText">
           ${id} ${this.renderDocsLink(details.docs)}
         </div>
-        <div style="padding-top:4px">${this.renderTextField(id, value as string)}</div>
+        <div style="padding-top:4px">${this.renderTextField(id, value as string, placeHolder)}</div>
       </div>
 
       ${when(errors.length, () => this.renderErrors(errors))}
