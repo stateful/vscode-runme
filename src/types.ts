@@ -230,6 +230,17 @@ export interface ClientMessagePayload {
     value: string | string[]
     id: string
   }
+  [ClientMessages.platformApiRequest]: {
+    data: any
+    id: string
+    hasErrors?: boolean
+    method: APIMethod
+  }
+  [ClientMessages.platformApiResponse]: {
+    data: any
+    id: string
+    hasErrors?: boolean
+  }
   [ClientMessages.cloudApiRequest]: {
     data: any
     id: string

@@ -13,6 +13,8 @@ import {
   TaskScope,
   ShellExecution,
   tasks,
+  EventEmitter,
+  Disposable,
 } from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
@@ -20,6 +22,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import getLogger from '../logger'
 import { Kernel } from '../kernel'
+import { AuthenticationProviders } from '../../constants'
 
 import {
   getProjectDir,
@@ -35,7 +38,11 @@ import {
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 const log = getLogger('RunmeUriHandler')
 
-export class RunmeUriHandler implements UriHandler {
+export class RunmeUriHandler implements UriHandler, Disposable {
+  #disposables: Disposable[] = []
+  readonly #onAuth = this.register(new EventEmitter<Uri>())
+  readonly onAuthEvent = this.#onAuth.event
+
   constructor(
     private context: ExtensionContext,
     private kernel: Kernel,
@@ -45,14 +52,23 @@ export class RunmeUriHandler implements UriHandler {
   async handleUri(uri: Uri) {
     log.info(`triggered RunmeUriHandler with ${uri}`)
     const params = new URLSearchParams(uri.query)
+    const windowId = params.get('windowId')
+    const state = params.get('state')
+    const code = params.get('code')
     const command = params.get('command')
 
     if (!command) {
       window.showErrorMessage('No query parameter "command" provided')
       return
     }
-
-    if (command === 'setup') {
+    if (command === 'auth' && windowId && state && code) {
+      TelemetryReporter.sendTelemetryEvent('extension.uriHandler', {
+        command,
+        type: AuthenticationProviders.Stateful,
+      })
+      this.#onAuth.fire(uri)
+      return
+    } else if (command === 'setup') {
       const { fileToOpen, repository } = parseParams(params)
       if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
         TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'file' })
@@ -63,9 +79,7 @@ export class RunmeUriHandler implements UriHandler {
       TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'project' })
       await this._setupProject(fileToOpen, repository)
       return
-    }
-
-    if (command === 'demo') {
+    } else if (command === 'demo') {
       try {
         const { fileToOpen, repository, cell } = parseParams(params)
         if (!repository) {
@@ -243,5 +257,14 @@ export class RunmeUriHandler implements UriHandler {
     }
 
     return Uri.joinPath(projectDirUri, 'demo', projectName)
+  }
+
+  protected register<T extends Disposable>(disposable: T): T {
+    this.#disposables.push(disposable)
+    return disposable
+  }
+
+  public async dispose() {
+    this.#disposables.forEach((d) => d.dispose())
   }
 }

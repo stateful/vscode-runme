@@ -10,8 +10,8 @@ import { TelemetryViewProvider } from 'vscode-telemetry'
 import { Subject } from 'rxjs'
 import { Observable, Subscription } from 'rxjs'
 
-import { fetchStaticHtml, getAuthSession } from '../utils'
-import { IAppToken, RunmeService } from '../services/runme'
+import { fetchStaticHtml, resolveAppToken } from '../utils'
+import { IAppToken } from '../services/runme'
 import { type SyncSchemaBus } from '../../types'
 import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
 import archiveCell from '../services/archiveCell'
@@ -35,15 +35,7 @@ class PanelBase extends TelemetryViewProvider implements Disposable {
   public dispose() {}
 
   public async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
-    const session = await getAuthSession(createIfNone)
-
-    if (session) {
-      const service = new RunmeService({ githubAccessToken: session.accessToken })
-      const userToken = await service.getUserToken()
-      return await service.getAppToken(userToken)
-    }
-
-    return null
+    return resolveAppToken(createIfNone)
   }
 
   public hydrateHtml(html: string, payload: InitPayload) {

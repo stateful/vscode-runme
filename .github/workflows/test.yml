@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# cancel old edit events being processed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
@@ -45,7 +50,7 @@ jobs:
         uses: stateful/vscode-server-action@v1
         if: failure()
         with:
-          timeout: '300000'
+          timeout: "300000"
 
   sonarcloud:
     if: ${{github.actor != 'dependabot[bot]'}}

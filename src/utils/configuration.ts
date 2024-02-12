@@ -1,12 +1,12 @@
-import path from 'node:path'
 import os from 'node:os'
+import path from 'node:path'
 
 import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
-import { getAnnotations, isWindows } from '../extension/utils'
 import { SERVER_PORT } from '../constants'
 import { RunmeIdentity } from '../extension/grpc/serializerTypes'
+import { getAnnotations, isWindows } from '../extension/utils'
 import { NotebookAutoSaveSetting } from '../types'
 
 const ACTIONS_SECTION_NAME = 'runme.actions'
@@ -27,6 +27,8 @@ const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
+  ['api.platform.', ':8911'],
+  ['platform.', ':8910'],
 ])
 
 type NotebookTerminalValue = keyof typeof notebookTerminalSchema
@@ -85,6 +87,10 @@ const configurationSchema = {
       .default(NotebookAutoSaveSetting.No),
     sessionOutputs: z.boolean().default(false),
     loginPrompt: z.boolean().default(true),
+    platformAuth: z.boolean().default(false),
+    idpClientId: z.string().default(''),
+    idpDomain: z.string().default(''),
+    idpAudience: z.string().default(''),
   },
 }
 
@@ -314,7 +320,19 @@ const getRemoteDev = (baseDomain: string): boolean => {
   return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
 }
 
-const getRunmeAppUrl = (subdomains: string[]): string => {
+const getRunmeAppUrl = (forSubdomains: string[]): string => {
+  let subdomains = forSubdomains
+  if (isPlatformAuthEnabled()) {
+    subdomains = forSubdomains.map((s) => {
+      if (s === 'app') {
+        return 'platform'
+      } else if (s === 'api') {
+        return 'api.platform'
+      }
+      return s
+    })
+  }
+
   let base = getRunmeBaseDomain()
   const isRemoteDev = getRemoteDev(base)
   if (isRemoteDev) {
@@ -377,29 +395,42 @@ const getLoginPrompt = (): boolean => {
   return getCloudConfigurationValue('loginPrompt', true)
 }
 
+const isPlatformAuthEnabled = (): boolean => {
+  return getCloudConfigurationValue('platformAuth', false)
+}
+const getIdpConfig = () => {
+  return {
+    idpClientId: getCloudConfigurationValue('idpClientId', ''),
+    idpDomain: getCloudConfigurationValue('idpDomain', ''),
+    idpAudience: getCloudConfigurationValue('idpAudience', ''),
+  }
+}
+
 export {
-  getPortNumber,
-  getBinaryPath,
   enableServerLogs,
-  getServerConfigurationValue,
-  isNotebookTerminalFeatureEnabled,
-  isNotebookTerminalEnabledForCell,
-  getTLSEnabled,
-  getTLSDir,
-  getNotebookTerminalConfigurations,
+  getActionsOpenViewInEditor,
+  getBinaryPath,
+  getCLIUseIntegratedRunme,
   getCodeLensEnabled,
   getNotebookExecutionOrder,
-  registerExtensionEnvironmentVariables,
   getCustomServerAddress,
-  getActionsOpenViewInEditor,
-  getEnvWorkspaceFileOrder,
   getEnvLoadWorkspaceFiles,
-  getCLIUseIntegratedRunme,
-  getRunmeAppUrl,
-  getRunmePanelIdentifier,
-  isRunmeAppButtonsEnabled,
+  getEnvWorkspaceFileOrder,
   getForceNewWindowConfig,
   getNotebookAutoSave,
+  getNotebookTerminalConfigurations,
+  getPortNumber,
+  getRunmeAppUrl,
+  getRunmePanelIdentifier,
+  getServerConfigurationValue,
+  getTLSDir,
+  getTLSEnabled,
+  isNotebookTerminalEnabledForCell,
+  isNotebookTerminalFeatureEnabled,
+  isRunmeAppButtonsEnabled,
+  isPlatformAuthEnabled,
+  registerExtensionEnvironmentVariables,
   getSessionOutputs,
   getLoginPrompt,
+  getIdpConfig,
 }

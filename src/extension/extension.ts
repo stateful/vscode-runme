@@ -15,6 +15,7 @@ import { Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
+  isPlatformAuthEnabled,
   registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
@@ -28,7 +29,12 @@ import {
   StopBackgroundTaskProvider,
 } from './provider/background'
 import { CopyProvider } from './provider/copy'
-import { getDefaultWorkspace, bootFile, resetNotebookAutosaveSettings } from './utils'
+import {
+  getDefaultWorkspace,
+  bootFile,
+  resetNotebookAutosaveSettings,
+  getPlatformAuthSession,
+} from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
@@ -61,6 +67,7 @@ import { RunmeCodeLensProvider } from './provider/codelens'
 import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { CloudAuthProvider } from './provider/cloudAuth'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -274,8 +281,16 @@ export class RunmeExtension {
           commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
         },
       ),
-      new CloudAuthProvider(context),
     )
+
+    if (isPlatformAuthEnabled()) {
+      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      // Required to populate the Accounts Menu in the Activity Bar
+      getPlatformAuthSession(false)
+    } else {
+      context.subscriptions.push(new CloudAuthProvider(context))
+    }
+
     await bootFile(context)
   }
 

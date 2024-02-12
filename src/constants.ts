@@ -26,6 +26,8 @@ export enum ClientMessages {
   onCategoryChange = 'common:onCategoryChange',
   cloudApiRequest = 'common:cloudApiRequest',
   cloudApiResponse = 'common:cloudApiResponse',
+  platformApiRequest = 'common:platformApiRequest',
+  platformApiResponse = 'common:platformApiResponse',
   optionsMessage = 'common:optionsMessage',
   openExternalLink = 'common:openExternalLink',
   onOptionsMessage = 'common:onOptionsMessage',
@@ -141,6 +143,7 @@ export enum RENDERERS {
 
 export enum AuthenticationProviders {
   GitHub = 'github',
+  Stateful = 'stateful',
 }
 export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
 export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'
