@@ -1,7 +1,6 @@
 import path from 'node:path'
 import { mkdirSync, readFileSync, unlinkSync } from 'node:fs'
 
-import { fetch } from 'undici'
 import vscode from 'vscode'
 import {
   Disposable,
