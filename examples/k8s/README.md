@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KJS30GAG33WMDGDMN4Z
-  version: v2.2
+  version: v3
 ---
 
 # Deploying a Dockerized React App to Kubernetes Cluster
