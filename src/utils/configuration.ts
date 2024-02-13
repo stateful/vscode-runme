@@ -320,14 +320,12 @@ const getRemoteDev = (baseDomain: string): boolean => {
   return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
 }
 
-const getRunmeAppUrl = (forSubdomains: string[]): string => {
+const getRunmeAppUrl = (forSubdomains: string[] = []): string => {
   let subdomains = forSubdomains
   if (isPlatformAuthEnabled()) {
     subdomains = forSubdomains.map((s) => {
       if (s === 'app') {
-        return 'platform'
-      } else if (s === 'api') {
-        return 'api.platform'
+        return ''
       }
       return s
     })
