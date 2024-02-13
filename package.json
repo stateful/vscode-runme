@@ -671,7 +671,7 @@
           "runme.app.sessionOutputs": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           },
           "runme.app.loginPrompt": {
