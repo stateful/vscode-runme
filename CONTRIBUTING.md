@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7VQMH8ESX1EFV4QCBTXB1Y
-  version: v2.2
+  version: v3
 ---
 
 # Contributing to `vscode-runme`

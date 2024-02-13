@@ -85,7 +85,7 @@ const configurationSchema = {
     notebookAutoSave: z
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
       .default(NotebookAutoSaveSetting.No),
-    sessionOutputs: z.boolean().default(false),
+    sessionOutputs: z.boolean().default(true),
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
     idpClientId: z.string().default(''),
@@ -388,7 +388,7 @@ const getNotebookAutoSave = (): NotebookAutoSaveSetting => {
 }
 
 const getSessionOutputs = (): boolean => {
-  return getCloudConfigurationValue('sessionOutputs', false)
+  return getCloudConfigurationValue('sessionOutputs', true)
 }
 
 const getLoginPrompt = (): boolean => {

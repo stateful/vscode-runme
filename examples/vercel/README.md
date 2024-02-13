@@ -1,7 +1,7 @@
 ---
 runme:
   id: 01HF7B0KJKPC0FGMY181R7Q7GE
-  version: v2.2
+  version: v3
 ---
 
 # Deploy Next.js with Runme

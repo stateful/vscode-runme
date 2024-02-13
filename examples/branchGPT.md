@@ -1,10 +1,12 @@
 ---
 runme:
   id: 01HF7B0KK19BHGNZ0X1W17ZEYB
-  version: v2.2
+  version: v3
 ---
 
 # Enter BranchGPT
+
+🛑 Please note that BranchGPT is deprecated and no longer available in the `runme` CLI.
 
 [![](https://badgen.net/badge/Run%20this%20/Demo/5B3ADF?icon=https://runme.dev/runme_logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
 
