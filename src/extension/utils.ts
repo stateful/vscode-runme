@@ -61,6 +61,7 @@ import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { RunmeService } from './services/runme'
+import { GCPResolver } from './resolvers/gcpResolver'
 
 declare var globalThis: any
 
@@ -169,6 +170,10 @@ export function getKey(runningCell: vscode.TextDocument): string {
 
   if (isGitHubLink(runningCell)) {
     return 'github'
+  }
+
+  if (new GCPResolver(runningCell).match()) {
+    return 'gcp'
   }
 
   const { languageId } = runningCell

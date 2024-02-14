@@ -68,6 +68,7 @@ import Panel from './panels/panel'
 import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
+import { handleClusterMessage } from './messages/gcp'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -387,6 +388,7 @@ export class Kernel implements Disposable {
       }
       const answer = await window.showInformationMessage(
         message.output.title,
+        { modal: !!message.output.modal },
         ...message.output.options,
       )
       return postClientMessage(this.messaging, ClientMessages.onOptionsMessage, {
@@ -408,6 +410,14 @@ export class Kernel implements Disposable {
           cellId: message.output.data.cellId,
         })
       }
+    } else if (
+      [
+        ClientMessages.gcpClusterCheckStatus,
+        ClientMessages.gcpClusterDetails,
+        ClientMessages.gcpClusterDetailsNewCell,
+      ].includes(message.type)
+    ) {
+      await handleClusterMessage({ messaging: this.messaging, message, editor })
     } else if (message.type.startsWith('terminal:')) {
       return
     }

@@ -19,6 +19,7 @@ import { IWorkflowRun } from './extension/services/types'
 import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
+import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 
 export interface SyncSchema {
   onCommand?: {
@@ -78,6 +79,7 @@ export namespace Serializer {
     ['runme.dev/githubState']?: GitHubState
     ['runme.dev/frontmatterParsed']?: Grpc.Frontmatter
     ['runme.dev/textRange']?: Grpc.Cell['textRange']
+    ['runme.dev/gcpState']?: GCPState
   }
 }
 
@@ -115,6 +117,44 @@ export interface GitHubState {
   cellId?: string
 }
 
+export interface StringIndexable {
+  [key: string]: any
+}
+
+export interface GcpGkeCluster extends StringIndexable {
+  clusterId: string
+  status: string
+  name: string
+  location: string
+  nodes: number
+  clusterLink: string
+  vCPUs: number
+  totalMemory: number
+  mode: string
+  labels?: { [k: string]: string } | null
+  statusMessage: string | null | undefined
+}
+
+export interface GcpGkeClustersState {
+  project?: string
+  zone?: string
+  clusters?: GcpGkeCluster[]
+  view: GCPSupportedView.CLUSTERS
+  cellId: string
+}
+
+export interface GcpGkeClusterState {
+  project?: string
+  zone?: string
+  cluster?: string | undefined
+  clusterDetails?: any
+  cellId: string
+  view: GCPSupportedView.CLUSTER
+  location?: string | undefined
+}
+
+export type GCPState = GcpGkeClustersState | GcpGkeClusterState
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
@@ -134,6 +174,7 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
+  [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -256,6 +297,7 @@ export interface ClientMessagePayload {
     title: string
     id: string
     options: any[]
+    modal?: boolean
     telemetryEvent?: string
   }
   [ClientMessages.onOptionsMessage]: {
@@ -276,6 +318,39 @@ export interface ClientMessagePayload {
   [ClientMessages.tangleEvent]: {
     data: any
     webviewId: string
+  }
+  [ClientMessages.gcpClusterCheckStatus]: {
+    clusterName: string
+    projectId: string
+    location: string
+    cellId: string
+    clusterId: string
+    status: string
+  }
+  [ClientMessages.gcpClusterStatusChanged]: {
+    clusterId: string
+    status: string
+    cellId: string
+  }
+  [ClientMessages.gcpClusterDetails]: {
+    cellId: string
+    cluster: string
+    location: string
+    projectId: string
+  }
+  [ClientMessages.gcpClusterDetailsResponse]: {
+    cellId: string
+    itFailed: boolean
+    reason: string
+    data: any
+    executedInNewCell: boolean
+    cluster: string
+  }
+  [ClientMessages.gcpClusterDetailsNewCell]: {
+    cellId: string
+    cluster: string
+    location: string
+    project: string
   }
 }
 
