@@ -72,7 +72,7 @@ import { handlePlatformApiMessage } from './messages/platformRequest'
 enum ConfirmationItems {
   Yes = 'Yes',
   No = 'No',
-  Skip = 'Skip Prompt and run all',
+  Skip = 'Skip confirmation and run all',
   Cancel = 'Cancel',
 }
 

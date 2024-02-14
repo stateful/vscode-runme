@@ -123,7 +123,7 @@ suite('_executeAll', async () => {
   test('skips prompt', async () => {
     const k = new Kernel({} as any)
     // @ts-ignore readonly
-    window.showQuickPick = vi.fn().mockResolvedValue('Skip Prompt and run all')
+    window.showQuickPick = vi.fn().mockResolvedValue('Skip confirmation and run all')
     k['_doExecuteCell'] = vi.fn()
     await k['_executeAll'](getCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
