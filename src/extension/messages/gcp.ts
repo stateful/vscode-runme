@@ -14,7 +14,7 @@ import {
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { postClientMessage } from '../../utils/messaging'
-import { getClusterDetails, waitForClusterStatus } from '../executors/gcp/clusters'
+import { getClusterDetails, waitForClusterStatus } from '../executors/gcp/gke/clusters'
 import { getCellById } from '../cell'
 
 export interface GCPStatusMessaging {

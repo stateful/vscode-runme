@@ -3,7 +3,7 @@ import { window } from 'vscode'
 import { OutputType } from '../../constants'
 import { GCPResolver, GCPSupportedView } from '../resolvers/gcpResolver'
 
-import { getClusterDetails, getClusters } from './gcp/clusters'
+import { getClusterDetails, getClusters } from './gcp/gke/clusters'
 
 import { IKernelExecutor } from '.'
 

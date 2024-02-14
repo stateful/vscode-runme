@@ -1,7 +1,7 @@
 import container from '@google-cloud/container'
 import compute from '@google-cloud/compute'
 
-import { GcpGkeCluster } from '../../../types'
+import { GcpGkeCluster } from '../../../../types'
 
 const CLUSTER_PROGRESS_STATUS = ['PROVISIONING', 'RECONCILING', 'STOPPING']
 
