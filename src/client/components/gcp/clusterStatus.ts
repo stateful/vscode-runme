@@ -15,7 +15,7 @@ import { onClientMessage } from '../../../utils/messaging'
 import { InfoIcon } from '../icons/info'
 import { UnknownIcon } from '../icons/unknown'
 
-@customElement('gcp-cluster-status')
+@customElement('gcp-gke-cluster-status')
 export class ClusterStatus extends LitElement {
   protected disposables: Disposable[] = []
 

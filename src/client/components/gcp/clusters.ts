@@ -49,7 +49,7 @@ const COLUMNS = [
     text: 'Actions',
   },
 ]
-@customElement('gcp-clusters')
+@customElement('gcp-gke-clusters')
 export class Clusters extends LitElement {
   protected disposables: Disposable[] = []
 
@@ -233,11 +233,11 @@ export class Clusters extends LitElement {
                 >${row[field]}</vscode-link
               >`
             case 'status':
-              return html`<gcp-cluster-status
+              return html`<gcp-gke-cluster-status
                 .cluster="${row}"
                 .projectId="${this.projectId}"
                 .cellId="${this.cellId}"
-              ></gcp-cluster-status>`
+              ></gcp-gke-cluster-status>`
             case 'memory':
               return html`${row.mode === 'Standard' ? `${row[field]} Gb` : ''}`
             case 'labels':
@@ -269,13 +269,13 @@ export class Clusters extends LitElement {
       ${when(
         this._displayClusterInNewCell === false && this._selectedCluster,
         () =>
-          html`<gcp-cluster
+          html`<gcp-gke-cluster
             cellId=${this.cellId}
             .location="${this._selectedCluster?.location}"
             projectId="${this.projectId}"
             .cluster="${this._selectedCluster?.name!}"
             @onBack="${() => this.resetSelectedCluster()}"
-          ></gcp-cluster>`,
+          ></gcp-gke-cluster>`,
         () => this.renderClusters(),
       )}
       <div class="footer">

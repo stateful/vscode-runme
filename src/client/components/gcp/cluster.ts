@@ -13,7 +13,7 @@ import { getContext } from '../../utils'
 import { ArrowLeft } from '../icons/arrowLeft'
 import { ClusterIcon } from '../icons/cluster'
 
-@customElement('gcp-cluster')
+@customElement('gcp-gke-cluster')
 export class Clusters extends LitElement {
   protected disposables: Disposable[] = []
 
@@ -447,11 +447,11 @@ export class Clusters extends LitElement {
             href="${`https://console.cloud.google.com/kubernetes/clusters/details/${this.location}/${this.cluster}/details?project=${this.projectId}`}"
             >${ClusterIcon}${this.cluster}</vscode-link
           >
-          <gcp-cluster-status
+          <gcp-gke-cluster-status
             .cluster="${this._clusterDetails}"
             .projectId="${this.projectId}"
             .cellId="${this.cellId}"
-          ></gcp-cluster-status>
+          ></gcp-gke-cluster-status>
           <vscode-link
             class="link"
             href=${`https://console.cloud.google.com/monitoring/dashboards/resourceList/kubernetes?project=${this.projectId}&pageState=(%22interval%22:(),%22gcpTableState%22:(%22t%22:%22CLUSTER%22,%22vA%22:false,%22fS%22:(%22cF%22:(%22pN%22:%22projects%2F${this.projectId}%22,%22l%22:%22${this.location}%22,%22n%22:%22${this.cluster}%22))))`}

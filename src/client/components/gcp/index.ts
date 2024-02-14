@@ -31,19 +31,19 @@ export class Clusters extends LitElement {
   render() {
     switch (this.state?.view) {
       case GCPSupportedView.CLUSTERS:
-        return html`<gcp-clusters
+        return html`<gcp-gke-clusters
           .clusters="${this.state.clusters || []}"
           cellId="${this.state.cellId}"
           projectId="${this.state.project!}"
-        ></gcp-clusters>`
+        ></gcp-gke-clusters>`
       case GCPSupportedView.CLUSTER:
-        return html`<gcp-cluster
+        return html`<gcp-gke-cluster
           .clusterData="${this.state.clusterDetails!}"
           cellId="${this.state.cellId}"
           .cluster="${this.state.cluster}"
           projectId="${this.state.project!}"
           .location="${this.state.location}"
-        ></gcp-cluster>`
+        ></gcp-gke-cluster>`
     }
   }
 }
