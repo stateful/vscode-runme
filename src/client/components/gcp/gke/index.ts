@@ -1,11 +1,11 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
-import './clusters'
-import './cluster'
-import { GCPSupportedView } from '../../../extension/resolvers/gcpResolver'
-import { GCPState } from '../../../types'
-import { RENDERERS } from '../../../constants'
+import '../gke/clusters'
+import '../gke/cluster'
+import { GCPSupportedView } from '../../../../extension/resolvers/gcpResolver'
+import { GCPState } from '../../../../types'
+import { RENDERERS } from '../../../../constants'
 
 @customElement(RENDERERS.GCPView)
 export class Clusters extends LitElement {

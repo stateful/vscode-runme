@@ -3,15 +3,15 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
 
-import '../table'
+import '../../table'
 import './clusterStatus'
 
-import { ClientMessages } from '../../../constants'
-import { ClientMessage, GCPCluster } from '../../../types'
-import { onClientMessage } from '../../../utils/messaging'
-import { getContext } from '../../utils'
-import { ArrowLeft } from '../icons/arrowLeft'
-import { ClusterIcon } from '../icons/cluster'
+import { ClientMessages } from '../../../../constants'
+import { ClientMessage, GCPCluster } from '../../../../types'
+import { onClientMessage } from '../../../../utils/messaging'
+import { getContext } from '../../../utils'
+import { ArrowLeft } from '../../icons/arrowLeft'
+import { ClusterIcon } from '../../icons/cluster'
 
 @customElement('gcp-gke-cluster')
 export class Clusters extends LitElement {
