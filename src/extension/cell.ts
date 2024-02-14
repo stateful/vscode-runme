@@ -254,7 +254,10 @@ export class NotebookCellOutputManager {
           output: this.getCellState(type),
         }
 
-        return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.gke)])
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(payload, OutputType.gke),
+          NotebookCellOutputItem.json(payload),
+        ])
       }
 
       default: {
