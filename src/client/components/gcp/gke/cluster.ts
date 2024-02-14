@@ -7,7 +7,7 @@ import '../../table'
 import './clusterStatus'
 
 import { ClientMessages } from '../../../../constants'
-import { ClientMessage, GCPCluster } from '../../../../types'
+import { ClientMessage, GcpGkeCluster } from '../../../../types'
 import { onClientMessage } from '../../../../utils/messaging'
 import { getContext } from '../../../utils'
 import { ArrowLeft } from '../../icons/arrowLeft'
@@ -246,10 +246,10 @@ export class Clusters extends LitElement {
           value: clusterBasics.privateEndpoint,
         },
       ]}"
-      .displayable="${(row: GCPCluster, field: string) => {
+      .displayable="${(row: GcpGkeCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GCPCluster, field: string) => {
+      .renderer="${(row: GcpGkeCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
@@ -298,10 +298,10 @@ export class Clusters extends LitElement {
           value: automation.autoscaling?.autoscalingProfile,
         },
       ]}"
-      .displayable="${(row: GCPCluster, field: string) => {
+      .displayable="${(row: GcpGkeCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GCPCluster, field: string) => {
+      .renderer="${(row: GcpGkeCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
@@ -408,10 +408,10 @@ export class Clusters extends LitElement {
           value: this.displayFeatureStatus(networking.multinetworking),
         },
       ]}"
-      .displayable="${(row: GCPCluster, field: string) => {
+      .displayable="${(row: GcpGkeCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GCPCluster, field: string) => {
+      .renderer="${(row: GcpGkeCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`

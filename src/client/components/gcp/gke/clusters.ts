@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable } from 'vscode'
 
-import { type GCPCluster } from '../../../../types'
+import { type GcpGkeCluster } from '../../../../types'
 import '../../table'
 import { GCPIcon } from '../../icons/gcp'
 import './clusterStatus'
@@ -54,7 +54,7 @@ export class Clusters extends LitElement {
   protected disposables: Disposable[] = []
 
   @property({ type: Array })
-  clusters!: GCPCluster[]
+  clusters!: GcpGkeCluster[]
 
   @property({ type: String })
   cellId!: string
@@ -66,7 +66,7 @@ export class Clusters extends LitElement {
   private _displayClusterInNewCell: boolean = true
 
   @state()
-  private _selectedCluster: GCPCluster | null | undefined
+  private _selectedCluster: GcpGkeCluster | null | undefined
 
   /* eslint-disable */
   static styles = css`
@@ -171,7 +171,7 @@ export class Clusters extends LitElement {
     )
   }
 
-  private viewCluster(cluster: GCPCluster) {
+  private viewCluster(cluster: GcpGkeCluster) {
     const ctx = getContext()
     this._selectedCluster = cluster
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
@@ -223,10 +223,10 @@ export class Clusters extends LitElement {
             ],
           }
         })}"
-        .displayable="${(row: GCPCluster, field: string) => {
+        .displayable="${(row: GcpGkeCluster, field: string) => {
           return !HIDDEN_COLUMNS.includes(field)
         }}"
-        .renderer="${(row: GCPCluster, field: string) => {
+        .renderer="${(row: GcpGkeCluster, field: string) => {
           switch (field) {
             case 'name':
               return html`<vscode-link @click="${() => this.viewCluster(row)}"

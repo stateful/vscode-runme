@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessage, type GCPCluster } from '../../../../types'
+import { ClientMessage, type GcpGkeCluster } from '../../../../types'
 import { PassIcon } from '../../icons/pass'
 import { SyncIcon } from '../../icons/sync'
 import { ErrorIcon } from '../../icons/error'
@@ -20,7 +20,7 @@ export class ClusterStatus extends LitElement {
   protected disposables: Disposable[] = []
 
   @property({ type: Object })
-  cluster!: GCPCluster
+  cluster!: GcpGkeCluster
 
   @property({ type: String })
   cellId!: string

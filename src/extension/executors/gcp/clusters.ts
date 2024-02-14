@@ -1,7 +1,7 @@
 import container from '@google-cloud/container'
 import compute from '@google-cloud/compute'
 
-import { GCPCluster } from '../../../types'
+import { GcpGkeCluster } from '../../../types'
 
 const CLUSTER_PROGRESS_STATUS = ['PROVISIONING', 'RECONCILING', 'STOPPING']
 
@@ -23,7 +23,7 @@ export function getClusterLink(zone: string, cluster: string, project: string) {
 export async function getClusters(
   project: string,
   useDefaultProject: boolean = false,
-): Promise<GCPCluster[] | undefined> {
+): Promise<GcpGkeCluster[] | undefined> {
   const oneGbInMb = 1024
   const clusterManagement = new container.v1.ClusterManagerClient()
   const machineTypes = new compute.v1.MachineTypesClient()
@@ -35,7 +35,7 @@ export async function getClusters(
   if (!response.clusters) {
     return
   }
-  const clusters: GCPCluster[] = []
+  const clusters: GcpGkeCluster[] = []
 
   for await (const cluster of response.clusters) {
     if (cluster.nodeConfig && !cluster.autopilot?.enabled) {

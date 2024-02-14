@@ -121,7 +121,7 @@ export interface StringIndexable {
   [key: string]: any
 }
 
-export interface GCPCluster extends StringIndexable {
+export interface GcpGkeCluster extends StringIndexable {
   clusterId: string
   status: string
   name: string
@@ -135,15 +135,15 @@ export interface GCPCluster extends StringIndexable {
   statusMessage: string | null | undefined
 }
 
-export interface GCPClustersState {
+export interface GcpGkeClustersState {
   project?: string
   zone?: string
-  clusters?: GCPCluster[]
+  clusters?: GcpGkeCluster[]
   view: GCPSupportedView.CLUSTERS
   cellId: string
 }
 
-export interface GCPClusterState {
+export interface GcpGkeClusterState {
   project?: string
   zone?: string
   cluster?: string | undefined
@@ -153,7 +153,7 @@ export interface GCPClusterState {
   location?: string | undefined
 }
 
-export type GCPState = GCPClustersState | GCPClusterState
+export type GCPState = GcpGkeClustersState | GcpGkeClusterState
 
 interface Payload {
   [OutputType.error]: string
@@ -174,7 +174,7 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
-  [OutputType.gcp]?: GCPClusterState | GCPClustersState
+  [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
