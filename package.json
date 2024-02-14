@@ -423,7 +423,7 @@
           "stateful.runme/terminal",
           "stateful.runme/error",
           "stateful.runme/github-stdout",
-          "stateful.runme/gke"
+          "stateful.runme/gcp"
         ],
         "requiresMessaging": "optional"
       }

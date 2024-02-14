@@ -67,7 +67,7 @@ import PanelManager from './panels/panelManager'
 import Panel from './panels/panel'
 import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction } from './commands'
-import { handleClusterMessage } from './messages/gke'
+import { handleClusterMessage } from './messages/gcp'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -402,9 +402,9 @@ export class Kernel implements Disposable {
       }
     } else if (
       [
-        ClientMessages.gkeClusterCheckStatus,
-        ClientMessages.gkeClusterDetails,
-        ClientMessages.gkeClusterDetailsNewCell,
+        ClientMessages.gcpClusterCheckStatus,
+        ClientMessages.gcpClusterDetails,
+        ClientMessages.gcpClusterDetailsNewCell,
       ].includes(message.type)
     ) {
       await handleClusterMessage({ messaging: this.messaging, message, editor })

@@ -7,13 +7,13 @@ import '../table'
 import './clusterStatus'
 
 import { ClientMessages } from '../../../constants'
-import { ClientMessage, GKECluster } from '../../../types'
+import { ClientMessage, GCPCluster } from '../../../types'
 import { onClientMessage } from '../../../utils/messaging'
 import { getContext } from '../../utils'
 import { ArrowLeft } from '../icons/arrowLeft'
 import { ClusterIcon } from '../icons/cluster'
 
-@customElement('gke-cluster')
+@customElement('gcp-cluster')
 export class Clusters extends LitElement {
   protected disposables: Disposable[] = []
 
@@ -155,8 +155,8 @@ export class Clusters extends LitElement {
     if (!ctx.postMessage) {
       return
     }
-    ctx.postMessage(<ClientMessage<ClientMessages.gkeClusterDetails>>{
-      type: ClientMessages.gkeClusterDetails,
+    ctx.postMessage(<ClientMessage<ClientMessages.gcpClusterDetails>>{
+      type: ClientMessages.gcpClusterDetails,
       output: {
         cellId: this.cellId,
         cluster: this.cluster,
@@ -177,7 +177,7 @@ export class Clusters extends LitElement {
     }
     this.disposables.push(
       onClientMessage(ctx, (e) => {
-        if (e.type === ClientMessages.gkeClusterDetailsResponse) {
+        if (e.type === ClientMessages.gcpClusterDetailsResponse) {
           if (this.cluster !== e.output.cluster || this.cellId !== e.output.cellId) {
             return
           }
@@ -246,10 +246,10 @@ export class Clusters extends LitElement {
           value: clusterBasics.privateEndpoint,
         },
       ]}"
-      .displayable="${(row: GKECluster, field: string) => {
+      .displayable="${(row: GCPCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GKECluster, field: string) => {
+      .renderer="${(row: GCPCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
@@ -298,10 +298,10 @@ export class Clusters extends LitElement {
           value: automation.autoscaling?.autoscalingProfile,
         },
       ]}"
-      .displayable="${(row: GKECluster, field: string) => {
+      .displayable="${(row: GCPCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GKECluster, field: string) => {
+      .renderer="${(row: GCPCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
@@ -408,10 +408,10 @@ export class Clusters extends LitElement {
           value: this.displayFeatureStatus(networking.multinetworking),
         },
       ]}"
-      .displayable="${(row: GKECluster, field: string) => {
+      .displayable="${(row: GCPCluster, field: string) => {
         return true
       }}"
-      .renderer="${(row: GKECluster, field: string) => {
+      .renderer="${(row: GCPCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
@@ -447,14 +447,14 @@ export class Clusters extends LitElement {
             href="${`https://console.cloud.google.com/kubernetes/clusters/details/${this.location}/${this.cluster}/details?project=${this.projectId}`}"
             >${ClusterIcon}${this.cluster}</vscode-link
           >
-          <gke-cluster-status
+          <gcp-cluster-status
             .cluster="${this._clusterDetails}"
             .projectId="${this.projectId}"
             .cellId="${this.cellId}"
-          ></gke-cluster-status>
+          ></gcp-cluster-status>
           <vscode-link
             class="link"
-            href=${`https://console.cloud.google.com/monitoring/dashboards/resourceList/kubernetes?project=${this.projectId}&pageState=(%22interval%22:(),%22gkeTableState%22:(%22t%22:%22CLUSTER%22,%22vA%22:false,%22fS%22:(%22cF%22:(%22pN%22:%22projects%2F${this.projectId}%22,%22l%22:%22${this.location}%22,%22n%22:%22${this.cluster}%22))))`}
+            href=${`https://console.cloud.google.com/monitoring/dashboards/resourceList/kubernetes?project=${this.projectId}&pageState=(%22interval%22:(),%22gcpTableState%22:(%22t%22:%22CLUSTER%22,%22vA%22:false,%22fS%22:(%22cF%22:(%22pN%22:%22projects%2F${this.projectId}%22,%22l%22:%22${this.location}%22,%22n%22:%22${this.cluster}%22))))`}
           >
             View metrics
           </vscode-link>

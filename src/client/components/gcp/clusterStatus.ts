@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
 
-import { ClientMessage, type GKECluster } from '../../../types'
+import { ClientMessage, type GCPCluster } from '../../../types'
 import { PassIcon } from '../icons/pass'
 import { SyncIcon } from '../icons/sync'
 import { ErrorIcon } from '../icons/error'
@@ -15,12 +15,12 @@ import { onClientMessage } from '../../../utils/messaging'
 import { InfoIcon } from '../icons/info'
 import { UnknownIcon } from '../icons/unknown'
 
-@customElement('gke-cluster-status')
+@customElement('gcp-cluster-status')
 export class ClusterStatus extends LitElement {
   protected disposables: Disposable[] = []
 
   @property({ type: Object })
-  cluster!: GKECluster
+  cluster!: GCPCluster
 
   @property({ type: String })
   cellId!: string
@@ -98,8 +98,8 @@ export class ClusterStatus extends LitElement {
     if (!ctx.postMessage) {
       return
     }
-    ctx.postMessage(<ClientMessage<ClientMessages.gkeClusterCheckStatus>>{
-      type: ClientMessages.gkeClusterCheckStatus,
+    ctx.postMessage(<ClientMessage<ClientMessages.gcpClusterCheckStatus>>{
+      type: ClientMessages.gcpClusterCheckStatus,
       output: {
         cellId: this.cellId,
         clusterId: this.cluster.clusterId,
@@ -117,7 +117,7 @@ export class ClusterStatus extends LitElement {
     this.checkClusterStatus()
     this.disposables.push(
       onClientMessage(ctx, (e) => {
-        if (e.type === ClientMessages.gkeClusterStatusChanged) {
+        if (e.type === ClientMessages.gcpClusterStatusChanged) {
           if (this.cluster.clusterId !== e.output.clusterId || this.cellId !== e.output.cellId) {
             return
           }

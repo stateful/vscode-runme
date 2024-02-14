@@ -19,7 +19,7 @@ import { IWorkflowRun } from './extension/services/types'
 import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
-import { GKESupportedView } from './extension/resolvers/gkeResolver'
+import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 
 export interface SyncSchema {
   onCommand?: {
@@ -79,7 +79,7 @@ export namespace Serializer {
     ['runme.dev/githubState']?: GitHubState
     ['runme.dev/frontmatterParsed']?: Grpc.Frontmatter
     ['runme.dev/textRange']?: Grpc.Cell['textRange']
-    ['runme.dev/gkeState']?: GKEState
+    ['runme.dev/gcpState']?: GCPState
   }
 }
 
@@ -121,7 +121,7 @@ export interface StringIndexable {
   [key: string]: any
 }
 
-export interface GKECluster extends StringIndexable {
+export interface GCPCluster extends StringIndexable {
   clusterId: string
   status: string
   name: string
@@ -135,25 +135,25 @@ export interface GKECluster extends StringIndexable {
   statusMessage: string | null | undefined
 }
 
-export interface GKEClustersState {
+export interface GCPClustersState {
   project?: string
   zone?: string
-  clusters?: GKECluster[]
-  view: GKESupportedView.CLUSTERS
+  clusters?: GCPCluster[]
+  view: GCPSupportedView.CLUSTERS
   cellId: string
 }
 
-export interface GKEClusterState {
+export interface GCPClusterState {
   project?: string
   zone?: string
   cluster?: string | undefined
   clusterDetails?: any
   cellId: string
-  view: GKESupportedView.CLUSTER
+  view: GCPSupportedView.CLUSTER
   location?: string | undefined
 }
 
-export type GKEState = GKEClustersState | GKEClusterState
+export type GCPState = GCPClustersState | GCPClusterState
 
 interface Payload {
   [OutputType.error]: string
@@ -174,7 +174,7 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
-  [OutputType.gke]?: GKEClusterState | GKEClustersState
+  [OutputType.gcp]?: GCPClusterState | GCPClustersState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -308,7 +308,7 @@ export interface ClientMessagePayload {
     data: any
     webviewId: string
   }
-  [ClientMessages.gkeClusterCheckStatus]: {
+  [ClientMessages.gcpClusterCheckStatus]: {
     clusterName: string
     projectId: string
     location: string
@@ -316,18 +316,18 @@ export interface ClientMessagePayload {
     clusterId: string
     status: string
   }
-  [ClientMessages.gkeClusterStatusChanged]: {
+  [ClientMessages.gcpClusterStatusChanged]: {
     clusterId: string
     status: string
     cellId: string
   }
-  [ClientMessages.gkeClusterDetails]: {
+  [ClientMessages.gcpClusterDetails]: {
     cellId: string
     cluster: string
     location: string
     projectId: string
   }
-  [ClientMessages.gkeClusterDetailsResponse]: {
+  [ClientMessages.gcpClusterDetailsResponse]: {
     cellId: string
     itFailed: boolean
     reason: string
@@ -335,7 +335,7 @@ export interface ClientMessagePayload {
     executedInNewCell: boolean
     cluster: string
   }
-  [ClientMessages.gkeClusterDetailsNewCell]: {
+  [ClientMessages.gcpClusterDetailsNewCell]: {
     cellId: string
     cluster: string
     location: string

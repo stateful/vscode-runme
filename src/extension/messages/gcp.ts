@@ -14,10 +14,10 @@ import {
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { postClientMessage } from '../../utils/messaging'
-import { getClusterDetails, waitForClusterStatus } from '../executors/gke/clusters'
+import { getClusterDetails, waitForClusterStatus } from '../executors/gcp/clusters'
 import { getCellById } from '../cell'
 
-export interface GKEStatusMessaging {
+export interface GCPStatusMessaging {
   messaging: NotebookRendererMessaging
   message: ClientMessage<ClientMessages>
   editor: NotebookEditor
@@ -27,18 +27,18 @@ export async function handleClusterMessage({
   messaging,
   message,
   editor,
-}: GKEStatusMessaging): Promise<void> {
+}: GCPStatusMessaging): Promise<void> {
   if (
     ![
-      ClientMessages.gkeClusterCheckStatus,
-      ClientMessages.gkeClusterDetails,
-      ClientMessages.gkeClusterDetailsNewCell,
+      ClientMessages.gcpClusterCheckStatus,
+      ClientMessages.gcpClusterDetails,
+      ClientMessages.gcpClusterDetailsNewCell,
     ].includes(message.type)
   ) {
     return
   }
 
-  if (message.type === ClientMessages.gkeClusterCheckStatus) {
+  if (message.type === ClientMessages.gcpClusterCheckStatus) {
     await waitForClusterStatus({
       clusterId: message.output.clusterId,
       currentStatus: message.output.status,
@@ -46,7 +46,7 @@ export async function handleClusterMessage({
       projectId: message.output.projectId,
       location: message.output.location,
       onClusterStatus: (clusterId: string, status: string) => {
-        postClientMessage(messaging, ClientMessages.gkeClusterStatusChanged, {
+        postClientMessage(messaging, ClientMessages.gcpClusterStatusChanged, {
           clusterId,
           status,
           cellId: message.output.cellId,
@@ -57,14 +57,14 @@ export async function handleClusterMessage({
     return
   }
 
-  if (message.type === ClientMessages.gkeClusterDetails) {
+  if (message.type === ClientMessages.gcpClusterDetails) {
     const { itFailed, data, reason } = await getClusterDetails(
       message.output.cluster,
       message.output.location,
       message.output.projectId,
     )
 
-    postClientMessage(messaging, ClientMessages.gkeClusterDetailsResponse, {
+    postClientMessage(messaging, ClientMessages.gcpClusterDetailsResponse, {
       itFailed,
       reason,
       data,
@@ -76,7 +76,7 @@ export async function handleClusterMessage({
     return
   }
 
-  if (message.type === ClientMessages.gkeClusterDetailsNewCell) {
+  if (message.type === ClientMessages.gcpClusterDetailsNewCell) {
     const cell = await getCellById({ editor, id: message.output.cellId })
     if (!cell) {
       throw new Error('Cell not found')

@@ -58,7 +58,7 @@ import { GrpcRunnerEnvironment } from './runner/environment'
 import { IServer } from './server/runmeServer'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
-import { GKEResolver } from './resolvers/gkeResolver'
+import { GCPResolver } from './resolvers/gcpResolver'
 
 declare var globalThis: any
 
@@ -169,8 +169,8 @@ export function getKey(runningCell: vscode.TextDocument): string {
     return 'github'
   }
 
-  if (new GKEResolver(runningCell).match()) {
-    return 'gke'
+  if (new GCPResolver(runningCell).match()) {
+    return 'gcp'
   }
 
   const { languageId } = runningCell

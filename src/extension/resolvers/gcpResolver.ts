@@ -3,7 +3,7 @@ import { IDisposable } from 'xterm-headless'
 
 import { StringIndexable } from '../../types'
 
-export enum GKESupportedView {
+export enum GCPSupportedView {
   CLUSTERS = 'clusters',
   CLUSTER = 'cluster',
 }
@@ -19,30 +19,30 @@ export interface ClustersPath extends StringIndexable {
   project: string | null
 }
 
-export interface GKEData {
-  [GKESupportedView.CLUSTER]: ClusterPath
-  [GKESupportedView.CLUSTERS]: ClustersPath
+export interface GCPData {
+  [GCPSupportedView.CLUSTER]: ClusterPath
+  [GCPSupportedView.CLUSTERS]: ClustersPath
 }
 
-export type GoogleKubernetesFeature<T extends GKESupportedView> = T extends any
+export type GoogleKubernetesFeature<T extends GCPSupportedView> = T extends any
   ? {
       view: T
-      data: GKEData[T]
+      data: GCPData[T]
     }
   : never
 
-export class GKEResolver implements IDisposable {
-  private supportedFeatures: Map<string, GoogleKubernetesFeature<GKESupportedView>> = new Map()
-  private resolvedFeature?: GoogleKubernetesFeature<GKESupportedView> | undefined
+export class GCPResolver implements IDisposable {
+  private supportedFeatures: Map<string, GoogleKubernetesFeature<GCPSupportedView>> = new Map()
+  private resolvedFeature?: GoogleKubernetesFeature<GCPSupportedView> | undefined
   constructor(private cell: TextDocument) {
     this.supportedFeatures.set('/kubernetes/list/overview', {
-      view: GKESupportedView.CLUSTERS,
+      view: GCPSupportedView.CLUSTERS,
       data: {
         project: '',
       },
     })
     this.supportedFeatures.set('/kubernetes/clusters/details', {
-      view: GKESupportedView.CLUSTER,
+      view: GCPSupportedView.CLUSTER,
       data: {
         location: '',
         cluster: '',
@@ -54,7 +54,7 @@ export class GKEResolver implements IDisposable {
     const text = this.cell.getText()
     if (text.startsWith('https://console.cloud.google.com')) {
       const url = new URL(text)
-      let supportedFeature: GoogleKubernetesFeature<GKESupportedView> | null = null
+      let supportedFeature: GoogleKubernetesFeature<GCPSupportedView> | null = null
       for (const [key, feature] of this.supportedFeatures) {
         if (feature.data.urlRegex?.test(url.pathname) || key === url.pathname) {
           supportedFeature = feature
