@@ -6,7 +6,6 @@ import { InitializeClient } from '../../api/client'
 import { getCellById } from '../../cell'
 import { getCellRunmeId, getPlatformAuthSession } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
-import { RunmeService } from '../../services/runme'
 import { UpdateCellExecutionDocument } from '../../__generated-platform__/graphql'
 import { Kernel } from '../../kernel'
 
@@ -22,7 +21,7 @@ export default async function updateCellExecution(
     const session = await getPlatformAuthSession()
 
     if (!session) {
-      throw new Error('You must authenticate with your GitHub account')
+      throw new Error('You must authenticate with your Stateful account')
     }
     const cell = await getCellById({ editor, id: message.output.id })
     if (!cell) {
@@ -34,12 +33,8 @@ export default async function updateCellExecution(
     if (!terminal) {
       throw new Error('Could not find an associated terminal')
     }
-    const runmeService = new RunmeService({ githubAccessToken: session.accessToken })
-    const runmeTokenResponse = await runmeService.getUserToken()
-    if (!runmeTokenResponse) {
-      throw new Error('Unable to retrieve an access token')
-    }
-    const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
+
+    const graphClient = InitializeClient({ runmeToken: session.accessToken })
     const result = await graphClient.mutate({
       mutation: UpdateCellExecutionDocument,
       variables: {
@@ -50,13 +45,17 @@ export default async function updateCellExecution(
       },
     })
     TelemetryReporter.sendTelemetryEvent('app.update')
-    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+    // TODO(cpda): Preserve consistent messaging format similar to CloudAPI to prevent unnecessary
+    // modifications across components for now.
+    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
       id: message.output.id,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.update.error')
-    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+    // TODO(cpda): Preserve consistent messaging format similar to CloudAPI to prevent unnecessary
+    // modifications across components for now.
+    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: (error as any).message,
       id: message.output.id,
       hasErrors: true,
