@@ -400,7 +400,12 @@ export class Annotations extends LitElement {
         <vscode-panel-view id="view-1">
           <div class="grid">
             <div class="box">${this.renderTextFieldTabEntry('name')}</div>
-            <div class="box">${this.renderCheckboxTabEntry('promptEnv')}</div>
+            <div class="box">
+              ${this.renderDropdownListTabEntry('promptEnv', [
+                { text: 'Yes', value: 'true' },
+                { text: 'No', value: 'false' },
+              ])}
+            </div>
             <div class="box">${this.renderCheckboxTabEntry('interactive')}</div>
             <div class="box">${this.renderCheckboxTabEntry('background')}</div>
           </div>
