@@ -4,6 +4,10 @@ runme:
   version: v3
 ---
 
+# GCP's Kubernetes Engine Cloud
+
+Be sure to run through the on-time [setup instructions](setup.md).
+
 ```sh {"id":"01HPM26EAZH5X2AW34XGWXBZ7B","terminalRows":"5"}
 $ gcloud container clusters list --region=us-central1-c --project runme-ci
 ```
