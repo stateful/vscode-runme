@@ -12,7 +12,7 @@ export enum OutputType {
   error = 'stateful.runme/error',
   github = 'stateful.runme/github-stdout',
   stdout = 'application/vnd.code.notebook.stdout',
-  gcp = 'stateful.runme/gcp',
+  gcp = 'stateful.runme/gcp', // only GKE for now
 }
 
 export enum ClientMessages {
