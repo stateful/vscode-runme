@@ -1,7 +1,7 @@
 import container from '@google-cloud/container'
 import compute from '@google-cloud/compute'
 
-import { GKECluster } from '../../../types'
+import { GcpGkeCluster } from '../../../../types'
 
 const CLUSTER_PROGRESS_STATUS = ['PROVISIONING', 'RECONCILING', 'STOPPING']
 
@@ -23,7 +23,7 @@ export function getClusterLink(zone: string, cluster: string, project: string) {
 export async function getClusters(
   project: string,
   useDefaultProject: boolean = false,
-): Promise<GKECluster[] | undefined> {
+): Promise<GcpGkeCluster[] | undefined> {
   const oneGbInMb = 1024
   const clusterManagement = new container.v1.ClusterManagerClient()
   const machineTypes = new compute.v1.MachineTypesClient()
@@ -35,7 +35,7 @@ export async function getClusters(
   if (!response.clusters) {
     return
   }
-  const clusters: GKECluster[] = []
+  const clusters: GcpGkeCluster[] = []
 
   for await (const cluster of response.clusters) {
     if (cluster.nodeConfig && !cluster.autopilot?.enabled) {
@@ -165,7 +165,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
           kubernetesAlpha: cluster.enableKubernetesAlpha,
           costAllocation: cluster.costManagementConfig,
           usageMetering: cluster.resourceUsageExportConfig,
-          backupForGKE: cluster.addonsConfig?.gkeBackupAgentConfig?.enabled,
+          backupForGCP: cluster.addonsConfig?.gkeBackupAgentConfig?.enabled,
           configConnector: cluster.addonsConfig?.configConnectorConfig?.enabled,
           discCSIDriver: cluster.addonsConfig?.gcpFilestoreCsiDriverConfig?.enabled,
         },

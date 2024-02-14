@@ -1,17 +1,17 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
-import './clusters'
-import './cluster'
-import { GKESupportedView } from '../../../extension/resolvers/gkeResolver'
-import { GKEState } from '../../../types'
-import { RENDERERS } from '../../../constants'
+import '../gke/clusters'
+import '../gke/cluster'
+import { GCPSupportedView } from '../../../../extension/resolvers/gcpResolver'
+import { GCPState } from '../../../../types'
+import { RENDERERS } from '../../../../constants'
 
-@customElement(RENDERERS.GKEView)
+@customElement(RENDERERS.GCPView)
 export class Clusters extends LitElement {
   @property({ type: Object })
   state:
-    | GKEState
+    | GCPState
     /* eslint-disable */
     | undefined
 
@@ -30,20 +30,20 @@ export class Clusters extends LitElement {
 
   render() {
     switch (this.state?.view) {
-      case GKESupportedView.CLUSTERS:
-        return html`<gke-clusters
+      case GCPSupportedView.CLUSTERS:
+        return html`<gcp-gke-clusters
           .clusters="${this.state.clusters || []}"
           cellId="${this.state.cellId}"
           projectId="${this.state.project!}"
-        ></gke-clusters>`
-      case GKESupportedView.CLUSTER:
-        return html`<gke-cluster
+        ></gcp-gke-clusters>`
+      case GCPSupportedView.CLUSTER:
+        return html`<gcp-gke-cluster
           .clusterData="${this.state.clusterDetails!}"
           cellId="${this.state.cellId}"
           .cluster="${this.state.cluster}"
           projectId="${this.state.project!}"
           .location="${this.state.location}"
-        ></gke-cluster>`
+        ></gcp-gke-cluster>`
     }
   }
 }

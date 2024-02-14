@@ -1,53 +1,52 @@
 import { window } from 'vscode'
 
-
 import { OutputType } from '../../constants'
-import { GKEResolver, GKESupportedView } from '../resolvers/gkeResolver'
+import { GCPResolver, GCPSupportedView } from '../resolvers/gcpResolver'
 
-import { getClusterDetails, getClusters } from './gke/clusters'
+import { getClusterDetails, getClusters } from './gcp/gke/clusters'
 
 import { IKernelExecutor } from '.'
 
-export const gke: IKernelExecutor = async (executor) => {
+export const gcp: IKernelExecutor = async (executor) => {
   const { doc, exec, outputs } = executor
 
   try {
-    const gkeResolver = new GKEResolver(doc).get()
-    if (!gkeResolver?.data.project) {
+    const gcpResolver = new GCPResolver(doc).get()
+    if (!gcpResolver?.data.project) {
       throw new Error('Could not resolve Google Kubernetes Engine resource')
     }
 
-    switch (gkeResolver.view) {
-      case GKESupportedView.CLUSTERS: {
-        const clusters = await getClusters(gkeResolver.data.project)
+    switch (gcpResolver.view) {
+      case GCPSupportedView.CLUSTERS: {
+        const clusters = await getClusters(gcpResolver.data.project)
         outputs.setState({
-          type: OutputType.gke,
+          type: OutputType.gcp,
           state: {
-            project: gkeResolver.data.project,
-            view: gkeResolver.view,
+            project: gcpResolver.data.project,
+            view: gcpResolver.view,
             cellId: exec.cell.metadata['runme.dev/id'],
             clusters,
           },
         })
-        await outputs.showOutput(OutputType.gke)
+        await outputs.showOutput(OutputType.gcp)
         break
       }
 
-      case GKESupportedView.CLUSTER: {
-        const { cluster, location, project } = gkeResolver.data
+      case GCPSupportedView.CLUSTER: {
+        const { cluster, location, project } = gcpResolver.data
         const clusterDetails = await getClusterDetails(cluster, location, project)
         outputs.setState({
-          type: OutputType.gke,
+          type: OutputType.gcp,
           state: {
-            project: gkeResolver.data.project,
-            view: gkeResolver.view,
+            project: gcpResolver.data.project,
+            view: gcpResolver.view,
             cellId: exec.cell.metadata['runme.dev/id'],
             cluster,
             clusterDetails,
             location,
           },
         })
-        await outputs.showOutput(OutputType.gke)
+        await outputs.showOutput(OutputType.gcp)
       }
     }
     return true

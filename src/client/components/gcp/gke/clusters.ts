@@ -3,16 +3,16 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable } from 'vscode'
 
-import { type GKECluster } from '../../../types'
-import '../table'
-import { GKEIcon } from '../icons/gke'
+import { type GcpGkeCluster } from '../../../../types'
+import '../../table'
+import { GCPIcon } from '../../icons/gcp'
 import './clusterStatus'
 import './cluster'
-import { ClusterIcon } from '../icons/cluster'
-import { CloudLogsIcon } from '../icons/cloudLogs'
-import { ClientMessages } from '../../../constants'
-import { onClientMessage, postClientMessage } from '../../../utils/messaging'
-import { getContext } from '../../utils'
+import { ClusterIcon } from '../../icons/cluster'
+import { CloudLogsIcon } from '../../icons/cloudLogs'
+import { ClientMessages } from '../../../../constants'
+import { onClientMessage, postClientMessage } from '../../../../utils/messaging'
+import { getContext } from '../../../utils'
 
 enum MessageOptions {
   Yes = 'Yes',
@@ -49,12 +49,12 @@ const COLUMNS = [
     text: 'Actions',
   },
 ]
-@customElement('gke-clusters')
+@customElement('gcp-gke-clusters')
 export class Clusters extends LitElement {
   protected disposables: Disposable[] = []
 
   @property({ type: Array })
-  clusters!: GKECluster[]
+  clusters!: GcpGkeCluster[]
 
   @property({ type: String })
   cellId!: string
@@ -66,7 +66,7 @@ export class Clusters extends LitElement {
   private _displayClusterInNewCell: boolean = true
 
   @state()
-  private _selectedCluster: GKECluster | null | undefined
+  private _selectedCluster: GcpGkeCluster | null | undefined
 
   /* eslint-disable */
   static styles = css`
@@ -159,7 +159,7 @@ export class Clusters extends LitElement {
             this._displayClusterInNewCell = false
             this.requestUpdate()
           } else {
-            postClientMessage(ctx, ClientMessages.gkeClusterDetailsNewCell, {
+            postClientMessage(ctx, ClientMessages.gcpClusterDetailsNewCell, {
               cellId: this.cellId,
               cluster: this._selectedCluster?.name!,
               location: this._selectedCluster?.location!,
@@ -171,7 +171,7 @@ export class Clusters extends LitElement {
     )
   }
 
-  private viewCluster(cluster: GKECluster) {
+  private viewCluster(cluster: GcpGkeCluster) {
     const ctx = getContext()
     this._selectedCluster = cluster
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
@@ -179,7 +179,7 @@ export class Clusters extends LitElement {
       options: Object.values(MessageOptions),
       modal: true,
       id: this.cellId,
-      telemetryEvent: 'app.gke.cluster',
+      telemetryEvent: 'app.gcp.cluster',
     })
   }
 
@@ -223,21 +223,21 @@ export class Clusters extends LitElement {
             ],
           }
         })}"
-        .displayable="${(row: GKECluster, field: string) => {
+        .displayable="${(row: GcpGkeCluster, field: string) => {
           return !HIDDEN_COLUMNS.includes(field)
         }}"
-        .renderer="${(row: GKECluster, field: string) => {
+        .renderer="${(row: GcpGkeCluster, field: string) => {
           switch (field) {
             case 'name':
               return html`<vscode-link @click="${() => this.viewCluster(row)}"
                 >${row[field]}</vscode-link
               >`
             case 'status':
-              return html`<gke-cluster-status
+              return html`<gcp-gke-cluster-status
                 .cluster="${row}"
                 .projectId="${this.projectId}"
                 .cellId="${this.cellId}"
-              ></gke-cluster-status>`
+              ></gcp-gke-cluster-status>`
             case 'memory':
               return html`${row.mode === 'Standard' ? `${row[field]} Gb` : ''}`
             case 'labels':
@@ -263,19 +263,19 @@ export class Clusters extends LitElement {
 
   render() {
     return html`<div class="integration">
-        ${GKEIcon}
+        ${GCPIcon}
         <h3>Google Cloud Kubernetes Engine | Clusters</h3>
       </div>
       ${when(
         this._displayClusterInNewCell === false && this._selectedCluster,
         () =>
-          html`<gke-cluster
+          html`<gcp-gke-cluster
             cellId=${this.cellId}
             .location="${this._selectedCluster?.location}"
             projectId="${this.projectId}"
             .cluster="${this._selectedCluster?.name!}"
             @onBack="${() => this.resetSelectedCluster()}"
-          ></gke-cluster>`,
+          ></gcp-gke-cluster>`,
         () => this.renderClusters(),
       )}
       <div class="footer">

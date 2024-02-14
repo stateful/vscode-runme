@@ -130,12 +130,12 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           }
           element.appendChild(githubElement)
           break
-        case OutputType.gke:
-          const gkeElement = document.createElement(RENDERERS.GKEView)
+        case OutputType.gcp:
+          const gcpElement = document.createElement(RENDERERS.GCPView)
           if (payload.output) {
-            gkeElement.setAttribute('state', JSON.stringify(payload.output))
+            gcpElement.setAttribute('state', JSON.stringify(payload.output))
           }
-          element.appendChild(gkeElement)
+          element.appendChild(gcpElement)
           break
         default:
           element.innerHTML = 'No renderer found!'
