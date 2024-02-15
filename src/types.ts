@@ -221,6 +221,7 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.onProgramClose]: {
     ['runme.dev/id']: string
+    code: number | void
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string

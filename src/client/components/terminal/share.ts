@@ -29,6 +29,9 @@ export class ShareCell extends LitElement {
     vscode-button:focus {
       outline: #007fd4 1px solid;
     }
+    vscode-button.escalate {
+      background-color: var(--vscode-errorForeground);
+    }
     .icon {
       width: 13px;
       margin: 0 5px 0 -5px;
@@ -45,15 +48,21 @@ export class ShareCell extends LitElement {
   }
 
   render() {
+    const className = this.shareText.toLocaleLowerCase()
     return when(
       this.disabled,
       () => html`
-        <vscode-button disabled appearance="secondary" @click=${this.onShareClick}>
+        <vscode-button
+          class=${className}
+          disabled
+          appearance="secondary"
+          @click=${this.onShareClick}
+        >
           ${ShareIcon} ${this.shareText}
         </vscode-button>
       `,
       () => html`
-        <vscode-button appearance="secondary" @click=${this.onShareClick}>
+        <vscode-button class=${className} appearance="secondary" @click=${this.onShareClick}>
           ${this.displayShareIcon ? ShareIcon : SaveIcon} ${this.shareText}
         </vscode-button>
       `,

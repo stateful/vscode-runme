@@ -192,6 +192,7 @@ export const executeRunner: IKernelRunner = async ({
   program.onDidClose((code) => {
     postClientMessage(messaging, ClientMessages.onProgramClose, {
       'runme.dev/id': cellId,
+      code,
     })
     if (!background) {
       return
