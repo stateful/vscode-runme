@@ -238,6 +238,12 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
+    // Check if the message type is a cloud API request and platform authentication is enabled.
+    if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
+      // Remap the message type to platform API request if platform authentication is enabled.
+      message = { ...message, type: ClientMessages.platformApiRequest }
+    }
+
     if (message.type === ClientMessages.mutateAnnotations) {
       const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
@@ -366,16 +372,14 @@ export class Kernel implements Disposable {
           commands.executeCommand('workbench.action.files.save')
         }
       })
+    } else if (message.type === ClientMessages.platformApiRequest) {
+      return handlePlatformApiMessage({
+        messaging: this.messaging,
+        message: { ...message, type: ClientMessages.platformApiRequest },
+        editor,
+        kernel: this,
+      })
     } else if (message.type === ClientMessages.cloudApiRequest) {
-      if (isPlatformAuthEnabled()) {
-        return handlePlatformApiMessage({
-          messaging: this.messaging,
-          message: { ...message, type: ClientMessages.platformApiRequest },
-          editor,
-          kernel: this,
-        })
-      }
-
       return handleCloudApiMessage({
         messaging: this.messaging,
         message,

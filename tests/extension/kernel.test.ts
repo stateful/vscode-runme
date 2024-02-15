@@ -1,10 +1,15 @@
 import { test, expect, vi, suite, beforeEach } from 'vitest'
-import { window, NotebookCell, workspace } from 'vscode'
+import { NotebookCell, notebooks, window, workspace } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
 import executors from '../../src/extension/executors'
 import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
 import { askAlternativeOutputsAction } from '../../src/extension/commands'
+import { ClientMessages } from '../../src/constants'
+import { APIMethod } from '../../src/types'
+import * as platform from '../../src/extension/messages/platformRequest/saveCellExecution'
+import * as cloudApi from '../../src/extension/messages/cloudApiRequest/saveCellExecution'
+import { isPlatformAuthEnabled } from '../../src/utils/configuration'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -15,6 +20,16 @@ vi.mock('../../src/extension/utils', async () => {
     getNotebookCategories: vi.fn().mockResolvedValue([]),
     isWindows: () => false,
     isShellLanguage: () => false,
+    getAuthSession: vi.fn().mockResolvedValue({
+      accessToken: '123',
+    }),
+  }
+})
+vi.mock('../../src/utils/configuration', async (importActual) => {
+  const actual = (await importActual()) as any
+  return {
+    ...actual,
+    isPlatformAuthEnabled: vi.fn(),
   }
 })
 vi.mock('../../src/extension/executors/index.js', () => ({
@@ -22,9 +37,20 @@ vi.mock('../../src/extension/executors/index.js', () => ({
   ENV_STORE_MANAGER: {},
 }))
 vi.mock('../../src/extension/runner', () => ({}))
-
 vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
 vi.mock('../../src/extension/commands', () => ({ askAlternativeOutputsAction: vi.fn() }))
+vi.mock('../../src/extension/messages/platformRequest/saveCellExecution')
+vi.mock('../../src/extension/messages/cloudApiRequest/saveCellExecution')
+vi.mock('../../../../src/extension/services/runme', () => ({
+  RunmeService: class {
+    async getUserToken() {}
+    constructor() {
+      this.getUserToken = vi.fn().mockResolvedValue({
+        token: 'token',
+      })
+    }
+  },
+}))
 
 const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
   [...new Array(cnt)].map(
@@ -41,8 +67,103 @@ const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
         },
       }) as any as NotebookCell,
   )
+suite('#handleRendererMessage', () => {
+  const editor = {
+    notebook: {
+      metadata: {
+        ['runme.dev/frontmatterParsed']: { runme: { id: 'ulid' } },
+      },
+    },
+  } as any
+
+  let message = {
+    output: {
+      id: 'cell-id',
+      method: APIMethod.CreateCellExecution,
+      data: {
+        stdout: 'hello world',
+      },
+    },
+  } as any
+
+  beforeEach(() => {
+    vi
+    vi.mocked(notebooks.createRendererMessaging).mockImplementation((_name: string) => {
+      return {
+        postMessage: vi.fn(),
+        onDidReceiveMessage: vi.fn().mockImplementation((handler) => {
+          return handler({ editor: editor, message: message })
+        }),
+      }
+    })
+  })
+
+  test(ClientMessages.cloudApiRequest, async () => {
+    message = {
+      ...message,
+      type: ClientMessages.cloudApiRequest,
+    }
+    const messaging = notebooks.createRendererMessaging('foo')
+    const requestMessage: cloudApi.APIRequestMessage = {
+      messaging: messaging,
+      message,
+      editor,
+    }
+
+    new Kernel({} as any)
+    await messaging.postMessage(requestMessage)
+    expect(cloudApi.default).toBeCalledTimes(1)
+  })
+
+  test('isPlatformAuthEnabled', async () => {
+    vi.mocked(platform.default).mockClear()
+    vi.mocked(isPlatformAuthEnabled).mockReturnValue(true)
+
+    message = {
+      ...message,
+      type: ClientMessages.cloudApiRequest,
+    }
+    const messaging = notebooks.createRendererMessaging('foo')
+    const requestMessage: cloudApi.APIRequestMessage = {
+      messaging: messaging,
+      message,
+      editor,
+    }
+
+    new Kernel({} as any)
+    await messaging.postMessage(requestMessage)
+    expect(platform.default).toBeCalledTimes(1)
+  })
+
+  test(ClientMessages.platformApiRequest, async () => {
+    vi.mocked(platform.default).mockClear()
+    message = {
+      ...message,
+      type: ClientMessages.platformApiRequest,
+    }
+
+    const messaging = notebooks.createRendererMessaging('foo')
+    const requestMessage: platform.APIRequestMessage = {
+      messaging: messaging,
+      message,
+      editor,
+    }
+    new Kernel({} as any)
+    await messaging.postMessage(requestMessage)
+    expect(platform.default).toBeCalledTimes(1)
+  })
+})
 
 test('dispose', () => {
+  vi.mocked(notebooks.createRendererMessaging).mockImplementation((_name: string) => {
+    return {
+      postMessage: vi.fn(),
+      onDidReceiveMessage: vi.fn().mockImplementation(() => {
+        return { dispose: vi.fn() }
+      }),
+    }
+  })
+
   const k = new Kernel({} as any)
   const reset = vi.fn()
   ;(k as any).getEnvironmentManager = vi.fn().mockImplementation(() => ({ reset }))

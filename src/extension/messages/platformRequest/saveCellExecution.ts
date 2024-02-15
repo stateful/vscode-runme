@@ -95,17 +95,13 @@ export default async function saveCellExecution(
       },
     })
     TelemetryReporter.sendTelemetryEvent('app.save')
-    // TODO(cpda): Preserve consistent messaging format similar to CloudAPI to prevent unnecessary
-    // modifications across components for now.
-    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: result,
       id: message.output.id,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.error')
-    // TODO(cpda): Preserve consistent messaging format similar to CloudAPI to prevent unnecessary
-    // modifications across components for now.
-    return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
+    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
       id: message.output.id,
       hasErrors: true,

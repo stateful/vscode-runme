@@ -38,6 +38,8 @@ const LISTEN_TO_EVENTS = [
   'theme:',
   ClientMessages.cloudApiRequest,
   ClientMessages.cloudApiResponse,
+  ClientMessages.platformApiRequest,
+  ClientMessages.platformApiResponse,
   ClientMessages.onOptionsMessage,
   ClientMessages.optionsMessage,
   ClientMessages.onCopyTextToClipboard,
@@ -448,6 +450,7 @@ export class TerminalView extends LitElement {
             }
             break
           case ClientMessages.cloudApiResponse:
+          case ClientMessages.platformApiResponse:
             {
               if (e.output.id !== this.id) {
                 return
