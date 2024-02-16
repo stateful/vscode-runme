@@ -6,12 +6,9 @@ import {
   NotebookCellKind,
 } from 'vscode'
 
-import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 
 export class NamedProvider implements NotebookCellStatusBarItemProvider {
-  constructor(private readonly kernel: Kernel) {}
-
   async provideCellStatusBarItems(
     cell: NotebookCell,
   ): Promise<NotebookCellStatusBarItem | undefined> {
@@ -22,18 +19,17 @@ export class NamedProvider implements NotebookCellStatusBarItemProvider {
     const annotations = getAnnotations(cell)
 
     let item: NotebookCellStatusBarItem
-    item = new NotebookCellStatusBarItem(
-      `$(file-symlink-file) ${annotations.name}`,
-      NotebookCellStatusBarAlignment.Left,
-    )
-    item.tooltip = 'Change cell name'
+    const text = '$(add) Add Name'
+    item = new NotebookCellStatusBarItem(text, NotebookCellStatusBarAlignment.Left)
+    item.text = text
+    item.tooltip = 'Add name to important cells'
 
     if (
-      annotations['runme.dev/nameGenerated'] &&
-      annotations.name === annotations['runme.dev/name']
+      annotations['runme.dev/nameGenerated'] !== true ||
+      annotations.name !== annotations['runme.dev/name']
     ) {
-      item.text = '$(add) Add Name'
-      item.tooltip = 'Add name to important cells'
+      item.tooltip = 'Be careful changing the name of an important cell'
+      item.text = `$(file-symlink-file) ${annotations.name}`
     }
 
     item.command = {

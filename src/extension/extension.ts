@@ -206,7 +206,7 @@ export class RunmeExtension {
         Kernel.type,
         new AnnotationsProvider(kernel),
       ),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new NamedProvider(kernel)),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new NamedProvider()),
 
       stopBackgroundTaskProvider,
 
