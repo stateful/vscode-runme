@@ -48,6 +48,8 @@ const boolify = (defaultValue: boolean, invalidTypeError: string = 'expected a b
 
 export const AnnotationSchema = {
   'runme.dev/id': z.string().optional(),
+  'runme.dev/name': z.string().optional(),
+  'runme.dev/nameGenerated': boolify(true).optional(),
   id: z.string().optional(),
   background: boolify(false),
   interactive: boolify(true),
@@ -79,7 +81,7 @@ export const AnnotationSchema = {
     }, 'mime type specification invalid format')
     .default('text/plain'),
   interpreter: z.string().optional().default(''),
-  cwd: z.string().nonempty().optional(),
+  cwd: z.string().optional().default(''),
   category: z.string().default(''),
 }
 

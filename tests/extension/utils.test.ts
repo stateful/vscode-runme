@@ -230,6 +230,7 @@ suite('#getAnnotations', () => {
     expect(d).toStrictEqual(<CellAnnotations>{
       background: false,
       closeTerminalOnSuccess: true,
+      cwd: '',
       interactive: true,
       mimeType: 'text/plain',
       name: 'command-123',
@@ -254,6 +255,7 @@ suite('#getAnnotations', () => {
       id: undefined,
       background: false,
       closeTerminalOnSuccess: true,
+      cwd: '',
       interactive: true,
       mimeType: 'text/plain',
       name: 'echo-hello',
@@ -261,6 +263,7 @@ suite('#getAnnotations', () => {
       excludeFromRunAll: false,
       category: '',
       interpreter: '',
+      'runme.dev/name': 'echo-hello',
     })
   })
 })

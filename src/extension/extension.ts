@@ -68,6 +68,7 @@ import Panel from './panels/panel'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
+import { NamedProvider } from './provider/named'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -205,6 +206,7 @@ export class RunmeExtension {
         Kernel.type,
         new AnnotationsProvider(kernel),
       ),
+      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new NamedProvider()),
 
       stopBackgroundTaskProvider,
 
