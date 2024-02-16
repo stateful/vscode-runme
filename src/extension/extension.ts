@@ -173,6 +173,7 @@ export class RunmeExtension {
 
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
+      ['runme.dev/nameGenerated']: undefined,
       ['runme.dev/id']: undefined,
       ['runme.dev/textRange']: undefined,
     }

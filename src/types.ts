@@ -73,6 +73,7 @@ export namespace Serializer {
     promptEnv?: string
     category?: string
     ['runme.dev/name']?: string
+    ['runme.dev/nameGenerated']?: string
     ['runme.dev/id']?: string
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
