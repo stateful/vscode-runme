@@ -97,7 +97,7 @@ test('initializes all providers', async () => {
   }
   const ext = new RunmeExtension()
   await ext.initialize(context)
-  expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(6)
+  expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(7)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)
   expect(commands.registerCommand).toBeCalledTimes(32)
   expect(window.registerTreeDataProvider).toBeCalledTimes(1)

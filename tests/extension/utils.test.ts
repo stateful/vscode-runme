@@ -261,6 +261,7 @@ suite('#getAnnotations', () => {
       excludeFromRunAll: false,
       category: '',
       interpreter: '',
+      'runme.dev/name': 'echo-hello',
     })
   })
 })
