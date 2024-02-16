@@ -12,11 +12,6 @@ import { getAnnotations } from '../utils'
 export class NamedProvider implements NotebookCellStatusBarItemProvider {
   constructor(private readonly kernel: Kernel) {}
 
-  // public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
-  //   const outputs = await this.kernel.getCellOutputs(cell)
-  //   await outputs.toggleOutput(OutputType.annotations)
-  // }
-
   async provideCellStatusBarItems(
     cell: NotebookCell,
   ): Promise<NotebookCellStatusBarItem | undefined> {
@@ -31,12 +26,14 @@ export class NamedProvider implements NotebookCellStatusBarItemProvider {
       `$(file-symlink-file) ${annotations.name}`,
       NotebookCellStatusBarAlignment.Left,
     )
+    item.tooltip = 'Change cell name'
 
     if (
       annotations['runme.dev/nameGenerated'] &&
       annotations.name === annotations['runme.dev/name']
     ) {
       item.text = '$(add) Add Name'
+      item.tooltip = 'Add name to important cells'
     }
 
     item.command = {
@@ -45,7 +42,6 @@ export class NamedProvider implements NotebookCellStatusBarItemProvider {
       arguments: [cell],
     }
 
-    item.tooltip = 'Change name'
     return item
   }
 }
