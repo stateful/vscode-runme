@@ -87,7 +87,6 @@ suite('#handleRendererMessage', () => {
   } as any
 
   beforeEach(() => {
-    vi
     vi.mocked(notebooks.createRendererMessaging).mockImplementation((_name: string) => {
       return {
         postMessage: vi.fn(),
