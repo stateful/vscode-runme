@@ -32,7 +32,6 @@ type Target = {
 
 interface configDetails {
   description: string
-  docs: string
 }
 
 interface DropdownListOption {
@@ -47,47 +46,36 @@ export class Annotations extends LitElement {
   readonly #details: { [id: string]: configDetails } = {
     background: {
       description: 'Run the cell as background process.',
-      docs: 'https://docs.runme.dev/getting-started/vs-code#background-processes',
     },
     interactive: {
       description: 'Run cell inside terminal to allow for interactive input.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#interactive-vs-non-interactive-cells',
     },
     closeTerminalOnSuccess: {
       description: 'Hide terminal after cell successful execution.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#terminal-visibility-post-execution',
     },
     promptEnv: {
       description: 'Prompt user input for exported environment variables.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#set-environment-variables',
     },
     mimeType: {
       description: "Cell's output content MIME type.",
-      docs: 'https://docs.runme.dev/configuration/reference#supported-mime-types',
     },
     name: {
       description: "Cell's canonical name for easy referencing.",
-      docs: 'https://docs.runme.dev/configuration/cell-level#unnamed-vs-named-cells',
     },
     cwd: {
       description: 'Optionally run the cell in different working directory (cwd).',
-      docs: 'https://docs.runme.dev/configuration/cell-level#cells-current-working-directory',
     },
     interpreter: {
       description: 'Inserted into shebang (aka #!) line',
-      docs: 'https://docs.runme.dev/configuration/shebang',
     },
     category: {
       description: 'Execute this code cell within a category. (no comma or spaces allowed)',
-      docs: 'https://docs.runme.dev/configuration/cell-level#run-all-cells-by-category',
     },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#exclude-cell-from-run-all',
     },
     terminalRows: {
       description: 'Number of rows to display in the notebook terminal.',
-      docs: 'https://docs.runme.dev/configuration/cell-level#terminal-row',
     },
   }
 
@@ -166,7 +154,7 @@ export class Annotations extends LitElement {
   }
 
   renderCheckbox(id: string, isChecked: boolean, isReadOnly: boolean) {
-    const details = this.#details?.[id] as any
+    const details = this.#details?.[id]
 
     return html`<vscode-checkbox
       id="${id}"
@@ -237,18 +225,16 @@ export class Annotations extends LitElement {
     return html`<p class="error-item current-value-error">Received value: ${value}</p>`
   }
 
-  renderDocsLink(link: string) {
+  renderDocsLink(id: string) {
+    const link = `https://docs.runme.dev/r/extension/${id}`
     return html`<vscode-link href="${link}">(docs ${ExternalLinkIcon})</vscode-link>`
   }
 
   renderCheckboxTabEntry(id: AnnotationsKey) {
     const value = this.annotations?.[id]
-    const details = this.#details?.[id]
 
     return html`<div>
-      <div class="themeText" style="font-weight:600">
-        ${id} ${this.renderDocsLink(details.docs)}
-      </div>
+      <div class="themeText" style="font-weight:600">${id} ${this.renderDocsLink(id)}</div>
       <div style="padding-top:4px">${this.renderCheckbox(id, value as boolean, false)}</div>
     </div> `
   }
@@ -258,9 +244,7 @@ export class Annotations extends LitElement {
     const details = this.#details?.[id]
 
     return html`<div>
-      <div class="themeText" style="font-weight:600">
-        ${id} ${this.renderDocsLink(details.docs)}
-      </div>
+      <div class="themeText" style="font-weight:600">${id} ${this.renderDocsLink(id)}</div>
       <div style="padding-top:4px">
         ${this.renderDropdownList(id, details.description, options, value?.toString())}
       </div>
@@ -270,7 +254,6 @@ export class Annotations extends LitElement {
   renderTextFieldTabEntry(id: AnnotationsKey) {
     let value = this.annotations?.[id]
     let nameGenerated = this.annotations?.['runme.dev/nameGenerated']
-    const details = this.#details?.[id]
 
     const errors: string[] = this.validationErrors?.errors
       ? this.validationErrors.errors[id as keyof CellAnnotations] || []
@@ -286,9 +269,7 @@ export class Annotations extends LitElement {
     }
 
     return html`<div>
-        <div style="font-weight:600" class="themeText">
-          ${id} ${this.renderDocsLink(details.docs)}
-        </div>
+        <div style="font-weight:600" class="themeText">${id} ${this.renderDocsLink(id)}</div>
         <div style="padding-top:4px">${this.renderTextField(id, value as string, placeHolder)}</div>
       </div>
 
