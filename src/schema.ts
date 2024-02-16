@@ -81,7 +81,7 @@ export const AnnotationSchema = {
     }, 'mime type specification invalid format')
     .default('text/plain'),
   interpreter: z.string().optional().default(''),
-  cwd: z.string().nonempty().optional(),
+  cwd: z.string().optional().default(''),
   category: z.string().default(''),
 }
 
