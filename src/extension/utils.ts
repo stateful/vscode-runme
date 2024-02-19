@@ -547,19 +547,23 @@ export async function resolveAuthToken(createIfNone: boolean = true) {
 }
 
 export async function resolveAppToken(createIfNone: boolean = true) {
-  const token = await resolveAuthToken(createIfNone)
-
   if (isPlatformAuthEnabled()) {
-    return { token: token }
+    const session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      throw new Error('You must authenticate with your Stateful account')
+    }
+    return { token: session.accessToken }
   }
 
-  const service = new RunmeService({ githubAccessToken: token })
-  const runmeTokenResponse = await service.getUserToken()
-  if (!runmeTokenResponse) {
-    throw new Error('Unable to retrieve an access token')
+  const session = await getAuthSession(createIfNone)
+
+  if (session) {
+    const service = new RunmeService({ githubAccessToken: session.accessToken })
+    const userToken = await service.getUserToken()
+    return await service.getAppToken(userToken)
   }
 
-  return await service.getAppToken({ token: token })
+  return null
 }
 
 export function fetchStaticHtml(appUrl: string) {
