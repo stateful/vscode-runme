@@ -25,7 +25,6 @@ import { convertEnvList } from '../utils'
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
-import { GrpcRunnerVarsResolver } from './vars'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -74,8 +73,6 @@ export interface IRunner extends Disposable {
   ): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
-
-  createVarsResolver(): Promise<GrpcRunnerVarsResolver>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -183,14 +180,6 @@ export default class GrpcRunner implements IRunner {
     this.registerChild(session)
 
     return session
-  }
-
-  async createVarsResolver(): Promise<GrpcRunnerVarsResolver> {
-    const resolver = new GrpcRunnerVarsResolver(this.client)
-
-    this.registerChild(resolver)
-
-    return resolver
   }
 
   async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
