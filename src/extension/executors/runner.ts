@@ -12,7 +12,7 @@ import {
 import { Subject, debounceTime } from 'rxjs'
 
 import getLogger from '../logger'
-import { ClientMessages } from '../../constants'
+import { ClientMessages, DEFAULT_PROMPT_ENV } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerProgramSession, RunProgramExecution } from '../runner'
@@ -26,11 +26,13 @@ import { CommandMode } from '../grpc/runnerTypes'
 
 import { closeTerminalByEnvID } from './task'
 import {
-  parseCommandSeq,
   getCellCwd,
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
   getCmdShellSeq,
+  isShellLanguage,
+  getCommandExportExtractMatches,
+  promptUserForVariable,
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
@@ -493,5 +495,107 @@ function updateProcessInfo(
   terminalState.setProcessInfo({
     exitReason,
     pid,
+  })
+}
+
+/**
+ * Parse set of commands, requiring user input for prompted environment
+ * variables, and supporting multiline strings
+ *
+ * Returns `undefined` when a user cancels on prompt
+ */
+export async function parseCommandSeq(
+  cellText: string,
+  languageId: string,
+  promptForEnv = DEFAULT_PROMPT_ENV,
+  skipEnvs?: Set<string>,
+): Promise<string[] | undefined> {
+  const parseBlock = isShellLanguage(languageId)
+    ? prepareCmdSeq
+    : (s: string) => (s ? s.split('\n') : [])
+
+  const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
+
+  type CommandBlock =
+    | {
+        type: 'block'
+        content: string
+      }
+    | {
+        type: 'single'
+        content: string
+      }
+
+  const parsedCommandBlocks: CommandBlock[] = []
+
+  let offset = 0
+
+  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+    let userValue: string | undefined
+
+    let skip = false
+
+    switch (type) {
+      case 'prompt':
+        {
+          if (skipEnvs?.has(key)) {
+            skip = true
+            break
+          }
+
+          const userInput = await promptUserForVariable(key, value, hasStringValue)
+
+          if (userInput === undefined) {
+            return undefined
+          }
+
+          userValue = userInput
+        }
+        break
+
+      case 'direct':
+        {
+          userValue = value
+        }
+        break
+
+      default: {
+        continue
+      }
+    }
+
+    const prior = cellText.slice(offset, regexpMatch.index)
+    parsedCommandBlocks.push({ type: 'block', content: prior })
+
+    if (!skip && userValue !== undefined) {
+      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+    }
+
+    offset = regexpMatch.index + match.length
+  }
+
+  parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
+
+  return parsedCommandBlocks.flatMap(
+    ({ type, content }) =>
+      (type === 'block' && parseBlock?.(content)) || (content ? [content] : []),
+  )
+}
+
+/**
+ * Does the following to a command list:
+ *
+ * - Splits by new lines
+ * - Removes trailing `$` characters
+ */
+export function prepareCmdSeq(cellText: string): string[] {
+  return cellText.split('\n').map((l) => {
+    const stripped = l.trimStart()
+
+    if (stripped.startsWith('$')) {
+      return stripped.slice(1).trimStart()
+    }
+
+    return l
   })
 }

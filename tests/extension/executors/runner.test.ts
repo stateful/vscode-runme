@@ -1,7 +1,11 @@
-import { test, suite, expect, vi } from 'vitest'
+import { test, suite, beforeEach, expect, vi } from 'vitest'
 import { window } from 'vscode'
 
-import { resolveRunProgramExecution } from '../../../src/extension/executors/runner'
+import {
+  parseCommandSeq,
+  prepareCmdSeq,
+  resolveRunProgramExecution,
+} from '../../../src/extension/executors/runner'
 
 vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')
@@ -129,5 +133,139 @@ suite('resolveRunProgramExecution', () => {
         }
       `)
     })
+  })
+})
+
+suite('parseCommandSeq', () => {
+  beforeEach(() => {
+    vi.mocked(window.showInputBox).mockReset()
+  })
+
+  test('single-line export with prompt', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+
+    const res = await parseCommandSeq(['$ export TEST="<placeholder>"'].join('\n'), 'sh')
+
+    expect(res).toBeTruthy()
+    expect(res).toHaveLength(3)
+    expect(res?.[1]).toBe('export TEST="test value"')
+  })
+
+  test('single-line export with prompt disabled', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+
+    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), 'sh', false)
+
+    expect(window.showInputBox).toBeCalledTimes(0)
+
+    expect(res).toBeTruthy()
+    expect(res).toHaveLength(1)
+    expect(res![0]).toBe('export TEST="placeholder"')
+  })
+
+  test('single line export with cancelled prompt', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
+
+    const res = await parseCommandSeq(['export TEST="<placeholder>"'].join('\n'), 'sh')
+
+    expect(res).toBe(undefined)
+  })
+
+  test('non shell code with exports retains leading dollar signs', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => undefined)
+
+    const res = await parseCommandSeq(
+      [
+        "$currentDateTime = date('Y-m-d H:i:s');",
+        '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+        'echo $fullGreeting;',
+      ].join('\n'),
+      'php',
+    )
+
+    expect(res).toBeTruthy()
+    expect(res).toStrictEqual([
+      "$currentDateTime = date('Y-m-d H:i:s');",
+      '$fullGreeting = $greeting . " It\'s now " . $currentDateTime;',
+      'echo $fullGreeting;',
+    ])
+  })
+
+  test('multiline export', async () => {
+    const exportLines = ['export TEST="I', 'am', 'doing', 'well!"']
+
+    const res = await parseCommandSeq(exportLines.join('\n'), 'sh')
+
+    expect(res).toBeTruthy
+    expect(res).toHaveLength(4)
+    expect(res).toStrictEqual(exportLines)
+  })
+
+  test('exports between normal command sequences', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+
+    const cmdLines = [
+      'echo "Hello!"',
+      'echo "Hi!"',
+      'export TEST="<placeholder>"',
+      'echo $TEST',
+      'export TEST_MULTILINE="This',
+      'is',
+      'a',
+      'multiline',
+      'env!"',
+      'echo $TEST_MULTILINE',
+    ]
+
+    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh')
+
+    expect(res).toBeTruthy()
+    expect(res).toStrictEqual([
+      'echo "Hello!"',
+      'echo "Hi!"',
+      'export TEST="test value"',
+      '',
+      'echo $TEST',
+      ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
+      'echo $TEST_MULTILINE',
+    ])
+  })
+
+  test('exports between normal command sequences with getCmdSeq', async () => {
+    vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
+
+    const cmdLines = [
+      'echo "Hello!"',
+      'echo "Hi!"',
+      'export TEST="<placeholder>"',
+      'echo $TEST',
+      'export TEST_MULTILINE="This',
+      'is',
+      'a',
+      'multiline',
+      'env!"',
+      'echo $TEST_MULTILINE',
+    ]
+
+    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh', true, new Set())
+
+    expect(res).toBeTruthy()
+    expect(res).toStrictEqual([
+      'echo "Hello!"',
+      'echo "Hi!"',
+      'export TEST="test value"',
+      '',
+      'echo $TEST',
+      ...['export TEST_MULTILINE="This', 'is', 'a', 'multiline', 'env!"'],
+      'echo $TEST_MULTILINE',
+    ])
+  })
+})
+
+suite('prepareCmdSeq', () => {
+  test('should eliminate leading dollar signs', () => {
+    expect(prepareCmdSeq('$ echo hi')).toStrictEqual(['echo hi'])
+    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual(['echo hi'])
+    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
   })
 })
