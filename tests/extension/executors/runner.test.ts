@@ -6,6 +6,10 @@ import { resolveRunProgramExecution } from '../../../src/extension/executors/run
 vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')
 
+vi.mock('../../../src/extension/constants', () => ({
+  PLATFORM_OS: 'darwin',
+}))
+
 suite('resolveRunProgramExecution', () => {
   test('resolves inline export block', async () => {
     const execution = await resolveRunProgramExecution(
