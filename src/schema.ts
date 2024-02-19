@@ -54,7 +54,7 @@ export const AnnotationSchema = {
   background: boolify(false),
   interactive: boolify(true),
   closeTerminalOnSuccess: boolify(true),
-  promptEnv: boolify(true),
+  promptEnv: z.string().default(DEFAULT_PROMPT_ENV),
   excludeFromRunAll: boolify(false),
   terminalRows: z.preprocess((subject) => {
     if (typeof subject === 'string' && subject) {
@@ -90,7 +90,6 @@ export const SafeCellAnnotationsSchema = z.object({
   background: falseyBoolean(false),
   interactive: falseyBoolean(true),
   closeTerminalOnSuccess: falseyBoolean(true),
-  promptEnv: falseyBoolean(DEFAULT_PROMPT_ENV),
 })
 
 export const SafeNotebookAnnotationsSchema = z.object({

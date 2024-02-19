@@ -77,7 +77,7 @@ export async function promptUserForVariable(
 export function getCommandExportExtractMatches(
   rawText: string,
   supportsDirect = true,
-  supportsPrompt = true,
+  supportsPrompt = DEFAULT_PROMPT_ENV,
 ): CommandExportExtractMatch[] {
   const test = new RegExp(EXPORT_EXTRACT_REGEX)
 
@@ -100,7 +100,7 @@ export function getCommandExportExtractMatches(
     if (placeHolder.startsWith('$(') && placeHolder.endsWith(')')) {
       matchType = 'exec'
       value = placeHolder.slice(2, -1)
-    } else if (!placeHolder.includes('\n') && supportsPrompt) {
+    } else if (!placeHolder.includes('\n') && supportsPrompt !== 'false') {
       matchType = 'prompt'
     } else if (supportsDirect) {
       matchType = 'direct'

@@ -136,7 +136,7 @@ export const DEFAULT_LANGUAGEID = 'shellscript'
 export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
 
-export const DEFAULT_PROMPT_ENV = true
+export const DEFAULT_PROMPT_ENV = ''
 
 export enum RENDERERS {
   VercelOutput = 'vercel-output',

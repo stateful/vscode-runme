@@ -22,7 +22,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
-import { CommandMode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveVarsMode } from '../grpc/runnerTypes'
 
 import { closeTerminalByEnvID } from './task'
 import {
@@ -95,8 +95,14 @@ export const executeRunner: IKernelRunner = async ({
 
   const cellText = exec.cell.document.getText()
 
-  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
+  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
   const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+  const resolver = await runner.createVarsResolver(envs)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const req = await resolver.resolveVars(cellText, ResolveVarsMode.UNSPECIFIED, runnerEnv)
+  console.log(JSON.stringify(req.response?.items, null, 1))
+  console.log(req.response?.commands?.items.join('\n'))
 
   let execution: RunProgramExecution
   try {
@@ -438,7 +444,7 @@ export async function resolveRunProgramExecution(
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  promptForEnv: boolean,
+  promptForEnv = DEFAULT_PROMPT_ENV,
   skipEnvs?: Set<string>,
 ): Promise<RunProgramExecution> {
   const isVercel = isVercelDeployScript(script)

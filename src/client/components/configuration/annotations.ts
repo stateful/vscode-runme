@@ -394,6 +394,7 @@ export class Annotations extends LitElement {
             <div class="box">${this.renderTextFieldTabEntry('name')}</div>
             <div class="box">
               ${this.renderDropdownListTabEntry('promptEnv', [
+                { text: 'Auto', value: 'auto' },
                 { text: 'Yes', value: 'true' },
                 { text: 'No', value: 'false' },
               ])}

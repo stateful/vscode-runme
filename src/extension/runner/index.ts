@@ -75,7 +75,7 @@ export interface IRunner extends Disposable {
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
-  createVarsResolver(): Promise<GrpcRunnerVarsResolver>
+  createVarsResolver(envs: Record<string, string>): Promise<GrpcRunnerVarsResolver>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -185,8 +185,8 @@ export default class GrpcRunner implements IRunner {
     return session
   }
 
-  async createVarsResolver(): Promise<GrpcRunnerVarsResolver> {
-    const resolver = new GrpcRunnerVarsResolver(this.client)
+  async createVarsResolver(envs: Record<string, string>): Promise<GrpcRunnerVarsResolver> {
+    const resolver = new GrpcRunnerVarsResolver(this.client, envs)
 
     this.registerChild(resolver)
 

@@ -43,6 +43,7 @@ import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTy
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
 import { CommandMode } from '../grpc/runnerTypes'
+import { DEFAULT_PROMPT_ENV } from '../../constants'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -269,7 +270,7 @@ export class RunmeTaskProvider implements TaskProvider {
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
+        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
@@ -328,7 +329,7 @@ export class RunmeTaskProvider implements TaskProvider {
     script: string,
     languageId: string,
     commandMode: CommandMode,
-    promptForEnv: boolean,
+    promptForEnv = DEFAULT_PROMPT_ENV,
     skipEnvs?: Set<string>,
   ): Promise<RunProgramExecution> {
     try {
