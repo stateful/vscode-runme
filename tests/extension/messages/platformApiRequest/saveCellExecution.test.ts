@@ -121,18 +121,42 @@ suite('Save cell execution', () => {
 
     await saveCellExecution(requestMessage, kernel)
 
-    expect(messaging.postMessage).toBeCalledWith({
-      output: {
-        data: {
-          data: {
-            id: 'cell-id',
-            htmlUrl: 'https://app.runme.dev/cell/gotyou!',
+    expect(messaging.postMessage).toMatchInlineSnapshot(`
+      [MockFunction spy] {
+        "calls": [
+          [
+            {
+              "from": "kernel",
+            },
+          ],
+          [
+            {
+              "output": {
+                "data": {
+                  "data": {
+                    "htmlUrl": "https://app.runme.dev/cell/gotyou!",
+                    "id": "cell-id",
+                  },
+                },
+                "escalationButton": false,
+                "id": "cell-id",
+              },
+              "type": "common:platformApiResponse",
+            },
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
           },
-        },
-        id: 'cell-id',
-      },
-      type: 'common:platformApiResponse',
-    })
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    `)
   })
 
   it('Should not save cell output when user is not authenticated', async () => {
@@ -176,14 +200,57 @@ suite('Save cell execution', () => {
 
     await saveCellExecution(requestMessage, kernel)
 
-    expect(messaging.postMessage).toBeCalledWith({
-      output: {
-        data: {
-          displayShare: false,
-        },
-        id: 'cell-id',
-      },
-      type: 'common:platformApiResponse',
-    })
+    expect(messaging.postMessage).toMatchInlineSnapshot(`
+      [MockFunction spy] {
+        "calls": [
+          [
+            {
+              "from": "kernel",
+            },
+          ],
+          [
+            {
+              "output": {
+                "data": {
+                  "data": {
+                    "htmlUrl": "https://app.runme.dev/cell/gotyou!",
+                    "id": "cell-id",
+                  },
+                },
+                "escalationButton": false,
+                "id": "cell-id",
+              },
+              "type": "common:platformApiResponse",
+            },
+          ],
+          [
+            {
+              "output": {
+                "data": {
+                  "displayShare": false,
+                },
+                "escalationButton": false,
+                "id": "cell-id",
+              },
+              "type": "common:platformApiResponse",
+            },
+          ],
+        ],
+        "results": [
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+          {
+            "type": "return",
+            "value": undefined,
+          },
+        ],
+      }
+    `)
   })
 })
