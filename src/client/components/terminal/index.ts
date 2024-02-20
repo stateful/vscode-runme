@@ -470,13 +470,14 @@ export class TerminalView extends LitElement {
               }
 
               const { data } = e.output.data
+              const { escalationButton: escalationButtonEnabled } = e.output
               if (data.createCellExecution) {
                 const {
                   createCellExecution: { id, exitCode, htmlUrl },
                 } = data
                 this.cloudId = id
                 this.shareUrl = htmlUrl
-                this.shareText = this.getSecondaryButtonLabel(exitCode)
+                this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
                 this.isShareReady = true
                 // Dispatch tangle update event
                 return postClientMessage(ctx, ClientMessages.tangleEvent, {
@@ -491,7 +492,7 @@ export class TerminalView extends LitElement {
                   updateCellExecution: { exitCode },
                 } = data
                 this.isUpdatedReady = true
-                this.shareText = this.getSecondaryButtonLabel(exitCode)
+                this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
                 this.#displayShareDialog(this.shareText)
               }
             }
@@ -527,11 +528,11 @@ export class TerminalView extends LitElement {
             return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
           }
           case ClientMessages.onProgramClose: {
-            const { 'runme.dev/id': id, code } = e.output
+            const { 'runme.dev/id': id, code, escalationButton: escalationButtonEnabled } = e.output
             if (id !== this.id || !this.isAutoSaveEnabled) {
               return
             }
-            const btnSecondaryText = this.getSecondaryButtonLabel(code)
+            const btnSecondaryText = this.getSecondaryButtonLabel(code, escalationButtonEnabled)
             this.shareText = this.isAutoSaveEnabled ? btnSecondaryText : this.saveText
             return this.#shareCellOutput(false)
           }
@@ -546,7 +547,10 @@ export class TerminalView extends LitElement {
     )
   }
 
-  getSecondaryButtonLabel(code: number | null | void): string {
+  getSecondaryButtonLabel(code: number | null | void, escalationButtonEnabled = false): string {
+    if (!escalationButtonEnabled) {
+      return this.shareEnabledText
+    }
     return code === 0 ? this.shareEnabledText : this.escalateEnabledText
   }
 

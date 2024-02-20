@@ -443,6 +443,12 @@
             "scope": "window",
             "markdownDescription": "Relative path to a file within the workspace to open within a Runme notebook view, when VS Code starts (e.g. `./CONTRIBUTING.md`)."
           },
+          "runme.experiments.escalationButton": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
+          },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "window",
