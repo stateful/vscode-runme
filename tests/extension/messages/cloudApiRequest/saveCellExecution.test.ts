@@ -148,6 +148,7 @@ suite('Save cell execution', () => {
             htmlUrl: 'https://app.runme.dev/cell/gotyou!',
           },
         },
+        escalationButton: false,
         id: 'cell-id',
       },
       type: 'common:cloudApiResponse',
@@ -208,6 +209,7 @@ suite('Save cell execution', () => {
         data: {
           displayShare: false,
         },
+        escalationButton: false,
         id: 'cell-id',
       },
       type: 'common:cloudApiResponse',
