@@ -1,5 +1,3 @@
-import path from 'node:path'
-
 import {
   ExtensionContext,
   ProviderResult,
@@ -19,20 +17,32 @@ import {
 } from 'vscode'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { Observable, of, scan, takeLast, lastValueFrom } from 'rxjs'
+import {
+  Observable,
+  of,
+  from,
+  scan,
+  map,
+  takeLast,
+  firstValueFrom,
+  lastValueFrom,
+  isObservable,
+} from 'rxjs'
 
 import getLogger from '../logger'
 import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
-import type { IRunner, RunProgramOptions } from '../runner'
+import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
-import { getCellCwd, getCellProgram, parseCommandSeq } from '../executors/utils'
+import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
+import { resolveRunProgramExecution } from '../executors/runner'
+import { CommandMode } from '../grpc/runnerTypes'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -46,6 +56,10 @@ export interface RunmeTask extends Task {
 type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
 
 type ProjectTask = LoadEventFoundTask
+
+type TaskNotebook = NotebookData | Serializer.Notebook
+
+type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
 
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
@@ -193,15 +207,51 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   static async newRunmeProjectTask(
-    projectTask: ProjectTask,
+    knownTask: Pick<ProjectTask, 'id' | 'name' | 'documentPath'>,
     options: TaskOptions = {},
     token: CancellationToken,
     serializer: SerializerBase,
     runner: IRunner,
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
-    const { name, documentPath } = projectTask
-    const { relativePath: source } = asWorkspaceRelativePath(documentPath)
+    const { id, name, documentPath } = knownTask
+    let mdBuffer: Uint8Array
+    try {
+      mdBuffer = await workspace.fs.readFile(Uri.parse(documentPath))
+    } catch (err: any) {
+      if (err.code !== 'FileNotFound') {
+        log.error(`${err.message}`)
+      }
+      throw err
+    }
+
+    const notebook = from(serializer.deserializeNotebook(mdBuffer, token))
+    const cell = notebook.pipe(
+      map((n) => {
+        console.log(documentPath)
+        return n.cells.find(
+          (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
+        )!
+      }),
+    )
+
+    return this.newRunmeTask(documentPath, name, notebook, cell, options, runner, runnerEnv)
+  }
+
+  static async newRunmeTask(
+    filePath: string,
+    command: string,
+    notebookish: TaskNotebook | Observable<TaskNotebook>,
+    cellish: TaskCell | Observable<TaskCell>,
+    options: TaskOptions = {},
+    runner: IRunner,
+    runnerEnv: IRunnerEnvironment | undefined,
+  ): Promise<Task> {
+    const source = asWorkspaceRelativePath(filePath).relativePath
+    const name = `${command}`
+
+    notebookish = !isObservable(notebookish) ? of(notebookish) : notebookish
+    cellish = !isObservable(cellish) ? of(cellish) : cellish
 
     const task = new Task(
       { type: 'runme', name, command: name },
@@ -209,46 +259,37 @@ export class RunmeTaskProvider implements TaskProvider {
       name,
       source,
       new CustomExecution(async () => {
-        let mdBuf: Uint8Array
-        try {
-          mdBuf = await workspace.fs.readFile(Uri.parse(documentPath))
-        } catch (err: any) {
-          if (err.code !== 'FileNotFound') {
-            log.error(`${err.message}`)
-          }
-          throw err
-        }
-
-        const notebook = await serializer.deserializeNotebook(mdBuf, token)
-
-        const cell: Serializer.Cell = notebook.cells.find((cell) => {
-          return (
-            cell.metadata?.['id'] === projectTask.id || cell.metadata?.['runme.dev/name'] === name
-          )
-        })!
+        const notebook = await firstValueFrom<TaskNotebook>(notebookish as any)
+        const cell = await firstValueFrom<TaskCell>(cellish as any)
 
         const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
+        const isBackground = options.isBackground || background
 
+        const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(documentPath)))
-
+        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
         const envs: Record<string, string> = {
-          ...(await getWorkspaceEnvs(Uri.file(documentPath))),
+          ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
+        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
 
-        const cellContent = cell.value
-        const commands = await parseCommandSeq(
-          cellContent,
-          languageId,
-          promptEnv,
-          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
-        )
+        const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
+
+        // todo(sebastian): re-prompt the best solution here?
+        const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+          cellText,
+          languageId,
+          commandMode,
+          promptForEnv,
+          envKeys,
+        )
 
         const runOpts: RunProgramOptions = {
           commandMode,
@@ -256,9 +297,8 @@ export class RunmeTaskProvider implements TaskProvider {
           cwd,
           runnerEnv: runnerEnv,
           envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-          exec: { type: 'commands', commands: commands ?? [''] },
+          exec: execution,
           languageId,
-          background,
           programName,
           storeLastOutput: true,
           tty: interactive,
@@ -268,6 +308,14 @@ export class RunmeTaskProvider implements TaskProvider {
 
         program.registerTerminalWindow('vscode')
         program.setActiveTerminalWindow('vscode')
+
+        task.isBackground = isBackground
+        task.presentationOptions = {
+          focus: true,
+          // why doesn't this work with Silent?
+          reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Silent,
+          panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+        }
 
         return program
       }),
@@ -276,80 +324,32 @@ export class RunmeTaskProvider implements TaskProvider {
     return task
   }
 
-  static async newRunmeTask(
-    filePath: string,
-    command: string,
-    notebook: NotebookData | Serializer.Notebook,
-    cell: NotebookCell | NotebookCellData | Serializer.Cell,
-    options: TaskOptions = {},
-    runner: IRunner,
-    runnerEnv?: IRunnerEnvironment,
-  ): Promise<Task> {
-    const source = workspace.workspaceFolders?.[0]
-      ? path.relative(workspace.workspaceFolders[0].uri.fsPath, filePath)
-      : path.basename(filePath)
-
-    const { interactive, background, promptEnv } = getAnnotations(cell.metadata)
-    const isBackground = options.isBackground || background
-    const languageId = ('languageId' in cell && cell.languageId) || 'sh'
-    const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-
-    const name = `${command}`
-
-    const task = new Task(
-      { type: 'runme', name, command: name },
-      TaskScope.Workspace,
-      name,
-      source,
-      new CustomExecution(async () => {
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
-
-        const envs: Record<string, string> = {
-          ...(await getWorkspaceEnvs(Uri.file(filePath))),
-        }
-
-        const cellContent = 'value' in cell ? cell.value : cell.document.getText()
-        const commands = await parseCommandSeq(
-          cellContent,
-          languageId,
-          promptEnv,
-          new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
-        )
-
-        if (!runnerEnv) {
-          Object.assign(envs, process.env)
-        }
-
-        const runOpts: RunProgramOptions = {
-          commandMode,
-          convertEol: true,
-          cwd,
-          runnerEnv: runnerEnv,
-          envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-          exec: { type: 'commands', commands: commands ?? [''] },
-          languageId,
-          programName,
-          storeLastOutput: true,
-          tty: interactive,
-        }
-
-        const program = await runner.createProgramSession(runOpts)
-
-        program.registerTerminalWindow('vscode')
-        program.setActiveTerminalWindow('vscode')
-
-        return program
-      }),
-    )
-
-    task.isBackground = isBackground
-    task.presentationOptions = {
-      focus: true,
-      // why doesn't this work with Silent?
-      reveal: isBackground ? TaskRevealKind.Never : TaskRevealKind.Always,
-      panel: isBackground ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+  static async resolveRunProgramExecutionWithRetry(
+    script: string,
+    languageId: string,
+    commandMode: CommandMode,
+    promptForEnv: boolean,
+    skipEnvs?: Set<string>,
+  ): Promise<RunProgramExecution> {
+    try {
+      return await resolveRunProgramExecution(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        log.error(err.message)
+      }
+      return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+        script,
+        languageId,
+        commandMode,
+        promptForEnv,
+        skipEnvs,
+      )
     }
-
-    return task
   }
 }

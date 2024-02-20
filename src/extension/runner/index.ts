@@ -324,7 +324,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     private readonly client: IRunnerServiceClient,
     protected opts: RunProgramOptions,
   ) {
-    this.session = client.execute()
+    this.session = this.client.execute()
 
     this.register(
       this._onStdoutRaw.event((data) => {

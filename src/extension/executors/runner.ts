@@ -22,6 +22,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
+import { CommandMode } from '../grpc/runnerTypes'
 
 import { closeTerminalByEnvID } from './task'
 import {
@@ -82,56 +83,36 @@ export const executeRunner: IKernelRunner = async ({
     }
   }
 
-  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
+  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
 
   const RUNME_ID = getCellRunmeId(exec.cell)
-
   const envs: Record<string, string> = {
     RUNME_ID,
     ...(await getWorkspaceEnvs(runningCell.uri)),
   }
 
-  let cellText = exec.cell.document.getText()
+  const cellText = exec.cell.document.getText()
 
-  const commands = await parseCommandSeq(
-    cellText,
-    execKey, // same as languageId
-    skipPromptEnvDocumentLevel === false ? promptEnv : false,
-    new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)]),
-  )
-  if (!commands) {
+  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
+  const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+  let execution: RunProgramExecution
+  try {
+    execution = await resolveRunProgramExecution(
+      cellText,
+      execKey, // same as languageId
+      commandMode,
+      promptForEnv,
+      envKeys,
+    )
+  } catch (err) {
+    if (err instanceof Error) {
+      log.error(err.message)
+    }
     return false
   }
 
-  if (commands.length === 0) {
-    commands.push('')
-  }
-
-  let execution: RunProgramExecution = {
-    type: 'commands',
-    commands,
-  }
-
-  const script = getCmdShellSeq(cellText, PLATFORM_OS)
-
-  const isVercel = isVercelDeployScript(script)
-  const vercelProd = process.env['vercelProd'] === 'true'
-
-  if (isVercel) {
-    const cmdParts = [script]
-
-    if (vercelProd) {
-      cmdParts.push('--prod')
-    }
-
-    execution = {
-      type: 'script',
-      script: cmdParts.join(' '),
-    }
-  }
-
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
-
+  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
   const program = await runner.createProgramSession({
     background,
     commandMode,
@@ -139,7 +120,7 @@ export const executeRunner: IKernelRunner = async ({
     cwd,
     runnerEnv,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution,
+    exec: execution!,
     languageId: exec.cell.document.languageId,
     programName,
     storeLastOutput: true,
@@ -241,7 +222,8 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
-  if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(script)) {
+  const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
+  if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(scriptVercel)) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
@@ -264,13 +246,14 @@ export const executeRunner: IKernelRunner = async ({
       )
 
       // hacky for now, maybe inheritence is a fitting pattern
-      if (isVercelDeployScript(script)) {
+      const isVercelProd = process.env['vercelProd'] === 'true'
+      if (isVercelDeployScript(scriptVercel)) {
         await handleVercelDeployOutput(
           exec.cell,
           outputs,
           output,
           exec.cell.index,
-          vercelProd,
+          isVercelProd,
           envMgr,
         )
 
@@ -442,6 +425,57 @@ export const executeRunner: IKernelRunner = async ({
       }, BACKGROUND_TASK_HIDE_TIMEOUT)
     }
   })
+}
+
+/**
+ * Prompts for vars that are exported as necessary
+ */
+export async function resolveRunProgramExecution(
+  script: string,
+  languageId: string,
+  commandMode: CommandMode,
+  promptForEnv: boolean,
+  skipEnvs?: Set<string>,
+): Promise<RunProgramExecution> {
+  const isVercel = isVercelDeployScript(script)
+
+  if (isVercel) {
+    const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
+    const isVercelProd = process.env['vercelProd'] === 'true'
+    const parts = [scriptVercel]
+    if (isVercelProd) {
+      parts.push('--prod')
+    }
+
+    const commands = [parts.join(' ')]
+
+    return {
+      type: 'commands',
+      commands,
+    }
+  }
+
+  if (commandMode === CommandMode.INLINE_SHELL) {
+    const commands = await parseCommandSeq(script, languageId, promptForEnv, skipEnvs)
+
+    if (!commands) {
+      throw new Error('Cannot run cell due to canceled prompt')
+    }
+
+    if (commands.length === 0) {
+      commands.push('')
+    }
+
+    return {
+      type: 'commands',
+      commands,
+    }
+  }
+
+  return {
+    type: 'script',
+    script,
+  }
 }
 
 function updateProcessInfo(
