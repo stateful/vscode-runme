@@ -107,6 +107,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
+    this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
 
     this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
 

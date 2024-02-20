@@ -20,6 +20,8 @@ export default async function saveCellExecution(
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
 
+  const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const session = await getAuthSession(
@@ -31,6 +33,7 @@ export default async function saveCellExecution(
           displayShare: false,
         },
         id: message.output.id,
+        escalationButton,
       })
     }
     const cell = await getCellById({ editor, id: message.output.id })
@@ -100,12 +103,14 @@ export default async function saveCellExecution(
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: result,
       id: message.output.id,
+      escalationButton,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.error')
     return postClientMessage(messaging, ClientMessages.cloudApiResponse, {
       data: (error as any).message,
       id: message.output.id,
+      escalationButton,
       hasErrors: true,
     })
   }

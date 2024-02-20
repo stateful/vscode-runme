@@ -14,8 +14,8 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}": types.ArchiveCellExecutionDocument,
-    "mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n  }\n}": types.CreateCellExecutionDocument,
-    "mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n  }\n}": types.UpdateCellExecutionDocument,
+    "mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}": types.CreateCellExecutionDocument,
+    "mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}": types.UpdateCellExecutionDocument,
 };
 
 /**
@@ -39,11 +39,11 @@ export function graphql(source: "mutation ArchiveCellExecution($archiveCellExecu
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n  }\n}"): (typeof documents)["mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n  }\n}"];
+export function graphql(source: "mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}"): (typeof documents)["mutation CreateCellExecution($data: CellExecutionInput!) {\n  createCellExecution(data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n  }\n}"): (typeof documents)["mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n  }\n}"];
+export function graphql(source: "mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}"): (typeof documents)["mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {\n  updateCellExecution(id: $id, data: $data) {\n    id\n    htmlUrl\n    exitCode\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

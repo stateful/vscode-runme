@@ -17,6 +17,8 @@ export default async function updateCellExecution(
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
 
+  const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+
   try {
     const session = await getPlatformAuthSession()
 
@@ -48,12 +50,14 @@ export default async function updateCellExecution(
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: result,
       id: message.output.id,
+      escalationButton,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.update.error')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
       id: message.output.id,
+      escalationButton,
       hasErrors: true,
     })
   }

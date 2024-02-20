@@ -192,6 +192,8 @@ export const executeRunner: IKernelRunner = async ({
   program.onDidClose((code) => {
     postClientMessage(messaging, ClientMessages.onProgramClose, {
       'runme.dev/id': cellId,
+      code,
+      escalationButton: kernel.hasExperimentEnabled('escalationButton', false)!,
     })
     if (!background) {
       return

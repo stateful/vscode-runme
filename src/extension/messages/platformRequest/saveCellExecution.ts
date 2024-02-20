@@ -22,6 +22,8 @@ export default async function saveCellExecution(
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
 
+  const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
@@ -32,6 +34,7 @@ export default async function saveCellExecution(
         data: {
           displayShare: false,
         },
+        escalationButton,
         id: message.output.id,
       })
     }
@@ -98,12 +101,14 @@ export default async function saveCellExecution(
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: result,
       id: message.output.id,
+      escalationButton,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.error')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
       id: message.output.id,
+      escalationButton,
       hasErrors: true,
     })
   }

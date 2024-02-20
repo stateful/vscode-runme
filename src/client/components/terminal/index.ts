@@ -72,6 +72,7 @@ export class TerminalView extends LitElement {
   protected shareText = 'Save'
   protected saveText = 'Save'
   protected shareEnabledText = 'Share'
+  protected escalateEnabledText = 'Escalate'
 
   static styles = css`
     .xterm {
@@ -469,13 +470,14 @@ export class TerminalView extends LitElement {
               }
 
               const { data } = e.output.data
+              const { escalationButton: escalationButtonEnabled } = e.output
               if (data.createCellExecution) {
                 const {
-                  createCellExecution: { id, htmlUrl },
+                  createCellExecution: { id, exitCode, htmlUrl },
                 } = data
                 this.cloudId = id
                 this.shareUrl = htmlUrl
-                this.shareText = this.shareEnabledText
+                this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
                 this.isShareReady = true
                 // Dispatch tangle update event
                 return postClientMessage(ctx, ClientMessages.tangleEvent, {
@@ -486,8 +488,12 @@ export class TerminalView extends LitElement {
                 })
               }
               if (data.updateCellExecution) {
+                const {
+                  updateCellExecution: { exitCode },
+                } = data
                 this.isUpdatedReady = true
-                this.#displayShareDialog()
+                this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
+                this.#displayShareDialog(this.shareText)
               }
             }
             break
@@ -522,11 +528,12 @@ export class TerminalView extends LitElement {
             return postClientMessage(ctx, ClientMessages.infoMessage, 'Link copied!')
           }
           case ClientMessages.onProgramClose: {
-            const { 'runme.dev/id': id } = e.output
+            const { 'runme.dev/id': id, code, escalationButton: escalationButtonEnabled } = e.output
             if (id !== this.id || !this.isAutoSaveEnabled) {
               return
             }
-            this.shareText = this.isAutoSaveEnabled ? this.shareEnabledText : this.saveText
+            const btnSecondaryText = this.getSecondaryButtonLabel(code, escalationButtonEnabled)
+            this.shareText = this.isAutoSaveEnabled ? btnSecondaryText : this.saveText
             return this.#shareCellOutput(false)
           }
         }
@@ -538,6 +545,13 @@ export class TerminalView extends LitElement {
         }),
       ),
     )
+  }
+
+  getSecondaryButtonLabel(code: number | null | void, escalationButtonEnabled = false): string {
+    if (!escalationButtonEnabled) {
+      return this.shareEnabledText
+    }
+    return code === 0 ? this.shareEnabledText : this.escalateEnabledText
   }
 
   disconnectedCallback(): void {
@@ -713,12 +727,12 @@ export class TerminalView extends LitElement {
     })
   }
 
-  async #displayShareDialog(): Promise<boolean | void> {
+  async #displayShareDialog(btnText?: string): Promise<boolean | void> {
     const ctx = getContext()
     if (!ctx.postMessage || !this.shareUrl) {
       return
     }
-    this.shareText = this.shareEnabledText
+    this.shareText = btnText ?? this.shareEnabledText
     this.isShareReady = true
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
       title:

@@ -221,6 +221,8 @@ export interface ClientMessagePayload {
   }
   [ClientMessages.onProgramClose]: {
     ['runme.dev/id']: string
+    code: number | void
+    escalationButton: boolean
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
@@ -281,6 +283,7 @@ export interface ClientMessagePayload {
   [ClientMessages.platformApiResponse]: {
     data: any
     id: string
+    escalationButton: boolean
     hasErrors?: boolean
   }
   [ClientMessages.cloudApiRequest]: {
@@ -292,6 +295,7 @@ export interface ClientMessagePayload {
   [ClientMessages.cloudApiResponse]: {
     data: any
     id: string
+    escalationButton: boolean
     hasErrors?: boolean
   }
   [ClientMessages.optionsMessage]: {
