@@ -24,10 +24,11 @@ export class NamedProvider implements NotebookCellStatusBarItemProvider {
     item.text = text
     item.tooltip = 'Add name to important cells'
 
-    if (
+    const specificName =
       annotations['runme.dev/nameGenerated'] !== true ||
       annotations.name !== annotations['runme.dev/name']
-    ) {
+
+    if (annotations.name.length > 0 && specificName) {
       item.tooltip = 'Be careful changing the name of an important cell'
       item.text = `$(file-symlink-file) ${annotations.name}`
     }
