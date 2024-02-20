@@ -1,7 +1,7 @@
 import { html } from 'lit'
 
 /* eslint-disable max-len */
-export const GCPIcon = html`
+export const GKEIcon = html`
   <svg
     fill="none"
     fill-rule="evenodd"
@@ -26,5 +26,5 @@ export const GCPIcon = html`
 `
 
 export default {
-  GCPIcon,
+  GKEIcon,
 }

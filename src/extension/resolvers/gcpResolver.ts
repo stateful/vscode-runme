@@ -1,18 +1,21 @@
-import { TextDocument } from 'vscode'
-import { IDisposable } from 'xterm-headless'
+import { TextDocument, Disposable } from 'vscode'
 
 import { StringIndexable } from '../../types'
 
 export enum GCPSupportedView {
   CLUSTERS = 'clusters',
   CLUSTER = 'cluster',
+  VM_INSTANCES = 'vm_instances',
 }
 
-export interface ClusterPath extends StringIndexable {
-  location: string
-  project: string
-  cluster: string
+export interface GcpPath extends StringIndexable {
   urlRegex?: RegExp
+  project: string
+}
+
+export interface ClusterPath extends GcpPath {
+  location: string
+  cluster: string
 }
 
 export interface ClustersPath extends StringIndexable {
@@ -22,6 +25,7 @@ export interface ClustersPath extends StringIndexable {
 export interface GCPData {
   [GCPSupportedView.CLUSTER]: ClusterPath
   [GCPSupportedView.CLUSTERS]: ClustersPath
+  [GCPSupportedView.VM_INSTANCES]: GcpPath
 }
 
 export type GoogleKubernetesFeature<T extends GCPSupportedView> = T extends any
@@ -31,7 +35,7 @@ export type GoogleKubernetesFeature<T extends GCPSupportedView> = T extends any
     }
   : never
 
-export class GCPResolver implements IDisposable {
+export class GCPResolver implements Disposable {
   private supportedFeatures: Map<string, GoogleKubernetesFeature<GCPSupportedView>> = new Map()
   private resolvedFeature?: GoogleKubernetesFeature<GCPSupportedView> | undefined
   constructor(private cell: TextDocument) {
@@ -47,6 +51,14 @@ export class GCPResolver implements IDisposable {
         location: '',
         cluster: '',
         urlRegex: /kubernetes\/clusters\/details\/([^/]+)\/([^/]+)\/details/,
+        project: '',
+      },
+    })
+
+    this.supportedFeatures.set('/compute/instances', {
+      view: GCPSupportedView.VM_INSTANCES,
+      data: {
+        urlRegex: /compute\/instances[?]project=.+/,
         project: '',
       },
     })

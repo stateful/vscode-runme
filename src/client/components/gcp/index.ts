@@ -1,14 +1,15 @@
 import { LitElement, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 
-import '../gke/clusters'
-import '../gke/cluster'
-import { GCPSupportedView } from '../../../../extension/resolvers/gcpResolver'
-import { GCPState } from '../../../../types'
-import { RENDERERS } from '../../../../constants'
+import './gke/clusters'
+import './gke/cluster'
+import './gce/vmInstances'
+import { GCPSupportedView } from '../../../extension/resolvers/gcpResolver'
+import { GCPState } from '../../../types'
+import { RENDERERS } from '../../../constants'
 
 @customElement(RENDERERS.GCPView)
-export class Clusters extends LitElement {
+export class GCPViews extends LitElement {
   @property({ type: Object })
   state:
     | GCPState
@@ -44,6 +45,12 @@ export class Clusters extends LitElement {
           projectId="${this.state.project!}"
           .location="${this.state.location}"
         ></gcp-gke-cluster>`
+      case GCPSupportedView.VM_INSTANCES:
+        return html`<vm-instances
+          .instances="${this.state.instances!}"
+          cellId="${this.state.cellId}"
+          projectId="${this.state.project!}"
+        ></vm-instances>`
     }
   }
 }

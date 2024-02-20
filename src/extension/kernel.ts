@@ -68,7 +68,7 @@ import Panel from './panels/panel'
 import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
-import { handleClusterMessage } from './messages/gcp'
+import { handleGCPMessage } from './messages/gcp'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -415,9 +415,10 @@ export class Kernel implements Disposable {
         ClientMessages.gcpClusterCheckStatus,
         ClientMessages.gcpClusterDetails,
         ClientMessages.gcpClusterDetailsNewCell,
+        ClientMessages.gcpVMInstanceAction,
       ].includes(message.type)
     ) {
-      await handleClusterMessage({ messaging: this.messaging, message, editor })
+      return handleGCPMessage({ messaging: this.messaging, message, editor })
     } else if (message.type.startsWith('terminal:')) {
       return
     }

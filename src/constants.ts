@@ -12,7 +12,7 @@ export enum OutputType {
   error = 'stateful.runme/error',
   github = 'stateful.runme/github-stdout',
   stdout = 'application/vnd.code.notebook.stdout',
-  gcp = 'stateful.runme/gcp', // only GKE for now
+  gcp = 'stateful.runme/gcp',
 }
 
 export enum ClientMessages {
@@ -51,11 +51,12 @@ export enum ClientMessages {
   githubWorkflowDeploy = 'github:workflowDeploy',
   githubWorkflowStatusUpdate = 'github:workflowStatusUpdate',
   tangleEvent = 'tangle:event',
-  gcpClusterStatusChanged = 'gcp:clusterStatusChanged',
+  gcpResourceStatusChanged = 'gcp:resourceStatusChanged',
   gcpClusterCheckStatus = 'gcp:clusterCheckStatus',
   gcpClusterDetails = 'gcp:clusterDetails',
   gcpClusterDetailsNewCell = 'gcp:clusterDetailsNewCell',
   gcpClusterDetailsResponse = 'gcp:clusterDetailsResponse',
+  gcpVMInstanceAction = 'gcp:gceVMInstanceAction',
 }
 
 // [pretty print, languageId, destination]

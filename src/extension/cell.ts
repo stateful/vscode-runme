@@ -12,6 +12,7 @@ import {
   NotebookEditor,
   workspace,
   WorkspaceEdit,
+  NotebookCellData,
 } from 'vscode'
 
 import { CLOUD_USER_SIGNED_IN, NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
@@ -686,4 +687,28 @@ export async function getCellById(options: ICellOption): Promise<NotebookCell | 
       }
     }
   }
+}
+
+export async function insertCodeCell(
+  cellId: string,
+  editor: NotebookEditor,
+  input: string,
+  languageId: string = 'sh',
+  background: boolean = false,
+) {
+  const cell = await getCellById({ editor, id: cellId })
+  if (!cell) {
+    throw new Error('Cell not found')
+  }
+  const newCellData = new NotebookCellData(NotebookCellKind.Code, input, languageId)
+  newCellData.metadata = {
+    background,
+  }
+  const notebookEdit = NotebookEdit.insertCells(cell.index + 1, [newCellData])
+  const edit = new WorkspaceEdit()
+  edit.set(cell.notebook.uri, [notebookEdit])
+  workspace.applyEdit(edit)
+  await commands.executeCommand('notebook.focusNextEditor')
+  await commands.executeCommand('notebook.cell.execute')
+  await commands.executeCommand('notebook.cell.focusInOutput')
 }

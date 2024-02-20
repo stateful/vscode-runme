@@ -90,11 +90,29 @@ export class Table extends LitElement {
       color: var(--vscode-editor-selectionForeground);
     }
 
+    vscode-button:hover {
+      background: var(--vscode-list-hoverBackground);
+    }
+
     .actions {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
       place-content: stretch space-evenly;
+    }
+
+    .flex-column {
+      display: flex;
+      flex-wrap: nowrap;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: stretch;
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
   `
 

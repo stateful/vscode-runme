@@ -177,8 +177,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
 }
 
 /**
- * Waits until a cluster status is in final state, one of 'PROVISIONING', 'RECONCILING', 'STOPPING'
- * You can "interrupt" the status check by sending an abort signal via an abortEvent.
+ * Waits until a cluster status is in final state
  */
 export async function waitForClusterStatus({
   clusterId,

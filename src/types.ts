@@ -136,6 +136,47 @@ export interface GcpGkeCluster extends StringIndexable {
   statusMessage: string | null | undefined
 }
 
+export interface InstancePool {
+  name: string
+  link: string
+}
+
+export enum GceActionType {
+  StopVMInstance = 'stopVmInstance',
+  StartVMInstance = 'startVmInstance',
+  SuspendVMInstance = 'suspendVmInstance',
+  ConnectViaSSH = 'connectViaSsh',
+}
+
+export enum InstanceStatusType {
+  Stopping = 'STOPPING',
+  Suspending = 'SUSPENDING',
+  Staging = 'STAGING',
+  Repairing = 'REPAIRING',
+  Provisioning = 'PROVISIONING',
+  Suspended = 'SUSPENDED',
+  Terminated = 'TERMINATED',
+  Running = 'RUNNING',
+}
+
+export interface GcpGceVMInstance extends StringIndexable {
+  instanceId: string
+  status: InstanceStatusType
+  name: string
+  zone: string
+  network: {
+    name: string
+    interfaceLink: string
+    internal: {
+      ip: string
+    }
+    external: {
+      ip: string
+    }
+  }
+  pools?: InstancePool[]
+}
+
 export interface GcpGkeClustersState {
   project?: string
   zone?: string
@@ -154,7 +195,15 @@ export interface GcpGkeClusterState {
   location?: string | undefined
 }
 
-export type GCPState = GcpGkeClustersState | GcpGkeClusterState
+export interface GcpGceVMInstancesState {
+  project?: string
+  zone?: string
+  instances?: GcpGceVMInstance[]
+  view: GCPSupportedView.VM_INSTANCES
+  cellId: string
+}
+
+export type GCPState = GcpGkeClustersState | GcpGkeClusterState | GcpGceVMInstancesState
 
 interface Payload {
   [OutputType.error]: string
@@ -175,7 +224,7 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
-  [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState
+  [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState | GcpGceVMInstancesState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -328,10 +377,12 @@ export interface ClientMessagePayload {
     clusterId: string
     status: string
   }
-  [ClientMessages.gcpClusterStatusChanged]: {
-    clusterId: string
+  [ClientMessages.gcpResourceStatusChanged]: {
+    resourceId: string
     status: string
     cellId: string
+    hasErrors: boolean
+    error?: string | undefined
   }
   [ClientMessages.gcpClusterDetails]: {
     cellId: string
@@ -352,6 +403,14 @@ export interface ClientMessagePayload {
     cluster: string
     location: string
     project: string
+  }
+  [ClientMessages.gcpVMInstanceAction]: {
+    cellId: string
+    instance: string
+    zone: string
+    project: string
+    status: InstanceStatusType
+    action: GceActionType
   }
 }
 
