@@ -12,7 +12,7 @@ import {
 import { Subject, debounceTime } from 'rxjs'
 
 import getLogger from '../logger'
-import { ClientMessages, DEFAULT_PROMPT_ENV } from '../../constants'
+import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
 import { IRunner, IRunnerProgramSession, RunProgramExecution } from '../runner'
@@ -22,7 +22,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
-import { CommandMode, ResolveVarsMode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveVarsPrompt } from '../grpc/runnerTypes'
 
 import { closeTerminalByEnvID } from './task'
 import {
@@ -31,8 +31,9 @@ import {
   getNotebookSkipPromptEnvSetting,
   getCmdShellSeq,
   isShellLanguage,
-  getCommandExportExtractMatches,
+  // getCommandExportExtractMatches,
   promptUserForVariable,
+  CommandExportExtractMatch,
 } from './utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
 
@@ -98,23 +99,61 @@ export const executeRunner: IKernelRunner = async ({
   const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
   const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
-  const resolver = await runner.createVarsResolver(envs)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const req = await resolver.resolveVars(cellText, ResolveVarsMode.UNSPECIFIED, runnerEnv)
-  console.log(JSON.stringify(req.response?.items, null, 1))
-  console.log(req.response?.commands?.items.join('\n'))
-
   let execution: RunProgramExecution
   try {
-    execution = await resolveRunProgramExecution(
-      cellText,
+    const isVercel = isVercelDeployScript(cellText)
+
+    if (isVercel) {
+      const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
+      const isVercelProd = process.env['vercelProd'] === 'true'
+      const parts = [scriptVercel]
+      if (isVercelProd) {
+        parts.push('--prod')
+      }
+
+      const commands = [parts.join(' ')]
+
+      execution = {
+        type: 'commands',
+        commands,
+      }
+    }
+
+    let script = cellText
+    let exportMatches: CommandExportExtractMatch[] = []
+    if (commandMode === CommandMode.INLINE_SHELL) {
+      const resolver = await runner.createVarsResolver(promptForEnv, envs)
+      const vars = await resolver.resolveVars(script, runnerEnv)
+      exportMatches = vars.response?.vars
+        ?.filter(
+          (v) => v.status !== ResolveVarsPrompt.UNSPECIFIED,
+          // v.status === ResolveVarsPrompt.PLACEHOLDER || v.status === ResolveVarsPrompt.MESSAGE,
+        )
+        .map((v) => {
+          return <CommandExportExtractMatch>{
+            type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
+            key: v.name,
+            value: v.resolvedValue || v.originalValue,
+            match: v.name,
+            hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
+          }
+        })
+      script = vars.response.commands?.lines.join('\n') ?? script
+    }
+
+    // const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
+
+    // todo(sebastian): don't love this but ok while refactoring
+    execution ??= await resolveRunProgramExecution(
+      script,
       execKey, // same as languageId
       commandMode,
-      promptForEnv,
+      exportMatches,
       envKeys,
     )
   } catch (err) {
     if (err instanceof Error) {
+      // todo(sebastian): user facing error? notif?
       log.error(err.message)
     }
     return false
@@ -444,47 +483,28 @@ export async function resolveRunProgramExecution(
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  promptForEnv = DEFAULT_PROMPT_ENV,
+  exportMatches: CommandExportExtractMatch[],
   skipEnvs?: Set<string>,
 ): Promise<RunProgramExecution> {
-  const isVercel = isVercelDeployScript(script)
-
-  if (isVercel) {
-    const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
-    const isVercelProd = process.env['vercelProd'] === 'true'
-    const parts = [scriptVercel]
-    if (isVercelProd) {
-      parts.push('--prod')
-    }
-
-    const commands = [parts.join(' ')]
-
+  if (commandMode !== CommandMode.INLINE_SHELL) {
     return {
-      type: 'commands',
-      commands,
+      type: 'script',
+      script,
     }
   }
+  const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
 
-  if (commandMode === CommandMode.INLINE_SHELL) {
-    const commands = await parseCommandSeq(script, languageId, promptForEnv, skipEnvs)
+  if (!commands) {
+    throw new Error('Cannot run cell due to canceled prompt')
+  }
 
-    if (!commands) {
-      throw new Error('Cannot run cell due to canceled prompt')
-    }
-
-    if (commands.length === 0) {
-      commands.push('')
-    }
-
-    return {
-      type: 'commands',
-      commands,
-    }
+  if (commands.length === 0) {
+    commands.push('')
   }
 
   return {
-    type: 'script',
-    script,
+    type: 'commands',
+    commands,
   }
 }
 
@@ -513,15 +533,10 @@ function updateProcessInfo(
 export async function parseCommandSeq(
   cellText: string,
   languageId: string,
-  promptForEnv = DEFAULT_PROMPT_ENV,
+  exportMatches: CommandExportExtractMatch[],
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   skipEnvs?: Set<string>,
 ): Promise<string[] | undefined> {
-  const parseBlock = isShellLanguage(languageId)
-    ? prepareCmdSeq
-    : (s: string) => (s ? s.split('\n') : [])
-
-  const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
-
   type CommandBlock =
     | {
         type: 'block'
@@ -544,10 +559,10 @@ export async function parseCommandSeq(
     switch (type) {
       case 'prompt':
         {
-          if (skipEnvs?.has(key)) {
-            skip = true
-            break
-          }
+          // if (skipEnvs?.has(key)) {
+          //   skip = true
+          //   break
+          // }
 
           const userInput = await promptUserForVariable(key, value, hasStringValue)
 
@@ -570,31 +585,39 @@ export async function parseCommandSeq(
       }
     }
 
-    const prior = cellText.slice(offset, regexpMatch.index)
-    parsedCommandBlocks.push({ type: 'block', content: prior })
+    if (regexpMatch) {
+      const prior = cellText.slice(offset, regexpMatch.index)
+      parsedCommandBlocks.push({ type: 'block', content: prior })
+      offset = regexpMatch.index + match.length
+    }
 
     if (!skip && userValue !== undefined) {
       parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
     }
-
-    offset = regexpMatch.index + match.length
   }
 
   parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
 
-  return parsedCommandBlocks.flatMap(
-    ({ type, content }) =>
-      (type === 'block' && parseBlock?.(content)) || (content ? [content] : []),
-  )
+  const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
+    if (type === 'block') {
+      return prepareCommandSeq(content, languageId)
+    }
+    return content ? [content] : []
+  })
+  return commands
 }
 
 /**
  * Does the following to a command list:
  *
  * - Splits by new lines
- * - Removes trailing `$` characters
+ * - Removes preceeding `$` characters
  */
-export function prepareCmdSeq(cellText: string): string[] {
+export function prepareCommandSeq(cellText: string, languageId: string): string[] {
+  if (!isShellLanguage(languageId)) {
+    return cellText ? cellText.split('\n') : []
+  }
+
   return cellText.split('\n').map((l) => {
     const stripped = l.trimStart()
 

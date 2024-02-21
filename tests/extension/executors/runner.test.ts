@@ -3,7 +3,7 @@ import { window } from 'vscode'
 
 import {
   parseCommandSeq,
-  prepareCmdSeq,
+  prepareCommandSeq,
   resolveRunProgramExecution,
 } from '../../../src/extension/executors/runner'
 
@@ -20,7 +20,7 @@ suite('resolveRunProgramExecution', () => {
       'export TEST="test\n123\n456\n"',
       'sh',
       1,
-      true,
+      'true',
       new Set<string>(),
     )
     expect(execution).toMatchInlineSnapshot(`
@@ -41,7 +41,7 @@ suite('resolveRunProgramExecution', () => {
       'echo "Hello World!"',
       'sh',
       1,
-      true,
+      'true',
       new Set<string>(),
     )
     expect(execution).toMatchInlineSnapshot(`
@@ -60,7 +60,7 @@ suite('resolveRunProgramExecution', () => {
       'export TEST="return undefined"',
       'sh',
       1,
-      true,
+      'true',
       new Set<string>(),
     )
     expect(execution).rejects.toThrowError('Cannot run cell due to canceled prompt')
@@ -73,7 +73,7 @@ suite('resolveRunProgramExecution', () => {
       'echo "Auth token for service foo"\nexport SERVICE_FOO_TOKEN="foobar"\necho "Auth token for service bar"\nexport SERVICE_BAR_TOKEN="barfoo"\n',
       'sh',
       1,
-      true,
+      'true',
       new Set<string>(),
     )
     expect(execution).toMatchInlineSnapshot(`
@@ -97,7 +97,7 @@ suite('resolveRunProgramExecution', () => {
       'print("Hello Pythonista 🐍")',
       'py',
       2,
-      true,
+      'true',
       new Set<string>(),
     )
     expect(execution).toMatchInlineSnapshot(`
@@ -110,7 +110,13 @@ suite('resolveRunProgramExecution', () => {
 
   suite('resolves vercel', () => {
     test('preview', async () => {
-      const execution = await resolveRunProgramExecution('vercel', 'sh', 1, true, new Set<string>())
+      const execution = await resolveRunProgramExecution(
+        'vercel',
+        'sh',
+        1,
+        'true',
+        new Set<string>(),
+      )
       expect(execution).toMatchInlineSnapshot(`
       {
         "commands": [
@@ -123,7 +129,13 @@ suite('resolveRunProgramExecution', () => {
 
     test('production', async () => {
       process.env['vercelProd'] = 'true'
-      const execution = await resolveRunProgramExecution('vercel', 'sh', 1, true, new Set<string>())
+      const execution = await resolveRunProgramExecution(
+        'vercel',
+        'sh',
+        1,
+        'true',
+        new Set<string>(),
+      )
       expect(execution).toMatchInlineSnapshot(`
         {
           "commands": [
@@ -154,7 +166,7 @@ suite('parseCommandSeq', () => {
   test('single-line export with prompt disabled', async () => {
     vi.mocked(window.showInputBox).mockImplementationOnce(async () => 'test value')
 
-    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), 'sh', false)
+    const res = await parseCommandSeq(['export TEST="placeholder"'].join('\n'), 'sh', 'false')
 
     expect(window.showInputBox).toBeCalledTimes(0)
 
@@ -247,7 +259,7 @@ suite('parseCommandSeq', () => {
       'echo $TEST_MULTILINE',
     ]
 
-    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh', true, new Set())
+    const res = await parseCommandSeq(cmdLines.join('\n'), 'sh', 'true', new Set())
 
     expect(res).toBeTruthy()
     expect(res).toStrictEqual([
@@ -264,8 +276,12 @@ suite('parseCommandSeq', () => {
 
 suite('prepareCmdSeq', () => {
   test('should eliminate leading dollar signs', () => {
-    expect(prepareCmdSeq('$ echo hi')).toStrictEqual(['echo hi'])
-    expect(prepareCmdSeq('  $  echo hi')).toStrictEqual(['echo hi'])
-    expect(prepareCmdSeq('echo 1\necho 2\n $ echo 4')).toStrictEqual(['echo 1', 'echo 2', 'echo 4'])
+    expect(prepareCommandSeq('$ echo hi', 'sh')).toStrictEqual(['echo hi'])
+    expect(prepareCommandSeq('  $  echo hi', 'sh')).toStrictEqual(['echo hi'])
+    expect(prepareCommandSeq('echo 1\necho 2\n $ echo 4', 'sh')).toStrictEqual([
+      'echo 1',
+      'echo 2',
+      'echo 4',
+    ])
   })
 })

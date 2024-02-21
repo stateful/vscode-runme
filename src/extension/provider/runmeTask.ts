@@ -35,7 +35,13 @@ import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
-import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
+import {
+  CommandExportExtractMatch,
+  getCellCwd,
+  getCellProgram,
+  getCommandExportExtractMatches,
+  getNotebookSkipPromptEnvSetting,
+} from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
@@ -43,7 +49,6 @@ import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTy
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
 import { CommandMode } from '../grpc/runnerTypes'
-import { DEFAULT_PROMPT_ENV } from '../../constants'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -283,12 +288,13 @@ export class RunmeTaskProvider implements TaskProvider {
           Object.assign(envs, process.env)
         }
 
+        const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
         // todo(sebastian): re-prompt the best solution here?
         const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
           cellText,
           languageId,
           commandMode,
-          promptForEnv,
+          exportMatches,
           envKeys,
         )
 
@@ -329,7 +335,7 @@ export class RunmeTaskProvider implements TaskProvider {
     script: string,
     languageId: string,
     commandMode: CommandMode,
-    promptForEnv = DEFAULT_PROMPT_ENV,
+    exportMatches: CommandExportExtractMatch[],
     skipEnvs?: Set<string>,
   ): Promise<RunProgramExecution> {
     try {
@@ -337,7 +343,7 @@ export class RunmeTaskProvider implements TaskProvider {
         script,
         languageId,
         commandMode,
-        promptForEnv,
+        exportMatches,
         skipEnvs,
       )
     } catch (err: unknown) {
@@ -348,7 +354,7 @@ export class RunmeTaskProvider implements TaskProvider {
         script,
         languageId,
         commandMode,
-        promptForEnv,
+        exportMatches,
         skipEnvs,
       )
     }
