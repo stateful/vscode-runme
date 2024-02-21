@@ -15,6 +15,8 @@ import {
   commands,
   languages,
   TextDocument,
+  NotebookRange,
+  NotebookEditorRevealType,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -757,26 +759,40 @@ export class Kernel implements Disposable {
     return new Promise((cb) => setTimeout(cb, 100))
   }
 
-  async executeAndFocusNotebookCell(cell: NotebookCell, totalCells: number) {
-    await this.keyboardDelay()
-    await Promise.all(
-      Array.from({ length: totalCells }, async () => {
-        await this.keyboardDelay()
-        return commands.executeCommand('notebook.focusPreviousEditor')
-      }),
-    )
-    await this.keyboardDelay()
-    await Promise.all(
-      Array.from({ length: cell.index + 1 }, async () => {
-        await this.keyboardDelay()
+  checkNotebookSelection(retries = 5, intervalTime = 100) {
+    return new Promise((resolve, reject) => {
+      let retriesCount = 0
+      const intervalId = setInterval(() => {
+        const selection = window.activeNotebookEditor?.selection
+        if (selection !== undefined) {
+          clearInterval(intervalId)
+          resolve(selection)
+        } else {
+          retriesCount++
+          if (retriesCount >= retries) {
+            clearInterval(intervalId)
+            reject('Exceeded maximum retries')
+          }
+        }
+      }, intervalTime)
+    })
+  }
+
+  async executeAndFocusNotebookCell(cell: NotebookCell, _totalCells: number) {
+    await this.checkNotebookSelection(5, 100)
+    await commands.executeCommand('notebook.focusTop')
+
+    await Promise.allSettled(
+      Array.from({ length: cell.index }, async (_v, index) => {
+        window.activeNotebookEditor?.revealRange(
+          new NotebookRange(index, index),
+          NotebookEditorRevealType.InCenter,
+        )
         return commands.executeCommand('notebook.focusNextEditor')
       }),
     )
-    await this.keyboardDelay()
-    await commands.executeCommand('notebook.focusPreviousEditor')
-    await this.keyboardDelay()
+
     await commands.executeCommand('notebook.cell.execute')
-    await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
   }
 
