@@ -62,6 +62,7 @@ import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { RunmeService } from './services/runme'
 import { GCPResolver } from './resolvers/gcpResolver'
+import { AWSResolver } from './resolvers/awsResolver'
 
 declare var globalThis: any
 
@@ -174,6 +175,10 @@ export function getKey(runningCell: vscode.TextDocument): string {
 
   if (new GCPResolver(runningCell).match()) {
     return 'gcp'
+  }
+
+  if (new AWSResolver(runningCell).match()) {
+    return 'aws'
   }
 
   const { languageId } = runningCell

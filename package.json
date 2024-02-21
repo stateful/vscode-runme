@@ -423,7 +423,8 @@
           "stateful.runme/terminal",
           "stateful.runme/error",
           "stateful.runme/github-stdout",
-          "stateful.runme/gcp"
+          "stateful.runme/gcp",
+          "stateful.runme/aws"
         ],
         "requiresMessaging": "optional"
       }
@@ -971,6 +972,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.3",
+    "@aws-sdk/client-ec2": "^3.515.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.3-20240109204259-575a337f8c49.1",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.3-20240227222231-0bd1d14ed26b.1",
     "@google-cloud/compute": "^4.1.0",

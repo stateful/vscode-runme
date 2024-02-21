@@ -10,6 +10,7 @@ import {
 } from 'vscode'
 import { z } from 'zod'
 import { Bus } from 'tangle'
+import { InstanceStateName, MonitoringState, _InstanceType } from '@aws-sdk/client-ec2'
 
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
@@ -20,6 +21,7 @@ import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
 import { GCPSupportedView } from './extension/resolvers/gcpResolver'
+import { AWSSupportedView } from './extension/resolvers/awsResolver'
 
 export interface SyncSchema {
   onCommand?: {
@@ -159,6 +161,11 @@ export enum InstanceStatusType {
   Running = 'RUNNING',
 }
 
+export enum AWSActionType {
+  ConnectViaSSH = 'connectViaSsh',
+  EC2InstanceDetails = 'aws:ec2InstanceDetails',
+}
+
 export interface GcpGceVMInstance extends StringIndexable {
   instanceId: string
   status: InstanceStatusType
@@ -205,6 +212,37 @@ export interface GcpGceVMInstancesState {
 
 export type GCPState = GcpGkeClustersState | GcpGkeClusterState | GcpGceVMInstancesState
 
+export type AWSState = AWSEC2InstanceState | AWSEC2InstanceDetailsState
+
+export interface AWSEC2Instance extends StringIndexable {
+  name: string
+  instanceId: string | undefined
+  instanceState: InstanceStateName | undefined
+  type: _InstanceType | undefined
+  zone: string | undefined
+  publicDns: string | undefined
+  publicIp: string | undefined
+  monitoring: MonitoringState | undefined
+  securityGroup: string
+  keyName: string | undefined
+  launchTime: Date | undefined
+  platform: string | undefined
+}
+
+export interface AWSEC2InstanceState {
+  instances: AWSEC2Instance[]
+  cellId: string
+  region: string
+  view: AWSSupportedView.EC2Instances
+}
+
+export interface AWSEC2InstanceDetailsState {
+  instance: AWSEC2Instance | undefined
+  cellId: string
+  region: string
+  view: AWSSupportedView.EC2InstanceDetails
+}
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
@@ -225,6 +263,7 @@ interface Payload {
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
   [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState | GcpGceVMInstancesState
+  [OutputType.aws]?: AWSState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -415,6 +454,17 @@ export interface ClientMessagePayload {
     project: string
     status: InstanceStatusType
     action: GceActionType
+  }
+  [ClientMessages.awsEC2Instances]: {
+    cellId: string
+    region: string
+    view: AWSSupportedView
+  }
+  [ClientMessages.awsEC2InstanceAction]: {
+    cellId: string
+    instance: string
+    region: string
+    action: AWSActionType
   }
 }
 

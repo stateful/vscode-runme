@@ -13,6 +13,7 @@ export enum OutputType {
   github = 'stateful.runme/github-stdout',
   stdout = 'application/vnd.code.notebook.stdout',
   gcp = 'stateful.runme/gcp',
+  aws = 'stateful.runme/aws',
 }
 
 export enum ClientMessages {
@@ -57,6 +58,8 @@ export enum ClientMessages {
   gcpClusterDetailsNewCell = 'gcp:clusterDetailsNewCell',
   gcpClusterDetailsResponse = 'gcp:clusterDetailsResponse',
   gcpVMInstanceAction = 'gcp:gceVMInstanceAction',
+  awsEC2Instances = 'aws:ec2Instances',
+  awsEC2InstanceAction = 'aws:ec2InstanceAction',
 }
 
 // [pretty print, languageId, destination]
@@ -148,6 +151,7 @@ export enum RENDERERS {
   TerminalView = 'terminal-view',
   GitHubWorkflowViewer = 'github-workflow-viewer',
   GCPView = 'gcp-view',
+  AWSView = 'aws-view',
 }
 
 export enum AuthenticationProviders {

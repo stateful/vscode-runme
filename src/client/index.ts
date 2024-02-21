@@ -137,6 +137,14 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           }
           element.appendChild(gcpElement)
           break
+
+        case OutputType.aws:
+          const awsElement = document.createElement(RENDERERS.AWSView)
+          if (payload.output) {
+            awsElement.setAttribute('state', JSON.stringify(payload.output))
+          }
+          element.appendChild(awsElement)
+          break
         default:
           element.innerHTML = 'No renderer found!'
       }

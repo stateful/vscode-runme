@@ -17,6 +17,7 @@ import {
 
 import { CLOUD_USER_SIGNED_IN, NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
 import {
+  AWSState,
   CellOutputPayload,
   DenoState,
   GCPState,
@@ -102,7 +103,7 @@ interface ICellOption {
 interface ICellState {
   type: OutputType
   // TODO: Define a better abstraction for integration states.
-  state: GitHubState | DenoState | VercelState | GCPState
+  state: GitHubState | DenoState | VercelState | GCPState | AWSState
 }
 
 export class NotebookCellOutputManager {
@@ -114,6 +115,7 @@ export class NotebookCellOutputManager {
     [OutputType.vercel, false],
     [OutputType.github, false],
     [OutputType.gcp, false],
+    [OutputType.aws, false],
   ])
 
   protected sessionExecutionOrder = new Map<string, number | undefined>()
@@ -257,6 +259,18 @@ export class NotebookCellOutputManager {
 
         return new NotebookCellOutput([
           NotebookCellOutputItem.json(payload, OutputType.gcp),
+          NotebookCellOutputItem.json(payload),
+        ])
+      }
+
+      case OutputType.aws: {
+        const payload: CellOutputPayload<OutputType.aws> = {
+          type: OutputType.aws,
+          output: this.getCellState(type),
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(payload, OutputType.aws),
           NotebookCellOutputItem.json(payload),
         ])
       }
