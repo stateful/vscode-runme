@@ -1,5 +1,5 @@
 import { test, expect, vi, suite, beforeEach } from 'vitest'
-import { NotebookCell, notebooks, window, workspace } from 'vscode'
+import { NotebookCell, commands, notebooks, window, workspace } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
 import executors from '../../src/extension/executors'
@@ -151,6 +151,26 @@ suite('#handleRendererMessage', () => {
     await messaging.postMessage(requestMessage)
     expect(platform.default).toBeCalledTimes(1)
   })
+})
+
+test('#doExecuteAndFocusNotebookCell', async () => {
+  const k = new Kernel({} as any)
+  const cell = { index: 20 } as NotebookCell
+
+  await k.doExecuteAndFocusNotebookCell(cell)
+
+  expect(commands.executeCommand).toHaveBeenCalledWith('notebook.focusTop')
+  expect(commands.executeCommand).toHaveBeenNthCalledWith(20, 'notebook.focusNextEditor')
+  expect(commands.executeCommand).toHaveBeenCalledWith('notebook.cell.execute')
+  expect(commands.executeCommand).toHaveBeenCalledWith('notebook.cell.focusInOutput')
+})
+
+test('#executeAndFocusNotebookCell', async () => {
+  const k = new Kernel({} as any)
+  const cell = { index: 20 } as NotebookCell
+
+  await k.executeAndFocusNotebookCell(cell)
+  expect(window.onDidChangeNotebookEditorSelection).toHaveBeenCalledOnce()
 })
 
 test('dispose', () => {
