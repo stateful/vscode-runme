@@ -18,4 +18,10 @@ For all other platform consult GCP's official docs at https://cloud.google.com/s
 $ gcloud auth login
 ```
 
+Set the default gcloud auth
+
+```sh {"id":"01HQ6D3C0HGXBM29YNH9Z7H9R9","name":"set-gcloud-default"}
+$ gcloud auth application-default login
+```
+
 The cloud notebook renderers will use the default credentials created by the login.
