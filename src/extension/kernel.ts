@@ -17,6 +17,7 @@ import {
   TextDocument,
   NotebookRange,
   NotebookEditorRevealType,
+  NotebookEditorSelectionChangeEvent,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -759,27 +760,23 @@ export class Kernel implements Disposable {
     return new Promise((cb) => setTimeout(cb, 100))
   }
 
-  checkNotebookSelection(retries = 5, intervalTime = 100) {
-    return new Promise((resolve, reject) => {
-      let retriesCount = 0
-      const intervalId = setInterval(() => {
-        const selection = window.activeNotebookEditor?.selection
-        if (selection !== undefined) {
-          clearInterval(intervalId)
-          resolve(selection)
-        } else {
-          retriesCount++
-          if (retriesCount >= retries) {
-            clearInterval(intervalId)
-            reject('Exceeded maximum retries')
-          }
-        }
-      }, intervalTime)
-    })
+  async executeAndFocusNotebookCell(cell: NotebookCell) {
+    // if the notebook is already opened
+    if (!window.activeNotebookEditor?.selection) {
+      let disposable: Disposable
+      const onChangeSelection = async (_e: NotebookEditorSelectionChangeEvent) => {
+        disposable.dispose()
+        await this.doExecuteAndFocusNotebookCell(cell)
+      }
+
+      disposable = window.onDidChangeNotebookEditorSelection(onChangeSelection)
+      return
+    }
+
+    await this.doExecuteAndFocusNotebookCell(cell)
   }
 
-  async executeAndFocusNotebookCell(cell: NotebookCell, _totalCells: number) {
-    await this.checkNotebookSelection(5, 100)
+  async doExecuteAndFocusNotebookCell(cell: NotebookCell) {
     await commands.executeCommand('notebook.focusTop')
 
     await Promise.allSettled(
