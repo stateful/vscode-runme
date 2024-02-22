@@ -125,10 +125,7 @@ export const executeRunner: IKernelRunner = async ({
       const resolver = await runner.createVarsResolver(promptForEnv, envs)
       const vars = await resolver.resolveVars(script, runnerEnv)
       exportMatches = vars.response?.vars
-        ?.filter(
-          (v) => v.status !== ResolveVarsPrompt.UNSPECIFIED,
-          // v.status === ResolveVarsPrompt.PLACEHOLDER || v.status === ResolveVarsPrompt.MESSAGE,
-        )
+        ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
         .map((v) => {
           return <CommandExportExtractMatch>{
             type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
@@ -140,8 +137,6 @@ export const executeRunner: IKernelRunner = async ({
         })
       script = vars.response.commands?.lines.join('\n') ?? script
     }
-
-    // const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
 
     // todo(sebastian): don't love this but ok while refactoring
     execution ??= await resolveRunProgramExecution(
