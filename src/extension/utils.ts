@@ -550,7 +550,7 @@ export async function resolveAppToken(createIfNone: boolean = true) {
   if (isPlatformAuthEnabled()) {
     const session = await getPlatformAuthSession(createIfNone)
     if (!session) {
-      throw new Error('You must authenticate with your Stateful account')
+      return null
     }
     return { token: session.accessToken }
   }
