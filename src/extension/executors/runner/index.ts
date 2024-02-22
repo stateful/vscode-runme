@@ -512,7 +512,7 @@ export async function resolveRunProgramExecution(
         key: v.name,
         value: v.resolvedValue || v.originalValue,
         match: v.name,
-        hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
+        hasStringValue: v.status === ResolveVarsPrompt.PLACEHOLDER,
       }
     })
 
