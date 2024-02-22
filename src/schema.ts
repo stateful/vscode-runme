@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { DEFAULT_PROMPT_ENV } from './constants'
+import { ResolveVarsMode } from './extension/grpc/runnerTypes'
 
 const cleanAnnotation = (value: string, character: string): string => {
   return value
@@ -54,7 +54,32 @@ export const AnnotationSchema = {
   background: boolify(false),
   interactive: boolify(true),
   closeTerminalOnSuccess: boolify(true),
-  promptEnv: z.string().default(DEFAULT_PROMPT_ENV),
+  promptEnv: z.preprocess((subject) => {
+    if (typeof subject === 'string') {
+      subject = cleanAnnotation(subject, ',')
+    }
+    if (typeof subject === 'boolean' && !subject) {
+      return ResolveVarsMode.SKIP
+    }
+    if (typeof subject === 'boolean' && subject) {
+      return ResolveVarsMode.UNSPECIFIED
+    }
+    if (typeof subject === 'string' && ['false', 'no'].includes(subject.toLowerCase())) {
+      return ResolveVarsMode.SKIP
+    }
+    if (
+      typeof subject === 'string' &&
+      ['', 'true', 'yes', 'auto'].includes(subject.toLowerCase())
+    ) {
+      return ResolveVarsMode.UNSPECIFIED
+    }
+    if (typeof subject === 'string' && subject) {
+      const numeric = Number(subject)
+      if (Number.isFinite(numeric)) {
+        return numeric
+      }
+    }
+  }, z.nativeEnum(ResolveVarsMode).default(ResolveVarsMode.UNSPECIFIED)),
   excludeFromRunAll: boolify(false),
   terminalRows: z.preprocess((subject) => {
     if (typeof subject === 'string' && subject) {

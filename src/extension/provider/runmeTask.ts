@@ -48,7 +48,7 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveVarsMode } from '../grpc/runnerTypes'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -275,7 +275,7 @@ export class RunmeTaskProvider implements TaskProvider {
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
+        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
@@ -288,7 +288,12 @@ export class RunmeTaskProvider implements TaskProvider {
           Object.assign(envs, process.env)
         }
 
-        const exportMatches = getCommandExportExtractMatches(cellText, false, promptForEnv)
+        // todo(sebastian): move to runner-based resolver
+        const exportMatches = getCommandExportExtractMatches(
+          cellText,
+          false,
+          promptForEnv !== ResolveVarsMode.SKIP,
+        )
         // todo(sebastian): re-prompt the best solution here?
         const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
           cellText,

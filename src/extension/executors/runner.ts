@@ -22,7 +22,7 @@ import { postClientMessage } from '../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
 import { ITerminalState } from '../terminal/terminalState'
 import { toggleTerminal } from '../commands'
-import { CommandMode, ResolveVarsPrompt } from '../grpc/runnerTypes'
+import { CommandMode, ResolveVarsMode, ResolveVarsPrompt } from '../grpc/runnerTypes'
 
 import { closeTerminalByEnvID } from './task'
 import {
@@ -426,7 +426,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
 
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
-  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
+  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {

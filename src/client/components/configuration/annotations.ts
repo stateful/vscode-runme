@@ -37,6 +37,7 @@ interface configDetails {
 interface DropdownListOption {
   text: string
   value: string
+  enumNum?: number
 }
 
 @customElement(RENDERERS.EditAnnotations)
@@ -184,8 +185,9 @@ export class Annotations extends LitElement {
         <label slot="label">${groupLabel}</label>
         <div class="setting-item-control select-container">
           <select @change=${(e: Target) => this.setControlValue(group, e)}>
-            ${options.map(({ text, value }: DropdownListOption) => {
-              return value === defaultValue
+            ${options.map(({ text, value, enumNum }: DropdownListOption) => {
+              enumNum ??= Number.POSITIVE_INFINITY
+              return value === defaultValue || enumNum === Number(defaultValue)
                 ? html`<option value="${value}" selected>${text}</option>`
                 : html`<option value="${value}">${text}</option>`
             })}
@@ -394,9 +396,9 @@ export class Annotations extends LitElement {
             <div class="box">${this.renderTextFieldTabEntry('name')}</div>
             <div class="box">
               ${this.renderDropdownListTabEntry('promptEnv', [
-                { text: 'Auto', value: 'auto' },
-                { text: 'Yes', value: 'true' },
-                { text: 'No', value: 'false' },
+                { text: 'Auto', value: 'auto', enumNum: 0 },
+                { text: 'Yes', value: 'yes', enumNum: 1 },
+                { text: 'No', value: 'no', enumNum: 2 },
               ])}
             </div>
             <div class="box">${this.renderTextFieldTabEntry('cwd')}</div>

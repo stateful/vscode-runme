@@ -97,7 +97,7 @@ export function getCommandExportExtractMatches(
     if (placeHolder.startsWith('$(') && placeHolder.endsWith(')')) {
       matchType = 'exec'
       value = placeHolder.slice(2, -1)
-    } else if (!placeHolder.includes('\n') && supportsPrompt !== 'false') {
+    } else if (!placeHolder.includes('\n') && supportsPrompt) {
       matchType = 'prompt'
     } else if (supportsDirect) {
       matchType = 'direct'

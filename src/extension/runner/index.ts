@@ -22,7 +22,6 @@ import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
-import { DEFAULT_PROMPT_ENV } from '../../constants'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -78,7 +77,7 @@ export interface IRunner extends Disposable {
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
   createVarsResolver(
-    promptForEnv: string,
+    mode: ResolveVarsMode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerVarsResolver>
 
@@ -191,22 +190,9 @@ export default class GrpcRunner implements IRunner {
   }
 
   async createVarsResolver(
-    promptForEnv = DEFAULT_PROMPT_ENV,
+    mode: ResolveVarsMode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerVarsResolver> {
-    let mode = ResolveVarsMode.UNSPECIFIED
-    switch (promptForEnv) {
-      case 'false':
-        mode = ResolveVarsMode.SKIP
-        break
-      case 'true':
-        mode = ResolveVarsMode.PROMPT
-        break
-      default:
-        mode = ResolveVarsMode.UNSPECIFIED
-        break
-    }
-
     const resolver = new GrpcRunnerVarsResolver(this.client, mode, envs)
 
     this.registerChild(resolver)
