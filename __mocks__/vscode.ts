@@ -100,6 +100,9 @@ export const window = {
   withProgress: vi.fn(),
   onDidChangeActiveColorTheme: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   showInputBox: vi.fn(),
+  activeColorTheme: {
+    kind: 1,
+  },
 }
 
 export const tasks = {

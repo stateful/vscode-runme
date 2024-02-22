@@ -5,6 +5,7 @@ import {
   WebviewView,
   WebviewViewProvider,
   window,
+  ColorThemeKind,
 } from 'vscode'
 import { TelemetryViewProvider } from 'vscode-telemetry'
 import { Subject } from 'rxjs'
@@ -22,6 +23,7 @@ export interface InitPayload {
   panelId: string
   appToken: string | null
   defaultUx: DefaultUx
+  themeKind: ColorThemeKind
 }
 
 class PanelBase extends TelemetryViewProvider implements Disposable {
@@ -98,6 +100,7 @@ export default class Panel extends PanelBase implements WebviewViewProvider {
       panelId: this.identifier,
       appToken: appToken ?? 'EMPTY',
       defaultUx: this.defaultUx,
+      themeKind: window.activeColorTheme.kind,
     })
   }
 
