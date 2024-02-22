@@ -8,7 +8,6 @@ import {
   TaskPanelKind,
   tasks,
   TextDocument,
-  NotebookCellExecution,
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
@@ -31,7 +30,6 @@ import { toggleTerminal } from '../../commands'
 import { CommandMode, ResolveVarsMode, ResolveVarsPrompt } from '../../grpc/runnerTypes'
 import { closeTerminalByEnvID } from '../task'
 import {
-  getCellCwd,
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
   getCmdShellSeq,
@@ -41,7 +39,9 @@ import {
   CommandExportExtractMatch,
 } from '../utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
-import type { IKernelExecutorOptions } from '..'
+import { IKernelExecutorOptions } from '..'
+
+import { createRunProgramOptions } from './factory'
 
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
@@ -411,12 +411,12 @@ export const executeRunner: IKernelRunner = async ({
   })
 }
 
+type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
+
 type IResolveRunProgramOptions = { runner: IRunner } & Pick<
   IKernelRunnerOptions,
   'exec' | 'execKey' | 'runnerEnv' | 'runningCell'
 >
-
-type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
 
 export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   runner,
@@ -478,38 +478,6 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
     },
     runnerEnv,
   )
-}
-
-export async function createRunProgramOptions(
-  execKey: string,
-  runningCell: TextDocument,
-  exec: NotebookCellExecution,
-  execution: RunProgramExecution,
-  runnerEnv?: IRunnerEnvironment,
-): Promise<RunProgramOptions> {
-  const RUNME_ID = getCellRunmeId(exec.cell)
-  const envs: Record<string, string> = {
-    RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
-  }
-
-  const { interactive, mimeType, background } = getAnnotations(exec.cell)
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
-  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
-
-  return {
-    background,
-    commandMode,
-    convertEol: !mimeType || mimeType === 'text/plain',
-    cwd,
-    runnerEnv,
-    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution,
-    languageId: exec.cell.document.languageId,
-    programName,
-    storeLastOutput: true,
-    tty: interactive,
-  }
 }
 
 /**

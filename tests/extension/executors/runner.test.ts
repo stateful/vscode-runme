@@ -2,17 +2,21 @@ import { test, suite, expect, vi } from 'vitest'
 import { window } from 'vscode'
 
 import {
-  createRunProgramOptions,
   prepareCommandSeq,
   resolveProgramOptionsVercel,
   resolveRunProgramExecution,
 } from '../../../src/extension/executors/runner'
+import { createRunProgramOptions } from '../../../src/extension/executors/runner/factory'
 
 vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')
 
 vi.mock('../../../src/extension/constants', () => ({
   PLATFORM_OS: 'darwin',
+}))
+
+vi.mock('../../../src/extension/executors/runner/options', () => ({
+  createRunProgramOptions: vi.fn(),
 }))
 
 const MockRunner: any = {
@@ -131,44 +135,45 @@ suite('resolveRunProgramExecution', () => {
 })
 
 suite('#resolveProgramOptionsVercel', () => {
-  test.only('preview', async () => {
-    console.log(createRunProgramOptions)
-    const opts = await resolveProgramOptionsVercel({
+  test('preview', async () => {
+    const vercelArgs = {
       runner: {} as any,
       exec: {} as any,
       execKey: 'sh',
       runningCell: { getText: vi.fn().mockReturnValue('vercel') } as any,
-    })
-    // expect(createRunProgramOptions).toBeCalled()
-    expect(opts).toMatchInlineSnapshot(`
-        {
-          "commands": [
-            "set -e -o pipefail; vercel",
-          ],
-          "type": "commands",
-        }
-      `)
+    }
+    await resolveProgramOptionsVercel(vercelArgs)
+    expect(createRunProgramOptions).toHaveBeenCalledWith(
+      vercelArgs.execKey,
+      vercelArgs.runningCell,
+      vercelArgs.exec,
+      {
+        commands: ['set -e -o pipefail; vercel'],
+        type: 'commands',
+      },
+      undefined,
+    )
   })
 
-  test('production', async () => {
+  test.only('production', async () => {
     process.env['vercelProd'] = 'true'
-    const execution = await resolveRunProgramExecution(
-      MockRunner,
-      MockRunnerEnv,
-      {} as any,
-      'vercel',
-      'sh',
-      1,
-      0, // ResolveVarsMode.Auto
+    const vercelArgs = {
+      runner: {} as any,
+      exec: {} as any,
+      execKey: 'sh',
+      runningCell: { getText: vi.fn().mockReturnValue('vercel') } as any,
+    }
+    await resolveProgramOptionsVercel(vercelArgs)
+    expect(createRunProgramOptions).toHaveBeenCalledWith(
+      vercelArgs.execKey,
+      vercelArgs.runningCell,
+      vercelArgs.exec,
+      {
+        commands: ['set -e -o pipefail; vercel --prod'],
+        type: 'commands',
+      },
+      undefined,
     )
-    expect(execution).toMatchInlineSnapshot(`
-        {
-          "commands": [
-            "set -e -o pipefail; vercel --prod",
-          ],
-          "type": "commands",
-        }
-      `)
   })
 })
 
