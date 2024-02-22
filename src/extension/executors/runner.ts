@@ -477,7 +477,7 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
   )
 }
 
-async function createRunProgramOptions(
+export async function createRunProgramOptions(
   execKey: string,
   runningCell: TextDocument,
   exec: NotebookCellExecution,
@@ -561,8 +561,7 @@ export async function resolveRunProgramExecution(
   const parsedCommandBlocks: CommandBlock[] = []
 
   // todo(sebastian): do we still need this?
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+  // const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
   let offset = 0
 
