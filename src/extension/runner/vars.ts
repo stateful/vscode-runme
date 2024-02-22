@@ -3,7 +3,6 @@ import { Disposable } from 'vscode'
 import { IRunnerServiceClient } from '../grpc/client'
 import { ResolveVarsMode, ResolveVarsRequest } from '../grpc/runnerTypes'
 
-import { IRunnerEnvironment } from './environment'
 import { IRunnerChild } from './types'
 
 export class GrpcRunnerVarsResolver implements IRunnerChild {
@@ -15,12 +14,12 @@ export class GrpcRunnerVarsResolver implements IRunnerChild {
     private readonly envs: Record<string, string>,
   ) {}
 
-  async resolveVars(script: string, runnerEnv?: IRunnerEnvironment) {
-    const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
+  async resolveVars(commands: string[], sessionId: string | undefined) {
     const mode = this.mode
-    const sessionId = runnerEnv?.getSessionId()
+    const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
+
     const req = ResolveVarsRequest.create({
-      source: { oneofKind: 'script', script },
+      source: { oneofKind: 'commands', commands: { lines: commands } },
       mode,
       sessionId,
       env,

@@ -35,13 +35,7 @@ import { Serializer, RunmeTaskDefinition } from '../../types'
 import { SerializerBase } from '../serializer'
 import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
-import {
-  CommandExportExtractMatch,
-  getCellCwd,
-  getCellProgram,
-  getCommandExportExtractMatches,
-  getNotebookSkipPromptEnvSetting,
-} from '../executors/utils'
+import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
 import { Kernel } from '../kernel'
 import RunmeServer from '../server/runmeServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
@@ -275,34 +269,28 @@ export class RunmeTaskProvider implements TaskProvider {
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
+        const promptMode = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
-        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
-
         const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         if (!runnerEnv) {
           Object.assign(envs, process.env)
         }
 
-        // todo(sebastian): move to runner-based resolver
-        const exportMatches = getCommandExportExtractMatches(
-          cellText,
-          false,
-          promptForEnv !== ResolveVarsMode.SKIP,
-        )
         // todo(sebastian): re-prompt the best solution here?
         const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+          runner,
+          runnerEnv,
+          envs,
           cellText,
           languageId,
           commandMode,
-          exportMatches,
-          envKeys,
+          promptMode,
         )
 
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
         const runOpts: RunProgramOptions = {
           commandMode,
           convertEol: true,
@@ -337,30 +325,36 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   static async resolveRunProgramExecutionWithRetry(
+    runner: IRunner,
+    runnerEnv: IRunnerEnvironment | undefined,
+    envs: Record<string, string>,
     script: string,
     languageId: string,
     commandMode: CommandMode,
-    exportMatches: CommandExportExtractMatch[],
-    skipEnvs?: Set<string>,
+    promptMode: ResolveVarsMode,
   ): Promise<RunProgramExecution> {
     try {
       return await resolveRunProgramExecution(
+        runner,
+        runnerEnv,
+        envs,
         script,
         languageId,
         commandMode,
-        exportMatches,
-        skipEnvs,
+        promptMode,
       )
     } catch (err: unknown) {
       if (err instanceof Error) {
         log.error(err.message)
       }
       return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+        runner,
+        runnerEnv,
+        envs,
         script,
         languageId,
         commandMode,
-        exportMatches,
-        skipEnvs,
+        promptMode,
       )
     }
   }

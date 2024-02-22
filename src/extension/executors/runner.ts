@@ -423,45 +423,27 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   runningCell,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
   const { promptEnv } = getAnnotations(exec.cell)
-  let script = exec.cell.document.getText()
+  const script = exec.cell.document.getText()
 
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
-  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
+  const promptMode = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
     RUNME_ID,
     ...(await getWorkspaceEnvs(runningCell.uri)),
   }
-  const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
   const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
-
-  let exportMatches: CommandExportExtractMatch[] = []
-  if (commandMode === CommandMode.INLINE_SHELL) {
-    const resolver = await runner.createVarsResolver(promptForEnv, envs)
-    const vars = await resolver.resolveVars(script, runnerEnv)
-    exportMatches = vars.response?.vars
-      ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
-      .map((v) => {
-        return <CommandExportExtractMatch>{
-          type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
-          key: v.name,
-          value: v.resolvedValue || v.originalValue,
-          match: v.name,
-          hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
-        }
-      })
-    script = vars.response.commands?.lines.join('\n') ?? script
-  }
-
   const execution: RunProgramExecution = await resolveRunProgramExecution(
+    runner,
+    runnerEnv,
+    envs,
     script,
     execKey, // same as languageId
     commandMode,
-    exportMatches,
-    envKeys,
+    promptMode,
   )
 
   return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
@@ -473,7 +455,7 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
   execKey,
   runningCell,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const script = exec.cell.document.getText()
+  const script = runningCell.getText()
 
   const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
   const isVercelProd = process.env['vercelProd'] === 'true'
@@ -531,11 +513,13 @@ async function createRunProgramOptions(
  * Prompts for vars that are exported as necessary
  */
 export async function resolveRunProgramExecution(
+  runner: IRunner,
+  runnerEnv: IRunnerEnvironment | undefined,
+  envs: Record<string, string>,
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  exportMatches: CommandExportExtractMatch[],
-  skipEnvs?: Set<string>,
+  promptMode: ResolveVarsMode,
 ): Promise<RunProgramExecution> {
   if (commandMode !== CommandMode.INLINE_SHELL) {
     return {
@@ -543,11 +527,99 @@ export async function resolveRunProgramExecution(
       script,
     }
   }
-  const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
 
-  if (!commands) {
-    throw new Error('Cannot run cell due to canceled prompt')
+  const resolver = await runner.createVarsResolver(promptMode, envs)
+  // todo(sebastian): removing $-prompts from shell scripts should move server-side
+  const rawCommands = prepareCommandSeq(script, languageId)
+  const result = await resolver.resolveVars(rawCommands, runnerEnv?.getSessionId())
+
+  const exportMatches = result.response?.vars
+    ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
+    .map((v) => {
+      return <CommandExportExtractMatch>{
+        type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
+        key: v.name,
+        value: v.resolvedValue || v.originalValue,
+        match: v.name,
+        hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
+      }
+    })
+
+  script = result.response.commands?.lines.join('\n') ?? script
+
+  // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
+  type CommandBlock =
+    | {
+        type: 'block'
+        content: string
+      }
+    | {
+        type: 'single'
+        content: string
+      }
+
+  const parsedCommandBlocks: CommandBlock[] = []
+
+  // todo(sebastian): do we still need this?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+  let offset = 0
+
+  // todo(sebastian): align this with grpc types
+  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+    let userValue: string | undefined
+
+    let skip = false
+
+    switch (type) {
+      case 'prompt':
+        {
+          // if (skipEnvs?.has(key)) {
+          //   skip = true
+          //   break
+          // }
+
+          const userInput = await promptUserForVariable(key, value, hasStringValue)
+
+          if (userInput === undefined) {
+            throw new Error('Cannot run cell due to canceled prompt')
+          }
+
+          userValue = userInput
+        }
+        break
+
+      case 'direct':
+        {
+          userValue = value
+        }
+        break
+
+      default: {
+        continue
+      }
+    }
+
+    if (regexpMatch) {
+      const prior = script.slice(offset, regexpMatch.index)
+      parsedCommandBlocks.push({ type: 'block', content: prior })
+      offset = regexpMatch.index + match.length
+    }
+
+    if (!skip && userValue !== undefined) {
+      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
+    }
   }
+
+  parsedCommandBlocks.push({ type: 'block', content: script.slice(offset) })
+
+  const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
+    if (type === 'block') {
+      return prepareCommandSeq(content, languageId)
+    }
+    return content ? [content] : []
+  })
 
   if (commands.length === 0) {
     commands.push('')
@@ -573,89 +645,6 @@ function updateProcessInfo(
     exitReason,
     pid,
   })
-}
-
-/**
- * Parse set of commands, requiring user input for prompted environment
- * variables, and supporting multiline strings
- *
- * Returns `undefined` when a user cancels on prompt
- */
-export async function parseCommandSeq(
-  cellText: string,
-  languageId: string,
-  exportMatches: CommandExportExtractMatch[],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  skipEnvs?: Set<string>,
-): Promise<string[] | undefined> {
-  type CommandBlock =
-    | {
-        type: 'block'
-        content: string
-      }
-    | {
-        type: 'single'
-        content: string
-      }
-
-  const parsedCommandBlocks: CommandBlock[] = []
-
-  let offset = 0
-
-  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
-    let userValue: string | undefined
-
-    let skip = false
-
-    switch (type) {
-      case 'prompt':
-        {
-          // if (skipEnvs?.has(key)) {
-          //   skip = true
-          //   break
-          // }
-
-          const userInput = await promptUserForVariable(key, value, hasStringValue)
-
-          if (userInput === undefined) {
-            return undefined
-          }
-
-          userValue = userInput
-        }
-        break
-
-      case 'direct':
-        {
-          userValue = value
-        }
-        break
-
-      default: {
-        continue
-      }
-    }
-
-    if (regexpMatch) {
-      const prior = cellText.slice(offset, regexpMatch.index)
-      parsedCommandBlocks.push({ type: 'block', content: prior })
-      offset = regexpMatch.index + match.length
-    }
-
-    if (!skip && userValue !== undefined) {
-      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
-    }
-  }
-
-  parsedCommandBlocks.push({ type: 'block', content: cellText.slice(offset) })
-
-  const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
-    if (type === 'block') {
-      return prepareCommandSeq(content, languageId)
-    }
-    return content ? [content] : []
-  })
-  return commands
 }
 
 /**
