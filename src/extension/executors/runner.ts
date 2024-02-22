@@ -67,8 +67,7 @@ export const executeRunner: IKernelRunner = async ({
   runnerEnv,
   envMgr,
 }: IKernelRunnerOptions) => {
-  const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = getAnnotations(exec.cell)
   // enforce background tasks as singleton instanes
   // to do this,
   if (background) {
@@ -86,7 +85,9 @@ export const executeRunner: IKernelRunner = async ({
 
   let programOptions: RunProgramOptions
   try {
-    programOptions = await resolveRunCommands({
+    const isVercel = isVercelDeployScript(runningCell.getText())
+    const resolveRunProgram = isVercel ? resolveProgramOptionsVercel : resolveProgramOptionsScript
+    programOptions = await resolveRunProgram({
       exec,
       execKey,
       runnerEnv,
@@ -406,24 +407,22 @@ export const executeRunner: IKernelRunner = async ({
   })
 }
 
-type IResolveRunProgramOptions = Pick<
+type IResolveRunProgramOptions = { runner: IRunner } & Pick<
   IKernelRunnerOptions,
   'exec' | 'execKey' | 'runnerEnv' | 'runningCell'
-> & { runner: IRunner }
+>
 
 type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
 
-export const resolveRunCommands: IResolveRunProgram = async ({
+export const resolveProgramOptionsScript: IResolveRunProgram = async ({
+  runner,
+  runnerEnv,
   exec,
   execKey,
   runningCell,
-  runner,
-  runnerEnv,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const { interactive, mimeType, background, promptEnv } = getAnnotations(exec.cell)
   let script = exec.cell.document.getText()
-
-  const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, promptEnv } = annotations
 
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
@@ -435,25 +434,6 @@ export const resolveRunCommands: IResolveRunProgram = async ({
     ...(await getWorkspaceEnvs(runningCell.uri)),
   }
   const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-
-  let execution: RunProgramExecution
-  const isVercel = isVercelDeployScript(script)
-
-  if (isVercel) {
-    const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
-    const isVercelProd = process.env['vercelProd'] === 'true'
-    const parts = [scriptVercel]
-    if (isVercelProd) {
-      parts.push('--prod')
-    }
-
-    const commands = [parts.join(' ')]
-
-    execution = {
-      type: 'commands',
-      commands,
-    }
-  }
 
   const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
 
@@ -476,7 +456,7 @@ export const resolveRunCommands: IResolveRunProgram = async ({
   }
 
   // todo(sebastian): don't love this but ok while refactoring
-  execution ??= await resolveRunProgramExecution(
+  const execution: RunProgramExecution = await resolveRunProgramExecution(
     script,
     execKey, // same as languageId
     commandMode,
@@ -494,6 +474,50 @@ export const resolveRunCommands: IResolveRunProgram = async ({
     runnerEnv,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
     exec: execution!,
+    languageId: exec.cell.document.languageId,
+    programName,
+    storeLastOutput: true,
+    tty: interactive,
+  }
+}
+
+export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
+  runnerEnv,
+  exec,
+  execKey,
+  runningCell,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const { interactive, mimeType, background } = getAnnotations(exec.cell)
+  const script = exec.cell.document.getText()
+
+  const RUNME_ID = getCellRunmeId(exec.cell)
+  const envs: Record<string, string> = {
+    RUNME_ID,
+    ...(await getWorkspaceEnvs(runningCell.uri)),
+  }
+
+  const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
+  const isVercelProd = process.env['vercelProd'] === 'true'
+  const parts = [scriptVercel]
+  if (isVercelProd) {
+    parts.push('--prod')
+  }
+
+  const commands = [parts.join(' ')]
+  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+
+  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
+  return <RunProgramOptions>{
+    background,
+    commandMode,
+    convertEol: !mimeType || mimeType === 'text/plain',
+    cwd,
+    runnerEnv,
+    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+    exec: {
+      type: 'commands',
+      commands,
+    },
     languageId: exec.cell.document.languageId,
     programName,
     storeLastOutput: true,
