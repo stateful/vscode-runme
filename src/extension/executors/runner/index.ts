@@ -12,20 +12,24 @@ import {
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
-import getLogger from '../logger'
-import { ClientMessages } from '../../constants'
-import { ClientMessage } from '../../types'
-import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerProgramSession, RunProgramExecution, RunProgramOptions } from '../runner'
-import { IRunnerEnvironment } from '../runner/environment'
-import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
-import { postClientMessage } from '../../utils/messaging'
-import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
-import { ITerminalState } from '../terminal/terminalState'
-import { toggleTerminal } from '../commands'
-import { CommandMode, ResolveVarsMode, ResolveVarsPrompt } from '../grpc/runnerTypes'
-
-import { closeTerminalByEnvID } from './task'
+import getLogger from '../../logger'
+import { ClientMessages } from '../../../constants'
+import { ClientMessage } from '../../../types'
+import { PLATFORM_OS } from '../../constants'
+import {
+  IRunner,
+  IRunnerProgramSession,
+  RunProgramExecution,
+  RunProgramOptions,
+} from '../../runner'
+import { IRunnerEnvironment } from '../../runner/environment'
+import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../../utils'
+import { postClientMessage } from '../../../utils/messaging'
+import { isNotebookTerminalEnabledForCell } from '../../../utils/configuration'
+import { ITerminalState } from '../../terminal/terminalState'
+import { toggleTerminal } from '../../commands'
+import { CommandMode, ResolveVarsMode, ResolveVarsPrompt } from '../../grpc/runnerTypes'
+import { closeTerminalByEnvID } from '../task'
 import {
   getCellCwd,
   getCellProgram,
@@ -35,10 +39,9 @@ import {
   // getCommandExportExtractMatches,
   promptUserForVariable,
   CommandExportExtractMatch,
-} from './utils'
-import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
-
-import type { IKernelExecutorOptions } from '.'
+} from '../utils'
+import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
+import type { IKernelExecutorOptions } from '..'
 
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
@@ -667,3 +670,5 @@ export function prepareCommandSeq(cellText: string, languageId: string): string[
     return l
   })
 }
+
+export default executeRunner

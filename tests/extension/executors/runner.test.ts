@@ -15,14 +15,6 @@ vi.mock('../../../src/extension/constants', () => ({
   PLATFORM_OS: 'darwin',
 }))
 
-vi.mock('../../../src/extension/executors/runner', async (importActual) => {
-  const actual = await importActual<typeof import('../../../src/extension/executors/runner')>()
-  return {
-    ...actual,
-    createRunProgramOptions: vi.fn(),
-  }
-})
-
 const MockRunner: any = {
   createVarsResolver: vi.fn().mockResolvedValue({
     resolveVars: vi.fn().mockResolvedValue({ response: { vars: [] } }),
