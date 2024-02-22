@@ -170,7 +170,7 @@ export const taskExecutor: IKernelExecutor = async (executor) => {
  * @param exec NotebookCellExecution
  * @returns cell text if all operation to retrieve the cell text could be executed, undefined otherwise
  */
-async function retrieveShellCommand(
+export async function retrieveShellCommand(
   exec: NotebookCellExecution,
   promptForEnv = DEFAULT_PROMPT_ENV,
 ) {
