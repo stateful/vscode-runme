@@ -67,10 +67,10 @@ export const AnnotationSchema = {
     if (typeof subject === 'string' && ['false', 'no'].includes(subject.toLowerCase())) {
       return ResolveVarsMode.SKIP
     }
-    if (
-      typeof subject === 'string' &&
-      ['', 'true', 'yes', 'auto'].includes(subject.toLowerCase())
-    ) {
+    if (typeof subject === 'string' && ['true', 'yes'].includes(subject.toLowerCase())) {
+      return ResolveVarsMode.PROMPT
+    }
+    if (typeof subject === 'string' && ['', 'auto'].includes(subject.toLowerCase())) {
       return ResolveVarsMode.UNSPECIFIED
     }
     if (typeof subject === 'string' && subject) {
