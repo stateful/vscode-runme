@@ -8,6 +8,7 @@ import {
   TaskPanelKind,
   tasks,
   TextDocument,
+  NotebookCellExecution,
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
@@ -421,7 +422,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   execKey,
   runningCell,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const { interactive, mimeType, background, promptEnv } = getAnnotations(exec.cell)
+  const { promptEnv } = getAnnotations(exec.cell)
   let script = exec.cell.document.getText()
 
   // Document level settings
@@ -435,7 +436,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   }
   const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+  const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
 
   let exportMatches: CommandExportExtractMatch[] = []
   if (commandMode === CommandMode.INLINE_SHELL) {
@@ -455,7 +456,6 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     script = vars.response.commands?.lines.join('\n') ?? script
   }
 
-  // todo(sebastian): don't love this but ok while refactoring
   const execution: RunProgramExecution = await resolveRunProgramExecution(
     script,
     execKey, // same as languageId
@@ -464,21 +464,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     envKeys,
   )
 
-  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
-
-  return <RunProgramOptions>{
-    background,
-    commandMode,
-    convertEol: !mimeType || mimeType === 'text/plain',
-    cwd,
-    runnerEnv,
-    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution!,
-    languageId: exec.cell.document.languageId,
-    programName,
-    storeLastOutput: true,
-    tty: interactive,
-  }
+  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
 }
 
 export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
@@ -487,14 +473,7 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
   execKey,
   runningCell,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const { interactive, mimeType, background } = getAnnotations(exec.cell)
   const script = exec.cell.document.getText()
-
-  const RUNME_ID = getCellRunmeId(exec.cell)
-  const envs: Record<string, string> = {
-    RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
-  }
 
   const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
   const isVercelProd = process.env['vercelProd'] === 'true'
@@ -502,22 +481,45 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
   if (isVercelProd) {
     parts.push('--prod')
   }
-
   const commands = [parts.join(' ')]
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
 
+  return createRunProgramOptions(
+    execKey,
+    runningCell,
+    exec,
+    {
+      type: 'commands',
+      commands,
+    },
+    runnerEnv,
+  )
+}
+
+async function createRunProgramOptions(
+  execKey: string,
+  runningCell: TextDocument,
+  exec: NotebookCellExecution,
+  execution: RunProgramExecution,
+  runnerEnv?: IRunnerEnvironment,
+): Promise<RunProgramOptions> {
+  const RUNME_ID = getCellRunmeId(exec.cell)
+  const envs: Record<string, string> = {
+    RUNME_ID,
+    ...(await getWorkspaceEnvs(runningCell.uri)),
+  }
+
+  const { interactive, mimeType, background } = getAnnotations(exec.cell)
+  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
   const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
-  return <RunProgramOptions>{
+
+  return {
     background,
     commandMode,
     convertEol: !mimeType || mimeType === 'text/plain',
     cwd,
     runnerEnv,
     envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: {
-      type: 'commands',
-      commands,
-    },
+    exec: execution,
     languageId: exec.cell.document.languageId,
     programName,
     storeLastOutput: true,
