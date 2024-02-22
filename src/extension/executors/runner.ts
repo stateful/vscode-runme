@@ -15,7 +15,7 @@ import getLogger from '../logger'
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerProgramSession, RunProgramExecution } from '../runner'
+import { IRunner, IRunnerProgramSession, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
 import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
 import { postClientMessage } from '../../utils/messaging'
@@ -68,9 +68,7 @@ export const executeRunner: IKernelRunner = async ({
   envMgr,
 }: IKernelRunnerOptions) => {
   const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
-  // Document level settings
-  const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = annotations
   // enforce background tasks as singleton instanes
   // to do this,
   if (background) {
@@ -86,66 +84,15 @@ export const executeRunner: IKernelRunner = async ({
     }
   }
 
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
-
-  const RUNME_ID = getCellRunmeId(exec.cell)
-  const envs: Record<string, string> = {
-    RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
-  }
-
-  const cellText = exec.cell.document.getText()
-
-  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
-  const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-
-  let execution: RunProgramExecution
+  let programOptions: RunProgramOptions
   try {
-    const isVercel = isVercelDeployScript(cellText)
-
-    if (isVercel) {
-      const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
-      const isVercelProd = process.env['vercelProd'] === 'true'
-      const parts = [scriptVercel]
-      if (isVercelProd) {
-        parts.push('--prod')
-      }
-
-      const commands = [parts.join(' ')]
-
-      execution = {
-        type: 'commands',
-        commands,
-      }
-    }
-
-    let script = cellText
-    let exportMatches: CommandExportExtractMatch[] = []
-    if (commandMode === CommandMode.INLINE_SHELL) {
-      const resolver = await runner.createVarsResolver(promptForEnv, envs)
-      const vars = await resolver.resolveVars(script, runnerEnv)
-      exportMatches = vars.response?.vars
-        ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
-        .map((v) => {
-          return <CommandExportExtractMatch>{
-            type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
-            key: v.name,
-            value: v.resolvedValue || v.originalValue,
-            match: v.name,
-            hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
-          }
-        })
-      script = vars.response.commands?.lines.join('\n') ?? script
-    }
-
-    // todo(sebastian): don't love this but ok while refactoring
-    execution ??= await resolveRunProgramExecution(
-      script,
-      execKey, // same as languageId
-      commandMode,
-      exportMatches,
-      envKeys,
-    )
+    programOptions = await resolveRunCommands({
+      exec,
+      execKey,
+      runnerEnv,
+      runningCell,
+      runner,
+    })
   } catch (err) {
     if (err instanceof Error) {
       // todo(sebastian): user facing error? notif?
@@ -154,21 +101,7 @@ export const executeRunner: IKernelRunner = async ({
     return false
   }
 
-  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
-  const program = await runner.createProgramSession({
-    background,
-    commandMode,
-    convertEol: !mimeType || mimeType === 'text/plain',
-    cwd,
-    runnerEnv,
-    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution!,
-    languageId: exec.cell.document.languageId,
-    programName,
-    storeLastOutput: true,
-    tty: interactive,
-  })
-
+  const program = await runner.createProgramSession(programOptions)
   context.subscriptions.push(program)
 
   let terminalState: ITerminalState | undefined
@@ -266,6 +199,7 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
+  const cellText = runningCell.getText()
   const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
   if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(scriptVercel)) {
     if (revealNotebookTerminal) {
@@ -331,6 +265,7 @@ export const executeRunner: IKernelRunner = async ({
   } else {
     await outputs.replaceOutputs([])
 
+    const RUNME_ID = getCellRunmeId(exec.cell)
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
@@ -469,6 +404,101 @@ export const executeRunner: IKernelRunner = async ({
       }, BACKGROUND_TASK_HIDE_TIMEOUT)
     }
   })
+}
+
+type IResolveRunProgramOptions = Pick<
+  IKernelRunnerOptions,
+  'exec' | 'execKey' | 'runnerEnv' | 'runningCell'
+> & { runner: IRunner }
+
+type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
+
+export const resolveRunCommands: IResolveRunProgram = async ({
+  exec,
+  execKey,
+  runningCell,
+  runner,
+  runnerEnv,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  let script = exec.cell.document.getText()
+
+  const annotations = getAnnotations(exec.cell)
+  const { interactive, mimeType, background, promptEnv } = annotations
+
+  // Document level settings
+  const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
+  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : 'false'
+
+  const RUNME_ID = getCellRunmeId(exec.cell)
+  const envs: Record<string, string> = {
+    RUNME_ID,
+    ...(await getWorkspaceEnvs(runningCell.uri)),
+  }
+  const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+  let execution: RunProgramExecution
+  const isVercel = isVercelDeployScript(script)
+
+  if (isVercel) {
+    const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
+    const isVercelProd = process.env['vercelProd'] === 'true'
+    const parts = [scriptVercel]
+    if (isVercelProd) {
+      parts.push('--prod')
+    }
+
+    const commands = [parts.join(' ')]
+
+    execution = {
+      type: 'commands',
+      commands,
+    }
+  }
+
+  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+
+  let exportMatches: CommandExportExtractMatch[] = []
+  if (commandMode === CommandMode.INLINE_SHELL) {
+    const resolver = await runner.createVarsResolver(promptForEnv, envs)
+    const vars = await resolver.resolveVars(script, runnerEnv)
+    exportMatches = vars.response?.vars
+      ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
+      .map((v) => {
+        return <CommandExportExtractMatch>{
+          type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
+          key: v.name,
+          value: v.resolvedValue || v.originalValue,
+          match: v.name,
+          hasStringValue: v.status === ResolveVarsPrompt.MESSAGE,
+        }
+      })
+    script = vars.response.commands?.lines.join('\n') ?? script
+  }
+
+  // todo(sebastian): don't love this but ok while refactoring
+  execution ??= await resolveRunProgramExecution(
+    script,
+    execKey, // same as languageId
+    commandMode,
+    exportMatches,
+    envKeys,
+  )
+
+  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
+
+  return <RunProgramOptions>{
+    background,
+    commandMode,
+    convertEol: !mimeType || mimeType === 'text/plain',
+    cwd,
+    runnerEnv,
+    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
+    exec: execution!,
+    languageId: exec.cell.document.languageId,
+    programName,
+    storeLastOutput: true,
+    tty: interactive,
+  }
 }
 
 /**
