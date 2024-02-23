@@ -96,6 +96,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return callbackUrl
   }
 
+  get callbackPageUri() {
+    return `${getRunmeAppUrl(['app'])}ide-callback`
+  }
+
   /**
    * Get the existing sessions
    * @param scopes
@@ -273,7 +277,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         const searchParams = new URLSearchParams([
           ['response_type', 'code'],
           ['client_id', idpClientId],
-          ['redirect_uri', `${getRunmeAppUrl()}ide-callback`],
+          ['redirect_uri', this.callbackPageUri],
           ['state', encodeURIComponent(callbackUri.toString(true))],
           ['scope', scopes.join(' ')],
           ['prompt', 'login'],
@@ -367,7 +371,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         client_id: idpClientId,
         code,
         code_verifier: codeVerifier,
-        redirect_uri: `${getRunmeAppUrl()}ide-callback`,
+        redirect_uri: this.callbackPageUri,
       }).toString()
 
       const response = await fetch(`https://${idpDomain}/oauth/token`, {

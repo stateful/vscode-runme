@@ -27,8 +27,6 @@ const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
-  ['api.platform.', ':8911'],
-  ['platform.', ':8910'],
 ])
 
 type NotebookTerminalValue = keyof typeof notebookTerminalSchema
@@ -320,18 +318,9 @@ const getRemoteDev = (baseDomain: string): boolean => {
   return localDev.map((uri) => baseDomain.startsWith(uri)).reduce((p, c) => p || c)
 }
 
-const getRunmeAppUrl = (forSubdomains: string[] = []): string => {
-  let subdomains = forSubdomains
-  if (isPlatformAuthEnabled()) {
-    subdomains = forSubdomains.map((s) => {
-      if (s === 'app') {
-        return ''
-      }
-      return s
-    })
-  }
-
+const getRunmeAppUrl = (subdomains: string[]): string => {
   let base = getRunmeBaseDomain()
+
   const isRemoteDev = getRemoteDev(base)
   if (isRemoteDev) {
     if (subdomains.length === 1 && subdomains?.[0] === 'app') {
@@ -340,8 +329,17 @@ const getRunmeAppUrl = (forSubdomains: string[] = []): string => {
       base = DEFAULT_RUNME_REMOTE_DEV
     }
   }
-
   const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
+
+  if (!isLoopback && isPlatformAuthEnabled()) {
+    subdomains = subdomains.map((s) => {
+      if (s === 'app') {
+        return ''
+      }
+      return s
+    })
+  }
+
   const scheme = isLoopback ? 'http' : 'https'
 
   let sub = subdomains.join('.')
