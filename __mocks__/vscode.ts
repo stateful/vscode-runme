@@ -92,6 +92,7 @@ export const window = {
   showNotebookDocument: vi.fn(),
   showTextDocument: vi.fn(),
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  onDidChangeNotebookEditorSelection: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   registerTreeDataProvider: vi.fn(),
   registerUriHandler: vi.fn(),
   registerWebviewViewProvider: vi.fn(),

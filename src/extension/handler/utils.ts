@@ -195,7 +195,7 @@ export async function executeActiveNotebookCell({
     if (!cellToExecute) {
       throw new Error(`Could not find cell at index ${cell}`)
     }
-    return kernel.executeAndFocusNotebookCell(cellToExecute, notebookDocument.getCells().length)
+    return kernel.executeAndFocusNotebookCell(cellToExecute)
   }
 }
 

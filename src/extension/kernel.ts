@@ -15,6 +15,9 @@ import {
   commands,
   languages,
   TextDocument,
+  NotebookRange,
+  NotebookEditorRevealType,
+  NotebookEditorSelectionChangeEvent,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -757,26 +760,36 @@ export class Kernel implements Disposable {
     return new Promise((cb) => setTimeout(cb, 100))
   }
 
-  async executeAndFocusNotebookCell(cell: NotebookCell, totalCells: number) {
-    await this.keyboardDelay()
-    await Promise.all(
-      Array.from({ length: totalCells }, async () => {
-        await this.keyboardDelay()
-        return commands.executeCommand('notebook.focusPreviousEditor')
-      }),
-    )
-    await this.keyboardDelay()
-    await Promise.all(
-      Array.from({ length: cell.index + 1 }, async () => {
-        await this.keyboardDelay()
+  async executeAndFocusNotebookCell(cell: NotebookCell) {
+    // if the notebook is already opened
+    if (!window.activeNotebookEditor?.selection) {
+      let disposable: Disposable
+      const onChangeSelection = async (_e: NotebookEditorSelectionChangeEvent) => {
+        disposable.dispose()
+        await this.doExecuteAndFocusNotebookCell(cell)
+      }
+
+      disposable = window.onDidChangeNotebookEditorSelection(onChangeSelection)
+      return
+    }
+
+    await this.doExecuteAndFocusNotebookCell(cell)
+  }
+
+  async doExecuteAndFocusNotebookCell(cell: NotebookCell) {
+    await commands.executeCommand('notebook.focusTop')
+
+    await Promise.allSettled(
+      Array.from({ length: cell.index }, async (_v, index) => {
+        window.activeNotebookEditor?.revealRange(
+          new NotebookRange(index, index),
+          NotebookEditorRevealType.InCenter,
+        )
         return commands.executeCommand('notebook.focusNextEditor')
       }),
     )
-    await this.keyboardDelay()
-    await commands.executeCommand('notebook.focusPreviousEditor')
-    await this.keyboardDelay()
+
     await commands.executeCommand('notebook.cell.execute')
-    await this.keyboardDelay()
     await commands.executeCommand('notebook.cell.focusInOutput')
   }
 
