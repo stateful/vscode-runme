@@ -15,7 +15,7 @@ vi.mock('../../../src/extension/constants', () => ({
   PLATFORM_OS: 'darwin',
 }))
 
-vi.mock('../../../src/extension/executors/runner/options', () => ({
+vi.mock('../../../src/extension/executors/runner/factory', () => ({
   createRunProgramOptions: vi.fn(),
 }))
 
@@ -155,7 +155,7 @@ suite('#resolveProgramOptionsVercel', () => {
     )
   })
 
-  test.only('production', async () => {
+  test('production', async () => {
     process.env['vercelProd'] = 'true'
     const vercelArgs = {
       runner: {} as any,
