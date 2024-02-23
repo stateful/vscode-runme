@@ -20,7 +20,9 @@ import { SERVER_PORT } from '../../src/constants'
 import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
-vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+  ResolveProgramRequest_VarsMode: vi.fn(),
+}))
 
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
 const FAKE_WIN_EXT_PATH = 'C:\\Users\\.vscode\\extensions\\stateful.runme'
