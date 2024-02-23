@@ -26,7 +26,7 @@ import { convertEnvList } from '../utils'
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
-import { GrpcRunnerProgramResolver } from './vars'
+import { GrpcRunnerProgramResolver } from './program'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
