@@ -14,7 +14,7 @@ import { ArrowLeft } from '../../icons/arrowLeft'
 import { ClusterIcon } from '../../icons/cluster'
 
 @customElement('gcp-gke-cluster')
-export class Clusters extends LitElement {
+export class Clusters extends LitElement implements Disposable {
   protected disposables: Disposable[] = []
 
   @property({ type: String })
@@ -522,6 +522,10 @@ export class Clusters extends LitElement {
         </vscode-panels>
       </div>
     `
+  }
+
+  dispose() {
+    this.disposables.forEach(({ dispose }) => dispose())
   }
 
   render() {

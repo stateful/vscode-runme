@@ -5,7 +5,7 @@ import { Disposable } from 'vscode'
 
 import { type GcpGkeCluster } from '../../../../types'
 import '../../table'
-import { GCPIcon } from '../../icons/gcp'
+import { GKEIcon } from '../../icons/gkeIcon'
 import './clusterStatus'
 import './cluster'
 import { ClusterIcon } from '../../icons/cluster'
@@ -50,7 +50,7 @@ const COLUMNS = [
   },
 ]
 @customElement('gcp-gke-clusters')
-export class Clusters extends LitElement {
+export class Clusters extends LitElement implements Disposable {
   protected disposables: Disposable[] = []
 
   @property({ type: Array })
@@ -261,9 +261,13 @@ export class Clusters extends LitElement {
     this._displayClusterInNewCell = true
   }
 
+  dispose() {
+    this.disposables.forEach(({ dispose }) => dispose())
+  }
+
   render() {
     return html`<div class="integration">
-        ${GCPIcon}
+        ${GKEIcon}
         <h3>Google Cloud Kubernetes Engine | Clusters</h3>
       </div>
       ${when(

@@ -4,6 +4,7 @@ import { OutputType } from '../../constants'
 import { GCPResolver, GCPSupportedView } from '../resolvers/gcpResolver'
 
 import { getClusterDetails, getClusters } from './gcp/gke/clusters'
+import { getVMInstances } from './gcp/gce/vmInstances'
 
 import { IKernelExecutor } from '.'
 
@@ -13,7 +14,7 @@ export const gcp: IKernelExecutor = async (executor) => {
   try {
     const gcpResolver = new GCPResolver(doc).get()
     if (!gcpResolver?.data.project) {
-      throw new Error('Could not resolve Google Kubernetes Engine resource')
+      throw new Error('Could not resolve Google Cloud Platform resource')
     }
 
     switch (gcpResolver.view) {
@@ -47,6 +48,23 @@ export const gcp: IKernelExecutor = async (executor) => {
           },
         })
         await outputs.showOutput(OutputType.gcp)
+        break
+      }
+
+      case GCPSupportedView.VM_INSTANCES: {
+        const { project } = gcpResolver.data
+        const instances = await getVMInstances(project)
+        outputs.setState({
+          type: OutputType.gcp,
+          state: {
+            project: gcpResolver.data.project,
+            view: gcpResolver.view,
+            cellId: exec.cell.metadata['runme.dev/id'],
+            instances,
+          },
+        })
+        await outputs.showOutput(OutputType.gcp)
+        break
       }
     }
     return true

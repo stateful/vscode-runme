@@ -16,7 +16,7 @@ import { InfoIcon } from '../../icons/info'
 import { UnknownIcon } from '../../icons/unknown'
 
 @customElement('gcp-gke-cluster-status')
-export class ClusterStatus extends LitElement {
+export class ClusterStatus extends LitElement implements Disposable {
   protected disposables: Disposable[] = []
 
   @property({ type: Object })
@@ -117,19 +117,22 @@ export class ClusterStatus extends LitElement {
     this.checkClusterStatus()
     this.disposables.push(
       onClientMessage(ctx, (e) => {
-        if (e.type === ClientMessages.gcpClusterStatusChanged) {
-          if (this.cluster.clusterId !== e.output.clusterId || this.cellId !== e.output.cellId) {
+        if (e.type === ClientMessages.gcpResourceStatusChanged) {
+          if (this.cluster.clusterId !== e.output.resourceId || this.cellId !== e.output.cellId) {
             return
           }
 
           if (this.cluster.status !== e.output.status) {
             this.cluster.status = e.output.status
             this.requestUpdate()
-            console.log(e.output)
           }
         }
       }),
     )
+  }
+
+  dispose() {
+    this.disposables.forEach(({ dispose }) => dispose())
   }
 
   render() {
