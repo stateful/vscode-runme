@@ -27,7 +27,11 @@ import { postClientMessage } from '../../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
-import { CommandMode, ResolveVarsMode, ResolveVarsPrompt } from '../../grpc/runnerTypes'
+import {
+  CommandMode,
+  ResolveProgramRequest_VarsMode,
+  ResolveProgramResponse_VarsPrompt,
+} from '../../grpc/runnerTypes'
 import { closeTerminalByEnvID } from '../task'
 import {
   getCellProgram,
@@ -430,7 +434,8 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
 
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
-  const promptMode = skipPromptEnvDocumentLevel === false ? promptEnv : ResolveVarsMode.SKIP
+  const promptMode =
+    skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_VarsMode.SKIP
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
@@ -490,7 +495,7 @@ export async function resolveRunProgramExecution(
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  promptMode: ResolveVarsMode,
+  promptMode: ResolveProgramRequest_VarsMode,
 ): Promise<RunProgramExecution> {
   if (commandMode !== CommandMode.INLINE_SHELL) {
     return {
@@ -499,20 +504,20 @@ export async function resolveRunProgramExecution(
     }
   }
 
-  const resolver = await runner.createVarsResolver(promptMode, envs)
+  const resolver = await runner.createProgramResolver(promptMode, envs)
   // todo(sebastian): removing $-prompts from shell scripts should move server-side
   const rawCommands = prepareCommandSeq(script, languageId)
-  const result = await resolver.resolveVars(rawCommands, runnerEnv?.getSessionId())
+  const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
 
   const exportMatches = result.response?.vars
-    ?.filter((v) => v.status !== ResolveVarsPrompt.UNSPECIFIED)
+    ?.filter((v) => v.status !== ResolveProgramResponse_VarsPrompt.UNSPECIFIED)
     .map((v) => {
       return <CommandExportExtractMatch>{
-        type: v.status !== ResolveVarsPrompt.RESOLVED ? 'prompt' : 'direct',
+        type: v.status !== ResolveProgramResponse_VarsPrompt.RESOLVED ? 'prompt' : 'direct',
         key: v.name,
         value: v.resolvedValue || v.originalValue,
         match: v.name,
-        hasStringValue: v.status === ResolveVarsPrompt.PLACEHOLDER,
+        hasStringValue: v.status === ResolveProgramResponse_VarsPrompt.PLACEHOLDER,
       }
     })
 

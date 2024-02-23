@@ -236,7 +236,7 @@ suite('#getAnnotations', () => {
       name: 'command-123',
       category: '',
       excludeFromRunAll: false,
-      promptEnv: true,
+      promptEnv: 0,
       id: d.id,
       'runme.dev/id': '01HGVC6M8Y76XAGAY6MQ06F5XS',
       interpreter: '',

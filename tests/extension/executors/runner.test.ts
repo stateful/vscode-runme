@@ -20,8 +20,8 @@ vi.mock('../../../src/extension/executors/runner/options', () => ({
 }))
 
 const MockRunner: any = {
-  createVarsResolver: vi.fn().mockResolvedValue({
-    resolveVars: vi.fn().mockResolvedValue({ response: { vars: [] } }),
+  createProgramResolver: vi.fn().mockResolvedValue({
+    resolveProgram: vi.fn().mockResolvedValue({ response: { vars: [] } }),
   }),
 }
 
@@ -38,7 +38,7 @@ suite('resolveRunProgramExecution', () => {
       'export TEST="test\n123\n456\n"',
       'sh',
       1,
-      0, // ResolveVarsMode.Auto
+      0, // ResolveProgramRequest_VarsMode.Auto
     )
     expect(execution).toMatchInlineSnapshot(`
       {
@@ -61,7 +61,7 @@ suite('resolveRunProgramExecution', () => {
       'echo "Hello World!"',
       'sh',
       1,
-      0, // ResolveVarsMode.Auto
+      0, // ResolveProgramRequest_VarsMode.Auto
     )
     expect(execution).toMatchInlineSnapshot(`
       {
@@ -82,7 +82,7 @@ suite('resolveRunProgramExecution', () => {
       'export TEST="return undefined"',
       'sh',
       1,
-      0, // ResolveVarsMode.Auto
+      0, // ResolveProgramRequest_VarsMode.Auto
     )
     expect(execution).rejects.toThrowError('Cannot run cell due to canceled prompt')
   })
@@ -97,7 +97,7 @@ suite('resolveRunProgramExecution', () => {
       'echo "Auth token for service foo"\nexport SERVICE_FOO_TOKEN="foobar"\necho "Auth token for service bar"\nexport SERVICE_BAR_TOKEN="barfoo"\n',
       'sh',
       1,
-      0, // ResolveVarsMode.Auto
+      0, // ResolveProgramRequest_VarsMode.Auto
     )
     expect(execution).toMatchInlineSnapshot(`
       {
@@ -123,7 +123,7 @@ suite('resolveRunProgramExecution', () => {
       'print("Hello Pythonista 🐍")',
       'py',
       2,
-      0, // ResolveVarsMode.Auto
+      0, // ResolveProgramRequest_VarsMode.Auto
     )
     expect(execution).toMatchInlineSnapshot(`
       {

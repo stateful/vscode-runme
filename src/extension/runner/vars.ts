@@ -1,31 +1,31 @@
 import { Disposable } from 'vscode'
 
 import { IRunnerServiceClient } from '../grpc/client'
-import { ResolveVarsMode, ResolveVarsRequest } from '../grpc/runnerTypes'
+import { ResolveProgramRequest_VarsMode, ResolveProgramRequest } from '../grpc/runnerTypes'
 
 import { IRunnerChild } from './types'
 
-export class GrpcRunnerVarsResolver implements IRunnerChild {
+export class GrpcRunnerProgramResolver implements IRunnerChild {
   private disposables: Disposable[] = []
 
   constructor(
     private readonly client: IRunnerServiceClient,
-    private readonly mode: ResolveVarsMode,
+    private readonly varsMode: ResolveProgramRequest_VarsMode,
     private readonly envs: Record<string, string>,
   ) {}
 
-  async resolveVars(commands: string[], sessionId: string | undefined) {
-    const mode = this.mode
+  async resolveProgram(commands: string[], sessionId: string | undefined) {
+    const varsMode = this.varsMode
     const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
 
-    const req = ResolveVarsRequest.create({
+    const req = ResolveProgramRequest.create({
       source: { oneofKind: 'commands', commands: { lines: commands } },
-      mode,
+      varsMode,
       sessionId,
       env,
     })
     // console.log(JSON.stringify(req, null, 1))
-    const r = await this.client.resolveVars(req)
+    const r = await this.client.resolveProgram(req)
     // console.log(JSON.stringify(r.response?.vars, null, 1))
     console.log(r.response?.commands?.lines.join('\n'))
     return r
