@@ -55,15 +55,16 @@ suite('Panel', () => {
       ide: 'code',
       panelId: 'main',
       defaultUx: 'panels',
+      themeKind: 1,
     })
 
     expect(hydrated).toContain('<base href="https://app.runme.dev/">')
     expect(hydrated).toContain(
-      '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels"}',
+      '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels","themeKind":1}',
     )
   })
 
-  test('resovles authed', async () => {
+  test('resolves authed', async () => {
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
@@ -71,11 +72,11 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}',
+      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels","themeKind":1}',
     )
   })
 
-  test('resovles unauthed', async () => {
+  test('resolves unauthed', async () => {
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue(null)
 
@@ -83,11 +84,11 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="https://app.runme.dev/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}',
+      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels","themeKind":1}',
     )
   })
 
-  test('resovles authed localhost', async () => {
+  test('resolves authed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
@@ -96,11 +97,11 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels"}',
+      '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels","themeKind":1}',
     )
   })
 
-  test('resovles unauthed localhost', async () => {
+  test('resolves unauthed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new Panel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue(null)
@@ -109,7 +110,7 @@ suite('Panel', () => {
 
     expect(view.webview.html).toContain('<base href="http://localhost:4001/">')
     expect(view.webview.html).toContain(
-      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels"}',
+      '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels","themeKind":1}',
     )
   })
 })
