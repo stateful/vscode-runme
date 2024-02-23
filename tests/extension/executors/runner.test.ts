@@ -177,6 +177,7 @@ suite('#resolveProgramOptionsVercel', () => {
   })
 })
 
+// todo(sebastian): refactor to test UI but not resolutin since it moved into kernel
 // suite('parseCommandSeq', () => {
 //   beforeEach(() => {
 //     vi.mocked(window.showInputBox).mockReset()
