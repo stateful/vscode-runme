@@ -4,8 +4,11 @@ import { join } from 'node:path'
 
 import { vi } from 'vitest'
 import { URI } from 'vscode-uri'
-import type { Command, Disposable } from 'vscode'
+import { Command, Disposable as DisposableOriginal } from 'vscode'
 
+export const Disposable = {
+  from: vi.fn()
+}
 
 export const notebooks = {
   createNotebookController: vi.fn().mockReturnValue({
@@ -214,7 +217,7 @@ export const ProgressLocation = {
 }
 
 type MessageCallback<T> = (message: T) => void
-type Event<T> = (listener: MessageCallback<T>) => Disposable
+type Event<T> = (listener: MessageCallback<T>) => DisposableOriginal
 
 export class EventEmitter<T> {
   listeners: MessageCallback<T>[] = []
@@ -291,7 +294,8 @@ export const ShellExecution = vi.fn()
 export const Task = vi.fn()
 export const authentication = {
   getSession: vi.fn(),
-  onDidChangeSessions: vi.fn()
+  onDidChangeSessions: vi.fn(),
+  registerAuthenticationProvider: vi.fn()
 }
 
 export class WorkspaceEdit {

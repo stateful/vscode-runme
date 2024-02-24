@@ -86,9 +86,6 @@ const configurationSchema = {
     sessionOutputs: z.boolean().default(true),
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
-    idpClientId: z.string().default(''),
-    idpDomain: z.string().default(''),
-    idpAudience: z.string().default(''),
   },
 }
 
@@ -394,13 +391,6 @@ const getLoginPrompt = (): boolean => {
 const isPlatformAuthEnabled = (): boolean => {
   return getCloudConfigurationValue('platformAuth', false)
 }
-const getIdpConfig = () => {
-  return {
-    idpClientId: getCloudConfigurationValue('idpClientId', ''),
-    idpDomain: getCloudConfigurationValue('idpDomain', ''),
-    idpAudience: getCloudConfigurationValue('idpAudience', ''),
-  }
-}
 
 export {
   enableServerLogs,
@@ -428,5 +418,4 @@ export {
   registerExtensionEnvironmentVariables,
   getSessionOutputs,
   getLoginPrompt,
-  getIdpConfig,
 }
