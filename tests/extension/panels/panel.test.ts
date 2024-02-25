@@ -1,7 +1,7 @@
 import { suite, test, expect, vi } from 'vitest'
 import { workspace, Uri, type ExtensionContext, type WebviewView } from 'vscode'
 
-import Panel from '../../../src/extension/panels/panel'
+import CloudPanel from '../../../src/extension/panels/cloud'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -49,7 +49,7 @@ suite('Panel', () => {
   const view: WebviewView = { webview: { html: '' } } as any
 
   test('hydrates HTML', () => {
-    const p = new Panel(contextMock, 'testing')
+    const p = new CloudPanel(contextMock, 'testing')
     const hydrated = p.hydrateHtml(staticHtml, {
       appToken: 'a.b.c',
       ide: 'code',
@@ -65,7 +65,7 @@ suite('Panel', () => {
   })
 
   test('resolves authed', async () => {
-    const p = new Panel(contextMock, 'testing')
+    const p = new CloudPanel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
     await p.resolveWebviewTelemetryView(view)
@@ -77,7 +77,7 @@ suite('Panel', () => {
   })
 
   test('resolves unauthed', async () => {
-    const p = new Panel(contextMock, 'testing')
+    const p = new CloudPanel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue(null)
 
     await p.resolveWebviewTelemetryView(view)
@@ -90,7 +90,7 @@ suite('Panel', () => {
 
   test('resolves authed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
-    const p = new Panel(contextMock, 'testing')
+    const p = new CloudPanel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
     await p.resolveWebviewTelemetryView(view)
@@ -103,7 +103,7 @@ suite('Panel', () => {
 
   test('resolves unauthed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
-    const p = new Panel(contextMock, 'testing')
+    const p = new CloudPanel(contextMock, 'testing')
     p.getAppToken = vi.fn().mockResolvedValue(null)
 
     await p.resolveWebviewTelemetryView(view)

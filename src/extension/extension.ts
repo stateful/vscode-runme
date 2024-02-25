@@ -64,11 +64,12 @@ import GrpcRunner, { IRunner } from './runner'
 import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
-import Panel from './panels/panel'
+import CloudPanel from './panels/cloud'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
+import { IPanel } from './panels/base'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -298,21 +299,31 @@ export class RunmeExtension {
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {
-    const channel = new Channel<SyncSchema>('app')
-    const ids: string[] = [
+    const register = (channel: Channel<SyncSchema>, factory: (pid: string) => IPanel) => {
+      return (id: string): Disposable[] => {
+        const p = factory(id)
+        const bus$ = channel.register([p.webview])
+        p.registerBus(bus$)
+        const webviewProvider = window.registerWebviewViewProvider(id, p)
+        kernel.registerWebview(id, p, webviewProvider)
+        return [webviewProvider]
+      }
+    }
+
+    const appChannel = new Channel<SyncSchema>('app')
+    const runmePanelIds: string[] = [
       WebViews.RunmeCloud as const,
       WebViews.RunmeChat as const,
       WebViews.RunmeSearch as const,
     ]
-    const disposables = ids.map((id) => {
-      const cloudPanel = new Panel(context, id)
-      const bus$ = channel.register([cloudPanel.webview])
-      cloudPanel.registerBus(bus$)
-      const webviewProvider = window.registerWebviewViewProvider(id, cloudPanel)
-      kernel.registerWebview(id, cloudPanel, webviewProvider)
-      return [cloudPanel, webviewProvider]
-    })
-    return disposables.flat()
+
+    const notebookChannel = new Channel<SyncSchema>('notebooks')
+    const notebookIds: string[] = [WebViews.NotebookEnvStore as const]
+
+    return [
+      ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
+      ...notebookIds.map(register(notebookChannel, (id) => new CloudPanel(context, id))),
+    ].flat()
   }
 
   static registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any) {

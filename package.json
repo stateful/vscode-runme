@@ -786,6 +786,13 @@
           "title": "Runme",
           "icon": "assets/runme-logo-sidebar.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "runme-notebook",
+          "title": "Runme",
+          "icon": "$(notebook)"
+        }
       ]
     },
     "views": {
@@ -809,12 +816,15 @@
           "type": "webview",
           "name": "Chat",
           "visibility": "collapsed"
-        },
+        }
+      ],
+      "runme-notebook": [
         {
-          "id": "runme.search",
+          "id": "runme.store",
           "type": "webview",
-          "name": "Search",
-          "visibility": "collapsed"
+          "name": "Env Store",
+          "visibility": "visible",
+          "icon": "$(gist-secret)"
         }
       ]
     },

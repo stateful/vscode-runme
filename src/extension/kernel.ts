@@ -33,7 +33,6 @@ import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 import { getNotebookExecutionOrder, isPlatformAuthEnabled } from '../utils/configuration'
 
-import * as survey from './survey'
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
@@ -65,13 +64,12 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage from './messages/github'
 import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
-import { SurveyShebangComingSoon } from './survey'
 import PanelManager from './panels/panelManager'
-import Panel from './panels/panel'
 import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
+import { IPanel } from './panels/base'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -86,7 +84,6 @@ export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
   readonly #experiments = new Map<string, boolean>()
-  readonly #shebangComingSoon: SurveyShebangComingSoon
 
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -112,8 +109,6 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
     this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
 
-    this.#shebangComingSoon = new survey.SurveyShebangComingSoon(context)
-
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
     this.#controller.description = 'Run your Markdown'
@@ -136,7 +131,6 @@ export class Kernel implements Disposable {
     this.messaging.postMessage({ from: 'kernel' })
     this.panelManager = new PanelManager(context)
     this.#disposables.push(
-      this.#shebangComingSoon,
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
@@ -752,7 +746,7 @@ export class Kernel implements Disposable {
     }) as RunmeTerminal | undefined
   }
 
-  registerWebview(webviewId: string, panel: Panel, disposableWebViewProvider: Disposable): void {
+  registerWebview(webviewId: string, panel: IPanel, disposableWebViewProvider: Disposable): void {
     this.panelManager.addPanel(webviewId, panel, disposableWebViewProvider)
   }
 
