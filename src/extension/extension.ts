@@ -70,6 +70,7 @@ import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
+import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -318,11 +319,11 @@ export class RunmeExtension {
     ]
 
     const notebookChannel = new Channel<SyncSchema>('notebooks')
-    const notebookIds: string[] = [WebViews.NotebookEnvStore as const]
+    const notebookPanelIds: string[] = [WebViews.NotebookEnvStore as const]
 
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
-      ...notebookIds.map(register(notebookChannel, (id) => new CloudPanel(context, id))),
+      ...notebookPanelIds.map(register(notebookChannel, (id) => new EnvStorePanel(context, id))),
     ].flat()
   }
 

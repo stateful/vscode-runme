@@ -23,14 +23,12 @@ const log = getLogger('CloudPanel')
 export default class CloudPanel extends TanglePanel {
   protected readonly appUrl: string = getRunmeAppUrl(['app'])
   protected readonly defaultUx: DefaultUx = 'panels'
-  public readonly identifier: string
 
   constructor(
     protected readonly context: ExtensionContext,
     identifier: string,
   ) {
-    super(context)
-    this.identifier = getRunmePanelIdentifier(identifier)
+    super(context, getRunmePanelIdentifier(identifier))
   }
 
   public async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
@@ -125,9 +123,5 @@ export default class CloudPanel extends TanglePanel {
     } catch (err: any) {
       log.error(err?.message || err)
     }
-  }
-
-  public getBus() {
-    return this.bus$
   }
 }

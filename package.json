@@ -790,7 +790,7 @@
       "panel": [
         {
           "id": "runme-notebook",
-          "title": "Runme",
+          "title": "Env Store",
           "icon": "$(notebook)"
         }
       ]
@@ -816,11 +816,17 @@
           "type": "webview",
           "name": "Chat",
           "visibility": "collapsed"
+        },
+        {
+          "id": "runme.search",
+          "type": "webview",
+          "name": "Search",
+          "visibility": "collapsed"
         }
       ],
       "runme-notebook": [
         {
-          "id": "runme.store",
+          "id": "runme.notebook.envStore",
           "type": "webview",
           "name": "Env Store",
           "visibility": "visible",

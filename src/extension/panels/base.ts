@@ -16,10 +16,15 @@ export abstract class TanglePanel
   implements Disposable, WebviewViewProvider
 {
   public readonly webview = new Subject<Webview>()
+  public readonly identifier: string
   protected bus$?: SyncSchemaBus
 
-  constructor(protected readonly context: ExtensionContext) {
+  constructor(
+    protected readonly context: ExtensionContext,
+    identifier: string,
+  ) {
     super()
+    this.identifier = identifier
   }
 
   protected abstract registerSubscribers(bus: SyncSchemaBus): Subscription[]
@@ -33,6 +38,10 @@ export abstract class TanglePanel
         subs.forEach((s) => s.unsubscribe())
       }
     })
+  }
+
+  public getBus() {
+    return this.bus$
   }
 
   public dispose() {
