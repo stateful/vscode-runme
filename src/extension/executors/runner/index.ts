@@ -473,16 +473,12 @@ export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
   }
   const commands = [parts.join(' ')]
 
-  return createRunProgramOptions(
-    execKey,
-    runningCell,
-    exec,
-    {
-      type: 'commands',
-      commands,
-    },
-    runnerEnv,
-  )
+  const execution: RunProgramExecution = {
+    type: 'commands',
+    commands,
+  }
+
+  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
 }
 
 /**
