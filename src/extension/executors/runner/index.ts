@@ -509,7 +509,7 @@ export async function resolveRunProgramExecution(
     return <CommandExportExtractMatch>{
       type: v.status !== ResolveProgramResponse_Status.RESOLVED ? 'prompt' : 'direct',
       key: v.name,
-      value: v.resolvedValue || v.originalValue || 'Enter value',
+      value: v.resolvedValue || v.originalValue || 'Enter a value please',
       match: v.name,
       hasStringValue: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
     }
