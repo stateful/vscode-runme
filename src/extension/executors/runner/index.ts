@@ -532,7 +532,7 @@ export async function resolveRunProgramExecution(
 
   const parsedCommandBlocks: CommandBlock[] = []
 
-  // todo(sebastian): do we still need this?
+  // todo(sebastian): do we still need this? should be handled server-side
   // const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
 
   let offset = 0
