@@ -1076,6 +1076,7 @@ export enum WebViews {
   RunmeCloud = 'runme.cloud',
   RunmeChat = 'runme.chat',
   RunmeSearch = 'runme.search',
+  NotebookEnvStore = 'runme.notebook.envStore',
 }
 export const CATEGORY_SEPARATOR = ','
 export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'

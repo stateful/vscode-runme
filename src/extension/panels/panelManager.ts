@@ -1,9 +1,9 @@
 import { Disposable, ExtensionContext } from 'vscode'
 
-import Panel from './panel'
+import { IPanel } from './base'
 
 interface WebviewPanel {
-  panel: Panel
+  panel: IPanel
   disposableWebViewProvider: Disposable
 }
 
@@ -19,11 +19,11 @@ export default class PanelManager implements Disposable {
     })
   }
 
-  public addPanel(webviewId: string, panel: Panel, disposableWebViewProvider: Disposable): void {
+  public addPanel(webviewId: string, panel: IPanel, disposableWebViewProvider: Disposable): void {
     this.panels.set(webviewId, { panel, disposableWebViewProvider })
   }
 
-  public getPanel(webviewId: string) {
+  public getPanel(webviewId: string): IPanel | undefined {
     const webviewPanel = this.panels.get(webviewId)
     return webviewPanel?.panel
   }
