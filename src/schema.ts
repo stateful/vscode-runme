@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { ResolveProgramRequest_VarsMode } from './extension/grpc/runnerTypes'
+import { ResolveProgramRequest_Mode } from './extension/grpc/runnerTypes'
 
 const cleanAnnotation = (value: string, character: string): string => {
   return value
@@ -59,19 +59,19 @@ export const AnnotationSchema = {
       subject = cleanAnnotation(subject, ',')
     }
     if (typeof subject === 'boolean' && !subject) {
-      return ResolveProgramRequest_VarsMode.SKIP
+      return ResolveProgramRequest_Mode.SKIP_ALL
     }
     if (typeof subject === 'boolean' && subject) {
-      return ResolveProgramRequest_VarsMode.UNSPECIFIED
+      return ResolveProgramRequest_Mode.UNSPECIFIED
     }
     if (typeof subject === 'string' && ['false', 'no'].includes(subject.toLowerCase())) {
-      return ResolveProgramRequest_VarsMode.SKIP
+      return ResolveProgramRequest_Mode.SKIP_ALL
     }
     if (typeof subject === 'string' && ['true', 'yes'].includes(subject.toLowerCase())) {
-      return ResolveProgramRequest_VarsMode.PROMPT
+      return ResolveProgramRequest_Mode.PROMPT_ALL
     }
     if (typeof subject === 'string' && ['', 'auto'].includes(subject.toLowerCase())) {
-      return ResolveProgramRequest_VarsMode.UNSPECIFIED
+      return ResolveProgramRequest_Mode.UNSPECIFIED
     }
     if (typeof subject === 'string' && subject) {
       const numeric = Number(subject)
@@ -79,7 +79,7 @@ export const AnnotationSchema = {
         return numeric
       }
     }
-  }, z.nativeEnum(ResolveProgramRequest_VarsMode).default(ResolveProgramRequest_VarsMode.UNSPECIFIED)),
+  }, z.nativeEnum(ResolveProgramRequest_Mode).default(ResolveProgramRequest_Mode.UNSPECIFIED)),
   excludeFromRunAll: boolify(false),
   terminalRows: z.preprocess((subject) => {
     if (typeof subject === 'string' && subject) {

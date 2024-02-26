@@ -10,7 +10,7 @@ vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
 
 vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
-  ResolveProgramRequest_VarsMode: vi.fn(),
+  ResolveProgramRequest_Mode: vi.fn(),
 }))
 
 suite('Handle CellOutput messages', () => {

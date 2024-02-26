@@ -15,7 +15,7 @@ import {
   ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
-  ResolveProgramRequest_VarsMode,
+  ResolveProgramRequest_Mode,
   Winsize,
 } from '../grpc/runnerTypes'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
@@ -77,7 +77,7 @@ export interface IRunner extends Disposable {
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
   createProgramResolver(
-    mode: ResolveProgramRequest_VarsMode,
+    mode: ResolveProgramRequest_Mode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver>
 
@@ -190,7 +190,7 @@ export default class GrpcRunner implements IRunner {
   }
 
   async createProgramResolver(
-    mode: ResolveProgramRequest_VarsMode,
+    mode: ResolveProgramRequest_Mode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver> {
     const resolver = new GrpcRunnerProgramResolver(this.client, mode, envs)

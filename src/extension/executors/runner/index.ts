@@ -29,8 +29,8 @@ import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
 import {
   CommandMode,
-  ResolveProgramRequest_VarsMode,
-  ResolveProgramResponse_VarsPrompt,
+  ResolveProgramRequest_Mode,
+  ResolveProgramResponse_Status,
 } from '../../grpc/runnerTypes'
 import { closeTerminalByEnvID } from '../task'
 import {
@@ -435,7 +435,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
   const promptMode =
-    skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_VarsMode.SKIP
+    skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
@@ -491,7 +491,7 @@ export async function resolveRunProgramExecution(
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  promptMode: ResolveProgramRequest_VarsMode,
+  promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
   if (commandMode !== CommandMode.INLINE_SHELL) {
     return {
@@ -505,17 +505,15 @@ export async function resolveRunProgramExecution(
   const rawCommands = prepareCommandSeq(script, languageId)
   const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
 
-  const exportMatches = result.response?.vars
-    ?.filter((v) => v.status !== ResolveProgramResponse_VarsPrompt.UNSPECIFIED)
-    .map((v) => {
-      return <CommandExportExtractMatch>{
-        type: v.status !== ResolveProgramResponse_VarsPrompt.RESOLVED ? 'prompt' : 'direct',
-        key: v.name,
-        value: v.resolvedValue || v.originalValue,
-        match: v.name,
-        hasStringValue: v.status === ResolveProgramResponse_VarsPrompt.PLACEHOLDER,
-      }
-    })
+  const exportMatches = result.response?.vars.map((v) => {
+    return <CommandExportExtractMatch>{
+      type: v.status !== ResolveProgramResponse_Status.RESOLVED ? 'prompt' : 'direct',
+      key: v.name,
+      value: v.resolvedValue || v.originalValue || 'Enter value',
+      match: v.name,
+      hasStringValue: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
+    }
+  })
 
   script = result.response.commands?.lines.join('\n') ?? script
 

@@ -42,7 +42,7 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode, ResolveProgramRequest_VarsMode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runnerTypes'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -270,7 +270,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
         const promptMode =
-          skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_VarsMode.SKIP
+          skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
@@ -332,7 +332,7 @@ export class RunmeTaskProvider implements TaskProvider {
     script: string,
     languageId: string,
     commandMode: CommandMode,
-    promptMode: ResolveProgramRequest_VarsMode,
+    promptMode: ResolveProgramRequest_Mode,
   ): Promise<RunProgramExecution> {
     try {
       return await resolveRunProgramExecution(

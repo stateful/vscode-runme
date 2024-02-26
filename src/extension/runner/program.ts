@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode'
 
 import { IRunnerServiceClient } from '../grpc/client'
-import { ResolveProgramRequest_VarsMode, ResolveProgramRequest } from '../grpc/runnerTypes'
+import { ResolveProgramRequest_Mode, ResolveProgramRequest } from '../grpc/runnerTypes'
 
 import { IRunnerChild } from './types'
 
@@ -10,17 +10,17 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
 
   constructor(
     private readonly client: IRunnerServiceClient,
-    private readonly varsMode: ResolveProgramRequest_VarsMode,
+    private readonly mode: ResolveProgramRequest_Mode,
     private readonly envs: Record<string, string>,
   ) {}
 
   async resolveProgram(commands: string[], sessionId: string | undefined) {
-    const varsMode = this.varsMode
+    const mode = this.mode
     const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
 
     const req = ResolveProgramRequest.create({
       source: { oneofKind: 'commands', commands: { lines: commands } },
-      varsMode,
+      mode,
       sessionId,
       env,
     })

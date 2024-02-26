@@ -27,7 +27,7 @@ vi.mock('vscode-telemetry')
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
-  ResolveProgramRequest_VarsMode: vi.fn(),
+  ResolveProgramRequest_Mode: vi.fn(),
 }))
 
 describe('NotebookCellManager', () => {

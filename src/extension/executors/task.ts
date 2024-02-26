@@ -16,7 +16,7 @@ import getLogger from '../logger'
 import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV } from '../../constants'
-import { ResolveProgramRequest_VarsMode } from '../grpc/runnerTypes'
+import { ResolveProgramRequest_Mode } from '../grpc/runnerTypes'
 
 import {
   getCmdShellSeq,
@@ -50,7 +50,7 @@ export const taskExecutor: IKernelExecutor = async (executor) => {
   const cwd = path.dirname(doc.uri.fsPath)
   const cellText = await retrieveShellCommand(
     exec,
-    promptEnv !== ResolveProgramRequest_VarsMode.SKIP,
+    promptEnv !== ResolveProgramRequest_Mode.SKIP_ALL,
   )
   if (typeof cellText !== 'string') {
     return false

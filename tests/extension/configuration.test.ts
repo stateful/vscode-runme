@@ -21,7 +21,7 @@ import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
-  ResolveProgramRequest_VarsMode: vi.fn(),
+  ResolveProgramRequest_Mode: vi.fn(),
 }))
 
 const FAKE_UNIX_EXT_PATH = '/Users/user/.vscode/extension/stateful.runme'
