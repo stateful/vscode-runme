@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs'
-import { ExtensionContext, WebviewView } from 'vscode'
+import { ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
 
 import { SyncSchemaBus } from '../../types'
 import getLogger from '../logger'
@@ -17,6 +17,7 @@ export class NotebookPanel extends TanglePanel {
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {
+    const { webview } = webviewView
     const webviewOptions = {
       enableScripts: true,
       retainContextWhenHidden: true,
@@ -24,17 +25,46 @@ export class NotebookPanel extends TanglePanel {
 
     log.trace(`${this.identifier} webview resolving`)
 
-    const html =
-      '<!DOCTYPE html><html><head><title>Notebook</title></head><body><h3>Smart Env Store</h3></body></html>'
+    const extensionUri = this.context.extensionUri
+    const scripts = [
+      {
+        src: NotebookPanel.getUri(webview, extensionUri, ['out', 'client.js']),
+        defer: true,
+      },
+    ]
+    const scriptTags = scripts.map((s) => {
+      if (s.defer) {
+        return `<script src="${s.src}" type="module"></script>`
+      } else {
+        return `<script src="${s.src}" type="module" defer></script>`
+      }
+    })
+
+    const html = `<!DOCTYPE html><html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Panel</title>
+        ${scriptTags}
+      </head>
+      <body>
+        <env-store/>
+      </body>
+    </html>`
+
     webviewView.webview.html = html
     webviewView.webview.options = {
       ...webviewOptions,
-      localResourceRoots: [this.context.extensionUri],
+      localResourceRoots: [extensionUri],
     }
 
     this.webview.next(webviewView.webview)
     log.trace(`${this.identifier} webview resolved`)
     return Promise.resolve()
+  }
+
+  private static getUri(webview: Webview, extensionUri: Uri, pathList: string[]) {
+    return webview.asWebviewUri(Uri.joinPath(extensionUri, ...pathList))
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
