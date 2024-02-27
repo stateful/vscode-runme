@@ -692,24 +692,6 @@
             "scope": "window",
             "default": false,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
-          },
-          "runme.app.idpClientId": {
-            "type": "string",
-            "scope": "window",
-            "default": "",
-            "markdownDescription": "Stateful Identity Client Id"
-          },
-          "runme.app.idpDomain": {
-            "type": "string",
-            "scope": "window",
-            "default": "",
-            "markdownDescription": "Stateful Identity Domain"
-          },
-          "runme.app.idpAudience": {
-            "type": "string",
-            "scope": "window",
-            "default": "",
-            "markdownDescription": "Stateful Identity Audicence"
           }
         }
       }

@@ -17,7 +17,7 @@ import {
 import { v4 as uuid } from 'uuid'
 import fetch from 'node-fetch'
 
-import { getIdpConfig, getRunmeAppUrl } from '../../utils/configuration'
+import { getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 
@@ -25,9 +25,9 @@ const AUTH_NAME = 'Stateful'
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
 interface TokenInformation {
-  access_token: string
-  refresh_token: string
-  expires_in: number
+  accessToken: string
+  refreshToken: string
+  expiresIn: number
 }
 
 interface StatefulAuthSession extends AuthenticationSession {
@@ -96,10 +96,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return callbackUrl
   }
 
-  get callbackPageUri() {
-    return `${getRunmeAppUrl(['app'])}ide-callback`
-  }
-
   /**
    * Get the existing sessions
    * @param scopes
@@ -132,17 +128,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           return [session]
         }
 
-        const refreshToken = session.refreshToken
-        const { idpClientId } = getIdpConfig()
-        const token = await this.getAccessToken(refreshToken, idpClientId)
-        const { access_token, refresh_token, expires_in } = token
+        const token = await this.getAccessToken(session.refreshToken)
+        const { accessToken, refreshToken, expiresIn } = token
 
-        if (access_token) {
+        if (accessToken) {
           const updatedSession = {
             ...session,
-            accessToken: access_token,
-            refreshToken: refresh_token,
-            expiresIn: secsToUnixTime(expires_in),
+            accessToken,
+            refreshToken,
+            expiresIn: secsToUnixTime(expiresIn),
             scopes: scopes,
           }
 
@@ -166,18 +160,18 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    */
   public async createSession(scopes: string[]): Promise<StatefulAuthSession> {
     try {
-      const { access_token, refresh_token, expires_in } = await this.login(scopes)
-      if (!access_token) {
+      const { accessToken, refreshToken, expiresIn } = await this.login(scopes)
+
+      if (!accessToken) {
         throw new Error('Stateful login failure')
       }
 
-      const userinfo: { name: string; email: string } = await this.getUserInfo(access_token)
-
+      const userinfo: { name: string; email: string } = await this.getUserInfo(accessToken)
       const session: StatefulAuthSession = {
         id: uuid(),
-        expiresIn: secsToUnixTime(expires_in),
-        accessToken: access_token,
-        refreshToken: refresh_token,
+        expiresIn: secsToUnixTime(expiresIn),
+        accessToken,
+        refreshToken,
         account: {
           label: userinfo.name,
           id: userinfo.email,
@@ -272,21 +266,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         this.#pendingStates.push(stateId)
         this.#codeVerfifiers.set(stateId, codeVerifier)
         this.#scopes.set(stateId, scopes)
-        const { idpClientId, idpDomain, idpAudience } = getIdpConfig()
 
-        const searchParams = new URLSearchParams([
-          ['response_type', 'code'],
-          ['client_id', idpClientId],
-          ['redirect_uri', this.callbackPageUri],
-          ['state', encodeURIComponent(callbackUri.toString(true))],
-          ['scope', scopes.join(' ')],
-          ['prompt', 'login'],
-          ['code_challenge_method', 'S256'],
-          ['code_challenge', codeChallenge],
-          ['audience', idpAudience],
-        ])
+        const searchParams = new URLSearchParams({
+          state: encodeURIComponent(callbackUri.toString(true)),
+          scope: scopes.join(' '),
+          codeChallengeMethod: 'S256',
+          codeChallenge: codeChallenge,
+        })
 
-        const uri = Uri.parse(`https://${idpDomain}/authorize?${searchParams.toString()}`)
+        const uri = Uri.parse(`${getRunmeAppUrl(['api'])}idp-authorize?${searchParams.toString()}`)
         await env.openExternal(uri)
 
         // Retrieving the codeExchangePromise corresponding to the scopeString from the map
@@ -364,32 +352,22 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         return
       }
 
-      const { idpClientId, idpDomain } = getIdpConfig()
-
-      const postData = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: idpClientId,
+      const postData = {
         code,
-        code_verifier: codeVerifier,
-        redirect_uri: this.callbackPageUri,
-      }).toString()
+        codeVerifier,
+      }
 
-      const response = await fetch(`https://${idpDomain}/oauth/token`, {
+      const response = await fetch(`${getRunmeAppUrl(['api'])}idp-token`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': postData.length.toString(),
+          'Content-Type': 'application/json',
         },
-        body: postData,
+        body: JSON.stringify(postData),
       })
 
-      const { access_token, refresh_token, expires_in } = await response.json()
+      const { accessToken, refreshToken, expiresIn } = await response.json()
 
-      resolve({
-        access_token,
-        refresh_token,
-        expires_in,
-      })
+      resolve({ accessToken, refreshToken, expiresIn })
     }
 
   /**
@@ -398,9 +376,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @returns
    */
   private async getUserInfo(token: string) {
-    const { idpDomain } = getIdpConfig()
-
-    const response = await fetch(`https://${idpDomain}/userinfo`, {
+    const response = await fetch(`${getRunmeAppUrl(['api'])}idp-user-info`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -437,25 +413,22 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param clientId
    * @returns
    */
-  private async getAccessToken(refreshToken: string, clientId: string): Promise<TokenInformation> {
-    const { idpDomain } = getIdpConfig()
-    const postData = new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: clientId,
-      refresh_token: refreshToken,
-    }).toString()
+  private async getAccessToken(currentRefreshToken: string): Promise<TokenInformation> {
+    const postData = {
+      refreshToken: currentRefreshToken,
+    }
 
-    const response = await fetch(`https://${idpDomain}/oauth/token`, {
+    const response = await fetch(`${getRunmeAppUrl(['api'])}idp-refresh-token`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': postData.length.toString(),
+        'Content-Type': 'application/json',
       },
-      body: postData,
+      body: JSON.stringify(postData),
     })
 
-    const { access_token, refresh_token, expires_in } = await response.json()
-    return { access_token, refresh_token, expires_in }
+    const { accessToken, refreshToken, expiresIn } = await response.json()
+
+    return { accessToken, refreshToken, expiresIn }
   }
 
   /**
