@@ -501,7 +501,7 @@ export async function resolveRunProgramExecution(
   }
 
   const resolver = await runner.createProgramResolver(promptMode, envs)
-  // todo(sebastian): removing $-prompts from shell scripts should move server-side
+  // todo(sebastian): removing $-prompts from shell scripts should move kernel-side
   const rawCommands = prepareCommandSeq(script, languageId)
   const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
 
@@ -515,7 +515,8 @@ export async function resolveRunProgramExecution(
     }
   })
 
-  script = result.response.commands?.lines.join('\n') ?? script
+  // todo(sebastian): once normalization is all kernel-side, it should return commands
+  script = result.response.script ?? script
 
   // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
   type CommandBlock =

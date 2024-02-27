@@ -24,11 +24,7 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
       sessionId,
       env,
     })
-    // console.log(JSON.stringify(req, null, 1))
-    const r = await this.client.resolveProgram(req)
-    // console.log(JSON.stringify(r.response?.vars, null, 1))
-    // console.log(r.response?.commands?.lines.join('\n'))
-    return r
+    return this.client.resolveProgram(req)
   }
 
   async dispose(): Promise<void> {}
