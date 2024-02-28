@@ -2,7 +2,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { EnvVarType } from '../../types'
+import { EnvVarSpec } from '../../types'
 
 import { CopyIcon } from './icons/copy'
 import { EyeClosedIcon } from './icons/eyeClosed'
@@ -15,7 +15,7 @@ export class EnvViewer extends LitElement {
   value: string | undefined
 
   @property({ type: String })
-  type: EnvVarType | undefined
+  spec: EnvVarSpec | undefined
 
   @property({ type: Boolean })
   displaySecret: boolean = false
@@ -45,6 +45,7 @@ export class EnvViewer extends LitElement {
     .actions {
       display: flex;
       gap: 1px;
+      padding-right: 4px;
     }
 
     .cursor-pointer {
@@ -70,7 +71,7 @@ export class EnvViewer extends LitElement {
     return html`
       <div class="secret-container">
         ${when(
-          this.displaySecret || this.type === EnvVarType.Value,
+          this.displaySecret || this.spec === EnvVarSpec.Value,
           () => this.value,
           () =>
             Array.from({ length: 20 }, (_, index) => index + 1)
@@ -79,7 +80,7 @@ export class EnvViewer extends LitElement {
         )}
         <div class="actions">
           ${when(
-            this.type === EnvVarType.Value,
+            this.spec === EnvVarSpec.Value,
             () => html``,
             () => {
               return when(

@@ -538,16 +538,16 @@ export enum NotebookAutoSaveSetting {
   No = 'no',
 }
 
-export enum EnvVarType {
-  Secret = 'secret',
-  Password = 'password',
-  Opaque = 'opaque',
-  Value = 'value',
+export enum EnvVarSpec {
+  Secret = 'Secret',
+  Password = 'Password',
+  Opaque = 'Opaque',
+  Value = 'Value',
 }
 
 export interface StoredEnvVar extends StringIndexable {
   name: string
-  type: EnvVarType
+  spec: EnvVarSpec
   size: string
   value: string
 }
