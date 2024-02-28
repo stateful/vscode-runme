@@ -45,6 +45,7 @@ export class EnvViewer extends LitElement {
     .actions {
       display: flex;
       gap: 1px;
+      padding-right: 4px;
     }
 
     .cursor-pointer {
