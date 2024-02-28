@@ -24,3 +24,14 @@ export function closeOutput({ id, outputType }: { id: string; outputType: Output
       outputType,
     })
 }
+
+export function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}

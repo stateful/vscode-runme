@@ -70,14 +70,6 @@ export class Clusters extends LitElement implements Disposable {
 
   /* eslint-disable */
   static styles = css`
-    vscode-button {
-      color: var(--vscode-button-foreground);
-      background-color: var(--vscode-button-background);
-      transform: scale(0.9);
-    }
-    vscode-button:hover {
-      background: var(--vscode-list-hoverBackground);
-    }
     table {
       box-sizing: border-box;
       margin: 0px;
@@ -86,28 +78,6 @@ export class Clusters extends LitElement implements Disposable {
       line-height: 20px;
       text-indent: 0px;
       vertical-align: baseline;
-    }
-
-    .action-notice {
-      position: relative;
-      border-bottom: 2px solid var(--vscode-settings-rowHoverBackground);
-      animation-name: action-notice;
-      animation-duration: 2s;
-      animation-iteration-count: 2;
-    }
-
-    @keyframes action-notice {
-      0% {
-        border-color: var(--vscode-settings-rowHoverBackground);
-      }
-
-      50% {
-        border-color: var(--github-button-background);
-      }
-
-      100% {
-        border-color: var(--vscode-settings-rowHoverBackground);
-      }
     }
 
     .integration {

@@ -90,15 +90,11 @@ export class Table extends LitElement {
       color: var(--vscode-editor-selectionForeground);
     }
 
-    vscode-button:hover {
-      background: var(--vscode-list-hoverBackground);
-    }
-
     .actions {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      place-content: stretch space-evenly;
+      justify-content: center;
     }
 
     .flex-column {
@@ -113,6 +109,28 @@ export class Table extends LitElement {
       list-style: none;
       padding: 0;
       margin: 0;
+    }
+
+    .grouped-row {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: column;
+    }
+
+    .long-word {
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+    }
+
+    vscode-button {
+      color: var(--vscode-button-foreground);
+      background-color: var(--vscode-button-background);
+      transform: scale(0.9);
+    }
+    vscode-button:hover {
+      background: var(--vscode-button-hoverBackground);
     }
   `
 

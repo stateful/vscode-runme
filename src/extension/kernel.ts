@@ -70,6 +70,7 @@ import { askAlternativeOutputsAction } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
+import { handleAWSMessage } from './messages/aws'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -236,6 +237,7 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
+    console.log('received message', message.type)
     // Check if the message type is a cloud API request and platform authentication is enabled.
     if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
       // Remap the message type to platform API request if platform authentication is enabled.
@@ -421,6 +423,8 @@ export class Kernel implements Disposable {
       ].includes(message.type)
     ) {
       return handleGCPMessage({ messaging: this.messaging, message, editor })
+    } else if ([ClientMessages.awsEC2InstanceAction].includes(message.type)) {
+      return handleAWSMessage({ messaging: this.messaging, message, editor })
     } else if (message.type.startsWith('terminal:')) {
       return
     }

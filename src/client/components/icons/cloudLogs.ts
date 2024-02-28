@@ -3,7 +3,7 @@ import { html } from 'lit'
 /* eslint-disable max-len */
 export const CloudLogsIcon = html`
   <svg
-    fill="none"
+    fill="currentColor"
     width="16"
     height="16"
     fill-rule="evenodd"

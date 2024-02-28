@@ -14,6 +14,7 @@ import { vercel } from './vercel'
 import { deno } from './deno'
 import { github } from './github'
 import { gcp } from './gcp'
+import { aws } from './aws'
 
 export interface IKernelExecutorOptions {
   context: ExtensionContext
@@ -46,4 +47,4 @@ export const ENV_STORE_MANAGER: IEnvironmentManager = {
   },
 }
 
-export default { sh, bash, vercel, deno, github, gcp }
+export default { sh, bash, vercel, deno, github, gcp, aws }
