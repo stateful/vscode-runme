@@ -14,7 +14,7 @@ const COLUMNS = [
     text: 'Value',
   },
   {
-    text: 'Type',
+    text: 'Spec',
   },
   {
     text: 'Size',
@@ -55,7 +55,7 @@ export default class Table extends LitElement {
               return html`<env-viewer
                 .displaySecret="${false}"
                 .value="${row.value}"
-                .type="${row.type}"
+                .spec="${row.spec}"
                 @onCopy="${async () => {
                   return this.#copy(row.value)
                 }}"

@@ -11,7 +11,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { EnvVarType, Serializer, SyncSchema } from '../types'
+import { EnvVarSpec, Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
@@ -325,7 +325,7 @@ export class RunmeExtension {
       return {
         name: key,
         value: process.env[key] || '',
-        type: EnvVarType.Password,
+        spec: EnvVarSpec.Opaque,
         size: process.env[key]?.length.toString() || '0',
       }
     })
@@ -340,7 +340,7 @@ export class RunmeExtension {
               {
                 name: 'demo',
                 value: 'Just a value',
-                type: EnvVarType.Value,
+                spec: EnvVarSpec.Value,
                 size: '0',
               },
               ...variables,
