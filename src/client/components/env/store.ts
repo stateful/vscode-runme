@@ -5,6 +5,7 @@ import { customElement, property } from 'lit/decorators.js'
 import '../table'
 import '../envViewer'
 import { StoredEnvVar } from '../../../types'
+import { formatDate } from '../../utils'
 
 const COLUMNS = [
   {
@@ -18,6 +19,9 @@ const COLUMNS = [
   },
   {
     text: 'Size',
+  },
+  {
+    text: 'Created',
   },
 ]
 
@@ -60,6 +64,8 @@ export default class Table extends LitElement {
                   return this.#copy(row.value)
                 }}"
               ></env-viewer>`
+            case 'createdAt':
+              return html`${row.createdAt ? formatDate(new Date(row.createdAt)) : ''}`
             default:
               return html`${row[field]}`
           }

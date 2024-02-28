@@ -550,4 +550,5 @@ export interface StoredEnvVar extends StringIndexable {
   spec: EnvVarSpec
   size: string
   value: string
+  createdAt?: Date | undefined
 }

@@ -327,6 +327,7 @@ export class RunmeExtension {
         value: process.env[key] || '',
         spec: EnvVarSpec.Opaque,
         size: process.env[key]?.length.toString() || '0',
+        createdAt: new Date(),
       }
     })
 
@@ -342,6 +343,7 @@ export class RunmeExtension {
                 value: 'Just a value',
                 spec: EnvVarSpec.Value,
                 size: '0',
+                createdAt: new Date(),
               },
               ...variables,
             ]),
