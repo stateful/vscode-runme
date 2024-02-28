@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs'
 import { ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
 
-import { SyncSchemaBus } from '../../types'
+import { StoredEnvVar, SyncSchemaBus } from '../../types'
 import getLogger from '../logger'
 
 import { TanglePanel } from './base'
@@ -9,11 +9,14 @@ import { TanglePanel } from './base'
 const log = getLogger('NotebookPanel')
 
 export class NotebookPanel extends TanglePanel {
+  #variables: StoredEnvVar[] | undefined
   constructor(
     protected readonly context: ExtensionContext,
     identifier: string,
+    variables: StoredEnvVar[] | undefined,
   ) {
     super(context, identifier)
+    this.#variables = variables
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {
@@ -39,7 +42,6 @@ export class NotebookPanel extends TanglePanel {
         return `<script src="${s.src}" type="module" defer></script>`
       }
     })
-
     const html = `<!DOCTYPE html><html>
       <head>
         <meta charset="UTF-8" />
@@ -48,7 +50,7 @@ export class NotebookPanel extends TanglePanel {
         ${scriptTags}
       </head>
       <body>
-        <env-store/>
+      <env-store variables='${JSON.stringify(this.#variables)}'></env-store>
       </body>
     </html>`
 

@@ -11,7 +11,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { Serializer, SyncSchema } from '../types'
+import { EnvVarSpec, Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
@@ -320,10 +320,35 @@ export class RunmeExtension {
 
     const notebookChannel = new Channel<SyncSchema>('notebooks')
     const notebookPanelIds: string[] = [WebViews.NotebookEnvStore as const]
+    // Example
+    const variables = Object.keys(process.env).map((key) => {
+      return {
+        name: key,
+        value: process.env[key] || '',
+        spec: EnvVarSpec.Opaque,
+        size: process.env[key]?.length.toString() || '0',
+        createdAt: new Date(),
+      }
+    })
 
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
-      ...notebookPanelIds.map(register(notebookChannel, (id) => new EnvStorePanel(context, id))),
+      ...notebookPanelIds.map(
+        register(
+          notebookChannel,
+          (id) =>
+            new EnvStorePanel(context, id, [
+              {
+                name: 'demo',
+                value: 'Just a value',
+                spec: EnvVarSpec.Value,
+                size: '0',
+                createdAt: new Date(),
+              },
+              ...variables,
+            ]),
+        ),
+      ),
     ].flat()
   }
 

@@ -132,6 +132,12 @@ export class Table extends LitElement {
     vscode-button:hover {
       background: var(--vscode-button-hoverBackground);
     }
+
+    tbody tr td {
+      max-width: 100px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
   `
 
   render() {
