@@ -114,6 +114,12 @@ export class Table extends LitElement {
       padding: 0;
       margin: 0;
     }
+
+    tbody tr td {
+      max-width: 100px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
   `
 
   render() {
