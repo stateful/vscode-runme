@@ -9,7 +9,9 @@ vi.mock('vscode')
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
 
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+  ResolveProgramRequest_Mode: vi.fn(),
+}))
 
 suite('Handle CellOutput messages', () => {
   const mockOutput = (type: OutputType) => {

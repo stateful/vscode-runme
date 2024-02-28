@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { DEFAULT_PROMPT_ENV } from './constants'
+import { ResolveProgramRequest_Mode } from './extension/grpc/runnerTypes'
 
 const cleanAnnotation = (value: string, character: string): string => {
   return value
@@ -54,7 +54,32 @@ export const AnnotationSchema = {
   background: boolify(false),
   interactive: boolify(true),
   closeTerminalOnSuccess: boolify(true),
-  promptEnv: boolify(true),
+  promptEnv: z.preprocess((subject) => {
+    if (typeof subject === 'string') {
+      subject = cleanAnnotation(subject, ',')
+    }
+    if (typeof subject === 'boolean' && !subject) {
+      return ResolveProgramRequest_Mode.SKIP_ALL
+    }
+    if (typeof subject === 'boolean' && subject) {
+      return ResolveProgramRequest_Mode.UNSPECIFIED
+    }
+    if (typeof subject === 'string' && ['false', 'no'].includes(subject.toLowerCase())) {
+      return ResolveProgramRequest_Mode.SKIP_ALL
+    }
+    if (typeof subject === 'string' && ['true', 'yes'].includes(subject.toLowerCase())) {
+      return ResolveProgramRequest_Mode.PROMPT_ALL
+    }
+    if (typeof subject === 'string' && ['', 'auto'].includes(subject.toLowerCase())) {
+      return ResolveProgramRequest_Mode.UNSPECIFIED
+    }
+    if (typeof subject === 'string' && subject) {
+      const numeric = Number(subject)
+      if (Number.isFinite(numeric)) {
+        return numeric
+      }
+    }
+  }, z.nativeEnum(ResolveProgramRequest_Mode).default(ResolveProgramRequest_Mode.UNSPECIFIED)),
   excludeFromRunAll: boolify(false),
   terminalRows: z.preprocess((subject) => {
     if (typeof subject === 'string' && subject) {
@@ -90,7 +115,6 @@ export const SafeCellAnnotationsSchema = z.object({
   background: falseyBoolean(false),
   interactive: falseyBoolean(true),
   closeTerminalOnSuccess: falseyBoolean(true),
-  promptEnv: falseyBoolean(DEFAULT_PROMPT_ENV),
 })
 
 export const SafeNotebookAnnotationsSchema = z.object({

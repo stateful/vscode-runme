@@ -31,7 +31,9 @@ import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
-vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+  ResolveProgramRequest_Mode: vi.fn(),
+}))
 
 vi.mock('vscode', async () => {
   const { ulid } = (await vi.importActual('ulidx')) as typeof import('ulidx')
@@ -236,7 +238,7 @@ suite('#getAnnotations', () => {
       name: 'command-123',
       category: '',
       excludeFromRunAll: false,
-      promptEnv: true,
+      promptEnv: 0,
       id: d.id,
       'runme.dev/id': '01HGVC6M8Y76XAGAY6MQ06F5XS',
       interpreter: '',
@@ -259,7 +261,7 @@ suite('#getAnnotations', () => {
       interactive: true,
       mimeType: 'text/plain',
       name: 'echo-hello',
-      promptEnv: true,
+      promptEnv: 0,
       excludeFromRunAll: false,
       category: '',
       interpreter: '',

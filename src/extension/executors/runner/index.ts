@@ -11,30 +11,41 @@ import {
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
 
-import getLogger from '../logger'
-import { ClientMessages } from '../../constants'
-import { ClientMessage } from '../../types'
-import { PLATFORM_OS } from '../constants'
-import { IRunner, IRunnerProgramSession, RunProgramExecution } from '../runner'
-import { IRunnerEnvironment } from '../runner/environment'
-import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../utils'
-import { postClientMessage } from '../../utils/messaging'
-import { isNotebookTerminalEnabledForCell } from '../../utils/configuration'
-import { ITerminalState } from '../terminal/terminalState'
-import { toggleTerminal } from '../commands'
-import { CommandMode } from '../grpc/runnerTypes'
-
-import { closeTerminalByEnvID } from './task'
+import getLogger from '../../logger'
+import { ClientMessages } from '../../../constants'
+import { ClientMessage } from '../../../types'
+import { PLATFORM_OS } from '../../constants'
 import {
-  parseCommandSeq,
-  getCellCwd,
+  IRunner,
+  IRunnerProgramSession,
+  RunProgramExecution,
+  RunProgramOptions,
+} from '../../runner'
+import { IRunnerEnvironment } from '../../runner/environment'
+import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../../utils'
+import { postClientMessage } from '../../../utils/messaging'
+import { isNotebookTerminalEnabledForCell } from '../../../utils/configuration'
+import { ITerminalState } from '../../terminal/terminalState'
+import { toggleTerminal } from '../../commands'
+import {
+  CommandMode,
+  ResolveProgramRequest_Mode,
+  ResolveProgramResponse_Status,
+} from '../../grpc/runnerTypes'
+import { closeTerminalByEnvID } from '../task'
+import {
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
   getCmdShellSeq,
-} from './utils'
-import { handleVercelDeployOutput, isVercelDeployScript } from './vercel'
+  isShellLanguage,
+  // getCommandExportExtractMatches,
+  promptUserForVariable,
+  CommandExportExtractMatch,
+} from '../utils'
+import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
+import { IKernelExecutorOptions } from '..'
 
-import type { IKernelExecutorOptions } from '.'
+import { createRunProgramOptions } from './factory'
 
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
@@ -64,10 +75,7 @@ export const executeRunner: IKernelRunner = async ({
   runnerEnv,
   envMgr,
 }: IKernelRunnerOptions) => {
-  const annotations = getAnnotations(exec.cell)
-  const { interactive, mimeType, background, closeTerminalOnSuccess, promptEnv } = annotations
-  // Document level settings
-  const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
+  const { interactive, mimeType, background, closeTerminalOnSuccess } = getAnnotations(exec.cell)
   // enforce background tasks as singleton instanes
   // to do this,
   if (background) {
@@ -83,50 +91,26 @@ export const executeRunner: IKernelRunner = async ({
     }
   }
 
-  const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
-
-  const RUNME_ID = getCellRunmeId(exec.cell)
-  const envs: Record<string, string> = {
-    RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
-  }
-
-  const cellText = exec.cell.document.getText()
-
-  const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
-  const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-
-  let execution: RunProgramExecution
+  let programOptions: RunProgramOptions
   try {
-    execution = await resolveRunProgramExecution(
-      cellText,
-      execKey, // same as languageId
-      commandMode,
-      promptForEnv,
-      envKeys,
-    )
+    const isVercel = isVercelDeployScript(runningCell.getText())
+    const resolveRunProgram = isVercel ? resolveProgramOptionsVercel : resolveProgramOptionsScript
+    programOptions = await resolveRunProgram({
+      exec,
+      execKey,
+      runnerEnv,
+      runningCell,
+      runner,
+    })
   } catch (err) {
     if (err instanceof Error) {
+      // todo(sebastian): user facing error? notif?
       log.error(err.message)
     }
     return false
   }
 
-  const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
-  const program = await runner.createProgramSession({
-    background,
-    commandMode,
-    convertEol: !mimeType || mimeType === 'text/plain',
-    cwd,
-    runnerEnv,
-    envs: Object.entries(envs).map(([k, v]) => `${k}=${v}`),
-    exec: execution!,
-    languageId: exec.cell.document.languageId,
-    programName,
-    storeLastOutput: true,
-    tty: interactive,
-  })
-
+  const program = await runner.createProgramSession(programOptions)
   context.subscriptions.push(program)
 
   let terminalState: ITerminalState | undefined
@@ -224,6 +208,7 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
+  const cellText = runningCell.getText()
   const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
   if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(scriptVercel)) {
     if (revealNotebookTerminal) {
@@ -289,6 +274,7 @@ export const executeRunner: IKernelRunner = async ({
   } else {
     await outputs.replaceOutputs([])
 
+    const RUNME_ID = getCellRunmeId(exec.cell)
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
@@ -429,54 +415,189 @@ export const executeRunner: IKernelRunner = async ({
   })
 }
 
+type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
+
+type IResolveRunProgramOptions = { runner: IRunner } & Pick<
+  IKernelRunnerOptions,
+  'exec' | 'execKey' | 'runnerEnv' | 'runningCell'
+>
+
+export const resolveProgramOptionsScript: IResolveRunProgram = async ({
+  runner,
+  runnerEnv,
+  exec,
+  execKey,
+  runningCell,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const { promptEnv } = getAnnotations(exec.cell)
+  const script = exec.cell.document.getText()
+
+  // Document level settings
+  const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
+  const promptMode =
+    skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
+
+  const RUNME_ID = getCellRunmeId(exec.cell)
+  const envs: Record<string, string> = {
+    RUNME_ID,
+    ...(await getWorkspaceEnvs(runningCell.uri)),
+  }
+
+  const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+  const execution: RunProgramExecution = await resolveRunProgramExecution(
+    runner,
+    runnerEnv,
+    envs,
+    script,
+    execKey, // same as languageId
+    commandMode,
+    promptMode,
+  )
+
+  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
+}
+
+export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
+  runnerEnv,
+  exec,
+  execKey,
+  runningCell,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const script = runningCell.getText()
+
+  const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
+  const isVercelProd = process.env['vercelProd'] === 'true'
+  const parts = [scriptVercel]
+  if (isVercelProd) {
+    parts.push('--prod')
+  }
+  const commands = [parts.join(' ')]
+
+  const execution: RunProgramExecution = {
+    type: 'commands',
+    commands,
+  }
+
+  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
+}
+
 /**
  * Prompts for vars that are exported as necessary
  */
 export async function resolveRunProgramExecution(
+  runner: IRunner,
+  runnerEnv: IRunnerEnvironment | undefined,
+  envs: Record<string, string>,
   script: string,
   languageId: string,
   commandMode: CommandMode,
-  promptForEnv: boolean,
-  skipEnvs?: Set<string>,
+  promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
-  const isVercel = isVercelDeployScript(script)
-
-  if (isVercel) {
-    const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
-    const isVercelProd = process.env['vercelProd'] === 'true'
-    const parts = [scriptVercel]
-    if (isVercelProd) {
-      parts.push('--prod')
-    }
-
-    const commands = [parts.join(' ')]
-
+  if (commandMode !== CommandMode.INLINE_SHELL) {
     return {
-      type: 'commands',
-      commands,
+      type: 'script',
+      script,
     }
   }
 
-  if (commandMode === CommandMode.INLINE_SHELL) {
-    const commands = await parseCommandSeq(script, languageId, promptForEnv, skipEnvs)
+  const resolver = await runner.createProgramResolver(promptMode, envs)
+  // todo(sebastian): removing $-prompts from shell scripts should move kernel-side
+  const rawCommands = prepareCommandSeq(script, languageId)
+  const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
 
-    if (!commands) {
-      throw new Error('Cannot run cell due to canceled prompt')
+  const exportMatches = result.response?.vars.map((v) => {
+    return <CommandExportExtractMatch>{
+      type: v.status !== ResolveProgramResponse_Status.RESOLVED ? 'prompt' : 'direct',
+      key: v.name,
+      value: v.resolvedValue || v.originalValue || 'Enter a value please',
+      match: v.name,
+      hasStringValue: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
+    }
+  })
+
+  // todo(sebastian): once normalization is all kernel-side, it should return commands
+  script = result.response.script ?? script
+
+  // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
+  type CommandBlock =
+    | {
+        type: 'block'
+        content: string
+      }
+    | {
+        type: 'single'
+        content: string
+      }
+
+  const parsedCommandBlocks: CommandBlock[] = []
+
+  // todo(sebastian): do we still need this? should be handled server-side
+  // const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
+
+  let offset = 0
+
+  // todo(sebastian): align this with grpc types
+  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+    let userValue: string | undefined
+
+    let skip = false
+
+    switch (type) {
+      case 'prompt':
+        {
+          // if (skipEnvs?.has(key)) {
+          //   skip = true
+          //   break
+          // }
+
+          const userInput = await promptUserForVariable(key, value, hasStringValue)
+
+          if (userInput === undefined) {
+            throw new Error('Cannot run cell due to canceled prompt')
+          }
+
+          userValue = userInput
+        }
+        break
+
+      case 'direct':
+        {
+          userValue = value
+        }
+        break
+
+      default: {
+        continue
+      }
     }
 
-    if (commands.length === 0) {
-      commands.push('')
+    if (regexpMatch) {
+      const prior = script.slice(offset, regexpMatch.index)
+      parsedCommandBlocks.push({ type: 'block', content: prior })
+      offset = regexpMatch.index + match.length
     }
 
-    return {
-      type: 'commands',
-      commands,
+    if (!skip && userValue !== undefined) {
+      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
     }
+  }
+
+  parsedCommandBlocks.push({ type: 'block', content: script.slice(offset) })
+
+  const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
+    if (type === 'block') {
+      return prepareCommandSeq(content, languageId)
+    }
+    return content ? [content] : []
+  })
+
+  if (commands.length === 0) {
+    commands.push('')
   }
 
   return {
-    type: 'script',
-    script,
+    type: 'commands',
+    commands,
   }
 }
 
@@ -495,3 +616,27 @@ function updateProcessInfo(
     pid,
   })
 }
+
+/**
+ * Does the following to a command list:
+ *
+ * - Splits by new lines
+ * - Removes preceeding `$` characters
+ */
+export function prepareCommandSeq(cellText: string, languageId: string): string[] {
+  if (!isShellLanguage(languageId)) {
+    return cellText ? cellText.split('\n') : []
+  }
+
+  return cellText.split('\n').map((l) => {
+    const stripped = l.trimStart()
+
+    if (stripped.startsWith('$')) {
+      return stripped.slice(1).trimStart()
+    }
+
+    return l
+  })
+}
+
+export default executeRunner

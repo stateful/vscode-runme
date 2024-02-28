@@ -42,7 +42,7 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runnerTypes'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -269,13 +269,11 @@ export class RunmeTaskProvider implements TaskProvider {
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const promptForEnv = skipPromptEnvDocumentLevel === false ? promptEnv : false
+        const promptMode =
+          skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
         const envs: Record<string, string> = {
           ...(await getWorkspaceEnvs(Uri.file(filePath))),
         }
-        const envKeys = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
-
         const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         if (!runnerEnv) {
@@ -284,13 +282,16 @@ export class RunmeTaskProvider implements TaskProvider {
 
         // todo(sebastian): re-prompt the best solution here?
         const execution = await RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+          runner,
+          runnerEnv,
+          envs,
           cellText,
           languageId,
           commandMode,
-          promptForEnv,
-          envKeys,
+          promptMode,
         )
 
+        const cwd = options.cwd || (await getCellCwd(cell, notebook, Uri.file(filePath)))
         const runOpts: RunProgramOptions = {
           commandMode,
           convertEol: true,
@@ -325,30 +326,36 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   static async resolveRunProgramExecutionWithRetry(
+    runner: IRunner,
+    runnerEnv: IRunnerEnvironment | undefined,
+    envs: Record<string, string>,
     script: string,
     languageId: string,
     commandMode: CommandMode,
-    promptForEnv: boolean,
-    skipEnvs?: Set<string>,
+    promptMode: ResolveProgramRequest_Mode,
   ): Promise<RunProgramExecution> {
     try {
       return await resolveRunProgramExecution(
+        runner,
+        runnerEnv,
+        envs,
         script,
         languageId,
         commandMode,
-        promptForEnv,
-        skipEnvs,
+        promptMode,
       )
     } catch (err: unknown) {
       if (err instanceof Error) {
         log.error(err.message)
       }
       return RunmeTaskProvider.resolveRunProgramExecutionWithRetry(
+        runner,
+        runnerEnv,
+        envs,
         script,
         languageId,
         commandMode,
-        promptForEnv,
-        skipEnvs,
+        promptMode,
       )
     }
   }

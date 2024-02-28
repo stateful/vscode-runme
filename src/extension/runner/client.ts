@@ -14,6 +14,8 @@ import {
   GetSessionResponse,
   ListSessionsRequest,
   ListSessionsResponse,
+  ResolveProgramRequest,
+  ResolveProgramResponse,
 } from '../grpc/runnerTypes'
 import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
@@ -102,5 +104,13 @@ export class GrpcRunnerClient implements IRunnerClient {
   execute(options?: RpcOptions | undefined): DuplexStreamingCall<ExecuteRequest, ExecuteResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.execute(options)
+  }
+
+  resolveProgram(
+    input: ResolveProgramRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<ResolveProgramRequest, ResolveProgramResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.resolveProgram(input, options)
   }
 }

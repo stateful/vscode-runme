@@ -136,6 +136,7 @@ export const DEFAULT_LANGUAGEID = 'shellscript'
 export const SERVER_ADDRESS = 'localhost'
 export const SERVER_PORT = 7863
 
+// only for legacy implementation
 export const DEFAULT_PROMPT_ENV = true
 
 export enum RENDERERS {

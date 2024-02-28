@@ -11,7 +11,7 @@ import { expect, suite, vi, test } from 'vitest'
 import * as CellManager from '../../src/extension/cell'
 import { github } from '../../src/extension/executors/github'
 import { Kernel } from '../../src/extension/kernel'
-import { IKernelExecutor } from '../../src/extension/executors'
+import { IKernelExecutorOptions } from '../../src/extension/executors'
 
 vi.mock('vscode', async () => {
   const vscode = await import('../../__mocks__/vscode')
@@ -23,7 +23,9 @@ vi.mock('vscode', async () => {
 vi.mock('vscode-telemetry')
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
-vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+  ResolveProgramRequest_Mode: vi.fn(),
+}))
 
 class OctokitMock {
   protected rest: any
@@ -85,13 +87,18 @@ function mockNotebookController(cell: NotebookCell) {
 
 test("It fails when a GitHub session can't be stablished", async () => {
   const cell = mockCell([{ items: [] }])
-  const { doc } = cell
+  const { doc } = cell as any
   const { controller, createExecution } = mockNotebookController(cell)
   const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
   const exec = createExecution()
   const kernel = new Kernel({} as any)
   vi.mocked(authentication.getSession).mockRejectedValue('Authentication cancelled by user')
-  const executionResult = await github({ kernel, exec, doc, outputs } as unknown as IKernelExecutor)
+  const executionResult = await github({
+    kernel,
+    exec,
+    doc,
+    outputs,
+  } as unknown as IKernelExecutorOptions)
   expect(executionResult).toBe(false)
   expect(window.showErrorMessage).toBeCalled()
 })
@@ -99,7 +106,7 @@ test("It fails when a GitHub session can't be stablished", async () => {
 suite('When a valid session is stablished', () => {
   test('It fails for incomplete workflow file URL Schema', async () => {
     const cell = mockCell([{ items: [] }], {}, 'https://github.com/')
-    const { doc } = cell
+    const { doc } = cell as any
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -119,7 +126,7 @@ suite('When a valid session is stablished', () => {
       exec,
       doc,
       outputs,
-    } as unknown as IKernelExecutor)
+    } as unknown as IKernelExecutorOptions)
     expect(executionResult).toBe(false)
     expect(window.showErrorMessage).toBeCalled()
   })
@@ -128,7 +135,7 @@ suite('When a valid session is stablished', () => {
     const workflowSourceFile =
       'https://github.com/stateful/vscode-runme/blob/main/.github/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
-    const { doc } = cell
+    const { doc } = cell as any
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -149,7 +156,7 @@ suite('When a valid session is stablished', () => {
       exec,
       doc,
       outputs,
-    } as unknown as IKernelExecutor)
+    } as unknown as IKernelExecutorOptions)
     expect(outputSpy).toBeCalledTimes(1)
     expect(executionResult).toBe(true)
   })
@@ -158,7 +165,7 @@ suite('When a valid session is stablished', () => {
     const workflowSourceFile =
       'https://github.com/stateful/vscode-runme/actions/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
-    const { doc } = cell
+    const { doc } = cell as any
     const { controller, createExecution } = mockNotebookController(cell)
     const outputs = new CellManager.NotebookCellOutputManager(cell, controller)
     const exec = createExecution()
@@ -179,7 +186,7 @@ suite('When a valid session is stablished', () => {
       exec,
       doc,
       outputs,
-    } as unknown as IKernelExecutor)
+    } as unknown as IKernelExecutorOptions)
     expect(outputSpy).toBeCalledTimes(1)
     expect(executionResult).toBe(true)
   })
