@@ -375,7 +375,7 @@ export class Kernel implements Disposable {
     } else if (message.type === ClientMessages.platformApiRequest) {
       return handlePlatformApiMessage({
         messaging: this.messaging,
-        message: { ...message, type: ClientMessages.platformApiRequest },
+        message,
         editor,
         kernel: this,
       })

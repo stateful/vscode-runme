@@ -15,7 +15,12 @@ import {
   NotebookCellData,
 } from 'vscode'
 
-import { CLOUD_USER_SIGNED_IN, NOTEBOOK_AUTOSAVE_ON, OutputType } from '../constants'
+import {
+  CLOUD_USER_SIGNED_IN,
+  NOTEBOOK_AUTOSAVE_ON,
+  OutputType,
+  PLATFORM_USER_SIGNED_IN,
+} from '../constants'
 import {
   AWSState,
   CellOutputPayload,
@@ -26,7 +31,11 @@ import {
   VercelState,
 } from '../types'
 import { Mutex } from '../utils/sync'
-import { getNotebookTerminalConfigurations, isRunmeAppButtonsEnabled } from '../utils/configuration'
+import {
+  getNotebookTerminalConfigurations,
+  isPlatformAuthEnabled,
+  isRunmeAppButtonsEnabled,
+} from '../utils/configuration'
 
 import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -200,6 +209,11 @@ export class NotebookCellOutputManager {
           const terminalStateStr = terminalState.serialize()
           if (!terminalOutputItem) {
             const terminalConfigurations = getNotebookTerminalConfigurations()
+
+            const isSignedIn = isPlatformAuthEnabled()
+              ? ContextState.getKey(PLATFORM_USER_SIGNED_IN)
+              : ContextState.getKey(CLOUD_USER_SIGNED_IN)
+
             const json: CellOutputPayload<OutputType.terminal> = {
               type: OutputType.terminal,
               output: {
@@ -207,9 +221,7 @@ export class NotebookCellOutputManager {
                 content: stdoutBase64,
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
-                isAutoSaveEnabled: ContextState.getKey(CLOUD_USER_SIGNED_IN)
-                  ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
-                  : false,
+                isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
                 ...terminalConfigurations,
               },
             }
