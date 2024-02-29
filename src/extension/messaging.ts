@@ -123,9 +123,11 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
       })
     } catch (error) {
       window.showErrorMessage('Failed to add Runme to the recommended extensions')
+      console.error('[command:runme.recommendExtension]', error)
       TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, {
         added: 'false',
         error: 'true',
+        message: (error as any).message,
       })
     }
   }
