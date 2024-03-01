@@ -4,7 +4,7 @@ import { customElement, property } from 'lit/decorators.js'
 
 import '../table'
 import '../envViewer'
-import { StoredEnvVar } from '../../../types'
+import { EnvVarSpec, StoredEnvVar } from '../../../types'
 import { formatDate } from '../../utils'
 
 const COLUMNS = [
@@ -18,7 +18,7 @@ const COLUMNS = [
     text: 'Spec',
   },
   {
-    text: 'Size',
+    text: 'Origin',
   },
   {
     text: 'Created',
@@ -56,9 +56,11 @@ export default class Table extends LitElement {
         .renderer="${(row: StoredEnvVar, field: string) => {
           switch (field) {
             case 'value':
+              const displaySecret = row.spec === EnvVarSpec.Secret || row.spec === EnvVarSpec.Plain
+              const val = row.spec === EnvVarSpec.Secret ? `${row.value} [masked]` : row.value
               return html`<env-viewer
-                .displaySecret="${false}"
-                .value="${row.value}"
+                .displaySecret="${displaySecret}"
+                .value="${val}"
                 .spec="${row.spec}"
                 @onCopy="${async () => {
                   return this.#copy(row.value)

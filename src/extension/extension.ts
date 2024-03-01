@@ -326,7 +326,7 @@ export class RunmeExtension {
         name: key,
         value: process.env[key] || '',
         spec: EnvVarSpec.Opaque,
-        size: process.env[key]?.length.toString() || '0',
+        origin: '[Process]',
         createdAt: new Date(),
       }
     })
@@ -339,10 +339,17 @@ export class RunmeExtension {
           (id) =>
             new EnvStorePanel(context, id, [
               {
-                name: 'demo',
-                value: 'Just a value',
-                spec: EnvVarSpec.Value,
-                size: '0',
+                name: 'OPENAI_ORG_ID',
+                value: 'org-tmge23En1BsE9Lzy1BEX6sk0',
+                spec: EnvVarSpec.Plain,
+                origin: '.env',
+                createdAt: new Date(),
+              },
+              {
+                name: 'OPENAI_API_KEY',
+                value: 'cm9...lFl',
+                spec: EnvVarSpec.Secret,
+                origin: '.env.local',
                 createdAt: new Date(),
               },
               ...variables,

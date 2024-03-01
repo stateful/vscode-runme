@@ -71,7 +71,7 @@ export class EnvViewer extends LitElement {
     return html`
       <div class="secret-container">
         ${when(
-          this.displaySecret || this.spec === EnvVarSpec.Value,
+          this.displaySecret || this.spec === EnvVarSpec.Plain,
           () => this.value,
           () =>
             Array.from({ length: 20 }, (_, index) => index + 1)
@@ -80,7 +80,7 @@ export class EnvViewer extends LitElement {
         )}
         <div class="actions">
           ${when(
-            this.spec === EnvVarSpec.Value,
+            this.spec === EnvVarSpec.Plain || this.spec === EnvVarSpec.Secret,
             () => html``,
             () => {
               return when(
