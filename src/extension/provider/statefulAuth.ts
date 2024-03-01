@@ -18,8 +18,9 @@ import { v4 as uuid } from 'uuid'
 import fetch from 'node-fetch'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
-import { AuthenticationProviders } from '../../constants'
+import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
+import ContextState from '../contextState'
 
 const AUTH_NAME = 'Stateful'
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
@@ -33,6 +34,7 @@ interface TokenInformation {
 interface StatefulAuthSession extends AuthenticationSession {
   refreshToken: string
   expiresIn: number
+  isExpired: boolean
 }
 
 // Interface declaration for a PromiseAdapter
@@ -113,18 +115,20 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
       if (allScopes.length) {
         if (!scopes?.length) {
-          return sessions
+          const session = await this.getSession(sessions, allScopes)
+          if (session && !session.isExpired) {
+            return [session]
+          }
+
+          return []
         }
 
-        const session = sessions.find((s) => scopes.every((scope) => s.scopes.includes(scope)))
+        const session = await this.getSession(sessions, scopes)
         if (!session) {
           return []
         }
 
-        if (this.isTokenNotExpired(session.expiresIn)) {
-          // Emit a 'session changed' event to notify that the token has been accessed.
-          // This ensures that any components listening for session changes are notified appropriately.
-          this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
+        if (session && !session.isExpired) {
           return [session]
         }
 
@@ -141,8 +145,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           }
 
           await this.updateSession(updatedSession)
+          ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
           return [updatedSession]
         } else {
+          ContextState.addKey(PLATFORM_USER_SIGNED_IN, false)
           this.removeSession(session.id)
         }
       }
@@ -177,7 +183,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           id: userinfo.email,
         },
         scopes: this.getScopes(scopes),
+        isExpired: false,
       }
+
+      ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
 
       await this.persistSessions([session], { added: [session], removed: [], changed: [] })
       return session
@@ -485,6 +494,24 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   protected register<T extends Disposable>(disposable: T): T {
     this.#disposables.push(disposable)
     return disposable
+  }
+
+  async getSession(sessions: StatefulAuthSession[], scopes?: string[]) {
+    const session = sessions.find((s) => scopes?.every((scope) => s.scopes.includes(scope)))
+
+    if (!session) {
+      return null
+    }
+
+    if (this.isTokenNotExpired(session.expiresIn)) {
+      // Emit a 'session changed' event to notify that the token has been accessed.
+      // This ensures that any components listening for session changes are notified appropriately.
+      this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
+      ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
+      return session
+    }
+
+    return { ...session, isExpired: true }
   }
 }
 
