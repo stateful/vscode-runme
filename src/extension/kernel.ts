@@ -46,6 +46,7 @@ import {
   getTerminalRunmeId,
   suggestCategories,
   handleNotebookAutosaveSettings,
+  getWorkspaceFolder,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
@@ -683,7 +684,9 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
+      const workspaceRoot = getWorkspaceFolder()?.uri.fsPath
       const runnerEnv = await this.runner.createEnvironment(
+        workspaceRoot,
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this server-side
         processEnviron(),

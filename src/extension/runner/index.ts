@@ -22,6 +22,7 @@ import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
+import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -70,6 +71,7 @@ export interface IRunner extends Disposable {
   close(): void
 
   createEnvironment(
+    workspaceRoot?: string,
     envs?: string[],
     metadata?: { [index: string]: string },
   ): Promise<IRunnerEnvironment>
@@ -200,10 +202,19 @@ export default class GrpcRunner implements IRunner {
     return resolver
   }
 
-  async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
+  async createEnvironment(
+    workspaceRoot?: string,
+    envs?: string[],
+    metadata?: { [index: string]: string },
+  ) {
+    const envLoadOrder = getEnvWorkspaceFileOrder()
     const request = CreateSessionRequest.create({
       metadata,
       envs,
+      project: {
+        root: workspaceRoot,
+        envLoadOrder,
+      },
     })
 
     try {
