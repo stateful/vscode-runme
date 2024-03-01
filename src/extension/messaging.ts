@@ -2,10 +2,16 @@ import { join } from 'node:path'
 
 import { Disposable, ExtensionContext, Uri, window, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
+import { parse } from 'jsonc-parser'
 
 import { EXTENSION_NAME, TELEMETRY_EVENTS } from '../constants'
 
-import { fileOrDirectoryExists, getDefaultWorkspace, isMultiRootWorkspace } from './utils'
+import {
+  editJsonc,
+  fileOrDirectoryExists,
+  getDefaultWorkspace,
+  isMultiRootWorkspace,
+} from './utils'
 
 export abstract class DisplayableMessage {
   abstract dispose(): void
@@ -62,17 +68,20 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
       const extensionsFile = Uri.parse(join(workspaceRoot, '.vscode/extensions.json'))
       const extensionfileOrDirectoryExists = await fileOrDirectoryExists(extensionsFile)
       let extensionRecommendations: string[] = []
+      let documentText = ''
       if (extensionfileOrDirectoryExists) {
         const extensionDocument = await workspace.openTextDocument(extensionsFile)
-        const extensionContents = JSON.parse(extensionDocument.getText())
-        const { recommendations }: Record<string, string[]> = extensionContents
+        documentText = extensionDocument.getText()
+        const { recommendations }: Record<string, string[]> = parse(documentText)
         extensionRecommendations = recommendations
+
         if (recommendations.includes(EXTENSION_NAME)) {
           promptUser = false
         }
       }
 
       if (!promptUser) {
+        window.showInformationMessage('Runme is already added to the recommended extensions')
         return
       }
 
@@ -100,18 +109,15 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
         await workspace.fs.createDirectory(folderUri)
       }
 
-      const recommendations = extensionfileOrDirectoryExists
-        ? extensionRecommendations.push(EXTENSION_NAME) && extensionRecommendations
-        : [EXTENSION_NAME]
       await workspace.fs.writeFile(
         extensionsFile,
         Buffer.from(
-          JSON.stringify(
-            {
-              recommendations,
-            },
-            null,
-            2,
+          editJsonc(
+            documentText,
+            'recommendations',
+            true,
+            extensionRecommendations,
+            EXTENSION_NAME,
           ),
         ),
       )

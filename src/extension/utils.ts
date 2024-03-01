@@ -24,6 +24,7 @@ import vscode, {
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
+import { applyEdits, format, modify } from 'jsonc-parser'
 
 import {
   CellAnnotations,
@@ -703,4 +704,20 @@ export async function checkSession(context: ExtensionContext) {
   const session = await getAuthSession(false)
   context.globalState.update(CLOUD_USER_SIGNED_IN, !!session)
   ContextState.addKey(CLOUD_USER_SIGNED_IN, !!session)
+}
+
+export function editJsonc(
+  originalText: string,
+  propertyToUpdate: string,
+  isArray: boolean,
+  propertyContents: string[] | string,
+  value: string,
+) {
+  const edit = modify(originalText, [propertyToUpdate], [...propertyContents, value], {
+    isArrayInsertion: isArray,
+  })
+
+  const fileContent = applyEdits(originalText, edit)
+  const formatted = format(fileContent, undefined, {})
+  return applyEdits(fileContent, formatted)
 }
