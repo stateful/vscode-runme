@@ -26,6 +26,7 @@ import {
   isMultiRootWorkspace,
   convertEnvList,
   asWorkspaceRelativePath,
+  editJsonc,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -648,5 +649,40 @@ suite('asWorkspaceRelativePath', () => {
       relativePath: path.basename(absolutePath),
       outside: true,
     })
+  })
+})
+
+suite('editJsonC', () => {
+  test('format a JSON with comments properly', () => {
+    const jsonText = `{
+      "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "amodio.tsl-problem-matcher",
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode"
+      ],
+      "unwantedRecommendations": [
+        /** This is a json comment and should be respected */
+        "publisher.another",
+      ]
+    }`
+
+    const expectedUpdatedJson =
+      // eslint-disable-next-line max-len
+      '{\n\t"recommendations": [\n\t\t"dbaeumer.vscode-eslint",\n\t\t"amodio.tsl-problem-matcher",\n\t\t"editorconfig.editorconfig",\n\t\t"esbenp.prettier-vscode",\n\t\t"stateful.runme"\n\t],\n\t"unwantedRecommendations": [\n\t\t/** This is a json comment and should be respected */\n\t\t"publisher.another",\n\t]\n}'
+
+    const result = editJsonc(
+      jsonText,
+      'recommendations',
+      true,
+      [
+        'dbaeumer.vscode-eslint',
+        'amodio.tsl-problem-matcher',
+        'editorconfig.editorconfig',
+        'esbenp.prettier-vscode',
+      ],
+      'stateful.runme',
+    )
+    expect(result).toStrictEqual(expectedUpdatedJson)
   })
 })

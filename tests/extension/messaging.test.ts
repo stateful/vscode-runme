@@ -151,13 +151,7 @@ suite('RecommendExtensionMessage', () => {
       '/runme/workspace/.vscode/extensions.json',
     )
     expect((writeFileCalls[1] as Buffer).toString('utf-8')).toStrictEqual(
-      JSON.stringify(
-        {
-          recommendations: ['stateful.runme'],
-        },
-        null,
-        2,
-      ),
+      '{\n\t"recommendations": [\n\t\t"stateful.runme"\n\t]\n}',
     )
     expect(window.showInformationMessage).toHaveBeenCalledWith(
       'Runme added successfully to the recommended extensions',
