@@ -21,12 +21,12 @@ import {
   Observable,
   of,
   from,
-  scan,
   map,
   takeLast,
   firstValueFrom,
   lastValueFrom,
   isObservable,
+  toArray,
 } from 'rxjs'
 
 import getLogger from '../logger'
@@ -150,11 +150,8 @@ export class RunmeTaskProvider implements TaskProvider {
     }
 
     return task$.pipe(
-      scan((acc, one) => {
-        acc.push(one)
-        acc.sort((a, b) => dirProx(a) - dirProx(b))
-        return acc
-      }, new Array<ProjectTask>()),
+      toArray(),
+      map((tasks) => tasks.sort((a, b) => dirProx(a) - dirProx(b))),
     )
   }
 
