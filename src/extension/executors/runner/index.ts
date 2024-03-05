@@ -8,8 +8,10 @@ import {
   TaskPanelKind,
   tasks,
   TextDocument,
+  window,
 } from 'vscode'
 import { Subject, debounceTime } from 'rxjs'
+import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import getLogger from '../../logger'
 import { ClientMessages } from '../../../constants'
@@ -103,6 +105,10 @@ export const executeRunner: IKernelRunner = async ({
       runner,
     })
   } catch (err) {
+    if (err instanceof RpcError && err.methodName === 'ResolveProgram') {
+      const message = err.message
+      window.showErrorMessage('Invalid shell snippet: ' + message)
+    }
     if (err instanceof Error) {
       // todo(sebastian): user facing error? notif?
       log.error(err.message)
