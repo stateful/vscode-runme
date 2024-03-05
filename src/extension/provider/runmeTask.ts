@@ -22,7 +22,6 @@ import {
   of,
   from,
   map,
-  takeLast,
   firstValueFrom,
   lastValueFrom,
   isObservable,
@@ -89,7 +88,7 @@ export class RunmeTaskProvider implements TaskProvider {
       })
     })
 
-    this.tasks = lastValueFrom(this.loadProjectTasks().pipe(takeLast(1)))
+    this.tasks = lastValueFrom(this.loadProjectTasks())
   }
 
   private async initProjectClient(transport?: GrpcTransport) {
