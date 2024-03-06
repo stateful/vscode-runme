@@ -110,6 +110,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
     this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
+    this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -684,9 +685,12 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
+      const smartEnvStore = this.hasExperimentEnabled('smartEnvStore') ?? false
+
       const workspaceRoot = getWorkspaceFolder()?.uri.fsPath
       const runnerEnv = await this.runner.createEnvironment(
         workspaceRoot,
+        smartEnvStore,
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this server-side
         processEnviron(),

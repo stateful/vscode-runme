@@ -1,7 +1,7 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import { type Disposable, EventEmitter } from 'vscode'
-import { RpcOptions, UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { RpcOptions, ServerStreamingCall, UnaryCall } from '@protobuf-ts/runtime-rpc'
 
 import {
   CreateSessionRequest,
@@ -14,6 +14,8 @@ import {
   GetSessionResponse,
   ListSessionsRequest,
   ListSessionsResponse,
+  MonitorEnvRequest,
+  MonitorEnvResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
 } from '../grpc/runnerTypes'
@@ -112,5 +114,13 @@ export class GrpcRunnerClient implements IRunnerClient {
   ): UnaryCall<ResolveProgramRequest, ResolveProgramResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.resolveProgram(input, options)
+  }
+
+  monitorEnv(
+    _input: MonitorEnvRequest,
+    _options?: RpcOptions | undefined,
+  ): ServerStreamingCall<MonitorEnvRequest, MonitorEnvResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    throw new Error('Method not implemented.')
   }
 }

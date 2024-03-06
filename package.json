@@ -450,6 +450,12 @@
             "default": false,
             "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
           },
+          "runme.experiments.smartEnvStore": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the kernel will use the smart env store implementation."
+          },
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "window",

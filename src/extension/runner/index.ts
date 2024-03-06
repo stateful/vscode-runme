@@ -16,6 +16,7 @@ import {
   ExecuteStop,
   GetSessionRequest,
   ResolveProgramRequest_Mode,
+  SessionEnvStoreType,
   Winsize,
 } from '../grpc/runnerTypes'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
@@ -72,6 +73,7 @@ export interface IRunner extends Disposable {
 
   createEnvironment(
     workspaceRoot?: string,
+    smartEnvStore?: boolean,
     envs?: string[],
     metadata?: { [index: string]: string },
   ): Promise<IRunnerEnvironment>
@@ -204,10 +206,12 @@ export default class GrpcRunner implements IRunner {
 
   async createEnvironment(
     workspaceRoot?: string,
+    smartEnvStore?: boolean,
     envs?: string[],
     metadata?: { [index: string]: string },
   ) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
+    const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
     const request = CreateSessionRequest.create({
       metadata,
       envs,
@@ -215,6 +219,7 @@ export default class GrpcRunner implements IRunner {
         root: workspaceRoot,
         envLoadOrder,
       },
+      envStoreType,
     })
 
     try {
