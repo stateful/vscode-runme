@@ -77,6 +77,7 @@ import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
+import EnvVarsChangedEvent from './events/envVarsChanged'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -109,8 +110,13 @@ export class Kernel implements Disposable {
   protected category?: string
   protected panelManager: PanelManager
 
+  readonly onVarsChangeEvent: EnvVarsChangedEvent
+
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
+
+    this.onVarsChangeEvent = new EnvVarsChangedEvent()
+
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
@@ -145,6 +151,7 @@ export class Kernel implements Disposable {
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
       this.panelManager,
+      this.onVarsChangeEvent,
     )
   }
 
@@ -703,6 +710,15 @@ export class Kernel implements Disposable {
       this.runnerEnv = runnerEnv
 
       this.cellManager.setRunnerEnv(runnerEnv)
+
+      const monitor = await this.runner.createMonitorEnv()
+
+      const streaming = monitor.monitorEnv(runnerEnv?.getSessionId())
+      streaming.responses.onMessage(({ data }) => {
+        if (data.oneofKind === 'snapshot') {
+          this.onVarsChangeEvent.dispatch(data.snapshot.envs)
+        }
+      })
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')

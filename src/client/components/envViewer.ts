@@ -3,7 +3,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { EnvVarSpec } from '../../types'
+import { SnapshotEnvSpecName } from '../../types'
 
 import { CopyIcon } from './icons/copy'
 import { EyeClosedIcon } from './icons/eyeClosed'
@@ -18,7 +18,7 @@ export class EnvViewer extends LitElement implements Disposable {
   value: string | undefined
 
   @property({ type: String })
-  spec: EnvVarSpec | undefined
+  spec: SnapshotEnvSpecName | undefined
 
   @property({ type: Boolean })
   displaySecret: boolean = false
@@ -78,7 +78,7 @@ export class EnvViewer extends LitElement implements Disposable {
     return html`
       <div class="secret-container">
         ${when(
-          this.displaySecret || this.spec === EnvVarSpec.Plain,
+          this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
           () => this.value,
           () =>
             Array.from({ length: 20 }, (_, index) => index + 1)
@@ -87,7 +87,7 @@ export class EnvViewer extends LitElement implements Disposable {
         )}
         <div class="actions">
           ${when(
-            this.spec === EnvVarSpec.Plain || this.spec === EnvVarSpec.Secret,
+            this.spec === SnapshotEnvSpecName.Plain || this.spec === SnapshotEnvSpecName.Secret,
             () => html``,
             () => {
               return when(

@@ -117,10 +117,10 @@ export class GrpcRunnerClient implements IRunnerClient {
   }
 
   monitorEnv(
-    _input: MonitorEnvRequest,
-    _options?: RpcOptions | undefined,
+    input: MonitorEnvRequest,
+    options?: RpcOptions | undefined,
   ): ServerStreamingCall<MonitorEnvRequest, MonitorEnvResponse> {
     GrpcRunnerClient.assertClient(this.client)
-    throw new Error('Method not implemented.')
+    return this.client.monitorEnv(input, options)
   }
 }

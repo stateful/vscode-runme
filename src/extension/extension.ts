@@ -11,7 +11,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { EnvVarSpec, Serializer, SyncSchema } from '../types'
+import { Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
@@ -71,7 +71,6 @@ import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
-import EnvVarsChangedEvent from './events/envVarsChanged'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -321,46 +320,11 @@ export class RunmeExtension {
 
     const notebookChannel = new Channel<SyncSchema>('notebooks')
     const notebookPanelIds: string[] = [WebViews.NotebookEnvStore as const]
-    // Example
-    const variables = Object.keys(process.env).map((key) => {
-      return {
-        name: key,
-        value: process.env[key] || '',
-        spec: EnvVarSpec.Opaque,
-        origin: '[Process]',
-        createdAt: new Date(),
-      }
-    })
 
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
       ...notebookPanelIds.map(
-        register(
-          notebookChannel,
-          (id) =>
-            new EnvStorePanel(
-              context,
-              id,
-              [
-                {
-                  name: 'OPENAI_ORG_ID',
-                  value: 'org-tmge23En1BsE9Lzy1BEX6sk0',
-                  spec: EnvVarSpec.Plain,
-                  origin: '.env',
-                  createdAt: new Date(),
-                },
-                {
-                  name: 'OPENAI_API_KEY',
-                  value: 'cm9...lFl',
-                  spec: EnvVarSpec.Secret,
-                  origin: '.env.local',
-                  createdAt: new Date(),
-                },
-                ...variables,
-              ],
-              new EnvVarsChangedEvent(),
-            ),
-        ),
+        register(notebookChannel, (id) => new EnvStorePanel(context, id, kernel.onVarsChangeEvent)),
       ),
     ].flat()
   }

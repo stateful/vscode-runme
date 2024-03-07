@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs'
 import { Disposable, ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
 
-import { StoredEnvVar, SyncSchemaBus } from '../../types'
+import { SnapshotEnv, SyncSchemaBus } from '../../types'
 import getLogger from '../logger'
 import EnvVarsChangedEvent from '../events/envVarsChanged'
 
@@ -9,23 +9,20 @@ import { TanglePanel } from './base'
 
 const log = getLogger('NotebookPanel')
 export class NotebookPanel extends TanglePanel {
-  #variables: StoredEnvVar[] | undefined
+  #variables: SnapshotEnv[] | undefined
   #webviewView: WebviewView | undefined
   #disposables: Disposable[] = []
   constructor(
     protected readonly context: ExtensionContext,
     identifier: string,
-    variables: StoredEnvVar[] | undefined,
     protected onEnvVarsChangedEvent: EnvVarsChangedEvent,
   ) {
     super(context, identifier)
-    this.#variables = variables
+    this.#variables = []
     this.#disposables.push(this.onEnvVarsChangedEvent)
-    this.onEnvVarsChangedEvent
-      .getEvent()
-      ?.on(this.onEnvVarsChangedEvent.getEventName(), (envVars: StoredEnvVar[]) => {
-        this.updteWebview(envVars)
-      })
+    this.onEnvVarsChangedEvent.getEvent()?.event((envVars: SnapshotEnv[]) => {
+      this.updteWebview(envVars)
+    })
   }
 
   async resolveWebviewTelemetryView(webviewView: WebviewView): Promise<void> {
@@ -54,7 +51,7 @@ export class NotebookPanel extends TanglePanel {
     return Promise.resolve()
   }
 
-  private getHtml(webview: Webview, extensionUri: Uri, variables: StoredEnvVar[]) {
+  private getHtml(webview: Webview, extensionUri: Uri, variables: SnapshotEnv[]) {
     const scripts = [
       {
         src: NotebookPanel.getUri(webview, extensionUri, ['out', 'client.js']),
@@ -81,7 +78,7 @@ export class NotebookPanel extends TanglePanel {
   </html>`
   }
 
-  private updteWebview(vars: StoredEnvVar[]) {
+  private updteWebview(vars: SnapshotEnv[]) {
     console.log('updating webview')
     this.#webviewView!.webview.html = this.getHtml(
       this.#webviewView!.webview,

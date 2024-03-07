@@ -1,12 +1,9 @@
-import { EventEmitter } from 'node:events'
+import { Disposable, EventEmitter } from 'vscode'
 
-import { Disposable } from 'vscode'
-
-import { StoredEnvVar } from '../../types'
+import { SnapshotEnv } from '../../types'
 
 export default class EnvVarsChangedEvent implements Disposable {
-  #eventEmitter: EventEmitter | undefined
-  #eventName = 'envVarsChanged'
+  #eventEmitter: EventEmitter<SnapshotEnv[]> | undefined
   constructor() {
     this.#eventEmitter = new EventEmitter()
   }
@@ -16,16 +13,11 @@ export default class EnvVarsChangedEvent implements Disposable {
     return this.#eventEmitter
   }
 
-  getEventName() {
-    return this.#eventName
-  }
-
-  dispatch(envVars: StoredEnvVar[]) {
-    console.log('emit event', this.#eventName)
-    this.#eventEmitter?.emit(this.#eventName, envVars)
+  dispatch(envVars: SnapshotEnv[]) {
+    this.#eventEmitter?.fire(envVars)
   }
 
   dispose() {
-    this.#eventEmitter?.removeAllListeners(this.#eventName)
+    this.#eventEmitter?.dispose()
   }
 }

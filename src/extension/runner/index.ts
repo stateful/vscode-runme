@@ -29,6 +29,7 @@ import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
+import { GrpcRunnerMonitorEnv } from './monitorEnv'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -79,6 +80,8 @@ export interface IRunner extends Disposable {
   ): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
+
+  createMonitorEnv(): Promise<GrpcRunnerMonitorEnv>
 
   createProgramResolver(
     mode: ResolveProgramRequest_Mode,
@@ -183,6 +186,12 @@ export default class GrpcRunner implements IRunner {
   constructor(protected server: IServer) {
     this.client = new GrpcRunnerClient(server, this._onReady)
     this.register(this.client)
+  }
+
+  async createMonitorEnv(): Promise<GrpcRunnerMonitorEnv> {
+    const monitor = new GrpcRunnerMonitorEnv(this.client)
+    this.registerChild(monitor)
+    return monitor
   }
 
   async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
