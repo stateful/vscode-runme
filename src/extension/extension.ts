@@ -71,6 +71,7 @@ import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
+import EnvVarsChangedEvent from './events/envVarsChanged'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -337,23 +338,28 @@ export class RunmeExtension {
         register(
           notebookChannel,
           (id) =>
-            new EnvStorePanel(context, id, [
-              {
-                name: 'OPENAI_ORG_ID',
-                value: 'org-tmge23En1BsE9Lzy1BEX6sk0',
-                spec: EnvVarSpec.Plain,
-                origin: '.env',
-                createdAt: new Date(),
-              },
-              {
-                name: 'OPENAI_API_KEY',
-                value: 'cm9...lFl',
-                spec: EnvVarSpec.Secret,
-                origin: '.env.local',
-                createdAt: new Date(),
-              },
-              ...variables,
-            ]),
+            new EnvStorePanel(
+              context,
+              id,
+              [
+                {
+                  name: 'OPENAI_ORG_ID',
+                  value: 'org-tmge23En1BsE9Lzy1BEX6sk0',
+                  spec: EnvVarSpec.Plain,
+                  origin: '.env',
+                  createdAt: new Date(),
+                },
+                {
+                  name: 'OPENAI_API_KEY',
+                  value: 'cm9...lFl',
+                  spec: EnvVarSpec.Secret,
+                  origin: '.env.local',
+                  createdAt: new Date(),
+                },
+                ...variables,
+              ],
+              new EnvVarsChangedEvent(),
+            ),
         ),
       ),
     ].flat()

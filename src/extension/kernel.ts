@@ -21,7 +21,12 @@ import {
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { ActiveTerminal, ClientMessage, RunmeTerminal, Serializer } from '../types'
+import {
+  type ActiveTerminal,
+  type ClientMessage,
+  type RunmeTerminal,
+  type Serializer,
+} from '../types'
 import {
   ClientMessages,
   DEFAULT_LANGUAGEID,
@@ -239,7 +244,6 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
-    console.log('received message', message.type)
     // Check if the message type is a cloud API request and platform authentication is enabled.
     if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
       // Remap the message type to platform API request if platform authentication is enabled.
