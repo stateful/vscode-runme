@@ -1,3 +1,4 @@
+import { Disposable } from 'vscode'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
@@ -10,7 +11,9 @@ import { EyeIcon } from './icons/eye'
 import { CheckIcon } from './icons/check'
 
 @customElement('env-viewer')
-export class EnvViewer extends LitElement {
+export class EnvViewer extends LitElement implements Disposable {
+  protected disposables: Disposable[] = []
+
   @property({ type: String })
   value: string | undefined
 
@@ -65,6 +68,10 @@ export class EnvViewer extends LitElement {
 
   private toggleVisibility() {
     this.displaySecret = !this.displaySecret
+  }
+
+  dispose() {
+    this.disposables.forEach((disposable) => disposable.dispose())
   }
 
   render() {

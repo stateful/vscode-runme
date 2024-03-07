@@ -71,6 +71,7 @@ import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
+import EnvVarsChangedEvent from './events/envVarsChanged'
 
 export class RunmeExtension {
   async initialize(context: ExtensionContext) {
@@ -321,15 +322,30 @@ export class RunmeExtension {
     const notebookChannel = new Channel<SyncSchema>('notebooks')
     const notebookPanelIds: string[] = [WebViews.NotebookEnvStore as const]
     // Example
-    const variables = Object.keys(process.env).map((key) => {
-      return {
-        name: key,
-        value: process.env[key] || '',
-        spec: EnvVarSpec.Opaque,
-        size: process.env[key]?.length.toString() || '0',
-        createdAt: new Date(),
-      }
-    })
+    // const variables = Object.keys(process.env).map((key) => {
+    //   return {
+    //     name: key,
+    //     value: process.env[key] || '',
+    //     spec: EnvVarSpec.Opaque,
+    //     size: process.env[key]?.length.toString() || '0',
+    //     createdAt: new Date(),
+    //   }
+    // })
+
+    const envVarsChangedEvent = new EnvVarsChangedEvent()
+
+    setTimeout(() => {
+      console.log('sending event')
+      envVarsChangedEvent.dispatch([
+        {
+          name: 'demo',
+          value: 'Just a value updated',
+          spec: EnvVarSpec.Value,
+          size: '0',
+          createdAt: new Date(),
+        },
+      ])
+    }, 5000)
 
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
@@ -337,16 +353,20 @@ export class RunmeExtension {
         register(
           notebookChannel,
           (id) =>
-            new EnvStorePanel(context, id, [
-              {
-                name: 'demo',
-                value: 'Just a value',
-                spec: EnvVarSpec.Value,
-                size: '0',
-                createdAt: new Date(),
-              },
-              ...variables,
-            ]),
+            new EnvStorePanel(
+              context,
+              id,
+              [
+                {
+                  name: 'demo',
+                  value: 'Just a value',
+                  spec: EnvVarSpec.Password,
+                  size: '0',
+                  createdAt: new Date(),
+                },
+              ],
+              envVarsChangedEvent,
+            ),
         ),
       ),
     ].flat()
