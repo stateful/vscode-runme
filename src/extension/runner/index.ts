@@ -24,6 +24,7 @@ import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
 import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
+import getLogger from '../logger'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -330,6 +331,7 @@ export default class GrpcRunner implements IRunner {
   }
 }
 
+const log = getLogger('GrpcRunnerProgramSession')
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   private disposables: Disposable[] = []
 
@@ -498,7 +500,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   async handleInput(data: string): Promise<void> {
     if (this.hasExited()) {
-      throw new Error('Cannot write to closed program session!')
+      log.warn('Cannot write to closed program session')
+      return
     }
     this.sendRawInput(data)
   }
