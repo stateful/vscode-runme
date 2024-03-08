@@ -1,5 +1,5 @@
-import { Subscription } from 'rxjs'
-import { Disposable, ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
+import { Subscription, Observable, combineLatest } from 'rxjs'
+import { Disposable, EventEmitter, ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
 
 import { SnapshotEnv, SyncSchemaBus } from '../../types'
 import getLogger from '../logger'
@@ -12,6 +12,9 @@ export class NotebookPanel extends TanglePanel {
   #variables: SnapshotEnv[] | undefined
   #webviewView: WebviewView | undefined
   #disposables: Disposable[] = []
+  #webviewObservable$: Observable<WebviewView>
+  #webviewReadyEvent: EventEmitter<WebviewView>
+  #subscriptions$: Subscription
   constructor(
     protected readonly context: ExtensionContext,
     identifier: string,
@@ -20,7 +23,16 @@ export class NotebookPanel extends TanglePanel {
     super(context, identifier)
     this.#variables = []
     this.#disposables.push(this.onEnvVarsChangedEvent)
-    this.onEnvVarsChangedEvent.getEvent()?.event((envVars: SnapshotEnv[]) => {
+    this.#webviewReadyEvent = new EventEmitter()
+    this.#webviewObservable$ = new Observable((subscription) => {
+      const listener = (value: WebviewView) => subscription.next(value)
+      this.#webviewReadyEvent.event(listener)
+    })
+
+    this.#subscriptions$ = combineLatest([
+      this.#webviewObservable$,
+      this.onEnvVarsChangedEvent.getObservable(),
+    ]).subscribe(([, envVars]) => {
       this.updteWebview(envVars)
     })
   }
@@ -46,6 +58,7 @@ export class NotebookPanel extends TanglePanel {
     webviewView.onDidDispose(this.onDidDispose)
 
     this.webview.next(webviewView.webview)
+    this.#webviewReadyEvent.fire(webviewView)
     log.trace(`${this.identifier} webview resolved`)
 
     return Promise.resolve()
@@ -79,7 +92,7 @@ export class NotebookPanel extends TanglePanel {
   }
 
   private updteWebview(vars: SnapshotEnv[]) {
-    console.log('updating webview')
+    console.log('updating webview', this.#webviewView, this.#webviewView?.webview)
     this.#webviewView!.webview.html = this.getHtml(
       this.#webviewView!.webview,
       this.context.extensionUri,
@@ -92,8 +105,8 @@ export class NotebookPanel extends TanglePanel {
   }
 
   private onDidDispose() {
-    console.log('disposing')
     this.#disposables.forEach((disposable) => disposable.dispose())
+    this.#subscriptions$.unsubscribe()
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

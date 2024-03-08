@@ -30,6 +30,8 @@ const COLUMNS = [
   },
 ]
 
+const HIDDEN_COLUMNS = ['resolvedValue']
+
 @customElement('env-store')
 export default class Table extends LitElement {
   protected disposables: Disposable[] = []
@@ -61,7 +63,7 @@ export default class Table extends LitElement {
           }
         })}"
         .displayable="${(row: SnapshotEnv, field: string) => {
-          return !['resolvedValue'].includes(field)
+          return !HIDDEN_COLUMNS.includes(field)
         }}"
         .renderer="${(row: SnapshotEnv, field: string) => {
           switch (field) {
