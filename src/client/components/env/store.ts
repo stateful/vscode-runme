@@ -23,9 +23,6 @@ const COLUMNS = [
     text: 'Origin',
   },
   {
-    text: 'Status',
-  },
-  {
     text: 'Created',
   },
   {
@@ -60,7 +57,6 @@ export default class Table extends LitElement {
             originalValue: variable.originalValue,
             spec: variable.spec,
             origin: variable.origin,
-            status: variable.status,
             createdAt: formatDate(new Date(variable.createTime)),
             updatedAt: formatDate(new Date(variable.updateTime)),
             resolvedValue: variable.resolvedValue,

@@ -116,13 +116,24 @@ export class EnvViewer extends LitElement implements Disposable {
               )
             },
           )}
-          <vscode-button appearance="icon" class="cursor-pointer" @click=${this.onCopy}
-            >${when(
-              this._copied,
-              () => html`${CheckIcon}`,
-              () => html`${CopyIcon}`,
-            )}</vscode-button
-          >
+          ${when(
+            [SnapshotEnvSpecName.Plain, SnapshotEnvSpecName.Opaque].includes(this.spec!),
+            () => {
+              return html` <vscode-button
+                appearance="icon"
+                class="cursor-pointer"
+                @click=${this.onCopy}
+                >${when(
+                  this._copied,
+                  () => html`${CheckIcon}`,
+                  () => html`${CopyIcon}`,
+                )}</vscode-button
+              >`
+            },
+            () => {
+              return html``
+            },
+          )}
         </div>
       </div>
     `
