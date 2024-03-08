@@ -28,6 +28,9 @@ const COLUMNS = [
   {
     text: 'Created',
   },
+  {
+    text: 'Updated',
+  },
 ]
 
 const HIDDEN_COLUMNS = ['resolvedValue']
@@ -56,9 +59,10 @@ export default class Table extends LitElement {
             name: variable.name,
             originalValue: variable.originalValue,
             spec: variable.spec,
-            origin: '', // TODO: Where this come from?
+            origin: variable.origin,
             status: variable.status,
-            createdAt: new Date(), // TODO: Where this come from
+            createdAt: formatDate(new Date(variable.createTime)),
+            updatedAt: formatDate(new Date(variable.updateTime)),
             resolvedValue: variable.resolvedValue,
           }
         })}"
@@ -78,7 +82,7 @@ export default class Table extends LitElement {
               return html`<env-viewer
                 .displaySecret="${displaySecret}"
                 .value="${val}"
-                .spec="${row.spec}"
+                .spec="${row.spec as SnapshotEnvSpecName}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
                 }}"

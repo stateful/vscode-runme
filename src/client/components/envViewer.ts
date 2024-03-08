@@ -36,13 +36,16 @@ export class EnvViewer extends LitElement implements Disposable {
     vscode-button:hover {
       background: var(--vscode-button-hoverBackground);
     }
-    vscode-button:focus {
-      outline: #007fd4 1px solid;
-    }
     .secret-container {
       display: flex;
       gap: 1px;
       justify-content: space-between;
+    }
+
+    .secret-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
     }
 
     .actions {
@@ -79,7 +82,7 @@ export class EnvViewer extends LitElement implements Disposable {
       <div class="secret-container">
         ${when(
           this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
-          () => this.value,
+          () => html`<span class="secret-text">${this.value}</span>`,
           () =>
             Array.from({ length: 20 }, (_, index) => index + 1)
               .map((el) => '*')
