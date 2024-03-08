@@ -21,7 +21,7 @@ Follow these simple steps to set Runme Notebook as your default viewer:
 
 ![for-md](https://github.com/stateful/vscode-runme/assets/36479528/04ef7714-c01e-476b-810c-f31e4b9383ea)
 
-- Lastly, select “Runme Infra Notebooks” as your default markdown viewer.
+- Lastly, select “Runme DevOps Notebooks” as your default markdown viewer.
 
 With these simple steps, you would not have to manually choose Runme Notebook every time you want to view a markdown file; it becomes the automatic and permanent default markdown view.
 
