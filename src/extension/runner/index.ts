@@ -73,12 +73,17 @@ export interface IRunner extends Disposable {
 
   close(): void
 
-  createEnvironment(
-    workspaceRoot?: string,
-    smartEnvStore?: boolean,
-    envs?: string[],
-    metadata?: { [index: string]: string },
-  ): Promise<IRunnerEnvironment>
+  createEnvironment({
+    workspaceRoot,
+    envStoreType,
+    envs,
+    metadata,
+  }: {
+    workspaceRoot?: string
+    envStoreType?: SessionEnvStoreType
+    envs?: string[]
+    metadata?: { [index: string]: string }
+  }): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
 
@@ -214,14 +219,18 @@ export default class GrpcRunner implements IRunner {
     return resolver
   }
 
-  async createEnvironment(
-    workspaceRoot?: string,
-    smartEnvStore?: boolean,
-    envs?: string[],
-    metadata?: { [index: string]: string },
-  ) {
+  async createEnvironment({
+    workspaceRoot,
+    envStoreType,
+    envs,
+    metadata,
+  }: {
+    workspaceRoot?: string
+    envStoreType?: SessionEnvStoreType
+    envs?: string[]
+    metadata?: { [index: string]: string }
+  }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
-    const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
     const request = CreateSessionRequest.create({
       metadata,
       envs,

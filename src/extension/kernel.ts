@@ -78,6 +78,7 @@ import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
 import EnvVarsChangedEvent from './events/envVarsChanged'
+import { SessionEnvStoreType } from './grpc/runnerTypes'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -697,22 +698,22 @@ export class Kernel implements Disposable {
       this.runnerEnv = undefined
 
       const smartEnvStore = this.hasExperimentEnabled('smartEnvStore') ?? false
+      const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
 
       const workspaceRoot = getWorkspaceFolder()?.uri.fsPath
-      const runnerEnv = await this.runner.createEnvironment(
+      const runnerEnv = await this.runner.createEnvironment({
         workspaceRoot,
-        smartEnvStore,
+        envStoreType,
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this server-side
-        processEnviron(),
-      )
+        envs: processEnviron(),
+      })
 
       this.runnerEnv = runnerEnv
 
       this.cellManager.setRunnerEnv(runnerEnv)
 
       const monitor = await this.runner.createMonitorEnv()
-
       const streaming = monitor.monitorEnv(runnerEnv?.getSessionId())
       streaming.responses.onMessage(({ data }) => {
         if (data.oneofKind === 'snapshot') {
