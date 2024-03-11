@@ -23,10 +23,10 @@ const COLUMNS = [
     text: 'Origin',
   },
   {
-    text: 'Created',
+    text: 'Updated',
   },
   {
-    text: 'Updated',
+    text: 'Created',
   },
 ]
 
@@ -57,8 +57,8 @@ export default class Table extends LitElement {
             originalValue: variable.originalValue,
             spec: variable.spec,
             origin: variable.origin,
-            createdAt: formatDate(new Date(variable.createTime)),
             updatedAt: formatDate(new Date(variable.updateTime)),
+            createdAt: formatDate(new Date(variable.createTime)),
             resolvedValue: variable.resolvedValue,
           }
         })}"
@@ -85,6 +85,8 @@ export default class Table extends LitElement {
               ></env-viewer>`
             case 'createdAt':
               return html`${row.createdAt ? formatDate(new Date(row.createdAt)) : ''}`
+            case 'updatedAt':
+              return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
             case 'status':
               const statuses: Record<string, string> = Object.entries(
                 MonitorEnvResponseSnapshot_Status,

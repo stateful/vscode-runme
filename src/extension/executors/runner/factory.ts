@@ -2,7 +2,7 @@ import { TextDocument, NotebookCellExecution } from 'vscode'
 
 import { RunProgramExecution, RunProgramOptions } from '../../runner'
 import { IRunnerEnvironment } from '../../runner/environment'
-import { getAnnotations, getCellRunmeId, getWorkspaceEnvs } from '../../utils'
+import { getAnnotations, getCellRunmeId } from '../../utils'
 import { getCellCwd, getCellProgram } from '../utils'
 
 export async function createRunProgramOptions(
@@ -15,7 +15,6 @@ export async function createRunProgramOptions(
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
     RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
   }
 
   const { interactive, mimeType, background } = getAnnotations(exec.cell)
