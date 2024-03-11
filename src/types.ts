@@ -22,7 +22,7 @@ import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
 import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 import { AWSSupportedView } from './extension/resolvers/awsResolver'
-import { MonitorEnvResponseSnapshot_SnapshotEnv } from './extension/grpc/runnerTypes'
+import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runnerTypes'
 
 export interface SyncSchema {
   onCommand?: {
@@ -546,4 +546,4 @@ export enum SnapshotEnvSpecName {
   Plain = 'Plain',
 }
 
-export type SnapshotEnv = MonitorEnvResponseSnapshot_SnapshotEnv & StringIndexable
+export type SnapshotEnv = MonitorEnvStoreResponseSnapshot_SnapshotEnv & StringIndexable

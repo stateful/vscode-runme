@@ -14,8 +14,8 @@ import {
   GetSessionResponse,
   ListSessionsRequest,
   ListSessionsResponse,
-  MonitorEnvRequest,
-  MonitorEnvResponse,
+  MonitorEnvStoreRequest,
+  MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
 } from '../grpc/runnerTypes'
@@ -116,11 +116,11 @@ export class GrpcRunnerClient implements IRunnerClient {
     return this.client.resolveProgram(input, options)
   }
 
-  monitorEnv(
-    input: MonitorEnvRequest,
+  monitorEnvStore(
+    input: MonitorEnvStoreRequest,
     options?: RpcOptions | undefined,
-  ): ServerStreamingCall<MonitorEnvRequest, MonitorEnvResponse> {
+  ): ServerStreamingCall<MonitorEnvStoreRequest, MonitorEnvStoreResponse> {
     GrpcRunnerClient.assertClient(this.client)
-    return this.client.monitorEnv(input, options)
+    return this.client.monitorEnvStore(input, options)
   }
 }

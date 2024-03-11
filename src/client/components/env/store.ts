@@ -7,7 +7,7 @@ import '../envViewer'
 
 import { formatDate } from '../../utils'
 import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
-import { MonitorEnvResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
+import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
 
 const COLUMNS = [
   {
@@ -89,7 +89,7 @@ export default class Table extends LitElement {
               return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
             case 'status':
               const statuses: Record<string, string> = Object.entries(
-                MonitorEnvResponseSnapshot_Status,
+                MonitorEnvStoreResponseSnapshot_Status,
               ).reduce((acc, curr) => {
                 const [key, value] = curr
                 return { ...acc, [value]: key }

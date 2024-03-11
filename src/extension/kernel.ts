@@ -713,12 +713,15 @@ export class Kernel implements Disposable {
 
       this.cellManager.setRunnerEnv(runnerEnv)
 
-      const monitor = await this.runner.createMonitorEnv()
-      const streaming = monitor.monitorEnv(runnerEnv?.getSessionId())
+      const monitor = await this.runner.createMonitorEnvStore()
+      const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
       streaming.responses.onMessage(({ data }) => {
         if (data.oneofKind === 'snapshot') {
           this.onVarsChangeEvent.dispatch(data.snapshot.envs)
         }
+      })
+      streaming.responses.onError((err) => {
+        log.error('Error monitoring env store', err.message)
       })
 
       // runs this last to not overwrite previous outputs
