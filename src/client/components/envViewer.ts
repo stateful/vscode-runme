@@ -1,8 +1,9 @@
+import { Disposable } from 'vscode'
 import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { EnvVarSpec } from '../../types'
+import { SnapshotEnvSpecName } from '../../types'
 
 import { CopyIcon } from './icons/copy'
 import { EyeClosedIcon } from './icons/eyeClosed'
@@ -10,12 +11,14 @@ import { EyeIcon } from './icons/eye'
 import { CheckIcon } from './icons/check'
 
 @customElement('env-viewer')
-export class EnvViewer extends LitElement {
+export class EnvViewer extends LitElement implements Disposable {
+  protected disposables: Disposable[] = []
+
   @property({ type: String })
   value: string | undefined
 
   @property({ type: String })
-  spec: EnvVarSpec | undefined
+  spec: SnapshotEnvSpecName | undefined
 
   @property({ type: Boolean })
   displaySecret: boolean = false
@@ -33,13 +36,16 @@ export class EnvViewer extends LitElement {
     vscode-button:hover {
       background: var(--vscode-button-hoverBackground);
     }
-    vscode-button:focus {
-      outline: #007fd4 1px solid;
-    }
     .secret-container {
       display: flex;
       gap: 1px;
       justify-content: space-between;
+    }
+
+    .secret-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
     }
 
     .actions {
@@ -67,12 +73,16 @@ export class EnvViewer extends LitElement {
     this.displaySecret = !this.displaySecret
   }
 
+  dispose() {
+    this.disposables.forEach((disposable) => disposable.dispose())
+  }
+
   render() {
     return html`
       <div class="secret-container">
         ${when(
-          this.displaySecret || this.spec === EnvVarSpec.Value,
-          () => this.value,
+          this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
+          () => html`<span class="secret-text">${this.value}</span>`,
           () =>
             Array.from({ length: 20 }, (_, index) => index + 1)
               .map((el) => '*')
@@ -80,7 +90,7 @@ export class EnvViewer extends LitElement {
         )}
         <div class="actions">
           ${when(
-            this.spec === EnvVarSpec.Value,
+            this.spec === SnapshotEnvSpecName.Plain || this.spec === SnapshotEnvSpecName.Secret,
             () => html``,
             () => {
               return when(
@@ -106,13 +116,24 @@ export class EnvViewer extends LitElement {
               )
             },
           )}
-          <vscode-button appearance="icon" class="cursor-pointer" @click=${this.onCopy}
-            >${when(
-              this._copied,
-              () => html`${CheckIcon}`,
-              () => html`${CopyIcon}`,
-            )}</vscode-button
-          >
+          ${when(
+            [SnapshotEnvSpecName.Plain, SnapshotEnvSpecName.Opaque].includes(this.spec!),
+            () => {
+              return html` <vscode-button
+                appearance="icon"
+                class="cursor-pointer"
+                @click=${this.onCopy}
+                >${when(
+                  this._copied,
+                  () => html`${CheckIcon}`,
+                  () => html`${CopyIcon}`,
+                )}</vscode-button
+              >`
+            },
+            () => {
+              return html``
+            },
+          )}
         </div>
       </div>
     `

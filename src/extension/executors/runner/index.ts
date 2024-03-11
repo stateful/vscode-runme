@@ -24,7 +24,7 @@ import {
   RunProgramOptions,
 } from '../../runner'
 import { IRunnerEnvironment } from '../../runner/environment'
-import { getAnnotations, getCellRunmeId, getTerminalByCell, getWorkspaceEnvs } from '../../utils'
+import { getAnnotations, getCellRunmeId, getTerminalByCell } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { isNotebookTerminalEnabledForCell } from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
@@ -446,7 +446,6 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
     RUNME_ID,
-    ...(await getWorkspaceEnvs(runningCell.uri)),
   }
 
   const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)

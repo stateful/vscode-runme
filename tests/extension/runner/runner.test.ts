@@ -20,7 +20,7 @@ import GrpcRunner, {
   RunProgramOptions,
 } from '../../../src/extension/runner'
 import { GrpcRunnerEnvironment } from '../../../src/extension/runner/environment'
-import type { ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
+import { type ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
 import { ActionCommand, RunmeCodeLensProvider } from '../../../src/extension/provider/codelens'
 import { RunmeTaskProvider } from '../../../src/extension/provider/runmeTask'
 import { isWindows } from '../../../src/extension/utils'
@@ -166,7 +166,7 @@ suite('grpc runner client', () => {
 suite('grpc runner', () => {
   test('runner environment dispose is called on runner dispose', async () => {
     const { runner } = createGrpcRunner()
-    const runnerEnv = (await runner.createEnvironment()) as GrpcRunnerEnvironment
+    const runnerEnv = (await runner.createEnvironment({})) as GrpcRunnerEnvironment
 
     const oldEnvDispose = runnerEnv.dispose
 
@@ -184,7 +184,7 @@ suite('grpc runner', () => {
 
   test('runner environment has loaded variables', async () => {
     const { runner } = createGrpcRunner()
-    const runnerEnv = await runner.createEnvironment(['bar=baz'])
+    const runnerEnv = await runner.createEnvironment({ envs: ['bar=baz'] })
 
     const initialEnvs = runnerEnv.initialEnvs()
 
@@ -194,7 +194,7 @@ suite('grpc runner', () => {
 
   test('cannot create runner environment if server not initialized', async () => {
     const { runner } = createGrpcRunner(false)
-    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+    await expect(runner.createEnvironment({})).rejects.toThrowError('Client is not active!')
   })
 
   test('cannot create program session if server not initialized', async () => {
@@ -208,7 +208,7 @@ suite('grpc runner', () => {
     const { runner, server } = createGrpcRunner(true)
 
     server._onClose.fire({ code: null })
-    await expect(runner.createEnvironment()).rejects.toThrowError('Client is not active!')
+    await expect(runner.createEnvironment({})).rejects.toThrowError('Client is not active!')
   })
 
   test('cannot create program session if server closed', async () => {

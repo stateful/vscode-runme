@@ -267,12 +267,13 @@ export class RunmeTaskProvider implements TaskProvider {
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
         const promptMode =
           skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
-        const envs: Record<string, string> = {
-          ...(await getWorkspaceEnvs(Uri.file(filePath))),
-        }
         const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
+        let envs: Record<string, string> = {}
         if (!runnerEnv) {
+          envs = {
+            ...(await getWorkspaceEnvs(Uri.file(filePath))),
+          }
           Object.assign(envs, process.env)
         }
 

@@ -22,6 +22,7 @@ import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
 import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 import { AWSSupportedView } from './extension/resolvers/awsResolver'
+import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runnerTypes'
 
 export interface SyncSchema {
   onCommand?: {
@@ -538,17 +539,11 @@ export enum NotebookAutoSaveSetting {
   No = 'no',
 }
 
-export enum EnvVarSpec {
+export enum SnapshotEnvSpecName {
   Secret = 'Secret',
   Password = 'Password',
   Opaque = 'Opaque',
-  Value = 'Value',
+  Plain = 'Plain',
 }
 
-export interface StoredEnvVar extends StringIndexable {
-  name: string
-  spec: EnvVarSpec
-  size: string
-  value: string
-  createdAt?: Date | undefined
-}
+export type SnapshotEnv = MonitorEnvStoreResponseSnapshot_SnapshotEnv & StringIndexable

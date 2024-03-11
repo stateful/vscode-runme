@@ -21,7 +21,12 @@ import {
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import type { ActiveTerminal, ClientMessage, RunmeTerminal, Serializer } from '../types'
+import {
+  type ActiveTerminal,
+  type ClientMessage,
+  type RunmeTerminal,
+  type Serializer,
+} from '../types'
 import {
   ClientMessages,
   DEFAULT_LANGUAGEID,
@@ -46,6 +51,7 @@ import {
   getTerminalRunmeId,
   suggestCategories,
   handleNotebookAutosaveSettings,
+  getWorkspaceFolder,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
@@ -71,6 +77,8 @@ import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
+import EnvVarsChangedEvent from './events/envVarsChanged'
+import { SessionEnvStoreType } from './grpc/runnerTypes'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -103,12 +111,18 @@ export class Kernel implements Disposable {
   protected category?: string
   protected panelManager: PanelManager
 
+  readonly onVarsChangeEvent: EnvVarsChangedEvent
+
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
+
+    this.onVarsChangeEvent = new EnvVarsChangedEvent()
+
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
     this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
+    this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -138,6 +152,7 @@ export class Kernel implements Disposable {
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
       this.panelManager,
+      this.onVarsChangeEvent,
     )
   }
 
@@ -237,7 +252,6 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
-    console.log('received message', message.type)
     // Check if the message type is a cloud API request and platform authentication is enabled.
     if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
       // Remap the message type to platform API request if platform authentication is enabled.
@@ -683,15 +697,32 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
-      const runnerEnv = await this.runner.createEnvironment(
+      const smartEnvStore = this.hasExperimentEnabled('smartEnvStore') ?? false
+      const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
+
+      const workspaceRoot = getWorkspaceFolder()?.uri.fsPath
+      const runnerEnv = await this.runner.createEnvironment({
+        workspaceRoot,
+        envStoreType,
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this server-side
-        processEnviron(),
-      )
+        envs: processEnviron(),
+      })
 
       this.runnerEnv = runnerEnv
 
       this.cellManager.setRunnerEnv(runnerEnv)
+
+      const monitor = await this.runner.createMonitorEnvStore()
+      const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
+      streaming.responses.onMessage(({ data }) => {
+        if (data.oneofKind === 'snapshot') {
+          this.onVarsChangeEvent.dispatch(data.snapshot.envs)
+        }
+      })
+      streaming.responses.onError((err) => {
+        log.error('Error monitoring env store', err.message)
+      })
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')

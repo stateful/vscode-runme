@@ -16,18 +16,21 @@ import {
   ExecuteStop,
   GetSessionRequest,
   ResolveProgramRequest_Mode,
+  SessionEnvStoreType,
   Winsize,
 } from '../grpc/runnerTypes'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
+import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
+import { GrpcRunnerMonitorEnvStore as GrpcRunnerMonitorEnvStore } from './monitorEnv'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -70,12 +73,21 @@ export interface IRunner extends Disposable {
 
   close(): void
 
-  createEnvironment(
-    envs?: string[],
-    metadata?: { [index: string]: string },
-  ): Promise<IRunnerEnvironment>
+  createEnvironment({
+    workspaceRoot,
+    envStoreType,
+    envs,
+    metadata,
+  }: {
+    workspaceRoot?: string
+    envStoreType?: SessionEnvStoreType
+    envs?: string[]
+    metadata?: { [index: string]: string }
+  }): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
+
+  createMonitorEnvStore(): Promise<GrpcRunnerMonitorEnvStore>
 
   createProgramResolver(
     mode: ResolveProgramRequest_Mode,
@@ -182,6 +194,12 @@ export default class GrpcRunner implements IRunner {
     this.register(this.client)
   }
 
+  async createMonitorEnvStore(): Promise<GrpcRunnerMonitorEnvStore> {
+    const monitor = new GrpcRunnerMonitorEnvStore(this.client)
+    this.registerChild(monitor)
+    return monitor
+  }
+
   async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
     const session = new GrpcRunnerProgramSession(this.client, opts)
 
@@ -201,10 +219,26 @@ export default class GrpcRunner implements IRunner {
     return resolver
   }
 
-  async createEnvironment(envs?: string[], metadata?: { [index: string]: string }) {
+  async createEnvironment({
+    workspaceRoot,
+    envStoreType,
+    envs,
+    metadata,
+  }: {
+    workspaceRoot?: string
+    envStoreType?: SessionEnvStoreType
+    envs?: string[]
+    metadata?: { [index: string]: string }
+  }) {
+    const envLoadOrder = getEnvWorkspaceFileOrder()
     const request = CreateSessionRequest.create({
       metadata,
       envs,
+      project: {
+        root: workspaceRoot,
+        envLoadOrder,
+      },
+      envStoreType,
     })
 
     try {
