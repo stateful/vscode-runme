@@ -9,7 +9,7 @@ import '../tooltip'
 
 import { formatDate } from '../../utils'
 import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
-import { ErrorIcon } from '../icons/error'
+import { CustomErrorIcon } from '../icons/error'
 
 const COLUMNS = [
   {
@@ -68,6 +68,13 @@ export default class Table extends LitElement {
           return !HIDDEN_COLUMNS.includes(field)
         }}"
         .hasErrors="${(row: SnapshotEnv) => {
+          if (
+            [SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
+              row.spec as SnapshotEnvSpecName,
+            )
+          ) {
+            return false
+          }
           return !row.originalValue
         }}"
         .renderer="${(row: SnapshotEnv, field: string) => {
@@ -95,12 +102,15 @@ export default class Table extends LitElement {
               return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
             case 'name':
               return when(
-                !row.originalValue,
+                !row.originalValue &&
+                  ![SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
+                    row.spec as SnapshotEnvSpecName,
+                  ),
                 () =>
                   html`<div class="flex">
                     <tooltip-text
                       .tooltipText="This ${row.spec} is required but found an empty value"
-                      .value="${html`${ErrorIcon}`}"
+                      .value="${html`${CustomErrorIcon(10, 10)}`}"
                     ></tooltip-text>
                     <div>${row[field]}</div>
                   </div>`,

@@ -147,6 +147,8 @@ export class Table extends LitElement {
 
     .flex {
       display: flex;
+      align-items: baseline;
+      gap: 1px;
     }
   `
 

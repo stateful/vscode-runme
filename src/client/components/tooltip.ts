@@ -8,7 +8,7 @@ export class Tooltip extends LitElement {
   tooltipText: string | undefined
 
   @property({ type: String })
-  value: string | TemplateResult | undefined
+  value: string | TemplateResult<1> | undefined
 
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
