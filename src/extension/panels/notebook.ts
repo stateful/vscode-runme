@@ -33,7 +33,7 @@ export class NotebookPanel extends TanglePanel {
       this.#webviewObservable$,
       this.onEnvVarsChangedEvent.getObservable(),
     ]).subscribe(([, envVars]) => {
-      this.updteWebview(envVars)
+      this.updateWebview(envVars)
     })
   }
 
@@ -64,6 +64,13 @@ export class NotebookPanel extends TanglePanel {
     return Promise.resolve()
   }
 
+  private sanitizeVariables(variables: SnapshotEnv[]) {
+    variables.forEach((variable: SnapshotEnv) => {
+      variable.originalValue = variable.originalValue.replace(/'/g, '&#39;')
+    })
+    return variables
+  }
+
   private getHtml(webview: Webview, extensionUri: Uri, variables: SnapshotEnv[]) {
     const scripts = [
       {
@@ -86,12 +93,12 @@ export class NotebookPanel extends TanglePanel {
       ${scriptTags}
     </head>
     <body>
-    <env-store variables='${JSON.stringify(variables)}'></env-store>
+    <env-store variables='${JSON.stringify(this.sanitizeVariables(variables))}'></env-store>
     </body>
   </html>`
   }
 
-  private updteWebview(vars: SnapshotEnv[]) {
+  private updateWebview(vars: SnapshotEnv[]) {
     console.log('updating webview', this.#webviewView, this.#webviewView?.webview)
     this.#webviewView!.webview.html = this.getHtml(
       this.#webviewView!.webview,
