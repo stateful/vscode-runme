@@ -1,6 +1,7 @@
 mutation CreateCellExecution($input: CreateCellExecutionInput!) {
   createCellExecution(input: $input) {
-   id,
+   id
    htmlUrl
+   exitCode
   }
 }
