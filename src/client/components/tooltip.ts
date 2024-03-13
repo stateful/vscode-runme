@@ -5,7 +5,7 @@ import { when } from 'lit/directives/when.js'
 @customElement('tooltip-text')
 export class Tooltip extends LitElement {
   @property({ type: String })
-  tooltipText: string | undefined
+  tooltipText: string | TemplateResult<1> | undefined
 
   @property({ type: String })
   value: string | TemplateResult<1> | undefined
@@ -45,6 +45,11 @@ export class Tooltip extends LitElement {
 
     .tooltip:not(:hover) .tooltiptext {
       transition-delay: 0s;
+    }
+
+    .flex {
+      display: flex;
+      flex-direction: column;
     }
   `
 
