@@ -1,13 +1,17 @@
 import { Disposable } from 'vscode'
 import { LitElement, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { when } from 'lit/directives/when.js'
 
 import '../table'
 import '../envViewer'
+import '../tooltip'
 
 import { formatDate } from '../../utils'
 import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
-import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
+import { CustomErrorIcon } from '../icons/error'
+
+const RUNME_ENV_VARS_NAME = '__'
 
 const COLUMNS = [
   {
@@ -65,6 +69,17 @@ export default class Table extends LitElement {
         .displayable="${(row: SnapshotEnv, field: string) => {
           return !HIDDEN_COLUMNS.includes(field)
         }}"
+        .hasErrors="${(row: SnapshotEnv) => {
+          if (
+            [SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
+              row.spec as SnapshotEnvSpecName,
+            ) ||
+            row.name === RUNME_ENV_VARS_NAME
+          ) {
+            return false
+          }
+          return !row.originalValue
+        }}"
         .renderer="${(row: SnapshotEnv, field: string) => {
           switch (field) {
             case 'originalValue':
@@ -78,6 +93,7 @@ export default class Table extends LitElement {
               return html`<env-viewer
                 .displaySecret="${displaySecret}"
                 .value="${val}"
+                .maskedValue="${row.resolvedValue}"
                 .spec="${row.spec as SnapshotEnvSpecName}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
@@ -87,15 +103,23 @@ export default class Table extends LitElement {
               return html`${row.createdAt ? formatDate(new Date(row.createdAt)) : ''}`
             case 'updatedAt':
               return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
-            case 'status':
-              const statuses: Record<string, string> = Object.entries(
-                MonitorEnvStoreResponseSnapshot_Status,
-              ).reduce((acc, curr) => {
-                const [key, value] = curr
-                return { ...acc, [value]: key }
-              }, {})
-
-              return html`${statuses[row.status]}`
+            case 'name':
+              return when(
+                !row.originalValue &&
+                  ![SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
+                    row.spec as SnapshotEnvSpecName,
+                  ) &&
+                  row.name !== RUNME_ENV_VARS_NAME,
+                () =>
+                  html`<div class="flex">
+                    <tooltip-text
+                      .tooltipText="This ${row.spec} is required but found an empty value"
+                      .value="${html`${CustomErrorIcon(10, 10)}`}"
+                    ></tooltip-text>
+                    <div>${row[field]}</div>
+                  </div>`,
+                () => html`${row[field]}`,
+              )
             default:
               return html`${row[field]}`
           }

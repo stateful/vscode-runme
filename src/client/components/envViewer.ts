@@ -10,6 +10,8 @@ import { EyeClosedIcon } from './icons/eyeClosed'
 import { EyeIcon } from './icons/eye'
 import { CheckIcon } from './icons/check'
 
+import './tooltip'
+
 @customElement('env-viewer')
 export class EnvViewer extends LitElement implements Disposable {
   protected disposables: Disposable[] = []
@@ -22,6 +24,9 @@ export class EnvViewer extends LitElement implements Disposable {
 
   @property({ type: Boolean })
   displaySecret: boolean = false
+
+  @property({ type: String })
+  maskedValue?: string | undefined
 
   @state()
   _copied: boolean = false
@@ -46,6 +51,7 @@ export class EnvViewer extends LitElement implements Disposable {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: normal;
+      max-height: 100px;
     }
 
     .actions {
@@ -78,19 +84,38 @@ export class EnvViewer extends LitElement implements Disposable {
   }
 
   render() {
+    const hideEyeButton = [
+      undefined,
+      SnapshotEnvSpecName.Plain,
+      SnapshotEnvSpecName.Secret,
+      SnapshotEnvSpecName.Password,
+    ].includes(this.spec)
     return html`
       <div class="secret-container">
         ${when(
           this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
-          () => html`<span class="secret-text">${this.value}</span>`,
           () =>
-            Array.from({ length: 20 }, (_, index) => index + 1)
-              .map((el) => '*')
-              .join(''),
+            html`<tooltip-text
+              class="secret-text"
+              .tooltipText="${this.value}"
+              .value="${this.value}"
+            ></tooltip-text>`,
+          () =>
+            when(
+              this.maskedValue,
+              () => {
+                return html`<span class="secret-text">${this.maskedValue}</span>`
+              },
+              () => {
+                return Array.from({ length: 20 }, (_, index) => index + 1)
+                  .map((el) => '*')
+                  .join('')
+              },
+            ),
         )}
         <div class="actions">
           ${when(
-            this.spec === SnapshotEnvSpecName.Plain || this.spec === SnapshotEnvSpecName.Secret,
+            hideEyeButton,
             () => html``,
             () => {
               return when(

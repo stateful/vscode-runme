@@ -18,6 +18,7 @@ export class Table extends LitElement {
   @property({ type: Object })
   renderer?: (row: any, field: string) => TemplateResult<1>
   displayable?: (row: any, field: string) => boolean
+  hasErrors?: (row: any) => boolean
 
   /* eslint-disable */
   static styles = css`
@@ -138,6 +139,17 @@ export class Table extends LitElement {
       text-overflow: ellipsis;
       overflow: hidden;
     }
+
+    .row-error {
+      background-color: var(--vscode-inputValidation-errorBackground);
+      border: solid 2px var(--vscode-inputValidation-errorBorder);
+    }
+
+    .flex {
+      display: flex;
+      align-items: baseline;
+      gap: 1px;
+    }
   `
 
   render() {
@@ -152,7 +164,13 @@ export class Table extends LitElement {
       <tbody>
         ${this.rows?.map(
           (row) =>
-            html`<tr>
+            html`<tr
+              class="${when(
+                this.hasErrors && this.hasErrors(row),
+                () => 'row-error',
+                () => '',
+              )}"
+            >
               ${Object.keys(row).map((key) =>
                 when(
                   this.displayable && this.displayable(row, key),
