@@ -34,7 +34,7 @@ const COLUMNS = [
   },
 ]
 
-const HIDDEN_COLUMNS = ['resolvedValue']
+const HIDDEN_COLUMNS = ['resolvedValue', 'errors']
 
 @customElement('env-store')
 export default class Table extends LitElement {
@@ -64,21 +64,17 @@ export default class Table extends LitElement {
             updatedAt: formatDate(new Date(variable.updateTime)),
             createdAt: formatDate(new Date(variable.createTime)),
             resolvedValue: variable.resolvedValue,
+            errors: variable.errors,
           }
         })}"
         .displayable="${(row: SnapshotEnv, field: string) => {
           return !HIDDEN_COLUMNS.includes(field)
         }}"
         .hasErrors="${(row: SnapshotEnv) => {
-          if (
-            [SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
-              row.spec as SnapshotEnvSpecName,
-            ) ||
-            row.name === RUNME_ENV_VARS_NAME
-          ) {
+          if (!row.errors?.length || row.name === RUNME_ENV_VARS_NAME) {
             return false
           }
-          return !row.originalValue
+          return true
         }}"
         .renderer="${(row: SnapshotEnv, field: string) => {
           switch (field) {
@@ -105,15 +101,15 @@ export default class Table extends LitElement {
               return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
             case 'name':
               return when(
-                !row.originalValue &&
-                  ![SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
-                    row.spec as SnapshotEnvSpecName,
-                  ) &&
-                  row.name !== RUNME_ENV_VARS_NAME,
+                row.errors?.length,
                 () =>
                   html`<div class="flex">
                     <tooltip-text
-                      .tooltipText="This ${row.spec} is required but found an empty value"
+                      .tooltipText="${html`<div class="flex">
+                        ${row.errors.map(
+                          (error) => html`<span>${CustomErrorIcon(10, 10)}${error.message}</span>`,
+                        )}
+                      </div>`}"
                       .value="${html`${CustomErrorIcon(10, 10)}`}"
                     ></tooltip-text>
                     <div>${row[field]}</div>
