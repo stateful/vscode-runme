@@ -11,6 +11,8 @@ import { formatDate } from '../../utils'
 import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
 import { CustomErrorIcon } from '../icons/error'
 
+const RUNME_ENV_VARS_NAME = '__'
+
 const COLUMNS = [
   {
     text: 'Name',
@@ -71,7 +73,8 @@ export default class Table extends LitElement {
           if (
             [SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
               row.spec as SnapshotEnvSpecName,
-            )
+            ) ||
+            row.name === RUNME_ENV_VARS_NAME
           ) {
             return false
           }
@@ -105,7 +108,8 @@ export default class Table extends LitElement {
                 !row.originalValue &&
                   ![SnapshotEnvSpecName.Password, SnapshotEnvSpecName.Secret].includes(
                     row.spec as SnapshotEnvSpecName,
-                  ),
+                  ) &&
+                  row.name !== RUNME_ENV_VARS_NAME,
                 () =>
                   html`<div class="flex">
                     <tooltip-text
