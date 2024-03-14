@@ -39,7 +39,7 @@ import IServer from '../server/runmeServer'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
-import { NOTEBOOK_AUTOSAVE_ON } from '../../constants'
+import { NOTEBOOK_AUTOSAVE_ON, NOTEBOOK_RUN_WITH_PROMPTS } from '../../constants'
 import ContextState from '../contextState'
 
 const log = getLogger('Commands')
@@ -357,4 +357,10 @@ export async function toggleAutosave(autoSaveIsOn: boolean) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+}
+
+export async function runCellWithPrompts() {
+  await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
+  await commands.executeCommand('notebook.cell.execute')
+  await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, false)
 }

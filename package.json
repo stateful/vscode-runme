@@ -182,13 +182,13 @@
       {
         "command": "runme.runCategory",
         "category": "Runme",
-        "title": "Run by Category",
+        "title": "Execute by Category",
         "icon": "$(group-by-ref-type)"
       },
       {
         "command": "runme.runCellCategory",
         "category": "Runme",
-        "title": "Run cells with the same Category",
+        "title": "Execute cells with the same Category",
         "icon": "$(group-by-ref-type)"
       },
       {
@@ -223,6 +223,12 @@
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
         "shortTitle": "Reset Session"
+      },
+      {
+        "command": "runme.runWithPrompts",
+        "category": "Runme",
+        "title": "Execute and always prompt for input",
+        "icon": "$(terminal)"
       }
     ],
     "menus": {
@@ -368,6 +374,11 @@
           "command": "runme.runCellCategory",
           "group": "navigation",
           "when": "notebookType == runme && notebookHasCategories"
+        },
+        {
+          "command": "runme.runWithPrompts",
+          "group": "navigation",
+          "when": "notebookType == runme"
         }
       ]
     },
