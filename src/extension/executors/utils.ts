@@ -55,17 +55,20 @@ export interface CommandExportExtractMatch {
   match: string
   regexpMatch?: RegExpExecArray
   hasStringValue: boolean
+  isPassword?: boolean
 }
 
 export async function promptUserForVariable(
   key: string,
   placeHolder: string,
   hasStringValue: boolean,
+  password: boolean,
 ): Promise<string | undefined> {
   return await window.showInputBox({
     title: `Set Environment Variable "${key}"`,
     ignoreFocusOut: true,
     placeHolder,
+    password,
     prompt: 'Your shell script wants to set some environment variables, please enter them here.',
     ...(hasStringValue ? { value: placeHolder } : {}),
   })

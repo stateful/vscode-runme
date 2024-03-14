@@ -517,6 +517,7 @@ export async function resolveRunProgramExecution(
       value: v.resolvedValue || v.originalValue || 'Enter a value please',
       match: v.name,
       hasStringValue: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
+      isPassword: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET,
     }
   })
 
@@ -542,7 +543,15 @@ export async function resolveRunProgramExecution(
   let offset = 0
 
   // todo(sebastian): align this with grpc types
-  for (const { hasStringValue, key, match, type, value, regexpMatch } of exportMatches) {
+  for (const {
+    hasStringValue,
+    key,
+    match,
+    type,
+    value,
+    isPassword,
+    regexpMatch,
+  } of exportMatches) {
     let userValue: string | undefined
 
     let skip = false
@@ -550,12 +559,12 @@ export async function resolveRunProgramExecution(
     switch (type) {
       case 'prompt':
         {
-          // if (skipEnvs?.has(key)) {
-          //   skip = true
-          //   break
-          // }
-
-          const userInput = await promptUserForVariable(key, value, hasStringValue)
+          const userInput = await promptUserForVariable(
+            key,
+            value,
+            hasStringValue,
+            isPassword ?? false,
+          )
 
           if (userInput === undefined) {
             throw new Error('Cannot run cell due to canceled prompt')
