@@ -226,7 +226,7 @@ export async function retrieveShellCommand(
        * VS Code, see https://github.com/microsoft/vscode/issues/98098
        */
       stateEnv[key] = populateEnvVar(
-        (await promptUserForVariable(key, value, hasStringValue)) ?? '',
+        (await promptUserForVariable(key, value, hasStringValue, false)) ?? '',
         { ...process.env, ...stateEnv },
       )
     } else {

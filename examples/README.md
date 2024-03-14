@@ -75,7 +75,7 @@ Please see more examples, including configuration languages further down.
 Within single lines:
 
 ```sh {"id":"01HF7B0KK32HBQ9X4AAXYPNV60"}
-$ export DENO_ACCESS_TOKEN="<insert-token-here>"
+$ export DENO_ACCESS_TOKEN=Insert your secret token here
 ```
 
 verify:
