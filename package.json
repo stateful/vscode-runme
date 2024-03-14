@@ -378,7 +378,7 @@
         {
           "command": "runme.runWithPrompts",
           "group": "navigation",
-          "when": "notebookType == runme"
+          "when": "notebookType == runme && notebookCellType == 'code'"
         }
       ]
     },

@@ -254,6 +254,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
     await commands.executeCommand('workbench.action.files.save')
     await kernel.newRunnerEnvironment()
     await commands.executeCommand('workbench.action.files.save')
+    await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, false)
   }
 }
 
@@ -362,5 +363,4 @@ export async function toggleAutosave(autoSaveIsOn: boolean) {
 export async function runCellWithPrompts() {
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
   await commands.executeCommand('notebook.cell.execute')
-  await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, false)
 }
