@@ -14,7 +14,7 @@ import { Subject, debounceTime } from 'rxjs'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import getLogger from '../../logger'
-import { ClientMessages } from '../../../constants'
+import { ClientMessages, NOTEBOOK_RUN_WITH_PROMPTS } from '../../../constants'
 import { ClientMessage } from '../../../types'
 import { PLATFORM_OS } from '../../constants'
 import {
@@ -46,6 +46,7 @@ import {
 } from '../utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
 import { IKernelExecutorOptions } from '..'
+import ContextState from '../../contextState'
 
 import { createRunProgramOptions } from './factory'
 
@@ -436,12 +437,16 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   runningCell,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
   const { promptEnv } = getAnnotations(exec.cell)
+  const forceInputPrompt = ContextState.getKey(NOTEBOOK_RUN_WITH_PROMPTS)
   const script = exec.cell.document.getText()
 
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
-  const promptMode =
-    skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
+  const promptMode = forceInputPrompt
+    ? ResolveProgramRequest_Mode.PROMPT_ALL
+    : skipPromptEnvDocumentLevel === false
+      ? promptEnv
+      : ResolveProgramRequest_Mode.SKIP_ALL
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {

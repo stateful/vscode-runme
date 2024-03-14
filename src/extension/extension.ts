@@ -56,6 +56,7 @@ import {
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
+  runCellWithPrompts,
 } from './commands'
 import { WasmSerializer, GrpcSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -237,6 +238,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
+      RunmeExtension.registerCommand('runme.runWithPrompts', () => runCellWithPrompts()),
       runmeTaskProvider,
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
