@@ -1,5 +1,5 @@
 import { TelemetryReporter } from 'vscode-telemetry'
-import vscode from 'vscode'
+import { window } from 'vscode'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -67,7 +67,7 @@ export default async function saveCellExecution(
     let notebookInput: CreateNotebookInput | undefined
 
     if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
-      const fileName = vscode.window.activeTextEditor?.document.fileName
+      const fileName = window.activeTextEditor?.document.fileName
 
       notebookInput = {
         fileName,
