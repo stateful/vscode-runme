@@ -1,4 +1,5 @@
 import { TelemetryReporter } from 'vscode-telemetry'
+import vscode from 'vscode'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -13,7 +14,6 @@ import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
 import { getAnnotations, getCellRunmeId, getPlatformAuthSession } from '../../utils'
-
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 export default async function saveCellExecution(
@@ -67,7 +67,10 @@ export default async function saveCellExecution(
     let notebookInput: CreateNotebookInput | undefined
 
     if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
+      const fileName = vscode.window.activeTextEditor?.document.fileName
+
       notebookInput = {
+        fileName,
         id: fmParsed?.runme?.id,
         runmeVersion: fmParsed?.runme?.version,
       }
