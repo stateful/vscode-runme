@@ -94,12 +94,7 @@ export class EnvViewer extends LitElement implements Disposable {
       <div class="secret-container">
         ${when(
           this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
-          () =>
-            html`<tooltip-text
-              class="secret-text"
-              .tooltipText="${this.value}"
-              .value="${this.value}"
-            ></tooltip-text>`,
+          () => html`<span class="secret-text">${this.value}</span>`,
           () =>
             when(
               this.maskedValue,
