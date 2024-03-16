@@ -25,6 +25,14 @@ vi.mock('vscode', async () => {
         Code: 2,
       },
     },
+    window: {
+      ...mocked.window,
+      activeTextEditor: {
+        document: {
+          fileName: '/foo/bar/README.md',
+        },
+      },
+    },
   }
 })
 

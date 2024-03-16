@@ -67,6 +67,9 @@ export type CellExecution = {
   isOwner?: Maybe<Scalars['Boolean']['output']>;
   languageId?: Maybe<Scalars['String']['output']>;
   lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
+  maskedInput?: Maybe<Scalars['String']['output']>;
+  maskedStderr?: Maybe<Scalars['Bytes']['output']>;
+  maskedStdout?: Maybe<Scalars['Bytes']['output']>;
   metadata?: Maybe<Metadata>;
   notebook?: Maybe<Notebook>;
   notebookId?: Maybe<Scalars['String']['output']>;
@@ -78,6 +81,7 @@ export type CellExecution = {
   stderrData?: Maybe<Scalars['Bytes']['output']>;
   stdout?: Maybe<Scalars['Bytes']['output']>;
   stdoutData?: Maybe<Scalars['Bytes']['output']>;
+  unmaskable: Scalars['Boolean']['output'];
   updateTime?: Maybe<Scalars['DateTime']['output']>;
   user: User;
   userId: Scalars['String']['output'];
@@ -197,6 +201,7 @@ export type CreateGroupUserInput = {
 };
 
 export type CreateNotebookInput = {
+  fileName?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['String']['input'];
   runmeVersion: Scalars['String']['input'];
 };
@@ -606,6 +611,7 @@ export type ShareCellExecutionInput = {
   groupIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   notify?: InputMaybe<Scalars['Boolean']['input']>;
   shareType: ShareType;
+  unmaskable: Scalars['Boolean']['input'];
   userEmails?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
