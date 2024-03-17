@@ -21,7 +21,7 @@ export class Tooltip extends LitElement {
       border-radius: 5px;
       position: absolute;
       z-index: 100;
-      box-shadow: rgba(0, 0, 0, 0.16) 0px 0px 8px 2px;
+      box-shadow: var(--vscode-inputValidation-errorBorder) 0px 0px 8px 2px;
     }
 
     .tooltip .tooltiptext::after {
