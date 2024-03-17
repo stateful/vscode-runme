@@ -10,6 +10,7 @@ import '../tooltip'
 import { formatDate } from '../../utils'
 import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
 import { CustomErrorIcon } from '../icons/error'
+import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
 
 const RUNME_ENV_VARS_NAME = '__'
 
@@ -34,7 +35,7 @@ const COLUMNS = [
   },
 ]
 
-const HIDDEN_COLUMNS = ['resolvedValue', 'errors']
+const HIDDEN_COLUMNS = ['resolvedValue', 'errors', 'status']
 
 @customElement('env-store')
 export default class Table extends LitElement {
@@ -58,6 +59,7 @@ export default class Table extends LitElement {
         .rows="${this.variables?.map((variable: SnapshotEnv) => {
           return {
             name: variable.name,
+            status: variable.status,
             originalValue: variable.originalValue,
             spec: variable.spec,
             origin: variable.origin,
@@ -81,15 +83,21 @@ export default class Table extends LitElement {
             case 'originalValue':
               const displaySecret =
                 row.spec === SnapshotEnvSpecName.Secret || row.spec === SnapshotEnvSpecName.Plain
-              const val =
+              let val =
                 row.spec === SnapshotEnvSpecName.Secret
-                  ? `${row.originalValue} [masked]`
-                  : row.originalValue
+                  ? `${row.resolvedValue} [masked]`
+                  : row.resolvedValue
+
+              let resolveValue = row.resolvedValue
+              if (row.status === MonitorEnvStoreResponseSnapshot_Status.UNSPECIFIED) {
+                val = '[unset]'
+                resolveValue = '[unset]'
+              }
 
               return html`<env-viewer
                 .displaySecret="${displaySecret}"
                 .value="${val}"
-                .maskedValue="${row.resolvedValue}"
+                .maskedValue="${resolveValue}"
                 .spec="${row.spec as SnapshotEnvSpecName}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
