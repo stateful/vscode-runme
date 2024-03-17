@@ -88,16 +88,18 @@ export default class Table extends LitElement {
                   ? `${row.resolvedValue} [masked]`
                   : row.resolvedValue
 
-              let resolveValue = row.resolvedValue
+              let resolvedValue = row.resolvedValue
               if (row.status === MonitorEnvStoreResponseSnapshot_Status.UNSPECIFIED) {
                 val = '[unset]'
-                resolveValue = '[unset]'
+                resolvedValue = '[unset]'
+              } else if (row.status === MonitorEnvStoreResponseSnapshot_Status.HIDDEN) {
+                val = row.originalValue
               }
 
               return html`<env-viewer
                 .displaySecret="${displaySecret}"
                 .value="${val}"
-                .maskedValue="${resolveValue}"
+                .maskedValue="${resolvedValue}"
                 .spec="${row.spec as SnapshotEnvSpecName}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
