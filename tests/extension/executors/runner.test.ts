@@ -3,10 +3,15 @@ import { window } from 'vscode'
 
 import {
   prepareCommandSeq,
+  promptVariablesAsync,
   resolveProgramOptionsVercel,
   resolveRunProgramExecution,
 } from '../../../src/extension/executors/runner'
 import { createRunProgramOptions } from '../../../src/extension/executors/runner/factory'
+import {
+  ResolveProgramResponse_Status,
+  ResolveProgramResponse_VarResult,
+} from '../../../src/extension/grpc/runnerTypes'
 
 vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')
@@ -24,6 +29,14 @@ const MockRunner: any = {
     resolveProgram: vi.fn().mockResolvedValue({ response: { vars: [] } }),
   }),
 }
+
+vi.mock('../../../src/extension/executors/utils', async (importOriginal) => {
+  const actual = (await importOriginal()) as any
+  return {
+    ...actual,
+    promptUserForVariable: vi.fn().mockResolvedValue('mockedUserInput'),
+  }
+})
 
 const MockRunnerEnv: any = {
   getSessionId: vi.fn().mockReturnValue('mock-session-id'),
@@ -313,5 +326,71 @@ suite('prepareCmdSeq', () => {
       'echo 2',
       'echo 4',
     ])
+  })
+})
+
+suite('promptVariablesAsync function', () => {
+  // Define individual tests within the suite
+  type VarResult = ResolveProgramResponse_VarResult
+
+  test('resolved status', async () => {
+    const blocks = []
+    const variable = {
+      status: ResolveProgramResponse_Status.RESOLVED,
+      resolvedValue: 'resolvedValue',
+      name: 'variableName',
+    } as VarResult
+
+    await promptVariablesAsync(blocks, variable)
+
+    expect(blocks).toEqual([{ type: 'single', content: 'export variableName="resolvedValue"' }])
+  })
+
+  test('unresolved with message status', async () => {
+    const blocks = []
+    const variable = {
+      status: ResolveProgramResponse_Status.UNRESOLVED_WITH_MESSAGE,
+      name: 'variableName',
+    } as VarResult
+
+    await promptVariablesAsync(blocks, variable)
+
+    expect(blocks).toEqual([{ type: 'single', content: 'export variableName="mockedUserInput"' }])
+  })
+
+  test('unresolved with placeholder status', async () => {
+    const blocks = []
+    const variable = {
+      status: ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
+      name: 'variableName',
+    } as VarResult
+
+    await promptVariablesAsync(blocks, variable)
+
+    expect(blocks).toEqual([{ type: 'single', content: 'export variableName="mockedUserInput"' }])
+  })
+
+  test('unresolved with secret status', async () => {
+    const blocks = []
+    const variable = {
+      status: ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET,
+      name: 'variableName',
+    } as VarResult
+
+    await promptVariablesAsync(blocks, variable)
+
+    expect(blocks).toEqual([{ type: 'single', content: 'export variableName="mockedUserInput"' }])
+  })
+
+  test('unspecified status', async () => {
+    const blocks = []
+    const variable = {
+      status: ResolveProgramResponse_Status.UNSPECIFIED,
+      name: 'variableName',
+    } as VarResult
+
+    await promptVariablesAsync(blocks, variable)
+
+    expect(blocks).toEqual([])
   })
 })

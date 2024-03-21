@@ -556,7 +556,7 @@ type CommandBlock =
       content: string
     }
 
-async function promptVariablesAsync(
+export async function promptVariablesAsync(
   blocks: CommandBlock[],
   variable: VarResult,
 ): Promise<CommandBlock[]> {
