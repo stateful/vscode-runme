@@ -33,6 +33,7 @@ import {
   CommandMode,
   ResolveProgramRequest_Mode,
   ResolveProgramResponse_Status,
+  ResolveProgramResponse_VarResult,
 } from '../../grpc/runnerTypes'
 import { closeTerminalByEnvID } from '../task'
 import {
@@ -42,7 +43,6 @@ import {
   isShellLanguage,
   // getCommandExportExtractMatches,
   promptUserForVariable,
-  CommandExportExtractMatch,
 } from '../utils'
 import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
 import { IKernelExecutorOptions } from '..'
@@ -64,6 +64,8 @@ interface IKernelRunnerOptions extends IKernelExecutorOptions {
 }
 
 type IKernelRunner = (executor: IKernelRunnerOptions) => Promise<boolean>
+
+type VarResult = ResolveProgramResponse_VarResult
 
 export const executeRunner: IKernelRunner = async ({
   kernel,
@@ -514,94 +516,18 @@ export async function resolveRunProgramExecution(
   // todo(sebastian): removing $-prompts from shell scripts should move kernel-side
   const rawCommands = prepareCommandSeq(script, languageId)
   const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
-
-  const exportMatches = result.response?.vars.map((v) => {
-    return <CommandExportExtractMatch>{
-      type: v.status !== ResolveProgramResponse_Status.RESOLVED ? 'prompt' : 'direct',
-      key: v.name,
-      value: v.resolvedValue || v.originalValue || 'Enter a value please',
-      match: v.name,
-      hasStringValue: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER,
-      isPassword: v.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET,
-    }
-  })
+  const vars = result.response.vars
 
   // todo(sebastian): once normalization is all kernel-side, it should return commands
   script = result.response.script ?? script
 
   // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
-  type CommandBlock =
-    | {
-        type: 'block'
-        content: string
-      }
-    | {
-        type: 'single'
-        content: string
-      }
-
-  const parsedCommandBlocks: CommandBlock[] = []
-
-  // todo(sebastian): do we still need this? should be handled server-side
-  // const skipEnvs = new Set([...(runnerEnv?.initialEnvs() ?? []), ...Object.keys(envs)])
-
-  let offset = 0
-
-  // todo(sebastian): align this with grpc types
-  for (const {
-    hasStringValue,
-    key,
-    match,
-    type,
-    value,
-    isPassword,
-    regexpMatch,
-  } of exportMatches) {
-    let userValue: string | undefined
-
-    let skip = false
-
-    switch (type) {
-      case 'prompt':
-        {
-          const userInput = await promptUserForVariable(
-            key,
-            value,
-            hasStringValue,
-            isPassword ?? false,
-          )
-
-          if (userInput === undefined) {
-            throw new Error('Cannot run cell due to canceled prompt')
-          }
-
-          userValue = userInput
-        }
-        break
-
-      case 'direct':
-        {
-          userValue = value
-        }
-        break
-
-      default: {
-        continue
-      }
-    }
-
-    if (regexpMatch) {
-      const prior = script.slice(offset, regexpMatch.index)
-      parsedCommandBlocks.push({ type: 'block', content: prior })
-      offset = regexpMatch.index + match.length
-    }
-
-    if (!skip && userValue !== undefined) {
-      parsedCommandBlocks.push({ type: 'single', content: `export ${key}="${userValue}"` })
-    }
+  const reducer = async (acc: Promise<CommandBlock[]>, current: VarResult) => {
+    return promptVariablesAsync(await acc, current)
   }
 
-  parsedCommandBlocks.push({ type: 'block', content: script.slice(offset) })
+  const parsedCommandBlocks: CommandBlock[] = await vars.reduce(reducer, Promise.resolve([]))
+  parsedCommandBlocks.push({ type: 'block', content: script.slice(0) })
 
   const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
     if (type === 'block') {
@@ -618,6 +544,57 @@ export async function resolveRunProgramExecution(
     type: 'commands',
     commands,
   }
+}
+
+type CommandBlock =
+  | {
+      type: 'block'
+      content: string
+    }
+  | {
+      type: 'single'
+      content: string
+    }
+
+async function promptVariablesAsync(
+  blocks: CommandBlock[],
+  variable: VarResult,
+): Promise<CommandBlock[]> {
+  let userValue = ''
+
+  switch (variable.status) {
+    case ResolveProgramResponse_Status.RESOLVED:
+      userValue = variable.resolvedValue
+      break
+
+    case ResolveProgramResponse_Status.UNRESOLVED_WITH_MESSAGE:
+    case ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER:
+    case ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET: {
+      const key = variable.name
+      const placeHolder = variable.resolvedValue || variable.originalValue || 'Enter a value please'
+      const hasStringValue =
+        variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER
+      const isPassword = variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET
+
+      const userInput = await promptUserForVariable(key, placeHolder, hasStringValue, isPassword)
+
+      if (userInput === undefined) {
+        throw new Error('Cannot run cell due to canceled prompt')
+      }
+
+      userValue = userInput
+      break
+    }
+
+    default:
+      return blocks
+  }
+
+  if (userValue) {
+    blocks.push({ type: 'single', content: `export ${variable.name}="${userValue}"` })
+  }
+
+  return blocks
 }
 
 function updateProcessInfo(
