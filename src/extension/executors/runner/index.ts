@@ -522,11 +522,11 @@ export async function resolveRunProgramExecution(
   script = result.response.script ?? script
 
   // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
-  const reducer = async (acc: Promise<CommandBlock[]>, current: VarResult) => {
+  const promptReducer = async (acc: Promise<CommandBlock[]>, current: VarResult) => {
     return promptVariablesAsync(await acc, current)
   }
 
-  const parsedCommandBlocks: CommandBlock[] = await vars.reduce(reducer, Promise.resolve([]))
+  const parsedCommandBlocks: CommandBlock[] = await vars.reduce(promptReducer, Promise.resolve([]))
   parsedCommandBlocks.push({ type: 'block', content: script.slice(0) })
 
   const commands = parsedCommandBlocks.flatMap(({ type, content }) => {
