@@ -3,7 +3,7 @@
   "version": "3.2.3-edge.5",
   "publisher": "stateful",
   "displayName": "Runme DevOps Notebooks",
-  "description": "Execute your runbooks, docs, and READMEs.",
+  "description": "DevOps Workflows Built with Markdown.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
