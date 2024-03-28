@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.2.3-edge.5",
+  "version": "3.2.3",
   "publisher": "stateful",
   "displayName": "Runme DevOps Notebooks",
   "description": "DevOps Workflows Built with Markdown.",
