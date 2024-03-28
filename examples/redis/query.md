@@ -4,7 +4,7 @@ runme:
   version: v3
 ---
 
-# Redis Query Runbook for Runme Cloud
+# Redis Query Runbook
 
 ### Prerequisites:
 

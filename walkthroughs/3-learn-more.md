@@ -1,5 +1,3 @@
-
-
 Fantastic work!
 
 You've now begun using Runme, but don't stop there. We have just touched the surface of what Runme can accomplish for you.
@@ -12,4 +10,4 @@ Join the Runme community on:
 - [X](https://x.com/runmedev) with `#runme`
 - [YouTube](https://www.youtube.com/@runmedev)
 
-Get started with ▶ Runme Cloud and never miss a beat when working with critical infrastructure. You can [get started for free](https://app.runme.dev/).
+Get in touch. The Runme team's always looking for feedback. Also, check out [https://stateful.com](https://stateful.com), the Makers of Runme.

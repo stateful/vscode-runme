@@ -682,7 +682,7 @@ export async function promptUserSession(): Promise<AuthenticationSession | undef
   const displayLoginPrompt = getLoginPrompt()
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
-      `Securely store your cell output in the Runme Cloud.
+      `Securely store your cell outputs.
       Sign in with GitHub is required, do you want to proceed?`,
       'Yes',
       'No',

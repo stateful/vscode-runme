@@ -72,4 +72,3 @@ We would love to hear feedback, appreciate your patience, as Runme continutes to
 - [Submit an Issue](https://github.com/stateful/runme/issues)
 - [Contribute on Github](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
 - [Read the Docs](https://docs.runme.dev/)
-- [Join Runme cloud, it's free](https://runme.dev/)

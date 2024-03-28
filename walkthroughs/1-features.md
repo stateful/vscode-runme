@@ -22,7 +22,7 @@ You can also open the terminal that did the execution by clicking the “Open Te
 
 ## Save outputs
 
-Configure the autosave feature to automatically save your outputs, ensuring you never lose valuable information. All saved outputs are securely stored on the Runme cloud. You can turn off/on the autosave at anytime you desire.
+Configure the autosave feature to automatically save your outputs, ensuring you never lose valuable information. You can turn off/on the autosave at anytime you desire.
 
 ![save-output](https://github.com/stateful/vscode-runme/assets/36479528/53a35835-f1cc-4d4e-952b-a42b63d2338d)
 
