@@ -139,3 +139,8 @@ export function saveFile(browser: WebdriverIO.Browser): Promise<void> {
 
 export const FRONT_MATTER_ULID = /id[:=] ([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\s*/
 export const JSON_ULID = /\"id\":\"([0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26})\"/
+
+export async function getRepoBasename(): Promise<string> {
+  const filePath = new URL('../../..', import.meta.url)
+  return path.basename(filePath.pathname)
+}

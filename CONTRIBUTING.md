@@ -95,6 +95,11 @@ then ensure to install all project dependencies. Note GitHub token is required t
 ```sh {"id":"01HF7VQMH8ESX1EFV4P491H696","name":"setup","promptEnv":"false"}
 $ export GITHUB_REF_NAME=$(git branch --show-current)
 $ export GITHUB_TOKEN=$(gh auth token)
+$ export EXTENSION_BASENAME=$(node -p 'process.cwd().split("/").pop().split("-")[1]')
+$ cp -f "assets/$EXTENSION_BASENAME-icon.gif" "assets/icon.gif"
+$ cp -f "assets/$EXTENSION_BASENAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
+$ cp -f "assets/$EXTENSION_BASENAME-logo-open-light.svg" "assets/logo-open-light.svg"
+$ cp -f "assets/$EXTENSION_BASENAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
 $ npm install --include=dev
 ```
 
@@ -124,7 +129,7 @@ You can also run the extension in the Extension Development Host, which is a sep
 
 If you want to run the extension against a specific runme kernel binary, you can set this option in .vscode/settings.json:
 
-```
+```sh {"id":"01HT61TNMTK9GB0K8GQFSG43T9"}
 {
   "runme.server.binaryPath": "path/to/bin",
 }

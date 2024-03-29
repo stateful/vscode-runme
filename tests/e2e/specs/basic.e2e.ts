@@ -2,6 +2,7 @@ import { DefaultTreeItem } from 'wdio-vscode-service'
 import { Key } from 'webdriverio'
 
 import {
+  getRepoBasename,
   tryExecuteCommand,
   clearAllOutputs,
   getTerminalText,
@@ -11,17 +12,21 @@ import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { OutputType, StatusBarElements } from '../pageobjects/cell.page.js'
 
 describe('Runme VS Code Extension', async () => {
+  let baseName = 'vscode-runme'
+  before(async () => {
+    baseName = await getRepoBasename()
+  })
   it('should load successfully', async () => {
     const workbench = await browser.getWorkbench()
     const title = await workbench.getTitleBar().getTitle()
-    expect(title).toContain('vscode-runme')
+    expect(title).toContain(baseName)
   })
 
   it('should re-open Readme.md and validate that it loads as notebook', async () => {
     const workbench = await browser.getWorkbench()
     const sidebar = await workbench.getSideBar()
     const content = await sidebar.getContent()
-    const section = await content.getSection('VSCODE-RUNME')
+    const section = await content.getSection(`${baseName.toLocaleUpperCase()}`)
 
     const filesAndDirs = (await section.getVisibleItems()) as DefaultTreeItem[]
     let readmeFile: DefaultTreeItem | undefined
