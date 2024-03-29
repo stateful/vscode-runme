@@ -61,7 +61,7 @@ jobs:
         run: npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Build Package (Edge)
         run: npm run build:prod
         env:
@@ -75,7 +75,7 @@ jobs:
           NODE_ENV: production
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
-      
+
       - name: Run Tests
         uses: coactions/setup-xvfb@v1
         with:
@@ -83,25 +83,33 @@ jobs:
           options: "-screen 0 1600x1200x24"
         env:
           NODE_ENV: production
-      
+
       - name: Set Extension Name
         run: |
-          EXTENSION_NAME=$(node -p 'require("./package.json").name')
+          jq ".name = \"$EXTENSION_NAME\"" package.json > _package.json
+          mv -f _package.json package.json
           echo "EXTENSION_NAME=${EXTENSION_NAME}" >> $GITHUB_ENV
 
-      - name: Get stable releases
+      - name: Set Assets
+        run: |
+          cp -f "assets/$EXTENSION_NAME-icon.gif" "assets/icon.gif"
+          cp -f "assets/$EXTENSION_NAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
+          cp -f "assets/$EXTENSION_NAME-logo-open-light.svg" "assets/logo-open-light.svg"
+          cp -f "assets/$EXTENSION_NAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
+
+      - name: Get Stable Releases
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-              const { default: checkRelease } = await import('${{ github.workspace }}/.github/scripts/checkRelease.js')
-              await checkRelease({ github, context, core })
-      
+            const { default: checkRelease } = await import('${{ github.workspace }}/.github/scripts/checkRelease.js')
+            await checkRelease({ github, context, core })
+
       - name: Create Changelog
         run: |
           git log $(git describe --tags --abbrev=0)..HEAD --oneline &> ${{ github.workspace }}-CHANGELOG.txt
           cat ${{ github.workspace }}-CHANGELOG.txt
-      
+
       - name: Setup Git
         run: |
           git config --global user.name "stateful-wombot"
@@ -111,21 +119,21 @@ jobs:
         run: |
           CURRENT_VERSION=$(cat package.json | jq .version | cut -d'"' -f 2)
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
-      
+
       - name: Compile New Version (Edge)
         run: |
           RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i pre${{ github.event.inputs.releaseType }} --preid edge)"
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Bump to $RELEASE_VERSION"
         if: ${{ github.event.inputs.releaseChannel == 'edge' && !contains(env.CURRENT_VERSION, 'edge') }}
-      
+
       - name: Compile New Version (Edge)
         run: |
           RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i prerelease)"
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Bump to $RELEASE_VERSION"
         if: ${{ github.event.inputs.releaseChannel == 'edge' && contains(env.CURRENT_VERSION, 'edge') }}
-      
+
       - name: Compile New Version (Stable)
         run: |
           RELEASE_VERSION="$(npx semver $CURRENT_VERSION -i github.event.inputs.releaseType)"
@@ -146,13 +154,13 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
       - name: Version Package
         if: steps.tag_check.outputs.exists_tag == 'false'
         run: |
           npm version $RELEASE_VERSION
           git tag -a $RELEASE_VERSION -m "$RELEASE_VERSION"
-      
+
       # Update Edge version
       - name: Update edge version
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
@@ -172,59 +180,59 @@ jobs:
         run: npx vsce package -t linux-x64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-linux-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_LINUX_x86_64 }}
-          TYPE: 'tar'
-      
+          TYPE: "tar"
+
       - name: Package Extension Linux x86_64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t linux-x64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-linux-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_LINUX_x86_64 }}
-          TYPE: 'tar'
-      
+          TYPE: "tar"
+
       # Linux arm64
       - name: Package Linux arm64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: npx vsce package -t linux-arm64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-linux-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_LINUX_arm64 }}
-          TYPE: 'tar'
+          TYPE: "tar"
 
       - name: Package Linux arm64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t linux-arm64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-linux-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_LINUX_arm64 }}
-          TYPE: 'tar'
+          TYPE: "tar"
 
-      # MacOS x86_64      
+      # MacOS x86_64
       - name: Package MacOS x86_64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: npx vsce package -t darwin-x64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-darwin-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_MACOS_x86_64 }}
-          TYPE: 'tar'
-      
+          TYPE: "tar"
+
       - name: Package MacOS x86_64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t darwin-x64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-darwin-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_MACOS_x86_64 }}
-          TYPE: 'tar'
-      
-      # MacOS arm64 
+          TYPE: "tar"
+
+      # MacOS arm64
       - name: Package MacOS arm64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: npx vsce package -t darwin-arm64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-darwin-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_MACOS_arm64 }}
-          TYPE: 'tar'
+          TYPE: "tar"
 
       - name: Package MacOS arm64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t darwin-arm64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-darwin-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_MACOS_arm64 }}
-          TYPE: 'tar'
+          TYPE: "tar"
 
       # Windows x64
       - name: Package Windows x64 (Edge)
@@ -232,29 +240,29 @@ jobs:
         run: npx vsce package -t win32-x64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-win32-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_WINDOWS_x86_64 }}
-          TYPE: 'zip'
-      
+          TYPE: "zip"
+
       - name: Package Windows x64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t win32-x64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-win32-x64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_WINDOWS_x86_64 }}
-          TYPE: 'zip'
-      
+          TYPE: "zip"
+
       # Windows arm64
       - name: Package Windows arm64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
         run: npx vsce package -t win32-arm64 --pre-release --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-win32-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_WINDOWS_arm64 }}
-          TYPE: 'zip'
+          TYPE: "zip"
 
       - name: Package Windows arm64 (Stable)
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
         run: npx vsce package $RELEASE_VERSION -t win32-arm64 --no-yarn --no-git-tag-version --no-update-package-json -o "./${{ env.EXTENSION_NAME }}-win32-arm64-$RELEASE_VERSION.vsix" ${{ github.event.inputs.additionalFlags }}
         env:
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL_WINDOWS_arm64 }}
-          TYPE: 'zip'
+          TYPE: "zip"
 
       # Distribute
 
@@ -264,46 +272,43 @@ jobs:
       - name: Publish to Visual Studio Marketplace Linux X86 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-linux-x64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace Linux X86 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-linux-x64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
-      
+
       # Linux arm64
       - name: Publish to Visual Studio Marketplace Linux arm64 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-linux-arm64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace Linux arm64 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-linux-arm64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
-      
 
       # MacOS x86_64
       - name: Publish to Visual Studio Marketplace MacOS x86_64 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-darwin-x64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace MacOS x86_64 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-darwin-x64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
-    
 
       # MacOS arm64
       - name: Publish to Visual Studio Marketplace MacOS arm64 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-darwin-arm64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace MacOS arm64 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-darwin-arm64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
-    
 
       # Windows x64
       - name: Publish to Visual Studio Marketplace Windows x64 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-win32-x64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace MacOS x64 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-win32-x64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
@@ -312,11 +317,10 @@ jobs:
       - name: Publish to Visual Studio Marketplace Windows arm64 (Edge)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-win32-arm64-$RELEASE_VERSION.vsix" --pre-release --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: Publish to Visual Studio Marketplace Windows arm64 (Stable)
         run: npx vsce publish --packagePath "./$EXTENSION_NAME-win32-arm64-$RELEASE_VERSION.vsix" --no-yarn --no-git-tag-version --no-update-package-json -p ${{ secrets.VSC_MKTP_PAT }} ${{ github.event.inputs.additionalFlags }}
         if: ${{ github.event.inputs.publishMarketplace == 'yes' && github.event.inputs.releaseChannel == 'stable' }}
-    
 
       # VSX Registry (only Stable releases)
 
@@ -383,6 +387,7 @@ jobs:
 
       # Release
       - name: Push Tags
+        if: env.EXTENSION_NAME == 'runme'
         continue-on-error: true
         run: |
           git log -1 --stat
@@ -398,7 +403,7 @@ jobs:
           bodyFile: ${{ github.workspace }}-CHANGELOG.txt
           tag: ${{ env.GIT_TAG }}
           prerelease: ${{ github.event.inputs.releaseChannel == 'edge' }}
-      
+
       - name: 🐛 Debug Build
         uses: stateful/vscode-server-action@v1
         if: failure()

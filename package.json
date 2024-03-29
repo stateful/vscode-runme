@@ -114,8 +114,8 @@
         "category": "Runme",
         "title": "Open markdown as Runme",
         "icon": {
-          "dark": "assets/runme-logo-open-dark.svg",
-          "light": "assets/runme-logo-open-light.svg"
+          "dark": "assets/logo-open-dark.svg",
+          "light": "assets/logo-open-light.svg"
         }
       },
       {
@@ -784,7 +784,7 @@
         {
           "id": "runme",
           "title": "Runme",
-          "icon": "assets/runme-logo-sidebar.svg"
+          "icon": "assets/logo-sidebar.svg"
         }
       ],
       "panel": [
