@@ -36,7 +36,13 @@ export interface SyncSchema {
   onArchiveCell?: {
     cellId: string
   }
+  onUnArchiveCell?: {
+    cellId: string
+  }
   onCellArchived?: {
+    cellId: string
+  }
+  onCellUnArchived?: {
     cellId: string
   }
 }
