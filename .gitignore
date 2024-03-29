@@ -15,3 +15,7 @@ vscode-runme-CHANGELOG.txt
 .package.json
 .node_modules
 examples/.vscode
+assets/icon.gif
+assets/logo-open-dark.svg
+assets/logo-open-light.svg
+assets/logo-sidebar.svg
