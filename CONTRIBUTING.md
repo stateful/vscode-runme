@@ -143,7 +143,7 @@ npm run build
 The Runme project has several test stages that you can run individually or as a whole:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PFZ87Q58","name":"test"}
-npx runme run test:format test:lint test:unit test:e2e
+npx runme run test:format test:lint test:unit
 ```
 
 When testing in CI environment, run:
