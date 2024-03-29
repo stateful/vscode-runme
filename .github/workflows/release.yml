@@ -402,7 +402,7 @@ jobs:
       - name: GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./$EXTENSION_NAME-*"
+          artifacts: "./runme-*"
           bodyFile: ${{ github.workspace }}-CHANGELOG.txt
           tag: ${{ env.GIT_TAG }}
           prerelease: ${{ github.event.inputs.releaseChannel == 'edge' }}
