@@ -42,6 +42,9 @@ on:
           - "yes"
           - "no"
 
+env:
+  EXTENSION_NAME: ${{ vars.EXTENSION_NAME }}
+
 jobs:
   release:
     runs-on: ubuntu-latest
