@@ -387,6 +387,7 @@ jobs:
 
       # Release
       - name: Push Tags
+        if: env.EXTENSION_NAME == 'runme'
         continue-on-error: true
         run: |
           git log -1 --stat
