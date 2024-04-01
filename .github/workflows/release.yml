@@ -91,7 +91,7 @@ jobs:
 
       - name: Set Extension Name
         run: |
-          jq ".name = \"$EXTENSION_NAME\"" package.json > _package.json
+          jq ".name = \"$EXTENSION_NAME\"" package.json | jq ".displayName = \"Stateful Platform\"" | jq ".description = \"CloudOps Workflows made for Self-Service\"" > _package.json
           mv -f _package.json package.json
           echo "EXTENSION_NAME=${EXTENSION_NAME}" >> $GITHUB_ENV
 
