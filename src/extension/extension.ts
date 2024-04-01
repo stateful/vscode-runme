@@ -341,4 +341,10 @@ export class RunmeExtension {
       thisArg,
     )
   }
+
+  static getExtensionIdentifier(context: ExtensionContext) {
+    const publisher = context.extension.packageJSON.publisher
+    const name = context.extension.packageJSON.name
+    return `${publisher}.${name}`
+  }
 }

@@ -1,4 +1,4 @@
-import type { ExtensionContext } from 'vscode'
+import { extensions, type ExtensionContext } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeExtension } from './extension'
@@ -11,6 +11,14 @@ const log = getLogger()
 
 export async function activate(context: ExtensionContext) {
   TelemetryReporter.configure(INSTRUMENTATION_KEY)
+  const extensionIdentifier = RunmeExtension.getExtensionIdentifier(context)
+  const pfound = extensions.all.find((extension) => extension.id === 'stateful.platform')
+
+  if (extensionIdentifier === 'stateful.runme' && pfound) {
+    log.warn('Skipping extension activation to avoid conflicts')
+    return
+  }
+
   log.info('Activating Extension')
   try {
     await ext.initialize(context)
