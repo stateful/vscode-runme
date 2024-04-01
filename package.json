@@ -250,6 +250,20 @@
         "category": "Runme",
         "title": "Execute and always prompt for input",
         "icon": "$(terminal)"
+      },
+      {
+        "command": "runme.notebookAuthorMode",
+        "category": "Runme",
+        "title": "Always add new cells for renderers with action buttons",
+        "icon": "$(pencil)",
+        "shortTitle": "Author mode"
+      },
+      {
+        "command": "runme.notebookExplorerMode",
+        "category": "Runme",
+        "title": "Always navigate within existing renderer with action buttons",
+        "icon": "$(preview)",
+        "shortTitle": "Explorer mode"
       }
     ],
     "menus": {
@@ -402,6 +416,7 @@
           "group": "navigation"
         },
         {
+<<<<<<< HEAD
           "command": "runme.notebookGistShare",
           "when": "notebookType == runme && notebookMode == sessionOutputs",
           "group": "navigation@50"
@@ -415,6 +430,16 @@
           "command": "runme.notebookOutputsUnmasked",
           "when": "notebookType == runme && notebookMode == sessionOutputs && notebookOutputsMasked",
           "group": "navigation@30"
+=======
+          "command": "runme.notebookAuthorMode",
+          "when": "notebookType == runme && notebookAuthorModeOn",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.notebookExplorerMode",
+          "when": "notebookType == runme && !notebookAuthorModeOn",
+          "group": "navigation"
+>>>>>>> f981bcc2 (Introducing exploring/authoring mode)
         }
       ],
       "notebook/cell/execute": [

@@ -14,11 +14,6 @@ import { ClientMessages } from '../../../../constants'
 import { onClientMessage, postClientMessage } from '../../../../utils/messaging'
 import { getContext } from '../../../utils'
 
-enum MessageOptions {
-  Yes = 'Yes',
-  No = 'No',
-}
-
 const HIDDEN_COLUMNS = ['statusMessage', 'clusterId', 'clusterLink']
 const COLUMNS = [
   {
@@ -67,6 +62,9 @@ export class Clusters extends LitElement implements Disposable {
 
   @state()
   private _selectedCluster: GcpGkeCluster | null | undefined
+
+  @state()
+  private _authorMode: boolean | undefined
 
   /* eslint-disable */
   static styles = css`
@@ -121,21 +119,8 @@ export class Clusters extends LitElement implements Disposable {
     const ctx = getContext()
     this.disposables.push(
       onClientMessage(ctx, (e) => {
-        if (e.type === ClientMessages.onOptionsMessage) {
-          if (this.cellId !== e.output.id || !e.output.option) {
-            return
-          }
-          if (e.output.option === MessageOptions.No) {
-            this._displayClusterInNewCell = false
-            this.requestUpdate()
-          } else {
-            postClientMessage(ctx, ClientMessages.gcpClusterDetailsNewCell, {
-              cellId: this.cellId,
-              cluster: this._selectedCluster?.name!,
-              location: this._selectedCluster?.location!,
-              project: this.projectId,
-            })
-          }
+        if (e.type === ClientMessages.onAuthorModeChange) {
+          this._authorMode = e.output.isAuthorMode
         }
       }),
     )
@@ -144,13 +129,17 @@ export class Clusters extends LitElement implements Disposable {
   private viewCluster(cluster: GcpGkeCluster) {
     const ctx = getContext()
     this._selectedCluster = cluster
-    return postClientMessage(ctx, ClientMessages.optionsMessage, {
-      title: `Do you want to display the cluster details for ${cluster.name} in a separate cell?`,
-      options: Object.values(MessageOptions),
-      modal: true,
-      id: this.cellId,
-      telemetryEvent: 'app.gcp.cluster',
-    })
+    if (this._authorMode) {
+      return postClientMessage(ctx, ClientMessages.gcpClusterDetailsNewCell, {
+        cellId: this.cellId,
+        cluster: this._selectedCluster?.name!,
+        location: this._selectedCluster?.location!,
+        project: this.projectId,
+      })
+    } else {
+      this._displayClusterInNewCell = false
+      this.requestUpdate()
+    }
   }
 
   private renderClusters() {

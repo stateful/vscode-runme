@@ -492,6 +492,9 @@ export interface ClientMessagePayload {
     region: string
     action: AWSActionType
   }
+  [ClientMessages.onAuthorModeChange]: {
+    isAuthorMode: boolean
+  }
 }
 
 export interface OutputItemsPayload {
