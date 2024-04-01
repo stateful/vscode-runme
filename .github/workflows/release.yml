@@ -91,14 +91,12 @@ jobs:
 
       - name: Set Extension Name
         run: |
-          jq ".name = \"$EXTENSION_NAME\"" package.json > _package.json
-          mv -f _package.json package.json
           echo "EXTENSION_NAME=${EXTENSION_NAME}" >> $GITHUB_ENV
 
       - name: Overwrite Extension Definition
-        if: env.EXTENSION_NAME == 'runme'
+        if: env.EXTENSION_NAME != 'runme'
         run: |
-          jq ".displayName = \"Stateful Platform\"" package.json | jq ".description = \"CloudOps Workflows made for Self-Service\"" | jq "del( .galleryBanner )" > _package.json
+          jq ".name = \"$EXTENSION_NAME\"" package.json | jq ".displayName = \"Stateful Platform\"" | jq ".description = \"CloudOps Workflows made for Self-Service\"" | jq "del( .galleryBanner )" > _package.json
           mv -f _package.json package.json
 
       - name: Set Assets
