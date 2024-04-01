@@ -671,6 +671,14 @@ export function asWorkspaceRelativePath(documentPath: string): {
   return { relativePath, outside: false }
 }
 
+export async function resolveUserSession(
+  createIfNone: boolean,
+): Promise<AuthenticationSession | undefined> {
+  return isPlatformAuthEnabled()
+    ? await getPlatformAuthSession(createIfNone)
+    : await getAuthSession(createIfNone)
+}
+
 /**
  * Handles the first time experience for saving a cell.
  * It informs the user that a Login with a GitHub account is required before prompting the user.
@@ -678,12 +686,12 @@ export function asWorkspaceRelativePath(documentPath: string): {
  * @returns AuthenticationSession
  */
 export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
-  let session = await getAuthSession(false)
+  let session: AuthenticationSession | undefined = await resolveUserSession(false)
   const displayLoginPrompt = getLoginPrompt()
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell outputs.
-      Sign in with GitHub is required, do you want to proceed?`,
+      Sign in with ${isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'} is required, do you want to proceed?`,
       'Yes',
       'No',
       'Open Settings',
@@ -696,7 +704,7 @@ export async function promptUserSession(): Promise<AuthenticationSession | undef
       return commands.executeCommand('runme.openSettings', 'runme.app.loginPrompt')
     }
 
-    session = await getAuthSession(true)
+    session = await resolveUserSession(true)
     if (!session) {
       throw new Error('You must authenticate with your GitHub account')
     }
