@@ -69,6 +69,7 @@ jobs:
         run: npm run build:prod
         env:
           NODE_ENV: production
+          NODE_OPTIONS: --max-old-space-size=4096
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
 
@@ -76,6 +77,7 @@ jobs:
         run: npm run build:prod
         env:
           NODE_ENV: production
+          NODE_OPTIONS: --max-old-space-size=4096
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
 
