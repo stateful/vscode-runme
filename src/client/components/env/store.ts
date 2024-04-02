@@ -8,7 +8,7 @@ import '../envViewer'
 import '../tooltip'
 
 import { formatDate } from '../../utils'
-import { SnapshotEnv, SnapshotEnvSpecName } from '../../../types'
+import { SnapshotEnv } from '../../../types'
 import { CustomErrorIcon } from '../icons/error'
 import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
 
@@ -81,10 +81,9 @@ export default class Table extends LitElement {
         .renderer="${(row: SnapshotEnv, field: string) => {
           switch (field) {
             case 'originalValue':
-              const displaySecret =
-                row.spec === SnapshotEnvSpecName.Secret || row.spec === SnapshotEnvSpecName.Plain
+              const displaySecret = row.status === MonitorEnvStoreResponseSnapshot_Status.LITERAL
               let val =
-                row.spec === SnapshotEnvSpecName.Secret
+                row.status === MonitorEnvStoreResponseSnapshot_Status.MASKED
                   ? `${row.resolvedValue} [masked]`
                   : row.resolvedValue
 
@@ -100,7 +99,7 @@ export default class Table extends LitElement {
                 .displaySecret="${displaySecret}"
                 .value="${val}"
                 .maskedValue="${resolvedValue}"
-                .spec="${row.spec as SnapshotEnvSpecName}"
+                .status="${row.status}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
                 }}"
