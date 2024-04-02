@@ -110,7 +110,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             terminalElement.setAttribute('initialContent', payload.output.content)
           }
 
-          if (payload.output.isAutoSaveEnabled) {
+          if (payload.output.isAutoSaveEnabled && payload.output.enableShareButton) {
             terminalElement.setAttribute(
               'isAutoSaveEnabled',
               payload.output.isAutoSaveEnabled.toString(),

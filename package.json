@@ -669,8 +669,8 @@
           },
           "runme.app.enableShare": {
             "type": "boolean",
-            "default": true,
-            "markdownDescription": "Enable app buttons in notebook terminal"
+            "default": false,
+            "markdownDescription": "Enable collaboration in notebook terminal"
           },
           "runme.app.panel.runme.cloud": {
             "type": "string",
