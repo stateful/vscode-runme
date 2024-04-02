@@ -6,6 +6,7 @@ import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configurati
 import getLogger from '../logger'
 import { type SyncSchemaBus } from '../../types'
 import archiveCell from '../services/archiveCell'
+import unArchiveCell from '../services/unArchiveCell'
 
 import { TanglePanel } from './base'
 
@@ -102,14 +103,33 @@ export default class CloudPanel extends TanglePanel {
 
         try {
           if (answer === 'Yes') {
+            await archiveCell(cmdEvent?.cellId!)
+            window.showInformationMessage('The cell has been archived!')
             bus.emit('onCellArchived', {
               cellId: cmdEvent?.cellId!,
             })
-            await archiveCell(cmdEvent?.cellId!)
-            await window.showInformationMessage('The cell has been archived!')
           }
         } catch (error) {
           await window.showErrorMessage(`Failed to archive cell: ${(error as any).message}`)
+        }
+      }),
+      bus.on('onUnArchiveCell', async (cmdEvent) => {
+        const answer = await window.showInformationMessage(
+          'Are you sure you want to restore this cell?',
+          'Yes',
+          'No',
+        )
+
+        try {
+          if (answer === 'Yes') {
+            await unArchiveCell(cmdEvent?.cellId!)
+            window.showInformationMessage('The cell has been restored!')
+            bus.emit('onCellUnArchived', {
+              cellId: cmdEvent?.cellId!,
+            })
+          }
+        } catch (error) {
+          await window.showErrorMessage(`Failed to restore cell: ${(error as any).message}`)
         }
       }),
     ]
