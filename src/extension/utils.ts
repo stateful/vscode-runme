@@ -650,8 +650,13 @@ export function suggestCategories(categories: string[], title: string, placehold
 
 export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
-  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+  const extensionSettingAutoSaveIsOn =
+    configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  const notebookAutoSaveIsOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+  await ContextState.addKey(
+    NOTEBOOK_AUTOSAVE_ON,
+    notebookAutoSaveIsOn !== undefined ? notebookAutoSaveIsOn : extensionSettingAutoSaveIsOn,
+  )
 }
 
 export async function resetNotebookAutosaveSettings() {
