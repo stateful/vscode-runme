@@ -51,6 +51,7 @@ import {
   getTLSDir,
   getTLSEnabled,
   isPlatformAuthEnabled,
+  isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
 
 import CategoryQuickPickItem from './quickPickItems/category'
@@ -692,7 +693,7 @@ export async function resolveUserSession(
  */
 export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
   let session: AuthenticationSession | undefined = await resolveUserSession(false)
-  const displayLoginPrompt = getLoginPrompt()
+  const displayLoginPrompt = getLoginPrompt() && isRunmeAppButtonsEnabled()
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell outputs.

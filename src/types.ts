@@ -393,6 +393,12 @@ export interface ClientMessagePayload {
     escalationButton: boolean
     hasErrors?: boolean
   }
+  [ClientMessages.optionsModal]: {
+    title: string
+    id: string
+    options: any[]
+    telemetryEvent?: string
+  }
   [ClientMessages.optionsMessage]: {
     title: string
     id: string

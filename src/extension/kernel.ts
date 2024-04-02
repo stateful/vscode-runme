@@ -400,6 +400,21 @@ export class Kernel implements Disposable {
         editor,
         kernel: this,
       })
+    } else if (message.type === ClientMessages.optionsModal) {
+      if (message.output.telemetryEvent) {
+        TelemetryReporter.sendTelemetryEvent(message.output.telemetryEvent)
+      }
+      const answer = await window.showInformationMessage(
+        message.output.title,
+        { modal: true },
+        ...message.output.options,
+      )
+      if (answer === 'Open') {
+        await commands.executeCommand(
+          'vscode.open',
+          Uri.parse('https://stateful.com/redirect/runme-panel'),
+        )
+      }
     } else if (message.type === ClientMessages.optionsMessage) {
       if (message.output.telemetryEvent) {
         TelemetryReporter.sendTelemetryEvent(message.output.telemetryEvent)
