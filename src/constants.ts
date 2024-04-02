@@ -31,6 +31,7 @@ export enum ClientMessages {
   platformApiRequest = 'common:platformApiRequest',
   platformApiResponse = 'common:platformApiResponse',
   optionsMessage = 'common:optionsMessage',
+  optionsModal = 'common:optionsModal',
   openExternalLink = 'common:openExternalLink',
   onOptionsMessage = 'common:onOptionsMessage',
   copyTextToClipboard = 'common:copyTextToClipboard',
