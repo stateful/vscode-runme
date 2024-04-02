@@ -757,7 +757,7 @@ export class TerminalView extends LitElement {
       return postClientMessage(ctx, ClientMessages.optionsModal, {
         title:
           // eslint-disable-next-line max-len
-          'Secure workflow collaboration for self-service worflows is only available in the Stateful Platform. Click "Open" to learn more.',
+          'Secure collaboration for self-service workflows is only available in the Stateful Platform. Click "Open" to learn more.',
         options: Object.values(ModalOptions),
         id: this.id!,
         telemetryEvent: 'app.learnMore',
