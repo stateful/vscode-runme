@@ -7,7 +7,7 @@ import '../table'
 import '../envViewer'
 import '../tooltip'
 
-import { formatDate } from '../../utils'
+import { formatDate, formatDateWithTimeAgo } from '../../utils'
 import { SnapshotEnv } from '../../../types'
 import { CustomErrorIcon } from '../icons/error'
 import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
@@ -105,9 +105,9 @@ export default class Table extends LitElement {
                 }}"
               ></env-viewer>`
             case 'createdAt':
-              return html`${row.createdAt ? formatDate(new Date(row.createdAt)) : ''}`
+              return html`${row.createdAt ? formatDateWithTimeAgo(new Date(row.createdAt)) : ''}`
             case 'updatedAt':
-              return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
+              return html`${row.updatedAt ? formatDateWithTimeAgo(new Date(row.updatedAt)) : ''}`
             case 'name':
               return when(
                 row.errors?.length,
