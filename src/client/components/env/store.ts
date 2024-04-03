@@ -107,7 +107,7 @@ export default class Table extends LitElement {
             case 'createdAt':
               return html`${row.createdAt ? formatDateWithTimeAgo(new Date(row.createdAt)) : ''}`
             case 'updatedAt':
-              return html`${row.updatedAt ? formatDateWithTimeAgo(new Date(row.updatedAt)) : ''}`
+              return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
             case 'name':
               return when(
                 row.errors?.length,
