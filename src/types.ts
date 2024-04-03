@@ -551,11 +551,4 @@ export enum NotebookAutoSaveSetting {
   No = 'no',
 }
 
-export enum SnapshotEnvSpecName {
-  Secret = 'Secret',
-  Password = 'Password',
-  Opaque = 'Opaque',
-  Plain = 'Plain',
-}
-
 export type SnapshotEnv = MonitorEnvStoreResponseSnapshot_SnapshotEnv & StringIndexable

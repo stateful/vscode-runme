@@ -3,7 +3,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { SnapshotEnvSpecName } from '../../types'
+import { MonitorEnvStoreResponseSnapshot_Status } from '../../extension/grpc/runnerTypes'
 
 import { CopyIcon } from './icons/copy'
 import { EyeClosedIcon } from './icons/eyeClosed'
@@ -19,8 +19,8 @@ export class EnvViewer extends LitElement implements Disposable {
   @property({ type: String })
   value: string | undefined
 
-  @property({ type: String })
-  spec: SnapshotEnvSpecName | undefined
+  @property({ type: Number })
+  status: MonitorEnvStoreResponseSnapshot_Status | undefined
 
   @property({ type: Boolean })
   displaySecret: boolean = false
@@ -86,14 +86,14 @@ export class EnvViewer extends LitElement implements Disposable {
   render() {
     const hideEyeButton = [
       undefined,
-      SnapshotEnvSpecName.Plain,
-      SnapshotEnvSpecName.Secret,
-      SnapshotEnvSpecName.Password,
-    ].includes(this.spec)
+      MonitorEnvStoreResponseSnapshot_Status.MASKED,
+      MonitorEnvStoreResponseSnapshot_Status.LITERAL,
+      MonitorEnvStoreResponseSnapshot_Status.UNSPECIFIED,
+    ].includes(this.status)
     return html`
       <div class="secret-container">
         ${when(
-          this.displaySecret || this.spec === SnapshotEnvSpecName.Plain,
+          this.displaySecret,
           () => html`<span class="secret-text">${this.value}</span>`,
           () =>
             when(
@@ -137,7 +137,10 @@ export class EnvViewer extends LitElement implements Disposable {
             },
           )}
           ${when(
-            [SnapshotEnvSpecName.Plain, SnapshotEnvSpecName.Opaque].includes(this.spec!),
+            [
+              MonitorEnvStoreResponseSnapshot_Status.LITERAL,
+              MonitorEnvStoreResponseSnapshot_Status.HIDDEN,
+            ].includes(this.status!),
             () => {
               return html` <vscode-button
                 appearance="icon"
