@@ -230,7 +230,11 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           if (!activeTerminal) {
             let envs: Record<string, string> = {}
             if (this.runner && this.kernel && this.server) {
-              envs = getRunnerSessionEnvs(this.extensionBaseUri, this.kernel, this.server)
+              envs = getRunnerSessionEnvs(
+                this.extensionBaseUri,
+                this.kernel.getRunnerEnvironment(),
+                this.server.address(),
+              )
             }
             activeTerminal = window.createTerminal({ env: envs })
           }

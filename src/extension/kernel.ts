@@ -36,7 +36,11 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import { getNotebookExecutionOrder, isPlatformAuthEnabled } from '../utils/configuration'
+import {
+  getNotebookExecutionOrder,
+  isPlatformAuthEnabled,
+  registerExtensionEnvVarsMutation,
+} from '../utils/configuration'
 
 import getLogger from './logger'
 import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
@@ -52,11 +56,12 @@ import {
   suggestCategories,
   handleNotebookAutosaveSettings,
   getWorkspaceFolder,
+  getRunnerSessionEnvs,
 } from './utils'
 import { isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
-import { IRunner } from './runner'
+import { IRunner, IRunnerReady } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
 import { executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
@@ -700,7 +705,7 @@ export class Kernel implements Disposable {
     return this.runnerEnv
   }
 
-  async newRunnerEnvironment(): Promise<void> {
+  async newRunnerEnvironment({ address }: IRunnerReady): Promise<void> {
     if (!this.runner) {
       log.error('Skipping new runner environment request since runner is not initialized.')
       return
@@ -727,6 +732,11 @@ export class Kernel implements Disposable {
       this.runnerEnv = runnerEnv
 
       this.cellManager.setRunnerEnv(runnerEnv)
+
+      registerExtensionEnvVarsMutation(
+        this.context,
+        getRunnerSessionEnvs(this.context.extensionUri, runnerEnv, address),
+      )
 
       const monitor = await this.runner.createMonitorEnvStore()
       const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
@@ -766,7 +776,7 @@ export class Kernel implements Disposable {
           await this.runner?.setEnvironmentVariables(this.runnerEnv, { [key]: val })
         },
         reset: async () => {
-          await this.newRunnerEnvironment()
+          await this.newRunnerEnvironment({})
         },
       }
     } else {

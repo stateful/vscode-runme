@@ -16,7 +16,6 @@ import {
   getForceNewWindowConfig,
   getSessionOutputs,
   isPlatformAuthEnabled,
-  registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
 
@@ -170,7 +169,6 @@ export class RunmeExtension {
       server,
     )
 
-    registerExtensionEnvironmentVariables(context)
     await resetNotebookAutosaveSettings()
 
     const transientOutputs = !getSessionOutputs()

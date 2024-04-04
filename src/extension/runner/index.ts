@@ -63,13 +63,15 @@ export interface RunProgramOptions {
   commandMode?: CommandMode
 }
 
+export type IRunnerReady = { address?: string }
+
 export interface IRunner extends Disposable {
   /**
    * Called when underlying transport is ready
    *
    * May be called multiple times if server restarts
    */
-  readonly onReady: Event<void>
+  readonly onReady: Event<IRunnerReady>
 
   close(): void
 
@@ -186,7 +188,7 @@ export default class GrpcRunner implements IRunner {
   private children: WeakRef<IRunnerChild>[] = []
   private disposables: Disposable[] = []
 
-  protected _onReady = this.register(new EventEmitter<void>())
+  protected _onReady = this.register(new EventEmitter<IRunnerReady>())
   onReady = this._onReady.event
 
   constructor(protected server: IServer) {

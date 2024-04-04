@@ -281,11 +281,17 @@ const getNotebookExecutionOrder = (): boolean => {
   return getNotebookConfigurationValue<boolean>('executionOrder', true)
 }
 
-const registerExtensionEnvironmentVariables = (context: ExtensionContext): void => {
-  context.environmentVariableCollection.prepend(
-    'PATH',
-    path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':'),
-  )
+const registerExtensionEnvVarsMutation = (
+  context: ExtensionContext,
+  envs: Record<string, string>,
+): void => {
+  const binaryBasePath =
+    path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':')
+  context.environmentVariableCollection.prepend('PATH', binaryBasePath)
+
+  Object.entries(envs).forEach(([k, v]) => {
+    context.environmentVariableCollection.replace(k, v)
+  })
 }
 
 const getActionsOpenViewInEditor = () => {
@@ -415,7 +421,7 @@ export {
   isNotebookTerminalFeatureEnabled,
   isRunmeAppButtonsEnabled,
   isPlatformAuthEnabled,
-  registerExtensionEnvironmentVariables,
+  registerExtensionEnvVarsMutation,
   getSessionOutputs,
   getLoginPrompt,
 }

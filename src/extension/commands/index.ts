@@ -196,7 +196,7 @@ export function runCLICommand(
         args.push('--insecure')
       }
 
-      envs = getRunnerSessionEnvs(extensionBaseUri, kernel, server)
+      envs = getRunnerSessionEnvs(extensionBaseUri, kernel.getRunnerEnvironment(), server.address())
     }
 
     const annotations = getAnnotations(cell.metadata)
@@ -253,7 +253,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
   )
   if (action) {
     await commands.executeCommand('workbench.action.files.save')
-    await kernel.newRunnerEnvironment()
+    await kernel.newRunnerEnvironment({})
     await commands.executeCommand('workbench.action.files.save')
   }
 }
