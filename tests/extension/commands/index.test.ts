@@ -74,7 +74,7 @@ vi.mock('../../../src/extension/runner', () => ({
   GrpcRunnerEnvironment: class {},
 }))
 
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
 beforeEach(() => {
   vi.mocked(window.showWarningMessage).mockClear()

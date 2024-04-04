@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode'
 
 import { IRunnerServiceClient } from '../grpc/client'
-import { ResolveProgramRequest_Mode, ResolveProgramRequest } from '../grpc/runnerTypes'
+import { ResolveProgramRequest_Mode, ResolveProgramRequest } from '../grpc/runner/v1'
 
 import { IRunnerChild } from './types'
 

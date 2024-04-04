@@ -40,7 +40,7 @@ const log = getLogger('RunmeServer')
 export interface IServer extends Disposable {
   transportType: ServerTransportType
 
-  onTransportReady: Event<{ transport: GrpcTransport }>
+  onTransportReady: Event<{ transport: GrpcTransport; address?: string }>
   onClose: Event<{
     code: number | null
   }>
@@ -66,7 +66,9 @@ class RunmeServer implements IServer {
   #forceExternalServer: boolean
 
   readonly #onClose = this.register(new EventEmitter<{ code: number | null }>())
-  readonly #onTransportReady = this.register(new EventEmitter<{ transport: GrpcTransport }>())
+  readonly #onTransportReady = this.register(
+    new EventEmitter<{ transport: GrpcTransport; address?: string }>(),
+  )
 
   readonly transportType: ServerTransportType
   readonly onClose = this.#onClose.event
@@ -366,7 +368,7 @@ class RunmeServer implements IServer {
     this.closeTransport()
     await this.acceptsConnection()
 
-    this.#onTransportReady.fire({ transport: await this.transport() })
+    this.#onTransportReady.fire({ transport: await this.transport(), address: this.address() })
   }
 
   private _port() {

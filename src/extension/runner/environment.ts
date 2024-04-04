@@ -1,5 +1,5 @@
 import { IRunnerServiceClient } from '../grpc/client'
-import { Session } from '../grpc/runnerTypes'
+import { Session } from '../grpc/runner/v1'
 import getLogger from '../logger'
 import { convertEnvList } from '../utils'
 

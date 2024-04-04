@@ -5,7 +5,7 @@ import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provide
 import { getDefaultWorkspace } from '../../../src/extension/utils'
 
 vi.mock('../../../src/extension/grpc/client', () => ({}))
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')

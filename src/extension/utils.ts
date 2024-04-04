@@ -58,8 +58,7 @@ import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
 import { BOOTFILE, BOOTFILE_DEMO } from './constants'
-import { GrpcRunnerEnvironment } from './runner/environment'
-import { IServer } from './server/runmeServer'
+import { GrpcRunnerEnvironment, IRunnerEnvironment } from './runner/environment'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { RunmeService } from './services/runme'
@@ -577,15 +576,20 @@ export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
 }
 
-export function getRunnerSessionEnvs(extensionBaseUri: Uri, kernel: Kernel, server: IServer) {
+export function getRunnerSessionEnvs(
+  extensionBaseUri: Uri,
+  runnerEnv: IRunnerEnvironment | undefined,
+  address?: string,
+) {
   const envs: Record<string, string> = {}
-  envs['RUNME_SERVER_ADDR'] = server.address()
+  if (address) {
+    envs['RUNME_SERVER_ADDR'] = address
+  }
 
   if (getTLSEnabled()) {
     envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
   }
 
-  const runnerEnv = kernel.getRunnerEnvironment()
   if (runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
     envs['RUNME_SESSION'] = runnerEnv.getSessionId()
   }

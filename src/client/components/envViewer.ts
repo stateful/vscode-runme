@@ -3,7 +3,7 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import { MonitorEnvStoreResponseSnapshot_Status } from '../../extension/grpc/runnerTypes'
+import { MonitorEnvStoreResponseSnapshot_Status } from '../../extension/grpc/runner/v1'
 
 import { CopyIcon } from './icons/copy'
 import { EyeClosedIcon } from './icons/eyeClosed'

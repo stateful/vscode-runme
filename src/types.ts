@@ -22,7 +22,7 @@ import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
 import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 import { AWSSupportedView } from './extension/resolvers/awsResolver'
-import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runnerTypes'
+import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runner/v1'
 
 export interface SyncSchema {
   onCommand?: {

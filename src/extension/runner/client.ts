@@ -18,25 +18,31 @@ import {
   MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
-} from '../grpc/runnerTypes'
+} from '../grpc/runner/v1'
 import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
+
+import { IRunnerReady } from '.'
 
 export type IRunnerClient = IRunnerServiceClient & Disposable
 
 export class GrpcRunnerClient implements IRunnerClient {
   private disposables: Disposable[] = []
 
+  protected address?: string
   protected client?: RunnerServiceClient
-  protected _onReady?: EventEmitter<void>
+  protected _onReady?: EventEmitter<IRunnerReady>
 
   constructor(
     protected server: IServer,
-    ready?: EventEmitter<void>,
+    ready?: EventEmitter<IRunnerReady>,
   ) {
     this._onReady = ready
     this.disposables.push(
-      server.onTransportReady(({ transport }) => this.initRunnerClient(transport)),
+      server.onTransportReady(({ transport, address }) => {
+        this.address = address
+        this.initRunnerClient(transport)
+      }),
     )
 
     this.disposables.push(
@@ -53,7 +59,7 @@ export class GrpcRunnerClient implements IRunnerClient {
   private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
     this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
-    this._onReady?.fire()
+    this._onReady?.fire({ address: this.address })
   }
 
   static assertClient(client: RunnerServiceClient | undefined): asserts client {

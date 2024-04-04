@@ -16,7 +16,7 @@ import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
-import { CommandMode } from '../grpc/runnerTypes'
+import { CommandMode } from '../grpc/runner/v1'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const ENV_VAR_REGEXP = /(\$\w+)/g

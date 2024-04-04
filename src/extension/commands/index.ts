@@ -31,12 +31,10 @@ import { Kernel } from '../kernel'
 import {
   getAnnotations,
   getNotebookCategories,
-  getRunnerSessionEnvs,
   getTerminalByCell,
   openFileAsRunmeNotebook,
   promptUserSession,
 } from '../utils'
-import IServer from '../server/runmeServer'
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
@@ -148,12 +146,7 @@ export function stopBackgroundTask(cell: NotebookCell) {
   terminal.dispose()
 }
 
-export function runCLICommand(
-  extensionBaseUri: Uri,
-  grpcRunner: boolean,
-  server: IServer,
-  kernel: Kernel,
-) {
+export function runCLICommand(extensionBaseUri: Uri, grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
     if (cell.notebook.isDirty) {
       const option = await window.showInformationMessage(
@@ -189,21 +182,16 @@ export function runCLICommand(
       `--index=${index}`,
     ]
 
-    let envs: Record<string, string> = {}
-
     if (grpcRunner) {
       if (!getTLSEnabled()) {
         args.push('--insecure')
       }
-
-      envs = getRunnerSessionEnvs(extensionBaseUri, kernel, server)
     }
 
     const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
       name: `CLI: ${annotations.name}`,
       cwd,
-      env: envs,
     })
 
     const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
@@ -253,7 +241,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
   )
   if (action) {
     await commands.executeCommand('workbench.action.files.save')
-    await kernel.newRunnerEnvironment()
+    await kernel.newRunnerEnvironment({})
     await commands.executeCommand('workbench.action.files.save')
   }
 }

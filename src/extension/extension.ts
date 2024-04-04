@@ -16,7 +16,6 @@ import {
   getForceNewWindowConfig,
   getSessionOutputs,
   isPlatformAuthEnabled,
-  registerExtensionEnvironmentVariables,
 } from '../utils/configuration'
 import { WebViews } from '../constants'
 
@@ -158,7 +157,7 @@ export class RunmeExtension {
     ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
-    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner)
 
     const codeLensProvider = new RunmeCodeLensProvider(
       context.extensionUri,
@@ -170,7 +169,6 @@ export class RunmeExtension {
       server,
     )
 
-    registerExtensionEnvironmentVariables(context)
     await resetNotebookAutosaveSettings()
 
     const transientOutputs = !getSessionOutputs()

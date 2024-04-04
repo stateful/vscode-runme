@@ -11,7 +11,7 @@ import { createRunProgramOptions } from '../../../src/extension/executors/runner
 import {
   ResolveProgramResponse_Status,
   ResolveProgramResponse_VarResult,
-} from '../../../src/extension/grpc/runnerTypes'
+} from '../../../src/extension/grpc/runner/v1'
 
 vi.mock('vscode-telemetry', () => ({}))
 vi.mock('vscode')

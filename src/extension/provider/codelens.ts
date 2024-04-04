@@ -24,7 +24,7 @@ import { SerializerBase } from '../serializer'
 import type { runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
-import { getAnnotations, getRunnerSessionEnvs } from '../utils'
+import { getAnnotations } from '../utils'
 import { Serializer } from '../../types'
 import { getCodeLensEnabled } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
@@ -228,11 +228,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           let activeTerminal = window.activeTerminal
 
           if (!activeTerminal) {
-            let envs: Record<string, string> = {}
-            if (this.runner && this.kernel && this.server) {
-              envs = getRunnerSessionEnvs(this.extensionBaseUri, this.kernel, this.server)
-            }
-            activeTerminal = window.createTerminal({ env: envs })
+            activeTerminal = window.createTerminal()
           }
 
           activeTerminal.show(false)

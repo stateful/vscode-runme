@@ -69,7 +69,7 @@ vi.mock('../../src/extension/utils', async () => ({
   resetNotebookAutosaveSettings: vi.fn(),
 }))
 
-vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
 
 test('initializes all providers', async () => {
   const configValues = {

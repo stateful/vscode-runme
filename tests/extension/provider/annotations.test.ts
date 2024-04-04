@@ -31,7 +31,7 @@ vi.mock('../../../src/extension/utils', () => ({
 }))
 
 vi.mock('../../../src/extension/runner', () => ({}))
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
 describe('Runme Annotations', () => {
   const kernel = new Kernel({} as any)
