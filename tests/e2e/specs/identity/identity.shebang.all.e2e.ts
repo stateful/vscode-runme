@@ -53,7 +53,7 @@ describe('Test suite: Shebang with setting All (1)', async () => {
     const workbench = await browser.getWorkbench()
     await workbench.executeCommand('Notebook: Focus First Cell')
     await browser.keys([Key.Enter])
-    const cell = await notebook.getCell('console.log("Always bet on JS!")')
+    const cell = await notebook.getCell('console.log("Run scripts via Shebang!")')
     await cell.focus()
     await saveFile(browser)
 
@@ -71,7 +71,7 @@ describe('Test suite: Shebang with setting All (1)', async () => {
       ## Scenario
 
       \`\`\`js { name=foo id=01HEXJ9KWG7BYSFYCNKVF0VWR6 }
-      console.log("Always bet on JS!")
+      console.log("Run scripts via Shebang!")
 
       \`\`\`
 

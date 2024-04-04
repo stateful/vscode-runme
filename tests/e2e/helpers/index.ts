@@ -86,11 +86,16 @@ function sanitizeOutput(output: string) {
   return output.trim().replace(/^\s+/gm, '')
 }
 
-async function assertDocumentContains(absDocPath: string, matcher: string) {
+async function assertDocumentContains(absDocPath: string, matcher: string, exact: boolean = false) {
   const source = await fs.readFile(absDocPath, 'utf-8')
   const savedContent = sanitizeOutput(source.toString()).split('\n')
   const matcherParts = sanitizeOutput(matcher).split('\n')
+
   for (let index = 0; index < savedContent.length; index++) {
+    if (exact) {
+      await expect(savedContent[index].trim()).toMatch(matcherParts[index].trim())
+    }
+
     if (savedContent[index].includes('"id":')) {
       await expect(savedContent[index]).toMatch(JSON_ULID)
     } else if (savedContent[index].includes('id:')) {
@@ -104,18 +109,19 @@ async function assertDocumentContains(absDocPath: string, matcher: string) {
 export async function assertDocumentContainsSpinner(
   absDocPath: string,
   matcher: string,
+  exact: boolean = false,
   retries: number = 2, // three tries in total
   interval: number = 100,
 ) {
   try {
-    await assertDocumentContains(absDocPath, matcher)
+    await assertDocumentContains(absDocPath, matcher, exact)
   } catch (err: any) {
     if (retries <= 0) {
       console.warn(`Retrying assertDocumentContainsSpinner: ${err.message}`)
       throw err
     }
     await sleep(interval)
-    await assertDocumentContainsSpinner(absDocPath, matcher, retries - 1, interval)
+    await assertDocumentContainsSpinner(absDocPath, matcher, exact, retries - 1, interval)
   }
 }
 

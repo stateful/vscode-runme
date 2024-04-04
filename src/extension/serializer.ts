@@ -66,6 +66,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
+  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
+    getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
 
   constructor(
     protected context: ExtensionContext,
@@ -165,6 +167,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const metadata = data.metadata
     data = new NotebookData(cells)
     data.metadata = metadata
+
+    this.reconcileCellIdentity(data)
 
     let encoded: Uint8Array
     try {
@@ -335,6 +339,26 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected printCell(content: string, languageId = 'markdown') {
     return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
   }
+
+  /**
+   * Reconciles cell identity based on lifecycle identity, ie removes it if cell identity is not required.
+   */
+  protected reconcileCellIdentity(data: NotebookData): NotebookData {
+    const identity = this.lifecycleIdentity
+
+    if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
+      return data
+    }
+
+    data.cells.forEach((cell) => {
+      if (cell.metadata?.['id'] !== undefined) {
+        cell.metadata['runme.dev/id'] = cell.metadata['id']
+        delete cell.metadata['id']
+      }
+    })
+
+    return data
+  }
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -383,8 +407,6 @@ export class WasmSerializer extends SerializerBase {
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
-  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
-    getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
   protected readonly lidDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
@@ -499,9 +521,8 @@ export class GrpcSerializer extends SerializerBase {
     const identity = this.lifecycleIdentity
     switch (identity) {
       case RunmeIdentity.UNSPECIFIED:
-      case RunmeIdentity.DOCUMENT: {
+      case RunmeIdentity.DOCUMENT:
         break
-      }
       default: {
         data.cells.forEach((cell) => {
           if (cell.kind !== CellKind.CODE) {

@@ -48,7 +48,7 @@ describe('Test suite: Empty file with setting None (0)', async () => {
     await updateLifecycleIdentitySetting(0)
     await reloadWindow()
     await saveFile(browser)
-    await assertDocumentContainsSpinner(absDocPath, '')
+    await assertDocumentContainsSpinner(absDocPath, '', true)
   })
 
   after(() => {
