@@ -34,7 +34,7 @@ vi.mock('node:fs/promises', () => ({
 const COMMAND_MODE_INLINE_SHELL = 1
 const COMMAND_MODE_TEMP_FILE = 2
 
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   CommandMode: {
     INLINE_SHELL: 1,
     TEMP_FILE: 2,

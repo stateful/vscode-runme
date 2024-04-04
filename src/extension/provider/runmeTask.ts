@@ -41,7 +41,7 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runnerTypes'
+import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runner/v1'
 
 import { RunmeLauncherProvider } from './launcher'
 

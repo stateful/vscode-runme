@@ -16,7 +16,7 @@ import getLogger from '../logger'
 import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV } from '../../constants'
-import { ResolveProgramRequest_Mode } from '../grpc/runnerTypes'
+import { ResolveProgramRequest_Mode } from '../grpc/runner/v1'
 
 import {
   getCmdShellSeq,

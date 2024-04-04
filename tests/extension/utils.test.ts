@@ -32,7 +32,7 @@ import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
 
 vi.mock('../../src/extension/grpc/client', () => ({}))
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
 

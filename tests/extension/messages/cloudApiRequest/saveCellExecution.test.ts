@@ -13,7 +13,7 @@ import { getCellById } from '../../../../src/extension/cell'
 
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
-vi.mock('../../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 vi.mock('../../../../src/extension/services/runme', () => ({
   RunmeService: class {
     async getUserToken() {}

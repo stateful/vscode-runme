@@ -78,7 +78,7 @@ import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
 import EnvVarsChangedEvent from './events/envVarsChanged'
-import { SessionEnvStoreType } from './grpc/runnerTypes'
+import { SessionEnvStoreType } from './grpc/runner/v1'
 
 enum ConfirmationItems {
   Yes = 'Yes',

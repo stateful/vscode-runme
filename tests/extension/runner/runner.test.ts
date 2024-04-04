@@ -20,7 +20,7 @@ import GrpcRunner, {
   RunProgramOptions,
 } from '../../../src/extension/runner'
 import { GrpcRunnerEnvironment } from '../../../src/extension/runner/environment'
-import { type ExecuteResponse } from '../../../src/extension/grpc/runnerTypes'
+import { type ExecuteResponse } from '../../../src/extension/grpc/runner/v1'
 import { ActionCommand, RunmeCodeLensProvider } from '../../../src/extension/provider/codelens'
 import { RunmeTaskProvider } from '../../../src/extension/provider/runmeTask'
 import { isWindows } from '../../../src/extension/utils'

@@ -37,7 +37,7 @@ vi.mock('../../src/extension/executors/index.js', () => ({
   ENV_STORE_MANAGER: {},
 }))
 vi.mock('../../src/extension/runner', () => ({}))
-vi.mock('../../src/extension/grpc/runnerTypes', () => ({}))
+vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
 vi.mock('../../src/extension/commands', () => ({ askAlternativeOutputsAction: vi.fn() }))
 vi.mock('../../src/extension/messages/platformRequest/saveCellExecution')
 vi.mock('../../src/extension/messages/cloudApiRequest/saveCellExecution')

@@ -18,7 +18,7 @@ import {
   ResolveProgramRequest_Mode,
   SessionEnvStoreType,
   Winsize,
-} from '../grpc/runnerTypes'
+} from '../grpc/runner/v1'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'

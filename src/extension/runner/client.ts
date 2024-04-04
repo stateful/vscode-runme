@@ -18,7 +18,7 @@ import {
   MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
-} from '../grpc/runnerTypes'
+} from '../grpc/runner/v1'
 import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
 

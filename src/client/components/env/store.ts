@@ -10,7 +10,7 @@ import '../tooltip'
 import { formatDate, formatDateWithTimeAgo } from '../../utils'
 import { SnapshotEnv } from '../../../types'
 import { CustomErrorIcon } from '../icons/error'
-import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runnerTypes'
+import { MonitorEnvStoreResponseSnapshot_Status } from '../../../extension/grpc/runner/v1'
 
 const RUNME_ENV_VARS_NAME = '__'
 

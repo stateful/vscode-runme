@@ -34,7 +34,7 @@ import {
   ResolveProgramRequest_Mode,
   ResolveProgramResponse_Status,
   ResolveProgramResponse_VarResult,
-} from '../../grpc/runnerTypes'
+} from '../../grpc/runner/v1'
 import { closeTerminalByEnvID } from '../task'
 import {
   getCellProgram,

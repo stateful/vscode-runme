@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode'
 
 import { IRunnerServiceClient } from '../grpc/client'
-import { MonitorEnvStoreRequest } from '../grpc/runnerTypes'
+import { MonitorEnvStoreRequest } from '../grpc/runner/v1'
 
 import { IRunnerChild } from './types'
 
