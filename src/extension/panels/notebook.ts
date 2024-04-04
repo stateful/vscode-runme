@@ -99,7 +99,7 @@ export class NotebookPanel extends TanglePanel {
   }
 
   private updateWebview(vars: SnapshotEnv[]) {
-    console.log('updating webview', this.#webviewView, this.#webviewView?.webview)
+    // console.log('updating webview', this.#webviewView, this.#webviewView?.webview)
     this.#webviewView!.webview.html = this.getHtml(
       this.#webviewView!.webview,
       this.context.extensionUri,
