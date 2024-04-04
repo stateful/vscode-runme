@@ -71,9 +71,8 @@ describe('Test suite: Cell with existent identity and setting document only (2)'
 
       ## Scenario
 
-      \`\`\`js {"id":"01HER3GA0RQKJETKK5X5PPRTB4"}
+      \`\`\`js
       console.log("Hello from JS")
-
       \`\`\`
 
       `,
