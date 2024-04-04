@@ -157,7 +157,7 @@ export class RunmeExtension {
     ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
-    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner, server, kernel)
+    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner)
 
     const codeLensProvider = new RunmeCodeLensProvider(
       context.extensionUri,
