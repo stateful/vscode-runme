@@ -53,7 +53,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
     const workbench = await browser.getWorkbench()
     await workbench.executeCommand('Notebook: Focus First Cell')
     await browser.keys([Key.Enter])
-    const cell = await notebook.getCell('console.log("Always bet on JS!")')
+    const cell = await notebook.getCell('console.log("Run scripts via Shebang!")')
     await cell.focus()
     await saveFile(browser)
 
@@ -73,7 +73,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
       ## Scenario
 
       \`\`\`js {"name":"foo"}
-      console.log("Always bet on JS!")
+      console.log("Run scripts via Shebang!")
 
       \`\`\`
 

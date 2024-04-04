@@ -35,7 +35,7 @@ puts "Reversed words: #{sentence.reverse_words}"
 ## or JavaScript:
 
 ```js {"id":"01HF7B0KJQ8625WYMCRNP9C0RE"}
-console.log("Always bet on JS!")
+console.log("Run scripts via Shebang!")
 ```
 
 ## even TypeScript:

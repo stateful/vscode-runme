@@ -53,7 +53,7 @@ describe('Test suite: Cell with existent identity and setting document only (2)'
     const workbench = await browser.getWorkbench()
     await workbench.executeCommand('Notebook: Focus First Cell')
     await browser.keys([Key.Enter])
-    const cell = await notebook.getCell('console.log("Hello from JS")')
+    const cell = await notebook.getCell('console.log("Hello via Shebang")')
     await cell.focus()
     await saveFile(browser)
 
@@ -72,7 +72,7 @@ describe('Test suite: Cell with existent identity and setting document only (2)'
       ## Scenario
 
       \`\`\`js
-      console.log("Hello from JS")
+      console.log("Hello via Shebang")
       \`\`\`
 
       `,
