@@ -79,6 +79,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
 
 
       `,
+      true,
     )
   })
 

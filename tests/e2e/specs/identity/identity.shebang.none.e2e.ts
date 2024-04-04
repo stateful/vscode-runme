@@ -70,6 +70,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
       \`\`\`
 
       `,
+      true,
     )
   })
 
