@@ -16,10 +16,21 @@ Runme enables you to execute interactive runbooks using Markdown. More specifica
 
 You can author and execute Shell scripts inside a Runme Runbook, making them accessible alongside your operational documentation. Essentially, anything you can execute in your terminal can be seamlessly incorporated here, whether it's within a notebook cell or a separate .sh file.
 
-Feel free to run the following shell script example, it will give you the following information about your system:
- - Disk usage
- - Memory usage
- - CPU load
+Let's get started by running a simple script:
+
+```sh
+echo "What are you waiting for 👀 🕰"
+sleep 2
+echo "to write Runbooks 📔"
+sleep 2
+echo "with Runme? 🚀"
+```
+
+Now you get the idea, (isn't that cool ?) let's be creative and think about more advanced examples, let's write a Shell script that prints the following system information:
+
+- Disk usage
+- Memory usage
+- CPU load
 
 ```sh {"name":"shell-script","terminalRows":"20"}
 #!/bin/bash
@@ -61,9 +72,10 @@ You can write interactive (Stdin) programs too without leaving your Markdown fil
 Since this is a long running process, ensure we've marked the cell as a background process, otherwise the cell execution will block the Notebook UX, you can configure that at the cell level configuration section, check the background option from the advanced tab. [Learn more here](https://docs.runme.dev/configuration/cell-level#handle-long-running-processes).
 
 Feel free to run the following shell script example, it's similar to the above example with the main difference is now interactive!, it will give you the following information about your system:
- - Disk usage
- - Memory usage
- - CPU load
+
+- Disk usage
+- Memory usage
+- CPU load
 
 ```sh {"background":"true","name":"interactive-shell-script","terminalRows":"25"}
 #!/bin/sh
@@ -135,7 +147,7 @@ Take a look at the following example:
 ### Install kubectl
 
 ```sh {"background":"true","name":"install-kubectl","terminalRows":"25"}
-curl -# -v -o /dev/null "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
+curl -v -o /dev/null "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
 
 ```
 
@@ -242,7 +254,7 @@ spec:
 
 Non-shell scripts can also access environment variables, and are run from the current working directory:
 
-Export the following environment variable called **YOUR_NAME**
+Export the following environment variable called __YOUR_NAME__
 
 ```sh {"interactive":"false","promptEnv":"yes"}
 export YOUR_NAME=enter your name
@@ -250,7 +262,7 @@ export YOUR_NAME=enter your name
 
 Run the following python script that reads the environment variable specified in the previous step:
 
-```python
+```python {"interpreter":"/usr/bin/python3"}
 import os
 
 def main():
