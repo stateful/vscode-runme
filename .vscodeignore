@@ -16,3 +16,5 @@ vsc-extension-quickstart.md
 **/.node_modules
 tests
 coverage
+dagger
+dagger.json
