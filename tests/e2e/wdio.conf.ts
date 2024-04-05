@@ -97,7 +97,7 @@ export const config: Options.Testrunner = {
       'wdio:vscodeOptions': {
         extensionPath,
         workspacePath: extensionPath,
-        filePath: path.join(extensionPath, 'examples', 'README.md'),
+        filePath: path.join(extensionPath, 'tests', 'fixtures', 'README.md'),
         userSettings: {
           'terminal.integrated.defaultProfile.osx': 'bash',
         },
