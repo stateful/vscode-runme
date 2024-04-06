@@ -35,8 +35,15 @@ const baseConfig: Partial<Configuration> = {
     rules: [
       {
         test: /\.ts$/,
-        exclude: /node_modules/,
-        use: [{ loader: 'ts-loader' }],
+        include(value) {
+          if (value.includes('node_modules/@buf/stateful_runme.community_timostamm-protobuf-ts')) {
+            return true
+          }
+
+          return !value.includes('node_modules')
+        },
+        loader: 'ts-loader',
+        options: { allowTsInNodeModules: true }
       },
       {
         test: /\.m?js/,
