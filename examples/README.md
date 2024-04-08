@@ -18,7 +18,7 @@ You can author and execute Shell scripts inside a Runme Runbook, making them acc
 
 Let's get started by running a simple script:
 
-```sh
+```sh {"id":"01HTZB059ZFK301922XA4B0Z6V"}
 echo "What are you waiting for 👀 🕰"
 sleep 2
 echo "to write Runbooks 📔"
@@ -32,7 +32,7 @@ Now you get the idea, (isn't that cool ?) let's be creative and think about more
 - Memory usage
 - CPU load
 
-```sh {"name":"shell-script","terminalRows":"20"}
+```sh {"id":"01HTZB059ZFK301922XBD5B88R","name":"shell-script","terminalRows":"20"}
 #!/bin/bash
 
 check_disk_usage() {
@@ -77,7 +77,7 @@ Feel free to run the following shell script example, it's similar to the above e
 - Memory usage
 - CPU load
 
-```sh {"background":"true","name":"interactive-shell-script","terminalRows":"25"}
+```sh {"background":"true","id":"01HTZB059ZFK301922XDGZZNQ0","name":"interactive-shell-script","terminalRows":"25"}
 #!/bin/sh
 
 check_disk_usage() {
@@ -142,29 +142,75 @@ done
 
 The integrated Runme terminal is able to handle complex outputs too.
 
-Take a look at the following example:
+Take a look at the following example using Helm charts:
 
-### Install kubectl
+### Initialize a Helm Chart Repository
 
-```sh {"background":"true","name":"install-kubectl","terminalRows":"25"}
-curl -v -o /dev/null "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
+Ensure you have the following dependencies:
 
+- **Kubernetes** cluster installed.
+- A local configured copy of **kubectl**
+
+Read a complete [installation guide](https://helm.sh/docs/intro/install/) for installing Helm
+
+#### NGINX ingress controller for Kubernetes
+
+Now you have all the dependencies let's install a **NGINX** ingress controller for **Kubernetes**, this will allow to use NGINX as reverse proxy and load balancer.
+
+```sh {"background":"true","id":"01HTZB059ZFK301922XG2EDRWA","name":"get-nginx-ingress-info","terminalRows":"5"}
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
 ```
 
-You can confidently execute the provided curl command, as the downloaded file will be promptly discarded to /dev/null."
+Please specify an identifier for your controller release:
+
+```sh {"id":"01HTZB059ZFK301922XK8CSAV7","interactive":"false","name":"set-nginx-ingress-release-name","promptEnv":"yes"}
+export NGINX_INGRESS_CONTROLLER_RELEASE_NAME="Release name"
+echo "NGINX ingress controller release name:${NGINX_INGRESS_CONTROLLER_RELEASE_NAME}"
+```
+
+```sh {"id":"01HTZB059ZFK301922XQ0HWA91","name":"install-nginx-ingress-release"}
+helm install $NGINX_INGRESS_CONTROLLER_RELEASE_NAME ingress-nginx/ingress-nginx
+```
+
+#### Check the status of the ingress controller
+
+```sh {"background":"true","id":"01HTZB059ZFK301922XR8856MF","name":"check-nginx-ingress-release"}
+kubectl get service --namespace default "$NGINX_INGRESS_CONTROLLER_RELEASE_NAME-ingress-nginx-controller" --output wide --watch
+```
+
+#### Visualize your Helm releases
+
+Run the following command to list all deployed releases
+
+```sh {"id":"01HTZB059ZFK301922XTQ6HJXF","name":"nginx-ingress-list"}
+helm list
+```
+
+#### Check the status of the release
+
+```sh {"id":"01HTZB059ZFK301922XVDSFWEN","name":"nginx-ingress-release-status","terminalRows":"25"}
+helm status $NGINX_INGRESS_CONTROLLER_RELEASE_NAME
+```
+
+Now you are done, you can safely uninstall the Chart
+
+```sh {"id":"01HTZB059ZFK301922XYBSZD11","name":"uninstall-nginx-ingress-release"}
+helm uninstall $NGINX_INGRESS_CONTROLLER_RELEASE_NAME
+```
 
 ## Environment Variables
 
 ### Single line
 
-```sh {"name":"set-kubeconfig","promptEnv":"yes","terminalRows":"2"}
+```sh {"id":"01HTZB059ZFK301922Y0ASXB4P","name":"set-kubeconfig","promptEnv":"yes","terminalRows":"2"}
 #!/bin/bash
 export KUBECONFIG=Insert kubeconfig file path
 ```
 
 Verify the provided value for the environment var **KUBECONFIG**
 
-```sh {"name":"check-kubeconfig","terminalRows":"2"}
+```sh {"id":"01HTZB059ZFK301922Y49E91S2","name":"check-kubeconfig","terminalRows":"2"}
 echo "KUBECONFIG: $KUBECONFIG"
 ```
 
@@ -172,7 +218,7 @@ echo "KUBECONFIG: $KUBECONFIG"
 
 Runme also supports multiple lines where the export is just somewhere in between:
 
-```sh {"excludeFromRunAll":"true","name":"set-tokens","promptEnv":"yes","terminalRows":""}
+```sh {"excludeFromRunAll":"true","id":"01HTZB059ZFK301922Y6Q2F4CJ","name":"set-tokens","promptEnv":"yes","terminalRows":""}
 echo "Auth token for service foo"
 export SERVICE_FOO_TOKEN="foobar"
 echo "Auth token for service bar"
@@ -181,33 +227,33 @@ export SERVICE_BAR_TOKEN="barfoo"
 
 verify:
 
-```sh {"interactive":"false","name":"check-tokens"}
+```sh {"id":"01HTZB059ZFK301922Y78YYH7S","interactive":"false","name":"check-tokens"}
 echo "SERVICE_FOO_TOKEN: $SERVICE_FOO_TOKEN"
 echo "SERVICE_BAR_TOKEN: $SERVICE_BAR_TOKEN"
 ```
 
 You can also change existing environment variables, like adding changes to `$PATH`:
 
-```sh {"interactive":"true","name":"export-path"}
+```sh {"id":"01HTZB059ZFK301922YAVANQMG","interactive":"true","name":"export-path"}
 export PATH="/some/path:$PATH"
 echo $PATH
 ```
 
 Supports piping content into an environment variable:
 
-```sh {"name":"export-license"}
+```sh {"id":"01HTZB059ZFK301922YCZVX6R6","name":"export-license"}
 export LICENSE=$(cat ../LICENSE)
 ```
 
 verify:
 
-```sh {"interactive":"false","name":"check-license"}
+```sh {"id":"01HTZB059ZFK301922YD52Q415","interactive":"false","name":"check-license"}
 echo "LICENSE: $LICENSE"
 ```
 
 Support multiline exports:
 
-```sh {"name":"export-privatekey"}
+```sh {"id":"01HTZB059ZFK301922YGE4AME1","name":"export-privatekey"}
 export PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA04up8hoqzS1+
 ...
@@ -217,7 +263,7 @@ l48DlnUtMdMrWvBlRFPzU+hU9wDhb3F0CATQdvYo2mhzyUs8B1ZSQz2Vy==
 
 verify:
 
-```sh {"interactive":"false","name":"check-privatekey"}
+```sh {"id":"01HTZB059ZFK301922YHV46MJF","interactive":"false","name":"check-privatekey"}
 echo "PRIVATE_KEY: $PRIVATE_KEY"
 ```
 
@@ -227,7 +273,7 @@ You can use the `interpreter` annotation to use different programming languages 
 
 Take a look at the following YAML file for creating a Kubernetes Deployment object:
 
-```yaml {"interpreter":"cat"}
+```yaml {"id":"01HTZB059ZFK301922YJXQTM2D","interpreter":"cat"}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -256,13 +302,13 @@ Non-shell scripts can also access environment variables, and are run from the cu
 
 Export the following environment variable called __YOUR_NAME__
 
-```sh {"interactive":"false","promptEnv":"yes"}
+```sh {"id":"01HTZB059ZFK301922YMJNQ6RH","interactive":"false","promptEnv":"yes"}
 export YOUR_NAME=enter your name
 ```
 
 Run the following python script that reads the environment variable specified in the previous step:
 
-```python {"interpreter":"/usr/bin/python3"}
+```python {"id":"01HTZB059ZFK301922YNN12VKZ","interpreter":"/usr/bin/python3"}
 import os
 
 def main():
@@ -280,7 +326,7 @@ You can visualize static and dynamic images inside your Runbook.
 
 Run the following curl command to render a Kubernetes cluster Grafana dashboard.
 
-```sh {"interactive":"false,","mimeType":"image/png"}
+```sh {"id":"01HTZB059ZFK301922YRJ9G5EW","interactive":"false,","mimeType":"image/png"}
 curl -s https://grafana.com/api/dashboards/6417/images/4128/image
 ```
 
@@ -290,13 +336,13 @@ With [`antonmedv/fx`](https://github.com/antonmedv/fx) you can inspect JSON file
 
 Ensure you have **fx** installed (it requires [go](https://go.dev/)), run the following command:
 
-```sh
+```sh {"id":"01HTZB059ZFK301922YTAQ7XVY"}
 go install github.com/antonmedv/fx@latest
 ```
 
 Now you can explore any json file interactively, run the following command to explore the weather at Berlin 🍻
 
-```sh {"background":"true","promptEnv":"no","terminalRows":"20"}
+```sh {"background":"true","id":"01HTZB059ZFK301922YVFFN8R5","promptEnv":"no","terminalRows":"20"}
 export FX_THEME="2"
 curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
 ```
