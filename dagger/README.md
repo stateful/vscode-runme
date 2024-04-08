@@ -15,18 +15,18 @@ dagger call --progress auto \
   --src ../runme \
   build \
   file \
-    --output /Users/sourishkrout/Projects/stateful/oss/vscode-runme/bin/runme \
+    --output /tmp/runme/runme \
     --path runme
 ```
 
 ```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"build-extension","terminalRows":"25"}
-dagger --progress=plain \
+dagger --progress=auto \
   call \
   with-remote \
     --remote "github.com/stateful/vscode-runme" \
-    --ref "4e3007e2920299b9491ea8f4c7aa9f33cc649afc" \
+    --ref "main" \
   with-container \
-    --binary /Users/sourishkrout/Projects/stateful/oss/vscode-runme/bin/runme \
+    --binary /tmp/runme/runme \
     --presetup /Users/sourishkrout/Projects/stateful/oss/vscode-runme/presetup.sh \
   build-extension \
     --gh-token $(gh auth token)
