@@ -921,7 +921,16 @@
         "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
         "command": "runme.keybinding.noop"
       }
-    ]
+    ],
+    "terminal": {
+      "profiles": [
+        {
+          "id": "runme.terminalProfile",
+          "icon": "terminal",
+          "title": "Runme Terminal"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "run-s build:dev",
