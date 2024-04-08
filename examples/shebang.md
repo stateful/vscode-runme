@@ -8,9 +8,7 @@ runme:
 
 By default Runme can run everything that is also installed on your machine.
 
-Shebang is a versatile tool designed to execute scripts written in various scripting languages including Shell, Perl, Python, and more. Runme integrates Shebang to enable users to run the script of their choice directly from the Markdown file in their preferred programming language.
-
-Read more in our [docs](https://docs.runme.dev/features#interpreter)
+Shebang is a versatile tool designed to execute scripts written in various scripting languages including Shell, Perl, Python, Ruby, Node.js, and [more](https://docs.runme.dev/configuration/shebang). Runme integrates Shebang to enable users to run the script of their choice directly from the Markdown file in their preferred programming language.
 
 Let's learn how to use multiple programming languages to interact with your containers!
 
@@ -21,13 +19,13 @@ In this example we will write a simple script in different programming languages
 - Docker 🐳
 - Python 🐍 (for Python example)
 - Ruby 💎 (for Ruby example)
-- PHP 🤨 (for PHP example)
+- Node.js 🍦 (for Node.js example)
 
 ## Ensure docker is up and running
 
 Run the following check, just to ensure you have Docker up and running
 
-```sh {"terminalRows":"3"}
+```sh {"id":"01HTZBCXFZ0V7P4AXE70CNSGPG","terminalRows":"3"}
 #!/bin/bash
 
 # Check if Docker is installed
@@ -50,21 +48,22 @@ echo "Docker is installed and running. ✅"
 
 Ensure you have a list one container to list, if you don't have one, you can start a **nginx** container by running the following command:
 
-```sh
+```sh {"id":"01HTZBCXFZ0V7P4AXE70RXT9M1"}
 docker run -d --name my_runme_demo_container -p 8080:80 nginx
 ```
 
 ## Python 🐍
 
 ### Requirements
+
 - Ensure you have python installed
 - Install the docker and prettytable packages
 
-```sh {"terminalRows":"20"}
+```sh {"id":"01HTZBCXFZ0V7P4AXE74GQN99H","terminalRows":"20"}
 pip install docker prettytable
 ```
 
-```py
+```py {"id":"01HTZBCXFZ0V7P4AXE77YQVFAG"}
 import docker
 from prettytable import PrettyTable
 
@@ -86,56 +85,38 @@ if __name__ == "__main__":
 
 ```
 
-## Ruby
+## Ruby 💎
 
 ### Requirements
 
 - Ensure you have Ruby installed
 - Install docker-api and terminal-table gems
 
-Ensure you have ruby installed at least running version >= 2.7.0, run the following command:
+Ensure you have ruby installed at least running version >= 2.7.0 (required to have this demo working).
+You can run the following command to check your ruby version:
 
-```sh {"terminalRows":"2"}
+```sh {"id":"01HTZBCXFZ0V7P4AXE79429E8J","name":"check-ruby-version","terminalRows":"2"}
 ruby -v
-```
-
-### Installing Ruby
-
-If you are running an outdated version, you can use rvm (Ruby Version Manager) to install it.
-Run the following command:
-
-```sh
-curl -sSL https://get.rvm.io | bash
-```
-
-💡 Follow up the output instructions from the above command in order to have **rvm** command available in the terminal, usually you will need to run the **source** command.
-
-Install the specific ruby version needed for our demo
-
-```sh
-rvm install "ruby-2.7.2"
-```
-
-Now you have installed ruby, ensure you are using that specific version, run the following command:
-
-```sh {"terminalRows":"3"}
-rvm current
 ```
 
 Install required gems
 
-```rb
-require 'docker'
+```sh {"id":"01HTZBG5NYPFHDKP0BQTPDQSE3"}
+gem install docker-api terminal-table
+```
+
+```rb {"id":"01HTZBCXFZ0V7P4AXE7CSQQ7ST"}
+require 'docker-api'
 require 'terminal-table'
 
 def list_running_containers
   Docker.url = 'unix:///var/run/docker.sock'
-  containers = Docker::Container.all(:all => true)
+  containers = Docker::Container.all(:all => false)
 
   if containers.any?
-    table = Terminal::Table.new :headings => ['Container ID', 'Name', 'Image', 'Status', 'Ports'] do |t|
+    table = Terminal::Table.new :headings => ['Container ID', 'Name', 'Image', 'Status'] do |t|
       containers.each do |container|
-        t << [container.id[0..11], container.info['Names'][0], container.info['Image'], container.info['State'], container.info['Ports']]
+        t << [container.id[0..11], container.info['Names'][0], container.info['Image'], container.info['State']]
       end
     end
     puts "Running containers:"
@@ -149,39 +130,48 @@ list_running_containers
 
 ```
 
-## or JavaScript:
+## Node.js 🍦
 
-```js
-console.log("Run scripts via Shebang!")
+```sh {"background":"true","id":"01HTZBXZHJ1ARVB67SD6FQMXA7"}
+npm i cli-table3  dockerode
 ```
 
-## even TypeScript:
+```js {"id":"01HTZBCXFZ0V7P4AXE7D90XPDT"}
+const Docker = require('dockerode');
+const Table = require('cli-table3');
 
-Make sure you have `ts-node` installed globally:
+// Initialize Docker API
+const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 
-```sh
-npm i -g ts-node
-```
+function listRunningContainers() {
+  docker.listContainers({ all: false }, (err, containers) => {
+    if (err) {
+      console.error('Error fetching containers:', err);
+      return;
+    }
 
-then run:
+    if (containers.length > 0) {
+      const table = new Table({
+        head: ['Container ID', 'Name', 'Image', 'Status']
+      });
 
-```ts
-const myVar: string = 'I am a typed string!'
-console.log(myVar)
-```
+      containers.forEach(containerInfo => {
+        const containerId = containerInfo.Id.substr(0, 12);
+        const containerName = containerInfo.Names[0];
+        const containerImage = containerInfo.Image;
+        const containerStatus = containerInfo.State;
 
-## and, of course, PHP
+        table.push([containerId, containerName, containerImage, containerStatus]);
+      });
 
-Be sure to have the `php` interpreter in your `$PATH`:
+      console.log('Running containers:');
+      console.log(table.toString());
+    } else {
+      console.log('No running containers found.');
+    }
+  });
+}
 
-```php {"interpreter":"php"}
-<?php
-$greeting = "Hello, World!";
-$currentDateTime = date('Y-m-d H:i:s');
+listRunningContainers();
 
-// Concatenate the greeting with the current date and time
-$fullGreeting = $greeting . " It's now " . $currentDateTime . "\n";
-
-echo $fullGreeting;
-?>
 ```
