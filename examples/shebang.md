@@ -52,39 +52,6 @@ Ensure you have a list one container to list, if you don't have one, you can sta
 docker run -d --name my_runme_demo_container -p 8080:80 nginx
 ```
 
-## Python 🐍
-
-### Requirements
-
-- Ensure you have python installed
-- Install the docker and prettytable packages
-
-```sh {"id":"01HTZBCXFZ0V7P4AXE74GQN99H","terminalRows":"20"}
-pip install docker prettytable
-```
-
-```py {"id":"01HTZBCXFZ0V7P4AXE77YQVFAG"}
-import docker
-from prettytable import PrettyTable
-
-def list_running_containers():
-    client = docker.from_env()
-    containers = client.containers.list()
-    
-    if containers:
-        table = PrettyTable(["Container ID", "Name", "Image", "Status"])
-        for container in containers:
-            table.add_row([container.id[:12], container.name, container.attrs['Config']['Image'], container.status])
-        print("Running containers:")
-        print(table)
-    else:
-        print("No running containers found.")
-
-if __name__ == "__main__":
-    list_running_containers()
-
-```
-
 ## Ruby 💎
 
 ### Requirements
