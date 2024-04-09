@@ -17,7 +17,6 @@ In this example we will write a simple script in different programming languages
 💡 Before starting, ensure you have the following installed in your machine:
 
 - Docker 🐳
-- Python 🐍 (for Python example)
 - Ruby 💎 (for Ruby example)
 - Node.js 🍦 (for Node.js example)
 
