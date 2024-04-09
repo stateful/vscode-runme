@@ -8,22 +8,22 @@ title: Examples
 
 # Runme Examples
 
-Runme enables you to execute interactive runbooks using Markdown. More specifically, Runme runs your code and commands inside your fenced code blocks (shell, bash, zsh, but also, Ruby, Python, etc) see [shebang.md](shebang.md) to see more examples using different programming languages.
+Runme enables you to execute interactive notebooks using Markdown. More specifically, Runme runs your code and commands inside your fenced code blocks (shell, bash, zsh, but also, Ruby, Python, etc) see [shebang.md](shebang.md) to see more examples using different programming languages.
 
 ## Shell
 
 ### Shell scripts
 
-You can author and execute Shell scripts inside a Runme Runbook, making them accessible alongside your operational documentation. Essentially, anything you can execute in your terminal can be seamlessly incorporated here, whether it's within a notebook cell or a separate .sh file.
+You can author and execute Shell scripts inside a Runme Notebook, making them accessible alongside your operational documentation. Essentially, anything you can execute in your terminal can be seamlessly incorporated here, whether it's within a notebook cell or a separate .sh file.
 
 Let's get started by running a simple script:
 
 ```sh {"id":"01HTZB059ZFK301922XA4B0Z6V"}
-echo "What are you waiting for 👀 🕰"
+echo "Revitalize 🛟 your Cloud docs…"
+sleep 1
+echo "colocating the with IaC/Code 📔"
 sleep 2
-echo "to write Runbooks 📔"
-sleep 2
-echo "with Runme? 🚀"
+echo "with ▶️ Runme! 🤖"
 ```
 
 Now you get the idea, (isn't that cool ?) let's be creative and think about more advanced examples, let's write a Shell script that prints the following system information:
@@ -322,12 +322,12 @@ if __name__ == "__main__":
 
 ## Curl an image
 
-You can visualize static and dynamic images inside your Runbook.
+You can visualize static and dynamic images inside your notebook.
 
-Run the following curl command to render a Kubernetes cluster Grafana dashboard.
+Run the following curl command to render the beloved OpenTelemetry telescope logo:
 
-```sh {"id":"01HTZB059ZFK301922YRJ9G5EW","interactive":"false,","mimeType":"image/png"}
-curl -s https://grafana.com/api/dashboards/6417/images/4128/image
+```sh {"id":"01HTZB059ZFK301922YRJ9G5EW","interactive":"false,","mimeType":"image/svg+xml"}
+curl -s https://opentelemetry.io/img/logos/opentelemetry-horizontal-color.svg
 ```
 
 ## Inspect JSON files
