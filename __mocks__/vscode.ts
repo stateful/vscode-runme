@@ -99,6 +99,7 @@ export const window = {
   registerTreeDataProvider: vi.fn(),
   registerUriHandler: vi.fn(),
   registerWebviewViewProvider: vi.fn(),
+  registerTerminalProfileProvider: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidCloseTerminal: vi.fn(),
   withProgress: vi.fn(),
   onDidChangeActiveColorTheme: vi.fn().mockReturnValue({ dispose: vi.fn() }),
