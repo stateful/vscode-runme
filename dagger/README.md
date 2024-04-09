@@ -20,7 +20,7 @@ dagger call --progress auto \
 ```
 
 ```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"build-extension","terminalRows":"25"}
-dagger --progress=auto \
+dagger --progress auto \
   call \
   with-remote \
     --remote "github.com/stateful/vscode-runme" \
