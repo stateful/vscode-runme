@@ -133,7 +133,7 @@ list_running_containers
 ## Node.js 🍦
 
 ```sh {"background":"true","id":"01HTZBXZHJ1ARVB67SD6FQMXA7"}
-npm i cli-table3  dockerode
+npm i cli-table3 dockerode
 ```
 
 ```js {"id":"01HTZBCXFZ0V7P4AXE7D90XPDT"}
