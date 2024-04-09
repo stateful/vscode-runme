@@ -108,6 +108,7 @@ export class Kernel implements Disposable {
   )
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
+  protected address?: string
   protected runner?: IRunner
   protected runnerEnv?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
@@ -713,6 +714,8 @@ export class Kernel implements Disposable {
       return
     }
 
+    this.address = address
+
     log.info('Requesting new runner environment.')
 
     try {
@@ -813,11 +816,18 @@ export class Kernel implements Disposable {
         token: CancellationToken,
       ) {
         const runner = kernel.runner!
+        // todo(sebastian): why are the env collection mutations not doing this?
+        const envsRecords = getRunnerSessionEnvs(
+          kernel.context.extensionUri,
+          kernel.runnerEnv,
+          kernel.address,
+        )
         const sysShell = getSystemShellPath() || '/bin/bash'
         const program = await runner.createProgramSession({
           programName: `${sysShell} -l`,
           tty: true,
           cwd,
+          envs: Object.entries(envsRecords).map(([k, v]) => `${k}=${v}`),
         })
 
         program.registerTerminalWindow('vscode')
