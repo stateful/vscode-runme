@@ -9,7 +9,9 @@ describe('Runme Frontmatter', async () => {
   it('open category markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/frontmatter/skipPrompts/ENABLED.md`),
+        vscode.Uri.file(
+          `${vscode.workspace.rootPath}/tests/fixtures/frontmatter/skipPrompts/ENABLED.md`,
+        ),
       )
       return vscode.window.showNotebookDocument(doc, {
         viewColumn: vscode.ViewColumn.Active,

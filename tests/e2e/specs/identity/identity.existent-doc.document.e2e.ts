@@ -1,11 +1,15 @@
 import url from 'node:url'
 import path from 'node:path'
-import cp from 'node:child_process'
 
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
-import { assertDocumentContainsSpinner, saveFile, updateSettings } from '../../helpers/index.js'
+import {
+  assertDocumentContainsSpinner,
+  revertChanges,
+  saveFile,
+  updateSettings,
+} from '../../helpers/index.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
@@ -29,7 +33,7 @@ describe('Test suite: Document with existent identity and setting Document only 
   it('open identity markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/identity/existent-doc-id.md`),
+        vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/existent-doc-id.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
         viewColumn: vscode.ViewColumn.Active,
@@ -46,7 +50,7 @@ describe('Test suite: Document with existent identity and setting Document only 
   it('should not remove the front matter with the identity', async () => {
     const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
       return `${vscode.workspace.rootPath}${documentPath}`
-    }, '/examples/identity/existent-doc-id.md')
+    }, '/tests/fixtures/identity/existent-doc-id.md')
 
     await updateSettings({ setting: 'runme.server.lifecycleIdentity', value: 2 })
     await reloadWindow()
@@ -86,16 +90,6 @@ describe('Test suite: Document with existent identity and setting Document only 
 
   after(() => {
     //revert changes we made during the test
-    const mdPath = path.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'examples',
-      'identity',
-      'existent-doc-id.md',
-    )
-    cp.execSync(`git checkout -- ${mdPath}`)
+    revertChanges('existent-doc-id.md')
   })
 })

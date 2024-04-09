@@ -10,7 +10,7 @@ describe('Runme Frontmatter', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(
-          `${vscode.workspace.rootPath}/examples/frontmatter/skipPrompts/DISABLED.md`,
+          `${vscode.workspace.rootPath}/tests/fixtures/frontmatter/skipPrompts/DISABLED.md`,
         ),
       )
       return vscode.window.showNotebookDocument(doc, {

@@ -1,2 +1,0 @@
-brew "deno"
-brew "jq"
