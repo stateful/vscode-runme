@@ -18,6 +18,7 @@ import {
   NotebookRange,
   NotebookEditorRevealType,
   NotebookEditorSelectionChangeEvent,
+  CancellationToken,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
@@ -58,7 +59,7 @@ import {
   getWorkspaceFolder,
   getRunnerSessionEnvs,
 } from './utils'
-import { isShellLanguage } from './executors/utils'
+import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
 import { IRunner, IRunnerReady } from './runner'
@@ -107,6 +108,7 @@ export class Kernel implements Disposable {
   )
   protected messaging = notebooks.createRendererMessaging('runme-renderer')
 
+  protected address?: string
   protected runner?: IRunner
   protected runnerEnv?: IRunnerEnvironment
   protected runnerReadyListener?: Disposable
@@ -158,6 +160,7 @@ export class Kernel implements Disposable {
       window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
       this.panelManager,
       this.onVarsChangeEvent,
+      this.registerTerminalProfile(),
     )
   }
 
@@ -711,6 +714,8 @@ export class Kernel implements Disposable {
       return
     }
 
+    this.address = address
+
     log.info('Requesting new runner environment.')
 
     try {
@@ -798,6 +803,44 @@ export class Kernel implements Disposable {
     if (!exists) {
       this.activeTerminals.push({ ...terminal, executionId, runmeId })
     }
+  }
+
+  registerTerminalProfile(): Disposable {
+    const kernel = this
+    const baseUri = workspace.workspaceFolders![0].uri
+    const cwd = baseUri.fsPath
+
+    return window.registerTerminalProfileProvider('runme.terminalProfile', {
+      async provideTerminalProfile(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        token: CancellationToken,
+      ) {
+        const runner = kernel.runner!
+        // todo(sebastian): why are the env collection mutations not doing this?
+        const envsRecords = getRunnerSessionEnvs(
+          kernel.context.extensionUri,
+          kernel.runnerEnv,
+          kernel.address,
+        )
+        const sysShell = getSystemShellPath() || '/bin/bash'
+        const program = await runner.createProgramSession({
+          programName: `${sysShell} -l`,
+          tty: true,
+          cwd,
+          envs: Object.entries(envsRecords).map(([k, v]) => `${k}=${v}`),
+        })
+
+        program.registerTerminalWindow('vscode')
+        program.setActiveTerminalWindow('vscode')
+
+        return {
+          options: {
+            name: 'Runme Terminal',
+            pty: program,
+          },
+        }
+      },
+    })
   }
 
   getTerminal(runmeId: string) {
