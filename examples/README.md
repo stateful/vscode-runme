@@ -21,7 +21,7 @@ Let's get started by running a simple script:
 ```sh {"id":"01HTZB059ZFK301922XA4B0Z6V"}
 echo "Revitalize 🛟 your Cloud docs…"
 sleep 1
-echo "colocating the with IaC/Code 📔"
+echo "colocating them with IaC/Code 📔"
 sleep 2
 echo "with ▶️ Runme! 🤖"
 ```
