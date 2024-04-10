@@ -999,8 +999,8 @@
   "dependencies": {
     "@apollo/client": "^3.8.3",
     "@aws-sdk/client-ec2": "^3.515.0",
-    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "2.9.3-20240307201956-5967f8ae08c7.1",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "2.9.3-20240406201323-8223854c0c39.1",
+    "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240405170206-aa6833605627.3",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240406201323-8223854c0c39.3",
     "@google-cloud/compute": "^4.1.0",
     "@google-cloud/container": "^5.6.0",
     "@protobuf-ts/grpc-transport": "^2.9.1",
