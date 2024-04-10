@@ -63,7 +63,7 @@ Chances are, you're not the first trailblazer to wander through here – someone
 
 Runme is under active development. Please be aware of following known limitations:
 
-- Only shell is currently supported on macOS, Linux, and Windows ([WSL]([url](https://learn.microsoft.com/en-us/windows/wsl/))). PowerShell is not supported yet
+- Only shell is currently supported on macOS, Linux, and Windows ([WSL](https://code.visualstudio.com/docs/remote/wsl)). PowerShell is not supported yet
 - Be aware of edge cases. Let us know when you hit any snags. We appreciate it!
 
 We would love to hear feedback, appreciate your patience, as Runme continutes to harden. Get in touch please!
