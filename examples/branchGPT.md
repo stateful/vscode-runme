@@ -4,9 +4,13 @@ runme:
   version: v3
 ---
 
-# Enter BranchGPT
+## ⛔️  This feature is deprecated
 
-🛑 Please note that BranchGPT is deprecated and no longer available in the `runme` CLI.
+BranchGPT is deprecated and no longer available in the `runme` CLI.
+
+If you have feedback / questions [Join our Community](https://runme.dev/community)
+
+# Enter BranchGPT
 
 [![](https://badgen.net/badge/Run%20this%20/Demo/5B3ADF?icon=https://runme.dev/runme_logo.svg)](https://runme.dev/api/runme?repository=https://github.com/stateful/vscode-runme.git&fileToOpen=examples/branchGPT.md)
 
