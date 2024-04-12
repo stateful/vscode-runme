@@ -10,21 +10,21 @@ AWS EC2 enables you to deploy cloud-native applications with top-tier security, 
 
 Discover how you can leverage Runme's robust Notebook Cloud Renderers to engage with your EC2 resources in ways you've never imagined before!
 
-💡 **Important!** Be sure to run through the on-time guide [Getting started with Runme Noteboks for AWS](setup.md).
+💡 **Important!** Be sure to run through the one-time guide [Getting started with Runme Noteboks for AWS](setup.md).
 
 ## List EC2 Instances
 
-One of the fundamental tasks in working with EC2 is to list your instances, serving as the foundation for other operations such as managing instance states—starting, stopping, rebooting, or terminating them—or securely connecting via SSH.
+One of the fundamental tasks in working with EC2 is to list your instances, serving as the foundation for other operations such as managing instance states —starting, stopping, rebooting, or terminating them— or securely connecting via SSH.
 
 Runme seamlessly integrates with your AWS EC2 resource URLs, mirroring your navigation in the AWS Console directly within your Notebook. This eliminates the need to open the console separately; instead, you can access its functionality right within your Notebook file!
 
-Experience it firsthand by running the following URL to see Runme in action!
+Experience it firsthand by running the following URL to see Runme in action:
 
 ```sh {"id":"01HQRAF82SC4YPTNRGQ2TZ7DK2"}
 https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances
 ```
 
-Isn't that cool ? that's a **Runme cloud renderer** in Action!
+Isn't that cool? that's a **Runme cloud renderer** in Action!
 
 When your AWS Credentials are correctly configured, you'll encounter a table resembling the one found in the AWS Console, showcasing essential details such as:
 
@@ -65,7 +65,7 @@ export EC2_INSTANCE_ID=
 echo "Configured EC2 Instance is $EC2_INSTANCE_ID"
 ```
 
-Now you have the instance configured, run the following command to connect:
+Now that you have the instance configured, run the following command to connect:
 
 ```sh {"background":"true","id":"01HQRAMMXGPYTFGQDMREZHNB37","terminalRows":"25"}
 aws ec2-instance-connect ssh --instance-id $EC2_INSTANCE_ID
