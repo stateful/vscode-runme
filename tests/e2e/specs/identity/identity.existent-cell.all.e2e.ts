@@ -28,7 +28,7 @@ describe('Test suite: Cell with existent identity and setting All (1)', async ()
   it('open identity markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/identity/existent-cell-id.md`),
+        vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/existent-cell-id.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
         viewColumn: vscode.ViewColumn.Active,
@@ -45,7 +45,7 @@ describe('Test suite: Cell with existent identity and setting All (1)', async ()
   it('should not remove the front matter with the identity', async () => {
     const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
       return `${vscode.workspace.rootPath}${documentPath}`
-    }, '/examples/identity/existent-cell-id.md')
+    }, '/tests/fixtures/identity/existent-cell-id.md')
 
     await updateLifecycleIdentitySetting(1)
     await reloadWindow()

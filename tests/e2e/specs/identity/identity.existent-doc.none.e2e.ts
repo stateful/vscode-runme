@@ -28,7 +28,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
   it('open identity markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/identity/existent-doc-id.md`),
+        vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/existent-doc-id.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
         viewColumn: vscode.ViewColumn.Active,
@@ -45,7 +45,7 @@ describe('Test suite: Document with existent identity and setting None (0)', asy
   it('should not remove the front matter with the identity', async () => {
     const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
       return `${vscode.workspace.rootPath}${documentPath}`
-    }, '/examples/identity/existent-doc-id.md')
+    }, '/tests/fixtures/identity/existent-doc-id.md')
 
     await updateLifecycleIdentitySetting(0)
     await reloadWindow()

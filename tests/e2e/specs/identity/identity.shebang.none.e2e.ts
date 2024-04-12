@@ -27,7 +27,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
   it('open identity markdown file', async () => {
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${vscode.workspace.rootPath}/examples/identity/shebang.md`),
+        vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/shebang.md`),
       )
       return vscode.window.showNotebookDocument(doc, {
         viewColumn: vscode.ViewColumn.Active,
@@ -44,7 +44,7 @@ describe('Test suite: Shebang with setting None (0)', async () => {
   it('should not add identity to front matter and cell', async () => {
     const absDocPath = await browser.executeWorkbench(async (vscode, documentPath) => {
       return `${vscode.workspace.rootPath}${documentPath}`
-    }, '/examples/identity/shebang.md')
+    }, '/tests/fixtures/identity/shebang.md')
 
     await updateLifecycleIdentitySetting(0)
     await reloadWindow()

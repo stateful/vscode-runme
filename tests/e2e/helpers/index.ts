@@ -128,7 +128,16 @@ export async function assertDocumentContainsSpinner(
 export function revertChanges(fileName: string) {
   //revert changes we made during the test
   const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-  const mdPath = path.resolve(__dirname, '..', '..', '..', 'examples', 'identity', fileName)
+  const mdPath = path.resolve(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'tests',
+    'fixtures',
+    'identity',
+    fileName,
+  )
   const settingsPath = path.resolve(__dirname, '..', '..', '..', '.vscode', 'settings.json')
   cp.execSync(`git checkout -- ${mdPath} ${settingsPath}`)
 }
