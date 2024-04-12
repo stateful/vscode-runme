@@ -10,7 +10,13 @@ import {
 } from 'vscode'
 import { z } from 'zod'
 import { Bus } from 'tangle'
-import { InstanceStateName, MonitoringState, _InstanceType } from '@aws-sdk/client-ec2'
+import {
+  GroupIdentifier,
+  InstanceLifecycleType,
+  InstanceStateName,
+  MonitoringState,
+  _InstanceType,
+} from '@aws-sdk/client-ec2'
 
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
@@ -234,6 +240,13 @@ export interface AWSEC2Instance extends StringIndexable {
   keyName: string | undefined
   launchTime: Date | undefined
   platform: string | undefined
+  securityGroups?: GroupIdentifier[]
+  lifecycle: InstanceLifecycleType | undefined
+}
+
+export interface AWSEC2InstanceDetails {
+  instance: AWSEC2Instance | undefined
+  owner: string | undefined
 }
 
 export interface AWSEC2InstanceState {
@@ -244,7 +257,7 @@ export interface AWSEC2InstanceState {
 }
 
 export interface AWSEC2InstanceDetailsState {
-  instance: AWSEC2Instance | undefined
+  instanceDetails: AWSEC2InstanceDetails | undefined
   cellId: string
   region: string
   view: AWSSupportedView.EC2InstanceDetails

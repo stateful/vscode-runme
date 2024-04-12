@@ -33,7 +33,7 @@ export const aws: IKernelExecutor = async (executor) => {
       }
 
       case AWSSupportedView.EC2InstanceDetails: {
-        const instance = await getEC2InstanceDetail(
+        const instanceDetails = await getEC2InstanceDetail(
           awsResolver.data.region,
           awsResolver.data.instanceId!,
         )
@@ -43,7 +43,7 @@ export const aws: IKernelExecutor = async (executor) => {
             cellId: exec.cell.metadata['runme.dev/id'],
             view: awsResolver.view,
             region: awsResolver.data.region,
-            instance,
+            instanceDetails,
           },
         })
         await outputs.showOutput(OutputType.aws)

@@ -95,8 +95,10 @@ export class AWSInstanceActions extends LitElement implements Disposable {
     switch (action) {
       case AWSActionType.ConnectViaSSH:
         title = `Do you want to connect via SSH to ${this.instance.name}`
+        break
       case AWSActionType.EC2InstanceDetails:
         title = `Do you want to display the instance details for ${this.instance.name}?`
+        break
     }
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
       title,

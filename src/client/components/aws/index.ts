@@ -40,7 +40,8 @@ export class AWSViews extends LitElement {
       case AWSSupportedView.EC2InstanceDetails:
         return html`<ec2-instance-details
           .cellId="${this.state.cellId}"
-          .instance="${this.state.instance}"
+          .instance="${this.state.instanceDetails!.instance || {}}"
+          owner="${this.state.instanceDetails!.owner || '-'}"
           .region="${this.state.region}"
         ></ec2-instance-details>`
     }

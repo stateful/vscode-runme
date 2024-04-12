@@ -5,9 +5,9 @@ import {
   type Instance,
 } from '@aws-sdk/client-ec2'
 
-import { AWSEC2Instance } from '../../../types'
+import { AWSEC2Instance, AWSEC2InstanceDetails } from '../../../types'
 
-function _mapInstanceDetails(instance: Instance) {
+function _mapInstanceDetails(instance: Instance): AWSEC2Instance {
   return {
     name: (instance.Tags && instance.Tags.find((tag) => tag.Key === 'Name')?.Value) || 'unnamed',
     instanceId: instance.InstanceId,
@@ -24,6 +24,7 @@ function _mapInstanceDetails(instance: Instance) {
     keyName: instance.KeyName,
     launchTime: instance.LaunchTime,
     platform: instance.PlatformDetails,
+    lifecycle: instance.InstanceLifecycle,
     ...instance,
   }
 }
@@ -66,14 +67,19 @@ export async function getEC2InstanceDetail(region: string, instanceId: string) {
     return
   }
 
-  const instance: AWSEC2Instance | undefined = commandResult.Reservations.flatMap(
+  const instanceDetails: AWSEC2InstanceDetails | undefined = commandResult.Reservations.flatMap(
     (reservation: Reservation) => {
       if (!reservation.Instances) {
         return []
       }
-      return reservation.Instances.map((instance: Instance) => _mapInstanceDetails(instance))
+      return {
+        instance: reservation.Instances.map((instance: Instance) =>
+          _mapInstanceDetails(instance),
+        )[0],
+        owner: reservation.OwnerId,
+      }
     },
   )[0]
 
-  return instance
+  return instanceDetails
 }

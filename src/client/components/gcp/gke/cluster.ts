@@ -48,12 +48,12 @@ export class Clusters extends LitElement implements Disposable {
   static styles = css`
     vscode-button {
       color: var(--vscode-button-foreground);
-      background-color: var(--vscode-button-secondaryBackground);
+      background-color: var(--vscode-button-background);
       transform: scale(0.9);
     }
 
     vscode-button:hover {
-      background: var(--vscode-list-hoverBackground);
+      background: var(--vscode-button-secondaryHoverBackground);
     }
 
     table {
@@ -115,9 +115,9 @@ export class Clusters extends LitElement implements Disposable {
     }
 
     .active-tab {
-      color: var(--vscode-tab-activeBorderTop);
+      color: var(--vscode-textLink-activeForeground);
       fill: currentcolor;
-      border-bottom: solid 1px var(--vscode-tab-activeBorderTop);
+      border-bottom: solid 2px var(--vscode-activityBarTop-activeBorder);
     }
 
     .cluster-view {
