@@ -305,6 +305,12 @@ export class TerminalView extends LitElement {
     #terminal {
       position: relative;
     }
+
+    /** xf styles */
+    .xterm-bg-257,
+    .xterm-bg-7 {
+      background-color: var(--vscode-editor-selectionBackground) !important;
+    }
   `
 
   protected disposables: Disposable[] = []
