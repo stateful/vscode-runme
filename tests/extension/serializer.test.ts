@@ -243,7 +243,7 @@ describe('GrpcSerializer', () => {
   describe('#getDocumentLifecycleId', () => {
     it('should return the document lifecycle ID if present', () => {
       const fixture = deepCopyFixture()
-      const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
+      const res = GrpcSerializer.getDocumentCacheId(fixture.metadata)
       expect(res).toStrictEqual('01HF7B0KJPF469EG9ZWDNKKACQ')
     })
 
@@ -251,12 +251,12 @@ describe('GrpcSerializer', () => {
       const fixture = deepCopyFixture()
       delete fixture.metadata['runme.dev/frontmatterParsed']?.['runme']
 
-      const res = GrpcSerializer.getDocumentLifecycleId(fixture.metadata)
+      const res = GrpcSerializer.getDocumentCacheId(fixture.metadata)
       expect(res).toBeUndefined()
     })
 
     it('should return undefined for undefined metadata', () => {
-      const res = GrpcSerializer.getDocumentLifecycleId(undefined)
+      const res = GrpcSerializer.getDocumentCacheId(undefined)
       expect(res).toBeUndefined()
     })
   })
