@@ -448,9 +448,9 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async handleOpenNotebook(doc: NotebookDocument) {
-    const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
+    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
-    if (!lid) {
+    if (!cacheId) {
       this.toggleSessionButton(false)
       return
     }
@@ -460,19 +460,19 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    this.lidDocUriMapping.set(lid, doc.uri)
+    this.lidDocUriMapping.set(cacheId, doc.uri)
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
-    const lid = GrpcSerializer.getDocumentLifecycleId(doc.metadata)
+    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
     /**
      * Remove cache if output persistence is disabled
      */
-    if (!GrpcSerializer.sessionOutputsEnabled() && lid) {
-      this.serializerCache.delete(lid)
+    if (!GrpcSerializer.sessionOutputsEnabled() && cacheId) {
+      this.serializerCache.delete(cacheId)
     }
-    const bytes = this.serializerCache.get(lid ?? '')
-    await this.saveNotebookOutputs(lid, bytes)
+    const bytes = this.serializerCache.get(cacheId ?? '')
+    await this.saveNotebookOutputs(cacheId, bytes)
   }
 
   protected async saveNotebookOutputs(lid: string | undefined, bytes: Uint8Array | undefined) {
@@ -538,13 +538,17 @@ export class GrpcSerializer extends SerializerBase {
     return data
   }
 
-  public static getDocumentLifecycleId(
+  public static getDocumentCacheId(
     metadata: { [key: string]: any } | undefined,
   ): string | undefined {
     if (!metadata) {
       return undefined
     }
-    return metadata['runme.dev/frontmatterParsed']?.['runme']?.['id']
+
+    const ephemeralId = metadata['runme.dev/id'] as string | undefined
+    const lid = metadata['runme.dev/frontmatterParsed']?.['runme']?.['id'] as string | undefined
+
+    return lid ?? ephemeralId
   }
 
   public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
@@ -563,16 +567,16 @@ export class GrpcSerializer extends SerializerBase {
   ): Promise<Uint8Array> {
     const notebook = GrpcSerializer.marshalNotebook(data)
 
-    const lid = GrpcSerializer.getDocumentLifecycleId(data.metadata)
+    const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    const output = this.cacheNotebookOutputs(notebook, lid)
+    const output = this.cacheNotebookOutputs(notebook, cacheId)
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
     const [outputResult, serialResult] = await Promise.all([output, request])
 
-    await this.saveNotebookOutputs(lid, outputResult)
+    await this.saveNotebookOutputs(cacheId, outputResult)
 
     const { result } = serialResult.response
     if (result === undefined) {
