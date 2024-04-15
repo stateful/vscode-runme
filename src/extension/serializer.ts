@@ -409,7 +409,7 @@ export class GrpcSerializer extends SerializerBase {
   protected ready: ReadyPromise
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
-  protected readonly lidDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
+  protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
 
@@ -460,7 +460,7 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
-    this.lidDocUriMapping.set(cacheId, doc.uri)
+    this.cacheDocUriMapping.set(cacheId, doc.uri)
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
@@ -475,13 +475,13 @@ export class GrpcSerializer extends SerializerBase {
     await this.saveNotebookOutputs(cacheId, bytes)
   }
 
-  protected async saveNotebookOutputs(lid: string | undefined, bytes: Uint8Array | undefined) {
+  protected async saveNotebookOutputs(cacheId: string | undefined, bytes: Uint8Array | undefined) {
     if (!bytes) {
       this.toggleSessionButton(false)
       return
     }
 
-    const srcDocUri = this.lidDocUriMapping.get(lid ?? '')
+    const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
     if (!srcDocUri) {
       this.toggleSessionButton(false)
       return
@@ -592,14 +592,14 @@ export class GrpcSerializer extends SerializerBase {
 
   private async cacheNotebookOutputs(
     notebook: Notebook,
-    lid: string | undefined,
+    cacheId: string | undefined,
   ): Promise<Uint8Array | undefined> {
     if (!GrpcSerializer.sessionOutputsEnabled()) {
       return Promise.resolve(undefined)
     }
 
     let session: RunmeSession | undefined
-    const docUri = this.lidDocUriMapping.get(lid ?? '')
+    const docUri = this.cacheDocUriMapping.get(cacheId ?? '')
     const sid = this.kernel.getRunnerEnvironment()?.getSessionId()
     if (sid && docUri) {
       const relativePath = path.basename(docUri.fsPath)
@@ -624,10 +624,10 @@ export class GrpcSerializer extends SerializerBase {
 
     const bytes = result.response.result
 
-    if (!lid) {
+    if (!cacheId) {
       console.error('skip caching since no lifecycleId was found')
     } else {
-      this.serializerCache.set(lid, bytes)
+      this.serializerCache.set(cacheId, bytes)
     }
 
     return bytes
