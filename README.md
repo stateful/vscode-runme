@@ -59,7 +59,7 @@ For instance, the following annotation will run the command in the background, g
 
 ## Configure Document-level Execution
 
-RUNME does not just retain frontmatter, it supports top-level settings that will affect all cells in the document.
+Runme does not just retain frontmatter, it supports top-level settings that will affect all cells in the document.
 
 ```sh {"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"}
 ---
