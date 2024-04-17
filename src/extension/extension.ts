@@ -31,8 +31,9 @@ import { CopyProvider } from './provider/copy'
 import {
   getDefaultWorkspace,
   bootFile,
-  resetNotebookAutosaveSettings,
+  resetNotebookSettings,
   getPlatformAuthSession,
+  openFileAsRunmeNotebook,
 } from './utils'
 import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
@@ -56,8 +57,9 @@ import {
   toggleAutosave,
   askNewRunnerSession,
   runCellWithPrompts,
+  toggleMasking,
 } from './commands'
-import { WasmSerializer, GrpcSerializer } from './serializer'
+import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import GrpcRunner, { IRunner } from './runner'
@@ -72,7 +74,16 @@ import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 
+type NotebookUiEvent = {
+  notebookEditor: {
+    notebookUri: Uri
+  }
+  ui: boolean
+}
+
 export class RunmeExtension {
+  protected serializer?: SerializerBase
+
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
@@ -102,6 +113,7 @@ export class RunmeExtension {
     const serializer = grpcSerializer
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
+    this.serializer = serializer
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const runmeTaskProvider = tasks.registerTaskProvider(
@@ -169,7 +181,7 @@ export class RunmeExtension {
       server,
     )
 
-    await resetNotebookAutosaveSettings()
+    await resetNotebookSettings()
 
     const transientOutputs = !getSessionOutputs()
 
@@ -271,21 +283,26 @@ export class RunmeExtension {
       ),
       createDemoFileRunnerForActiveNotebook(context, kernel),
       createDemoFileRunnerWatcher(context, kernel),
+      RunmeExtension.registerCommand(
+        'runme.notebookOutputsMasked',
+        this.handleMasking(true).bind(this),
+      ),
+      RunmeExtension.registerCommand(
+        'runme.notebookOutputsUnmasked',
+        this.handleMasking(false).bind(this),
+      ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
-      RunmeExtension.registerCommand(
-        'runme.notebookSessionOutputs',
-        (e: { notebookEditor: { notebookUri: Uri }; ui: boolean }) => {
-          const runnerEnv = kernel.getRunnerEnvironment()
-          const sessionId = runnerEnv?.getSessionId()
-          if (!e.ui || !sessionId) {
-            return
-          }
-          const { notebookUri } = e.notebookEditor
-          const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-          commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
-        },
-      ),
+      RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
+        const runnerEnv = kernel.getRunnerEnvironment()
+        const sessionId = runnerEnv?.getSessionId()
+        if (!e.ui || !sessionId) {
+          return
+        }
+        const { notebookUri } = e.notebookEditor
+        const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+        openFileAsRunmeNotebook(outputFilePath)
+      }),
     )
 
     if (isPlatformAuthEnabled()) {
@@ -297,6 +314,18 @@ export class RunmeExtension {
     }
 
     await bootFile(context)
+  }
+
+  protected handleMasking(maskingIsOn: boolean): (e: NotebookUiEvent) => void {
+    return (e: NotebookUiEvent) => {
+      if (!e.ui) {
+        return
+      }
+      const uri = e.notebookEditor.notebookUri
+      toggleMasking(maskingIsOn).then(() => {
+        this.serializer?.saveNotebookOutputs(uri)
+      })
+    }
   }
 
   protected registerPanels(kernel: Kernel, context: ExtensionContext): Disposable[] {

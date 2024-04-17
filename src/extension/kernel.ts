@@ -34,6 +34,8 @@ import {
   NOTEBOOK_HAS_CATEGORIES,
   SUPPORTED_FILE_EXTENSIONS,
   CATEGORY_SEPARATOR,
+  NOTEBOOK_MODE,
+  NotebookMode,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
@@ -85,6 +87,7 @@ import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
 import EnvVarsChangedEvent from './events/envVarsChanged'
 import { SessionEnvStoreType } from './grpc/runner/v1'
+import ContextState from './contextState'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -195,6 +198,12 @@ export class Kernel implements Disposable {
     return outputs.registerCellTerminalState(type)
   }
 
+  async #setNotebookMode(notebookDocument: NotebookDocument): Promise<void> {
+    const isSessionsOutput = GrpcSerializer.isDocumentSessionOutputs(notebookDocument.metadata)
+    const notebookMode = isSessionsOutput ? NotebookMode.SessionOutputs : NotebookMode.Execution
+    await ContextState.addKey(NOTEBOOK_MODE, notebookMode)
+  }
+
   async #handleSaveNotebook({ uri, isUntitled, notebookType, getCells }: NotebookDocument) {
     if (notebookType !== Kernel.type) {
       return
@@ -218,11 +227,11 @@ export class Kernel implements Disposable {
   }
 
   async #handleOpenNotebook(notebookDocument: NotebookDocument) {
-    const isSessionsOutput = await Kernel.denySessionOutputsNotebook(notebookDocument)
     const { uri, isUntitled, notebookType, getCells } = notebookDocument
-    if (isSessionsOutput || notebookType !== Kernel.type) {
+    if (notebookType !== Kernel.type) {
       return
     }
+    await this.#setNotebookMode(notebookDocument)
     getCells().forEach((cell) => this.registerNotebookCell(cell))
     const availableCategories = new Set<string>([
       ...getCells()
@@ -247,6 +256,7 @@ export class Kernel implements Disposable {
     if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
       return
     }
+    await this.#setNotebookMode(notebookDocument)
     const { uri } = notebookDocument
     const categories = await getNotebookCategories(this.context, uri)
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, !!categories.length)

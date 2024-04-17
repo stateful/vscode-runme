@@ -38,7 +38,11 @@ import {
 import { NotebookToolbarCommand } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
-import { NOTEBOOK_AUTOSAVE_ON, NOTEBOOK_RUN_WITH_PROMPTS } from '../../constants'
+import {
+  NOTEBOOK_AUTOSAVE_ON,
+  NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_RUN_WITH_PROMPTS,
+} from '../../constants'
 import ContextState from '../contextState'
 
 const log = getLogger('Commands')
@@ -346,6 +350,10 @@ export async function toggleAutosave(autoSaveIsOn: boolean) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+}
+
+export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
+  ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, maskingIsOn)
 }
 
 export async function runCellWithPrompts() {

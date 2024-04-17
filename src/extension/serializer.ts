@@ -27,6 +27,7 @@ import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
+  NOTEBOOK_OUTPUTS_MASKED,
   OutputType,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
@@ -360,6 +361,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
     return data
   }
+
+  protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<void>
+
+  public abstract saveNotebookOutputs(uri: Uri): Promise<void>
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -403,6 +408,14 @@ export class WasmSerializer extends SerializerBase {
     }
     return notebook
   }
+
+  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {
+    console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
+  }
+
+  public async saveNotebookOutputs(_uri: Uri): Promise<void> {
+    console.error('saveNotebookOutputs not implemented for WasmSerializer')
+  }
 }
 
 export class GrpcSerializer extends SerializerBase {
@@ -436,6 +449,7 @@ export class GrpcSerializer extends SerializerBase {
     )
 
     this.disposables.push(
+      workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
       workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
     )
@@ -465,20 +479,32 @@ export class GrpcSerializer extends SerializerBase {
     this.cacheDocUriMapping.set(cacheId, doc.uri)
   }
 
-  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+  protected async handleCloseNotebook(doc: NotebookDocument) {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
     /**
-     * Remove cache if output persistence is disabled
+     * Remove cache
      */
-    if (!GrpcSerializer.sessionOutputsEnabled() && cacheId) {
+    if (cacheId) {
       this.plainCache.delete(cacheId)
       this.maskedCache.delete(cacheId)
     }
-    const bytes = await this.plainCache.get(cacheId ?? '')
-    await this.saveNotebookOutputs(cacheId, bytes)
   }
 
-  protected async saveNotebookOutputs(cacheId: string | undefined, bytes: Uint8Array | undefined) {
+  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
+
+    if (!cacheId) {
+      return
+    }
+
+    await this.saveNotebookOutputsByCacheId(cacheId)
+  }
+
+  protected async saveNotebookOutputsByCacheId(cacheId: string) {
+    const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
+    const cache = mode ? this.maskedCache : this.plainCache
+    const bytes = await cache.get(cacheId ?? '')
+
     if (!bytes) {
       this.togglePreviewButton(false)
       return
@@ -505,9 +531,17 @@ export class GrpcSerializer extends SerializerBase {
 
     await workspace.fs.writeFile(sessionFile, bytes)
     this.togglePreviewButton(true)
+  }
 
-    const masked = this.maskedCache.get(cacheId ?? '') ?? Promise.resolve(new Uint8Array())
-    masked.then((maskedBytes) => console.log(Buffer.from(maskedBytes).toString('utf8')))
+  public async saveNotebookOutputs(uri: Uri): Promise<void> {
+    let cacheId: string | undefined
+    this.cacheDocUriMapping.forEach((docUri, cid) => {
+      const src = GrpcSerializer.getSourceFileUri(uri)
+      if (docUri.fsPath.toString() === src.fsPath.toString()) {
+        cacheId = cid
+      }
+    })
+    await this.saveNotebookOutputsByCacheId(cacheId ?? '')
   }
 
   public static getOutputsFilePath(fsPath: string, sid: string): string {
@@ -521,6 +555,22 @@ export class GrpcSerializer extends SerializerBase {
 
   public static getOutputsUri(docUri: Uri, sessionId: string): Uri {
     return Uri.parse(GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId))
+  }
+
+  public static getSourceFilePath(outputsFile: string): string {
+    const fileExt = path.extname(outputsFile)
+    let fileBase = path.basename(outputsFile, fileExt)
+    if (fileBase.includes('-')) {
+      fileBase = fileBase.split('-')[0]
+    }
+    const fileDir = path.dirname(outputsFile)
+    const filePath = path.normalize(`${fileDir}/${fileBase}${fileExt}`)
+
+    return filePath
+  }
+
+  public static getSourceFileUri(outputsUri: Uri): Uri {
+    return Uri.parse(GrpcSerializer.getSourceFilePath(outputsUri.fsPath))
   }
 
   protected applyIdentity(data: Notebook): Notebook {
@@ -580,9 +630,11 @@ export class GrpcSerializer extends SerializerBase {
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
-    const [outputResult, serialResult] = await Promise.all([output, request])
+    const [, serialResult] = await Promise.all([output, request])
 
-    await this.saveNotebookOutputs(cacheId, outputResult)
+    if (cacheId) {
+      await this.saveNotebookOutputsByCacheId(cacheId)
+    }
 
     const { result } = serialResult.response
     if (result === undefined) {

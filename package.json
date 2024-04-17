@@ -211,6 +211,27 @@
         "shortTitle": "Auto-Save (off)"
       },
       {
+        "command": "runme.notebookGistShare",
+        "category": "Runme",
+        "title": "Click to generate GitHub gist link",
+        "icon": "$(link)",
+        "shortTitle": "Generate Gist"
+      },
+      {
+        "command": "runme.notebookOutputsMasked",
+        "category": "Runme",
+        "title": "Click to mask (best effort) cell outputs",
+        "icon": "$(gist-private)",
+        "shortTitle": "Mask"
+      },
+      {
+        "command": "runme.notebookOutputsUnmasked",
+        "category": "Runme",
+        "title": "Click to unmask cell outputs",
+        "icon": "$(unlock)",
+        "shortTitle": "Unmask"
+      },
+      {
         "command": "runme.notebookSessionOutputs",
         "category": "Runme",
         "title": "Click to open session outputs",
@@ -278,6 +299,18 @@
           "when": "false"
         },
         {
+          "command": "runme.notebookGistShare",
+          "when": "false"
+        },
+        {
+          "command": "runme.notebookOutputsMasked",
+          "when": "false"
+        },
+        {
+          "command": "runme.notebookOutputsUnmasked",
+          "when": "false"
+        },
+        {
           "command": "runme.runCategory",
           "when": "false"
         },
@@ -340,45 +373,60 @@
       "notebook/toolbar": [
         {
           "command": "runme.notebookSessionOutputs",
-          "when": "notebookType == runme && notebookHasRunmeOutputs",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasRunmeOutputs",
           "group": "navigation"
         },
         {
           "command": "runme.resetRunnerSession",
-          "when": "notebookType == runme",
+          "when": "notebookType == runme && notebookMode != sessionOutputs",
           "group": "navigation"
         },
         {
           "command": "runme.surveyFeedbackButton",
-          "when": "notebookType == runme",
+          "when": "notebookType == runme && notebookMode != sessionOutputs",
           "group": "navigation"
         },
         {
           "command": "runme.runCategory",
-          "when": "notebookType == runme && notebookHasCategories",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasCategories",
           "group": "navigation"
         },
         {
           "command": "runme.notebookAutoSaveOn",
-          "when": "notebookType == runme && notebookAutoSaveOn",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookAutoSaveOn",
           "group": "navigation"
         },
         {
           "command": "runme.notebookAutoSaveOff",
-          "when": "notebookType == runme && !notebookAutoSaveOn",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && !notebookAutoSaveOn",
           "group": "navigation"
+        },
+        {
+          "command": "runme.notebookGistShare",
+          "when": "notebookType == runme && notebookMode == sessionOutputs",
+          "group": "navigation@50"
+        },
+        {
+          "command": "runme.notebookOutputsMasked",
+          "when": "notebookType == runme && notebookMode == sessionOutputs && !notebookOutputsMasked",
+          "group": "navigation@30"
+        },
+        {
+          "command": "runme.notebookOutputsUnmasked",
+          "when": "notebookType == runme && notebookMode == sessionOutputs && notebookOutputsMasked",
+          "group": "navigation@30"
         }
       ],
       "notebook/cell/execute": [
         {
           "command": "runme.runCellCategory",
           "group": "navigation",
-          "when": "notebookType == runme && notebookHasCategories"
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasCategories"
         },
         {
           "command": "runme.runWithPrompts",
           "group": "navigation",
-          "when": "notebookType == runme && notebookCellType == 'code'"
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookCellType == 'code'"
         }
       ]
     },

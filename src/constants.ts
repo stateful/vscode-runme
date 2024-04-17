@@ -159,9 +159,17 @@ export enum AuthenticationProviders {
   GitHub = 'github',
   Stateful = 'stateful',
 }
+
+export enum NotebookMode {
+  Execution = 'execution',
+  SessionOutputs = 'sessionOutputs',
+}
+
 export const NOTEBOOK_AVAILABLE_CATEGORIES = 'notebookAvailableCategories'
 export const NOTEBOOK_HAS_CATEGORIES = 'notebookHasCategories'
 export const NOTEBOOK_AUTOSAVE_ON = 'notebookAutoSaveOn'
+export const NOTEBOOK_OUTPUTS_MASKED = 'notebookOutputsMasked'
+export const NOTEBOOK_MODE = 'notebookMode'
 export const NOTEBOOK_HAS_OUTPUTS = 'notebookHasRunmeOutputs'
 export const NOTEBOOK_RUN_WITH_PROMPTS = 'notebookRunWithPrompts'
 
