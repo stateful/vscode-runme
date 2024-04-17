@@ -494,6 +494,7 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
+      this.togglePreviewButton(false)
       return
     }
 
@@ -626,11 +627,11 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    const output = this.cacheNotebookOutputs(notebook, cacheId)
+    const cacheOutputs = this.cacheNotebookOutputs(notebook, cacheId)
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
-    const [, serialResult] = await Promise.all([output, request])
+    const [serialResult] = await Promise.all([request, cacheOutputs])
 
     if (cacheId) {
       await this.saveNotebookOutputsByCacheId(cacheId)
@@ -651,7 +652,7 @@ export class GrpcSerializer extends SerializerBase {
   private async cacheNotebookOutputs(
     notebook: Notebook,
     cacheId: string | undefined,
-  ): Promise<Uint8Array | undefined> {
+  ): Promise<void> {
     if (!GrpcSerializer.sessionOutputsEnabled()) {
       return Promise.resolve(undefined)
     }
@@ -715,8 +716,6 @@ export class GrpcSerializer extends SerializerBase {
     } else {
       this.plainCache.set(cacheId, Promise.resolve(bytes))
     }
-
-    return bytes
   }
 
   public static marshalNotebook(data: NotebookData): Notebook {

@@ -74,6 +74,10 @@ describe('SerializerBase', () => {
 
   it('serializeNotebook transforms languages', async () => {
     const TestSerializer = class extends SerializerBase {
+      protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {}
+
+      public async saveNotebookOutputs(_uri: Uri): Promise<void> {}
+
       protected ready: Promise<void | Error> = Promise.resolve()
 
       protected async saveNotebook(data: NotebookData): Promise<Uint8Array> {
@@ -372,7 +376,7 @@ describe('GrpcSerializer', () => {
 
       it('skips if uri mapping to lid is unknown', async () => {
         const fixture = deepCopyFixture()
-        serializer.serializerCache.set(
+        serializer.plainCache.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeCachedBytes,
         )
@@ -390,7 +394,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
-        serializer.serializerCache.set(
+        serializer.plainCache.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeCachedBytes,
         )
@@ -409,7 +413,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
-        serializer.serializerCache.set(
+        serializer.plainCache.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeCachedBytes,
         )
@@ -461,6 +465,13 @@ describe('GrpcSerializer', () => {
       expect(outputFilePath).toStrictEqual('/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md')
     })
 
+    it('can reverse the process to get the source document path', () => {
+      const sourceFilePath = GrpcSerializer.getSourceFilePath(
+        '/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md',
+      )
+      expect(sourceFilePath).toStrictEqual('/tmp/fake/runbook.md')
+    })
+
     it('should include session and document info on serialization', async () => {
       const context: any = {
         extensionUri: { fsPath: '/foo/bar' },
@@ -474,19 +485,20 @@ describe('GrpcSerializer', () => {
         },
       }
 
-      const serialize = vi.fn().mockImplementation(() => ({
-        response: {
-          result: new Uint8Array([4, 3, 2, 1]),
-        },
-      }))
+      const serialize = vi.fn().mockImplementation(() =>
+        Promise.resolve({
+          response: {
+            result: new Uint8Array([4, 3, 2, 1]),
+          },
+        }),
+      )
       const ser = new GrpcSerializer(context, new Server(), new Kernel())
       ;(ser as any).cacheDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
       GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
 
-      const output = await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
+      await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
 
-      expect(output).toEqual(new Uint8Array([4, 3, 2, 1]))
       expect(serialize).toBeCalledWith({
         notebook: {
           cells: [],
