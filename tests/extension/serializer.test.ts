@@ -347,7 +347,7 @@ describe('GrpcSerializer', () => {
         metadata: fixture.metadata,
       })
 
-      const lidDocUri = serializer.lidDocUriMapping.get(lid)
+      const lidDocUri = serializer.cacheDocUriMapping.get(lid)
       expect(lidDocUri).toStrictEqual(fakeSrcDocUri)
     })
 
@@ -385,7 +385,7 @@ describe('GrpcSerializer', () => {
 
       it('skips if session file mapping is unknown', async () => {
         const fixture = deepCopyFixture()
-        serializer.lidDocUriMapping.set(
+        serializer.cacheDocUriMapping.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
@@ -404,7 +404,7 @@ describe('GrpcSerializer', () => {
 
       it('skips if runner env session in unknown', async () => {
         const fixture = deepCopyFixture()
-        serializer.lidDocUriMapping.set(
+        serializer.cacheDocUriMapping.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
@@ -429,7 +429,7 @@ describe('GrpcSerializer', () => {
         writeableSer.client = {
           serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
         }
-        writeableSer.lidDocUriMapping.set(
+        writeableSer.cacheDocUriMapping.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
@@ -479,7 +479,7 @@ describe('GrpcSerializer', () => {
         },
       }))
       const ser = new GrpcSerializer(context, new Server(), new Kernel())
-      ;(ser as any).lidDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
+      ;(ser as any).cacheDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
       GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
 
