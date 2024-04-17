@@ -31,6 +31,7 @@ vi.mock('vscode', () => ({
   workspace: {
     fs: { readFile: vi.fn().mockResolvedValue({}), writeFile: vi.fn() },
     onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+    onDidCloseNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
     applyEdit: vi.fn(),
@@ -354,8 +355,8 @@ describe('GrpcSerializer', () => {
     describe('#saveNotebookOutputs', () => {
       const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      const toggleSessionButton = vi.fn()
-      serializer.toggleSessionButton = toggleSessionButton
+      const togglePreviewButton = vi.fn()
+      serializer.togglePreviewButton = togglePreviewButton
 
       it('skips if notebook has zero bytes', async () => {
         serializer.client = {
@@ -366,7 +367,7 @@ describe('GrpcSerializer', () => {
           metadata: {},
         })
 
-        expect(toggleSessionButton).toBeCalledWith(false)
+        expect(togglePreviewButton).toBeCalledWith(false)
       })
 
       it('skips if uri mapping to lid is unknown', async () => {
@@ -380,7 +381,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(toggleSessionButton).toBeCalledWith(false)
+        expect(togglePreviewButton).toBeCalledWith(false)
       })
 
       it('skips if session file mapping is unknown', async () => {
@@ -399,7 +400,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(toggleSessionButton).toBeCalledWith(false)
+        expect(togglePreviewButton).toBeCalledWith(false)
       })
 
       it('skips if runner env session in unknown', async () => {
@@ -420,7 +421,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(toggleSessionButton).toBeCalledWith(false)
+        expect(togglePreviewButton).toBeCalledWith(false)
       })
 
       it('writes cached bytes to session file on serialization and save', async () => {
