@@ -340,11 +340,20 @@ Ensure you have **fx** installed (it requires [go](https://go.dev/)), run the fo
 go install github.com/antonmedv/fx@latest
 ```
 
+### Inspecting a curl response
+
 Now you can explore any json file interactively, run the following command to explore the weather at Berlin 🍻
 
 ```sh {"background":"true","id":"01HTZB059ZFK301922YVFFN8R5","promptEnv":"no","terminalRows":"20"}
-export FX_THEME="2"
+export FX_THEME="0"
 curl -s "https://api.marquee.activecove.com/getWeather?lat=52&lon=10" | fx
+```
+
+### Navigate pods information from Kubernetes system resources
+
+```sh {"background":"true","id":"01HVA8M9W4ZFM0XTH6116MH5E2","promptEnv":"no","terminalRows":"30"}
+export FX_THEME="0"
+kubectl get pods -o json -n kube-system | fx
 ```
 
 💡 Pro tip: If you want to explore the available fx commands, type **?**
