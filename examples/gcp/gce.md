@@ -8,9 +8,9 @@ runme:
 
 💡 **Important!** Be sure to run through the one-time guide [Getting started with Runme Noteboks for Google Cloud](setup.md).
 
-Google Compute Engine (also known as GCE) enables users to launch virtual machines on demand, it supports different operating systems like Linux, FreeBSD, NetBSD and Windows.
+Google Compute Engine (also known as GCE) enables users to launch virtual machines on demand. It supports different operating systems like Linux, FreeBSD, NetBSD and Windows.
 
-With GCE, you can deploy Web and App servers, containerized microservices, virtual desktops, Databases, etc.
+With GCE, you can deploy Web and App servers, containerized microservices, virtual desktops, databases, and more.
 
 For DevOps professionals seeking an overarching perspective on their VM instances for efficient management, the Google Cloud Console stands out as a preferred option. Common operations encompass:
 
