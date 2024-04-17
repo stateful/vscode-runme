@@ -41,6 +41,7 @@ import {
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
   CLOUD_USER_SIGNED_IN,
+  NOTEBOOK_OUTPUTS_MASKED,
 } from '../constants'
 import {
   getEnvLoadWorkspaceFiles,
@@ -664,7 +665,9 @@ export async function handleNotebookAutosaveSettings() {
   )
 }
 
-export async function resetNotebookAutosaveSettings() {
+export async function resetNotebookSettings() {
+  // todo(sebastian): consider adding a setting to toggle default masking
+  await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, true)
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

@@ -21,11 +21,13 @@ import {
 } from 'vscode'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ulid } from 'ulidx'
+import { maskString } from 'data-guardian'
 
 import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
+  NOTEBOOK_OUTPUTS_MASKED,
   OutputType,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
@@ -359,6 +361,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
     return data
   }
+
+  protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<void>
+
+  public abstract saveNotebookOutputs(uri: Uri): Promise<void>
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -402,13 +408,22 @@ export class WasmSerializer extends SerializerBase {
     }
     return notebook
   }
+
+  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {
+    console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
+  }
+
+  public async saveNotebookOutputs(_uri: Uri): Promise<void> {
+    console.error('saveNotebookOutputs not implemented for WasmSerializer')
+  }
 }
 
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
-  protected readonly serializerCache: Map<string, Uint8Array> = new Map<string, Uint8Array>()
+  protected readonly plainCache = new Map<string, Promise<Uint8Array>>()
+  protected readonly maskedCache = new Map<string, Promise<Uint8Array>>()
   protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
@@ -420,7 +435,7 @@ export class GrpcSerializer extends SerializerBase {
   ) {
     super(context, kernel)
 
-    this.toggleSessionButton(GrpcSerializer.sessionOutputsEnabled())
+    this.togglePreviewButton(GrpcSerializer.sessionOutputsEnabled())
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -434,6 +449,7 @@ export class GrpcSerializer extends SerializerBase {
     )
 
     this.disposables.push(
+      workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
       workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
     )
@@ -443,7 +459,7 @@ export class GrpcSerializer extends SerializerBase {
     this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
-  public toggleSessionButton(state: boolean) {
+  public togglePreviewButton(state: boolean) {
     return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
   }
 
@@ -451,57 +467,82 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     if (GrpcSerializer.isDocumentSessionOutputs(doc.metadata)) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     this.cacheDocUriMapping.set(cacheId, doc.uri)
   }
 
-  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+  protected async handleCloseNotebook(doc: NotebookDocument) {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
     /**
-     * Remove cache if output persistence is disabled
+     * Remove cache
      */
-    if (!GrpcSerializer.sessionOutputsEnabled() && cacheId) {
-      this.serializerCache.delete(cacheId)
+    if (cacheId) {
+      this.plainCache.delete(cacheId)
+      this.maskedCache.delete(cacheId)
     }
-    const bytes = this.serializerCache.get(cacheId ?? '')
-    await this.saveNotebookOutputs(cacheId, bytes)
   }
 
-  protected async saveNotebookOutputs(cacheId: string | undefined, bytes: Uint8Array | undefined) {
+  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
+    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
+
+    if (!cacheId) {
+      this.togglePreviewButton(false)
+      return
+    }
+
+    await this.saveNotebookOutputsByCacheId(cacheId)
+  }
+
+  protected async saveNotebookOutputsByCacheId(cacheId: string) {
+    const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
+    const cache = mode ? this.maskedCache : this.plainCache
+    const bytes = await cache.get(cacheId ?? '')
+
     if (!bytes) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
     if (!srcDocUri) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     const runnerEnv = this.kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
     if (!sessionId) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
-      this.toggleSessionButton(false)
+      this.togglePreviewButton(false)
       return
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
-    this.toggleSessionButton(true)
+    this.togglePreviewButton(true)
+  }
+
+  public async saveNotebookOutputs(uri: Uri): Promise<void> {
+    let cacheId: string | undefined
+    this.cacheDocUriMapping.forEach((docUri, cid) => {
+      const src = GrpcSerializer.getSourceFileUri(uri)
+      if (docUri.fsPath.toString() === src.fsPath.toString()) {
+        cacheId = cid
+      }
+    })
+    await this.saveNotebookOutputsByCacheId(cacheId ?? '')
   }
 
   public static getOutputsFilePath(fsPath: string, sid: string): string {
@@ -515,6 +556,22 @@ export class GrpcSerializer extends SerializerBase {
 
   public static getOutputsUri(docUri: Uri, sessionId: string): Uri {
     return Uri.parse(GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId))
+  }
+
+  public static getSourceFilePath(outputsFile: string): string {
+    const fileExt = path.extname(outputsFile)
+    let fileBase = path.basename(outputsFile, fileExt)
+    if (fileBase.includes('-')) {
+      fileBase = fileBase.split('-')[0]
+    }
+    const fileDir = path.dirname(outputsFile)
+    const filePath = path.normalize(`${fileDir}/${fileBase}${fileExt}`)
+
+    return filePath
+  }
+
+  public static getSourceFileUri(outputsUri: Uri): Uri {
+    return Uri.parse(GrpcSerializer.getSourceFilePath(outputsUri.fsPath))
   }
 
   protected applyIdentity(data: Notebook): Notebook {
@@ -570,13 +627,15 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     const serialRequest = <SerializeRequest>{ notebook }
 
-    const output = this.cacheNotebookOutputs(notebook, cacheId)
+    const cacheOutputs = this.cacheNotebookOutputs(notebook, cacheId)
     const request = this.client!.serialize(serialRequest)
 
     // run in parallel
-    const [outputResult, serialResult] = await Promise.all([output, request])
+    const [serialResult] = await Promise.all([request, cacheOutputs])
 
-    await this.saveNotebookOutputs(cacheId, outputResult)
+    if (cacheId) {
+      await this.saveNotebookOutputsByCacheId(cacheId)
+    }
 
     const { result } = serialResult.response
     if (result === undefined) {
@@ -593,7 +652,7 @@ export class GrpcSerializer extends SerializerBase {
   private async cacheNotebookOutputs(
     notebook: Notebook,
     cacheId: string | undefined,
-  ): Promise<Uint8Array | undefined> {
+  ): Promise<void> {
     if (!GrpcSerializer.sessionOutputsEnabled()) {
       return Promise.resolve(undefined)
     }
@@ -615,22 +674,48 @@ export class GrpcSerializer extends SerializerBase {
       session,
     })
 
-    const request = <SerializeRequest>{ notebook, options }
-    const result = await this.client!.serialize(request)
+    const maskedNotebook = Notebook.clone(notebook)
+    maskedNotebook.cells.forEach((cell) => {
+      cell.value = maskString(cell.value)
+      cell.outputs.forEach((out) => {
+        out.items.forEach((item) => {
+          if (item.mime === OutputType.stdout) {
+            const outDecoded = Buffer.from(item.data).toString('utf8')
+            item.data = Buffer.from(maskString(outDecoded))
+          }
+        })
+      })
+    })
 
-    if (result.response.result === undefined) {
+    const plainReq = <SerializeRequest>{ notebook, options }
+    const plainRes = this.client!.serialize(plainReq)
+
+    const maskedReq = <SerializeRequest>{ notebook: maskedNotebook, options }
+    const masked = this.client!.serialize(maskedReq).then((maskedRes) => {
+      if (maskedRes.response.result === undefined) {
+        console.error('serialization of masked notebook failed')
+        return Promise.resolve(new Uint8Array())
+      }
+      return maskedRes.response.result
+    })
+
+    if (!cacheId) {
+      console.error('skip masked caching since no lifecycleId was found')
+    } else {
+      this.maskedCache.set(cacheId, masked)
+    }
+
+    const plain = await plainRes
+    if (plain.response.result === undefined) {
       throw new Error('serialization of notebook outputs failed')
     }
 
-    const bytes = result.response.result
-
+    const bytes = plain.response.result
     if (!cacheId) {
-      console.error('skip caching since no lifecycleId was found')
+      console.error('skip plain caching since no lifecycleId was found')
     } else {
-      this.serializerCache.set(cacheId, bytes)
+      this.plainCache.set(cacheId, Promise.resolve(bytes))
     }
-
-    return bytes
   }
 
   public static marshalNotebook(data: NotebookData): Notebook {

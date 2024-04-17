@@ -46,6 +46,7 @@ export const workspace = {
     getText: vi.fn().mockReturnValue(readFileSync(join(__dirname, 'gitignore.mock'), 'utf8'))
   }),
   registerNotebookSerializer: vi.fn(),
+  onDidCloseNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
