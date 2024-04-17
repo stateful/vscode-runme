@@ -291,6 +291,7 @@ export class RunmeExtension {
         'runme.notebookOutputsUnmasked',
         this.handleMasking(false).bind(this),
       ),
+      RunmeExtension.registerCommand('runme.notebookGistShare', (_e: NotebookUiEvent) => {}),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
       RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
