@@ -1,6 +1,5 @@
 import { type IWorkflowDispatchOptions, type IWorkflowRun } from '../../services/types'
-
-import GitHubServiceFactory from './githubServiceFactory'
+import GitHubServiceFactory from '../../services/github/factory'
 
 export type IGitHubURLParts = {
   owner: string

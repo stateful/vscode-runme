@@ -45,7 +45,7 @@ import {
   NOTEBOOK_RUN_WITH_PROMPTS,
 } from '../../constants'
 import ContextState from '../contextState'
-import { createGist } from '../executors/github/gist'
+import { createGist } from '../services/github/gist'
 
 const log = getLogger('Commands')
 
@@ -404,7 +404,7 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
     )
 
     const option = await window.showInformationMessage(
-      'The Gist has been created!',
+      'The Runme Gist has been created!',
       'Open',
       'Cancel',
     )
@@ -413,6 +413,6 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
       env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
     }
   } catch (error) {
-    window.showErrorMessage(`Failed to generate Gist: ${(error as any).message}`)
+    window.showErrorMessage(`Failed to generate Runme Gist: ${(error as any).message}`)
   }
 }

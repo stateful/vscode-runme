@@ -1,6 +1,6 @@
-import { Gist } from '../../services/types'
+import { Gist } from '../types'
 
-import GitHubServiceFactory from './githubServiceFactory'
+import GitHubServiceFactory from './factory'
 
 export async function createGist(gist: Gist) {
   const githubService = await new GitHubServiceFactory(['gist']).createService(true)

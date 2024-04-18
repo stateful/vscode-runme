@@ -1,9 +1,9 @@
 import { window } from 'vscode'
 
 import { OutputType } from '../../constants'
+import GitHubServiceFactory from '../services/github/factory'
 
 import { parseGitHubURL, getYamlFileContents } from './github/workflows'
-import GitHubServiceFactory from './github/githubServiceFactory'
 
 import { IKernelExecutor } from '.'
 

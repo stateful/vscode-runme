@@ -1,7 +1,7 @@
 import { authentication } from 'vscode'
 
 import { AuthenticationProviders } from '../../../constants'
-import { GitHubService } from '../../services'
+import { GitHubService } from '..'
 
 class GitHubServiceFactory {
   #service: GitHubService | undefined

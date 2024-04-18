@@ -8,7 +8,7 @@ import {
   IWorkflowDispatchOptions,
   IWorkflowRun,
   IWorkflowYamlContentRequest,
-} from './types'
+} from '../types'
 
 export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'> & {
   run_id: number
