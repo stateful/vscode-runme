@@ -362,9 +362,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     return data
   }
 
-  protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<void>
+  protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<number>
 
-  public abstract saveNotebookOutputs(uri: Uri): Promise<void>
+  public abstract saveNotebookOutputs(uri: Uri): Promise<number>
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -409,12 +409,14 @@ export class WasmSerializer extends SerializerBase {
     return notebook
   }
 
-  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {
+  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
     console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
+    return -1
   }
 
-  public async saveNotebookOutputs(_uri: Uri): Promise<void> {
+  public async saveNotebookOutputs(_uri: Uri): Promise<number> {
     console.error('saveNotebookOutputs not implemented for WasmSerializer')
+    return -1
   }
 }
 
@@ -449,7 +451,8 @@ export class GrpcSerializer extends SerializerBase {
     )
 
     this.disposables.push(
-      workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
+      // todo(sebastian): delete entries on session reset not notebook editor lifecycle
+      // workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
       workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
     )
@@ -501,40 +504,42 @@ export class GrpcSerializer extends SerializerBase {
     await this.saveNotebookOutputsByCacheId(cacheId)
   }
 
-  protected async saveNotebookOutputsByCacheId(cacheId: string) {
+  protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
     const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
     const cache = mode ? this.maskedCache : this.plainCache
     const bytes = await cache.get(cacheId ?? '')
 
     if (!bytes) {
       this.togglePreviewButton(false)
-      return
+      return -1
     }
 
     const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
     if (!srcDocUri) {
       this.togglePreviewButton(false)
-      return
+      return -1
     }
 
     const runnerEnv = this.kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
     if (!sessionId) {
       this.togglePreviewButton(false)
-      return
+      return -1
     }
 
     const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
       this.togglePreviewButton(false)
-      return
+      return -1
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
     this.togglePreviewButton(true)
+
+    return bytes.length
   }
 
-  public async saveNotebookOutputs(uri: Uri): Promise<void> {
+  public async saveNotebookOutputs(uri: Uri): Promise<number> {
     let cacheId: string | undefined
     this.cacheDocUriMapping.forEach((docUri, cid) => {
       const src = GrpcSerializer.getSourceFileUri(uri)
@@ -542,7 +547,11 @@ export class GrpcSerializer extends SerializerBase {
         cacheId = cid
       }
     })
-    await this.saveNotebookOutputsByCacheId(cacheId ?? '')
+    if (!cacheId) {
+      return -1
+    }
+
+    return this.saveNotebookOutputsByCacheId(cacheId ?? '')
   }
 
   public static getOutputsFilePath(fsPath: string, sid: string): string {

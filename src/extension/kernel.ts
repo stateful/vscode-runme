@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import {
   Disposable,
   notebooks,
@@ -480,6 +482,15 @@ export class Kernel implements Disposable {
   }
 
   private async _executeAll(cells: NotebookCell[]) {
+    const sessionOutputsDoc = cells.find((c) =>
+      GrpcSerializer.isDocumentSessionOutputs(c.notebook.metadata),
+    )
+    if (sessionOutputsDoc) {
+      const { notebook } = sessionOutputsDoc
+      await askAlternativeOutputsAction(path.dirname(notebook.uri.fsPath), notebook.metadata)
+      return
+    }
+
     await commands.executeCommand('setContext', NOTEBOOK_HAS_CATEGORIES, false)
     const totalNotebookCells =
       (cells[0] &&
@@ -899,15 +910,5 @@ export class Kernel implements Disposable {
 
     await commands.executeCommand('notebook.cell.execute')
     await commands.executeCommand('notebook.cell.focusInOutput')
-  }
-
-  private static async denySessionOutputsNotebook(notebookDoc: NotebookDocument): Promise<boolean> {
-    if (!GrpcSerializer.isDocumentSessionOutputs(notebookDoc.metadata)) {
-      return false
-    }
-
-    await askAlternativeOutputsAction(notebookDoc)
-
-    return true
   }
 }
