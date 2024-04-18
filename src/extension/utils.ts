@@ -59,7 +59,7 @@ import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
 import { BOOTFILE, BOOTFILE_DEMO } from './constants'
-import { GrpcRunnerEnvironment, IRunnerEnvironment } from './runner/environment'
+import { IRunnerEnvironment } from './runner/environment'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { RunmeService } from './services/runme'
@@ -585,15 +585,17 @@ export function getRunnerSessionEnvs(
   const envs: Record<string, string> = {}
   if (address) {
     envs['RUNME_SERVER_ADDR'] = address
+    envs['RUNME_SESSION_STRATEGY'] = 'recent'
   }
 
   if (getTLSEnabled()) {
     envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
   }
 
-  if (runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
-    envs['RUNME_SESSION'] = runnerEnv.getSessionId()
-  }
+  // todo(sebastian): consider making recent vs specific session a setting
+  // if (runnerEnv && runnerEnv instanceof GrpcRunnerEnvironment) {
+  //   envs['RUNME_SESSION'] = runnerEnv.getSessionId()
+  // }
   return envs
 }
 

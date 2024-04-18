@@ -292,6 +292,9 @@ const registerExtensionEnvVarsMutation = (
   Object.entries(envs).forEach(([k, v]) => {
     context.environmentVariableCollection.replace(k, v)
   })
+
+  // todo(sebastian): consider making recent vs specific session a setting
+  context.environmentVariableCollection.delete('RUNME_SESSION')
 }
 
 const getActionsOpenViewInEditor = () => {
