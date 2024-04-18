@@ -74,9 +74,13 @@ describe('SerializerBase', () => {
 
   it('serializeNotebook transforms languages', async () => {
     const TestSerializer = class extends SerializerBase {
-      protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {}
+      protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
+        return 0
+      }
 
-      public async saveNotebookOutputs(_uri: Uri): Promise<void> {}
+      public async saveNotebookOutputs(_uri: Uri): Promise<number> {
+        return 0
+      }
 
       protected ready: Promise<void | Error> = Promise.resolve()
 
@@ -357,24 +361,46 @@ describe('GrpcSerializer', () => {
     })
 
     describe('#saveNotebookOutputs', () => {
+      beforeEach(() => {
+        const sessionOutputsEnabled = vi.fn().mockReturnValue(true)
+        GrpcSerializer.sessionOutputsEnabled = sessionOutputsEnabled
+      })
       const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       const togglePreviewButton = vi.fn()
       serializer.togglePreviewButton = togglePreviewButton
 
-      it('skips if notebook has zero bytes', async () => {
-        serializer.client = {
-          serialize: vi.fn().mockResolvedValue({ response: { result: new Uint8Array([]) } }),
-        }
+      it('skips if session outputs are disabled', async () => {
+        const sessionOutputsEnabled = vi.fn().mockReturnValue(false)
+        GrpcSerializer.sessionOutputsEnabled = sessionOutputsEnabled
+        const fixture = deepCopyFixture()
+        serializer.plainCache.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          fakeCachedBytes,
+        )
         await serializer.handleSaveNotebookOutputs({
           uri: fakeSrcDocUri,
-          metadata: {},
+          metadata: fixture.metadata,
         })
 
         expect(togglePreviewButton).toBeCalledWith(false)
       })
 
-      it('skips if uri mapping to lid is unknown', async () => {
+      it('skips if notebook has zero bytes', async () => {
+        const fixture = deepCopyFixture()
+        serializer.plainCache.set(
+          fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
+          undefined,
+        )
+        await serializer.handleSaveNotebookOutputs({
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        })
+
+        expect(togglePreviewButton).toBeCalledWith(false)
+      })
+
+      it('skips if uri mapping to cacheId is unknown', async () => {
         const fixture = deepCopyFixture()
         serializer.plainCache.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,

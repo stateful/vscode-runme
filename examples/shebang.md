@@ -48,6 +48,7 @@ echo "Docker is installed and running. ✅"
 Ensure you have a list one container to list, if you don't have one, you can start a **nginx** container by running the following command:
 
 ```sh {"id":"01HTZBCXFZ0V7P4AXE70RXT9M1"}
+docker rm -f my_runme_demo_container
 docker run -d --name my_runme_demo_container -p 8080:80 nginx
 ```
 

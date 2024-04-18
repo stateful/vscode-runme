@@ -20,8 +20,8 @@ import {
   Uri,
 } from 'vscode'
 
-import { SerializerBase } from '../serializer'
-import type { runCLICommand } from '../commands'
+import { GrpcSerializer, SerializerBase } from '../serializer'
+import { type runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
@@ -97,6 +97,12 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
     }[document.eol]
 
     const notebook = await this.serializer.deserializeNotebook(contentBytes, token)
+
+    const isSessionOutputs = GrpcSerializer.isDocumentSessionOutputs(notebook.metadata)
+    if (isSessionOutputs) {
+      return []
+    }
+
     const { cells } = notebook
 
     return cells.flatMap((cell, i) => {

@@ -285,11 +285,11 @@ export class RunmeExtension {
       createDemoFileRunnerWatcher(context, kernel),
       RunmeExtension.registerCommand(
         'runme.notebookOutputsMasked',
-        this.handleMasking(true).bind(this),
+        this.handleMasking(kernel, true).bind(this),
       ),
       RunmeExtension.registerCommand(
         'runme.notebookOutputsUnmasked',
-        this.handleMasking(false).bind(this),
+        this.handleMasking(kernel, false).bind(this),
       ),
       RunmeExtension.registerCommand('runme.notebookGistShare', (_e: NotebookUiEvent) => {}),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
@@ -317,15 +317,36 @@ export class RunmeExtension {
     await bootFile(context)
   }
 
-  protected handleMasking(maskingIsOn: boolean): (e: NotebookUiEvent) => void {
-    return (e: NotebookUiEvent) => {
+  protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {
+    const showSessionExpiryErrMessage = () => {
+      return window.showErrorMessage(
+        'Cannot toggle masking of outputs for expired sessions. Consider re-running the original notebook',
+        { modal: true },
+      )
+    }
+
+    return async (e: NotebookUiEvent) => {
       if (!e.ui) {
         return
       }
       const uri = e.notebookEditor.notebookUri
-      toggleMasking(maskingIsOn).then(() => {
-        this.serializer?.saveNotebookOutputs(uri)
-      })
+      const runnerEnv = kernel.getRunnerEnvironment()
+      const sessionId = runnerEnv?.getSessionId()
+
+      if (!sessionId || !uri.fsPath.includes(sessionId)) {
+        await showSessionExpiryErrMessage()
+        return
+      }
+
+      await toggleMasking(maskingIsOn)
+      const written = (await this.serializer?.saveNotebookOutputs(uri)) ?? -1
+      if (written > -1) {
+        // success early return
+        return
+      }
+
+      await toggleMasking(!maskingIsOn)
+      await showSessionExpiryErrMessage()
     }
   }
 

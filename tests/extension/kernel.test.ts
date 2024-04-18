@@ -4,12 +4,12 @@ import { NotebookCell, commands, notebooks, window, workspace } from 'vscode'
 import { Kernel } from '../../src/extension/kernel'
 import executors from '../../src/extension/executors'
 import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
-import { askAlternativeOutputsAction } from '../../src/extension/commands'
 import { ClientMessages } from '../../src/constants'
 import { APIMethod } from '../../src/types'
 import * as platform from '../../src/extension/messages/platformRequest/saveCellExecution'
 import * as cloudApi from '../../src/extension/messages/cloudApiRequest/saveCellExecution'
 import { isPlatformAuthEnabled } from '../../src/utils/configuration'
+import { askAlternativeOutputsAction } from '../../src/extension/commands'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -52,7 +52,7 @@ vi.mock('../../../../src/extension/services/runme', () => ({
   },
 }))
 
-const getCells = (cnt: number, metadata: Record<string, any> = {}) =>
+const genCells = (cnt: number, metadata: Record<string, any> = {}) =>
   [...new Array(cnt)].map(
     (_, i) =>
       ({
@@ -192,11 +192,29 @@ test('dispose', () => {
 })
 
 suite('_executeAll', async () => {
+  test('does not run cells if it is a session outputs document', async () => {
+    const k = new Kernel({} as any)
+
+    const cells = genCells(1)
+    ;(cells[0].notebook.uri as any) = { fsPath: '/foo/bar' }
+    ;(cells[0].notebook.metadata as any) = {
+      'runme.dev/frontmatterParsed': {
+        runme: {
+          session: {
+            id: 'abc123',
+          },
+        },
+      },
+    }
+    await k['_executeAll'](cells)
+    expect(askAlternativeOutputsAction).toBeCalledTimes(1)
+  })
+
   test('runs individual cells or cell selections', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => {}))
     const k = new Kernel({} as any)
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10).slice(0, 5))
+    await k['_executeAll'](genCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(5)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
       'cells.executed': '5',
@@ -209,7 +227,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Yes')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10))
+    await k['_executeAll'](genCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -223,7 +241,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Yes')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(1))
+    await k['_executeAll'](genCells(1))
     expect(window.showQuickPick).toBeCalledTimes(0)
     expect(k['_doExecuteCell']).toBeCalledTimes(1)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -237,7 +255,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('No')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10))
+    await k['_executeAll'](genCells(10))
     expect(window.showQuickPick).toBeCalledTimes(10)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -251,7 +269,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Cancel')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10))
+    await k['_executeAll'](genCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -265,7 +283,7 @@ suite('_executeAll', async () => {
     // @ts-ignore readonly
     window.showQuickPick = vi.fn().mockResolvedValue('Skip confirmation and run all')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10))
+    await k['_executeAll'](genCells(10))
     expect(window.showQuickPick).toBeCalledTimes(1)
     expect(k['_doExecuteCell']).toBeCalledTimes(10)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -279,7 +297,7 @@ suite('_executeAll', async () => {
     const k = new Kernel({} as any)
     k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](getCells(10).slice(0, 5))
+    await k['_executeAll'](genCells(10).slice(0, 5))
     expect(k['_doExecuteCell']).toBeCalledTimes(0)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
       'cells.executed': '0',
@@ -287,12 +305,12 @@ suite('_executeAll', async () => {
     })
   })
 
-  test('does runs cells for specific cell category', async () => {
+  test('does run cells for specific cell category', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => {}))
     const k = new Kernel({} as any)
     k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
-    const cellsFromCategory = getCells(2, { category: 'shellscripts' }).concat(getCells(5))
+    const cellsFromCategory = genCells(2, { category: 'shellscripts' }).concat(genCells(5))
     await k['_executeAll'](cellsFromCategory)
     expect(k['_doExecuteCell']).toBeCalledTimes(2)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -301,18 +319,18 @@ suite('_executeAll', async () => {
     })
   })
 
-  test('does runs cells for specific cell category and skip cells with excludeFromRunAll', async () => {
+  test('does run cells for specific cell category and skip cells with excludeFromRunAll', async () => {
     window.showQuickPick = vi.fn().mockReturnValue(new Promise(() => {}))
     const k = new Kernel({} as any)
     k.setCategory('shellscripts')
     k['_doExecuteCell'] = vi.fn()
-    const cellsFromCategory = getCells(2, {
+    const cellsFromCategory = genCells(2, {
       category: 'foo,shellscripts,bar',
       excludeFromRunAll: true,
     })
-      .concat(getCells(1, { category: 'bar,shellscripts,foo' }))
-      .concat(getCells(1, { category: 'barfoo,shellscripts' }))
-      .concat(getCells(1))
+      .concat(genCells(1, { category: 'bar,shellscripts,foo' }))
+      .concat(genCells(1, { category: 'barfoo,shellscripts' }))
+      .concat(genCells(1))
     await k['_executeAll'](cellsFromCategory)
     expect(k['_doExecuteCell']).toBeCalledTimes(2)
     expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
@@ -392,26 +410,4 @@ test('supportedLanguages', async () => {
   const k = new Kernel({} as any)
 
   expect(k.getSupportedLanguages()![0]).toStrictEqual('shellscript')
-})
-
-suite('#denySessionOutputsNotebook', () => {
-  test('allow notebook UX view for non-session outputs files', async () => {
-    const res = await (Kernel as any).denySessionOutputsNotebook({
-      metadata: {
-        'runme.dev/frontmatterParsed': { runme: { id: 'ulid' } },
-      },
-    })
-    expect(askAlternativeOutputsAction).toBeCalledTimes(0)
-    expect(res).toBeFalsy()
-  })
-
-  test('deny notebook UX view for session outputs files', async () => {
-    const res = await (Kernel as any).denySessionOutputsNotebook({
-      metadata: {
-        'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
-      },
-    })
-    expect(askAlternativeOutputsAction).toBeCalledTimes(1)
-    expect(res).toBeTruthy()
-  })
 })
