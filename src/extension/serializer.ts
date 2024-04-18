@@ -505,6 +505,12 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
+    // if session outputs are disabled, we don't write anything
+    if (!GrpcSerializer.sessionOutputsEnabled()) {
+      this.togglePreviewButton(false)
+      return -1
+    }
+
     const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
     const cache = mode ? this.maskedCache : this.plainCache
     const bytes = await cache.get(cacheId ?? '')
