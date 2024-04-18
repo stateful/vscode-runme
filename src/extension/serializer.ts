@@ -731,6 +731,8 @@ export class GrpcSerializer extends SerializerBase {
     } else {
       this.plainCache.set(cacheId, Promise.resolve(bytes))
     }
+
+    await Promise.all([plain, masked])
   }
 
   public static marshalNotebook(data: NotebookData): Notebook {
