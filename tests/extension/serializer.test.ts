@@ -74,9 +74,13 @@ describe('SerializerBase', () => {
 
   it('serializeNotebook transforms languages', async () => {
     const TestSerializer = class extends SerializerBase {
-      protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<void> {}
+      protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
+        return 0
+      }
 
-      public async saveNotebookOutputs(_uri: Uri): Promise<void> {}
+      public async saveNotebookOutputs(_uri: Uri): Promise<number> {
+        return 0
+      }
 
       protected ready: Promise<void | Error> = Promise.resolve()
 
