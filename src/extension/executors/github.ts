@@ -2,14 +2,15 @@ import { window } from 'vscode'
 
 import { OutputType } from '../../constants'
 
-import { parseGitHubURL, getYamlFileContents, getService } from './github/workflows'
+import { parseGitHubURL, getYamlFileContents } from './github/workflows'
+import GitHubServiceFactory from './github/githubServiceFactory'
 
 import { IKernelExecutor } from '.'
 
 export const github: IKernelExecutor = async (executor) => {
   const { doc, exec, outputs } = executor
   try {
-    await getService(true)
+    await new GitHubServiceFactory(['repo']).createService(true)
     const { owner, repo, path, ref } = parseGitHubURL(doc.getText())
     const json = await getYamlFileContents({ owner, repo, path })
     outputs.setState({

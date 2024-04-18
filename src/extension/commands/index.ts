@@ -15,6 +15,7 @@ import {
   NotebookCellKind,
   ExtensionContext,
   authentication,
+  ProgressLocation,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -35,7 +36,7 @@ import {
   openFileAsRunmeNotebook,
   promptUserSession,
 } from '../utils'
-import { NotebookToolbarCommand } from '../../types'
+import { NotebookToolbarCommand, NotebookUiEvent } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
 import {
@@ -44,6 +45,7 @@ import {
   NOTEBOOK_RUN_WITH_PROMPTS,
 } from '../../constants'
 import ContextState from '../contextState'
+import { createGist } from '../executors/github/gist'
 
 const log = getLogger('Commands')
 
@@ -360,4 +362,57 @@ export async function runCellWithPrompts() {
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
   await commands.executeCommand('notebook.cell.execute')
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, false)
+}
+
+export async function createGistCommand(e: NotebookUiEvent, context: ExtensionContext) {
+  try {
+    if (!e.ui) {
+      return
+    }
+
+    const uri = e.notebookEditor.notebookUri
+    const fileName = path.basename(uri.path)
+    const bytes = await workspace.fs.readFile(uri)
+    const templatePath = Uri.joinPath(context.extensionUri, 'templates', 'gist.md')
+    const poweredByRunmeFile = await workspace.fs.readFile(templatePath)
+    const [originalFileName, sessionId] = fileName.split('-')
+
+    const createGistProgress = await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: 'Creating new Gist ...',
+        cancellable: true,
+      },
+      async () => {
+        const createdGist = await createGist({
+          isPublic: false,
+          files: {
+            [sessionId]: {
+              content: Buffer.from(poweredByRunmeFile)
+                .toString('utf8')
+                .replaceAll('%%file%%', `${originalFileName}.md`)
+                .replaceAll('%%session%%', sessionId.replace('.md', '')),
+            },
+            [fileName]: {
+              content: Buffer.from(bytes).toString('utf8'),
+            },
+          },
+        })
+
+        return createdGist
+      },
+    )
+
+    const option = await window.showInformationMessage(
+      'The Gist has been created!',
+      'Open',
+      'Cancel',
+    )
+
+    if (option === 'Open') {
+      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
+    }
+  } catch (error) {
+    window.showErrorMessage(`Failed to generate Gist: ${(error as any).message}`)
+  }
 }

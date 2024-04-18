@@ -2,7 +2,13 @@ import { Octokit } from 'octokit'
 import { parse } from 'yaml'
 import { fetch } from 'cross-fetch'
 
-import { IWorkflowDispatchOptions, IWorkflowRun, IWorkflowYamlContentRequest } from './types'
+import {
+  Gist,
+  GistResponse,
+  IWorkflowDispatchOptions,
+  IWorkflowRun,
+  IWorkflowYamlContentRequest,
+} from './types'
 
 export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'> & {
   run_id: number
@@ -93,5 +99,16 @@ export class GitHubService {
     }
     const decodedContent = Buffer.from((workflow.data as any).content, 'base64').toString()
     return parse(decodedContent)
+  }
+
+  async createGist({ isPublic, description, files }: Gist) {
+    return this.octokit.request('POST /gists', {
+      description,
+      public: isPublic,
+      files,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    }) as Promise<GistResponse>
   }
 }
