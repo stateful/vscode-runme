@@ -373,7 +373,7 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
     const fileName = path.basename(uri.path)
     const bytes = await workspace.fs.readFile(uri)
     const templatePath = Uri.joinPath(context.extensionUri, 'templates', 'gist.md')
-    const poweredByRunmeFile = await workspace.fs.readFile(templatePath)
+    const byRunmeFile = await workspace.fs.readFile(templatePath)
     const [originalFileName, sessionId] = fileName.split('-')
 
     const createGistProgress = await window.withProgress(
@@ -387,7 +387,7 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
           isPublic: false,
           files: {
             [sessionId]: {
-              content: Buffer.from(poweredByRunmeFile)
+              content: Buffer.from(byRunmeFile)
                 .toString('utf8')
                 .replaceAll('%%file%%', `${originalFileName}.md`)
                 .replaceAll('%%session%%', sessionId.replace('.md', '')),
