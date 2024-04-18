@@ -565,3 +565,10 @@ export enum NotebookAutoSaveSetting {
 }
 
 export type SnapshotEnv = MonitorEnvStoreResponseSnapshot_SnapshotEnv & StringIndexable
+
+export type NotebookUiEvent = {
+  notebookEditor: {
+    notebookUri: Uri
+  }
+  ui: boolean
+}

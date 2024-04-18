@@ -1,17 +1,8 @@
-import {
-  Disposable,
-  workspace,
-  notebooks,
-  commands,
-  ExtensionContext,
-  tasks,
-  window,
-  Uri,
-} from 'vscode'
+import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { Serializer, SyncSchema } from '../types'
+import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
   getSessionOutputs,
@@ -58,6 +49,7 @@ import {
   askNewRunnerSession,
   runCellWithPrompts,
   toggleMasking,
+  createGistCommand,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -73,13 +65,6 @@ import { StatefulAuthProvider } from './provider/statefulAuth'
 import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
-
-type NotebookUiEvent = {
-  notebookEditor: {
-    notebookUri: Uri
-  }
-  ui: boolean
-}
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -291,7 +276,9 @@ export class RunmeExtension {
         'runme.notebookOutputsUnmasked',
         this.handleMasking(kernel, false).bind(this),
       ),
-      RunmeExtension.registerCommand('runme.notebookGistShare', (_e: NotebookUiEvent) => {}),
+      RunmeExtension.registerCommand('runme.notebookGistShare', (event: NotebookUiEvent) =>
+        createGistCommand(event, context),
+      ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
       RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {

@@ -214,7 +214,7 @@
         "command": "runme.notebookGistShare",
         "category": "Runme",
         "title": "Click to generate GitHub gist link",
-        "icon": "$(link)",
+        "icon": "$(github)",
         "shortTitle": "Generate Gist"
       },
       {

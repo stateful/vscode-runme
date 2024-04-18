@@ -1,8 +1,5 @@
-import { authentication } from 'vscode'
-
-import { GitHubService } from '../../services'
-import { IWorkflowDispatchOptions, IWorkflowRun } from '../../services/types'
-import { AuthenticationProviders } from '../../../constants'
+import { type IWorkflowDispatchOptions, type IWorkflowRun } from '../../services/types'
+import GitHubServiceFactory from '../../services/github/factory'
 
 export type IGitHubURLParts = {
   owner: string
@@ -25,8 +22,10 @@ export type WorkflowRunStatus = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'>
 
 export type OnWorkflowStatusUpdate = (workflowRun: IWorkflowRun | undefined) => void
 
+const workflowService = new GitHubServiceFactory(['repo'])
+
 export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>): Promise<string> {
-  const githubService = await getService()
+  const githubService = await workflowService.createService()
   const { owner, repo, path } = options
   return githubService.getWorkflowYamlFile({
     owner,
@@ -39,7 +38,7 @@ export async function deployWorkflow(
   options: IWorkflowDispatchOptions,
 ): Promise<IWorkflowRunResult> {
   try {
-    const githubService = await getService()
+    const githubService = await workflowService.createService()
     const workflowRun = await githubService.createWorkflowDispatch(options)
     return {
       itFailed: false,
@@ -50,21 +49,6 @@ export async function deployWorkflow(
   }
 }
 
-export async function getService(createIfNone?: boolean) {
-  const session =
-    // @ts-expect-error test token only for testing purposes
-    globalThis._RUNME_TEST_TOKEN ||
-    (await authentication.getSession(
-      AuthenticationProviders.GitHub,
-      ['repo'],
-      createIfNone ? { createIfNone } : {},
-    ))
-  if (!session) {
-    throw new Error('Missing a valid GitHub session')
-  }
-  return new GitHubService(session.accessToken)
-}
-
 export async function checkWorkflowRunStatus({
   owner,
   repo,
@@ -73,7 +57,7 @@ export async function checkWorkflowRunStatus({
 }: WorkflowRunStatus): Promise<void> {
   // Check for workflow status update
   let checkStatus = true
-  const githubService = await getService()
+  const githubService = await workflowService.createService()
   while (checkStatus) {
     try {
       let workflowRun = await githubService.getWorkflowRun({
