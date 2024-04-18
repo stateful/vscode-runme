@@ -30,7 +30,7 @@ import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
-import { GrpcRunnerMonitorEnvStore as GrpcRunnerMonitorEnvStore } from './monitorEnv'
+import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
