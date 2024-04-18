@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HV73A9EN6BYYQVTBQM2RNMGP
-  version: v3
----
-
 # [Runme](http://runme.dev) DevOps Notebooks for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
 
 Runme offers a robust solution for integrating operational documentation written in Markdown files.
