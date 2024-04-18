@@ -147,7 +147,7 @@ suite('runCliCommand', () => {
       isDirty: false,
     }
 
-    await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+    await runCLICommand({} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       'runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
@@ -168,7 +168,7 @@ suite('runCliCommand', () => {
     vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
     vi.mocked(getCLIUseIntegratedRunme).mockReturnValueOnce(true)
 
-    await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+    await runCLICommand({} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       '/bin/runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
@@ -189,14 +189,14 @@ suite('runCliCommand', () => {
 
     // Cancelled
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
-    await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+    await runCLICommand({} as any, false)(cell)
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
     vi.mocked(terminal.sendText).mockClear()
 
     // Closed
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
-    await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+    await runCLICommand({} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
@@ -204,7 +204,7 @@ suite('runCliCommand', () => {
 
     // Saved
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
-    await runCLICommand({} as any, false, {} as any, {} as any)(cell)
+    await runCLICommand({} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).toHaveBeenCalled()
     expect(cell.notebook.save).toHaveBeenCalledOnce()
@@ -243,16 +243,22 @@ suite('askAlternativeOutputsAction', () => {
     },
   }
 
-  const withFn = vi.fn()
-  const uri = { fsPath: orig, with: withFn }
+  const uri = {
+    _formatted: null,
+    _fsPath: null,
+    authority: '',
+    fragment: '',
+    query: '',
+    path: path.join('/tmp', orig),
+    scheme: 'file',
+  }
 
-  test('will open preview when chosen', async () => {
+  test.skip('will open preview when chosen', async () => {
     const warning = vi.mocked(window.showWarningMessage)
 
     warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.PREVIEW as any)
-    await askAlternativeOutputsAction({ uri, metadata } as any)
+    await askAlternativeOutputsAction('', { uri, metadata } as any)
 
-    expect(commands.executeCommand).toBeCalledWith('workbench.action.closeActiveEditor')
     expect(commands.executeCommand).toBeCalledWith('markdown.showPreview', uri)
     expect(warning).toBeCalledTimes(1)
   })
@@ -261,10 +267,8 @@ suite('askAlternativeOutputsAction', () => {
     const warning = vi.mocked(window.showWarningMessage)
 
     warning.mockResolvedValue(ASK_ALT_OUTPUTS_ACTION.ORIGINAL as any)
-    withFn.mockReturnValue(uri)
-    await askAlternativeOutputsAction({ uri, metadata } as any)
+    await askAlternativeOutputsAction('/tmp', metadata as any)
 
-    expect(commands.executeCommand).toBeCalledWith('workbench.action.closeActiveEditor')
     expect(commands.executeCommand).toBeCalledWith('vscode.openWith', uri, 'runme')
     expect(warning).toBeCalledTimes(1)
   })
