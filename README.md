@@ -5,7 +5,7 @@ It improves documentation maintainability and team collaboration. Seamlessly inc
 
 With native support for Helm, Terraform, Ansible, Docker, and SSH, Runme enhances your DevOps toolchain. Utilize Runme's native cloud renderers to access the AWS Console and Google Cloud Console directly within your Notebooks. (More Cloud renderers coming soon!)
 
-## How it works?
+## How it works
 
 This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code Notebooks (with the click of a `play` button).
 By annotating markdown code blocks, repository maintainers can enrich the interactive, runbook-style experience of their markdown notebooks, all while ensuring they render correctly in markdown viewers. Runme, available as an [open-source](https://docs.runme.dev/open-source) tool, is licensed under APL 2.0.
