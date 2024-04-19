@@ -48,12 +48,9 @@ import {
   toggleAutosave,
   askNewRunnerSession,
   runCellWithPrompts,
-<<<<<<< HEAD
   toggleMasking,
   createGistCommand,
-=======
   toggleAuthorMode,
->>>>>>> f981bcc2 (Introducing exploring/authoring mode)
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -285,7 +282,12 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
-<<<<<<< HEAD
+      RunmeExtension.registerCommand('runme.notebookAuthorMode', () =>
+        toggleAuthorMode(false, kernel),
+      ),
+      RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
+        toggleAuthorMode(true, kernel),
+      ),
       RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
         const runnerEnv = kernel.getRunnerEnvironment()
         const sessionId = runnerEnv?.getSessionId()
@@ -296,27 +298,6 @@ export class RunmeExtension {
         const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
         openFileAsRunmeNotebook(outputFilePath)
       }),
-=======
-      RunmeExtension.registerCommand(
-        'runme.notebookSessionOutputs',
-        (e: { notebookEditor: { notebookUri: Uri }; ui: boolean }) => {
-          const runnerEnv = kernel.getRunnerEnvironment()
-          const sessionId = runnerEnv?.getSessionId()
-          if (!e.ui || !sessionId) {
-            return
-          }
-          const { notebookUri } = e.notebookEditor
-          const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-          commands.executeCommand('markdown.showPreviewToSide', outputFilePath)
-        },
-      ),
-      RunmeExtension.registerCommand('runme.notebookAuthorMode', () =>
-        toggleAuthorMode(false, kernel),
-      ),
-      RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
-        toggleAuthorMode(true, kernel),
-      ),
->>>>>>> f981bcc2 (Introducing exploring/authoring mode)
     )
 
     if (isPlatformAuthEnabled()) {

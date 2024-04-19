@@ -416,7 +416,6 @@
           "group": "navigation"
         },
         {
-<<<<<<< HEAD
           "command": "runme.notebookGistShare",
           "when": "notebookType == runme && notebookMode == sessionOutputs",
           "group": "navigation@50"
@@ -430,16 +429,16 @@
           "command": "runme.notebookOutputsUnmasked",
           "when": "notebookType == runme && notebookMode == sessionOutputs && notebookOutputsMasked",
           "group": "navigation@30"
-=======
+        },
+        {
           "command": "runme.notebookAuthorMode",
-          "when": "notebookType == runme && notebookAuthorModeOn",
+          "when": "notebookType == runme && false",
           "group": "navigation"
         },
         {
           "command": "runme.notebookExplorerMode",
-          "when": "notebookType == runme && !notebookAuthorModeOn",
+          "when": "notebookType == runme && false",
           "group": "navigation"
->>>>>>> f981bcc2 (Introducing exploring/authoring mode)
         }
       ],
       "notebook/cell/execute": [

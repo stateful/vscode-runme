@@ -64,7 +64,7 @@ export class Clusters extends LitElement implements Disposable {
   private _selectedCluster: GcpGkeCluster | null | undefined
 
   @state()
-  private _authorMode: boolean | undefined
+  private _authorMode: boolean = true
 
   /* eslint-disable */
   static styles = css`
