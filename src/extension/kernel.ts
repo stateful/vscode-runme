@@ -111,7 +111,7 @@ export class Kernel implements Disposable {
     Kernel.type,
     Kernel.type.toUpperCase(),
   )
-  protected messaging = notebooks.createRendererMessaging('runme-renderer')
+  public readonly messaging = notebooks.createRendererMessaging('runme-renderer')
 
   protected address?: string
   protected runner?: IRunner

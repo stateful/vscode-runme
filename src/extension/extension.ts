@@ -50,6 +50,7 @@ import {
   runCellWithPrompts,
   toggleMasking,
   createGistCommand,
+  toggleAuthorMode,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -281,6 +282,12 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
+      RunmeExtension.registerCommand('runme.notebookAuthorMode', () =>
+        toggleAuthorMode(false, kernel),
+      ),
+      RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
+        toggleAuthorMode(true, kernel),
+      ),
       RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
         const runnerEnv = kernel.getRunnerEnvironment()
         const sessionId = runnerEnv?.getSessionId()

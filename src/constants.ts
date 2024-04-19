@@ -61,6 +61,7 @@ export enum ClientMessages {
   gcpVMInstanceAction = 'gcp:gceVMInstanceAction',
   awsEC2Instances = 'aws:ec2Instances',
   awsEC2InstanceAction = 'aws:ec2InstanceAction',
+  onAuthorModeChange = 'common:onAuthorModeChange',
 }
 
 // [pretty print, languageId, destination]
@@ -172,6 +173,7 @@ export const NOTEBOOK_OUTPUTS_MASKED = 'notebookOutputsMasked'
 export const NOTEBOOK_MODE = 'notebookMode'
 export const NOTEBOOK_HAS_OUTPUTS = 'notebookHasRunmeOutputs'
 export const NOTEBOOK_RUN_WITH_PROMPTS = 'notebookRunWithPrompts'
+export const NOTEBOOK_AUTHOR_MODE_ON = 'notebookAuthorModeOn'
 
 /**
  * https://gist.github.com/ppisarczyk/43962d06686722d26d176fad46879d41?permalink_comment_id=3949999#gistcomment-3949999

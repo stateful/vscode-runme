@@ -43,6 +43,8 @@ import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_OUTPUTS_MASKED,
   NOTEBOOK_RUN_WITH_PROMPTS,
+  NOTEBOOK_AUTHOR_MODE_ON,
+  ClientMessages,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -414,4 +416,14 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
   } catch (error) {
     window.showErrorMessage(`Failed to generate Runme Gist: ${(error as any).message}`)
   }
+}
+
+export async function toggleAuthorMode(isAuthorMode: boolean, kernel: Kernel) {
+  kernel.messaging.postMessage({
+    type: ClientMessages.onAuthorModeChange,
+    output: {
+      isAuthorMode,
+    },
+  })
+  return ContextState.addKey(NOTEBOOK_AUTHOR_MODE_ON, isAuthorMode)
 }
