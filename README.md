@@ -1,8 +1,16 @@
-# [Runme](http://runme.dev) for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
+# [Runme](http://runme.dev) DevOps Notebooks for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
 
-This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code notebooks (with the click of a `play` button). Annotating markdown code blocks repo maintainers can enhance the interactive runbook-like experience of their markdown notebooks while they will continue to render properly in markdown viewers. Runme is [open source](https://docs.runme.dev/open-source) and licensed under APL2.0.
+Runme offers a robust solution for integrating operational documentation written in Markdown files.
+It improves documentation maintainability and team collaboration. Seamlessly incorporate scripting, pipelines, and GitOps methodologies into your infrastructure workflows.
 
-> 💡 If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
+With native support for Helm, Terraform, Ansible, Docker, and SSH, Runme enhances your DevOps toolchain. Utilize Runme's native cloud renderers to access the AWS Console and Google Cloud Console directly within your Notebooks. (More Cloud renderers coming soon!)
+
+## How it works?
+
+This VS Code extension transparently opens markdown files (i.e. README.md) as runnable VS Code Notebooks (with the click of a `play` button).
+By annotating markdown code blocks, repository maintainers can enrich the interactive, runbook-style experience of their markdown notebooks, all while ensuring they render correctly in markdown viewers. Runme, available as an [open-source](https://docs.runme.dev/open-source) tool, is licensed under APL 2.0.
+
+> 💡 To disable the default opening of the Runme Notebook when accessing Markdown files, you have the option to right-click on the .md file, then select **"Open With..."** and choose your preferred text editor. For a permanent solution, select **"Configure default editor for..."** and make your choice accordingly.".
 
 ![Text and notebook view side-by-side](https://runme.dev/img/intro.gif)
 
@@ -15,6 +23,12 @@ Please visit Runme's documentation to learn about its purpose, all its features,
 Feel free to submit any issues you may have via the
 [issue tracker](https://github.com/stateful/vscode-runme/issues) or [tell us about it on Discord](https://discord.gg/runme).
 
+## Guides
+
+Runme integrates with numerous third-party services and tools to simplify your documentation process and enhance your workflow across various domains. So, whether you are working with a cloud provider, setting up infrastructure, handling databases, etc. Runme can help you run and execute your projects, create standard procedures, and provide visibility to other team members.
+
+[Read the official Runme guide](https://docs.runme.dev/guide/)
+
 # Installation
 
 - Search for `runme` in the VS Code marketplace or extensions panel
@@ -25,9 +39,7 @@ Comprehensive install instructions are available in the docs at [https://docs.ru
 
 # Usage
 
-After cloning into a repo in VS Code, open any markdown file and notice that instead of opening the markdown file content, in renders a notebook where shell commands are rendered as runnable blocks. Please see Runme's [Getting Started guide](https://docs.runme.dev/getting-started) for step-by-step instructions.
-
-> If you don't want the runme notebook, you can always right click on the .md file, click `Open With...` and select the text editor. To make your choice permanent pick "Configure default editor for...".
+Once you've cloned a repository in VS Code, open any markdown file to observe that instead of displaying its content directly, it renders a Notebook. Within this Notebook, shell commands and other code sections are presented as runnable blocks. For detailed guidance, refer to Runme's [Getting Started guide](https://docs.runme.dev/getting-started) for step-by-step instructions.
 
 ## Configure Cell Execution
 
@@ -41,9 +53,9 @@ For instance, the following annotation will run the command in the background, g
 
 ## Configure Document-level Execution
 
-RUNME does not just retain frontmatter, it supports top-level settings that will affect all cells in the document.
+Runme does not just retain frontmatter, it supports top-level settings that will affect all cells in the document.
 
-``` {"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"}
+```sh {"id":"01HF7B0KK8DED9E3ZYTXMMAQFJ"}
 ---
 shell: bash
 # or
@@ -70,5 +82,5 @@ We would love to hear feedback, appreciate your patience, as Runme continutes to
 
 - [Join our Discord](https://discord.gg/runme)
 - [Submit an Issue](https://github.com/stateful/runme/issues)
-- [Contribute on Github](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
+- [Contribute on GitHub](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
 - [Read the Docs](https://docs.runme.dev/)
