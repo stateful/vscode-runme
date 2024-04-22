@@ -17,6 +17,7 @@ In this example we will write a simple script in different programming languages
 💡 Before starting, ensure you have the following installed in your machine:
 
 - Docker 🐳
+- Python 🐍 (for Python example)
 - Ruby 💎 (for Ruby example)
 - Node.js 🍦 (for Node.js example)
 
@@ -52,6 +53,43 @@ docker rm -f my_runme_demo_container
 docker run -d --name my_runme_demo_container -p 8080:80 nginx
 ```
 
+## Python 🐍
+
+### Requirements
+
+- Ensure you have python installed
+- Create a virtual env
+- Install the docker and prettytable packages
+
+```sh {"id":"01HW3EBAW8W703XVEMC38ZHTSP"}
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install docker prettytable
+```
+
+Now you have all the requirements ready, run the following Python script to get a list of running containers in a nice table format.
+
+```python {"id":"01HW3ECJTEMPK5F8BFT67CJ4XC"}
+import docker
+from prettytable import PrettyTable
+
+def list_running_containers():
+    client = docker.from_env()
+    containers = client.containers.list()
+
+    if containers:
+        table = PrettyTable(["Container ID", "Name", "Image", "Status"])
+        for container in containers:
+            table.add_row([container.id[:12], container.name, container.attrs['Config']['Image'], container.status])
+        print("Running containers:")
+        print(table)
+    else:
+        print("No running containers found.")
+
+if __name__ == "__main__":
+    list_running_containers()
+```
+
 ## Ruby 💎
 
 ### Requirements
@@ -70,6 +108,10 @@ Install required gems
 
 ```sh {"id":"01HTZBG5NYPFHDKP0BQTPDQSE3"}
 gem install docker-api terminal-table
+```
+
+```sh {"id":"01HW3EJ4FT4ZB0MZJW5FYX4NQF"}
+Now you have all the requirements ready, run the following Ruby script to get a list of running containers in a nice table format.
 ```
 
 ```rb {"id":"01HTZBCXFZ0V7P4AXE7CSQQ7ST"}
@@ -99,9 +141,13 @@ list_running_containers
 
 ## Node.js 🍦
 
+Install required node packages
+
 ```sh {"background":"true","id":"01HTZBXZHJ1ARVB67SD6FQMXA7"}
 npm i cli-table3 dockerode
 ```
+
+Now you have all the requirements ready, run the following Node.js script to get a list of running containers in a nice table format.
 
 ```js {"id":"01HTZBCXFZ0V7P4AXE7D90XPDT"}
 const Docker = require('dockerode');
