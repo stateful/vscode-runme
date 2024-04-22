@@ -30,7 +30,7 @@ import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
-import { GrpcRunnerMonitorEnvStore as GrpcRunnerMonitorEnvStore } from './monitorEnv'
+import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
 
 type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
@@ -61,6 +61,8 @@ export interface RunProgramOptions {
   languageId?: string
   fileExtension?: string
   commandMode?: CommandMode
+  knownId?: string
+  knownName?: string
 }
 
 export type IRunnerReady = { address?: string }
@@ -697,6 +699,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     fileExtension,
     languageId,
     commandMode,
+    knownId,
+    knownName,
   }: RunProgramOptions): ExecuteRequest {
     if (runnerEnv && !(runnerEnv instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC runner environment!')
@@ -717,6 +721,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       fileExtension,
       languageId,
       commandMode,
+      knownId,
+      knownName,
     })
   }
 

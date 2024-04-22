@@ -17,7 +17,13 @@ export async function createRunProgramOptions(
     RUNME_ID,
   }
 
-  const { interactive, mimeType, background } = getAnnotations(exec.cell)
+  const {
+    interactive,
+    mimeType,
+    background,
+    id: knownId,
+    name: knownName,
+  } = getAnnotations(exec.cell)
   const { programName, commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
   const cwd = await getCellCwd(exec.cell, exec.cell.notebook, runningCell.uri)
 
@@ -33,5 +39,7 @@ export async function createRunProgramOptions(
     programName,
     storeLastOutput: true,
     tty: interactive,
+    knownId,
+    knownName,
   }
 }
