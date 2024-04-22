@@ -23,7 +23,7 @@ echo "Revitalize 🛟 your Cloud docs…"
 sleep 1
 echo "colocating them with IaC/Code 📔"
 sleep 2
-echo "with ▶️ Runme! 🤖"
+echo "using ▶️ Runme.dev! 🤖"
 ```
 
 Now you get the idea, (isn't that cool ?) let's be creative and think about more advanced examples, let's write a Shell script that prints the following system information:
