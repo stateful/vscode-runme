@@ -501,6 +501,8 @@ export class GrpcSerializer extends SerializerBase {
       return
     }
 
+    this.cacheDocUriMapping.set(cacheId, doc.uri)
+
     await this.saveNotebookOutputsByCacheId(cacheId)
   }
 
