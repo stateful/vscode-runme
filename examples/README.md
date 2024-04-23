@@ -32,9 +32,7 @@ Now you get the idea, (isn't that cool ?) let's be creative and think about more
 - Memory usage
 - CPU load
 
-```sh {"id":"01HTZB059ZFK301922XBD5B88R","name":"shell-script","terminalRows":"20"}
-#!/bin/bash
-
+```sh {"id":"01HTZB059ZFK301922XBD5B88R","interpreter":"bash","name":"shell-script","terminalRows":"20"}
 check_disk_usage() {
     echo "Disk Usage:"
     df -h
@@ -77,9 +75,7 @@ Feel free to run the following shell script example, it's similar to the above e
 - Memory usage
 - CPU load
 
-```sh {"background":"true","id":"01HTZB059ZFK301922XDGZZNQ0","name":"interactive-shell-script","terminalRows":"25"}
-#!/bin/sh
-
+```sh {"background":"true","id":"01HTZB059ZFK301922XDGZZNQ0","interpreter":"bash","name":"interactive-shell-script","terminalRows":"25"}
 check_disk_usage() {
     echo "Disk Usage:"
     df -h
