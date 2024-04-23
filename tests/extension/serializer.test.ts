@@ -479,7 +479,7 @@ describe('GrpcSerializer', () => {
         })
 
         expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
-        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(3)
       })
     })
 
