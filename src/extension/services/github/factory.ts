@@ -12,9 +12,10 @@ class GitHubServiceFactory {
     if (this.#service) {
       return this.#service
     }
+    // @ts-expect-error test token only for testing purposes
+    const testingToken = globalThis._RUNME_TEST_TOKEN
     const session =
-      // @ts-expect-error test token only for testing purposes
-      globalThis._RUNME_TEST_TOKEN ||
+      testingToken ||
       (await authentication.getSession(
         AuthenticationProviders.GitHub,
         this.scopes,
