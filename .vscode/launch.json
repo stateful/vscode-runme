@@ -52,9 +52,15 @@
       "request": "launch",
       "name": "Debug Current Test File",
       "autoAttachChildProcesses": true,
-      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**"
+      ],
       "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
-      "args": ["run", "${relativeFile}"],
+      "args": [
+        "run",
+        "${relativeFile}"
+      ],
       "smartStep": true,
       "console": "integratedTerminal",
       "env": {
@@ -65,19 +71,23 @@
       "name": "Run Selected E2E Spec",
       "type": "node",
       "request": "launch",
-      "args": ["wdio.conf.ts", "--spec", "${file}"],
+      "args": [
+        "wdio.conf.ts",
+        "--spec",
+        "${file}"
+      ],
       "cwd": "${workspaceFolder}/tests/e2e",
       "autoAttachChildProcesses": true,
       "program": "${workspaceRoot}/node_modules/@wdio/cli/bin/wdio.js",
       "console": "integratedTerminal",
       "skipFiles": [
-          "${workspaceFolder}/node_modules/**/*.js",
-          "${workspaceFolder}/lib/**/*.js",
-          "<node_internals>/**/*.js"
+        "${workspaceFolder}/node_modules/**/*.js",
+        "${workspaceFolder}/lib/**/*.js",
+        "<node_internals>/**/*.js"
       ],
       "env": {
         "NODE_OPTIONS": "--experimental-specifier-resolution=node"
       },
-  }
+    }
   ]
 }

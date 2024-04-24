@@ -3,7 +3,7 @@ import { Key } from 'webdriverio'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import type { NotebookCell } from '../pageobjects/cell.page.js'
 
-describe.skip('Runme GitHub Workflow Integration', async () => {
+describe('Runme GitHub Workflow Integration', async () => {
   const notebook = new RunmeNotebook()
   const token = process.env.RUNME_TEST_TOKEN
 
@@ -41,6 +41,8 @@ describe.skip('Runme GitHub Workflow Integration', async () => {
     })
 
     it('should open GitHub Action trigger view', async () => {
+      await cell.run()
+      await cell.switchIntoCellFrame()
       await browser
         .action('key')
         .down(Key.Ctrl)
@@ -50,8 +52,6 @@ describe.skip('Runme GitHub Workflow Integration', async () => {
         .down(Key.Subtract)
         .pause(100)
         .perform()
-      await cell.run()
-      await cell.switchIntoCellFrame()
       await expect($('>>>.github-workflow-item-container')).toBePresent()
     })
 
@@ -60,7 +60,7 @@ describe.skip('Runme GitHub Workflow Integration', async () => {
       await outputContainer.$('aria/Run Workflow').click()
       await outputContainer
         .$('github-workflow-run[status="queued"]')
-        .waitForExist({ timeout: 10000 })
+        .waitForExist({ timeout: 60000 })
         // run again if workflow is not triggered
         .catch(() => outputContainer.$('aria/Run Workflow').click())
       await outputContainer
