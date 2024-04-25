@@ -12,16 +12,17 @@ export const github: IKernelExecutor = async (executor) => {
   try {
     await new GitHubServiceFactory(['repo']).createService(true)
     const { owner, repo, path, ref } = parseGitHubURL(doc.getText())
-    const json = await getYamlFileContents({ owner, repo, path })
+    const { content, environments } = await getYamlFileContents({ owner, repo, path })
     outputs.setState({
       type: OutputType.github,
       state: {
-        content: json,
+        content,
         repo,
         owner,
         workflow_id: path,
         ref,
         cellId: exec.cell.metadata['runme.dev/id'],
+        environments,
       },
     })
     await outputs.showOutput(OutputType.github)

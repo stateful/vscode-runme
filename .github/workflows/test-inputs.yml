@@ -41,6 +41,29 @@ on:
         options:
           - "yes"
           - "no"
+      requiredReleaseNumber:
+        description: "Mandatory release number"
+        required: true
+        type: number
+      optionalReleaseNumber:
+        description: "Optional release number"
+        required: false
+        type: number
+        default: 0
+      requiredBoolean:
+        description: "Required boolean value"
+        required: true
+        type: boolean
+      optionalBoolean:
+        description: "Optional boolean value"
+        required: false
+        type: boolean
+        default: false
+      environmentExample:
+        description: "Environment example"
+        required: true
+        type: environment
+        default: stage
 
 jobs:
   release:
