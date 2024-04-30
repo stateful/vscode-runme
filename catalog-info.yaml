@@ -8,7 +8,5 @@ metadata:
     backstage.io/techdocs-ref: dir:.
 spec:
   type: service
-  owner:
-    sebastian: user:sourishkrout
-    ruben: user:degrammer
+  owner: user:sourishkrout
   lifecycle: production
