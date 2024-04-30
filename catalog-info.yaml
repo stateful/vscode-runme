@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: vscode-runme
+  description: Runme vscode Extension
+  annotations:
+    github.com/project-slug: stateful/vscode-runme
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  owner:
+    sebastian: user:sourishkrout
+    ruben: user:degrammer
+  lifecycle: production
