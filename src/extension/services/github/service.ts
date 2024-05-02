@@ -2,17 +2,17 @@ import { Octokit } from 'octokit'
 import { parse } from 'yaml'
 import { fetch } from 'cross-fetch'
 
+import { Gist, GistResponse } from '../types'
+
 import {
-  Gist,
-  GistResponse,
   IWorkflowDispatchOptions,
   IWorkflowRun,
   IWorkflowYamlContentRequest,
-} from '../types'
-
-export type WorkflowRunFilter = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'> & {
-  run_id: number
-}
+  RepositoryEnvironment,
+  RepositoryEnvironments,
+  WorkflowDispatch,
+  WorkflowRunFilter,
+} from './types'
 
 export class GitHubService {
   private octokit: Octokit
@@ -87,7 +87,9 @@ export class GitHubService {
    * Download the YAML content from a workflow file
    * @returns A workflow YAML file in JSON format
    */
-  async getWorkflowYamlFile(options: IWorkflowYamlContentRequest): Promise<string> {
+  async getWorkflowYamlFile(
+    options: IWorkflowYamlContentRequest,
+  ): Promise<Partial<WorkflowDispatch>> {
     const { owner, repo, name } = options
     const workflow = await this.octokit.rest.repos.getContent({
       owner,
@@ -98,7 +100,7 @@ export class GitHubService {
       throw new Error('Failed to get workflow file content')
     }
     const decodedContent = Buffer.from((workflow.data as any).content, 'base64').toString()
-    return parse(decodedContent)
+    return parse(decodedContent) as Partial<WorkflowDispatch>
   }
 
   async createGist({ isPublic, description, files }: Gist) {
@@ -110,5 +112,35 @@ export class GitHubService {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     }) as Promise<GistResponse>
+  }
+
+  async getRepositoryEnvironments(
+    options: Omit<IWorkflowYamlContentRequest, 'name'>,
+  ): Promise<RepositoryEnvironments> {
+    const { owner, repo } = options
+    const environmentsResponse = await this.octokit.rest.repos.getAllEnvironments({
+      owner,
+      repo,
+    })
+
+    const { total_count, environments } = environmentsResponse.data
+
+    if (total_count && environments) {
+      return {
+        total_count,
+        environments: environments.map(({ html_url, id, name }) => {
+          return {
+            html_url,
+            id,
+            name,
+          }
+        }) as RepositoryEnvironment[],
+      }
+    }
+
+    return {
+      total_count: 0,
+      environments: [],
+    }
   }
 }

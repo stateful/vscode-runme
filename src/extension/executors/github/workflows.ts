@@ -1,4 +1,10 @@
-import { type IWorkflowDispatchOptions, type IWorkflowRun } from '../../services/types'
+import {
+  type IWorkflowDispatchOptions,
+  type IWorkflowRun,
+  RepositoryEnvironments,
+  WorkflowDispatch,
+  WorkflowDispatchInput,
+} from '../../services/github/types'
 import GitHubServiceFactory from '../../services/github/factory'
 
 export type IGitHubURLParts = {
@@ -22,16 +28,43 @@ export type WorkflowRunStatus = Pick<IWorkflowDispatchOptions, 'owner' | 'repo'>
 
 export type OnWorkflowStatusUpdate = (workflowRun: IWorkflowRun | undefined) => void
 
+export interface YAMLFileContents {
+  content: Partial<WorkflowDispatch>
+  environments?: RepositoryEnvironments
+}
+
 const workflowService = new GitHubServiceFactory(['repo'])
 
-export async function getYamlFileContents(options: Omit<IGitHubURLParts, 'ref'>): Promise<string> {
+export async function getYamlFileContents(
+  options: Omit<IGitHubURLParts, 'ref'>,
+): Promise<YAMLFileContents> {
   const githubService = await workflowService.createService()
   const { owner, repo, path } = options
-  return githubService.getWorkflowYamlFile({
+  const content = await githubService.getWorkflowYamlFile({
     owner,
     repo,
     name: path,
   })
+
+  const hasEnvironment = Object.values(content.on?.workflow_dispatch.inputs || {}).some(
+    (val: WorkflowDispatchInput) => val.type === 'environment',
+  )
+
+  if (hasEnvironment) {
+    const environments = await githubService.getRepositoryEnvironments({
+      repo,
+      owner,
+    })
+
+    return {
+      content,
+      environments,
+    }
+  }
+
+  return {
+    content,
+  }
 }
 
 export async function deployWorkflow(

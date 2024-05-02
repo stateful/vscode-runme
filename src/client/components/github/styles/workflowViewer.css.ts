@@ -21,6 +21,10 @@ export default /*css*/ css`
     position: relative;
   }
 
+  .workflow-items-container {
+    max-width: 50%;
+  }
+
   .github-workflow-control::part(control) {
     background-color: var(--theme-input-background);
     color: var(--vscode-foreground);
@@ -43,6 +47,7 @@ export default /*css*/ css`
 
   .row {
     width: 100%;
+    padding: 5px;
   }
 
   .github-workflow-control::part(control) {
@@ -75,6 +80,19 @@ export default /*css*/ css`
     margin-top: 1rem;
   }
 
+  .container {
+    background-color: var(--vscode-settings-rowHoverBackground);
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .branch {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
   .deploying {
     display: flex;
     gap: 1rem;
@@ -96,5 +114,15 @@ export default /*css*/ css`
 
   .error-message {
     color: var(--vscode-errorForeground);
+  }
+
+  .warning {
+    background-color: var(--vscode-inputValidation-warningBackground);
+    padding: 1rem;
+  }
+
+  .warning .alert {
+    color: var(--vscode-editorWarning-foreground);
+    margin-bottom: 1rem;
   }
 `

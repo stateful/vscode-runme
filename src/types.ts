@@ -22,7 +22,11 @@ import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
-import { IWorkflowRun } from './extension/services/types'
+import {
+  IWorkflowRun,
+  RepositoryEnvironments,
+  WorkflowDispatch,
+} from './extension/services/github/types'
 import { Kernel } from './extension/kernel'
 import { IAppToken } from './extension/services/runme'
 import type { TerminalConfiguration } from './utils/configuration'
@@ -127,10 +131,11 @@ export interface GitHubState {
   repo?: string
   owner?: string
   workflow_id?: string
-  content?: string
+  content?: Partial<WorkflowDispatch>
   ref?: string
   error?: any
   cellId?: string
+  environments?: RepositoryEnvironments
 }
 
 export interface StringIndexable {
