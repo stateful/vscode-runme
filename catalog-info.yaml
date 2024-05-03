@@ -2,11 +2,15 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: vscode-runme
+  namespace: stateful
   description: Runme vscode Extension
   annotations:
     github.com/project-slug: stateful/vscode-runme
-    backstage.io/techdocs-ref: dir:.
 spec:
   type: service
-  owner: user:sourishkrout
+  owner: user:  /sourishkrout
   lifecycle: production
+  providesApis:
+    - component:stateful/runme
+  dependsOn:
+    - component:stateful/firefly
