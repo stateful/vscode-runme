@@ -8,7 +8,7 @@ metadata:
     github.com/project-slug: stateful/vscode-runme
 spec:
   type: service
-  owner: user:  /sourishkrout
+  owner: user:stateful/sourishkrout
   lifecycle: production
   providesApis:
     - component:stateful/runme
