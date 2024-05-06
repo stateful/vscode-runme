@@ -608,7 +608,7 @@
           "runme.server.lifecycleIdentity": {
             "type": "number",
             "scope": "window",
-            "default": 1,
+            "default": 3,
             "enum": [
               0,
               1,
