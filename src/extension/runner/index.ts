@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
   type Pseudoterminal,
@@ -694,10 +693,13 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     interactive,
     envs,
     terminalDimensions,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     background,
-    storeStdoutInEnv,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fileExtension,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     languageId,
+    storeStdoutInEnv,
     commandMode,
     knownId,
     knownName,
