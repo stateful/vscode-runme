@@ -749,3 +749,7 @@ export function editJsonc(
   const formatted = format(fileContent, undefined, {})
   return applyEdits(fileContent, formatted)
 }
+
+export function isValidEnvVarName(name: string): boolean {
+  return new RegExp('^[A-Z_][A-Z0-9_]{1}[A-Z0-9_]*[A-Z][A-Z0-9_]*$').test(name)
+}
