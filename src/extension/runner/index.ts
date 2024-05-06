@@ -706,7 +706,25 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       throw new Error('Expected gRPC runner environment!')
     }
 
-    const execReq = ExecuteRequest.create({
+    let source: progconf.ProgramConfig['source'] | undefined = undefined
+    switch (exec?.type) {
+      case 'commands':
+        source = {
+          oneofKind: 'commands',
+          commands: { items: exec.commands },
+        }
+        break
+      case 'script':
+        source = {
+          oneofKind: 'script',
+          script: exec.script,
+        }
+        break
+      default:
+      // undefined
+    }
+
+    return ExecuteRequest.create({
       sessionId: runnerEnv?.getSessionId(),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
       storeStdoutInEnv,
@@ -721,45 +739,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         // fileExtension,
         // languageId,
         mode: commandMode,
+        source,
         knownId,
         knownName,
       },
     })
-
-    switch (exec?.type) {
-      case 'commands':
-        execReq.config!.source = {
-          oneofKind: 'commands',
-          commands: { items: exec.commands },
-        }
-        break
-      case 'script':
-        execReq.config!.source = {
-          oneofKind: 'script',
-          script: exec.script,
-        }
-        break
-    }
-
-    return execReq
-    // return ExecuteRequest.create({
-    //   sessionId: runnerEnv?.getSessionId(),
-    //   storeStdoutInEnv,
-    //   ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
-    //   // arguments: args,
-    //   // env: envs,
-    //   // directory: cwd,
-    //   // interactive,
-    //   // programName,
-    //   // background: background,
-    //   // ...(exec?.type === 'commands' && { commands: exec.commands }),
-    //   // ...(exec?.type === 'script' && { script: exec.script }),
-    //   // fileExtension,
-    //   // languageId,
-    //   // commandMode,
-    //   // knownId,
-    //   // knownName,
-    // })
   }
 
   get numTerminalWindows() {
