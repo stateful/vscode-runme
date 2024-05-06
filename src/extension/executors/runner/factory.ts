@@ -37,8 +37,8 @@ export async function createRunProgramOptions(
     exec: execution,
     languageId: exec.cell.document.languageId,
     programName,
-    storeLastOutput: true,
-    tty: interactive,
+    storeStdoutInEnv: true,
+    interactive: interactive,
     knownId,
     knownName,
   }

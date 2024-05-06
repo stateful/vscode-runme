@@ -12,11 +12,11 @@ import {
   NotebookDocument,
 } from 'vscode'
 
+import { progconf } from '../grpc/runner/v2alpha1'
 import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
-import { CommandMode } from '../grpc/runner/v1'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -195,8 +195,8 @@ export function getCellProgram(
   cell: NotebookCell | NotebookCellData | Serializer.Cell,
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
   execKey: string,
-): { programName: string; commandMode: CommandMode } {
-  let result: { programName: string; commandMode: CommandMode }
+): { programName: string; commandMode: progconf.CommandMode } {
+  let result: { programName: string; commandMode: progconf.CommandMode }
   const { interpreter } = getAnnotations(cell.metadata)
 
   if (isShellLanguage(execKey)) {
@@ -204,13 +204,13 @@ export function getCellProgram(
 
     result = {
       programName: shellPath,
-      commandMode: CommandMode.INLINE_SHELL,
+      commandMode: progconf.CommandMode.INLINE,
     }
   } else {
     // TODO(mxs): make this configurable!!
     result = {
       programName: '',
-      commandMode: CommandMode.TEMP_FILE,
+      commandMode: progconf.CommandMode.FILE,
     }
   }
 

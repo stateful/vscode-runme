@@ -33,11 +33,12 @@ import {
 import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
 import {
-  CommandMode,
+  // CommandMode,
   ResolveProgramRequest_Mode,
   ResolveProgramResponse_Status,
   ResolveProgramResponse_VarResult,
-} from '../../grpc/runner/v1'
+  progconf,
+} from '../../grpc/runner/v2alpha1'
 import { closeTerminalByEnvID } from '../task'
 import {
   getCellProgram,
@@ -506,10 +507,10 @@ export async function resolveRunProgramExecution(
   envs: Record<string, string>,
   script: string,
   languageId: string,
-  commandMode: CommandMode,
+  commandMode: progconf.CommandMode,
   promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
-  if (commandMode !== CommandMode.INLINE_SHELL) {
+  if (commandMode !== progconf.CommandMode.INLINE) {
     return {
       type: 'script',
       script,
@@ -572,13 +573,12 @@ export async function promptVariablesAsync(
       break
 
     case ResolveProgramResponse_Status.UNRESOLVED_WITH_MESSAGE:
-    case ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER:
-    case ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET: {
+    case ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER: {
       const key = variable.name
       const placeHolder = variable.resolvedValue || variable.originalValue || 'Enter a value please'
       const hasStringValue =
         variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER
-      const isPassword = variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET
+      const isPassword = false
 
       const userInput = await promptUserForVariable(key, placeHolder, hasStringValue, isPassword)
 

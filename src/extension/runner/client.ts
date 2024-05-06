@@ -1,7 +1,7 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import { type Disposable, EventEmitter } from 'vscode'
-import { RpcOptions, ServerStreamingCall, UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { RpcOptions, UnaryCall } from '@protobuf-ts/runtime-rpc'
 
 import {
   CreateSessionRequest,
@@ -14,11 +14,13 @@ import {
   GetSessionResponse,
   ListSessionsRequest,
   ListSessionsResponse,
-  MonitorEnvStoreRequest,
-  MonitorEnvStoreResponse,
+  // MonitorEnvStoreRequest,
+  // MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
-} from '../grpc/runner/v1'
+  UpdateSessionRequest,
+  UpdateSessionResponse,
+} from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
 
@@ -109,6 +111,14 @@ export class GrpcRunnerClient implements IRunnerClient {
     return this.client.deleteSession(input, options)
   }
 
+  updateSession(
+    input: UpdateSessionRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<UpdateSessionRequest, UpdateSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.updateSession(input, options)
+  }
+
   execute(options?: RpcOptions | undefined): DuplexStreamingCall<ExecuteRequest, ExecuteResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.execute(options)
@@ -122,11 +132,11 @@ export class GrpcRunnerClient implements IRunnerClient {
     return this.client.resolveProgram(input, options)
   }
 
-  monitorEnvStore(
-    input: MonitorEnvStoreRequest,
-    options?: RpcOptions | undefined,
-  ): ServerStreamingCall<MonitorEnvStoreRequest, MonitorEnvStoreResponse> {
-    GrpcRunnerClient.assertClient(this.client)
-    return this.client.monitorEnvStore(input, options)
-  }
+  // monitorEnvStore(
+  //   input: MonitorEnvStoreRequest,
+  //   options?: RpcOptions | undefined,
+  // ): ServerStreamingCall<MonitorEnvStoreRequest, MonitorEnvStoreResponse> {
+  //   GrpcRunnerClient.assertClient(this.client)
+  //   return this.client.monitorEnvStore(input, options)
+  // }
 }

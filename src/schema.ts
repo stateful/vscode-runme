@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { ResolveProgramRequest_Mode } from './extension/grpc/runner/v1'
+import { ResolveProgramRequest_Mode } from './extension/grpc/runner/v2alpha1'
 
 const cleanAnnotation = (value: string, character: string): string => {
   return value

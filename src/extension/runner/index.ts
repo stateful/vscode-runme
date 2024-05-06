@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
   type Pseudoterminal,
@@ -9,16 +10,15 @@ import {
 
 import type { DisposableAsync } from '../../types'
 import {
-  CommandMode,
   CreateSessionRequest,
   ExecuteRequest,
   ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
   ResolveProgramRequest_Mode,
-  SessionEnvStoreType,
   Winsize,
-} from '../grpc/runner/v1'
+  progconf,
+} from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
@@ -52,15 +52,15 @@ export interface RunProgramOptions {
   cwd?: string
   envs?: string[]
   exec?: RunProgramExecution
-  tty?: boolean
+  interactive?: boolean
   runnerEnv?: IRunnerEnvironment
   terminalDimensions?: TerminalDimensions
   background?: boolean
   convertEol?: boolean
-  storeLastOutput?: boolean
+  storeStdoutInEnv?: boolean
   languageId?: string
   fileExtension?: string
-  commandMode?: CommandMode
+  commandMode?: progconf.CommandMode
   knownId?: string
   knownName?: string
 }
@@ -79,12 +79,12 @@ export interface IRunner extends Disposable {
 
   createEnvironment({
     workspaceRoot,
-    envStoreType,
+    // envStoreType,
     envs,
     metadata,
   }: {
     workspaceRoot?: string
-    envStoreType?: SessionEnvStoreType
+    // envStoreType?: SessionEnvStoreType
     envs?: string[]
     metadata?: { [index: string]: string }
   }): Promise<IRunnerEnvironment>
@@ -225,24 +225,24 @@ export default class GrpcRunner implements IRunner {
 
   async createEnvironment({
     workspaceRoot,
-    envStoreType,
+    // envStoreType,
     envs,
     metadata,
   }: {
     workspaceRoot?: string
-    envStoreType?: SessionEnvStoreType
+    // envStoreType?: SessionEnvStoreType
     envs?: string[]
     metadata?: { [index: string]: string }
   }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
     const request = CreateSessionRequest.create({
       metadata,
-      envs,
+      env: envs,
       project: {
         root: workspaceRoot,
         envLoadOrder,
       },
-      envStoreType,
+      // envStoreType,
     })
 
     try {
@@ -285,7 +285,7 @@ export default class GrpcRunner implements IRunner {
       return undefined
     }
 
-    convertEnvList(session.envs)
+    convertEnvList(session.env)
   }
 
   // TODO: create a gRPC endpoint for this so it can be done without making a
@@ -418,7 +418,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       }
 
       if (pid) {
-        this._onPid.fire(Number(pid.pid))
+        this._onPid.fire(Number(pid.value))
       }
     })
 
@@ -490,7 +490,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.opts.envs ??= []
 
-    if (this.opts.tty) {
+    if (this.opts.interactive) {
       this.opts.envs.push('TERM=xterm-256color')
     } else {
       this.opts.envs.push('TERM=')
@@ -508,7 +508,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   }
 
   isPseudoterminal(): boolean {
-    return !!this.opts.tty
+    return !!this.opts.interactive
   }
 
   async handleInput(data: string): Promise<void> {
@@ -691,11 +691,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     cwd,
     runnerEnv,
     exec,
-    tty,
+    interactive,
     envs,
     terminalDimensions,
     background,
-    storeLastOutput,
+    storeStdoutInEnv,
     fileExtension,
     languageId,
     commandMode,
@@ -706,24 +706,60 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       throw new Error('Expected gRPC runner environment!')
     }
 
-    return ExecuteRequest.create({
-      arguments: args,
-      envs,
-      directory: cwd,
-      tty,
+    const execReq = ExecuteRequest.create({
       sessionId: runnerEnv?.getSessionId(),
-      programName,
-      background: background,
-      ...(exec?.type === 'commands' && { commands: exec.commands }),
-      ...(exec?.type === 'script' && { script: exec.script }),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
-      storeLastOutput,
-      fileExtension,
-      languageId,
-      commandMode,
-      knownId,
-      knownName,
+      storeStdoutInEnv,
+      // program config
+      config: {
+        arguments: args,
+        env: envs,
+        directory: cwd,
+        interactive,
+        programName,
+        // background: background,
+        // fileExtension,
+        // languageId,
+        mode: commandMode,
+        knownId,
+        knownName,
+      },
     })
+
+    switch (exec?.type) {
+      case 'commands':
+        execReq.config!.source = {
+          oneofKind: 'commands',
+          commands: { items: exec.commands },
+        }
+        break
+      case 'script':
+        execReq.config!.source = {
+          oneofKind: 'script',
+          script: exec.script,
+        }
+        break
+    }
+
+    return execReq
+    // return ExecuteRequest.create({
+    //   sessionId: runnerEnv?.getSessionId(),
+    //   storeStdoutInEnv,
+    //   ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
+    //   // arguments: args,
+    //   // env: envs,
+    //   // directory: cwd,
+    //   // interactive,
+    //   // programName,
+    //   // background: background,
+    //   // ...(exec?.type === 'commands' && { commands: exec.commands }),
+    //   // ...(exec?.type === 'script' && { script: exec.script }),
+    //   // fileExtension,
+    //   // languageId,
+    //   // commandMode,
+    //   // knownId,
+    //   // knownName,
+    // })
   }
 
   get numTerminalWindows() {

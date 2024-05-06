@@ -41,7 +41,7 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runner/v1'
+import { ResolveProgramRequest_Mode, progconf } from '../grpc/runner/v2alpha1'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -298,8 +298,8 @@ export class RunmeTaskProvider implements TaskProvider {
           exec: execution,
           languageId,
           programName,
-          storeLastOutput: true,
-          tty: interactive,
+          storeStdoutInEnv: true,
+          interactive,
         }
 
         const program = await runner.createProgramSession(runOpts)
@@ -328,7 +328,7 @@ export class RunmeTaskProvider implements TaskProvider {
     envs: Record<string, string>,
     script: string,
     languageId: string,
-    commandMode: CommandMode,
+    commandMode: progconf.CommandMode,
     promptMode: ResolveProgramRequest_Mode,
   ): Promise<RunProgramExecution> {
     try {
