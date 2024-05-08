@@ -1,9 +1,13 @@
-import { NotebookRendererMessaging } from 'vscode'
+import { NotebookEditor, NotebookRendererMessaging, workspace, window } from 'vscode'
 
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
 import { postClientMessage } from '../../utils/messaging'
 import { checkWorkflowRunStatus, deployWorkflow } from '../executors/github/workflows'
+import { Kernel } from '../kernel'
+import { getCellById } from '../cell'
+import { GrpcSerializer } from '../serializer'
+import { openFileAsRunmeNotebook } from '../utils'
 
 export interface IGitHubMessaging {
   messaging: NotebookRendererMessaging
@@ -39,4 +43,34 @@ export default async function handleGitHubMessage({
       })
     },
   })
+}
+
+export async function handleGistMessage({
+  kernel,
+  message,
+  editor,
+}: {
+  kernel: Kernel
+  message: ClientMessage<ClientMessages.gistCell>
+  editor: NotebookEditor
+}) {
+  const runnerEnv = kernel.getRunnerEnvironment()
+  const sessionId = runnerEnv?.getSessionId()
+  if (!sessionId) {
+    return // Display message
+  }
+  const cell = await getCellById({ editor, id: message.output.cellId })
+  if (cell) {
+    const outputFilePath = GrpcSerializer.getOutputsUri(cell.document.uri, sessionId)
+    const sessionFileExists = await workspace.fs.stat(outputFilePath).then(
+      () => true,
+      () => false,
+    )
+    if (!sessionFileExists) {
+      return window.showWarningMessage(
+        'No session files found, turn on Auto-Save and run the cell again to generate one',
+      )
+    }
+    openFileAsRunmeNotebook(outputFilePath)
+  }
 }

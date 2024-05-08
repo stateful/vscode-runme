@@ -1,4 +1,13 @@
-import { Disposable, workspace, notebooks, commands, ExtensionContext, tasks, window } from 'vscode'
+import {
+  Disposable,
+  workspace,
+  notebooks,
+  commands,
+  ExtensionContext,
+  tasks,
+  window,
+  NotebookCell,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
@@ -18,7 +27,6 @@ import {
   BackgroundTaskProvider,
   StopBackgroundTaskProvider,
 } from './provider/background'
-import { CopyProvider } from './provider/copy'
 import {
   getDefaultWorkspace,
   bootFile,
@@ -26,7 +34,6 @@ import {
   getPlatformAuthSession,
   openFileAsRunmeNotebook,
 } from './utils'
-import { AnnotationsProvider } from './provider/annotations'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   toggleTerminal,
@@ -51,21 +58,22 @@ import {
   toggleMasking,
   createGistCommand,
   toggleAuthorMode,
+  createCellGistCommand,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import GrpcRunner, { IRunner } from './runner'
-import { CliProvider } from './provider/cli'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import CloudPanel from './panels/cloud'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
-import { NamedProvider } from './provider/named'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
+import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
+import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -199,14 +207,15 @@ export class RunmeExtension {
         Kernel.type,
         new BackgroundTaskProvider(),
       ),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CopyProvider()),
       notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, stopBackgroundTaskProvider),
       notebooks.registerNotebookCellStatusBarItemProvider(
         Kernel.type,
-        new AnnotationsProvider(kernel),
+        new NotebookCellStatusBarProvider(kernel),
       ),
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new NamedProvider()),
-
+      notebooks.registerNotebookCellStatusBarItemProvider(
+        Kernel.type,
+        new SessionOutputCellStatusBarProvider(kernel),
+      ),
       stopBackgroundTaskProvider,
 
       codeLensProvider,
@@ -236,7 +245,6 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       RunmeExtension.registerCommand('runme.runWithPrompts', () => runCellWithPrompts()),
       runmeTaskProvider,
-      notebooks.registerNotebookCellStatusBarItemProvider(Kernel.type, new CliProvider()),
 
       /**
        * tree viewer items
@@ -279,6 +287,9 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookGistShare', (event: NotebookUiEvent) =>
         createGistCommand(event, context),
+      ),
+      RunmeExtension.registerCommand('runme.cellGistShare', (cell: NotebookCell) =>
+        createCellGistCommand(cell, context),
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),

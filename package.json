@@ -264,6 +264,10 @@
         "title": "Always navigate within existing renderer with action buttons",
         "icon": "$(preview)",
         "shortTitle": "Explorer mode"
+      },
+      {
+        "command": "runme.cellGistShare",
+        "title": "Click to generate GitHub gist link"
       }
     ],
     "menus": {

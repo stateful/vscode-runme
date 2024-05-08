@@ -18,6 +18,7 @@ import {
   ProgressLocation,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import {
   OpenViewInEditorAction,
@@ -45,6 +46,7 @@ import {
   NOTEBOOK_RUN_WITH_PROMPTS,
   NOTEBOOK_AUTHOR_MODE_ON,
   ClientMessages,
+  TELEMETRY_EVENTS,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -366,6 +368,7 @@ export async function runCellWithPrompts() {
 }
 
 export async function createGistCommand(e: NotebookUiEvent, context: ExtensionContext) {
+  let gitShared = true
   try {
     if (!e.ui) {
       return
@@ -414,7 +417,12 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
       env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
     }
   } catch (error) {
+    gitShared = false
     window.showErrorMessage(`Failed to generate Runme Gist: ${(error as any).message}`)
+  } finally {
+    TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.NotebookGist, {
+      error: gitShared.toString(),
+    })
   }
 }
 
@@ -426,4 +434,66 @@ export async function toggleAuthorMode(isAuthorMode: boolean, kernel: Kernel) {
     },
   })
   return ContextState.addKey(NOTEBOOK_AUTHOR_MODE_ON, isAuthorMode)
+}
+
+export async function createCellGistCommand(cell: NotebookCell, context: ExtensionContext) {
+  let gitShared = true
+  try {
+    const uri = cell.notebook.uri
+    const fileName = path.basename(uri.path)
+    const templatePath = Uri.joinPath(context.extensionUri, 'templates', 'gist.md')
+    const byRunmeFile = await workspace.fs.readFile(templatePath)
+    const cellGistTemplate = await workspace.fs.readFile(
+      Uri.joinPath(context.extensionUri, 'templates', 'cellGist.md'),
+    )
+    const [originalFileName, sessionId] = fileName.split('-')
+    const cellId = cell.notebook.metadata['runme.dev/id']
+    const markdownId = cellId ? `${cellId}.md` : sessionId
+
+    const createGistProgress = await window.withProgress(
+      {
+        location: ProgressLocation.Notification,
+        title: 'Creating new cell Gist ...',
+        cancellable: true,
+      },
+      async () => {
+        const createdGist = await createGist({
+          isPublic: false,
+          files: {
+            [`${markdownId}`]: {
+              content: Buffer.from(byRunmeFile)
+                .toString('utf8')
+                .replaceAll('%%file%%', `${originalFileName}.md`)
+                .replaceAll('%%session%%', sessionId.replace('.md', '')),
+            },
+            [`cell-${markdownId}`]: {
+              content: Buffer.from(cellGistTemplate)
+                .toString('utf8')
+                .replaceAll('%%cell_text%%', cell.document.getText())
+                .replaceAll('%%language%%', cell.document.languageId),
+            },
+          },
+        })
+
+        return createdGist
+      },
+    )
+
+    const option = await window.showInformationMessage(
+      'The Runme Gist has been created for the cell!',
+      'Open',
+      'Cancel',
+    )
+
+    if (option === 'Open') {
+      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
+    }
+  } catch (error) {
+    gitShared = false
+    window.showErrorMessage(`Failed to generate Runme Gist: ${(error as any).message}`)
+  } finally {
+    TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.CellGist, {
+      error: gitShared.toString(),
+    })
+  }
 }
