@@ -693,11 +693,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     interactive,
     envs,
     terminalDimensions,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     background,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fileExtension,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     languageId,
     storeStdoutInEnv,
     commandMode,
@@ -737,9 +734,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         directory: cwd,
         interactive,
         programName,
-        // background: background,
-        // fileExtension,
-        // languageId,
+        background,
+        fileExtension,
+        languageId,
         mode: commandMode,
         source,
         knownId,
