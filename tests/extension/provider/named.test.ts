@@ -9,6 +9,7 @@ vi.mock('vscode')
 
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
+  isValidEnvVarName: vi.fn().mockReturnValue(true),
 }))
 
 suite('NamedStatusBarItem Test Suite', () => {
@@ -30,7 +31,7 @@ suite('NamedStatusBarItem Test Suite', () => {
     expect(item?.text).toMatchInlineSnapshot(`"$(add) Add Name"`)
     expect(item?.tooltip).toMatchInlineSnapshot(
       // eslint-disable-next-line quotes
-      `"Add name to important cells"`,
+      `"Set an environment variable to reference the cell output in another cell"`,
     )
     expect(getAnnotations).toBeCalledTimes(1)
   })
@@ -47,7 +48,7 @@ suite('NamedStatusBarItem Test Suite', () => {
     expect(item?.text).toMatchInlineSnapshot(`"$(file-symlink-file) say-hello"`)
     expect(item?.tooltip).toMatchInlineSnapshot(
       // eslint-disable-next-line quotes
-      `"Be careful changing the name of an important cell"`,
+      `"Click to run an example cell with the exported variable name"`,
     )
     expect(getAnnotations).toBeCalledTimes(1)
   })

@@ -22,6 +22,7 @@ vi.mock('../../../src/extension/utils', () => ({
   }),
   validateAnnotations: vi.fn(),
   replaceOutput: vi.fn(),
+  isValidEnvVarName: vi.fn().mockReturnValue(true),
 }))
 
 vi.mock('../../../src/extension/runner', () => ({}))
@@ -31,7 +32,7 @@ describe('Notebook Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)
   it('should register commands when initializing', () => {
     new NotebookCellStatusBarProvider(kernel)
-    expect(commands.registerCommand).toBeCalledTimes(1)
+    expect(commands.registerCommand).toBeCalledTimes(2)
   })
 
   describe('provideCellStatusBarItems', () => {

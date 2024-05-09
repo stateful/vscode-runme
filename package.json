@@ -79,6 +79,10 @@
         "title": "Toggle cell configuration UI"
       },
       {
+        "command": "runme.addEnvironmentVariableExecution",
+        "title": "Add Environment Variable cell execution"
+      },
+      {
         "command": "runme.runCliCommand",
         "title": "Run CLI command in new terminal"
       },
