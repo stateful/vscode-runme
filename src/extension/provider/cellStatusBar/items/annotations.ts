@@ -1,17 +1,12 @@
-import {
-  NotebookCell,
-  NotebookCellStatusBarItemProvider,
-  NotebookCellStatusBarItem,
-  NotebookCellStatusBarAlignment,
-  NotebookCellKind,
-} from 'vscode'
+import { NotebookCell, NotebookCellStatusBarAlignment, NotebookCellStatusBarItem } from 'vscode'
 
-import { OutputType } from '../../constants'
-import { RunmeExtension } from '../extension'
-import { Kernel } from '../kernel'
+import { OutputType } from '../../../../constants'
+import { RunmeExtension } from '../../../extension'
 
-export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
-  constructor(private readonly kernel: Kernel) {
+import CellStatusBarItem from './cellStatusBarItem'
+
+export class AnnotationsStatusBarItem extends CellStatusBarItem {
+  registerCommands(): void {
     RunmeExtension.registerCommand(
       'runme.toggleCellAnnotations',
       this.toggleCellAnnotations.bind(this),
@@ -23,13 +18,7 @@ export class AnnotationsProvider implements NotebookCellStatusBarItemProvider {
     await outputs.toggleOutput(OutputType.annotations)
   }
 
-  async provideCellStatusBarItems(
-    cell: NotebookCell,
-  ): Promise<NotebookCellStatusBarItem | undefined> {
-    if (cell.kind !== NotebookCellKind.Code) {
-      return
-    }
-
+  getStatusBarItem(cell: NotebookCell): NotebookCellStatusBarItem {
     const item = new NotebookCellStatusBarItem(
       '$(gear) Configure',
       NotebookCellStatusBarAlignment.Right,

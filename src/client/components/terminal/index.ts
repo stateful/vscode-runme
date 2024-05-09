@@ -1,5 +1,6 @@
 import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
+import { when } from 'lit/directives/when.js'
 import { Disposable, TerminalDimensions } from 'vscode'
 import { ITheme, Terminal as XTermJS } from 'xterm'
 import { SerializeAddon } from 'xterm-addon-serialize'
@@ -17,6 +18,7 @@ import type { TerminalConfiguration } from '../../../utils/configuration'
 import '../closeCellButton'
 import '../copyButton'
 import './share'
+import './gistCell'
 
 interface IWindowSize {
   width: number
@@ -27,10 +29,6 @@ enum MessageOptions {
   OpenLink = 'Open',
   CopyToClipboard = 'Copy to clipboard',
   Cancel = 'Cancel',
-}
-
-enum ModalOptions {
-  OpenLink = 'Open',
 }
 
 const vscodeCSS = (...identifiers: string[]) => `--vscode-${identifiers.join('-')}`
@@ -753,24 +751,18 @@ export class TerminalView extends LitElement {
   }
 
   async #triggerShareCellOutput(): Promise<boolean | void | undefined> {
-    const cloudSaveEnabled = this.enableShareButton
-
-    if (!cloudSaveEnabled) {
-      const ctx = getContext()
-      if (!ctx.postMessage) {
-        return
-      }
-      return postClientMessage(ctx, ClientMessages.optionsModal, {
-        title:
-          // eslint-disable-next-line max-len
-          'Secure collaboration for self-service workflows is only available in the Stateful Platform. Click "Open" to learn more.',
-        options: Object.values(ModalOptions),
-        id: this.id!,
-        telemetryEvent: 'app.learnMore',
-      })
-    }
-
     return this.#shareCellOutput(true)
+  }
+
+  #openSessionOutput(): Promise<void | boolean> | undefined {
+    const ctx = getContext()
+    if (!ctx.postMessage) {
+      return
+    }
+    return postClientMessage(ctx, ClientMessages.gistCell, {
+      cellId: this.id!,
+      telemetryEvent: 'app.cellGist',
+    })
   }
 
   /**
@@ -841,13 +833,20 @@ export class TerminalView extends LitElement {
             return this.#copy()
           }}"
         ></copy-button>
-        <share-cell
-          ?disabled=${this.isCloudApiLoading}
-          ?displayShareIcon=${this.isShareReady}
-          shareText="${this.isCloudApiLoading ? 'Saving ...' : this.shareText}"
-          @onShare="${this.#triggerShareCellOutput}"
-        >
-        </share-cell>
+        <gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>
+        ${when(
+          this.enableShareButton,
+          () => {
+            return html` <share-cell
+              ?disabled=${this.isCloudApiLoading}
+              ?displayShareIcon=${this.isShareReady}
+              shareText="${this.isCloudApiLoading ? 'Saving ...' : this.shareText}"
+              @onShare="${this.#triggerShareCellOutput}"
+            >
+            </share-cell>`
+          },
+          () => {},
+        )}
       </div>
     </section>`
   }

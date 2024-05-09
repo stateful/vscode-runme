@@ -77,7 +77,7 @@ import {
   getCellById,
 } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
-import handleGitHubMessage from './messages/github'
+import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import PanelManager from './panels/panelManager'
@@ -474,6 +474,13 @@ export class Kernel implements Disposable {
       return handleGCPMessage({ messaging: this.messaging, message, editor })
     } else if ([ClientMessages.awsEC2InstanceAction].includes(message.type)) {
       return handleAWSMessage({ messaging: this.messaging, message, editor })
+    } else if (message.type === ClientMessages.gistCell) {
+      TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)
+      return handleGistMessage({
+        kernel: this,
+        editor,
+        message,
+      })
     } else if (message.type.startsWith('terminal:')) {
       return
     }

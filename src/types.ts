@@ -500,6 +500,11 @@ export interface ClientMessagePayload {
   [ClientMessages.onAuthorModeChange]: {
     isAuthorMode: boolean
   }
+
+  [ClientMessages.gistCell]: {
+    cellId: string
+    telemetryEvent: string
+  }
 }
 
 export interface OutputItemsPayload {

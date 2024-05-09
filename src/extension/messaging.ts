@@ -18,7 +18,7 @@ export abstract class DisplayableMessage {
   abstract display(): void
   constructor(
     protected readonly context: ExtensionContext,
-    readonly stateSettings?: Record<TELEMETRY_EVENTS, any>,
+    readonly stateSettings?: Partial<Record<TELEMETRY_EVENTS, any>>,
   ) {
     this.context = context
     this.stateSettings = stateSettings

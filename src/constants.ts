@@ -62,6 +62,7 @@ export enum ClientMessages {
   awsEC2Instances = 'aws:ec2Instances',
   awsEC2InstanceAction = 'aws:ec2InstanceAction',
   onAuthorModeChange = 'common:onAuthorModeChange',
+  gistCell = 'gist:cell',
 }
 
 // [pretty print, languageId, destination]
@@ -1087,6 +1088,8 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 export const EXTENSION_NAME = 'stateful.runme'
 export enum TELEMETRY_EVENTS {
   RecommendExtension = 'runme.recommendExtension',
+  NotebookGist = 'runme.notebookGist',
+  CellGist = 'runme.cellGist',
 }
 
 export enum WebViews {

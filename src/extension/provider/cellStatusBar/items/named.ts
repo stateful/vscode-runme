@@ -1,21 +1,13 @@
-import {
-  NotebookCell,
-  NotebookCellStatusBarItemProvider,
-  NotebookCellStatusBarItem,
-  NotebookCellStatusBarAlignment,
-  NotebookCellKind,
-} from 'vscode'
+import { NotebookCell, NotebookCellStatusBarAlignment, NotebookCellStatusBarItem } from 'vscode'
 
-import { getAnnotations } from '../utils'
+import { getAnnotations } from '../../../utils'
 
-export class NamedProvider implements NotebookCellStatusBarItemProvider {
-  async provideCellStatusBarItems(
-    cell: NotebookCell,
-  ): Promise<NotebookCellStatusBarItem | undefined> {
-    if (cell.kind !== NotebookCellKind.Code) {
-      return
-    }
+import CellStatusBarItem from './cellStatusBarItem'
 
+export class NamedStatusBarItem extends CellStatusBarItem {
+  registerCommands(): void {}
+
+  getStatusBarItem(cell: NotebookCell): NotebookCellStatusBarItem {
     const annotations = getAnnotations(cell)
 
     let item: NotebookCellStatusBarItem
