@@ -1,7 +1,7 @@
 import { vi, describe, it, expect } from 'vitest'
-import { commands, NotebookCellKind } from 'vscode'
+import { NotebookCellKind } from 'vscode'
 
-import { AnnotationsProvider } from '../../../src/extension/provider/annotations'
+import { AnnotationsStatusBarItem } from '../../../src/extension/provider/cellStatusBar/items/annotations'
 import { Kernel } from '../../../src/extension/kernel'
 import { OutputType } from '../../../src/constants'
 
@@ -33,36 +33,12 @@ vi.mock('../../../src/extension/utils', () => ({
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
-describe('Runme Annotations', () => {
+describe('AnnotationsStatusBarItem test suite', () => {
   const kernel = new Kernel({} as any)
-  it('should register commands when initializing', () => {
-    new AnnotationsProvider(kernel)
-    expect(commands.registerCommand).toBeCalledTimes(1)
-    expect(commands.registerCommand).toBeCalledWith(
-      'runme.toggleCellAnnotations',
-      expect.anything(),
-      undefined,
-    )
-  })
 
-  describe('provideCellStatusBarItems', () => {
-    it('should not create a status bar item for non-code elements', async () => {
-      const annotationsProvider = new AnnotationsProvider(kernel)
-      const cell = {
-        metadata: {
-          background: 'true',
-        },
-        executionSummary: {
-          success: false,
-        },
-        kind: NotebookCellKind.Markup,
-      }
-      const statusBarItems = await annotationsProvider.provideCellStatusBarItems(cell as any)
-      expect(statusBarItems).toBe(undefined)
-    })
-
-    it('should create a status bar item for code elements', async () => {
-      const annotationsProvider = new AnnotationsProvider(kernel)
+  describe('getStatusBarItem', () => {
+    it('should create a status bar item', () => {
+      const annotationsProvider = new AnnotationsStatusBarItem(kernel)
       const cell = {
         metadata: {
           background: 'true',
@@ -84,14 +60,14 @@ describe('Runme Annotations', () => {
         tooltip: 'Click to configure cell behavior',
       }
 
-      const statusBarItem = await annotationsProvider.provideCellStatusBarItems(cell as any)
+      const statusBarItem = annotationsProvider.getStatusBarItem(cell as any)
       expect(statusBarItem).toEqual(expectedItem)
     })
   })
 
   describe('toggleCellAnnotations', () => {
     it('should clear the ouput when the annotation is already rendered', async () => {
-      const annotationsProvider = new AnnotationsProvider(kernel)
+      const annotationsProvider = new AnnotationsStatusBarItem(kernel)
       const cell = {
         metadata: {
           background: 'true',
@@ -117,7 +93,7 @@ describe('Runme Annotations', () => {
     })
 
     it('should replace the output when the annotation is not rendered', async () => {
-      const annotationsProvider = new AnnotationsProvider(kernel)
+      const annotationsProvider = new AnnotationsStatusBarItem(kernel)
       const cell = {
         metadata: {
           background: 'true',

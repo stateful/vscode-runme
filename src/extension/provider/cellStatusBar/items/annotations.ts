@@ -13,7 +13,7 @@ export class AnnotationsStatusBarItem extends CellStatusBarItem {
     )
   }
 
-  private async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
+  public async toggleCellAnnotations(cell: NotebookCell): Promise<void> {
     const outputs = await this.kernel.getCellOutputs(cell)
     await outputs.toggleOutput(OutputType.annotations)
   }

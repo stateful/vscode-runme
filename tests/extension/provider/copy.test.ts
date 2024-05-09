@@ -1,27 +1,19 @@
 import { vi, test, expect } from 'vitest'
+import { NotebookCellStatusBarAlignment } from 'vscode'
 
-import { CopyProvider } from '../../../src/extension/provider/copy'
+import { CopyStatusBarItem } from '../../../src/extension/provider/cellStatusBar/items/copy'
+import { Kernel } from '../../../src/extension/kernel'
 
-vi.mock('vscode', () => ({
-  default: {
-    NotebookCellStatusBarItem: class {
-      constructor(
-        public label: string,
-        public position: number,
-      ) {}
-    },
-    NotebookCellStatusBarAlignment: {
-      Right: 'right',
-    },
-  },
-}))
+vi.mock('vscode-telemetry')
+vi.mock('vscode')
 
-test('dont show pid if cell is non interactive', async () => {
-  const p = new CopyProvider()
-  const item = await p.provideCellStatusBarItems()
+test('NotebookCellStatusBarAlignment test suite', () => {
+  const kernel = new Kernel({} as any)
+  const p = new CopyStatusBarItem(kernel)
+  const item = p.getStatusBarItem()
   expect(item).toEqual({
     label: '$(copy) Copy',
-    position: 'right',
+    alignment: NotebookCellStatusBarAlignment.Right,
     command: 'runme.copyCellToClipboard',
   })
 })
