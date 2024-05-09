@@ -36,7 +36,7 @@ export class NamedStatusBarItem extends CellStatusBarItem {
       if (!isValid) {
         item.tooltip =
           "The environment variable is invalid; cell output won't export, click here to configure it properly"
-        item.text = `$(exclude) ${annotations.name}`
+        item.text = `$(edit) ${annotations.name}`
         item.command = {
           title: 'Configure cell behavior',
           command: 'runme.toggleCellAnnotations',
