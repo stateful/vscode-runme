@@ -125,3 +125,17 @@ export const SafeNotebookAnnotationsSchema = z.object({
 export const CellAnnotationsSchema = z.object({
   ...AnnotationSchema,
 })
+
+export const StrictCellAnnotationsSchema = z.object({
+  ...AnnotationSchema,
+  name: z.preprocess(
+    (value) => (typeof value === 'string' ? cleanAnnotation(value, ',') : value),
+    z
+      .string()
+      .regex(
+        new RegExp('^[A-Z_][A-Z0-9_]{1}[A-Z0-9_]*[A-Z][A-Z0-9_]*$'),
+        "The name is invalid; cell output won't export as environment variable",
+      )
+      .default(''),
+  ),
+})
