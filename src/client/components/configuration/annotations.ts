@@ -61,7 +61,7 @@ export class Annotations extends LitElement {
       description: "Cell's output content MIME type.",
     },
     name: {
-      description: 'Environment variable name to export the cell output (uppercase)',
+      description: 'Cell name or environment variable name to export the cell output (see docs)',
     },
     cwd: {
       description: 'Optionally run the cell in different working directory (cwd).',
