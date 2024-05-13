@@ -8,7 +8,13 @@ import CellStatusBarItem from './cellStatusBarItem'
 
 export class NamedStatusBarItem extends CellStatusBarItem {
   public async addEnvironmentExecution(cell: NotebookCell, variableName: string): Promise<void> {
-    return insertCodeNotebookCell(cell, `echo $${variableName}`)
+    return insertCodeNotebookCell({
+      cell,
+      input: `echo $${variableName}`,
+      displayConfirmationDialog: true,
+      background: false,
+      languageId: 'sh',
+    })
   }
 
   registerCommands(): void {

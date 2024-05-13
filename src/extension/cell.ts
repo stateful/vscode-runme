@@ -115,6 +115,14 @@ interface ICellState {
   state: GitHubState | DenoState | VercelState | GCPState | AWSState
 }
 
+interface InsertCodeCellOptions {
+  cell: NotebookCell
+  input: string
+  displayConfirmationDialog: boolean
+  languageId: string
+  background: boolean
+}
+
 export class NotebookCellOutputManager {
   protected outputs: readonly NotebookCellOutput[] = []
 
@@ -726,15 +734,33 @@ export async function insertCodeCell(
   if (!cell) {
     throw new Error('Cell not found')
   }
-  await insertCodeNotebookCell(cell, input, languageId, background)
+  await insertCodeNotebookCell({
+    cell,
+    input,
+    displayConfirmationDialog: false,
+    languageId,
+    background,
+  })
 }
 
-export async function insertCodeNotebookCell(
-  cell: NotebookCell,
-  input: string,
-  languageId: string = 'sh',
-  background: boolean = false,
-) {
+export async function insertCodeNotebookCell({
+  cell,
+  input,
+  displayConfirmationDialog,
+  languageId,
+  background,
+}: InsertCodeCellOptions) {
+  if (displayConfirmationDialog) {
+    const answer = await window.showInformationMessage(
+      "Do you want to add a new cell to demonstrate referencing this cell's output?",
+      'Yes',
+      'No',
+    )
+    if (answer !== 'Yes') {
+      return
+    }
+  }
+
   const newCellData = new NotebookCellData(NotebookCellKind.Code, input, languageId)
   newCellData.metadata = {
     background,

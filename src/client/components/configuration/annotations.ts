@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../../types'
-import { CellAnnotationsSchema, AnnotationSchema } from '../../../schema'
+import { AnnotationSchema, StrictCellAnnotationsSchema } from '../../../schema'
 import {
   ClientMessages,
   NOTEBOOK_AVAILABLE_CATEGORIES,
@@ -61,7 +61,7 @@ export class Annotations extends LitElement {
       description: "Cell's output content MIME type.",
     },
     name: {
-      description: "Cell's canonical name for easy referencing.",
+      description: 'Cell name or environment variable name to export the cell output (see docs)',
     },
     cwd: {
       description: 'Optionally run the cell in different working directory (cwd).',
@@ -108,7 +108,7 @@ export class Annotations extends LitElement {
     const propName = e.target.id
     const targetValue = this.#getTargetValue(e)
 
-    const parseResult = CellAnnotationsSchema.safeParse({
+    const parseResult = StrictCellAnnotationsSchema.safeParse({
       [propName]: targetValue,
     })
 
