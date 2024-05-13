@@ -41,7 +41,8 @@ export class NamedStatusBarItem extends CellStatusBarItem {
       const isValid = isValidEnvVarName(annotations.name)
       if (!isValid) {
         item.tooltip =
-          "The environment variable is invalid; cell output won't export, click here to configure it properly"
+          // eslint-disable-next-line max-len
+          "Cell output won't be exported into ENV since variable name does not conform to the convention. Click here to configure."
         item.text = `$(edit) ${annotations.name}`
         item.command = {
           title: 'Configure cell behavior',
@@ -49,10 +50,10 @@ export class NamedStatusBarItem extends CellStatusBarItem {
           arguments: [cell, annotations.name],
         }
       } else {
-        item.tooltip = 'Click to run an example cell with the exported variable name'
+        item.tooltip = 'Click to add an example cell using the exported ENV variable name.'
         item.text = `$(file-symlink-file) ${annotations.name}`
         item.command = {
-          title: 'Add cell execution for the defined environment variable',
+          title: 'Add cell example for the defined ENV variable',
           command: 'runme.addEnvironmentVariableExecution',
           arguments: [cell, annotations.name],
         }

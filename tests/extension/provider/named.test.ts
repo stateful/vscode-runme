@@ -48,7 +48,7 @@ suite('NamedStatusBarItem Test Suite', () => {
     expect(item?.text).toMatchInlineSnapshot(`"$(file-symlink-file) say-hello"`)
     expect(item?.tooltip).toMatchInlineSnapshot(
       // eslint-disable-next-line quotes
-      `"Click to run an example cell with the exported variable name"`,
+      `"Click to add an example cell using the exported ENV variable name."`,
     )
     expect(getAnnotations).toBeCalledTimes(1)
   })
