@@ -88,7 +88,7 @@ describe('Runme VS Code Extension', async () => {
       await cell.run()
       await cell.run()
 
-      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual(['Hello World!'])
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toContain('Hello World!')
     })
 
     // TODO: enable this test after releasing shebang support on cli

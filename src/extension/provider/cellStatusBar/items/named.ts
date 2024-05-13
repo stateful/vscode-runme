@@ -10,7 +10,7 @@ export class NamedStatusBarItem extends CellStatusBarItem {
   public async addEnvironmentExecution(cell: NotebookCell, variableName: string): Promise<void> {
     return insertCodeNotebookCell({
       cell,
-      input: `echo $${variableName}`,
+      input: `echo -n $${variableName}`,
       displayConfirmationDialog: true,
       background: false,
       languageId: 'sh',
