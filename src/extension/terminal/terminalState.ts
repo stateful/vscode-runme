@@ -1,10 +1,10 @@
-import { Terminal as XTerm } from 'xterm-headless'
-import { SerializeAddon } from 'xterm-addon-serialize'
+import { Terminal as XTerm } from '@xterm/headless'
+import { SerializeAddon } from '@xterm/addon-serialize'
 
 import { OutputType } from '../../constants'
 import { RunnerExitReason } from '../runner'
 
-export type NotebookTerminalType = 'xterm' | 'local'
+export type NotebookTerminalType = '@xterm/xterm' | 'local'
 
 export interface IProcessInfoState {
   exitReason: RunnerExitReason

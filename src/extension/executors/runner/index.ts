@@ -221,7 +221,7 @@ export const executeRunner: IKernelRunner = async ({
 
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
-    revealNotebookTerminal ? 'xterm' : 'local',
+    revealNotebookTerminal ? '@xterm/xterm' : 'local',
   )
 
   let mimeType = cellMimeType
