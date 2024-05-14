@@ -753,6 +753,7 @@ export async function insertCodeNotebookCell({
   if (displayConfirmationDialog) {
     const answer = await window.showInformationMessage(
       "Do you want to add a new cell to demonstrate referencing this cell's output?",
+      { modal: true },
       'Yes',
       'No',
     )
