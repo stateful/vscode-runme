@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
 import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../../types'
-import { AnnotationSchema, StrictCellAnnotationsSchema } from '../../../schema'
+import { CellAnnotationsSchema, AnnotationSchema } from '../../../schema'
 import {
   ClientMessages,
   NOTEBOOK_AVAILABLE_CATEGORIES,
@@ -108,7 +108,7 @@ export class Annotations extends LitElement {
     const propName = e.target.id
     const targetValue = this.#getTargetValue(e)
 
-    const parseResult = StrictCellAnnotationsSchema.safeParse({
+    const parseResult = CellAnnotationsSchema.safeParse({
       [propName]: targetValue,
     })
 
