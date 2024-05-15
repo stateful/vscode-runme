@@ -135,6 +135,10 @@ If you want to run the extension against a specific runme kernel binary, you can
 }
 ```
 
+### Debug Project
+
+To run the extension in a development version of VS Code open [src/extension/extension.ts](src/extension/extension.ts) inside VSCode, press `F5` or `Ctrl+Shift+D` and then select `Run Extension` from the dropdown.
+
 ### Build Project
 
 To compile all extension files, run:
