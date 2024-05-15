@@ -723,6 +723,11 @@
             "default": true,
             "markdownDescription": "Enable CodeLens support in markdown documents"
           },
+          "runme.codelens.pasteNewline": {
+            "type": "boolean",
+            "default": false,
+            "markdownDescription": "If set to 'true', adds a new line to the text being paste which is typically required to run a command in the terminal."
+          },
           "runme.env.workspaceFileOrder": {
             "type": "array",
             "default": [
