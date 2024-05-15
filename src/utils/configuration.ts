@@ -64,6 +64,7 @@ const configurationSchema = {
   },
   codelens: {
     enable: z.boolean().default(true),
+    pasteNewline: z.boolean().default(false),
   },
   notebook: {
     executionOrder: z.boolean().default(true),
@@ -277,6 +278,10 @@ const getCodeLensEnabled = (): boolean => {
   return getCodeLensConfigurationValue<boolean>('enable', true)
 }
 
+const getCodeLensPasteIntoTerminalNewline = (): boolean => {
+  return getCodeLensConfigurationValue<boolean>('pasteNewline', false)
+}
+
 const getNotebookExecutionOrder = (): boolean => {
   return getNotebookConfigurationValue<boolean>('executionOrder', true)
 }
@@ -407,6 +412,7 @@ export {
   getBinaryPath,
   getCLIUseIntegratedRunme,
   getCodeLensEnabled,
+  getCodeLensPasteIntoTerminalNewline,
   getNotebookExecutionOrder,
   getCustomServerAddress,
   getEnvLoadWorkspaceFiles,

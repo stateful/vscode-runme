@@ -26,7 +26,7 @@ import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
 import { getAnnotations } from '../utils'
 import { Serializer } from '../../types'
-import { getCodeLensEnabled } from '../../utils/configuration'
+import { getCodeLensEnabled, getCodeLensPasteIntoTerminalNewline } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
 import type { SurveyWinCodeLensRun } from '../survey'
 import IServer from '../server/runmeServer'
@@ -238,7 +238,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
           }
 
           activeTerminal.show(false)
-          activeTerminal.sendText(value, false)
+          activeTerminal.sendText(value, getCodeLensPasteIntoTerminalNewline())
         }
         break
     }
