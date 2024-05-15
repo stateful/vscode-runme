@@ -272,6 +272,10 @@
       {
         "command": "runme.cellGistShare",
         "title": "Click to generate GitHub gist link"
+      },
+      {
+        "command": "runme.aiGenerate",
+        "title": "Generate cells using the Foyle AI assistant"
       }
     ],
     "menus": {
