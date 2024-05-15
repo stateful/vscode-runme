@@ -26,8 +26,6 @@ In this example we will write a simple script in different programming languages
 Run the following check, just to ensure you have Docker up and running
 
 ```sh {"id":"01HTZBCXFZ0V7P4AXE70CNSGPG","terminalRows":"3"}
-#!/bin/bash
-
 # Check if Docker is installed
 if ! command -v docker &> /dev/null
 then
