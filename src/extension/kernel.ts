@@ -157,16 +157,22 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.panelManager = new PanelManager(context)
-    this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
-      workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
-      workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
-      window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
-      window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
-      this.panelManager,
-      this.onVarsChangeEvent,
-      this.registerTerminalProfile(),
-    )
+
+    // DO NOT COMMIT this was a hack because I was getting crashes when trying to run the extension
+    // if (this.#disposables !== undefined) {
+    //   // disposables is undefined
+
+    //   this.#disposables.push(
+    //     this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+    //     workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
+    //     workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
+    //     window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
+    //     window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
+    //     this.panelManager,
+    //     this.onVarsChangeEvent,
+    //     this.registerTerminalProfile(),
+    //   )
+    // }
   }
 
   registerNotebookCell(cell: NotebookCell) {
