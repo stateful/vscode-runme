@@ -312,12 +312,12 @@ export class RunmeExtension {
       }),
 
       // Register a command to generate completions using foyle
-      //RunmeExtension.registerCommand('runme.aiGenerate', generate.generateCompletion),
+      RunmeExtension.registerCommand('runme.aiGenerate', generate.generateCompletion),
     )
 
-    context.subscriptions.push(
-      commands.registerCommand('runme.aiGenerate', generate.generateCompletion),
-    )
+    // context.subscriptions.push(
+    //   commands.registerCommand('runme.aiGenerate', generate.generateCompletion),
+    // )
 
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
