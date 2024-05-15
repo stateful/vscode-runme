@@ -16,6 +16,7 @@ import {
   getCodeLensPasteIntoTerminalNewline,
   getCLIUseIntegratedRunme,
   getNotebookExecutionOrder,
+  getCloseTerminalOnSuccess,
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
 import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
@@ -140,6 +141,10 @@ suite('Configuration', () => {
     expect(
       getServerConfigurationValue<number>('lifecycleIdentity', RunmeIdentity.UNSPECIFIED),
     ).toStrictEqual(RunmeIdentity.CELL)
+  })
+
+  test('getCloseTerminalOnSuccess should return true by default', () => {
+    expect(getCloseTerminalOnSuccess()).toStrictEqual(true)
   })
 
   test('getCodeLensEnabled should return true by default', () => {

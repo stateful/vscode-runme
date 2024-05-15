@@ -17,6 +17,7 @@ import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV } from '../../constants'
 import { ResolveProgramRequest_Mode } from '../grpc/runner/v1'
+import { getCloseTerminalOnSuccess } from '../../utils/configuration'
 
 import {
   getCmdShellSeq,
@@ -136,7 +137,8 @@ export const taskExecutor: IKernelExecutor = async (executor) => {
       /**
        * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0 && annotations.closeTerminalOnSuccess) {
+      const closeIt = getCloseTerminalOnSuccess() && annotations.closeTerminalOnSuccess
+      if (e.exitCode === 0 && closeIt) {
         closeTerminalByEnvID(RUNME_ID)
       }
 
