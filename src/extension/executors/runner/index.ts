@@ -26,7 +26,10 @@ import {
 import { IRunnerEnvironment } from '../../runner/environment'
 import { getAnnotations, getCellRunmeId, getTerminalByCell } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
-import { isNotebookTerminalEnabledForCell } from '../../../utils/configuration'
+import {
+  getCloseTerminalOnSuccess,
+  isNotebookTerminalEnabledForCell,
+} from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
 import {
@@ -367,7 +370,8 @@ export const executeRunner: IKernelRunner = async ({
       /**
        * only close terminal if execution passed and desired by user
        */
-      if (e.exitCode === 0 && closeTerminalOnSuccess && !background) {
+      const closeIt = getCloseTerminalOnSuccess() && closeTerminalOnSuccess
+      if (e.exitCode === 0 && closeIt && !background) {
         closeTerminalByEnvID(RUNME_ID)
       }
     })

@@ -700,6 +700,11 @@
             "default": 10,
             "markdownDescription": "Default number of rows in notebook terminal"
           },
+          "runme.terminal.closeOnSuccess": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to 'true', integrated terminal panel is being closed upon successful completion of cell/task."
+          },
           "runme.actions.openViewInEditor": {
             "type": "string",
             "default": "split",

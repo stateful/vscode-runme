@@ -47,6 +47,7 @@ const notebookTerminalSchema = {
   cursorWidth: z.number().min(1).optional(),
   smoothScrollDuration: z.number().optional(),
   scrollback: z.number().optional(),
+  closeOnSuccess: z.boolean().default(true),
 }
 
 const configurationSchema = {
@@ -274,6 +275,10 @@ const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
     : isNotebookTerminalFeatureEnabled('nonInteractive')
 }
 
+const getCloseTerminalOnSuccess = () => {
+  return getRunmeTerminalConfigurationValue<boolean>('closeOnSuccess', true)
+}
+
 const getCodeLensEnabled = (): boolean => {
   return getCodeLensConfigurationValue<boolean>('enable', true)
 }
@@ -411,6 +416,7 @@ export {
   getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
+  getCloseTerminalOnSuccess,
   getCodeLensEnabled,
   getCodeLensPasteIntoTerminalNewline,
   getNotebookExecutionOrder,
