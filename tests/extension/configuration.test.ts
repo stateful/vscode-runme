@@ -13,6 +13,7 @@ import {
   getTLSDir,
   getNotebookTerminalConfigurations,
   getCodeLensEnabled,
+  getCodeLensPasteIntoTerminalNewline,
   getCLIUseIntegratedRunme,
   getNotebookExecutionOrder,
 } from '../../src/utils/configuration'
@@ -143,6 +144,10 @@ suite('Configuration', () => {
 
   test('getCodeLensEnabled should return true by default', () => {
     expect(getCodeLensEnabled()).toStrictEqual(true)
+  })
+
+  test('getCodeLensPasteIntoTerminalNewline should return false by default', () => {
+    expect(getCodeLensPasteIntoTerminalNewline()).toStrictEqual(false)
   })
 
   test('getNotebookExecutionOrder should return true by default', () => {
