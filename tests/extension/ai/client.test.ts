@@ -1,9 +1,8 @@
 import { describe, it } from 'vitest'
-
 import { GenerateCellsRequest } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/ai/v1alpha1/ai_pb'
+import { CellKind } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 import { initAIServiceClient } from '../../../src/extension/ai/client'
-import { CellKind } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 describe('AIService Client Test', () => {
   it('can call the grpc service', async () => {
