@@ -69,22 +69,6 @@ export async function generateCompletion() {
     })
 }
 
-// // addAIGeneratedCells turns the response from the AI model into a set of cells that can be inserted
-//  into the notebook.
-// // This is done by returning a mutation to add the new cells to the notebook.
-// // index is the position in the notebook at which the new the new cells should be inserted.
-// function addAIGeneratedCells(index: number,response: agentpb.GenerateResponse): vscode.NotebookEdit {
-//   let newCellData: vscode.NotebookCellData[] = [];
-
-//   for (let newBlock of response.blocks) {
-//     const data = converters.blockToCellData(newBlock);
-//     newCellData.push(data);
-//   }
-
-//    // Now insert the new cells at the end of the notebook
-//    return  vscode.NotebookEdit.insertCells(index, newCellData);
-// }
-
 // addAIGeneratedCells turns the response from the AI model into a set of cells that can be inserted into the notebook.
 // This is done by returning a mutation to add the new cells to the notebook.
 // index is the position in the notebook at which the new the new cells should be inserted.
