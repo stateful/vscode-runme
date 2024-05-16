@@ -208,7 +208,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       TaskScope.Workspace,
       'Clone Repo',
       'exec',
-      new ShellExecution(`git clone ${repository} "${targetDirUri.fsPath}"`),
+      new ShellExecution(`git clone --depth=1 ${repository} "${targetDirUri.fsPath}"`),
     )
 
     const success = await new Promise<boolean>((resolve) => {
