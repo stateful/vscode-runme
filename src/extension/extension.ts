@@ -315,10 +315,6 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.aiGenerate', generate.generateCompletion),
     )
 
-    // context.subscriptions.push(
-    //   commands.registerCommand('runme.aiGenerate', generate.generateCompletion),
-    // )
-
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
       // Required to populate the Accounts Menu in the Activity Bar
