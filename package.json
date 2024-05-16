@@ -1014,6 +1014,12 @@
         "key": "L",
         "when": "notebookEditorFocused && !inputFocus && !notebookOutputInputFocused",
         "command": "runme.keybinding.noop"
+      },
+      {
+        "command": "runme.aiGenerate",
+        "key": "win+;",
+        "mac": "cmd+;",
+        "when": "resourceExtname==.md || resourceExtname==.markdown"
       }
     ],
     "terminal": {
