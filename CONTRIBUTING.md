@@ -140,6 +140,7 @@ If you want to run the extension against a specific runme kernel binary, you can
 To compile all extension files, run:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PDNTDPTS","name":"build"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npm run build
 ```
 
@@ -190,7 +191,7 @@ eslint src tests --ext ts --fix
 We use [Vitest](https://vitest.dev/) for running unit tests via:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"false"}
-export NODE_OPTIONS="--experimental-specifier-resolution=node"
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npx vitest -c ./vitest.conf.ts --run
 ```
 
