@@ -17,6 +17,8 @@ import * as converters from './converters'
 import * as serializer from '../serializer'
 
 import { Serializer } from '../types'
+import getLogger from '../logger'
+const log = getLogger('AIGenerate')
 
 export async function generateCompletion() {
   const editor = vscode.window.activeNotebookEditor
@@ -31,7 +33,7 @@ export async function generateCompletion() {
 
   // We subtract 1 because end is non-inclusive
   const lastSelectedCell = editor?.selection.end - 1
-  console.log('Getting cells')
+  log.trace(`generateCompletion: lastSelectedCell: ${lastSelectedCell}`)
 
   // Notebook uses the vscode interface types NotebookDocument and NotebookCell. We
   // need to convert this to NotebookCellData which is the concrete type used by the serializer.
@@ -52,21 +54,19 @@ export async function generateCompletion() {
       let response = finished.response
       // TODO(jeremy): We should have the server add the traceId to the response and then we should
       // log it here. This is for debugging purposes as it allows to easily link to the logs
-      //console.log(`Generate request succeeded traceId: ${traceId}`)
+      log.info('Generate request succeeded traceId')
 
-      // To add the traceId to the input data we need to create a mutation
-      //const traceIdEdit = createAddTraceIDMutation(lastActiveCell, traceId)
       const insertCells = addAIGeneratedCells(lastSelectedCell + 1, response)
 
       const edit = new vscode.WorkspaceEdit()
       const notebookUri = editor?.notebook.uri
       edit.set(notebookUri, [insertCells])
       vscode.workspace.applyEdit(edit).then((result: boolean) => {
-        console.log(`applyedit resolved with ${result}`)
+        log.trace(`applyedit resolved with ${result}`)
       })
     })
     .catch((error) => {
-      console.error(`Generate request failed ${error}`)
+      log.error(`AI Generate request failed ${error}`)
       return
     })
 }

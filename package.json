@@ -1024,7 +1024,7 @@
         "command": "runme.aiGenerate",
         "key": "win+;",
         "mac": "cmd+;",
-        "when": "resourceExtname==.md || resourceExtname==.markdown"
+        "when": "notebookType == runme"
       }
     ],
     "terminal": {
