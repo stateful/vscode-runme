@@ -301,7 +301,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   // revive converts the Notebook proto to VSCode's NotebookData.
   // It returns a an array of VSCode NotebookCellData objects.
-  protected static revive(notebook: Serializer.Notebook) {
+  public static revive(notebook: Serializer.Notebook) {
     return notebook.cells.reduce(
       (accu, elem) => {
         let cell: NotebookCellData
