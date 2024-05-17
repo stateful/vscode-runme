@@ -14,6 +14,7 @@ import {
 
 import { initAIServiceClient } from './client'
 import * as converters from './converters'
+import * as serializer from '../serializer'
 
 export async function generateCompletion() {
   const editor = vscode.window.activeNotebookEditor
@@ -28,18 +29,18 @@ export async function generateCompletion() {
 
   // We subtract 1 because end is non-inclusive
   const lastSelectedCell = editor?.selection.end - 1
-  var lastActiveCell = editor?.notebook.cellAt(lastSelectedCell)
   console.log('Getting cells')
-  let cells = editor?.notebook.getCells(new vscode.NotebookRange(0, editor?.notebook.cellCount))
-  console.log('Got cells')
+
+  // Notebook uses the vscode interface types NotebookDocument and NotebookCell. We
+  // need to convert this to NotebookCellData which is the concrete type used by the serializer.
+  // This allows us to reuse the existing serializer code.
+  let cellData = editor?.notebook.getCells().map((cell) => converters.cellToCellData(cell))
+  let notebookData = new vscode.NotebookData(cellData)
+
+  let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
 
   const req = GenerateCellsRequest.create()
-  req.notebook = Notebook.create()
-  req.notebook.cells = []
-  for (let cell of cells) {
-    let cellPb = converters.cellDataToProto(converters.cellToCellData(cell))
-    req.notebook.cells.push(cellPb)
-  }
+  req.notebook = notebookProto
 
   let client = initAIServiceClient()
 

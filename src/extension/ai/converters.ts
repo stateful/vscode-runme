@@ -13,6 +13,8 @@ import {
   CellOutputItem,
 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
+export { Serializer } from '../serializer'
+
 // cellToCellData converts a NotebookCell to a NotebookCellData.
 // NotebookCell is an interface used by the editor.
 // NotebookCellData is a concrete class.
