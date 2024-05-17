@@ -121,7 +121,8 @@ cat .vscode/extensions.json | grep -v '\/\/' | jq -r ".recommendations[]" | xarg
 
 Then just run the watcher and you're off to the races.
 
-```sh {"background":"true","id":"01HF7VQMH8ESX1EFV4PD922S8P","name":"npm-watch"}
+```sh {"background":"true","id":"01HF7VQMH8ESX1EFV4PD922S8P","name":"npm-watch","promptEnv":"no"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npm run watch
 ```
 

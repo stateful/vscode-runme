@@ -355,6 +355,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     data.cells.forEach((cell) => {
+      if (identity === RunmeIdentity.UNSPECIFIED && cell.metadata?.['runme.dev/stageId']) {
+        cell.metadata['id'] = cell.metadata['runme.dev/stageId']
+        return
+      }
+
       if (cell.metadata?.['id'] !== undefined) {
         cell.metadata['runme.dev/id'] = cell.metadata['id']
         delete cell.metadata['id']
@@ -596,8 +601,17 @@ export class GrpcSerializer extends SerializerBase {
   protected applyIdentity(data: Notebook): Notebook {
     const identity = this.lifecycleIdentity
     switch (identity) {
-      case RunmeIdentity.UNSPECIFIED:
       case RunmeIdentity.DOCUMENT:
+        break
+      case RunmeIdentity.UNSPECIFIED:
+        data.cells.forEach((cell) => {
+          if (cell.kind !== CellKind.CODE) {
+            return
+          }
+          if (cell.metadata?.['id']) {
+            cell.metadata['runme.dev/stageId'] = cell.metadata['id']
+          }
+        })
         break
       default: {
         data.cells.forEach((cell) => {

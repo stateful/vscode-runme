@@ -53,7 +53,7 @@ describe('Test suite: Shebang with setting Cell only (3)', async () => {
     const workbench = await browser.getWorkbench()
     await workbench.executeCommand('Notebook: Focus First Cell')
     await browser.keys([Key.Enter])
-    const cell = await notebook.getCell('console.log("Run scripts via Shebang!")')
+    const cell = await notebook.getCell('console.log("Scenario 1: Run scripts via Shebang!")')
     await cell.focus()
     await saveFile(browser)
 
@@ -63,10 +63,10 @@ describe('Test suite: Shebang with setting Cell only (3)', async () => {
       ## Shebang
       Example file used as part of the end to end suite
 
-      ## Scenario
+      ## Scenario 1
 
-      \`\`\`js { name=foo id=01HEXJ9KWG7BYSFYCNKVF0VWR6 }
-      console.log("Run scripts via Shebang!")
+      \`\`\`js {"name":"foo","id":"01HEXJ9KWG7BYSFYCNKVF0VWR6"}
+      console.log("Scenario 1: Run scripts via Shebang!")
 
       \`\`\`
 
