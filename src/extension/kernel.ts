@@ -157,7 +157,6 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.panelManager = new PanelManager(context)
-
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
