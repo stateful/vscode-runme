@@ -1,24 +1,18 @@
 import * as vscode from 'vscode'
-// import {FoyleClient, getTraceID} from './client';
-// import * as converters from './converters';
-// generateCompletion generates a completion by calling the foyle backend and then adds
-// the returned blocks to the window
-import {
-  GenerateCellsRequest,
-  GenerateCellsResponse,
-} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/ai/v1alpha1/ai_pb'
-import {
-  Notebook,
-  Cell,
-} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
-import { initAIServiceClient } from './client'
-import * as converters from './converters'
+import { GenerateCellsRequest, GenerateCellsResponse } from '../grpc/aiTypes'
 import * as serializer from '../serializer'
-
 import { Serializer } from '../types'
 import getLogger from '../logger'
+import { initAIServiceClient } from '../grpc/aiClient'
+import { AIServiceClient } from '../grpc/aiTypes'
+
+import * as converters from './converters'
 const log = getLogger('AIGenerate')
+
+const clients = new Map<string, AIServiceClient>()
+
+const extName = 'runme'
 
 export async function generateCompletion() {
   const editor = vscode.window.activeNotebookEditor
@@ -46,7 +40,16 @@ export async function generateCompletion() {
   const req = GenerateCellsRequest.create()
   req.notebook = notebookProto
 
-  let client = initAIServiceClient()
+  const config = vscode.workspace.getConfiguration(extName)
+  // Include a default so that address is always well defined
+  const address = config.get<string>('foyleAddress', 'localhost:9080')
+
+  let client = clients.get(address)
+  if (!client) {
+    log.info(`Creating new client for address: ${address}`)
+    client = initAIServiceClient(address)
+    clients.set(address, client)
+  }
 
   client
     .generateCells(req)

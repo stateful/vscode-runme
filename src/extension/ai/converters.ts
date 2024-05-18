@@ -3,15 +3,6 @@
 // See ../vscode_apis.md for an exlanation. It is very helpful for understanding this folder.
 
 import * as vscode from 'vscode'
-//import * as metadata from './metadata'
-//import * as constants from './constants'
-import {
-  Notebook,
-  Cell,
-  CellKind,
-  CellOutput,
-  CellOutputItem,
-} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb'
 
 // cellToCellData converts a NotebookCell to a NotebookCellData.
 // NotebookCell is an interface used by the editor.
