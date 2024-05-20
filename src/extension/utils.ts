@@ -175,11 +175,11 @@ export function getKey(runningCell: vscode.TextDocument): string {
     return 'github'
   }
 
-  if (new GCPResolver(runningCell).match()) {
+  if (new GCPResolver(runningCell.getText()).match()) {
     return 'gcp'
   }
 
-  if (new AWSResolver(runningCell).match()) {
+  if (new AWSResolver(runningCell.getText()).match()) {
     return 'aws'
   }
 

@@ -8,10 +8,11 @@ import { getEC2InstanceDetail, listEC2Instances } from './aws/ec2'
 import { IKernelExecutor } from '.'
 
 export const aws: IKernelExecutor = async (executor) => {
-  const { doc, exec, outputs } = executor
+  const { cellText, exec, outputs } = executor
 
   try {
-    const awsResolver = new AWSResolver(doc).get()
+    const text = cellText ?? ''
+    const awsResolver = new AWSResolver(text).get()
     if (!awsResolver?.data.region) {
       throw new Error('Could not resolve AWS resource')
     }

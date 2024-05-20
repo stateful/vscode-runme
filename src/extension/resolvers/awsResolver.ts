@@ -1,4 +1,4 @@
-import { TextDocument, Disposable } from 'vscode'
+import { Disposable } from 'vscode'
 
 import { StringIndexable } from '../../types'
 
@@ -33,7 +33,7 @@ export type AWSFeature<T extends AWSSupportedView> = T extends any
 export class AWSResolver implements Disposable {
   private supportedFeatures: Map<string, AWSFeature<AWSSupportedView>> = new Map()
   private resolvedFeature?: AWSFeature<AWSSupportedView> | undefined
-  constructor(private cell: TextDocument) {
+  constructor(private cellText: string) {
     this.supportedFeatures.set('/ec2/details', {
       view: AWSSupportedView.EC2InstanceDetails,
       data: {
@@ -50,7 +50,7 @@ export class AWSResolver implements Disposable {
       },
     })
 
-    const text = this.cell.getText()
+    const text = this.cellText
     if (text.includes('console.aws.amazon.com')) {
       const url = new URL(text)
       let supportedFeature: AWSFeature<AWSSupportedView> | null = null

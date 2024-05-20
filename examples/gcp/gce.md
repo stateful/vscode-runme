@@ -35,6 +35,11 @@ You'll be presented with a resources table akin to the Google Cloud interface, s
 
 Run the following command (ensure you have provided a valid value for project-id)
 
+```sh {"id":"01HYBMAWD6Y8BCJ56289SJ2H3A","terminalRows":"5"}
+export PROJECT_ID="runme-ci"
+echo "PROJECT_ID set to $PROJECT_ID"
+```
+
 ```sh {"id":"01HQE7NWNH8T6WRBNPE3943XBY"}
-https://console.cloud.google.com/compute/instances?project=project-id
+https://console.cloud.google.com/compute/instances?project=$PROJECT_ID
 ```

@@ -58,7 +58,7 @@ const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
 const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
 
-interface IKernelRunnerOptions extends IKernelExecutorOptions {
+export interface IKernelRunnerOptions extends IKernelExecutorOptions {
   runner: IRunner
   runningCell: TextDocument
   cellId: string
@@ -66,7 +66,7 @@ interface IKernelRunnerOptions extends IKernelExecutorOptions {
   runnerEnv?: IRunnerEnvironment
 }
 
-type IKernelRunner = (executor: IKernelRunnerOptions) => Promise<boolean>
+export type IKernelRunner = (executor: IKernelRunnerOptions) => Promise<boolean>
 
 type VarResult = ResolveProgramResponse_VarResult
 
