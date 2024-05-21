@@ -225,7 +225,7 @@ export default class GrpcRunner implements IRunner {
 
   async createEnvironment({
     workspaceRoot,
-    // envStoreType,
+    envStoreType,
     envs,
     metadata,
   }: {
@@ -242,7 +242,7 @@ export default class GrpcRunner implements IRunner {
         root: workspaceRoot,
         envLoadOrder,
       },
-      // envStoreType,
+      envStoreType,
     })
 
     try {
