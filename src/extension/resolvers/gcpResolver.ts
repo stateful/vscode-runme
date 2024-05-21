@@ -1,4 +1,4 @@
-import { TextDocument, Disposable } from 'vscode'
+import { Disposable } from 'vscode'
 
 import { StringIndexable } from '../../types'
 
@@ -38,7 +38,7 @@ export type GoogleKubernetesFeature<T extends GCPSupportedView> = T extends any
 export class GCPResolver implements Disposable {
   private supportedFeatures: Map<string, GoogleKubernetesFeature<GCPSupportedView>> = new Map()
   private resolvedFeature?: GoogleKubernetesFeature<GCPSupportedView> | undefined
-  constructor(private cell: TextDocument) {
+  constructor(private cellText: string) {
     this.supportedFeatures.set('/kubernetes/list/overview', {
       view: GCPSupportedView.CLUSTERS,
       data: {
@@ -63,7 +63,7 @@ export class GCPResolver implements Disposable {
       },
     })
 
-    const text = this.cell.getText()
+    const text = this.cellText
     if (text.startsWith('https://console.cloud.google.com')) {
       const url = new URL(text)
       let supportedFeature: GoogleKubernetesFeature<GCPSupportedView> | null = null

@@ -9,10 +9,11 @@ import { getVMInstances } from './gcp/gce/vmInstances'
 import { IKernelExecutor } from '.'
 
 export const gcp: IKernelExecutor = async (executor) => {
-  const { doc, exec, outputs } = executor
+  const { cellText, exec, outputs } = executor
 
   try {
-    const gcpResolver = new GCPResolver(doc).get()
+    const text = cellText ?? ''
+    const gcpResolver = new GCPResolver(text).get()
     if (!gcpResolver?.data.project) {
       throw new Error('Could not resolve Google Cloud Platform resource')
     }

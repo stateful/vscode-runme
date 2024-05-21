@@ -90,6 +90,7 @@ import { handleAWSMessage } from './messages/aws'
 import EnvVarsChangedEvent from './events/envVarsChanged'
 import { SessionEnvStoreType } from './grpc/runner/v1'
 import ContextState from './contextState'
+import { uri as runUriResource } from './executors/resource'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -679,15 +680,32 @@ export class Kernel implements Disposable {
         successfulCellExecution = await runScript(execKey)
       } else {
         const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-        successfulCellExecution = await executorByKey({
-          context: this.context,
+        successfulCellExecution = await runUriResource({
           kernel: this,
-          doc: runningCell,
+          doc: cell.document,
+          context: this.context,
+          runner: this.runner!,
           exec,
-          outputs,
+          runningCell,
           messaging: this.messaging,
+          cellId: id,
+          execKey: execKey,
+          outputs,
+          runnerEnv: this.runnerEnv,
           envMgr,
-          runScript,
+          runScript: (text?: string) => {
+            const cellText = text ?? runningCell.getText()
+            return executorByKey({
+              context: this.context,
+              kernel: this,
+              doc: runningCell,
+              exec,
+              outputs,
+              messaging: this.messaging,
+              envMgr,
+              cellText,
+            })
+          },
         })
       }
     } else if (execKey in executor) {

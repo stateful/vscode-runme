@@ -52,16 +52,21 @@ Just as with listing instances, if you execute an AWS Console link for specific 
 
 For a quick demo of visualizing a specific EC2 instance details, you can replace the instanceId placeholder with the instance you want to visualize:
 
+```sh {"id":"01HYC3AWEMN7B6DK5MS36GK98D","terminalRows":"5"}
+export EC2_INSTANCE_ID="i-0b28a82dcc7518b01"
+echo "EC2_INSTANCE_ID set to $EC2_INSTANCE_ID"
+```
+
 ```sh {"background":"false","id":"01HQRAK03KBKPSZ47CRDDFJWDV"}
-https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=<REPLACE_WITH_INSTANCE_ID>
+https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID
 ```
 
 ## Connect to EC2 instance via SSH
 
 You can leverage the AWS CLI to connect securely via SSH to a EC2 instance, run the following commands:
 
-```sh {"id":"01HV6XT7E79H95RB7NSTX1GCN0","promptEnv":"yes","terminalRows":"4"}
-export EC2_INSTANCE_ID=
+```sh {"id":"01HV6XT7E79H95RB7NSTX1GCN0","promptEnv":"yes","terminalRows":"5"}
+export EC2_INSTANCE_ID=Enter a valid EC2 instance ID please
 echo "Configured EC2 Instance is $EC2_INSTANCE_ID"
 ```
 
