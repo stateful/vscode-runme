@@ -88,7 +88,7 @@ import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
 import EnvVarsChangedEvent from './events/envVarsChanged'
-// import { SessionEnvStoreType } from './grpc/runner/v1'
+import { SessionEnvStoreType } from './grpc/runner/v1'
 import ContextState from './contextState'
 import { uri as runUriResource } from './executors/resource'
 
@@ -768,13 +768,13 @@ export class Kernel implements Disposable {
       this.runnerEnv?.dispose()
       this.runnerEnv = undefined
 
-      // const smartEnvStore = this.hasExperimentEnabled('smartEnvStore') ?? false
-      // const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
+      const smartEnvStore = this.hasExperimentEnabled('smartEnvStore') ?? false
+      const envStoreType = smartEnvStore ? SessionEnvStoreType.OWL : SessionEnvStoreType.UNSPECIFIED
 
       const workspaceRoot = getWorkspaceFolder()?.uri.fsPath
       const runnerEnv = await this.runner.createEnvironment({
         workspaceRoot,
-        // envStoreType,
+        envStoreType,
         // copy env from process naively for now
         // later we might want a more sophisticated approach/to bring this server-side
         envs: processEnviron(),
@@ -789,16 +789,16 @@ export class Kernel implements Disposable {
         getRunnerSessionEnvs(this.context.extensionUri, runnerEnv, address),
       )
 
-      // const monitor = await this.runner.createMonitorEnvStore()
-      // const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
-      // streaming.responses.onMessage(({ data }) => {
-      //   if (data.oneofKind === 'snapshot') {
-      //     this.onVarsChangeEvent.dispatch(data.snapshot.envs)
-      //   }
-      // })
-      // streaming.responses.onError((err) => {
-      //   log.error('Error monitoring env store', err.message)
-      // })
+      const monitor = await this.runner.createMonitorEnvStore()
+      const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
+      streaming.responses.onMessage(({ data }) => {
+        if (data.oneofKind === 'snapshot') {
+          this.onVarsChangeEvent.dispatch(data.snapshot.envs)
+        }
+      })
+      streaming.responses.onError((err) => {
+        log.error('Error monitoring env store', err.message)
+      })
 
       // runs this last to not overwrite previous outputs
       await commands.executeCommand('notebook.clearAllCellsOutputs')

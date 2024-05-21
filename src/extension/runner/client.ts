@@ -1,7 +1,7 @@
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import { type Disposable, EventEmitter } from 'vscode'
-import { RpcOptions, UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { RpcOptions, ServerStreamingCall, UnaryCall } from '@protobuf-ts/runtime-rpc'
 
 import {
   CreateSessionRequest,
@@ -14,8 +14,8 @@ import {
   GetSessionResponse,
   ListSessionsRequest,
   ListSessionsResponse,
-  // MonitorEnvStoreRequest,
-  // MonitorEnvStoreResponse,
+  MonitorEnvStoreRequest,
+  MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
   UpdateSessionRequest,
@@ -132,11 +132,11 @@ export class GrpcRunnerClient implements IRunnerClient {
     return this.client.resolveProgram(input, options)
   }
 
-  // monitorEnvStore(
-  //   input: MonitorEnvStoreRequest,
-  //   options?: RpcOptions | undefined,
-  // ): ServerStreamingCall<MonitorEnvStoreRequest, MonitorEnvStoreResponse> {
-  //   GrpcRunnerClient.assertClient(this.client)
-  //   return this.client.monitorEnvStore(input, options)
-  // }
+  monitorEnvStore(
+    input: MonitorEnvStoreRequest,
+    options?: RpcOptions | undefined,
+  ): ServerStreamingCall<MonitorEnvStoreRequest, MonitorEnvStoreResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.monitorEnvStore(input, options)
+  }
 }

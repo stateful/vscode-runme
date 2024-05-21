@@ -24,6 +24,7 @@ import { IServer } from '../server/runmeServer'
 import { convertEnvList } from '../utils'
 import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
+import { SessionEnvStoreType } from '../grpc/runner/v1'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -78,12 +79,12 @@ export interface IRunner extends Disposable {
 
   createEnvironment({
     workspaceRoot,
-    // envStoreType,
+    envStoreType,
     envs,
     metadata,
   }: {
     workspaceRoot?: string
-    // envStoreType?: SessionEnvStoreType
+    envStoreType?: SessionEnvStoreType
     envs?: string[]
     metadata?: { [index: string]: string }
   }): Promise<IRunnerEnvironment>
@@ -229,7 +230,7 @@ export default class GrpcRunner implements IRunner {
     metadata,
   }: {
     workspaceRoot?: string
-    // envStoreType?: SessionEnvStoreType
+    envStoreType?: SessionEnvStoreType
     envs?: string[]
     metadata?: { [index: string]: string }
   }) {
