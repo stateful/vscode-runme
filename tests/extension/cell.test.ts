@@ -297,7 +297,7 @@ describe('NotebookCellOutputManager', () => {
     await outputs.toggleOutput(OutputType.annotations)
     const result = replaceOutput.mock.calls[0][0]
     expect(result).toHaveLength(1)
-    expect(result[0].items).toHaveLength(1)
+    expect(result[0].items).toHaveLength(2)
     expect(result[0].items[0].mime).toBe(OutputType.annotations)
   })
 
@@ -314,7 +314,7 @@ describe('NotebookCellOutputManager', () => {
     const result = replaceOutput.mock.calls[0][0]
 
     expect(result).toHaveLength(1)
-    expect(result[0].items).toHaveLength(1)
+    expect(result[0].items).toHaveLength(2)
     expect(result[0].items[0].mime).toBe(OutputType.annotations)
   })
 
