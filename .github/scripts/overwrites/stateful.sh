@@ -9,6 +9,8 @@ npm pkg set contributes.configuration[0].properties[runme.app.platformAuth].defa
 npm pkg set contributes.configuration[0].properties[runme.app.enableShare].default=true --json
 npm pkg set contributes.configuration[0].properties[runme.experiments.escalationButton].default=true --json
 npm pkg set contributes.configuration[0].properties[runme.server.lifecycleIdentity].default=1 --json
+npm pkg set contributes.configuration[0].properties[runme.app.notebookAutoSave].default="yes"
+npm pkg set contributes.configuration[0].properties[runme.app.sessionOutputs].default=false --json
 npm pkg delete galleryBanner
 
 cp -f "assets/$EXTENSION_NAME-icon.gif" "assets/icon.gif"
