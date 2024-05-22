@@ -5,8 +5,9 @@ runme:
   version: v3
 ---
 
-```sh {"id":"01HXF9X7750APY0DB81KPPZBN5"}
+```sh {"id":"01HXF9X7750APY0DB81KPPZBN5","terminalRows":"5"}
 export PROGRESS_OUTPUT="plain"
+echo "Using $PROGRESS_OUTPUT for progress logging"
 ```
 
 ```sh {"id":"01HTNVRK3AJ2AT8M24TA996RCJ","terminalRows":"15"}

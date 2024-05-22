@@ -10,25 +10,25 @@ import { dag, Container, File, Directory, object, func, field } from '@dagger.io
 @object()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 class VscodeRunme {
-  @field()
   /**
    * The working repository directory for the VscodeRunme instance.
    */
+  @field()
   dir: Directory
 
-  @field()
   /**
    * The base container being used for building the extension
    */
+  @field()
   container: Container
 
-  @func()
   /**
    * Build from remote git repository.
    * @param remote - Valid git remote url, aka repo to clone
    * @param ref - Branch, tag, or commit to checkout
    * @returns The modified VscodeRunme instance.
    */
+  @func()
   withRemote(remote: string, ref: string): VscodeRunme {
     this.dir = dag
     .git(`https://${remote}.git`)
@@ -38,13 +38,13 @@ class VscodeRunme {
     return this
   }
 
-  @func()
   /**
    * Sets up the container for the VscodeRunme instance.
    * @param binary - Optional kernel binary file to be added to the container.
    * @param presetup - Optional presetup (for dependencies) file to be added to the container.
    * @returns The modified VscodeRunme instance.
    */
+  @func()
   withContainer(binary?: File, presetup?: File): VscodeRunme {
     this.container = dag
       .container()
@@ -60,12 +60,12 @@ class VscodeRunme {
       return this
   }
 
-  @func()
   /**
    * Sets up the container for the VscodeRunme instance.
    * @param ghToken - Valid GitHub access token for API access.
    * @returns The modified VscodeRunme instance.
    */
+  @func()
   async buildExtension(ghToken: string): Promise<string> {
     return this.container
       .withEnvVariable('GITHUB_TOKEN', ghToken)
