@@ -1,4 +1,4 @@
-import { NotebookEditor, NotebookRendererMessaging, workspace, window } from 'vscode'
+import { NotebookEditor, NotebookRendererMessaging, workspace, window, commands } from 'vscode'
 
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
@@ -67,9 +67,17 @@ export async function handleGistMessage({
       () => false,
     )
     if (!sessionFileExists) {
-      return window.showWarningMessage(
-        'No session files found, turn on Auto-Save and run the cell again to generate one',
-      )
+      return window
+        .showWarningMessage(
+          'No session outputs files found. Enable Auto-Save, rerun the cell, and click again.',
+          'Enable and Re-run',
+        )
+        .then(async (selected) => {
+          if (selected === 'Enable and Re-run') {
+            await commands.executeCommand('runme.notebookAutoSaveOff')
+            await commands.executeCommand('notebook.cell.execute')
+          }
+        })
     }
     openFileAsRunmeNotebook(outputFilePath)
   }
