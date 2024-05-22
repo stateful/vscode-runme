@@ -2,10 +2,11 @@ import * as vscode from 'vscode'
 
 import { GenerateCellsRequest, GenerateCellsResponse } from '../grpc/aiTypes'
 import * as serializer from '../serializer'
-import { Serializer } from '../types'
+import { Serializer } from '../../types'
 import getLogger from '../logger'
 import { initAIServiceClient } from '../grpc/aiClient'
 import { AIServiceClient } from '../grpc/aiTypes'
+import { CellKind } from '../grpc/serializerTypes'
 
 import * as converters from './converters'
 const log = getLogger('AIGenerate')
@@ -78,8 +79,26 @@ export async function generateCompletion() {
 // This is done by returning a mutation to add the new cells to the notebook.
 // index is the position in the notebook at which the new the new cells should be inserted.
 function addAIGeneratedCells(index: number, response: GenerateCellsResponse): vscode.NotebookEdit {
-  let notebook = new Serializer.Notebook()
-  notebook.cells = response.cells
+  let notebook: Serializer.Notebook = {
+    cells: [],
+  }
+  for (let cell of response.cells) {
+    let kind: vscode.NotebookCellKind = vscode.NotebookCellKind.Markup
+
+    if (cell.kind === CellKind.CODE) {
+      kind = vscode.NotebookCellKind.Code
+    }
+
+    let newCell: Serializer.Cell = {
+      value: cell.value,
+      metadata: cell.metadata,
+      kind: kind,
+      // TODO(jeremy): Should we include outputs? The generate response should never contain outputs so we shouldn't
+      // have to worry about them.
+    }
+    notebook.cells.push(newCell)
+  }
+
   let newCellData = serializer.SerializerBase.revive(notebook)
   // Now insert the new cells at the end of the notebook
   return vscode.NotebookEdit.insertCells(index, newCellData)
