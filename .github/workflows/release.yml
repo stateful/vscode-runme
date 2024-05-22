@@ -96,7 +96,7 @@ jobs:
       - name: Overwrite Extension Definition
         if: env.EXTENSION_NAME != 'runme'
         run: |
-          .github/scripts/overrides.sh
+          .github/scripts/overwrites/stateful.sh
 
       - name: Get Stable Releases
         uses: actions/github-script@v6

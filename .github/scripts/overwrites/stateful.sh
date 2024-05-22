@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# package.json overrides
+# package.json stateful overwrites
 npm pkg set name="$EXTENSION_NAME"
 npm pkg set displayName="Stateful Platform"
 npm pkg set description="DevOps workflows for teams"
