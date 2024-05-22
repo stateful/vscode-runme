@@ -171,8 +171,7 @@ export class NotebookCellOutputManager {
 
         return new NotebookCellOutput([
           NotebookCellOutputItem.json(annotationJson, OutputType.annotations),
-          // disable to prevent rendering in session outputs
-          // NotebookCellOutputItem.json(annotationJson),
+          NotebookCellOutputItem.json(annotationJson),
         ])
       }
 
