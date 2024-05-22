@@ -9,11 +9,11 @@ runme:
 export PROGRESS_OUTPUT="plain"
 ```
 
-```sh {"id":"01HTNVRK3AJ2AT8M24TA996RCJ"}
+```sh {"id":"01HTNVRK3AJ2AT8M24TA996RCJ","terminalRows":"15"}
 dagger -m vscode-runme functions
 ```
 
-```sh {"id":"01HTQBSZTS5M1HP3GGP4T99PT0","name":"build-binary","terminalRows":"28"}
+```sh {"id":"01HTQBSZTS5M1HP3GGP4T99PT0","name":"KERNEL_BINARY","terminalRows":"28"}
 dagger call --progress $PROGRESS_OUTPUT \
   -m golang \
   --src ../runme \
@@ -23,7 +23,7 @@ dagger call --progress $PROGRESS_OUTPUT \
     --path runme
 ```
 
-```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"build-extension","terminalRows":"25"}
+```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"EXTENSION_VSIX","terminalRows":"25"}
 dagger --progress $PROGRESS_OUTPUT \
   call \
   with-remote \
@@ -31,7 +31,7 @@ dagger --progress $PROGRESS_OUTPUT \
     --ref "main" \
   with-container \
     --binary /tmp/runme/runme \
-    --presetup /Users/sourishkrout/Projects/stateful/oss/vscode-runme/presetup.sh \
+    --presetup dagger/scripts/presetup.sh \
   build-extension \
     --gh-token $(gh auth token)
 ```
