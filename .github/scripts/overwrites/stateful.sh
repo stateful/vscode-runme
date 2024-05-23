@@ -11,6 +11,8 @@ npm pkg set contributes.configuration[0].properties[runme.experiments.escalation
 npm pkg set contributes.configuration[0].properties[runme.server.lifecycleIdentity].default=1 --json
 npm pkg set contributes.configuration[0].properties[runme.app.notebookAutoSave].default="yes"
 npm pkg set contributes.configuration[0].properties[runme.app.sessionOutputs].default=false --json
+npm pkg set contributes.views.runme[0].name="Platform"
+npm pkg set contributes.viewsContainers.activitybar[0].title="Stateful"
 npm pkg delete galleryBanner
 
 cp -f "assets/$EXTENSION_NAME-icon.gif" "assets/icon.gif"
