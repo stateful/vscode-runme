@@ -74,6 +74,7 @@ import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
+import * as generate from './ai/generate'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -309,6 +310,9 @@ export class RunmeExtension {
         const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
         openFileAsRunmeNotebook(outputFilePath)
       }),
+
+      // Register a command to generate completions using foyle
+      RunmeExtension.registerCommand('runme.aiGenerate', generate.generateCompletion),
     )
 
     if (isPlatformAuthEnabled()) {

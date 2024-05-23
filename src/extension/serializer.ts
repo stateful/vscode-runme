@@ -299,7 +299,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     return notebookData
   }
 
-  protected static revive(notebook: Serializer.Notebook) {
+  // revive converts the Notebook proto to VSCode's NotebookData.
+  // It returns a an array of VSCode NotebookCellData objects.
+  public static revive(notebook: Serializer.Notebook) {
     return notebook.cells.reduce(
       (accu, elem) => {
         let cell: NotebookCellData
@@ -737,6 +739,7 @@ export class GrpcSerializer extends SerializerBase {
     await Promise.all([plain, masked])
   }
 
+  // marshalNotebook converts VSCode's NotebookData to the Notebook proto.
   public static marshalNotebook(data: NotebookData): Notebook {
     // the bulk copies cleanly except for what's below
     const notebook = Notebook.clone(data as any)
