@@ -17,10 +17,10 @@ export async function activate(context: ExtensionContext) {
   if (extensionIdentifier === 'stateful.runme' && pfound) {
     log.warn('Skipping extension activation to avoid conflicts')
     const message =
-      'For optimal performance, we recommend using only one Stateful extension at a time. ' +
-      'Consider uninstalling Stateful Runme to continue using Stateful Platform.'
+      "The Stateful extension is a superset of Runme. Both extension can't be enabled at the same time." +
+      'Please deactivate Runme and restart VS Code to avoid conflicts.'
 
-    const actionText = 'Go to Stateful Runme'
+    const actionText = 'Open Runme Extension'
     const response = await window.showWarningMessage(message, actionText)
     if (response === actionText) {
       await env.openExternal(Uri.parse('vscode:extension/stateful.runme'))
