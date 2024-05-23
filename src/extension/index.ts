@@ -1,4 +1,4 @@
-import { extensions, type ExtensionContext } from 'vscode'
+import { window, extensions, type ExtensionContext, env, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
 import { RunmeExtension } from './extension'
@@ -16,6 +16,16 @@ export async function activate(context: ExtensionContext) {
 
   if (extensionIdentifier === 'stateful.runme' && pfound) {
     log.warn('Skipping extension activation to avoid conflicts')
+    const message =
+      'For optimal performance, we recommend using only one Stateful extension at a time. ' +
+      'Consider uninstalling Stateful Runme to continue using Stateful Platform.'
+
+    const actionText = 'Go to Stateful Runme'
+    const response = await window.showWarningMessage(message, actionText)
+    if (response === actionText) {
+      await env.openExternal(Uri.parse('vscode:extension/stateful.runme'))
+    }
+
     return
   }
 
