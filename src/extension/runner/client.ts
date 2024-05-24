@@ -18,9 +18,9 @@ import {
   MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
-} from '../grpc/runner/v1'
+} from '../grpc/runner/types'
 import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2alpha1'
-import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
+import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
 
 import { IRunnerReady } from '.'
@@ -31,7 +31,7 @@ export class GrpcRunnerClient implements IRunnerClient {
   private disposables: Disposable[] = []
 
   protected address?: string
-  protected client?: RunnerServiceClient
+  protected client?: IRunnerServiceClient
   protected _onReady?: EventEmitter<IRunnerReady>
 
   constructor(
@@ -59,11 +59,11 @@ export class GrpcRunnerClient implements IRunnerClient {
 
   private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
-    this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
+    this.client = getRunnerServiceClient(transport ?? (await this.server.transport()))
     this._onReady?.fire({ address: this.address })
   }
 
-  static assertClient(client: RunnerServiceClient | undefined): asserts client {
+  static assertClient(client: IRunnerServiceClient | undefined): asserts client {
     if (!client) {
       throw new Error('Client is not active!')
     }

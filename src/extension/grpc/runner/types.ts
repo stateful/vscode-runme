@@ -49,20 +49,13 @@ export type Session = v1.Session | v2.Session
 
 export type ExecuteStop = v1.ExecuteStop | v2.ExecuteStop
 
-interface SessionCompat {
-  env?: string[]
-  envs?: string[]
-}
-
-export type CreateSessionRequest = v1.CreateSessionRequest | v2.CreateSessionRequest
-export type CreateSessionResponse = (v1.CreateSessionResponse | v2.CreateSessionResponse) & {
-  session?: SessionCompat
-}
+export type CreateSessionRequest =
+  | (v1.CreateSessionRequest & { env: string[] })
+  | (v2.CreateSessionRequest & { envs: string[] })
+export type CreateSessionResponse = v1.CreateSessionResponse | v2.CreateSessionResponse
 
 export type GetSessionRequest = v1.GetSessionRequest | v2.GetSessionRequest
-export type GetSessionResponse = (v1.GetSessionResponse | v2.GetSessionResponse) & {
-  session?: SessionCompat
-}
+export type GetSessionResponse = v1.GetSessionResponse | v2.GetSessionResponse
 
 export type ListSessionsRequest = v1.ListSessionsRequest | v2.ListSessionsRequest
 export type ListSessionsResponse = v1.ListSessionsResponse | v2.ListSessionsResponse
@@ -73,7 +66,9 @@ export type UpdateSessionResponse = v2.UpdateSessionResponse
 export type DeleteSessionRequest = v1.DeleteSessionRequest | v2.DeleteSessionRequest
 export type DeleteSessionResponse = v1.DeleteSessionResponse | v2.DeleteSessionResponse
 
-export type MonitorEnvStoreRequest = v1.MonitorEnvStoreRequest | v2.MonitorEnvStoreRequest
+export type MonitorEnvStoreRequest =
+  | v1.MonitorEnvStoreRequest
+  | (v2.MonitorEnvStoreRequest & { session: { envs: string[] } })
 export type MonitorEnvStoreResponse = v1.MonitorEnvStoreResponse | v2.MonitorEnvStoreResponse
 
 export type ResolveProgramRequest = v1.ResolveProgramRequest | v2.ResolveProgramRequest
@@ -82,3 +77,45 @@ export type ResolveProgramResponse = v1.ResolveProgramResponse | v2.ResolveProgr
 export type SessionEnvStoreType = v1.SessionEnvStoreType | v2.SessionEnvStoreType
 
 export type Winsize = v1.Winsize | v2.Winsize
+
+export const CreateSessionRequestImpl = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.CreateSessionRequest
+  }
+  return v1.CreateSessionRequest
+}
+
+export const GetSessionRequestImpl = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.GetSessionRequest
+  }
+  return v1.GetSessionRequest
+}
+
+export const ExecuteRequestImpl = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.ExecuteRequest
+  }
+  return v1.ExecuteRequest
+}
+
+export const ExecuteStopEnum = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.ExecuteStop
+  }
+  return v1.ExecuteStop
+}
+
+export const WinsizeImpl = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.Winsize
+  }
+  return v1.Winsize
+}
+
+export const ResolveProgramRequestImpl = () => {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return v2.ResolveProgramRequest
+  }
+  return v1.ResolveProgramRequest
+}

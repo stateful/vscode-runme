@@ -9,11 +9,13 @@ import {
 import type { DisposableAsync } from '../../types'
 import {
   CreateSessionRequest,
-  ExecuteRequest,
-  ExecuteStop,
-  GetSessionRequest,
+  CreateSessionRequestImpl,
+  ExecuteRequestImpl,
+  ExecuteStopEnum,
+  GetSessionRequestImpl,
   Winsize,
-} from '../grpc/runner/v1'
+  WinsizeImpl,
+} from '../grpc/runner/types'
 import {
   CommandMode,
   ExecuteRequest as ExecuteRequestType,
@@ -236,7 +238,7 @@ export default class GrpcRunner implements IRunner {
     metadata?: { [index: string]: string }
   }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
-    const request = CreateSessionRequest.create({
+    const request = CreateSessionRequestImpl().create({
       metadata,
       envs,
       project: {
@@ -250,7 +252,7 @@ export default class GrpcRunner implements IRunner {
       const client = this.client
 
       return client
-        .createSession(request)
+        .createSession(request as CreateSessionRequest)
         .then(({ response: { session } }) => {
           if (!session) {
             throw new Error('Did not receive session!!')
@@ -280,13 +282,15 @@ export default class GrpcRunner implements IRunner {
 
     const id = runnerEnv.getSessionId()
 
-    const { session } = await this.client.getSession(GetSessionRequest.create({ id })).response
+    const { session } = await this.client.getSession(GetSessionRequestImpl().create({ id }))
+      .response
 
     if (!session) {
       return undefined
     }
 
-    convertEnvList(session.envs ?? session.env ?? [])
+    const env = (session as any).envs ?? (session as any).env ?? []
+    convertEnvList(env)
   }
 
   // TODO: create a gRPC endpoint for this so it can be done without making a
@@ -525,7 +529,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     const inputData = Buffer.from(data)
 
     this.session.requests.send(
-      ExecuteRequest.create({
+      ExecuteRequestImpl().create({
         inputData: inputData,
       }),
     )
@@ -628,8 +632,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }
 
     this.session.requests.send(
-      ExecuteRequest.create({
-        stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
+      ExecuteRequestImpl().create({
+        stop: this.isPseudoterminal() ? ExecuteStopEnum().INTERRUPT : ExecuteStopEnum().KILL,
       }),
     )
   }
@@ -671,7 +675,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     if (this.activeTerminalWindow === terminalWindow && this.initialized) {
       await this.session.requests.send(
-        ExecuteRequest.create({
+        ExecuteRequestImpl().create({
           winsize: terminalDimensionsToWinsize(dimensions),
         }),
       )
@@ -726,7 +730,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       // undefined
     }
 
-    const execReq: any = ExecuteRequest.create({
+    // attempt to satisfy both v1 and v2
+    const execReq: any = {
       arguments: args,
       envs,
       directory: cwd,
@@ -738,32 +743,30 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...(exec?.type === 'script' && { script: exec.script }),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
       storeLastOutput,
+      storeStdoutInEnv: storeLastOutput,
       fileExtension,
       languageId,
-      // commandMode,
+      commandMode,
       knownId,
       knownName,
-    })
-
-    execReq.commandMode = commandMode
-    execReq.storeStdoutInEnv = storeLastOutput
-    // program config
-    execReq.config = {
-      arguments: args,
-      env: envs,
-      directory: cwd,
-      interactive: tty,
-      programName,
-      background,
-      fileExtension,
-      languageId,
-      mode: commandMode,
-      source,
-      knownId,
-      knownName,
+      // runnerv2's program config
+      config: {
+        arguments: args,
+        env: envs,
+        directory: cwd,
+        interactive: tty,
+        programName,
+        background,
+        fileExtension,
+        languageId,
+        mode: commandMode,
+        source,
+        knownId,
+        knownName,
+      },
     }
 
-    return execReq as ExecuteRequestType
+    return ExecuteRequestImpl().create(execReq) as ExecuteRequestType
   }
 
   get numTerminalWindows() {
@@ -776,7 +779,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 }
 
 function terminalDimensionsToWinsize({ rows, columns }: TerminalDimensions): Winsize {
-  return Winsize.create({
+  return WinsizeImpl().create({
     cols: columns,
     rows,
   })

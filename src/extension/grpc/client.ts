@@ -2,17 +2,22 @@ import {
   DuplexStreamingCall,
   RpcError,
   RpcOptions,
+  RpcTransport,
   ServerStreamingCall,
   UnaryCall,
 } from '@protobuf-ts/runtime-rpc'
 // eslint-disable-next-line max-len
 import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/parser/v1/parser_pb.client'
 // eslint-disable-next-line max-len
-import { RunnerServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb.client'
+import { RunnerServiceClient as RunnerServiceClientV1 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb.client'
+// eslint-disable-next-line max-len
+import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v2alpha1/runner_pb.client'
 // eslint-disable-next-line max-len
 import { ProjectServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/project/v1/project_pb.client'
 import { HealthClient } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
+
+import { getServerRunnerVersion } from '../../utils/configuration'
 
 import {
   CreateSessionRequest,
@@ -82,10 +87,17 @@ function initProjectClient(transport: GrpcTransport): ProjectServiceClient {
 
 type ReadyPromise = Promise<void | Error>
 
+function getRunnerServiceClient(transport: RpcTransport): IRunnerServiceClient {
+  if (getServerRunnerVersion() === 'v2alpha1') {
+    return new RunnerServiceClientV2(transport) as any
+  }
+  return new RunnerServiceClientV1(transport) as any
+}
+
 export {
   ParserServiceClient,
   IRunnerServiceClient,
-  RunnerServiceClient,
+  getRunnerServiceClient,
   ProjectServiceClient,
   initParserClient,
   initProjectClient,
