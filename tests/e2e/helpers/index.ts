@@ -90,9 +90,9 @@ async function assertDocumentContains(absDocPath: string, matcher: string, exact
   const source = await fs.readFile(absDocPath, 'utf-8')
   const savedContent = sanitizeOutput(source.toString()).split('\n')
   const matcherParts = sanitizeOutput(matcher).split('\n')
-  const maxLength = Math.min(matcherParts.length, savedContent.length)
+  const maxContentLines = Math.min(matcherParts.length, savedContent.length)
 
-  for (let index = 0; index < maxLength; index++) {
+  for (let index = 0; index < maxContentLines; index++) {
     if (exact) {
       await expect(savedContent[index].trim()).toMatch(matcherParts[index].trim())
     }

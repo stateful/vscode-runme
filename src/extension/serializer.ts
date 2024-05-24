@@ -355,8 +355,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     data.cells.forEach((cell) => {
-      if (identity === RunmeIdentity.UNSPECIFIED && cell.metadata?.['runme.dev/stageId']) {
-        cell.metadata['id'] = cell.metadata['runme.dev/stageId']
+      if (identity === RunmeIdentity.UNSPECIFIED && cell.metadata?.['runme.dev/originalId']) {
+        cell.metadata['id'] = cell.metadata['runme.dev/originalId']
         return
       }
 
@@ -609,7 +609,7 @@ export class GrpcSerializer extends SerializerBase {
             return
           }
           if (cell.metadata?.['id']) {
-            cell.metadata['runme.dev/stageId'] = cell.metadata['id']
+            cell.metadata['runme.dev/originalId'] = cell.metadata['id']
           }
         })
         break
