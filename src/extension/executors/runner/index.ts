@@ -32,12 +32,6 @@ import {
 } from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
-import {
-  CommandMode,
-  ResolveProgramRequest_Mode,
-  ResolveProgramResponse_Status,
-  ResolveProgramResponse_VarResult,
-} from '../../grpc/runner/v1'
 import { closeTerminalByEnvID } from '../task'
 import {
   getCellProgram,
@@ -50,6 +44,14 @@ import {
 import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
 import { IKernelExecutorOptions } from '..'
 import ContextState from '../../contextState'
+import {
+  CommandMode,
+  CommandModeEnum,
+  ResolveProgramResponse_VarResult,
+  ResolveProgramRequest_Mode,
+  ResolveProgramRequest_ModeEnum,
+  ResolveProgramResponse_StatusEnum,
+} from '../../grpc/runner/types'
 
 import { createRunProgramOptions } from './factory'
 
@@ -67,8 +69,6 @@ export interface IKernelRunnerOptions extends IKernelExecutorOptions {
 }
 
 export type IKernelRunner = (executor: IKernelRunnerOptions) => Promise<boolean>
-
-type VarResult = ResolveProgramResponse_VarResult
 
 export const executeRunner: IKernelRunner = async ({
   kernel,
@@ -446,13 +446,15 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   const forceInputPrompt = ContextState.getKey(NOTEBOOK_RUN_WITH_PROMPTS)
   const script = exec.cell.document.getText()
 
+  const { PROMPT_ALL, SKIP_ALL } = ResolveProgramRequest_ModeEnum()
+
   // Document level settings
   const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(exec.cell.notebook)
   const promptMode = forceInputPrompt
-    ? ResolveProgramRequest_Mode.PROMPT_ALL
+    ? PROMPT_ALL
     : skipPromptEnvDocumentLevel === false
       ? promptEnv
-      : ResolveProgramRequest_Mode.SKIP_ALL
+      : SKIP_ALL
 
   const RUNME_ID = getCellRunmeId(exec.cell)
   const envs: Record<string, string> = {
@@ -509,7 +511,8 @@ export async function resolveRunProgramExecution(
   commandMode: CommandMode,
   promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
-  if (commandMode !== CommandMode.INLINE_SHELL) {
+  const { INLINE_SHELL } = CommandModeEnum()
+  if (commandMode !== INLINE_SHELL) {
     return {
       type: 'script',
       script,
@@ -526,7 +529,10 @@ export async function resolveRunProgramExecution(
   script = result.response.script ?? script
 
   // const commands = await parseCommandSeq(script, languageId, exportMatches, skipEnvs)
-  const promptReducer = async (acc: Promise<CommandBlock[]>, current: VarResult) => {
+  const promptReducer = async (
+    acc: Promise<CommandBlock[]>,
+    current: ResolveProgramResponse_VarResult,
+  ) => {
     return promptVariablesAsync(await acc, current)
   }
 
@@ -562,23 +568,25 @@ type CommandBlock =
 
 export async function promptVariablesAsync(
   blocks: CommandBlock[],
-  variable: VarResult,
+  variable: ResolveProgramResponse_VarResult,
 ): Promise<CommandBlock[]> {
   let userValue = ''
 
+  const { RESOLVED, UNRESOLVED_WITH_MESSAGE, UNRESOLVED_WITH_PLACEHOLDER, UNRESOLVED_WITH_SECRET } =
+    ResolveProgramResponse_StatusEnum()
+
   switch (variable.status) {
-    case ResolveProgramResponse_Status.RESOLVED:
+    case RESOLVED:
       userValue = variable.resolvedValue
       break
 
-    case ResolveProgramResponse_Status.UNRESOLVED_WITH_MESSAGE:
-    case ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER:
-    case ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET: {
+    case UNRESOLVED_WITH_MESSAGE:
+    case UNRESOLVED_WITH_PLACEHOLDER:
+    case UNRESOLVED_WITH_SECRET: {
       const key = variable.name
       const placeHolder = variable.resolvedValue || variable.originalValue || 'Enter a value please'
-      const hasStringValue =
-        variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_PLACEHOLDER
-      const isPassword = variable.status === ResolveProgramResponse_Status.UNRESOLVED_WITH_SECRET
+      const hasStringValue = variable.status === UNRESOLVED_WITH_PLACEHOLDER
+      const isPassword = variable.status === UNRESOLVED_WITH_SECRET
 
       const userInput = await promptUserForVariable(key, placeHolder, hasStringValue, isPassword)
 

@@ -1,4 +1,3 @@
-import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
   type Pseudoterminal,
   type Event,
@@ -9,16 +8,20 @@ import {
 
 import type { DisposableAsync } from '../../types'
 import {
-  CommandMode,
   CreateSessionRequest,
   ExecuteRequest,
-  ExecuteResponse,
   ExecuteStop,
   GetSessionRequest,
-  ResolveProgramRequest_Mode,
-  SessionEnvStoreType,
   Winsize,
 } from '../grpc/runner/v1'
+import {
+  CommandMode,
+  ExecuteRequest as ExecuteRequestType,
+  ResolveProgramRequest_Mode,
+  SessionEnvStoreType,
+} from '../grpc/runner/types'
+import { ExecuteDuplex } from '../grpc/runner/types'
+import { progconf } from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
@@ -31,8 +34,6 @@ import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
 import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
-
-type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
 export type RunProgramExecution =
   | {
@@ -285,7 +286,7 @@ export default class GrpcRunner implements IRunner {
       return undefined
     }
 
-    convertEnvList(session.envs)
+    convertEnvList(session.envs ?? session.env ?? [])
   }
 
   // TODO: create a gRPC endpoint for this so it can be done without making a
@@ -418,7 +419,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       }
 
       if (pid) {
-        this._onPid.fire(Number(pid.pid))
+        const v = (pid as any).pid ?? (pid as any).value
+        this._onPid.fire(Number(v))
       }
     })
 
@@ -701,12 +703,30 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     commandMode,
     knownId,
     knownName,
-  }: RunProgramOptions): ExecuteRequest {
+  }: RunProgramOptions): ExecuteRequestType {
     if (runnerEnv && !(runnerEnv instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC runner environment!')
     }
 
-    return ExecuteRequest.create({
+    let source: progconf.ProgramConfig['source'] | undefined = undefined
+    switch (exec?.type) {
+      case 'commands':
+        source = {
+          oneofKind: 'commands',
+          commands: { items: exec.commands },
+        }
+        break
+      case 'script':
+        source = {
+          oneofKind: 'script',
+          script: exec.script,
+        }
+        break
+      default:
+      // undefined
+    }
+
+    const execReq: any = ExecuteRequest.create({
       arguments: args,
       envs,
       directory: cwd,
@@ -720,10 +740,30 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       storeLastOutput,
       fileExtension,
       languageId,
-      commandMode,
+      // commandMode,
       knownId,
       knownName,
     })
+
+    execReq.commandMode = commandMode
+    execReq.storeStdoutInEnv = storeLastOutput
+    // program config
+    execReq.config = {
+      arguments: args,
+      env: envs,
+      directory: cwd,
+      interactive: tty,
+      programName,
+      background,
+      fileExtension,
+      languageId,
+      mode: commandMode,
+      source,
+      knownId,
+      knownName,
+    }
+
+    return execReq as ExecuteRequestType
   }
 
   get numTerminalWindows() {

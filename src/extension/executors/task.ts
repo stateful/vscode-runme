@@ -16,8 +16,8 @@ import getLogger from '../logger'
 import { getAnnotations, getTerminalRunmeId } from '../utils'
 import { PLATFORM_OS, ENV_STORE } from '../constants'
 import { DEFAULT_PROMPT_ENV } from '../../constants'
-import { ResolveProgramRequest_Mode } from '../grpc/runner/v1'
 import { getCloseTerminalOnSuccess } from '../../utils/configuration'
+import { ResolveProgramRequest_ModeEnum } from '../grpc/runner/types'
 
 import {
   getCmdShellSeq,
@@ -48,11 +48,10 @@ export const taskExecutor: IKernelExecutor = async (executor) => {
   const { context, exec, doc } = executor
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)
 
+  const { SKIP_ALL } = ResolveProgramRequest_ModeEnum()
+
   const cwd = path.dirname(doc.uri.fsPath)
-  const cellText = await retrieveShellCommand(
-    exec,
-    promptEnv !== ResolveProgramRequest_Mode.SKIP_ALL,
-  )
+  const cellText = await retrieveShellCommand(exec, promptEnv !== SKIP_ALL)
   if (typeof cellText !== 'string') {
     return false
   }

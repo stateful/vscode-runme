@@ -41,7 +41,11 @@ import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../g
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
 import { resolveRunProgramExecution } from '../executors/runner'
-import { CommandMode, ResolveProgramRequest_Mode } from '../grpc/runner/v1'
+import {
+  CommandMode,
+  ResolveProgramRequest_Mode,
+  ResolveProgramRequest_ModeEnum,
+} from '../grpc/runner/types'
 
 import { RunmeLauncherProvider } from './launcher'
 
@@ -266,7 +270,9 @@ export class RunmeTaskProvider implements TaskProvider {
 
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
         const promptMode =
-          skipPromptEnvDocumentLevel === false ? promptEnv : ResolveProgramRequest_Mode.SKIP_ALL
+          skipPromptEnvDocumentLevel === false
+            ? promptEnv
+            : ResolveProgramRequest_ModeEnum().SKIP_ALL
         const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         let envs: Record<string, string> = {}

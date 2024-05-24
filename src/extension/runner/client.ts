@@ -19,6 +19,7 @@ import {
   ResolveProgramRequest,
   ResolveProgramResponse,
 } from '../grpc/runner/v1'
+import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
 
@@ -107,6 +108,16 @@ export class GrpcRunnerClient implements IRunnerClient {
   ): UnaryCall<DeleteSessionRequest, DeleteSessionResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.deleteSession(input, options)
+  }
+
+  updateSession(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    input: UpdateSessionRequest,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    options?: RpcOptions | undefined,
+  ): UnaryCall<UpdateSessionRequest, UpdateSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    throw new Error('Method not implemented.')
   }
 
   execute(options?: RpcOptions | undefined): DuplexStreamingCall<ExecuteRequest, ExecuteResponse> {

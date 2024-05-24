@@ -1,5 +1,5 @@
 import { IRunnerServiceClient } from '../grpc/client'
-import { Session } from '../grpc/runner/v1'
+import { Session } from '../grpc/runner/types'
 import getLogger from '../logger'
 import { convertEnvList } from '../utils'
 
@@ -18,7 +18,8 @@ export class GrpcRunnerEnvironment implements IRunnerEnvironment {
     private readonly client: IRunnerServiceClient,
     private readonly session: Session,
   ) {
-    this.initialEnvKeys = new Set(Object.keys(convertEnvList(session.envs)))
+    const env = (session as any).envs ?? (session as any).env
+    this.initialEnvKeys = new Set(Object.keys(convertEnvList(env)))
   }
 
   getRunmeSession(): Session {

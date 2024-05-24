@@ -635,6 +635,16 @@
             ],
             "markdownDescription": "Select whether or not lifecycle identities of document and/or cells should be presistent inside markdown"
           },
+          "runme.server.runnerVersion": {
+            "type": "string",
+            "scope": "window",
+            "default": "v1",
+            "enum": [
+              "v1",
+              "v2alpha1"
+            ],
+            "markdownDescription": "Runner GRPC version to use"
+          },
           "runme.terminal.backgroundTask": {
             "type": "boolean",
             "scope": "machine",
