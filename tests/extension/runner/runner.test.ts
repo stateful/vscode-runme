@@ -89,8 +89,8 @@ class MockedDuplexClientStream {
   }
 }
 
-vi.mock('../../../src/extension/grpc/client', () => ({
-  RunnerServiceClient: class {
+vi.mock('../../../src/extension/grpc/client', () => {
+  class MockedRunnerServiceClient {
     constructor() {}
 
     async createSession(request: { envs?: string[] }) {
@@ -110,8 +110,13 @@ vi.mock('../../../src/extension/grpc/client', () => ({
     execute() {
       return new MockedDuplexClientStream()
     }
-  },
-}))
+  }
+
+  return {
+    RunnerServiceClient: MockedRunnerServiceClient,
+    getRunnerServiceClient: vi.fn(() => new MockedRunnerServiceClient()),
+  }
+})
 
 vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb', () => ({
   default: {},
@@ -248,6 +253,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(stdoutListener).toBeCalledTimes(1)
@@ -262,6 +268,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from('test'),
+        mimeType: 'text/plain',
       })
 
       expect(stdoutListener).not.toBeCalled()
@@ -276,6 +283,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
         pid: {
           pid: '1234',
         },
@@ -292,6 +300,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
         pid: {
           pid: '4321',
         },
@@ -310,6 +319,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -322,6 +332,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from('test'),
+        mimeType: 'text/plain',
       })
 
       expect(errListener).toBeCalledTimes(1)
@@ -334,6 +345,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
         exitCode: {
           value: 1,
         },
@@ -533,6 +545,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\n'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -547,6 +560,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\nSERVICE_BAR_TOKEN: barfoo'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -561,6 +575,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from(''),
         stderrData: Buffer.from('test\n'),
+        mimeType: 'text/plain',
       })
 
       expect(errListener).toBeCalledTimes(1)
@@ -576,6 +591,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\r\n'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(writeListener).toBeCalledTimes(1)
@@ -590,6 +606,7 @@ suite('grpc runner', () => {
       duplex._onMessage.fire({
         stdoutData: Buffer.from('test\n'),
         stderrData: Buffer.from(''),
+        mimeType: 'text/plain',
       })
 
       expect(writeListener).toBeCalledTimes(1)
