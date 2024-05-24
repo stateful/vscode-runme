@@ -295,6 +295,7 @@ const registerExtensionEnvVarsMutation = (
   context: ExtensionContext,
   envs: Record<string, string>,
 ): void => {
+  context.environmentVariableCollection.persistent = false
   const binaryBasePath =
     path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':')
   context.environmentVariableCollection.prepend('PATH', binaryBasePath)
