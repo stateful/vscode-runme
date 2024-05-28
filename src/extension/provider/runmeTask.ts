@@ -268,11 +268,9 @@ export class RunmeTaskProvider implements TaskProvider {
         const skipPromptEnvDocumentLevel = getNotebookSkipPromptEnvSetting(notebook)
         const languageId = ('languageId' in cell && cell.languageId) || 'sh'
 
+        const { SKIP_ALL } = ResolveProgramRequest_ModeEnum()
         const { programName, commandMode } = getCellProgram(cell, notebook, languageId)
-        const promptMode =
-          skipPromptEnvDocumentLevel === false
-            ? promptEnv
-            : ResolveProgramRequest_ModeEnum().SKIP_ALL
+        const promptMode = skipPromptEnvDocumentLevel === false ? promptEnv : SKIP_ALL
         const cellText = 'value' in cell ? cell.value : cell.document.getText()
 
         let envs: Record<string, string> = {}
