@@ -539,6 +539,12 @@
             "scope": "window",
             "markdownDescription": "Relative path to a file within the workspace to open within a Runme notebook view, when VS Code starts (e.g. `./CONTRIBUTING.md`)."
           },
+          "runme.experiments.aiLogs": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, enable logging server logs used for training AIs."
+          },
           "runme.experiments.escalationButton": {
             "type": "boolean",
             "scope": "window",
