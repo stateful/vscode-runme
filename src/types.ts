@@ -284,6 +284,7 @@ interface Payload {
     initialRows?: number
     enableShareButton: boolean
     isAutoSaveEnabled: boolean
+    isSessionOutputsEnabled: boolean
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object

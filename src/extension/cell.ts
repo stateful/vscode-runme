@@ -33,6 +33,7 @@ import {
 import { Mutex } from '../utils/sync'
 import {
   getNotebookTerminalConfigurations,
+  getSessionOutputs,
   isPlatformAuthEnabled,
   isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
@@ -221,6 +222,8 @@ export class NotebookCellOutputManager {
               ? ContextState.getKey(PLATFORM_USER_SIGNED_IN)
               : ContextState.getKey(CLOUD_USER_SIGNED_IN)
 
+            const isSessionOutputsEnabled = getSessionOutputs()
+
             const json: CellOutputPayload<OutputType.terminal> = {
               type: OutputType.terminal,
               output: {
@@ -229,6 +232,7 @@ export class NotebookCellOutputManager {
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
+                isSessionOutputsEnabled,
                 ...terminalConfigurations,
               },
             }

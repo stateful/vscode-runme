@@ -117,6 +117,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             )
           }
 
+          if (payload.output.isSessionOutputsEnabled) {
+            terminalElement.setAttribute(
+              'isSessionOutputsEnabled',
+              payload.output.isSessionOutputsEnabled.toString(),
+            )
+          }
+
           element.appendChild(terminalElement)
           break
 
