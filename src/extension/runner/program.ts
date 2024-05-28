@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode'
 
 import { IRunnerServiceClient } from '../grpc/client'
-import { ResolveProgramRequest_Mode, ResolveProgramRequest } from '../grpc/runner/v1'
+import { ResolveProgramRequestImpl, ResolveProgramRequest_Mode } from '../grpc/runner/types'
 
 import { IRunnerChild } from './types'
 
@@ -18,7 +18,7 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
     const mode = this.mode
     const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
 
-    const req = ResolveProgramRequest.create({
+    const req = ResolveProgramRequestImpl().create({
       source: { oneofKind: 'commands', commands: { lines: commands } },
       mode,
       sessionId,

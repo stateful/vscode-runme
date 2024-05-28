@@ -62,6 +62,7 @@ const configurationSchema = {
     tlsDir: z.string().optional(),
     transportType: z.enum(['TCP', 'UDS']).default('TCP'),
     lifecycleIdentity: z.nativeEnum(RunmeIdentity).default(RunmeIdentity.CELL),
+    runnerVersion: z.enum(['v1', 'v2alpha1']).default('v1'),
   },
   codelens: {
     enable: z.boolean().default(true),
@@ -95,6 +96,7 @@ const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
 export type TerminalConfiguration = z.infer<typeof notebookTerminalSchemaObject>
 export type ServerTransportType = z.infer<typeof configurationSchema.server.transportType>
 export type ServerLifecycleIdentity = z.infer<typeof configurationSchema.server.lifecycleIdentity>
+export type ServerRunnerVersion = z.infer<typeof configurationSchema.server.runnerVersion>
 
 const getActionsConfigurationValue = <T>(
   configName: keyof typeof configurationSchema.actions,
@@ -245,6 +247,10 @@ const getBinaryPath = (extensionBaseUri: Uri, platform = os.platform()): Uri => 
 
 const enableServerLogs = (): boolean => {
   return getServerConfigurationValue<boolean>('enableLogger', false)
+}
+
+const getServerRunnerVersion = (): ServerRunnerVersion => {
+  return getServerConfigurationValue<ServerRunnerVersion>('runnerVersion', 'v1')
 }
 
 const isNotebookTerminalFeatureEnabled = (
@@ -416,6 +422,7 @@ export {
   enableServerLogs,
   getActionsOpenViewInEditor,
   getBinaryPath,
+  getServerRunnerVersion,
   getCLIUseIntegratedRunme,
   getCloseTerminalOnSuccess,
   getCodeLensEnabled,

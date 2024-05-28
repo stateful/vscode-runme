@@ -18,8 +18,9 @@ import {
   MonitorEnvStoreResponse,
   ResolveProgramRequest,
   ResolveProgramResponse,
-} from '../grpc/runner/v1'
-import { IRunnerServiceClient, RunnerServiceClient } from '../grpc/client'
+} from '../grpc/runner/types'
+import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2alpha1'
+import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/client'
 import { IServer } from '../server/runmeServer'
 
 import { IRunnerReady } from '.'
@@ -30,7 +31,7 @@ export class GrpcRunnerClient implements IRunnerClient {
   private disposables: Disposable[] = []
 
   protected address?: string
-  protected client?: RunnerServiceClient
+  protected client?: IRunnerServiceClient
   protected _onReady?: EventEmitter<IRunnerReady>
 
   constructor(
@@ -58,11 +59,11 @@ export class GrpcRunnerClient implements IRunnerClient {
 
   private async initRunnerClient(transport?: GrpcTransport) {
     this.deinitRunnerClient()
-    this.client = new RunnerServiceClient(transport ?? (await this.server.transport()))
+    this.client = getRunnerServiceClient(transport ?? (await this.server.transport()))
     this._onReady?.fire({ address: this.address })
   }
 
-  static assertClient(client: RunnerServiceClient | undefined): asserts client {
+  static assertClient(client: IRunnerServiceClient | undefined): asserts client {
     if (!client) {
       throw new Error('Client is not active!')
     }
@@ -107,6 +108,16 @@ export class GrpcRunnerClient implements IRunnerClient {
   ): UnaryCall<DeleteSessionRequest, DeleteSessionResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.deleteSession(input, options)
+  }
+
+  updateSession(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    input: UpdateSessionRequest,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    options?: RpcOptions | undefined,
+  ): UnaryCall<UpdateSessionRequest, UpdateSessionResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    throw new Error('Method not implemented.')
   }
 
   execute(options?: RpcOptions | undefined): DuplexStreamingCall<ExecuteRequest, ExecuteResponse> {

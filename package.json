@@ -641,6 +641,16 @@
             ],
             "markdownDescription": "Select whether or not lifecycle identities of document and/or cells should be presistent inside markdown"
           },
+          "runme.server.runnerVersion": {
+            "type": "string",
+            "scope": "window",
+            "default": "v1",
+            "enum": [
+              "v1",
+              "v2alpha1"
+            ],
+            "markdownDescription": "Runner GRPC version to use"
+          },
           "runme.terminal.backgroundTask": {
             "type": "boolean",
             "scope": "machine",
@@ -1111,7 +1121,7 @@
     "@apollo/client": "^3.8.3",
     "@aws-sdk/client-ec2": "^3.515.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240430201511-d9455265c5d4.3",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240515171834-148b5afad0df.3",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240524203529-27f0371f1064.3",
     "@google-cloud/compute": "^4.1.0",
     "@google-cloud/container": "^5.6.0",
     "@protobuf-ts/grpc-transport": "^2.9.1",

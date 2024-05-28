@@ -1,4 +1,3 @@
-import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc/build/types/duplex-streaming-call'
 import {
   type Pseudoterminal,
   type Event,
@@ -9,16 +8,22 @@ import {
 
 import type { DisposableAsync } from '../../types'
 import {
-  CommandMode,
   CreateSessionRequest,
-  ExecuteRequest,
-  ExecuteResponse,
-  ExecuteStop,
-  GetSessionRequest,
+  CreateSessionRequestImpl,
+  ExecuteRequestImpl,
+  ExecuteStopEnum,
+  GetSessionRequestImpl,
+  Winsize,
+  WinsizeImpl,
+} from '../grpc/runner/types'
+import {
+  CommandMode,
+  ExecuteRequest as ExecuteRequestType,
   ResolveProgramRequest_Mode,
   SessionEnvStoreType,
-  Winsize,
-} from '../grpc/runner/v1'
+} from '../grpc/runner/types'
+import { ExecuteDuplex } from '../grpc/runner/types'
+import { progconf } from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/runmeServer'
@@ -31,8 +36,6 @@ import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
 import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
-
-type ExecuteDuplex = DuplexStreamingCall<ExecuteRequest, ExecuteResponse>
 
 export type RunProgramExecution =
   | {
@@ -235,7 +238,7 @@ export default class GrpcRunner implements IRunner {
     metadata?: { [index: string]: string }
   }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
-    const request = CreateSessionRequest.create({
+    const request = CreateSessionRequestImpl().create({
       metadata,
       envs,
       project: {
@@ -249,7 +252,7 @@ export default class GrpcRunner implements IRunner {
       const client = this.client
 
       return client
-        .createSession(request)
+        .createSession(request as CreateSessionRequest)
         .then(({ response: { session } }) => {
           if (!session) {
             throw new Error('Did not receive session!!')
@@ -279,13 +282,15 @@ export default class GrpcRunner implements IRunner {
 
     const id = runnerEnv.getSessionId()
 
-    const { session } = await this.client.getSession(GetSessionRequest.create({ id })).response
+    const { session } = await this.client.getSession(GetSessionRequestImpl().create({ id }))
+      .response
 
     if (!session) {
       return undefined
     }
 
-    convertEnvList(session.envs)
+    const env = (session as any).envs ?? (session as any).env ?? []
+    convertEnvList(env)
   }
 
   // TODO: create a gRPC endpoint for this so it can be done without making a
@@ -418,7 +423,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       }
 
       if (pid) {
-        this._onPid.fire(Number(pid.pid))
+        const v = (pid as any).pid ?? (pid as any).value
+        this._onPid.fire(Number(v))
       }
     })
 
@@ -523,7 +529,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     const inputData = Buffer.from(data)
 
     this.session.requests.send(
-      ExecuteRequest.create({
+      ExecuteRequestImpl().create({
         inputData: inputData,
       }),
     )
@@ -626,8 +632,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     }
 
     this.session.requests.send(
-      ExecuteRequest.create({
-        stop: this.isPseudoterminal() ? ExecuteStop.INTERRUPT : ExecuteStop.KILL,
+      ExecuteRequestImpl().create({
+        stop: this.isPseudoterminal() ? ExecuteStopEnum().INTERRUPT : ExecuteStopEnum().KILL,
       }),
     )
   }
@@ -669,7 +675,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     if (this.activeTerminalWindow === terminalWindow && this.initialized) {
       await this.session.requests.send(
-        ExecuteRequest.create({
+        ExecuteRequestImpl().create({
           winsize: terminalDimensionsToWinsize(dimensions),
         }),
       )
@@ -701,12 +707,31 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     commandMode,
     knownId,
     knownName,
-  }: RunProgramOptions): ExecuteRequest {
+  }: RunProgramOptions): ExecuteRequestType {
     if (runnerEnv && !(runnerEnv instanceof GrpcRunnerEnvironment)) {
       throw new Error('Expected gRPC runner environment!')
     }
 
-    return ExecuteRequest.create({
+    let source: progconf.ProgramConfig['source'] | undefined = undefined
+    switch (exec?.type) {
+      case 'commands':
+        source = {
+          oneofKind: 'commands',
+          commands: { items: exec.commands },
+        }
+        break
+      case 'script':
+        source = {
+          oneofKind: 'script',
+          script: exec.script,
+        }
+        break
+      default:
+      // undefined
+    }
+
+    // attempt to satisfy both v1 and v2
+    const execReq: any = {
       arguments: args,
       envs,
       directory: cwd,
@@ -718,12 +743,30 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       ...(exec?.type === 'script' && { script: exec.script }),
       ...(terminalDimensions && { winsize: terminalDimensionsToWinsize(terminalDimensions) }),
       storeLastOutput,
+      storeStdoutInEnv: storeLastOutput,
       fileExtension,
       languageId,
       commandMode,
       knownId,
       knownName,
-    })
+      // runnerv2's program config
+      config: {
+        arguments: args,
+        env: envs,
+        directory: cwd,
+        interactive: tty,
+        programName,
+        background,
+        fileExtension,
+        languageId,
+        mode: commandMode,
+        source,
+        knownId,
+        knownName,
+      },
+    }
+
+    return ExecuteRequestImpl().create(execReq) as ExecuteRequestType
   }
 
   get numTerminalWindows() {
@@ -736,7 +779,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 }
 
 function terminalDimensionsToWinsize({ rows, columns }: TerminalDimensions): Winsize {
-  return Winsize.create({
+  return WinsizeImpl().create({
     cols: columns,
     rows,
   })

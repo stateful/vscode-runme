@@ -16,7 +16,7 @@ import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
-import { CommandMode } from '../grpc/runner/v1'
+import { CommandMode, CommandModeEnum } from '../grpc/runner/types'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -199,18 +199,20 @@ export function getCellProgram(
   let result: { programName: string; commandMode: CommandMode }
   const { interpreter } = getAnnotations(cell.metadata)
 
+  const { INLINE_SHELL, TEMP_FILE } = CommandModeEnum()
+
   if (isShellLanguage(execKey)) {
     const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
 
     result = {
       programName: shellPath,
-      commandMode: CommandMode.INLINE_SHELL,
+      commandMode: INLINE_SHELL,
     }
   } else {
     // TODO(mxs): make this configurable!!
     result = {
       programName: '',
-      commandMode: CommandMode.TEMP_FILE,
+      commandMode: TEMP_FILE,
     }
   }
 
