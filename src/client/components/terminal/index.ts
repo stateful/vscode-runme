@@ -373,6 +373,9 @@ export class TerminalView extends LitElement {
   @property({ type: Boolean })
   isAutoSaveEnabled: boolean = false
 
+  @property({ type: Boolean })
+  isSessionOutputsEnabled: boolean = false
+
   constructor() {
     super()
     this.windowSize = {
@@ -833,7 +836,13 @@ export class TerminalView extends LitElement {
             return this.#copy()
           }}"
         ></copy-button>
-        <gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>
+        ${when(
+          this.isSessionOutputsEnabled,
+          () => {
+            return html`<gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>`
+          },
+          () => {},
+        )}
         ${when(
           this.enableShareButton,
           () => {
