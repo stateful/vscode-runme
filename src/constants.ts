@@ -63,6 +63,9 @@ export enum ClientMessages {
   awsEC2InstanceAction = 'aws:ec2InstanceAction',
   onAuthorModeChange = 'common:onAuthorModeChange',
   gistCell = 'gist:cell',
+  gcpCloudRunAction = 'gcp:cloudRunAction',
+  gcpLoadServices = 'gcp:loadServices',
+  gcpServicesLoaded = 'gcp:servicesLoaded',
 }
 
 // [pretty print, languageId, destination]

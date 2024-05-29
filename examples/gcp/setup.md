@@ -16,12 +16,13 @@ Available guides:
 
 - [Google Cloud Engine](gce.md)
 - [Google Kubernetes Engine](gke.md)
+- [Google Cloud Run](cloudRun.md)
 
 ## Install gcloud SDK
 
 #### Via Homebrew
 
-```sh {"id":"01HPM36BJYQPJNPRXN1XEG5GTB"}
+```sh
 $ brew install --cask google-cloud-sdk
 ```
 
@@ -33,7 +34,7 @@ Once you've installed the **gcloud SDK**, authenticate with your authorized Goog
 
 Run the following command, which will prompt a browser window to appear. Follow the on-screen instructions to complete the authentication process. Once authorized, you'll receive confirmation within the terminal output of this guide step, displaying your authenticated account and the current project details.
 
-```sh {"background":"true","id":"01HPM3806ZWYRNJYXK4KW3KQ4M"}
+```sh {"background":"true"}
 $ gcloud auth login
 ```
 
@@ -41,7 +42,7 @@ $ gcloud auth login
 
 To instruct Runme Notebooks on which credentials to use for interacting with GCP resources, it's crucial to execute the following step. This process will acquire your credentials through a web flow and place them in the well-known location for Application Default Credentials (ADC).
 
-```sh {"id":"01HQ6D3C0HGXBM29YNH9Z7H9R9","name":"set-gcloud-default"}
+```sh {"name":"set-gcloud-default"}
 $ gcloud auth application-default login
 ```
 
