@@ -16,7 +16,6 @@ import { RpcError } from '@protobuf-ts/runtime-rpc'
 import getLogger from '../../logger'
 import { ClientMessages, NOTEBOOK_RUN_WITH_PROMPTS } from '../../../constants'
 import { ClientMessage } from '../../../types'
-import { PLATFORM_OS } from '../../constants'
 import {
   IRunner,
   IRunnerProgramSession,
@@ -36,12 +35,9 @@ import { closeTerminalByEnvID } from '../task'
 import {
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
-  getCmdShellSeq,
   isShellLanguage,
-  // getCommandExportExtractMatches,
   promptUserForVariable,
 } from '../utils'
-import { handleVercelDeployOutput, isVercelDeployScript } from '../vercel'
 import { IKernelExecutorOptions } from '..'
 import ContextState from '../../contextState'
 import {
@@ -81,10 +77,9 @@ export const executeRunner: IKernelRunner = async ({
   execKey,
   outputs,
   runnerEnv,
-  envMgr,
 }: IKernelRunnerOptions) => {
   const { interactive, mimeType, background, closeTerminalOnSuccess } = getAnnotations(exec.cell)
-  // enforce background tasks as singleton instanes
+  // enforce background tasks as singleton instances
   // to do this,
   if (background) {
     const terminal = getTerminalByCell(exec.cell)
@@ -101,8 +96,8 @@ export const executeRunner: IKernelRunner = async ({
 
   let programOptions: RunProgramOptions
   try {
-    const isVercel = isVercelDeployScript(runningCell.getText())
-    const resolveRunProgram = isVercel ? resolveProgramOptionsVercel : resolveProgramOptionsScript
+    // removed vercel resolution option
+    const resolveRunProgram = resolveProgramOptionsScript
     programOptions = await resolveRunProgram({
       exec,
       execKey,
@@ -219,7 +214,6 @@ export const executeRunner: IKernelRunner = async ({
   )
 
   const cellText = runningCell.getText()
-  const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
   if (interactive) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
@@ -244,20 +238,7 @@ export const executeRunner: IKernelRunner = async ({
         detectedMime,
       )
 
-      // hacky for now, maybe inheritence is a fitting pattern
-      const isVercelProd = process.env['vercelProd'] === 'true'
-      if (isVercelDeployScript(scriptVercel)) {
-        await handleVercelDeployOutput(
-          exec.cell,
-          outputs,
-          output,
-          exec.cell.index,
-          isVercelProd,
-          envMgr,
-        )
-
-        item = undefined
-      } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMime)) {
+      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMime)) {
         await outputs.showTerminal()
         item = undefined
       }
@@ -471,30 +452,6 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     commandMode,
     promptMode,
   )
-
-  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
-}
-
-export const resolveProgramOptionsVercel: IResolveRunProgram = async ({
-  runnerEnv,
-  exec,
-  execKey,
-  runningCell,
-}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const script = runningCell.getText()
-
-  const scriptVercel = getCmdShellSeq(script, PLATFORM_OS)
-  const isVercelProd = process.env['vercelProd'] === 'true'
-  const parts = [scriptVercel]
-  if (isVercelProd) {
-    parts.push('--prod')
-  }
-  const commands = [parts.join(' ')]
-
-  const execution: RunProgramExecution = {
-    type: 'commands',
-    commands,
-  }
 
   return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
 }

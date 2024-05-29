@@ -4,10 +4,8 @@ import { window } from 'vscode'
 import {
   prepareCommandSeq,
   promptVariablesAsync,
-  resolveProgramOptionsVercel,
   resolveRunProgramExecution,
 } from '../../../src/extension/executors/runner'
-import { createRunProgramOptions } from '../../../src/extension/executors/runner/factory'
 import {
   ResolveProgramResponse_Status,
   ResolveProgramResponse_VarResult,
@@ -144,49 +142,6 @@ suite('resolveRunProgramExecution', () => {
         "type": "script",
       }
     `)
-  })
-})
-
-suite('#resolveProgramOptionsVercel', () => {
-  test('preview', async () => {
-    const vercelArgs = {
-      runner: {} as any,
-      exec: {} as any,
-      execKey: 'sh',
-      runningCell: { getText: vi.fn().mockReturnValue('vercel') } as any,
-    }
-    await resolveProgramOptionsVercel(vercelArgs)
-    expect(createRunProgramOptions).toHaveBeenCalledWith(
-      vercelArgs.execKey,
-      vercelArgs.runningCell,
-      vercelArgs.exec,
-      {
-        commands: ['set -e -o pipefail; vercel'],
-        type: 'commands',
-      },
-      undefined,
-    )
-  })
-
-  test('production', async () => {
-    process.env['vercelProd'] = 'true'
-    const vercelArgs = {
-      runner: {} as any,
-      exec: {} as any,
-      execKey: 'sh',
-      runningCell: { getText: vi.fn().mockReturnValue('vercel') } as any,
-    }
-    await resolveProgramOptionsVercel(vercelArgs)
-    expect(createRunProgramOptions).toHaveBeenCalledWith(
-      vercelArgs.execKey,
-      vercelArgs.runningCell,
-      vercelArgs.exec,
-      {
-        commands: ['set -e -o pipefail; vercel --prod'],
-        type: 'commands',
-      },
-      undefined,
-    )
   })
 })
 
