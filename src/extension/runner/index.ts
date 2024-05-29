@@ -154,6 +154,8 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   readonly pid: Promise<number | undefined>
 
+  readonly mimeType: Promise<string | undefined>
+
   handleInput(message: string): Promise<void>
 
   setRunOptions(opts: RunProgramOptions): void
@@ -360,6 +362,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly _onStdoutRaw = this.register(new EventEmitter<Uint8Array>())
   readonly _onStderrRaw = this.register(new EventEmitter<Uint8Array>())
   readonly _onPid = this.register(new EventEmitter<number | undefined>())
+  readonly _onMimeType = this.register(new EventEmitter<string | undefined>())
 
   readonly onDidWrite = this._onDidWrite.event
   readonly onDidErr = this._onDidErr.event
@@ -382,6 +385,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   protected terminalWindows = new Map<TerminalWindow, TerminalWindowState>()
 
   pid = new Promise<number | undefined>(this._onPid.event)
+
+  mimeType = new Promise<string | undefined>(this._onMimeType.event)
 
   constructor(
     private readonly client: IRunnerServiceClient,
@@ -408,7 +413,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.register(this._onDidClose.event(() => this.dispose()))
     this.register(this._onInternalErr.event(() => this.dispose()))
 
-    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid }) => {
+    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid, mimeType }) => {
+      if (mimeType) {
+        this._onMimeType.fire(mimeType)
+      }
+
       if (stdoutData.length > 0) {
         this.write('stdout', stdoutData)
       }

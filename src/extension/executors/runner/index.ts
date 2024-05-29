@@ -213,8 +213,6 @@ export const executeRunner: IKernelRunner = async ({
 
   let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
-  const mime = mimeType || ('text/plain' as const)
-
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
     revealNotebookTerminal ? 'xterm' : 'local',
@@ -222,7 +220,7 @@ export const executeRunner: IKernelRunner = async ({
 
   const cellText = runningCell.getText()
   const scriptVercel = getCmdShellSeq(cellText, PLATFORM_OS)
-  if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime) && !isVercelDeployScript(scriptVercel)) {
+  if (interactive) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
@@ -239,9 +237,11 @@ export const executeRunner: IKernelRunner = async ({
     const _handleOutput = async (data: Uint8Array) => {
       output.push(Buffer.from(data))
 
+      const fallbackMime = mimeType || ('text/plain' as const)
+      const detectedMime = (await program.mimeType) ?? fallbackMime
       let item: NotebookCellOutputItem | undefined = new NotebookCellOutputItem(
         Buffer.concat(output),
-        mime,
+        detectedMime,
       )
 
       // hacky for now, maybe inheritence is a fitting pattern
@@ -257,7 +257,7 @@ export const executeRunner: IKernelRunner = async ({
         )
 
         item = undefined
-      } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)) {
+      } else if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMime)) {
         await outputs.showTerminal()
         item = undefined
       }
