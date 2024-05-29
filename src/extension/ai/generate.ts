@@ -93,6 +93,7 @@ function addAIGeneratedCells(index: number, response: GenerateCellsResponse): vs
       value: cell.value,
       metadata: cell.metadata,
       kind: kind,
+      languageId: cell.languageId,
       // TODO(jeremy): Should we include outputs? The generate response should never contain outputs so we shouldn't
       // have to worry about them.
     }
