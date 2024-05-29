@@ -58,7 +58,7 @@ export class Annotations extends LitElement {
       description: 'Prompt user input for exported environment variables.',
     },
     mimeType: {
-      description: "Cell's output content MIME type.",
+      description: "Cell's output content fallback MIME type if auto detection fails.",
     },
     name: {
       description: 'Cell name or environment variable name to export the cell output (see docs)',
