@@ -213,7 +213,6 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
-  const cellText = runningCell.getText()
   if (interactive) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
@@ -267,6 +266,7 @@ export const executeRunner: IKernelRunner = async ({
   } else {
     await outputs.replaceOutputs([])
 
+    const cellText = runningCell.getText()
     const RUNME_ID = getCellRunmeId(exec.cell)
     const taskExecution = new Task(
       { type: 'shell', name: `Runme Task (${RUNME_ID})` },

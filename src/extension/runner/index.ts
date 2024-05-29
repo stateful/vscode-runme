@@ -415,7 +415,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
     this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid, mimeType }) => {
       if (mimeType) {
-        this._onMimeType.fire(mimeType)
+        const mimeWithoutEncoding = mimeType.split(';')[0]
+        this._onMimeType.fire(mimeWithoutEncoding)
       }
 
       if (stdoutData.length > 0) {
