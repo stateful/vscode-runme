@@ -78,7 +78,12 @@ export const executeRunner: IKernelRunner = async ({
   outputs,
   runnerEnv,
 }: IKernelRunnerOptions) => {
-  const { interactive, mimeType, background, closeTerminalOnSuccess } = getAnnotations(exec.cell)
+  const {
+    interactive,
+    mimeType: defaultMimeType,
+    background,
+    closeTerminalOnSuccess,
+  } = getAnnotations(exec.cell)
   // enforce background tasks as singleton instances
   // to do this,
   if (background) {
@@ -201,6 +206,8 @@ export const executeRunner: IKernelRunner = async ({
     writeToTerminalStdout(`\x1B[7m * \x1B[0m ${text}`)
   })
 
+  program.onDidWrite(writeToTerminalStdout)
+
   if (interactive) {
     program.registerTerminalWindow('vscode')
     await program.setActiveTerminalWindow('vscode')
@@ -213,13 +220,12 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
+  let detectedMimeType = defaultMimeType || ('text/plain' as const)
   if (interactive) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
     }
-
-    program.onDidWrite(writeToTerminalStdout)
 
     await outputs.showTerminal()
   } else {
@@ -228,30 +234,27 @@ export const executeRunner: IKernelRunner = async ({
 
     // adapted from `shellExecutor` in `shell.ts`
     const _handleOutput = async (data: Uint8Array) => {
+      detectedMimeType = (await program.mimeType) || detectedMimeType
       output.push(Buffer.from(data))
-
-      const fallbackMime = mimeType || ('text/plain' as const)
-      const detectedMime = (await program.mimeType) ?? fallbackMime
-      let item: NotebookCellOutputItem | undefined = new NotebookCellOutputItem(
-        Buffer.concat(output),
-        detectedMime,
-      )
-
-      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMime)) {
-        await outputs.showTerminal()
-        item = undefined
+      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMimeType)) {
+        outputItems$.complete()
+        return
       }
 
-      if (item) {
-        outputItems$.next(item)
-      }
+      const item = new NotebookCellOutputItem(Buffer.concat(output), detectedMimeType)
+      outputItems$.next(item)
     }
 
     // debounce by 0.5s because human preception likely isn't as fast
-    const sub = outputItems$
-      .pipe(debounceTime(500))
-      .subscribe((item) => outputs.replaceOutputs([new NotebookCellOutput([item])]))
-
+    const sub = outputItems$.pipe(debounceTime(500)).subscribe({
+      next: (item) => outputs.replaceOutputs([new NotebookCellOutput([item])]),
+      complete: async () => {
+        return (
+          MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMimeType) &&
+          (await outputs.showTerminal())
+        )
+      },
+    })
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })
 
     program.onStdoutRaw(_handleOutput)
