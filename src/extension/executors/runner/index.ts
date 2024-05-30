@@ -54,7 +54,8 @@ import { createRunProgramOptions } from './factory'
 const log = getLogger('executeRunner')
 const LABEL_LIMIT = 15
 const BACKGROUND_TASK_HIDE_TIMEOUT = 2000
-const MIME_TYPES_WITH_CUSTOM_RENDERERS = ['text/plain']
+const CELL_MIME_TYPE_DEFAULT: string = 'text/plain' as const
+const MIME_TYPES_WITH_CUSTOM_RENDERERS = [CELL_MIME_TYPE_DEFAULT]
 
 export interface IKernelRunnerOptions extends IKernelExecutorOptions {
   runner: IRunner
@@ -80,7 +81,7 @@ export const executeRunner: IKernelRunner = async ({
 }: IKernelRunnerOptions) => {
   const {
     interactive,
-    mimeType: defaultMimeType,
+    mimeType: cellMimeType,
     background,
     closeTerminalOnSuccess,
   } = getAnnotations(exec.cell)
@@ -220,7 +221,7 @@ export const executeRunner: IKernelRunner = async ({
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
-  let detectedMimeType = defaultMimeType || ('text/plain' as const)
+  let mimeType = cellMimeType
   if (interactive) {
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
@@ -234,14 +235,14 @@ export const executeRunner: IKernelRunner = async ({
 
     // adapted from `shellExecutor` in `shell.ts`
     const _handleOutput = async (data: Uint8Array) => {
-      detectedMimeType = (await program.mimeType) || detectedMimeType
+      mimeType = mimeType || (await program.mimeType) || CELL_MIME_TYPE_DEFAULT
       output.push(Buffer.from(data))
-      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMimeType)) {
+      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mimeType)) {
         outputItems$.complete()
         return
       }
 
-      const item = new NotebookCellOutputItem(Buffer.concat(output), detectedMimeType)
+      const item = new NotebookCellOutputItem(Buffer.concat(output), mimeType)
       outputItems$.next(item)
     }
 
@@ -249,10 +250,8 @@ export const executeRunner: IKernelRunner = async ({
     const sub = outputItems$.pipe(debounceTime(500)).subscribe({
       next: (item) => outputs.replaceOutputs([new NotebookCellOutput([item])]),
       complete: async () => {
-        return (
-          MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(detectedMimeType) &&
-          (await outputs.showTerminal())
-        )
+        const isCustomRenderer = MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mimeType || '')
+        return isCustomRenderer && (await outputs.showTerminal())
       },
     })
     context.subscriptions.push({ dispose: () => sub.unsubscribe() })
