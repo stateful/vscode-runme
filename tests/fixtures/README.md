@@ -171,7 +171,7 @@ console.log(`Hello, ${process.env.YOUR_NAME}, from ${__dirname}!`)
 
 ## Curl an image
 
-```sh {"id":"01HF7B0KK32HBQ9X4ABWJPGK6P","interactive":"false,","mimeType":"image/png"}
+```sh {"id":"01HF7B0KK32HBQ9X4ABWJPGK6P","interactive":"false"}
 curl -s https://lever-client-logos.s3.us-west-2.amazonaws.com/a8ff9b1f-f313-4632-b90f-1f7ae7ee807f-1638388150933.png
 ```
 
