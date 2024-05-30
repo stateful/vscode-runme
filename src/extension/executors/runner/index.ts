@@ -28,6 +28,7 @@ import { getAnnotations, getCellRunmeId, getTerminalByCell } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import {
   getCloseTerminalOnSuccess,
+  getServerRunnerVersion,
   isNotebookTerminalEnabledForCell,
 } from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
@@ -457,8 +458,10 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
       : SKIP_ALL
 
   const RUNME_ID = getCellRunmeId(exec.cell)
+  const RUNME_RUNNER = getServerRunnerVersion()
   const envs: Record<string, string> = {
     RUNME_ID,
+    RUNME_RUNNER,
   }
 
   const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)

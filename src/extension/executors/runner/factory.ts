@@ -4,6 +4,7 @@ import { RunProgramExecution, RunProgramOptions } from '../../runner'
 import { IRunnerEnvironment } from '../../runner/environment'
 import { getAnnotations, getCellRunmeId } from '../../utils'
 import { getCellCwd, getCellProgram } from '../utils'
+import { getServerRunnerVersion } from '../../../utils/configuration'
 
 export async function createRunProgramOptions(
   execKey: string,
@@ -13,8 +14,10 @@ export async function createRunProgramOptions(
   runnerEnv?: IRunnerEnvironment,
 ): Promise<RunProgramOptions> {
   const RUNME_ID = getCellRunmeId(exec.cell)
+  const RUNME_RUNNER = getServerRunnerVersion()
   const envs: Record<string, string> = {
     RUNME_ID,
+    RUNME_RUNNER,
   }
 
   const {
