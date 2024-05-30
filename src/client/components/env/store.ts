@@ -1,5 +1,5 @@
 import { Disposable } from 'vscode'
-import { LitElement, html } from 'lit'
+import { LitElement, TemplateResult, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
@@ -52,7 +52,21 @@ export default class Table extends LitElement {
     return navigator.clipboard.writeText(content)
   }
 
+  #sort() {
+    this.variables?.sort((a, b) => {
+      if (a.errors.length > 0) {
+        return -1
+      }
+      if (b.errors.length > 0) {
+        return 1
+      }
+      return 0
+    })
+  }
+
   render() {
+    this.#sort()
+
     return html` <div>
       <table-view
         .columns="${COLUMNS}"
@@ -99,38 +113,42 @@ export default class Table extends LitElement {
               return html`<env-viewer
                 .displaySecret="${displaySecret}"
                 .value="${val}"
-                .maskedValue="${resolvedValue}"
+                .maskedValue="${this.#renderValue(row, field, () => resolvedValue)}"
                 .status="${row.status}"
                 @onCopy="${async () => {
                   return this.#copy(row.originalValue)
                 }}"
               ></env-viewer>`
             case 'createdAt':
-              return html`${row.createdAt ? formatDateWithTimeAgo(new Date(row.createdAt)) : ''}`
+              return this.#renderValue(row, field, () =>
+                row[field] ? formatDateWithTimeAgo(new Date(row[field])) : '',
+              )
             case 'updatedAt':
-              return html`${row.updatedAt ? formatDate(new Date(row.updatedAt)) : ''}`
-            case 'name':
-              return when(
-                row.errors?.length,
-                () =>
-                  html`<div class="flex">
-                    <tooltip-text
-                      .tooltipText="${html`<div class="flex">
-                        ${row.errors.map(
-                          (error) => html`<span>${CustomErrorIcon(10, 10)}${error.message}</span>`,
-                        )}
-                      </div>`}"
-                      .value="${html`${CustomErrorIcon(10, 10)}`}"
-                    ></tooltip-text>
-                    <div>${row[field]}</div>
-                  </div>`,
-                () => html`${row[field]}`,
+              return this.#renderValue(row, field, () =>
+                row[field] ? formatDate(new Date(row[field])) : '',
               )
             default:
-              return html`${row[field]}`
+              return this.#renderValue(row, field, () => row[field])
           }
         }}"
       ></table-view>
     </div>`
+  }
+
+  #renderValue(row: SnapshotEnv, field: string, format: () => string): TemplateResult<1> {
+    const icon = field === 'name' ? html`${CustomErrorIcon(10, 10)}` : html``
+    return when(
+      row.errors?.length,
+      () =>
+        html`<div class="flex">
+          <tooltip-text
+            .tooltipText="${html`<div class="flex">
+              ${row.errors.map((error) => html`<span>${icon}${error.message}</span>`)}
+            </div>`}"
+            .value="${html`${icon} ${format()}`}"
+          ></tooltip-text>
+        </div>`,
+      () => html`${format()}`,
+    )
   }
 }
