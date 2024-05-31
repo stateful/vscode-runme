@@ -82,7 +82,7 @@ import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import PanelManager from './panels/panelManager'
 import { GrpcSerializer } from './serializer'
-import { askAlternativeOutputsAction } from './commands'
+import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
@@ -237,12 +237,28 @@ export class Kernel implements Disposable {
     }
     await this.#setNotebookMode(notebookDocument)
     getCells().forEach((cell) => this.registerNotebookCell(cell))
-    const availableCategories = new Set<string>([
-      ...getCells()
-        .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
-        .flat()
-        .filter((c) => c.length > 0),
-    ])
+
+    let availableCategories = new Set<string>()
+    try {
+      availableCategories = new Set<string>([
+        ...getCells()
+          .map((cell) => getAnnotations(cell).category.split(CATEGORY_SEPARATOR))
+          .flat()
+          .filter((c) => c.length > 0),
+      ])
+    } catch (err) {
+      if (err instanceof Error) {
+        const action = 'Edit Markdown'
+        const taken = await window.showErrorMessage(
+          `Failed to retrieve cell annotations in markdown; possibly invalid: ${err.message}`,
+          action,
+        )
+        if (taken && taken === action) {
+          const doc = await workspace.openTextDocument(notebookDocument.uri)
+          openSplitViewAsMarkdownText(doc)
+        }
+      }
+    }
 
     await setNotebookCategories(this.context, uri, availableCategories)
     const isReadme = uri.fsPath.toUpperCase().includes('README')
