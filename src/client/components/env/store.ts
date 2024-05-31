@@ -1,7 +1,6 @@
 import { Disposable } from 'vscode'
 import { LitElement, TemplateResult, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
-import { when } from 'lit/directives/when.js'
 
 import '../table'
 import '../envViewer'
@@ -35,7 +34,7 @@ const COLUMNS = [
   },
 ]
 
-const HIDDEN_COLUMNS = ['resolvedValue', 'errors', 'status']
+const HIDDEN_COLUMNS = ['resolvedValue', 'errors', 'status', 'specClass']
 
 @customElement('env-store')
 export default class Table extends LitElement {
@@ -70,17 +69,18 @@ export default class Table extends LitElement {
     return html` <div>
       <table-view
         .columns="${COLUMNS}"
-        .rows="${this.variables?.map((variable: SnapshotEnv) => {
+        .rows="${this.variables?.map((v: SnapshotEnv) => {
           return {
-            name: variable.name,
-            status: variable.status,
-            originalValue: variable.originalValue,
-            spec: variable.spec,
-            origin: variable.origin,
-            updatedAt: formatDate(new Date(variable.updateTime)),
-            createdAt: formatDate(new Date(variable.createTime)),
-            resolvedValue: variable.resolvedValue,
-            errors: variable.errors,
+            name: v.name,
+            status: v.status,
+            originalValue: v.originalValue,
+            spec: v.spec,
+            specClass: v.isRequired ? 'required' : 'optional',
+            origin: v.origin,
+            updatedAt: formatDate(new Date(v.updateTime)),
+            createdAt: formatDate(new Date(v.createTime)),
+            resolvedValue: v.resolvedValue,
+            errors: v.errors,
           }
         })}"
         .displayable="${(row: SnapshotEnv, field: string) => {
@@ -127,6 +127,10 @@ export default class Table extends LitElement {
               return this.#renderValue(row, field, () =>
                 row[field] ? formatDate(new Date(row[field])) : '',
               )
+            case 'spec':
+              return this.#renderValue(row, field, () => {
+                return html`<span class="${row.specClass}">${row[field]}</span>`
+              })
             default:
               return this.#renderValue(row, field, () => row[field])
           }
@@ -135,20 +139,33 @@ export default class Table extends LitElement {
     </div>`
   }
 
-  #renderValue(row: SnapshotEnv, field: string, format: () => string): TemplateResult<1> {
+  #renderValue(
+    row: SnapshotEnv,
+    field: string,
+    format: () => TemplateResult<1> | string,
+  ): TemplateResult<1> {
     const icon = field === 'name' ? html`${CustomErrorIcon(10, 10)}` : html``
-    return when(
-      row.errors?.length,
-      () =>
-        html`<div class="flex">
-          <tooltip-text
-            .tooltipText="${html`<div class="flex">
-              ${row.errors.map((error) => html`<span>${icon}${error.message}</span>`)}
-            </div>`}"
-            .value="${html`${icon} ${format()}`}"
-          ></tooltip-text>
-        </div>`,
-      () => html`${format()}`,
-    )
+
+    if (row.errors?.length) {
+      return html`<div class="flex">
+        <tooltip-text
+          .tooltipText="${html`<div class="flex">
+            ${row.errors.map((error) => html`<span>${icon}${error.message}</span>`)}
+          </div>`}"
+          .value="${html`${icon} ${format()}`}"
+        ></tooltip-text>
+      </div>`
+    }
+
+    if (field === 'spec') {
+      return html`<div class="flex">
+        <tooltip-text
+          .tooltipText="${html`<div class="flex">Info: Variable is ${row.specClass}</div>`}"
+          .value="${format()}"
+        ></tooltip-text>
+      </div>`
+    }
+
+    return html`${format()}`
   }
 }

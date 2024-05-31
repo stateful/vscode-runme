@@ -51,6 +51,14 @@ export class Tooltip extends LitElement {
       display: flex;
       flex-direction: column;
     }
+
+    .required {
+      font-weight: 600;
+    }
+
+    .optional {
+      font-weight: 400;
+    }
   `
 
   render() {
