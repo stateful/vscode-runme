@@ -58,19 +58,19 @@ export class Annotations extends LitElement {
       description: 'Prompt user input for exported environment variables.',
     },
     mimeType: {
-      description: "Cell's output content MIME type.",
+      description: "Cell's output MIME type (non-interactive); skips auto-detection.",
     },
     name: {
-      description: 'Cell name or environment variable name to export the cell output (see docs)',
+      description: 'Cell name or environment variable name to export the cell output (see docs).',
     },
     cwd: {
       description: 'Optionally run the cell in different working directory (cwd).',
     },
     interpreter: {
-      description: 'Inserted into shebang (aka #!) line',
+      description: 'Inserted into shebang (aka #!) line.',
     },
     category: {
-      description: 'Execute this code cell within a category. (no comma or spaces allowed)',
+      description: 'Execute this code cell within a category (no comma or spaces allowed).',
     },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',

@@ -121,7 +121,7 @@ suite('AnnotationSchema', () => {
         expect(background).toBeFalsy()
         expect(closeTerminalOnSuccess).toBeTruthy()
         expect(interactive).toBeTruthy()
-        expect(mimeType).toStrictEqual('text/plain')
+        expect(mimeType).toBeUndefined()
         expect(name).toBe('')
       }
     })
@@ -148,7 +148,7 @@ suite('AnnotationSchema', () => {
         expect(background).toBeFalsy()
         expect(closeTerminalOnSuccess).toBeTruthy()
         expect(interactive).toBeTruthy()
-        expect(mimeType).toStrictEqual('text/plain')
+        expect(mimeType).toBeUndefined()
         expect(name).toBe('')
       }
     })

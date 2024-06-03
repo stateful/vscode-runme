@@ -154,6 +154,8 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   readonly pid: Promise<number | undefined>
 
+  readonly mimeType: Promise<string | undefined>
+
   handleInput(message: string): Promise<void>
 
   setRunOptions(opts: RunProgramOptions): void
@@ -360,6 +362,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   readonly _onStdoutRaw = this.register(new EventEmitter<Uint8Array>())
   readonly _onStderrRaw = this.register(new EventEmitter<Uint8Array>())
   readonly _onPid = this.register(new EventEmitter<number | undefined>())
+  readonly _onMimeType = this.register(new EventEmitter<string | undefined>())
 
   readonly onDidWrite = this._onDidWrite.event
   readonly onDidErr = this._onDidErr.event
@@ -382,6 +385,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   protected terminalWindows = new Map<TerminalWindow, TerminalWindowState>()
 
   pid = new Promise<number | undefined>(this._onPid.event)
+
+  mimeType = new Promise<string | undefined>(this._onMimeType.event)
 
   constructor(
     private readonly client: IRunnerServiceClient,
@@ -408,13 +413,20 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     this.register(this._onDidClose.event(() => this.dispose()))
     this.register(this._onInternalErr.event(() => this.dispose()))
 
-    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid }) => {
+    let detectedMimeType = ''
+    this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid, mimeType }) => {
+      if (mimeType) {
+        const mimeWithoutEncoding = mimeType.split(';')[0]
+        detectedMimeType = mimeWithoutEncoding
+        this._onMimeType.fire(mimeWithoutEncoding)
+      }
+
       if (stdoutData.length > 0) {
-        this.write('stdout', stdoutData)
+        this.write('stdout', detectedMimeType, stdoutData)
       }
 
       if (stderrData.length > 0) {
-        this.write('stderr', stderrData)
+        this.write('stderr', detectedMimeType, stderrData)
       }
 
       if (exitCode) {
@@ -462,8 +474,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     stderr: '_onStderrRaw',
   } as const
 
-  protected write(channel: 'stdout' | 'stderr', bytes: Uint8Array): void {
-    if (this.convertEol && !this.isPseudoterminal()) {
+  protected write(channel: 'stdout' | 'stderr', mimeType: string, bytes: Uint8Array): void {
+    if (this.convertEol(mimeType) && !this.isPseudoterminal()) {
       const newBytes = new Array(bytes.byteLength)
 
       let i = 0,
@@ -691,6 +703,18 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     return disposable
   }
 
+  protected convertEol(mimeType?: string) {
+    if (this.opts.convertEol !== undefined) {
+      return this.opts.convertEol
+    }
+
+    if (mimeType && mimeType !== 'text/plain') {
+      return false
+    }
+
+    return true
+  }
+
   static runOptionsToExecuteRequest({
     programName,
     args,
@@ -771,10 +795,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   get numTerminalWindows() {
     return this.terminalWindows.size
-  }
-
-  protected get convertEol() {
-    return this.opts.convertEol ?? true
   }
 }
 

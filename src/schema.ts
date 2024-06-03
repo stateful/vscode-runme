@@ -97,14 +97,16 @@ export const AnnotationSchema = {
   ),
   mimeType: z
     .string()
+    .optional()
     .refine((subject) => {
-      const [type, subtype, ...rest] = subject.split('/')
-      if (!type || !subtype || rest.length) {
-        return false
+      if (subject) {
+        const [type, subtype, ...rest] = subject.split('/')
+        if (!type || !subtype || rest.length) {
+          return false
+        }
       }
       return true
-    }, 'mime type specification invalid format')
-    .default('text/plain'),
+    }, 'mime type specification invalid format'),
   interpreter: z.string().optional().default(''),
   cwd: z.string().optional().default(''),
   category: z.string().default(''),
