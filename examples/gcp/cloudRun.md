@@ -21,13 +21,17 @@ To utilize this feature, simply paste a link from the console, specifying the de
 
 For instance:
 
-```sh
+```sh {"id":"01HZFE5B0R1FHM1BJVRXKFE2HH"}
 export PROJECT_ID="runme-ci"
 echo "PROJECT_ID set to $PROJECT_ID"
 ```
 
-```sh
+```sh {"id":"01HZFE5B0R1FHM1BJVRXKJ4T8W"}
 https://console.cloud.google.com/run?project=$PROJECT_ID
+```
+
+```sh {"background":"true","id":"01HZFGE40Y5PWM98DZPAVPYGPK"}
+https://console.cloud.google.com/run/detail/us-central1/cloud-backend/revisions?project=production-5df4
 ```
 
 Here, **"runme-ci"** serves as the project identifier.
