@@ -16,6 +16,7 @@ Available guides:
 
 - [Google Cloud Engine](gce.md)
 - [Google Kubernetes Engine](gke.md)
+- [Google Cloud Run](cloudRun.md)
 
 ## Install gcloud SDK
 

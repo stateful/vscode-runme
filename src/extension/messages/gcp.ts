@@ -3,7 +3,13 @@ import path from 'node:path'
 import { NotebookEditor, NotebookRendererMessaging } from 'vscode'
 
 import { ClientMessages } from '../../constants'
-import { ClientMessage, GceActionType, InstanceStatusType } from '../../types'
+import {
+  ClientMessage,
+  GCPCloudRunActionType,
+  GceActionType,
+  GcpCloudRunService,
+  InstanceStatusType,
+} from '../../types'
 import { postClientMessage } from '../../utils/messaging'
 import { getClusterDetails, waitForClusterStatus } from '../executors/gcp/gke/clusters'
 import { insertCodeCell } from '../cell'
@@ -13,6 +19,7 @@ import {
   suspendInstance,
   waitForInstanceStatus,
 } from '../executors/gcp/gce/vmInstances'
+import { listServices } from '../executors/gcp/run'
 
 export interface GCPStatusMessaging {
   messaging: NotebookRendererMessaging
@@ -170,6 +177,70 @@ export async function handleGCPMessage({ messaging, message, editor }: GCPStatus
             },
           })
         }
+      }
+    }
+
+    case ClientMessages.gcpLoadServices: {
+      listServices({
+        project: message.output.project,
+        onAllServicesLoaded: (hasError: boolean, error: string | undefined) => {
+          postClientMessage(messaging, ClientMessages.gcpServicesLoaded, {
+            cellId: message.output.cellId,
+            allRegionsLoaded: true,
+            hasError,
+            error,
+          })
+        },
+        onServicesLoaded: (
+          region: string,
+          services: GcpCloudRunService[],
+          hasError: boolean,
+          error: string | undefined,
+        ) => {
+          postClientMessage(messaging, ClientMessages.gcpServicesLoaded, {
+            cellId: message.output.cellId,
+            services,
+            region,
+            allRegionsLoaded: false,
+            hasError,
+            error,
+          })
+        },
+      })
+
+      break
+    }
+
+    case ClientMessages.gcpCloudRunAction: {
+      switch (message.output.action) {
+        case GCPCloudRunActionType.DescribeYAML:
+          return insertCodeCell(
+            message.output.cellId,
+            editor,
+            // eslint-disable-next-line max-len
+            `gcloud run ${message.output.resourceType} describe ${message.output.resource} --format yaml --project ${message.output.project} --region ${message.output.region}`,
+            'sh',
+            true,
+          )
+
+        case GCPCloudRunActionType.DownloadYAML:
+          return insertCodeCell(
+            message.output.cellId,
+            editor,
+            // eslint-disable-next-line max-len
+            `gcloud run ${message.output.resourceType} describe ${message.output.resource} --project ${message.output.project} --region ${message.output.region} --format yaml > ${message.output.resource}.yaml`,
+            'sh',
+            true,
+          )
+        case GCPCloudRunActionType.ViewRevisions:
+          return insertCodeCell(
+            message.output.cellId,
+            editor,
+            // eslint-disable-next-line max-len
+            `https://console.cloud.google.com/run/detail/${message.output.region}/${message.output.resource}/revisions?project=${message.output.project}`,
+            'sh',
+            true,
+          )
       }
     }
 

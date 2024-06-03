@@ -6,6 +6,8 @@ export enum GCPSupportedView {
   CLUSTERS = 'clusters',
   CLUSTER = 'cluster',
   VM_INSTANCES = 'vm_instances',
+  CLOUD_RUN_SERVICES = 'cloud_run_services',
+  CLOUD_RUN_REVISIONS = 'cloud_run_revisions',
 }
 
 export interface GcpPath extends StringIndexable {
@@ -22,10 +24,21 @@ export interface ClustersPath extends StringIndexable {
   project: string | null
 }
 
+export interface CloudRunServicesPath extends StringIndexable {
+  project: string | null
+}
+
+export interface CloudRunRevisionsPath extends StringIndexable {
+  service: string
+  region: string
+}
+
 export interface GCPData {
   [GCPSupportedView.CLUSTER]: ClusterPath
   [GCPSupportedView.CLUSTERS]: ClustersPath
   [GCPSupportedView.VM_INSTANCES]: GcpPath
+  [GCPSupportedView.CLOUD_RUN_SERVICES]: CloudRunServicesPath
+  [GCPSupportedView.CLOUD_RUN_REVISIONS]: CloudRunRevisionsPath
 }
 
 export type GoogleKubernetesFeature<T extends GCPSupportedView> = T extends any
@@ -63,6 +76,23 @@ export class GCPResolver implements Disposable {
       },
     })
 
+    this.supportedFeatures.set('/run', {
+      view: GCPSupportedView.CLOUD_RUN_SERVICES,
+      data: {
+        urlRegex: /run[?]project=.+/,
+        project: '',
+      },
+    })
+
+    this.supportedFeatures.set('/revisions', {
+      view: GCPSupportedView.CLOUD_RUN_REVISIONS,
+      data: {
+        urlRegex: /^\/run\/detail\/([^/]+)\/([^/]+)\/revisions$/,
+        region: '',
+        service: '',
+      },
+    })
+
     const text = this.cellText
     if (text.startsWith('https://console.cloud.google.com')) {
       const url = new URL(text)
@@ -78,9 +108,11 @@ export class GCPResolver implements Disposable {
           const matches = supportedFeature.data.urlRegex.exec(url.pathname)
           if (matches) {
             const [, ...fields] = matches
-            Object.keys(supportedFeature.data).forEach((field, index) => {
-              supportedFeature!.data![field] = fields[index]
-            })
+            Object.keys(supportedFeature.data)
+              .filter((field) => field !== 'urlRegex')
+              .forEach((field, index) => {
+                supportedFeature!.data![field] = fields[index]
+              })
           }
         }
         supportedFeature.data.project = url.searchParams.get('project')

@@ -5,6 +5,7 @@ import { GCPResolver, GCPSupportedView } from '../resolvers/gcpResolver'
 
 import { getClusterDetails, getClusters } from './gcp/gke/clusters'
 import { getVMInstances } from './gcp/gce/vmInstances'
+import { listRevisions } from './gcp/run'
 
 import { IKernelExecutor } from '.'
 
@@ -67,10 +68,45 @@ export const gcp: IKernelExecutor = async (executor) => {
         await outputs.showOutput(OutputType.gcp)
         break
       }
+
+      case GCPSupportedView.CLOUD_RUN_SERVICES: {
+        outputs.setState({
+          type: OutputType.gcp,
+          state: {
+            project: gcpResolver.data.project,
+            view: gcpResolver.view,
+            cellId: exec.cell.metadata['runme.dev/id'],
+          },
+        })
+        await outputs.showOutput(OutputType.gcp)
+        break
+      }
+
+      case GCPSupportedView.CLOUD_RUN_REVISIONS: {
+        const { project, service, region } = gcpResolver.data
+        const revisions = await listRevisions({
+          project,
+          service,
+          location: region,
+        })
+        outputs.setState({
+          type: OutputType.gcp,
+          state: {
+            project,
+            service,
+            view: gcpResolver.view,
+            cellId: exec.cell.metadata['runme.dev/id'],
+            revisions,
+            region,
+          },
+        })
+        await outputs.showOutput(OutputType.gcp)
+        break
+      }
     }
     return true
   } catch (error: any) {
-    window.showErrorMessage(`Failed to get Google Kubernetes Engine data, reason: ${error.message}`)
+    window.showErrorMessage(`Failed to get Google Cloud resource data, reason: ${error.message}`)
     return false
   }
 }

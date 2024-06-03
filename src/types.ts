@@ -17,6 +17,7 @@ import {
   MonitoringState,
   _InstanceType,
 } from '@aws-sdk/client-ec2'
+import { google } from '@google-cloud/run/build/protos/protos'
 
 import { OutputType, ClientMessages } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
@@ -33,6 +34,7 @@ import type { TerminalConfiguration } from './utils/configuration'
 import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 import { AWSSupportedView } from './extension/resolvers/awsResolver'
 import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runner/v1'
+import { Revision } from './extension/executors/gcp/run/types'
 
 export interface SyncSchema {
   onCommand?: {
@@ -184,6 +186,12 @@ export enum AWSActionType {
   EC2InstanceDetails = 'aws:ec2InstanceDetails',
 }
 
+export enum GCPCloudRunActionType {
+  DescribeYAML = 'describeYAML',
+  DownloadYAML = 'downloadYAML',
+  ViewRevisions = 'viewRevisions',
+}
+
 export interface GcpGceVMInstance extends StringIndexable {
   instanceId: string
   status: InstanceStatusType
@@ -200,6 +208,22 @@ export interface GcpGceVMInstance extends StringIndexable {
     }
   }
   pools?: InstancePool[]
+}
+
+export interface GcpCloudRunService extends StringIndexable {
+  creator: string
+  lastModifier: string
+  name: string
+  uri: string
+  updateTime: string | null
+  ingress:
+    | google.cloud.run.v2.IngressTraffic
+    | keyof typeof google.cloud.run.v2.IngressTraffic
+    | null
+  ingressDisplayName: string
+  serviceName: string
+  isHealthy: boolean
+  region: string
 }
 
 export interface GcpGkeClustersState {
@@ -228,7 +252,29 @@ export interface GcpGceVMInstancesState {
   cellId: string
 }
 
-export type GCPState = GcpGkeClustersState | GcpGkeClusterState | GcpGceVMInstancesState
+export interface GcpCloudRunServicesState {
+  project?: string
+  zone?: string
+  services?: GcpCloudRunService[]
+  view: GCPSupportedView.CLOUD_RUN_SERVICES
+  cellId: string
+}
+
+export interface GcpCloudRunRevisionsState {
+  project?: string
+  region: string
+  revisions?: Revision[]
+  view: GCPSupportedView.CLOUD_RUN_REVISIONS
+  cellId: string
+  service: string
+}
+
+export type GCPState =
+  | GcpGkeClustersState
+  | GcpGkeClusterState
+  | GcpGceVMInstancesState
+  | GcpCloudRunServicesState
+  | GcpCloudRunRevisionsState
 
 export type AWSState = AWSEC2InstanceState | AWSEC2InstanceDetailsState
 
@@ -288,7 +334,12 @@ interface Payload {
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
-  [OutputType.gcp]?: GcpGkeClusterState | GcpGkeClustersState | GcpGceVMInstancesState
+  [OutputType.gcp]?:
+    | GcpGkeClusterState
+    | GcpGkeClustersState
+    | GcpGceVMInstancesState
+    | GcpCloudRunServicesState
+    | GcpCloudRunRevisionsState
   [OutputType.aws]?: AWSState
 }
 
@@ -505,6 +556,29 @@ export interface ClientMessagePayload {
   [ClientMessages.gistCell]: {
     cellId: string
     telemetryEvent: string
+  }
+
+  [ClientMessages.gcpCloudRunAction]: {
+    cellId: string
+    resource?: string | undefined
+    project: string
+    resourceType?: 'revisions' | 'services'
+    region?: string
+    action: GCPCloudRunActionType
+  }
+
+  [ClientMessages.gcpLoadServices]: {
+    cellId: string
+    project: string
+  }
+
+  [ClientMessages.gcpServicesLoaded]: {
+    cellId: string
+    services?: GcpCloudRunService[] | undefined
+    region?: string | undefined
+    allRegionsLoaded: boolean
+    hasError: boolean
+    error?: string | undefined
   }
 }
 

@@ -487,6 +487,8 @@ export class Kernel implements Disposable {
         ClientMessages.gcpClusterDetails,
         ClientMessages.gcpClusterDetailsNewCell,
         ClientMessages.gcpVMInstanceAction,
+        ClientMessages.gcpCloudRunAction,
+        ClientMessages.gcpLoadServices,
       ].includes(message.type)
     ) {
       return handleGCPMessage({ messaging: this.messaging, message, editor })

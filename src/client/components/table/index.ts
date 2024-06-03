@@ -150,6 +150,13 @@ export class Table extends LitElement {
       align-items: baseline;
       gap: 1px;
     }
+
+    .status {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      place-content: stretch space-evenly;
+    }
   `
 
   render() {
