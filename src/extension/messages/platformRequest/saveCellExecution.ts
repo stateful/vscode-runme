@@ -101,7 +101,7 @@ export default async function saveCellExecution(
       },
     })
 
-    const showEscalationButton = !!result.data?.createCellExecution.isSlackReady
+    const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady
 
     TelemetryReporter.sendTelemetryEvent('app.save')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
