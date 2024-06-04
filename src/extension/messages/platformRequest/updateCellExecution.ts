@@ -46,11 +46,13 @@ export default async function updateCellExecution(
         },
       },
     })
+    const showEscalationButton = !!result.data?.updateCellExecution.isSlackReady
+
     TelemetryReporter.sendTelemetryEvent('app.update')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: result,
       id: message.output.id,
-      escalationButton,
+      escalationButton: showEscalationButton,
     })
   } catch (error) {
     TelemetryReporter.sendTelemetryEvent('app.update.error')

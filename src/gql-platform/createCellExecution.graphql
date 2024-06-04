@@ -3,5 +3,6 @@ mutation CreateCellExecution($input: CreateCellExecutionInput!) {
    id
    htmlUrl
    exitCode
+   isSlackReady
   }
 }
