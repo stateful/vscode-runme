@@ -125,6 +125,17 @@ describe('Runme VS Code Extension', async () => {
       ])
     })
 
+    it('shebang typescript example', async () => {
+      const cell = await notebook.getCell(
+        // eslint-disable-next-line max-len
+        "function unnest({ message }: { message: string }): void {\n    console.log(message)\n}\nunnest({ message: 'Running typescript that outputs this message' })",
+      )
+      await cell.run()
+      expect(await cell.getCellOutput(OutputType.TerminalView)).toStrictEqual([
+        'Running typescript that outputs this message',
+      ])
+    })
+
     it('background task example', async () => {
       const cell = await notebook.getCell('sleep 100000')
       await cell.run()
