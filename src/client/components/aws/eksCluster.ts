@@ -216,7 +216,7 @@ export class EKSCluster extends LitElement implements Disposable {
                 <div class="column">
                   <div class="row">
                     <div class="bold">OpenID Connect provider URL</div>
-                    <div>${this.cluster?.platformVersion}</div>
+                    <div>${this.cluster?.identity?.oidc?.issuer || 'none'}</div>
                   </div>
                   <div class="row">
                     <div class="bold">Cluster IAM role ARN</div>
