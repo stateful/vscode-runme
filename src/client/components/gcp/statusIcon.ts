@@ -59,7 +59,6 @@ export class StatusIcon extends LitElement {
   }
 
   private mapClusterStatusIcon(status: string) {
-    console.log('received status', status)
     switch (status) {
       case 'STATUS_UNSPECIFIED':
         return this.statusIcon(UnknownIcon, 'Unknown')

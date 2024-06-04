@@ -157,6 +157,10 @@ export class Table extends LitElement {
       flex-wrap: wrap;
       place-content: stretch space-evenly;
     }
+
+    .flex-center {
+      align-items: center;
+    }
   `
 
   render() {

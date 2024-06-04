@@ -5,6 +5,7 @@ import { StringIndexable } from '../../types'
 export enum AWSSupportedView {
   EC2Instances = 'ec2Instances',
   EC2InstanceDetails = 'ec2InstanceDetails',
+  EKSClusters = 'eksClusters',
 }
 
 export interface EC2InstancePath extends StringIndexable {
@@ -18,9 +19,16 @@ export interface EC2InstanceDetailsPath extends StringIndexable {
   urlRegex?: RegExp
 }
 
+export interface EKSClustersPath extends StringIndexable {
+  region: string | null
+  urlRegex?: RegExp
+  cluster?: string | undefined
+}
+
 export interface AWSData {
   [AWSSupportedView.EC2Instances]: EC2InstancePath
   [AWSSupportedView.EC2InstanceDetails]: EC2InstanceDetailsPath
+  [AWSSupportedView.EKSClusters]: EKSClustersPath
 }
 
 export type AWSFeature<T extends AWSSupportedView> = T extends any
@@ -45,6 +53,13 @@ export class AWSResolver implements Disposable {
 
     this.supportedFeatures.set('/ec2/home', {
       view: AWSSupportedView.EC2Instances,
+      data: {
+        region: '',
+      },
+    })
+
+    this.supportedFeatures.set('/eks/home', {
+      view: AWSSupportedView.EKSClusters,
       data: {
         region: '',
       },
@@ -80,6 +95,15 @@ export class AWSResolver implements Disposable {
             })
           }
         }
+
+        if (supportedFeature.view === AWSSupportedView.EKSClusters) {
+          const matches = /clusters\/([^&]+)/.exec(url.toString())
+          if (matches) {
+            const [, clusterName] = matches
+            supportedFeature.data.cluster = clusterName
+          }
+        }
+
         supportedFeature.data.region = url.searchParams.get('region')
         this.resolvedFeature = {
           ...supportedFeature,

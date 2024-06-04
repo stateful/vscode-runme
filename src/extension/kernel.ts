@@ -492,7 +492,11 @@ export class Kernel implements Disposable {
       ].includes(message.type)
     ) {
       return handleGCPMessage({ messaging: this.messaging, message, editor })
-    } else if ([ClientMessages.awsEC2InstanceAction].includes(message.type)) {
+    } else if (
+      [ClientMessages.awsEC2InstanceAction, ClientMessages.awsEKSClusterAction].includes(
+        message.type,
+      )
+    ) {
       return handleAWSMessage({ messaging: this.messaging, message, editor })
     } else if (message.type === ClientMessages.gistCell) {
       TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)

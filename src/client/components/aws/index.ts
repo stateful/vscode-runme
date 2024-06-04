@@ -7,6 +7,7 @@ import { AWSSupportedView } from '../../../extension/resolvers/awsResolver'
 
 import './ec2Instances'
 import './ec2InstanceDetails'
+import './eksClusters'
 
 @customElement(RENDERERS.AWSView)
 export class AWSViews extends LitElement {
@@ -44,6 +45,13 @@ export class AWSViews extends LitElement {
           owner="${this.state.instanceDetails!.owner || '-'}"
           .region="${this.state.region}"
         ></ec2-instance-details>`
+      case AWSSupportedView.EKSClusters:
+        return html`<eks-clusters
+          .cellId="${this.state.cellId}"
+          .clusters="${this.state.clusters}"
+          .cluster="${this.state.cluster}"
+          .region="${this.state.region}"
+        ></eks-clusters>`
     }
   }
 }

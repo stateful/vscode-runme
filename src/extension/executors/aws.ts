@@ -4,6 +4,7 @@ import { OutputType } from '../../constants'
 import { AWSResolver, AWSSupportedView } from '../resolvers/awsResolver'
 
 import { getEC2InstanceDetail, listEC2Instances } from './aws/ec2'
+import { getCluster, listClusters } from './aws/eks'
 
 import { IKernelExecutor } from '.'
 
@@ -47,6 +48,38 @@ export const aws: IKernelExecutor = async (executor) => {
             instanceDetails,
           },
         })
+        await outputs.showOutput(OutputType.aws)
+        break
+      }
+
+      case AWSSupportedView.EKSClusters: {
+        /**
+         * EKS Details and Clusters shares the same URL.
+         */
+        if (awsResolver.data.cluster) {
+          const cluster = await getCluster(awsResolver.data.region, awsResolver.data.cluster)
+          outputs.setState({
+            type: OutputType.aws,
+            state: {
+              cellId: exec.cell.metadata['runme.dev/id'],
+              view: awsResolver.view,
+              region: awsResolver.data.region,
+              cluster,
+            },
+          })
+        } else {
+          const clusters = await listClusters(awsResolver.data.region)
+          outputs.setState({
+            type: OutputType.aws,
+            state: {
+              cellId: exec.cell.metadata['runme.dev/id'],
+              view: awsResolver.view,
+              region: awsResolver.data.region,
+              clusters,
+            },
+          })
+        }
+
         await outputs.showOutput(OutputType.aws)
         break
       }
