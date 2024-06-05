@@ -57,6 +57,9 @@ export interface SyncSchema {
   onCellUnArchived?: {
     cellId: string
   }
+  onSiteOpen?: {
+    url: string
+  }
 }
 
 export type SyncSchemaBus = Bus<SyncSchema>
