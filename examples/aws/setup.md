@@ -10,7 +10,12 @@ AWS provides a robust Command Line Interface (CLI) that enables you to efficient
 
 You can interact with your AWS Resources with Runme via the AWS CLI or Runme Notebook Cloud renderers.
 
-💡 If you've already installed and configured the AWS CLI, feel free to jump directly to the [AWS EC2 Cloud Renderers](ec2.md) example. Otherwise, keep reading for guidance.
+💡 If you've already installed and configured the **AWS CLI**, feel free to jump directly to the available examples. Otherwise, keep reading for guidance.
+
+Available guides:
+
+-  [AWS EC2 Cloud Renderers](ec2.md)
+- [AWS EKS Cloud Renderers](eks.md)
 
 ## Installing AWS CLI
 

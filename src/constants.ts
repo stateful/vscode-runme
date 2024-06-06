@@ -61,6 +61,7 @@ export enum ClientMessages {
   gcpVMInstanceAction = 'gcp:gceVMInstanceAction',
   awsEC2Instances = 'aws:ec2Instances',
   awsEC2InstanceAction = 'aws:ec2InstanceAction',
+  awsEKSClusterAction = 'aws:eksClusterAction',
   onAuthorModeChange = 'common:onAuthorModeChange',
   gistCell = 'gist:cell',
   gcpCloudRunAction = 'gcp:cloudRunAction',

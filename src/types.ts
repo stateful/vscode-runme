@@ -35,6 +35,7 @@ import { GCPSupportedView } from './extension/resolvers/gcpResolver'
 import { AWSSupportedView } from './extension/resolvers/awsResolver'
 import { MonitorEnvStoreResponseSnapshot_SnapshotEnv } from './extension/grpc/runner/v1'
 import { Revision } from './extension/executors/gcp/run/types'
+import { IndexableCluster } from './extension/executors/aws/types'
 
 export interface SyncSchema {
   onCommand?: {
@@ -187,6 +188,7 @@ export enum InstanceStatusType {
 export enum AWSActionType {
   ConnectViaSSH = 'connectViaSsh',
   EC2InstanceDetails = 'aws:ec2InstanceDetails',
+  EKSClusterDetails = 'aws:eksClusterDetails',
 }
 
 export enum GCPCloudRunActionType {
@@ -279,7 +281,7 @@ export type GCPState =
   | GcpCloudRunServicesState
   | GcpCloudRunRevisionsState
 
-export type AWSState = AWSEC2InstanceState | AWSEC2InstanceDetailsState
+export type AWSState = AWSEC2InstanceState | AWSEC2InstanceDetailsState | AWSEKSClustersState
 
 export interface AWSEC2Instance extends StringIndexable {
   name: string
@@ -315,6 +317,14 @@ export interface AWSEC2InstanceDetailsState {
   cellId: string
   region: string
   view: AWSSupportedView.EC2InstanceDetails
+}
+
+export interface AWSEKSClustersState {
+  clusters: IndexableCluster[]
+  cluster?: IndexableCluster | undefined
+  cellId: string
+  region: string
+  view: AWSSupportedView.EKSClusters
 }
 
 interface Payload {
@@ -582,6 +592,13 @@ export interface ClientMessagePayload {
     allRegionsLoaded: boolean
     hasError: boolean
     error?: string | undefined
+  }
+
+  [ClientMessages.awsEKSClusterAction]: {
+    cellId: string
+    cluster: string
+    region: string
+    action: AWSActionType
   }
 }
 
