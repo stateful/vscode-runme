@@ -4,7 +4,7 @@ Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service t
 
 Discover how you can leverage Runme's robust Notebook Cloud Renderers to engage with your EKS resources in ways you've never imagined before!
 
-💡 **Important!** Be sure to run through the one-time guide [Getting started with Runme Noteboks for AWS](setup.md).
+💡 **Important!** Be sure to run through the one-time guide [Getting started with Runme Notebooks for AWS](setup.md).
 
 ## List EKS Clusters
 
@@ -14,12 +14,12 @@ Runme seamlessly integrates with your AWS EKS resource URLs, mirroring your navi
 
 Experience it firsthand by running the following URL to see Runme in action:
 
-```sh
+```sh {"id":"01HZQMSYFXKX89KZZTXEC0FHNQ"}
 export EKS_REGION="us-east-1"
 echo "EKS_REGION set to $EKS_REGION"
 ```
 
-```sh
+```sh {"id":"01HZQMSYFXKX89KZZTXG76VCEN"}
 https://$EKS_REGION.console.aws.amazon.com/eks/home?region=$EKS_REGION#/clusters
 ```
 
@@ -48,14 +48,14 @@ Just as with listing clusters, if you execute an AWS Console link for specific c
 
 For a quick demo of visualizing a specific EKS cluster details, you can replace the cluster placeholder with the instance you want to visualize:
 
-```sh {"terminalRows":"5"}
-export EKS_CLUSTER="runme-demo"
+```sh {"id":"01HZQMSYFXKX89KZZTXH6RG4HF","terminalRows":"5"}
+export EKS_CLUSTER="dev1"
 export EKS_REGION="us-east-1"
 echo "EKS_CLUSTER set to $EKS_CLUSTER"
 echo "EKS_REGION set to $EKS_REGION"
 ```
 
-```sh {"background":"false"}
+```sh {"background":"false","id":"01HZQMSYFXKX89KZZTXKTTPH3B"}
 https://$EKS_REGION.console.aws.amazon.com/eks/home?region=$EKS_REGION#/clusters/$EKS_CLUSTER
 ```
 

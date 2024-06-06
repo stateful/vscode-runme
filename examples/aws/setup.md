@@ -21,7 +21,7 @@ Available guides:
 
 For UNIX based systems (macOS and Linux), you can use `Homebrew` to install `awscli`.
 
-```sh
+```sh {"id":"01HQRA46HYEXYTCYN03PY77Z9B"}
 brew install awscli
 ```
 
@@ -39,18 +39,18 @@ It's crucial to note that if you manage multiple profiles, each with its associa
 
 To list your configured profiles, execute the following command:
 
-```sh
+```sh {"id":"01HV6VND4H1HHJ9RPZC2BZBEFS"}
 aws configure list-profiles
 ```
 
 To display profile details, including access key, secret key, and region configuration information utilized for a specific profile, execute the following commands:
 
-```sh {"promptEnv":"yes","terminalRows":"2"}
+```sh {"id":"01HV6VWQWV48H1P32E3FBTZXQZ","promptEnv":"yes","terminalRows":"2"}
 export PROFILE_NAME="default"
 echo "PROFILE NAME SET TO $PROFILE_NAME"
 ```
 
-```sh
+```sh {"id":"01HV6VR5P3DNBBRS24G43P384G"}
 aws configure list --profile $PROFILE_NAME
 ```
 
@@ -58,7 +58,7 @@ aws configure list --profile $PROFILE_NAME
 
 If you haven't configured a profile yet, you can create a default one by running the following command, ensure you have your Access Key ID and Secret Access Key at hand.
 
-```sh {"background":"true","terminalRows":"10"}
+```sh {"background":"true","id":"01HQRA9RW8S8XJ21HFVW02VGBS","terminalRows":"10"}
 aws configure
 ```
 
