@@ -143,7 +143,7 @@ To run the extension in a new Extension Development Host window of VS Code open 
 
 To compile all extension files, run:
 
-```sh {"id":"01HF7VQMH8ESX1EFV4PDNTDPTS","name":"build"}
+```sh {"id":"01HF7VQMH8ESX1EFV4PDNTDPTS","name":"build","promptEnv":"no"}
 export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npm run build
 ```
@@ -194,7 +194,7 @@ eslint src tests --ext ts --fix
 
 We use [Vitest](https://vitest.dev/) for running unit tests via:
 
-```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"false"}
+```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"no"}
 export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npx vitest -c ./vitest.conf.ts --run
 ```
