@@ -5,7 +5,7 @@ import { HealthCheckResponse_ServingStatus } from '@buf/grpc_grpc.community_timo
 
 import { RunmeExtension } from '../../src/extension/extension'
 import { bootFile } from '../../src/extension/utils'
-import RunmeServer from '../../src/extension/server/runmeServer'
+import KernelServer from '../../src/extension/server/kernelServer'
 import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
 
 vi.mock('vscode')
@@ -80,7 +80,7 @@ test('initializes all providers', async () => {
   } as any)
   const dummyFilePath = Uri.file('/foo/bar')
   vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)
-  RunmeServer['getTLS'] = vi
+  KernelServer['getTLS'] = vi
     .fn()
     .mockResolvedValue({ privKeyPEM: testPrivKeyPEM, certPEM: testCertPEM })
   const context: any = {

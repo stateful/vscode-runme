@@ -51,7 +51,7 @@ import { initParserClient, ParserServiceClient, type ReadyPromise } from './grpc
 import Languages from './languages'
 import { PLATFORM_OS } from './constants'
 import { initWasm } from './utils'
-import { IServer } from './server/runmeServer'
+import { IServer } from './server/kernelServer'
 import { Kernel } from './kernel'
 import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'

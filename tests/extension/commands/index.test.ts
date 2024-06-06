@@ -66,7 +66,7 @@ vi.mock('../../../src/extension/provider/cli', () => ({
   },
 }))
 
-vi.mock('../../../src/extension/server/runmeServer.ts', () => ({
+vi.mock('../../../src/extension/server/kernelServer.ts', () => ({
   default: class {},
 }))
 

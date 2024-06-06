@@ -9,8 +9,8 @@ import { HealthCheckResponse_ServingStatus } from '@buf/grpc_grpc.community_timo
 // eslint-disable-next-line import/order
 import { isPortAvailable } from '../../../src/extension/utils'
 
-import Server, { IServerConfig } from '../../../src/extension/server/runmeServer'
-import RunmeServerError from '../../../src/extension/server/runmeServerError'
+import Server, { IServerConfig } from '../../../src/extension/server/kernelServer'
+import KernelServerError from '../../../src/extension/server/kernelServerError'
 import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
 
 const healthCheck = vi.fn()
@@ -85,7 +85,7 @@ suite('health check', () => {
   })
 })
 
-suite('Runme server spawn process', () => {
+suite('Kernel server spawn process', () => {
   const configValues: Record<string, any> = {
     binaryPath: 'bin/runme',
   }
@@ -166,7 +166,7 @@ suite('Runme server spawn process', () => {
     })
 
     const serverLaunchSpy = vi.spyOn(server, 'launch')
-    await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
+    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
     expect(serverLaunchSpy).toBeCalledTimes(3)
   })
 
@@ -185,13 +185,13 @@ suite('Runme server spawn process', () => {
 
     vi.mocked(isPortAvailable).mockResolvedValueOnce(false)
     const port = server['_port']()
-    await expect(server.launch()).rejects.toBeInstanceOf(RunmeServerError)
+    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
 
     expect(server['_port']()).toStrictEqual(port + 1)
   })
 })
 
-suite('Runme server accept connections', () => {
+suite('Kernel server accept connections', () => {
   let server: Server
   beforeEach(() => {
     server = createServer({
@@ -216,7 +216,7 @@ suite('Runme server accept connections', () => {
     ;(server as any).isRunning = vi.fn().mockResolvedValue(false)
 
     await expect(server.launch()).rejects.toThrowErrorMatchingInlineSnapshot(
-      `[RunmeServerError: Server did not accept connections after 0.2s]`,
+      `[KernelServerError: Server did not accept connections after 0.2s]`,
     )
   })
 })

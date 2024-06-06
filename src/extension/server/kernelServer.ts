@@ -23,7 +23,7 @@ import {
 import { isPortAvailable } from '../utils'
 import { HealthClient } from '../grpc/client'
 
-import RunmeServerError from './runmeServerError'
+import KernelServerError from './kernelServerError'
 
 export interface IServerConfig {
   assignPortDynamically?: boolean
@@ -36,7 +36,7 @@ export interface IServerConfig {
   aiLogs?: boolean
 }
 
-const log = getLogger('RunmeServer')
+const log = getLogger('KernelServer')
 
 export interface IServer extends Disposable {
   transportType: ServerTransportType
@@ -51,7 +51,7 @@ export interface IServer extends Disposable {
   transport(): Promise<GrpcTransport>
 }
 
-class RunmeServer implements IServer {
+class KernelServer implements IServer {
   #port: number
   #socketId?: string
   #process: ChildProcessWithoutNullStreams | undefined
@@ -86,7 +86,7 @@ class RunmeServer implements IServer {
   ) {
     this.transportType = getServerConfigurationValue<ServerTransportType>(
       'transportType',
-      RunmeServer.transportTypeDefault,
+      KernelServer.transportTypeDefault,
     )
     this.#port = getPortNumber()
     this.#loggingEnabled = enableServerLogs()
@@ -141,7 +141,7 @@ class RunmeServer implements IServer {
       return customAddress
     }
 
-    if (this.transportType === RunmeServer.transportTypeDefault) {
+    if (this.transportType === KernelServer.transportTypeDefault) {
       const host = `${SERVER_ADDRESS}:${this.#port}`
       return host
     }
@@ -168,7 +168,7 @@ class RunmeServer implements IServer {
 
       return { certPEM, privKeyPEM }
     } catch (e: any) {
-      throw new RunmeServerError('Unable to read TLS files', e)
+      throw new KernelServerError('Unable to read TLS files', e)
     }
   }
 
@@ -181,7 +181,7 @@ class RunmeServer implements IServer {
       return ChannelCredentials.createInsecure()
     }
 
-    const { certPEM, privKeyPEM } = await RunmeServer.getTLS(this.getTLSDir())
+    const { certPEM, privKeyPEM } = await KernelServer.getTLS(this.getTLSDir())
 
     return ChannelCredentials.createSsl(certPEM, privKeyPEM, certPEM)
   }
@@ -220,7 +220,7 @@ class RunmeServer implements IServer {
     )
 
     if (!binaryExists || !isFile) {
-      throw new RunmeServerError('Cannot find server binary file')
+      throw new KernelServerError('Cannot find server binary file')
     }
 
     this.#port = getPortNumber()
@@ -293,7 +293,7 @@ class RunmeServer implements IServer {
               }
             }
           } catch (err: any) {
-            reject(new RunmeServerError(`Server failed, reason: ${(err as Error).message}`))
+            reject(new KernelServerError(`Server failed, reason: ${(err as Error).message}`))
           }
         }
 
@@ -329,7 +329,7 @@ class RunmeServer implements IServer {
     }
 
     const intervalSecs = ((iter * INTERVAL) / 1000).toFixed(1)
-    throw new RunmeServerError(`Server did not accept connections after ${intervalSecs}s`)
+    throw new KernelServerError(`Server did not accept connections after ${intervalSecs}s`)
   }
 
   /**
@@ -353,10 +353,10 @@ class RunmeServer implements IServer {
       addr = await this.start()
     } catch (e) {
       if (this.#retryOnFailure && this.#maxNumberOfIntents > intent) {
-        console.error(`Failed to start runme server, retrying. Error: ${(e as Error).message}`)
+        console.error(`Failed to start kernel server, retrying. Error: ${(e as Error).message}`)
         return this.launch(intent + 1)
       }
-      throw new RunmeServerError(`Cannot start server. Error: ${(e as Error).message}`)
+      throw new KernelServerError(`Cannot start server. Error: ${(e as Error).message}`)
     }
 
     await this.connect()
@@ -398,4 +398,4 @@ class RunmeServer implements IServer {
   }
 }
 
-export default RunmeServer
+export default KernelServer

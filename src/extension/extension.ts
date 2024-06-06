@@ -20,8 +20,8 @@ import {
 import { WebViews } from '../constants'
 
 import { Kernel } from './kernel'
-import RunmeServer from './server/runmeServer'
-import RunmeServerError from './server/runmeServerError'
+import KernelServer from './server/kernelServer'
+import KernelServerError from './server/kernelServerError'
 import {
   ToggleTerminalProvider,
   BackgroundTaskProvider,
@@ -86,7 +86,7 @@ export class RunmeExtension {
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
     const aiLogs = kernel.hasExperimentEnabled('aiLogs')
 
-    const server = new RunmeServer(
+    const server = new KernelServer(
       context.extensionUri,
       {
         retryOnFailure: true,
@@ -120,18 +120,18 @@ export class RunmeExtension {
     )
 
     /**
-     * Start the Runme server
+     * Start the Kernel server
      */
     try {
       await server.launch()
     } catch (e) {
       // Unrecoverable error happened
-      if (e instanceof RunmeServerError) {
+      if (e instanceof KernelServerError) {
         TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: e.message })
-        if (server.transportType === RunmeServer.transportTypeDefault) {
+        if (server.transportType === KernelServer.transportTypeDefault) {
           return window
             .showErrorMessage(
-              `Failed to start Runme server (reason: ${e.message}).` +
+              `Failed to start Kernel server (reason: ${e.message}).` +
                 ' Consider switching from TCP to Unix Domain Socket in Settings.',
               'Open Settings',
             )
@@ -143,7 +143,7 @@ export class RunmeExtension {
             })
         }
         return window
-          .showErrorMessage(`Failed to start Runme server. Reason: ${e.message}`)
+          .showErrorMessage(`Failed to start Kernel server. Reason: ${e.message}`)
           .then((action) => {
             if (!action) {
               return
@@ -152,7 +152,7 @@ export class RunmeExtension {
       }
       TelemetryReporter.sendTelemetryErrorEvent('extension.server', { data: (e as Error).message })
       return window.showErrorMessage(
-        'Failed to start Runme server, please try to reload the window. ' +
+        'Failed to start Kernel server, please try to reload the window. ' +
           `Reason: ${(e as any).message}`,
       )
     }

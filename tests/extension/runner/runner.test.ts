@@ -131,7 +131,7 @@ vi.mock('@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/run
   },
 }))
 
-class MockedRunmeServer {
+class MockedKernelServer {
   _onTransportReady = new EventEmitter<{ transport: GrpcTransport }>()
   _onClose = new EventEmitter<{ code: number | null }>()
 
@@ -789,7 +789,7 @@ function getMockedDuplex(session: GrpcRunnerProgramSession): MockedDuplexClientS
 }
 
 function createGrpcRunner(initialize = true) {
-  const server = new MockedRunmeServer()
+  const server = new MockedKernelServer()
   const runner = new GrpcRunner(server as any)
 
   if (initialize) {
@@ -800,7 +800,7 @@ function createGrpcRunner(initialize = true) {
 }
 
 function createGrpcRunnerClient(initialize = true) {
-  const server = new MockedRunmeServer()
+  const server = new MockedKernelServer()
   const client = new GrpcRunnerClient(server as any)
 
   if (initialize) {

@@ -589,18 +589,18 @@
           "runme.server.customAddress": {
             "type": "string",
             "scope": "window",
-            "markdownDescription": "Custom runme server address. This address will be used instead of launching the server at start. Use this only if you know what you are doing!"
+            "markdownDescription": "Custom kernel server address. This address will be used instead of launching the server at start. Use this only if you know what you are doing!"
           },
           "runme.server.binaryPath": {
             "type": "string",
             "scope": "window",
-            "markdownDescription": "Runme server path to binary. (It requires the GRPC interface enabled)"
+            "markdownDescription": "Kernel server path to binary. (It requires the GRPC interface enabled)"
           },
           "runme.server.enableLogger": {
             "type": "boolean",
             "scope": "machine",
             "default": false,
-            "markdownDescription": "Enable Runme server logs. (It requires the GRPC interface enabled)"
+            "markdownDescription": "Enable Kernel server logs. (It requires the GRPC interface enabled)"
           },
           "runme.server.tlsDir": {
             "type": "string",
