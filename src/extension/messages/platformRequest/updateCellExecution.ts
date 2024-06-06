@@ -8,16 +8,21 @@ import { getCellRunmeId, getPlatformAuthSession } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import { UpdateCellExecutionDocument } from '../../__generated-platform__/graphql'
 import { Kernel } from '../../kernel'
+import getLogger from '../../logger'
 
 type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
+
+const log = getLogger('UpdateCell')
 
 export default async function updateCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
+  log.info('Updating cell execution', message.output.data.id)
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+  log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`, message.output.data.id)
 
   try {
     const session = await getPlatformAuthSession()
@@ -46,8 +51,13 @@ export default async function updateCellExecution(
         },
       },
     })
+    log.info('Cell execution updated', message.output.data.id)
 
     const showEscalationButton = !!result.data?.updateCellExecution?.isSlackReady
+    log.info(
+      `showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`,
+      message.output.data.id,
+    )
 
     TelemetryReporter.sendTelemetryEvent('app.update')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
@@ -56,6 +66,7 @@ export default async function updateCellExecution(
       escalationButton: showEscalationButton,
     })
   } catch (error) {
+    log.error('Error updating cell execution', message.output.data.id, (error as Error).message)
     TelemetryReporter.sendTelemetryEvent('app.update.error')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,

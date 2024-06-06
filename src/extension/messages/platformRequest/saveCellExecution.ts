@@ -14,15 +14,20 @@ import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
 import { getAnnotations, getCellRunmeId, getPlatformAuthSession } from '../../utils'
+import getLogger from '../../logger'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
+
+const log = getLogger('SaveCell')
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
+  log.info('Saving cell execution')
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+  log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
@@ -100,8 +105,10 @@ export default async function saveCellExecution(
         },
       },
     })
+    log.info('Cell execution saved')
 
     const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady
+    log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
 
     TelemetryReporter.sendTelemetryEvent('app.save')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
@@ -110,6 +117,7 @@ export default async function saveCellExecution(
       escalationButton: showEscalationButton,
     })
   } catch (error) {
+    log.error('Error saving cell execution', (error as Error).message)
     TelemetryReporter.sendTelemetryEvent('app.error')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
