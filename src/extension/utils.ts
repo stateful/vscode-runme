@@ -166,30 +166,35 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
   return text.startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): string {
+export interface IExecKeyInfo {
+  key: string
+  uriResource: boolean
+}
+
+export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
   if (isDenoScript(runningCell)) {
-    return 'deno'
+    return { key: 'deno', uriResource: true }
   }
 
   if (isGitHubLink(runningCell)) {
-    return 'github'
+    return { key: 'github', uriResource: true }
   }
 
   if (new GCPResolver(runningCell.getText()).match()) {
-    return 'gcp'
+    return { key: 'gcp', uriResource: true }
   }
 
   if (new AWSResolver(runningCell.getText()).match()) {
-    return 'aws'
+    return { key: 'aws', uriResource: true }
   }
 
   const { languageId } = runningCell
 
   if (languageId === 'shellscript') {
-    return 'sh'
+    return { key: 'sh', uriResource: false }
   }
 
-  return languageId
+  return { key: languageId, uriResource: false }
 }
 
 export function normalizeLanguage(l?: string) {

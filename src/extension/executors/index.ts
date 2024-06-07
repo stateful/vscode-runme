@@ -25,6 +25,7 @@ export interface IKernelExecutorOptions {
   messaging: NotebookRendererMessaging
   envMgr: IEnvironmentManager
   cellText?: string
+  uriResource?: boolean
   runScript?: (exeResult?: string) => Promise<boolean>
 }
 
