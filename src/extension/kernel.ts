@@ -762,7 +762,12 @@ export class Kernel implements Disposable {
           return false
         }
 
-        if (e.message.includes('invalid ProgramName')) {
+        // cover runnerv1 and v2
+        if (
+          e.message.includes('invalid ProgramName') ||
+          e.message.includes('failed program lookup') ||
+          e.message.includes('unable to locate program')
+        ) {
           window.showErrorMessage(
             // eslint-disable-next-line max-len
             'Unable to locate interpreter specified in shebang (aka #!). Please check the cell\'s "Configure" foldout.',
