@@ -68,7 +68,7 @@ import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
 import { IRunner, IRunnerReady } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
-import { executeRunner } from './executors/runner'
+import { IKernelRunnerOptions, executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
 import {
   NotebookCellManager,
@@ -618,6 +618,47 @@ export class Kernel implements Disposable {
     return textDocument
   }
 
+  private async executeRunnerSafe(executor: IKernelRunnerOptions): Promise<boolean> {
+    return executeRunner(executor).catch((e) => {
+      if (e instanceof RpcError) {
+        if (e.message.includes('invalid LanguageId')) {
+          // todo(sebastian): provide "Configure" button to trigger foldout
+          window
+            .showWarningMessage(
+              // eslint-disable-next-line max-len
+              'Not every language is automatically executable. ' +
+                'Click below to learn what language runtimes are auto-detected. ' +
+                'You can also set an "interpreter" in the "Configure" foldout to define how this cell executes.',
+              'See Auto-Detected Languages',
+            )
+            .then((link) => {
+              if (!link) {
+                return
+              }
+              TelemetryReporter.sendTelemetryEvent('survey.shebangAutoDetectRedirect', {})
+              commands.executeCommand(
+                'vscode.open',
+                Uri.parse('https://runme.dev/redirect/shebang-auto-detect'),
+              )
+            })
+          return false
+        }
+
+        if (e.message.includes('invalid ProgramName')) {
+          window.showErrorMessage(
+            // eslint-disable-next-line max-len
+            'Unable to locate interpreter specified in shebang (aka #!). Please check the cell\'s "Configure" foldout.',
+          )
+          return false
+        }
+      }
+
+      window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
+      log.error('Internal failure executing runner', e.message)
+      return false
+    })
+  }
+
   private async _doExecuteCell(cell: NotebookCell): Promise<void> {
     const runningCell = await this.openAndWaitForTextDocument(cell.document.uri)
     if (!runningCell) {
@@ -647,82 +688,32 @@ export class Kernel implements Disposable {
     const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
-    if (
-      this.runner &&
-      // hard disable gRPC runner on windows
-      // TODO(mxs): support windows shells
-      !isWindows()
-    ) {
-      const runScript = (key: string = execKey) =>
-        executeRunner({
-          kernel: this,
-          doc: cell.document,
-          context: this.context,
-          runner: this.runner!,
-          exec,
-          runningCell,
-          messaging: this.messaging,
-          cellId: id,
-          execKey: key,
-          outputs,
-          runnerEnv: this.runnerEnv,
-          envMgr,
-        }).catch((e) => {
-          if (e instanceof RpcError) {
-            if (e.message.includes('invalid LanguageId')) {
-              // todo(sebastian): provide "Configure" button to trigger foldout
-              window
-                .showWarningMessage(
-                  // eslint-disable-next-line max-len
-                  'Not every language is automatically executable. ' +
-                    'Click below to learn what language runtimes are auto-detected. ' +
-                    'You can also set an "interpreter" in the "Configure" foldout to define how this cell executes.',
-                  'See Auto-Detected Languages',
-                )
-                .then((link) => {
-                  if (!link) {
-                    return
-                  }
-                  TelemetryReporter.sendTelemetryEvent('survey.shebangAutoDetectRedirect', {})
-                  commands.executeCommand(
-                    'vscode.open',
-                    Uri.parse('https://runme.dev/redirect/shebang-auto-detect'),
-                  )
-                })
-              return false
-            }
+    const runnerOpts = {
+      kernel: this,
+      doc: cell.document,
+      context: this.context,
+      runner: this.runner!,
+      exec,
+      runningCell,
+      messaging: this.messaging,
+      cellId: id,
+      execKey,
+      outputs,
+      runnerEnv: this.runnerEnv,
+      envMgr,
+    }
 
-            if (e.message.includes('invalid ProgramName')) {
-              window.showErrorMessage(
-                // eslint-disable-next-line max-len
-                'Unable to locate interpreter specified in shebang (aka #!). Please check the cell\'s "Configure" foldout.',
-              )
-              return false
-            }
-          }
+    // hard disable gRPC runner on windows
+    // TODO(sebastian): support windows shells
+    const supportsGrpcRunner = this.runner && !isWindows()
 
-          window.showErrorMessage(`Internal failure executing runner: ${e.message}`)
-          log.error('Internal failure executing runner', e.message)
-          return false
-        })
-
+    if (supportsGrpcRunner) {
       if (isShellLanguage(execKey) || !(execKey in executor)) {
-        successfulCellExecution = await runScript(execKey)
+        successfulCellExecution = await executeRunner(runnerOpts)
       } else {
         const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-        successfulCellExecution = await runUriResource({
-          kernel: this,
-          doc: cell.document,
-          context: this.context,
-          runner: this.runner!,
-          exec,
-          runningCell,
-          messaging: this.messaging,
-          cellId: id,
-          execKey: execKey,
-          outputs,
-          runnerEnv: this.runnerEnv,
-          envMgr,
+        const opts: IKernelRunnerOptions = {
+          ...runnerOpts,
           runScript: (text?: string) => {
             const cellText = text ?? runningCell.getText()
             return executorByKey({
@@ -738,7 +729,8 @@ export class Kernel implements Disposable {
               cellText,
             })
           },
-        })
+        }
+        successfulCellExecution = await runUriResource(opts)
       }
     } else if (execKey in executor) {
       /**
@@ -756,11 +748,10 @@ export class Kernel implements Disposable {
       })
     } else {
       window.showErrorMessage('Cell language is not executable')
-
       successfulCellExecution = false
     }
-    const annotations = getAnnotations(cell)
 
+    const annotations = getAnnotations(cell)
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
