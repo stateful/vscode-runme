@@ -391,14 +391,14 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
         const createdGist = await createGist({
           isPublic: false,
           files: {
-            [sessionId]: {
+            [fileName]: {
+              content: Buffer.from(bytes).toString('utf8'),
+            },
+            [`summary-${sessionId}`]: {
               content: Buffer.from(byRunmeFile)
                 .toString('utf8')
                 .replaceAll('%%file%%', `${originalFileName}.md`)
                 .replaceAll('%%session%%', sessionId.replace('.md', '')),
-            },
-            [fileName]: {
-              content: Buffer.from(bytes).toString('utf8'),
             },
           },
         })
@@ -414,7 +414,7 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
     )
 
     if (option === 'Open') {
-      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
+      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}`))
     }
   } catch (error) {
     gitShared = false
@@ -461,16 +461,16 @@ export async function createCellGistCommand(cell: NotebookCell, context: Extensi
           isPublic: false,
           files: {
             [`${markdownId}`]: {
-              content: Buffer.from(byRunmeFile)
-                .toString('utf8')
-                .replaceAll('%%file%%', `${originalFileName}.md`)
-                .replaceAll('%%session%%', sessionId.replace('.md', '')),
-            },
-            [`cell-${markdownId}`]: {
               content: Buffer.from(cellGistTemplate)
                 .toString('utf8')
                 .replaceAll('%%cell_text%%', cell.document.getText())
                 .replaceAll('%%language%%', cell.document.languageId),
+            },
+            [`summary-${markdownId}`]: {
+              content: Buffer.from(byRunmeFile)
+                .toString('utf8')
+                .replaceAll('%%file%%', `${originalFileName}.md`)
+                .replaceAll('%%session%%', sessionId.replace('.md', '')),
             },
           },
         })
@@ -486,7 +486,7 @@ export async function createCellGistCommand(cell: NotebookCell, context: Extensi
     )
 
     if (option === 'Open') {
-      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}#file-${fileName}`))
+      env.openExternal(Uri.parse(`${createGistProgress.data?.html_url}`))
     }
   } catch (error) {
     gitShared = false
