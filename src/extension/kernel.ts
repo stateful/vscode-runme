@@ -48,7 +48,12 @@ import {
 } from '../utils/configuration'
 
 import getLogger from './logger'
-import executor, { type IEnvironmentManager, ENV_STORE_MANAGER, IKernelExecutor } from './executors'
+import executor, {
+  type IEnvironmentManager,
+  ENV_STORE_MANAGER,
+  IKernelExecutor,
+  IKernelExecutorOptions,
+} from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
   getKey,
@@ -618,6 +623,116 @@ export class Kernel implements Disposable {
     return textDocument
   }
 
+  private async _doExecuteCell(cell: NotebookCell): Promise<void> {
+    const runningCell = await this.openAndWaitForTextDocument(cell.document.uri)
+    if (!runningCell) {
+      throw new Error(`Failed to open ${cell.document.uri}`)
+    }
+    const runmeExec = await this.createCellExecution(cell)
+
+    if (!runmeExec) {
+      log.warn('Unable to create execution')
+      return
+    }
+
+    const exec = runmeExec.underlyingExecution
+
+    const id = (cell.metadata as Serializer.Metadata)['runme.dev/id']
+
+    if (!id) {
+      throw new Error('Executable cell does not have ID field!')
+    }
+
+    TelemetryReporter.sendTelemetryEvent('cell.startExecute')
+    runmeExec.start(Date.now())
+    let execKey = getKey(runningCell)
+
+    let successfulCellExecution: boolean
+
+    const envMgr = this.getEnvironmentManager()
+    const outputs = await this.getCellOutputs(cell)
+
+    const runnerOpts: IKernelRunnerOptions = {
+      kernel: this,
+      doc: cell.document,
+      context: this.context,
+      runner: this.runner!,
+      exec,
+      runningCell,
+      messaging: this.messaging,
+      cellId: id,
+      execKey,
+      outputs,
+      runnerEnv: this.runnerEnv,
+      envMgr,
+    }
+
+    const executorOpts: IKernelExecutorOptions = {
+      context: this.context,
+      kernel: this,
+      runner: this.runner,
+      runnerEnv: this.runnerEnv,
+      doc: runningCell,
+      exec,
+      outputs,
+      messaging: this.messaging,
+      envMgr,
+      cellText: runningCell.getText(),
+    }
+
+    try {
+      successfulCellExecution = await this.executeCell(execKey, runnerOpts, executorOpts)
+    } catch (e: any) {
+      successfulCellExecution = false
+      log.error('Error executing cell', e.message)
+      window.showErrorMessage(e.message)
+    }
+
+    const annotations = getAnnotations(cell)
+    TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
+      'cell.success': successfulCellExecution?.toString(),
+      'cell.mimeType': annotations.mimeType,
+    })
+    runmeExec.end(successfulCellExecution, Date.now())
+  }
+
+  private async executeCell(
+    execKey: string,
+    runnerOpts: IKernelRunnerOptions,
+    executorOpts: IKernelExecutorOptions,
+  ): Promise<boolean> {
+    if (
+      this.runner &&
+      // hard disable gRPC runner on windows
+      // TODO(sebastian): support windows shells?
+      !isWindows()
+    ) {
+      if (isShellLanguage(execKey) || !(execKey in executor)) {
+        return this.executeRunnerSafe(runnerOpts)
+      }
+
+      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+      const opts: IKernelRunnerOptions = {
+        ...runnerOpts,
+        runScript: (text?: string) => {
+          const cellText = text || executorOpts.cellText
+          return executorByKey({ ...executorOpts, cellText })
+        },
+      }
+      return runUriResource(opts)
+    }
+
+    if (execKey in executor) {
+      /**
+       * check if custom notebook executor & renderer is available
+       */
+      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+      return executorByKey(executorOpts)
+    }
+
+    throw Error('Cell language is not executable')
+  }
+
   private async executeRunnerSafe(executor: IKernelRunnerOptions): Promise<boolean> {
     return executeRunner(executor).catch((e) => {
       if (e instanceof RpcError) {
@@ -657,106 +772,6 @@ export class Kernel implements Disposable {
       log.error('Internal failure executing runner', e.message)
       return false
     })
-  }
-
-  private async _doExecuteCell(cell: NotebookCell): Promise<void> {
-    const runningCell = await this.openAndWaitForTextDocument(cell.document.uri)
-    if (!runningCell) {
-      throw new Error(`Failed to open ${cell.document.uri}`)
-    }
-    const runmeExec = await this.createCellExecution(cell)
-
-    if (!runmeExec) {
-      log.warn('Unable to create execution')
-      return
-    }
-
-    const exec = runmeExec.underlyingExecution
-
-    const id = (cell.metadata as Serializer.Metadata)['runme.dev/id']
-
-    if (!id) {
-      throw new Error('Executable cell does not have ID field!')
-    }
-
-    TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    runmeExec.start(Date.now())
-    let execKey = getKey(runningCell)
-
-    let successfulCellExecution: boolean
-
-    const envMgr = this.getEnvironmentManager()
-    const outputs = await this.getCellOutputs(cell)
-
-    const runnerOpts = {
-      kernel: this,
-      doc: cell.document,
-      context: this.context,
-      runner: this.runner!,
-      exec,
-      runningCell,
-      messaging: this.messaging,
-      cellId: id,
-      execKey,
-      outputs,
-      runnerEnv: this.runnerEnv,
-      envMgr,
-    }
-
-    // hard disable gRPC runner on windows
-    // TODO(sebastian): support windows shells
-    const supportsGrpcRunner = this.runner && !isWindows()
-
-    if (supportsGrpcRunner) {
-      if (isShellLanguage(execKey) || !(execKey in executor)) {
-        successfulCellExecution = await executeRunner(runnerOpts)
-      } else {
-        const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-        const opts: IKernelRunnerOptions = {
-          ...runnerOpts,
-          runScript: (text?: string) => {
-            const cellText = text ?? runningCell.getText()
-            return executorByKey({
-              context: this.context,
-              kernel: this,
-              runner: this.runner,
-              runnerEnv: this.runnerEnv,
-              doc: runningCell,
-              exec,
-              outputs,
-              messaging: this.messaging,
-              envMgr,
-              cellText,
-            })
-          },
-        }
-        successfulCellExecution = await runUriResource(opts)
-      }
-    } else if (execKey in executor) {
-      /**
-       * check if user is running experiment to execute shell via runme cli
-       */
-      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-      successfulCellExecution = await executorByKey({
-        context: this.context,
-        kernel: this,
-        doc: runningCell,
-        exec,
-        outputs,
-        messaging: this.messaging,
-        envMgr,
-      })
-    } else {
-      window.showErrorMessage('Cell language is not executable')
-      successfulCellExecution = false
-    }
-
-    const annotations = getAnnotations(cell)
-    TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
-      'cell.success': successfulCellExecution?.toString(),
-      'cell.mimeType': annotations.mimeType,
-    })
-    runmeExec.end(successfulCellExecution, Date.now())
   }
 
   useRunner(runner: IRunner) {
