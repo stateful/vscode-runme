@@ -56,7 +56,7 @@ import executor, {
 } from './executors'
 import { DENO_ACCESS_TOKEN_KEY } from './constants'
 import {
-  getKey,
+  getKeyInfo,
   getAnnotations,
   hashDocumentUri,
   processEnviron,
@@ -611,7 +611,7 @@ export class Kernel implements Disposable {
     return await this.cellManager.getNotebookOutputs(cell)
   }
 
-  private async openAndWaitForTextDocument(uri: Uri): Promise<TextDocument | undefined> {
+  public async openAndWaitForTextDocument(uri: Uri): Promise<TextDocument | undefined> {
     let textDocument = await workspace.openTextDocument(uri)
     if (!textDocument) {
       textDocument = await new Promise((resolve) => {
@@ -645,7 +645,7 @@ export class Kernel implements Disposable {
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     runmeExec.start(Date.now())
-    let execKey = getKey(runningCell)
+    const { key: execKey, uriResource } = getKeyInfo(runningCell)
 
     let successfulCellExecution: boolean
 
@@ -677,11 +677,12 @@ export class Kernel implements Disposable {
       outputs,
       messaging: this.messaging,
       envMgr,
+      uriResource,
       cellText: runningCell.getText(),
     }
 
     try {
-      successfulCellExecution = await this.executeCell(execKey, runnerOpts, executorOpts)
+      successfulCellExecution = await this.executeCell(runnerOpts, executorOpts)
     } catch (e: any) {
       successfulCellExecution = false
       log.error('Error executing cell', e.message)
@@ -697,40 +698,42 @@ export class Kernel implements Disposable {
   }
 
   private async executeCell(
-    execKey: string,
     runnerOpts: IKernelRunnerOptions,
     executorOpts: IKernelExecutorOptions,
   ): Promise<boolean> {
-    if (
-      this.runner &&
-      // hard disable gRPC runner on windows
-      // TODO(sebastian): support windows shells?
-      !isWindows()
-    ) {
-      if (isShellLanguage(execKey) || !(execKey in executor)) {
-        return this.executeRunnerSafe(runnerOpts)
-      }
+    // hard disable gRPC runner on windows
+    // TODO(sebastian): support windows shells?
+    const supportsGrpcRunner = this.runner && !isWindows()
 
-      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-      const opts: IKernelRunnerOptions = {
-        ...runnerOpts,
-        runScript: (text?: string) => {
-          const cellText = text || executorOpts.cellText
-          return executorByKey({ ...executorOpts, cellText })
-        },
-      }
+    const execKey = runnerOpts.execKey
+    const hasExecutor = execKey in executor
+
+    if (supportsGrpcRunner && (isShellLanguage(execKey) || !hasExecutor)) {
+      return this.executeRunnerSafe(runnerOpts)
+    }
+
+    /**
+     * error if no custom notebook executor + renderer is available
+     */
+    if (!hasExecutor) {
+      throw Error('Cell language is not executable')
+    }
+
+    const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
+    const runScript = (text?: string) => {
+      const cellText = text || executorOpts.cellText
+      return executorByKey({ ...executorOpts, cellText })
+    }
+    const opts: IKernelRunnerOptions = {
+      ...runnerOpts,
+      runScript,
+    }
+
+    if (executorOpts.uriResource && supportsGrpcRunner) {
       return runUriResource(opts)
     }
 
-    if (execKey in executor) {
-      /**
-       * check if custom notebook executor & renderer is available
-       */
-      const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-      return executorByKey(executorOpts)
-    }
-
-    throw Error('Cell language is not executable')
+    return executorByKey(executorOpts)
   }
 
   private async executeRunnerSafe(executor: IKernelRunnerOptions): Promise<boolean> {

@@ -7,7 +7,7 @@ import simpleGit from 'simple-git'
 
 import {
   getTerminalByCell,
-  getKey,
+  getKeyInfo,
   normalizeLanguage,
   getAnnotations,
   mapGitIgnoreToGlobFolders,
@@ -125,30 +125,78 @@ test('getTerminalByCell', () => {
   ).toBeUndefined()
 })
 
-test('getKey', () => {
+test('getKeyInfo', () => {
   expect(
-    getKey({
+    getKeyInfo({
       getText: vi.fn().mockReturnValue('foobar'),
       languageId: 'barfoo',
     } as any),
-  ).toBe('barfoo')
+  ).toStrictEqual({
+    key: 'barfoo',
+    uriResource: false,
+  })
 
   expect(
-    getKey({
+    getKeyInfo({
       getText: vi.fn().mockReturnValue('deployctl deploy foobar'),
       languageId: 'something else',
     } as any),
-  ).toBe('deno')
+  ).toStrictEqual({
+    key: 'deno',
+    uriResource: true,
+  })
 
   expect(
-    getKey({
+    getKeyInfo({
+      getText: vi
+        .fn()
+        .mockReturnValue('https://github.com/stateful/vscode-runme/actions/workflows/release.yml'),
+      languageId: 'sh',
+    } as any),
+  ).toStrictEqual({
+    key: 'github',
+    uriResource: true,
+  })
+
+  expect(
+    getKeyInfo({
+      getText: vi
+        .fn()
+        .mockReturnValue(
+          'https://console.cloud.google.com/kubernetes/list/overview?project=runme-ci',
+        ),
+      languageId: 'sh',
+    } as any),
+  ).toStrictEqual({
+    key: 'gcp',
+    uriResource: true,
+  })
+
+  expect(
+    getKeyInfo({
+      getText: vi.fn().mockReturnValue(
+        // eslint-disable-next-line max-len
+        'https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
+      ),
+      languageId: 'sh',
+    } as any),
+  ).toStrictEqual({
+    key: 'aws',
+    uriResource: true,
+  })
+
+  expect(
+    getKeyInfo({
       getText: vi.fn().mockReturnValue(''),
       languageId: 'shellscript',
     } as any),
-  ).toBe('sh')
+  ).toStrictEqual({
+    key: 'sh',
+    uriResource: false,
+  })
 
   expect(
-    getKey({
+    getKeyInfo({
       getText: vi
         .fn()
         .mockReturnValue(
@@ -158,7 +206,10 @@ test('getKey', () => {
         ),
       languageId: 'sh',
     } as any),
-  ).toBe('sh')
+  ).toStrictEqual({
+    key: 'sh',
+    uriResource: false,
+  })
 })
 
 suite('normalizeLanguage', () => {

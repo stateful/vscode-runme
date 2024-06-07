@@ -15,7 +15,7 @@ vi.mock('vscode')
 vi.mock('vscode-telemetry')
 vi.mock('../../src/extension/utils', async () => {
   return {
-    getKey: vi.fn((cell) => cell.languageId),
+    getKeyInfo: vi.fn((cell) => ({ key: cell.languageId, uriResource: false })),
     getAnnotations: vi.fn((cell) => cell.metadata),
     getNotebookCategories: vi.fn().mockResolvedValue([]),
     isWindows: () => false,
@@ -355,6 +355,9 @@ suite('_doExecuteCell', () => {
       underlyingExecution: vi.fn(),
     })
     k.getCellOutputs = vi.fn().mockResolvedValue({})
+    k.openAndWaitForTextDocument = vi
+      .fn()
+      .mockImplementation(() => ({ languageId: 'foobar', getText: () => 'foobar cell' }))
 
     vi.mocked(workspace.openTextDocument).mockResolvedValueOnce({
       languageId: 'foobar',
@@ -383,6 +386,10 @@ suite('_doExecuteCell', () => {
       underlyingExecution: vi.fn(),
     })
     k.getCellOutputs = vi.fn().mockResolvedValue({})
+    k.openAndWaitForTextDocument = vi
+      .fn()
+      // languageId makes sure no executor is found
+      .mockImplementation(() => ({ languageId: undefined, getText: () => 'foobar cell' }))
 
     vi.mocked(workspace.openTextDocument).mockResolvedValueOnce({
       languageId: 'barfoo',
@@ -396,7 +403,9 @@ suite('_doExecuteCell', () => {
           mimeType: 'text/plain',
         },
       } as any)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
 
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.startExecute')
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.endExecute', {

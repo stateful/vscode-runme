@@ -29,6 +29,7 @@ export interface IKernelExecutorOptions {
   runner?: IRunner
   runnerEnv?: IRunnerEnvironment
   cellText?: string
+  uriResource?: boolean
   runScript?: (exeResult?: string) => Promise<boolean>
 }
 
