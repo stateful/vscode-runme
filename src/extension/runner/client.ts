@@ -21,7 +21,7 @@ import {
 } from '../grpc/runner/types'
 import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2alpha1'
 import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/client'
-import { IServer } from '../server/runmeServer'
+import { IServer } from '../server/kernelServer'
 
 import { IRunnerReady } from '.'
 

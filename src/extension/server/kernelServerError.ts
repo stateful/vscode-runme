@@ -1,11 +1,11 @@
-class RunmeServerError extends Error {
+class KernelServerError extends Error {
   constructor(message: string, err?: Error) {
     if (err) {
       message += `\nCaused by: ${err?.message}`
     }
     super(message)
-    this.name = 'RunmeServerError'
+    this.name = 'KernelServerError'
   }
 }
 
-export default RunmeServerError
+export default KernelServerError

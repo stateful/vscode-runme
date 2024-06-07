@@ -29,7 +29,7 @@ import { Serializer } from '../../types'
 import { getCodeLensEnabled, getCodeLensPasteIntoTerminalNewline } from '../../utils/configuration'
 import { RunmeExtension } from '../extension'
 import type { SurveyWinCodeLensRun } from '../survey'
-import IServer from '../server/runmeServer'
+import IServer from '../server/kernelServer'
 
 import { RunmeTaskProvider } from './runmeTask'
 

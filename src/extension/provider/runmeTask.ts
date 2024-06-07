@@ -36,7 +36,7 @@ import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
 import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
 import { Kernel } from '../kernel'
-import RunmeServer from '../server/runmeServer'
+import KernelServer from '../server/kernelServer'
 import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
 import { RunmeIdentity } from '../grpc/serializerTypes'
@@ -78,7 +78,7 @@ export class RunmeTaskProvider implements TaskProvider {
     private treeView: RunmeLauncherProvider,
     private serializer: SerializerBase,
     private kernel: Kernel,
-    private server: RunmeServer,
+    private server: KernelServer,
     private runner?: IRunner,
   ) {
     this.serverReadyListener = this.server.onTransportReady(({ transport }) =>
