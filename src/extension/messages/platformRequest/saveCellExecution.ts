@@ -13,7 +13,7 @@ import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
-import { getAnnotations, getCellRunmeId, getPlatformAuthSession } from '../../utils'
+import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 import getLogger from '../../logger'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
@@ -81,6 +81,8 @@ export default async function saveCellExecution(
       }
     }
 
+    const gitCtx = await getGitContext()
+
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
       variables: {
@@ -102,6 +104,9 @@ export default async function saveCellExecution(
           },
           id: annotations.id,
           notebook: notebookInput,
+          branch: gitCtx?.branch,
+          repository: gitCtx?.repository,
+          commit: gitCtx?.commit,
         },
       },
     })
