@@ -35,8 +35,12 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           //   renderError(payload.output.error)
           //   break
           // }
+          if (!payload.output?.cellId) {
+            return
+          }
 
           const daggerElem = document.createElement(RENDERERS.DaggerCli)
+          daggerElem.setAttribute('cellId', payload.output.cellId)
 
           const outputState = {
             ...payload.output,

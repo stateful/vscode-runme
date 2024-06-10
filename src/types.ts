@@ -149,6 +149,7 @@ export interface DaggerState {
   cli?: {
     status: string
     actions: string[]
+    returnType?: string
   }
 }
 
