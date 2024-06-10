@@ -534,14 +534,21 @@ export class Kernel implements Disposable {
 
     for (const cell of cells) {
       const annotations = getAnnotations(cell)
+
+      // Skip cells that are not assigned to requested category if requested
       if (
-        (totalCellsToExecute > 1 &&
-          this.category &&
-          !annotations.category.split(CATEGORY_SEPARATOR).includes(this.category)) ||
-        annotations.excludeFromRunAll
+        totalCellsToExecute > 1 &&
+        this.category &&
+        !annotations.category.split(CATEGORY_SEPARATOR).includes(this.category)
       ) {
         continue
       }
+
+      // skip cells that are excluded from run all
+      if (totalCellsToExecute > 1 && annotations.excludeFromRunAll) {
+        continue
+      }
+
       if (showConfirmPrompt) {
         const cellText = cell.document.getText()
         const cellLabel =
