@@ -1082,7 +1082,7 @@
     "@types/vscode-notebook-renderer": "^1.72.3",
     "@types/webpack-env": "^1.18.1",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.6.0",
+    "@typescript-eslint/parser": "^7.12.0",
     "@vitest/coverage-v8": "^1.2.2",
     "@vscode/vsce": "^2.21.0",
     "@wdio/cli": "^8.27.2",
