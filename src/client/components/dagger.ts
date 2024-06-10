@@ -8,7 +8,7 @@ import { RENDERERS, ClientMessages } from '../../constants'
 import { getContext } from '../utils'
 import { onClientMessage } from '../../utils/messaging'
 
-import { DaggerIcon } from './icons/dagger'
+import { DaggerIcon, DaggerLogo } from './icons/dagger'
 import './spinner'
 
 @customElement(RENDERERS.DaggerCli)
@@ -28,16 +28,20 @@ export class DaggerCli extends LitElement {
     vscode-button:focus {
       outline: #007fd4 1px solid;
     }
-    .icon {
+    .logo {
       width: 13px;
-      margin: 0 5px 0 -5px;
-      padding: 0;
+      padding-right: 4px;
+      scale: 1.5;
     }
 
-    .button-group {
+    .info {
+      margin: 5px 5px;
+      font-size: 1.4em;
+    }
+
+    .groups {
       display: flex;
-      flex-direction: row;
-      justify-content: end;
+      justify-content: space-between;
     }
 
     section {
@@ -47,6 +51,8 @@ export class DaggerCli extends LitElement {
       position: relative;
     }
   `
+  @property({ type: String })
+  cellId?: string
 
   @property({ type: Object })
   state: DaggerState = {}
@@ -55,12 +61,12 @@ export class DaggerCli extends LitElement {
     return this.state?.cli?.actions ?? []
   }
 
-  private get cellId(): string {
-    return this.state.cellId!
-  }
-
   private get active(): boolean {
     return this.state.cli?.status === undefined
+  }
+
+  private get returnedType(): string | undefined {
+    return this.state.cli?.returnType
   }
 
   private onAction(e: Event) {
@@ -74,8 +80,11 @@ export class DaggerCli extends LitElement {
   }
 
   #applyState(dagger: any) {
-    let actions: string[] = []
+    if (dagger.cellId !== this.cellId) {
+      return
+    }
 
+    let actions: string[] = []
     switch (dagger.state._type) {
       case 'Container':
         actions = ['As Service', 'Publish', 'Terminal', 'Entrypoint']
@@ -93,8 +102,10 @@ export class DaggerCli extends LitElement {
       cli: {
         status: 'complete',
         actions,
+        returnType: dagger.state._type,
       },
     }
+
     this.requestUpdate()
   }
 
@@ -123,15 +134,25 @@ export class DaggerCli extends LitElement {
   // Render the UI as a function of component state
   render() {
     return html`<section>
-      <div class="button-group">
-        ${when(
-          this.active,
-          () => html`<vscode-spinner />`,
-          () =>
-            this.actions.map((a) => {
-              return html`<dagger-button label=${a} @clicked="${this.onAction}" />`
-            }),
-        )}
+      <div class="groups">
+        <div class="info">
+          ${DaggerLogo}
+          ${when(
+            !this.active && this.returnedType,
+            () => html`Built ${this.returnedType}`,
+            () => html`Building`,
+          )}
+        </div>
+        <div>
+          ${when(
+            this.active,
+            () => html`<vscode-spinner />`,
+            () =>
+              this.actions.map((a) => {
+                return html`<dagger-button label=${a} @clicked="${this.onAction}" />`
+              }),
+          )}
+        </div>
       </div>
     </section>`
   }
