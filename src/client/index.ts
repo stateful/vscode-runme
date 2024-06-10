@@ -30,6 +30,28 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
           vercelElem.setAttribute('content', JSON.stringify(payload.output))
           element.appendChild(vercelElem)
           break
+        case OutputType.dagger:
+          // if (payload.output?.error) {
+          //   renderError(payload.output.error)
+          //   break
+          // }
+
+          const daggerElem = document.createElement(RENDERERS.DaggerCli)
+
+          const outputState = {
+            ...payload.output,
+            // for dev
+            ...{
+              cli: {
+                // status: 'running',
+                // actions: ['Entires', 'Directory', 'File', 'Glob', 'Export'],
+              },
+            },
+          }
+          daggerElem.setAttribute('state', JSON.stringify(outputState))
+
+          element.appendChild(daggerElem)
+          break
         case OutputType.deno:
           if (payload.output?.error) {
             renderError(payload.output.error)

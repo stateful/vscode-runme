@@ -14,7 +14,7 @@ import { Subject, debounceTime } from 'rxjs'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import getLogger from '../../logger'
-import { ClientMessages, NOTEBOOK_RUN_WITH_PROMPTS } from '../../../constants'
+import { ClientMessages, NOTEBOOK_RUN_WITH_PROMPTS, OutputType } from '../../../constants'
 import { ClientMessage } from '../../../types'
 import {
   IRunner,
@@ -79,6 +79,7 @@ export const executeRunner: IKernelRunner = async ({
   execKey,
   outputs,
   runnerEnv,
+  runScript,
 }: IKernelRunnerOptions) => {
   const {
     interactive,
@@ -111,6 +112,7 @@ export const executeRunner: IKernelRunner = async ({
       runnerEnv,
       runningCell,
       runner,
+      cellId,
     })
   } catch (err) {
     if (err instanceof RpcError && err.methodName === 'ResolveProgram') {
@@ -227,6 +229,11 @@ export const executeRunner: IKernelRunner = async ({
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
+    }
+
+    const t = OutputType[execKey as keyof typeof OutputType]
+    if (t) {
+      outputs.showOutput(t)
     }
 
     await outputs.showTerminal()
@@ -365,7 +372,7 @@ export const executeRunner: IKernelRunner = async ({
     await program.run()
   }
 
-  return await new Promise<boolean>(async (resolve, reject) => {
+  const main = await new Promise<boolean>(async (resolve, reject) => {
     const terminalState = outputs.getCellTerminalState()
     program.onDidClose(async (code) => {
       const pid = await program.pid
@@ -410,13 +417,20 @@ export const executeRunner: IKernelRunner = async ({
       }, BACKGROUND_TASK_HIDE_TIMEOUT)
     }
   })
+
+  let secondary = true
+  if (runScript) {
+    secondary = await runScript()
+  }
+
+  return main && secondary
 }
 
-type IResolveRunProgram = (resovler: IResolveRunProgramOptions) => Promise<RunProgramOptions>
+type IResolveRunProgram = (resolver: IResolveRunProgramOptions) => Promise<RunProgramOptions>
 
 type IResolveRunProgramOptions = { runner: IRunner } & Pick<
   IKernelRunnerOptions,
-  'exec' | 'execKey' | 'runnerEnv' | 'runningCell'
+  'exec' | 'execKey' | 'runnerEnv' | 'runningCell' | 'cellId'
 >
 
 export const resolveProgramOptionsScript: IResolveRunProgram = async ({
@@ -425,10 +439,17 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   exec,
   execKey,
   runningCell,
+  cellId,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
   const { promptEnv } = getAnnotations(exec.cell)
   const forceInputPrompt = ContextState.getKey(NOTEBOOK_RUN_WITH_PROMPTS)
-  const script = exec.cell.document.getText()
+  let script = exec.cell.document.getText()
+
+  // temp hack for dagger integration
+  if (execKey === 'dagger' && !script.includes(' --help')) {
+    const varName = `DAGGER_${cellId}`
+    script = 'export ' + varName + '=$(' + script + ')'
+  }
 
   const { PROMPT_ALL, SKIP_ALL } = ResolveProgramRequest_ModeEnum()
 

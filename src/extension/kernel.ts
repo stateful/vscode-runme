@@ -645,7 +645,7 @@ export class Kernel implements Disposable {
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     runmeExec.start(Date.now())
-    const { key: execKey, uriResource } = getKeyInfo(runningCell)
+    const { key: execKey, resource } = getKeyInfo(runningCell)
 
     let successfulCellExecution: boolean
 
@@ -665,6 +665,7 @@ export class Kernel implements Disposable {
       outputs,
       runnerEnv: this.runnerEnv,
       envMgr,
+      resource,
     }
 
     const executorOpts: IKernelExecutorOptions = {
@@ -677,7 +678,7 @@ export class Kernel implements Disposable {
       outputs,
       messaging: this.messaging,
       envMgr,
-      uriResource,
+      resource,
       cellText: runningCell.getText(),
     }
 
@@ -708,7 +709,7 @@ export class Kernel implements Disposable {
     const execKey = runnerOpts.execKey
     const hasExecutor = execKey in executor
 
-    if (supportsGrpcRunner && (isShellLanguage(execKey) || !hasExecutor)) {
+    if (supportsGrpcRunner && isShellLanguage(execKey) && executorOpts.resource === 'None') {
       return this.executeRunnerSafe(runnerOpts)
     }
 
@@ -720,17 +721,45 @@ export class Kernel implements Disposable {
     }
 
     const executorByKey: IKernelExecutor = executor[execKey as keyof typeof executor]
-    const runScript = (text?: string) => {
-      const cellText = text || executorOpts.cellText
-      return executorByKey({ ...executorOpts, cellText })
-    }
-    const opts: IKernelRunnerOptions = {
-      ...runnerOpts,
-      runScript,
+    if (executorOpts.resource === 'URI' && supportsGrpcRunner) {
+      const runScript = (text?: string) => {
+        const cellText = text || executorOpts.cellText
+        return executorByKey({ ...executorOpts, cellText })
+      }
+      const opts: IKernelRunnerOptions = {
+        ...runnerOpts,
+        runScript,
+      }
+      return runUriResource(opts)
     }
 
-    if (executorOpts.uriResource && supportsGrpcRunner) {
-      return runUriResource(opts)
+    if (execKey === 'dagger' && supportsGrpcRunner) {
+      const notify = (daggerJson?: string): Promise<boolean> => {
+        try {
+          const daggerJsonParsed = JSON.parse(daggerJson || '')
+          daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.syncDaggerState>>{
+                type: ClientMessages.syncDaggerState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  state: daggerJsonParsed,
+                },
+              })
+              .then(() => resolve(true))
+          })
+        } catch (e) {
+          // not a fatal error
+          console.error(e)
+          return Promise.resolve(true)
+        }
+      }
+      const runSecondary = () => {
+        return runUriResource({ ...runnerOpts, runScript: notify })
+      }
+      return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
     }
 
     return executorByKey(executorOpts)

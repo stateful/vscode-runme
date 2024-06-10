@@ -144,6 +144,14 @@ export interface GitHubState {
   environments?: RepositoryEnvironments
 }
 
+export interface DaggerState {
+  cellId?: string
+  cli?: {
+    status: string
+    actions: string[]
+  }
+}
+
 export interface StringIndexable {
   [key: string]: any
 }
@@ -355,6 +363,7 @@ interface Payload {
     | GcpCloudRunServicesState
     | GcpCloudRunRevisionsState
   [OutputType.aws]?: AWSState
+  [OutputType.dagger]?: DaggerState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -601,6 +610,11 @@ export interface ClientMessagePayload {
     cluster: string
     region: string
     action: AWSActionType
+  }
+  [ClientMessages.syncDaggerState]: {
+    id: string
+    cellId: string
+    state: DaggerState
   }
 }
 
