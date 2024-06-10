@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { RunProgramOptions } from '../runner'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
@@ -11,6 +10,8 @@ export const uri: IKernelRunner = async ({
   execKey,
   runnerEnv,
   runScript,
+  cellId,
+  resource,
 }: IKernelRunnerOptions) => {
   const programOptions: RunProgramOptions = await resolveProgramOptionsScript({
     exec,
@@ -18,16 +19,27 @@ export const uri: IKernelRunner = async ({
     runnerEnv,
     runningCell,
     runner,
+    cellId,
   })
 
   // todo(sebastian): move down into kernel?
-  switch (programOptions.exec?.type) {
-    case 'script':
-      {
-        const { script } = programOptions.exec
-        programOptions.exec.script = `echo "${script}"`
-      }
-      break
+  if (resource === 'URI') {
+    switch (programOptions.exec?.type) {
+      case 'script':
+        {
+          const { script } = programOptions.exec
+          programOptions.exec.script = `echo "${script}"`
+        }
+        break
+    }
+  }
+
+  if (resource === 'Dagger') {
+    const varName = `$DAGGER_${cellId}`
+    programOptions.exec = {
+      type: 'script',
+      script: `echo ${varName}`,
+    }
   }
 
   const program = await runner.createProgramSession(programOptions)

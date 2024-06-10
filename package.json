@@ -519,7 +519,8 @@
           "stateful.runme/error",
           "stateful.runme/github-stdout",
           "stateful.runme/gcp",
-          "stateful.runme/aws"
+          "stateful.runme/aws",
+          "stateful.runme/dagger"
         ],
         "requiresMessaging": "optional"
       }

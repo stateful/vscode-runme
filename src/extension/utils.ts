@@ -166,35 +166,44 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
   return text.trimStart().startsWith('https://github.com') && isWorkflowUrl
 }
 
+export function isDaggerCli(text: string): boolean {
+  return text.trimStart().startsWith('dagger ')
+}
+
+export type ExecResourceType = 'None' | 'URI' | 'Dagger'
 export interface IExecKeyInfo {
   key: string
-  uriResource: boolean
+  resource: ExecResourceType
 }
 
 export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
+  if (isDaggerCli(runningCell.getText())) {
+    return { key: 'dagger', resource: 'Dagger' }
+  }
+
   if (isDenoScript(runningCell)) {
-    return { key: 'deno', uriResource: true }
+    return { key: 'deno', resource: 'URI' }
   }
 
   if (isGitHubLink(runningCell)) {
-    return { key: 'github', uriResource: true }
+    return { key: 'github', resource: 'URI' }
   }
 
   if (new GCPResolver(runningCell.getText()).match()) {
-    return { key: 'gcp', uriResource: true }
+    return { key: 'gcp', resource: 'URI' }
   }
 
   if (new AWSResolver(runningCell.getText()).match()) {
-    return { key: 'aws', uriResource: true }
+    return { key: 'aws', resource: 'URI' }
   }
 
   const { languageId } = runningCell
 
   if (languageId === 'shellscript') {
-    return { key: 'sh', uriResource: false }
+    return { key: 'sh', resource: 'None' }
   }
 
-  return { key: languageId, uriResource: false }
+  return { key: languageId, resource: 'None' }
 }
 
 export function normalizeLanguage(l?: string) {
