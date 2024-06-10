@@ -200,7 +200,6 @@ helm uninstall $NGINX_INGRESS_CONTROLLER_RELEASE_NAME
 ### Single line
 
 ```sh {"id":"01HTZB059ZFK301922Y0ASXB4P","name":"set-kubeconfig","promptEnv":"yes","terminalRows":"2"}
-#!/bin/bash
 export KUBECONFIG=Insert kubeconfig file path
 ```
 
