@@ -29,8 +29,8 @@ export class DaggerCli extends LitElement {
     ])
     this.actionsMap.set('Directory', [
       { label: 'Entires', action: 'entries' },
-      { label: 'Directory', action: 'directory' },
-      { label: 'File', action: 'file' },
+      { label: 'Directory', action: 'directory', argument: 'path' },
+      { label: 'File', action: 'file', argument: 'path' },
       { label: 'Glob', action: 'glob' },
       // { label: 'Export', action: 'export' },
     ])
