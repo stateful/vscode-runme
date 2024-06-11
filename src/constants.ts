@@ -68,7 +68,8 @@ export enum ClientMessages {
   gcpCloudRunAction = 'gcp:cloudRunAction',
   gcpLoadServices = 'gcp:loadServices',
   gcpServicesLoaded = 'gcp:servicesLoaded',
-  syncDaggerState = 'dagger:syncState',
+  daggerSyncState = 'dagger:syncState',
+  daggerCliAction = 'dagger:cliAction',
 }
 
 // [pretty print, languageId, destination]
