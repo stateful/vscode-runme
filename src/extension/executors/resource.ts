@@ -1,4 +1,5 @@
 import { RunProgramOptions } from '../runner'
+import { getAnnotations } from '../utils'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
 
@@ -21,6 +22,7 @@ export const uri: IKernelRunner = async ({
     runner,
     cellId,
   })
+  const { name: knownName } = getAnnotations(exec.cell)
 
   // todo(sebastian): move down into kernel?
   if (resource === 'URI') {
@@ -35,10 +37,22 @@ export const uri: IKernelRunner = async ({
   }
 
   if (resource === 'Dagger') {
-    const varName = `$DAGGER_${cellId}`
+    const varDaggerCellId = `$DAGGER_${cellId}`
+
+    const printDaggerCellId = `echo ${varDaggerCellId}`
     programOptions.exec = {
       type: 'script',
-      script: `echo ${varName}`,
+      script: printDaggerCellId,
+    }
+
+    if (knownName) {
+      const varDaggerCellName = `DAGGER_ID_${knownName}`
+      programOptions.exec.script =
+        `export ${varDaggerCellName}` +
+        '=$(' +
+        printDaggerCellId +
+        ' | jq -j .id);' +
+        ` ${printDaggerCellId}`
     }
   }
 
