@@ -712,7 +712,11 @@ export class Kernel implements Disposable {
     const execKey = runnerOpts.execKey
     const hasExecutor = execKey in executor
 
-    if (supportsGrpcRunner && isShellLanguage(execKey) && executorOpts.resource === 'None') {
+    if (
+      supportsGrpcRunner &&
+      (isShellLanguage(execKey) || !hasExecutor) &&
+      executorOpts.resource === 'None'
+    ) {
       return this.executeRunnerSafe(runnerOpts)
     }
 
