@@ -130,7 +130,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'barfoo',
-    uriResource: false,
+    resource: 'None',
   })
 
   expect(
@@ -140,7 +140,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'deno',
-    uriResource: true,
+    resource: 'URI',
   })
 
   expect(
@@ -152,7 +152,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'github',
-    uriResource: true,
+    resource: 'URI',
   })
 
   expect(
@@ -166,7 +166,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'gcp',
-    uriResource: true,
+    resource: 'URI',
   })
 
   expect(
@@ -179,7 +179,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'aws',
-    uriResource: true,
+    resource: 'URI',
   })
 
   expect(
@@ -189,7 +189,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'sh',
-    uriResource: false,
+    resource: 'None',
   })
 })
 
