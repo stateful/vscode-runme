@@ -147,7 +147,8 @@ export interface GitHubState {
 export type DaggerStateAction = {
   label: string
   action: string
-  command: string
+  argument?: string
+  command?: string
 }
 
 export interface DaggerState {
@@ -156,6 +157,7 @@ export interface DaggerState {
     status: string
     actions: [DaggerStateAction]
     returnType?: string
+    returnText?: string
   }
 }
 
@@ -630,6 +632,7 @@ export interface ClientMessagePayload {
   [ClientMessages.daggerCliAction]: {
     cellId: string
     command: string
+    argument?: string
   }
 }
 

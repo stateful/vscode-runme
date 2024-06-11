@@ -512,7 +512,37 @@ export class Kernel implements Disposable {
         message,
       })
     } else if (message.type === ClientMessages.daggerCliAction) {
-      return insertCodeCell(message.output.cellId, editor, message.output.command, 'sh', false)
+      let args: string[] = []
+      switch (message.output.argument) {
+        case 'path':
+          const loc = await window.showSaveDialog({
+            title: 'Specify path please',
+          })
+          if (loc) {
+            args.push('--path')
+            const dir = path.dirname(editor.notebook.uri.fsPath)
+            const idx = loc.fsPath.lastIndexOf(dir)
+            if (idx >= 0) {
+              args.push(loc.fsPath.substring(idx + dir.length + 1))
+            } else {
+              args.push(loc.fsPath)
+            }
+            break
+          }
+          return
+        case 'address':
+          const address = await window.showInputBox({
+            prompt: 'Specify the address please',
+          })
+          if (address) {
+            args.push('--address')
+            args.push(address)
+            break
+          }
+          return
+      }
+      const cellText = `${message.output.command} ${args.join(' ')}`
+      return insertCodeCell(message.output.cellId, editor, cellText, 'sh', false)
     } else if (message.type.startsWith('terminal:')) {
       return
     }
