@@ -144,11 +144,17 @@ export interface GitHubState {
   environments?: RepositoryEnvironments
 }
 
+export type DaggerStateAction = {
+  label: string
+  action: string
+  command: string
+}
+
 export interface DaggerState {
   cellId?: string
   cli?: {
     status: string
-    actions: string[]
+    actions: [DaggerStateAction]
     returnType?: string
   }
 }
@@ -612,10 +618,18 @@ export interface ClientMessagePayload {
     region: string
     action: AWSActionType
   }
-  [ClientMessages.syncDaggerState]: {
+
+  [ClientMessages.daggerSyncState]: {
     id: string
     cellId: string
-    state: DaggerState
+    text?: string
+    json?: any
+    state?: DaggerState
+  }
+
+  [ClientMessages.daggerCliAction]: {
+    cellId: string
+    command: string
   }
 }
 

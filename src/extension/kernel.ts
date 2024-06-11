@@ -80,6 +80,7 @@ import {
   NotebookCellOutputManager,
   RunmeNotebookCellExecution,
   getCellById,
+  insertCodeCell,
 } from './cell'
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
@@ -510,6 +511,8 @@ export class Kernel implements Disposable {
         editor,
         message,
       })
+    } else if (message.type === ClientMessages.daggerCliAction) {
+      return insertCodeCell(message.output.cellId, editor, message.output.command, 'sh', false)
     } else if (message.type.startsWith('terminal:')) {
       return
     }
@@ -734,26 +737,39 @@ export class Kernel implements Disposable {
     }
 
     if (execKey === 'dagger' && supportsGrpcRunner) {
-      const notify = (daggerJson?: string): Promise<boolean> => {
+      const notify = (res?: string): Promise<boolean> => {
         try {
-          const daggerJsonParsed = JSON.parse(daggerJson || '')
+          const daggerJsonParsed = JSON.parse(res || '{}')
           daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
           return new Promise<boolean>((resolve) => {
             this.messaging
-              .postMessage(<ClientMessage<ClientMessages.syncDaggerState>>{
-                type: ClientMessages.syncDaggerState,
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
                 output: {
                   id: runnerOpts.cellId,
                   cellId: runnerOpts.cellId,
-                  state: daggerJsonParsed,
+                  json: daggerJsonParsed,
                 },
               })
               .then(() => resolve(true))
           })
         } catch (e) {
           // not a fatal error
-          console.error(e)
-          return Promise.resolve(true)
+          if (e instanceof Error) {
+            console.error(e.message)
+          }
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  text: res,
+                },
+              })
+              .then(() => resolve(true))
+          })
         }
       }
       const runSecondary = () => {

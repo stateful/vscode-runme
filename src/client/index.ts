@@ -44,11 +44,9 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
 
           const outputState = {
             ...payload.output,
-            // for dev
             ...{
               cli: {
-                // status: 'running',
-                // actions: ['Entires', 'Directory', 'File', 'Glob', 'Export'],
+                status: 'active',
               },
             },
           }
