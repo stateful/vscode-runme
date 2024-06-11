@@ -1057,7 +1057,7 @@
     "build": "run-s build:dev",
     "build:dev": "webpack --mode development --node-env development",
     "build:prod": "webpack --mode production --node-env production",
-    "bundle": "vsce package --pre-release --no-git-tag-version --no-update-package-json -o \"./runme-$npm_package_version.vsix\"",
+    "bundle": "vsce package --pre-release --no-git-tag-version --no-update-package-json -o \"./runme-extension.vsix\"",
     "download:wasm": "node .github/scripts/downloadWasm.js",
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "run-s postinstall:*",

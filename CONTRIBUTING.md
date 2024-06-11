@@ -148,6 +148,13 @@ export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-si
 npm run build
 ```
 
+And then package the extension into a .vsix file:
+
+```sh {"id":"01J04FQ8WSEVTDVS05VPZMKAYJ","name":"bundle","promptEnv":"no"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
+npm run bundle
+```
+
 ### Test Project
 
 The Runme project has several test stages that you can run individually or as a whole:
