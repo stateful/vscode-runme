@@ -2,6 +2,7 @@ import { LitElement, TemplateResult, css, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable } from 'vscode'
+import { filesize } from 'filesize'
 
 import { DaggerState, DaggerStateAction } from '../../types'
 import { RENDERERS, ClientMessages } from '../../constants'
@@ -14,6 +15,32 @@ import './spinner'
 @customElement(RENDERERS.DaggerCli)
 export class DaggerCli extends LitElement {
   protected disposables: Disposable[] = []
+  protected actionsMap = new Map<string, DaggerStateAction[]>()
+
+  constructor() {
+    super()
+
+    // could be queried from the engine dynamically or at startup
+    this.actionsMap.set('Container', [
+      { label: 'Platform', action: 'platform' },
+      { label: 'Workdir', action: 'workdir' },
+      { label: 'Publish', action: 'publish', argument: 'address' },
+      { label: 'Terminal', action: 'terminal' },
+    ])
+    this.actionsMap.set('Directory', [
+      { label: 'Entires', action: 'entries' },
+      { label: 'Directory', action: 'directory' },
+      { label: 'File', action: 'file' },
+      { label: 'Glob', action: 'glob' },
+      // { label: 'Export', action: 'export' },
+    ])
+    this.actionsMap.set('File', [
+      { label: 'Name', action: 'name' },
+      { label: 'Size', action: 'size' },
+      { label: 'Contents', action: 'contents' },
+      { label: 'Export', action: 'export', argument: 'path' },
+    ])
+  }
 
   // Define scoped styles right with your component, in plain CSS
   static styles = css`
@@ -44,6 +71,10 @@ export class DaggerCli extends LitElement {
       justify-content: space-between;
     }
 
+    .groups span {
+      font-family: Courier, monospace;
+    }
+
     section {
       display: flex;
       flex-direction: column;
@@ -57,6 +88,10 @@ export class DaggerCli extends LitElement {
   @property({ type: Object })
   state: DaggerState = {}
 
+  public static humandReadableSize(size: number) {
+    return filesize(size, { standard: 'jedec' })
+  }
+
   private get actions(): DaggerStateAction[] {
     return this.state?.cli?.actions ?? []
   }
@@ -67,6 +102,18 @@ export class DaggerCli extends LitElement {
 
   private get returnedType(): string | undefined {
     return this.state.cli?.returnType
+  }
+
+  private get done(): TemplateResult<1> {
+    if (this.state.cli?.returnText !== undefined) {
+      let text = this.state.cli.returnText
+      const num = Number(text)
+      if (isFinite(num)) {
+        text = DaggerCli.humandReadableSize(num)
+      }
+      return html`Result: <span>${text}</span>`
+    }
+    return html`Done`
   }
 
   private onAction(a: DaggerStateAction) {
@@ -85,6 +132,7 @@ export class DaggerCli extends LitElement {
         postClientMessage(ctx, ClientMessages.daggerCliAction, {
           cellId: this.cellId!,
           command,
+          argument: a.argument,
         })
     }
   }
@@ -99,40 +147,31 @@ export class DaggerCli extends LitElement {
         cellId: dagger.cellId,
         cli: {
           status: 'complete',
+          returnText: dagger.text,
         },
       }
       return
     }
 
     const command = dagger.json?.runme.cellText
-    let actions: DaggerStateAction[] = []
-    switch (dagger.json?._type) {
-      case 'Container':
-        actions = [
-          { command, label: 'As Service', action: 'as-service' },
-          { command, label: 'Publish', action: 'publish' },
-          { command, label: 'Terminal', action: 'terminal' },
-          { command, label: 'Entrypoint', action: 'entrypoint' },
-        ]
-        break
-      case 'Directory':
-        actions = [
-          { command, label: 'Entires', action: 'entries' },
-          { command, label: 'Directory', action: 'directory' },
-          { command, label: 'File', action: 'file' },
-          { command, label: 'Glob', action: 'glob' },
-          { command, label: 'Export', action: 'export' },
-        ]
-        break
-      case 'File':
-        actions = [
-          { command, label: 'Name', action: 'name' },
-          { command, label: 'Size', action: 'size' },
-          { command, label: 'Contents', action: 'contents' },
-          { command, label: 'Export', action: 'export' },
-        ]
-        break
-    }
+    const actions = this.actionsMap.get(dagger.json?._type) || []
+    actions.forEach((a) => {
+      Object.entries(dagger.json).forEach(([k, v]) => {
+        if (k === a.action) {
+          switch (typeof v) {
+            case 'string':
+              a.label += `: "${v}"`
+              return
+            case 'number':
+              a.label += `: ${DaggerCli.humandReadableSize(v)}`
+              return
+            default:
+              return
+          }
+        }
+      })
+      a.command = command
+    })
 
     this.state = <DaggerState>{
       cellId: dagger.cellId,
@@ -173,7 +212,7 @@ export class DaggerCli extends LitElement {
     const status = when(
       !this.running && this.returnedType,
       () => html`${this.returnedType} ready`,
-      () => (this.running ? html`Running` : html`Done`),
+      () => (this.running ? html`Running` : this.done),
     )
     return html`<section>
       <div class="groups">
