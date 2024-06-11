@@ -31,8 +31,7 @@ export default defineConfig({
       ],
       thresholds: {
         statements: 43,
-        // Temporary sert to 70
-        branches: 70,
+        branches: 79,
         functions: 32,
         lines: 43,
       }
