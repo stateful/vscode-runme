@@ -515,6 +515,18 @@ export class Kernel implements Disposable {
       let args: string[] = []
       switch (message.output.argument) {
         case 'path':
+          if (!message.output.command.trimEnd().includes('export')) {
+            const remotePath = await window.showInputBox({
+              title: 'Specify path please',
+            })
+            if (!remotePath) {
+              return
+            }
+            args.push('--path')
+            args.push(remotePath || '')
+            break
+          }
+
           const loc = await window.showSaveDialog({
             title: 'Specify path please',
           })
