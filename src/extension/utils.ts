@@ -168,7 +168,8 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
 }
 
 export function isDaggerCli(text: string): boolean {
-  return text.trimStart().startsWith('dagger ')
+  const trimmed = text.trimStart()
+  return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
 }
 
 export type ExecResourceType = 'None' | 'URI' | 'Dagger'

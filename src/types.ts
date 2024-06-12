@@ -101,6 +101,7 @@ export namespace Serializer {
     ['runme.dev/nameGenerated']?: string
     ['runme.dev/id']?: string
     ['runme.dev/denoState']?: DenoState
+    ['runme.dev/daggerState']?: DaggerState
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState
     [RUNME_FRONTMATTER_PARSED]?: Grpc.Frontmatter
