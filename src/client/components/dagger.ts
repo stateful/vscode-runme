@@ -40,6 +40,7 @@ export class DaggerCli extends LitElement {
       { label: 'Contents', action: 'contents' },
       { label: 'Export', action: 'export', argument: 'path' },
     ])
+    this.actionsMap.set('Secret', [{ label: 'Name', action: 'name' }])
   }
 
   // Define scoped styles right with your component, in plain CSS
