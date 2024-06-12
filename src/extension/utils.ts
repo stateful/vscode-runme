@@ -769,9 +769,9 @@ export async function getGitContext() {
     const commit = await git.revparse(['HEAD'])
 
     return {
-      repository,
-      branch,
-      commit,
+      repository: repository.trim(),
+      branch: branch.trim(),
+      commit: commit.trim(),
     }
   } catch (error) {
     log.info('Running in a non-git context', (error as Error).message)
