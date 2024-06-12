@@ -1,5 +1,5 @@
 import { RunProgramOptions } from '../runner'
-import { getAnnotations } from '../utils'
+import { getAnnotations, isValidEnvVarName } from '../utils'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
 
@@ -45,7 +45,7 @@ export const uri: IKernelRunner = async ({
       script: printDaggerCellId,
     }
 
-    if (knownName) {
+    if (knownName && isValidEnvVarName(knownName)) {
       const varDaggerCellName = `DAGGER_ID_${knownName}`
       programOptions.exec.script =
         `export ${varDaggerCellName}` +
