@@ -201,6 +201,8 @@ eslint src tests --ext ts --fix
 
 We use [Vitest](https://vitest.dev/) for running unit tests via:
 
+In case you experience a "Cannot find module '@buf/stateful'" error, it's probably caused because of a nvm cache issue, you can try clearing removing node_modules and reinstalling the dependencies. In case the issue persists, do a fresh clone of the repository. The issue is probably caused by nvm caching the wrong version of the package.
+
 ```sh {"id":"01HF7VQMH8ESX1EFV4PT2KN303","name":"test:unit","promptEnv":"no"}
 export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npx vitest -c ./vitest.conf.ts --run

@@ -3,6 +3,7 @@ import path from 'node:path'
 import vscode, { ExtensionContext, FileType, Uri, commands, workspace } from 'vscode'
 import { expect, vi, test, beforeEach, beforeAll, afterAll, suite } from 'vitest'
 import { ulid } from 'ulidx'
+import simpleGit from 'simple-git'
 
 import {
   getTerminalByCell,
@@ -27,10 +28,12 @@ import {
   convertEnvList,
   asWorkspaceRelativePath,
   editJsonc,
+  getGitContext,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
 
+vi.mock('simple-git')
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
@@ -682,5 +685,39 @@ suite('editJsonC', () => {
       'stateful.runme',
     )
     expect(result).toStrictEqual(expectedUpdatedJson)
+  })
+})
+
+suite('getGitContext', () => {
+  test('should return the correct git context', async () => {
+    const gitMock = {
+      branch: vi.fn().mockResolvedValue({ current: 'main' }),
+      listRemote: vi.fn().mockResolvedValue('https://github.com/user/repo.git'),
+      revparse: vi.fn().mockResolvedValue('commit-hash'),
+    }
+
+    vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
+
+    const { branch, commit, repository } = await getGitContext()
+
+    expect(branch).toBe('main')
+    expect(commit).toBe('commit-hash')
+    expect(repository).toBe('https://github.com/user/repo.git')
+  })
+
+  test('should return null values if there is an error', async () => {
+    const gitMock = {
+      branch: vi.fn().mockRejectedValue(new Error('branch error')),
+      listRemote: vi.fn().mockRejectedValue(new Error('listRemote error')),
+      revparse: vi.fn().mockRejectedValue(new Error('revparse error')),
+    }
+
+    vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
+
+    const { branch, commit, repository } = await getGitContext()
+
+    expect(branch).toBe(null)
+    expect(commit).toBe(null)
+    expect(repository).toBe(null)
   })
 })

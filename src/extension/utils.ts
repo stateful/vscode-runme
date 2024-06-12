@@ -1,5 +1,5 @@
-import path from 'node:path'
 import util from 'node:util'
+import path from 'node:path'
 import cp from 'node:child_process'
 import os from 'node:os'
 
@@ -25,6 +25,7 @@ import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
 import dotenv from 'dotenv'
 import { applyEdits, format, modify } from 'jsonc-parser'
+import simpleGit from 'simple-git'
 
 import {
   CellAnnotations,
@@ -752,4 +753,33 @@ export function editJsonc(
 
 export function isValidEnvVarName(name: string): boolean {
   return new RegExp('^[A-Z_][A-Z0-9_]{1}[A-Z0-9_]*[A-Z][A-Z0-9_]*$').test(name)
+}
+
+export async function getGitContext() {
+  const document = window.activeTextEditor?.document
+  const filePath = document?.uri?.fsPath?.split('/').slice(0, -1).join('/')
+
+  try {
+    const git = simpleGit({
+      baseDir: filePath,
+    })
+
+    const branch = (await git.branch()).current
+    const repository = await git.listRemote(['--get-url', 'origin'])
+    const commit = await git.revparse(['HEAD'])
+
+    return {
+      repository: repository.trim(),
+      branch: branch.trim(),
+      commit: commit.trim(),
+    }
+  } catch (error) {
+    log.info('Running in a non-git context', (error as Error).message)
+
+    return {
+      repository: null,
+      branch: null,
+      commit: null,
+    }
+  }
 }

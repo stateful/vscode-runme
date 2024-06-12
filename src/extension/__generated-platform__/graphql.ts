@@ -116,7 +116,7 @@ export type CellExecution = {
   input?: Maybe<Scalars['String']['output']>;
   inputData?: Maybe<Scalars['Bytes']['output']>;
   isOwner?: Maybe<Scalars['Boolean']['output']>;
-  isSlackReady?: Maybe<Scalars['Boolean']['output']>;
+  isSlackReady: Scalars['Boolean']['output'];
   languageId?: Maybe<Scalars['String']['output']>;
   lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
   maskedInput?: Maybe<Scalars['String']['output']>;
@@ -271,6 +271,8 @@ export type CreateCellAttachmentInput = {
 export type CreateCellExecutionInput = {
   archivedTime?: InputMaybe<Scalars['DateTime']['input']>;
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+  branch?: InputMaybe<Scalars['String']['input']>;
+  commit?: InputMaybe<Scalars['String']['input']>;
   createTime?: InputMaybe<Scalars['DateTime']['input']>;
   exitCode?: InputMaybe<Scalars['Int']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
@@ -279,6 +281,7 @@ export type CreateCellExecutionInput = {
   metadata: MetadataInput;
   notebook?: InputMaybe<CreateNotebookInput>;
   pid: Scalars['Int']['input'];
+  repository?: InputMaybe<Scalars['String']['input']>;
   shareType?: InputMaybe<ShareType>;
   stderr: Scalars['Bytes']['input'];
   stdout: Scalars['Bytes']['input'];
@@ -354,6 +357,7 @@ export type CreateGroupUserInput = {
 };
 
 export type CreateInvitationInput = {
+  metadata?: InputMaybe<InvitationMetadataInput>;
   referenceId: Scalars['String']['input'];
   referenceTable: Scalars['String']['input'];
   userId: Scalars['String']['input'];
@@ -567,6 +571,7 @@ export type Invitation = {
   createdBy: User;
   createdById: Scalars['String']['output'];
   id: Scalars['String']['output'];
+  metadata?: Maybe<InvitationMetadata>;
   organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   referenceId: Scalars['String']['output'];
@@ -575,6 +580,15 @@ export type Invitation = {
   updateTime: Scalars['DateTime']['output'];
   user: User;
   userId: Scalars['String']['output'];
+};
+
+export type InvitationMetadata = {
+  __typename?: 'InvitationMetadata';
+  isGuest?: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type InvitationMetadataInput = {
+  isGuest?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export enum InvitationStatus {
@@ -656,7 +670,6 @@ export type Mutation = {
   createCellOutputMessage: CellOutputMessage;
   createEnvironment: Environment;
   createGroup: Group;
-  createInvitation: Invitation;
   createNotebookSession: NotebookSession;
   createOrganization: Organization;
   declineInvitation: Invitation;
@@ -670,6 +683,7 @@ export type Mutation = {
   deleteOrganizationUser: OrganizationUser;
   handleGithubInstallation: GithubInstallation;
   inviteUserToOrganization: User;
+  readNotifications: Array<Maybe<Notification>>;
   rejectAccessRequest: AccessRequest;
   removeUserFromOrganization: Organization;
   revokeInvitation: Invitation;
@@ -747,11 +761,6 @@ export type MutationCreateEnvironmentArgs = {
 
 export type MutationCreateGroupArgs = {
   input: CreateGroupInput;
-};
-
-
-export type MutationCreateInvitationArgs = {
-  input: CreateInvitationInput;
 };
 
 
@@ -955,6 +964,7 @@ export enum NotificationType {
 export type Organization = {
   __typename?: 'Organization';
   createTime: Scalars['DateTime']['output'];
+  domain?: Maybe<Scalars['String']['output']>;
   groups: Array<Maybe<Group>>;
   id: Scalars['String']['output'];
   invitations: Array<Maybe<Invitation>>;
@@ -967,6 +977,7 @@ export type Organization = {
 export type OrganizationUser = {
   __typename?: 'OrganizationUser';
   id: Scalars['String']['output'];
+  isGuest?: Maybe<Scalars['Boolean']['output']>;
   organization: Organization;
   organizationId: Scalars['String']['output'];
   user: User;
@@ -1000,6 +1011,7 @@ export type PaginatedNotifications = {
 export type PaginationMeta = {
   __typename?: 'PaginationMeta';
   totalPages: Scalars['Int']['output'];
+  totalUnread?: Maybe<Scalars['Int']['output']>;
 };
 
 /** About the Redwood queries. */
@@ -1457,7 +1469,7 @@ export type CreateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady?: boolean | null } };
+export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady: boolean } };
 
 export type UpdateCellExecutionMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -1465,7 +1477,7 @@ export type UpdateCellExecutionMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady?: boolean | null } };
+export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady: boolean } };
 
 
 export const ArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellExecutionMutation, ArchiveCellExecutionMutationVariables>;
