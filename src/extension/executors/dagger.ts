@@ -12,7 +12,7 @@ export const dagger: IKernelExecutor = async (executor) => {
     return runScript?.() ?? bash(executor)
   } catch (err: any) {
     updateCellMetadata(exec.cell, {
-      'runme.dev/vercelState': { error: err.message, outputItems: [] },
+      'runme.dev/daggerState': {},
     })
     outputs.showOutput(OutputType.vercel)
 

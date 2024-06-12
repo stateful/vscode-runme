@@ -448,7 +448,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   // temp hack for dagger integration
   if (execKey === 'dagger' && !script.includes(' --help')) {
     const varName = `DAGGER_${cellId}`
-    script = 'export ' + varName + '=$(' + script + ')'
+    script = 'export ' + varName + '=$(' + script + '\n)'
   }
 
   const { PROMPT_ALL, SKIP_ALL } = ResolveProgramRequest_ModeEnum()
