@@ -19,11 +19,11 @@ dagger --progress=$PROGRESS \
 ### What does the 🐮 cow say?
 
 ```sh {"id":"01J022WD7Z6TM1QQ075X09BTK4","interactive":"true","name":"COWSAY"}
-dagger --progress=$PROGRESS \
+dagger --progress=plain \
     call \
         -m github.com/shykes/daggerverse/wolfi@v0.1.2 \
     container \
         --packages=cowsay
 ```
 
-Let's continue over here with the [pipeline example](../../dagger/Pipeline.md).
+👉 Let's continue over here with the [pipeline demo](../../dagger/Pipeline.md).
