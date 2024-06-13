@@ -25,3 +25,5 @@ dagger --progress=$PROGRESS \
     container \
         --packages=cowsay
 ```
+
+Let's continue over here with the [pipeline example](../../dagger/Pipeline.md).
