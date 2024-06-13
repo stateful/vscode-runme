@@ -43,8 +43,6 @@ Putting everything together, we build the extension. While we're issuing a query
 
 This call will currently fail because passing IDs from a module appears to bypass caching. However, we hear this is on Dagger's roadmap.
 
-`17: ! failed to load ref for blob snapshot: missing descriptor handlers for lazy blobs [sha256:74eed75e10a8e6dceef2b446cf20daed65774c11cc827ec80b41c7f476c819af]`
-
 ```sh {"id":"01J04KG1K4S8ZND9RYXKFVP4GK","name":"EXTENSION_VSIX"}
 dagger --progress=$PROGRESS query <<EOF
 {
@@ -64,17 +62,25 @@ dagger --progress=$PROGRESS query <<EOF
 EOF
 ```
 
-Essentially, above's query would run this module, however, without relying on the host filesystem.
+This is the error we're seeing:
 
-<pre>
-  $ dagger --debug call --progress=plain \
-    with-remote \
-      --remote "github.com/stateful/vscode-runme" \
-      --ref "main" \
-    with-container \
-      --binary /tmp/runme/runme \
-      --presetup dagger/scripts/presetup.sh \
-    with-github-token \
-      --token cmd:"gh auth token" \
-    build-extension
-</pre>
+<pre>17: ! failed to load ref for blob snapshot: missing descriptor handlers for lazy blobs [sha256:74eed75e10a8e6dceef2b446cf20daed65774c11cc827ec80b41c7f476c819af]</pre>
+
+## What it could look like...
+
+Essentially, above's query would run this module, however, using the CLI without relying on the host filesystem. This won't actually run.... yet.
+
+```sh {"excludeFromRunAll":"true","id":"01J04HR247XE1TK2MVBBPV7ZM7","name":"EXTENSION_VSIX"}
+dagger --debug call --progress=plain \
+  with-remote \
+    --remote "github.com/stateful/vscode-runme" \
+    --ref "seb/dagger-integr" \
+  with-container \
+    --binary $DAGGER_ID_KERNEL_BINARY \
+    --presetup $DAGGER_ID_PRESETUP \
+  with-github-token \
+    --token $DAGGER_ID_TOKEN \
+  build-extension
+```
+
+Even above's module's output could become another function/pipeline's input.
