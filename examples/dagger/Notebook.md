@@ -1,5 +1,9 @@
 # Runme ▶️ for Dagger
 
+```sh {"id":"01J097BHJHQS28M29YR0WCZ3B8","interactive":"false"}
+curl -s "https://framerusercontent.com/images/tpJEZ337KKxXU4q1SSUXDx4FG4.png?scale-down-to=512"
+```
+
 Showcase the notebook experience to **author, debug, express, and run** Dagger pipelines.
 
 ### Let's use a Dagger function to build the Runme binary
