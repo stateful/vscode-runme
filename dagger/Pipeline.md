@@ -86,3 +86,7 @@ dagger call --progress=$PROGRESS \
 ```
 
 Even above's module's output could become another function/pipeline's input.
+
+```sh {"id":"01J094XAEPWN0JM13BFT9VVVB3","interactive":"false"}
+curl -s "https://runme.dev/img/thankyou.png"
+```
