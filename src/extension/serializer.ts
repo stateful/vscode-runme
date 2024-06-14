@@ -580,9 +580,11 @@ export class GrpcSerializer extends SerializerBase {
   public static getSourceFilePath(outputsFile: string): string {
     const fileExt = path.extname(outputsFile)
     let fileBase = path.basename(outputsFile, fileExt)
-    if (fileBase.includes('-')) {
-      fileBase = fileBase.split('-')[0]
+    const parts = fileBase.split('-')
+    if (parts.length > 1) {
+      parts.pop()
     }
+    fileBase = parts.join('-')
     const fileDir = path.dirname(outputsFile)
     const filePath = path.normalize(`${fileDir}/${fileBase}${fileExt}`)
 

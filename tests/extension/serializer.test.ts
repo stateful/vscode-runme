@@ -498,6 +498,13 @@ describe('GrpcSerializer', () => {
       expect(sourceFilePath).toStrictEqual('/tmp/fake/runbook.md')
     })
 
+    it('can reverse the process even with mulitple dashes to get the source document path', () => {
+      const sourceFilePath = GrpcSerializer.getSourceFilePath(
+        '/tmp/fake/my-runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md',
+      )
+      expect(sourceFilePath).toStrictEqual('/tmp/fake/my-runbook.md')
+    })
+
     it('should include session and document info on serialization', async () => {
       const context: any = {
         extensionUri: { fsPath: '/foo/bar' },
