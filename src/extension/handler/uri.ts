@@ -1,38 +1,39 @@
 import path from 'node:path'
 
-import {
-  UriHandler,
-  window,
-  Uri,
-  Progress,
-  ProgressLocation,
-  commands,
-  workspace,
-  ExtensionContext,
-  Task,
-  TaskScope,
-  ShellExecution,
-  tasks,
-  EventEmitter,
-  Disposable,
-} from 'vscode'
 import got from 'got'
 import { v4 as uuidv4 } from 'uuid'
+import {
+  Disposable,
+  EventEmitter,
+  ExtensionContext,
+  Progress,
+  ProgressLocation,
+  ShellExecution,
+  Task,
+  TaskScope,
+  Uri,
+  UriHandler,
+  commands,
+  tasks,
+  window,
+  workspace,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import getLogger from '../logger'
-import { Kernel } from '../kernel'
 import { AuthenticationProviders } from '../../constants'
+import { RunmeExtension } from '../extension'
+import { Kernel } from '../kernel'
+import getLogger from '../logger'
 
 import {
-  getProjectDir,
-  getTargetDirName,
-  getSuggestedProjectName,
-  writeBootstrapFile,
-  parseParams,
-  writeDemoBootstrapFile,
   executeActiveNotebookCell,
+  getProjectDir,
+  getSuggestedProjectName,
+  getTargetDirName,
+  parseParams,
   setCurrentCellExecutionDemo,
+  writeBootstrapFile,
+  writeDemoBootstrapFile,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
@@ -152,7 +153,13 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       projectDirUri,
       ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/'),
     )
-    window.showInformationMessage('Setting up a new project using Runme...')
+
+    const extensionIdentifier = RunmeExtension.getExtensionIdentifier(this.context)
+
+    const extensionTitle = extensionIdentifier === 'stateful.runme' ? 'Runme' : 'Platform'
+    if (extensionIdentifier === 'stateful.runme') {
+    }
+    window.showInformationMessage(`Setting up a new project using ${extensionTitle}...`)
     return window.withProgress(
       {
         location: ProgressLocation.Window,
