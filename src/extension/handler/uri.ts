@@ -157,8 +157,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
     const extensionIdentifier = RunmeExtension.getExtensionIdentifier(this.context)
 
     const extensionTitle = extensionIdentifier === 'stateful.runme' ? 'Runme' : 'Platform'
-    if (extensionIdentifier === 'stateful.runme') {
-    }
+
     window.showInformationMessage(`Setting up a new project using ${extensionTitle}...`)
     return window.withProgress(
       {
