@@ -38,6 +38,11 @@ import {
 const REGEX_WEB_RESOURCE = /^https?:\/\//
 const log = getLogger('RunmeUriHandler')
 
+const extensionNames: { [key: string]: string } = {
+  'stateful.platform': 'Stateful',
+  'stateful.runme': 'Runme',
+}
+
 export class RunmeUriHandler implements UriHandler, Disposable {
   #disposables: Disposable[] = []
   readonly #onAuth = this.register(new EventEmitter<Uri>())
@@ -152,7 +157,8 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       projectDirUri,
       ...(await getTargetDirName(projectDirUri, suggestedProjectName)).split('/'),
     )
-    window.showInformationMessage('Setting up a new project using Runme...')
+    const extensionTitle = extensionNames[this?.context?.extension?.id] || 'Runme'
+    window.showInformationMessage(`Setting up a new project using ${extensionTitle}...`)
     return window.withProgress(
       {
         location: ProgressLocation.Window,
