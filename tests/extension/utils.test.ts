@@ -693,16 +693,24 @@ suite('getGitContext', () => {
     const gitMock = {
       branch: vi.fn().mockResolvedValue({ current: 'main' }),
       listRemote: vi.fn().mockResolvedValue('https://github.com/user/repo.git'),
-      revparse: vi.fn().mockResolvedValue('commit-hash'),
+      revparse: vi.fn().mockImplementation((params) => {
+        if (params[0] === 'HEAD') {
+          return 'commit-hash'
+        }
+        if (params[0] === '--show-prefix') {
+          return 'relative-path/'
+        }
+      }),
     }
 
     vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
 
-    const { branch, commit, repository } = await getGitContext()
+    const { branch, commit, repository, relativePath } = await getGitContext()
 
     expect(branch).toBe('main')
     expect(commit).toBe('commit-hash')
     expect(repository).toBe('https://github.com/user/repo.git')
+    expect(relativePath).toBe('relative-path/')
   })
 
   test('should return null values if there is an error', async () => {
@@ -710,14 +718,16 @@ suite('getGitContext', () => {
       branch: vi.fn().mockRejectedValue(new Error('branch error')),
       listRemote: vi.fn().mockRejectedValue(new Error('listRemote error')),
       revparse: vi.fn().mockRejectedValue(new Error('revparse error')),
+      relativePath: vi.fn().mockRejectedValue(new Error('relativePath error')),
     }
 
     vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
 
-    const { branch, commit, repository } = await getGitContext()
+    const { branch, commit, repository, relativePath } = await getGitContext()
 
     expect(branch).toBe(null)
     expect(commit).toBe(null)
     expect(repository).toBe(null)
+    expect(relativePath).toBe(null)
   })
 })
