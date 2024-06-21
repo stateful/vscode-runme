@@ -774,11 +774,13 @@ export async function getGitContext() {
     const branch = (await git.branch()).current
     const repository = await git.listRemote(['--get-url', 'origin'])
     const commit = await git.revparse(['HEAD'])
+    const relativePath = await git.revparse(['--show-prefix'])
 
     return {
       repository: repository.trim(),
       branch: branch.trim(),
       commit: commit.trim(),
+      relativePath: relativePath.trim(),
     }
   } catch (error) {
     log.info('Running in a non-git context', (error as Error).message)
@@ -787,6 +789,7 @@ export async function getGitContext() {
       repository: null,
       branch: null,
       commit: null,
+      relativePath: null,
     }
   }
 }
