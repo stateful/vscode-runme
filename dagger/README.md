@@ -10,11 +10,11 @@ export PROGRESS_OUTPUT="plain"
 echo "Using $PROGRESS_OUTPUT for progress logging"
 ```
 
-```sh {"id":"01HTNVRK3AJ2AT8M24TA996RCJ","terminalRows":"15"}
+```sh {"excludeFromRunAll":"true","id":"01HTNVRK3AJ2AT8M24TA996RCJ","terminalRows":"15"}
 dagger -m vscode-runme functions
 ```
 
-```sh {"id":"01HTQBSZTS5M1HP3GGP4T99PT0","name":"KERNEL_BINARY","terminalRows":"28"}
+```sh {"id":"01HTQBSZTS5M1HP3GGP4T99PT0","name":"KERNEL_BINARY"}
 dagger call --progress $PROGRESS_OUTPUT \
   -m golang \
   --src ../runme \
@@ -24,9 +24,8 @@ dagger call --progress $PROGRESS_OUTPUT \
     --path runme
 ```
 
-```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"EXTENSION_VSIX","terminalRows":"25"}
-dagger --progress $PROGRESS_OUTPUT \
-  call \
+```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"EXTENSION_VSIX"}
+dagger call --progress $PROGRESS_OUTPUT \
   with-remote \
     --remote "github.com/stateful/vscode-runme" \
     --ref "main" \
@@ -34,5 +33,5 @@ dagger --progress $PROGRESS_OUTPUT \
     --binary /tmp/runme/runme \
     --presetup dagger/scripts/presetup.sh \
   build-extension \
-    --gh-token $(gh auth token)
+    --gh-token cmd:"gh auth token"
 ```

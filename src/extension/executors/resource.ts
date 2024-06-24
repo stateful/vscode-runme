@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { RunProgramOptions } from '../runner'
+import { getAnnotations, isValidEnvVarName } from '../utils'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
 
@@ -11,6 +11,8 @@ export const uri: IKernelRunner = async ({
   execKey,
   runnerEnv,
   runScript,
+  cellId,
+  resource,
 }: IKernelRunnerOptions) => {
   const programOptions: RunProgramOptions = await resolveProgramOptionsScript({
     exec,
@@ -18,16 +20,40 @@ export const uri: IKernelRunner = async ({
     runnerEnv,
     runningCell,
     runner,
+    cellId,
   })
+  const { name: knownName } = getAnnotations(exec.cell)
 
   // todo(sebastian): move down into kernel?
-  switch (programOptions.exec?.type) {
-    case 'script':
-      {
-        const { script } = programOptions.exec
-        programOptions.exec.script = `echo "${script}"`
-      }
-      break
+  if (resource === 'URI') {
+    switch (programOptions.exec?.type) {
+      case 'script':
+        {
+          const { script } = programOptions.exec
+          programOptions.exec.script = `echo "${script}"`
+        }
+        break
+    }
+  }
+
+  if (resource === 'Dagger') {
+    const varDaggerCellId = `$DAGGER_${cellId}`
+
+    const printDaggerCellId = `echo ${varDaggerCellId}`
+    programOptions.exec = {
+      type: 'script',
+      script: printDaggerCellId,
+    }
+
+    if (knownName && isValidEnvVarName(knownName)) {
+      const varDaggerCellName = `DAGGER_ID_${knownName}`
+      programOptions.exec.script =
+        `export ${varDaggerCellName}` +
+        '=$(' +
+        printDaggerCellId +
+        ' | jq -j .id);' +
+        ` ${printDaggerCellId}`
+    }
   }
 
   const program = await runner.createProgramSession(programOptions)

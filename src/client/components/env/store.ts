@@ -94,6 +94,7 @@ export default class Table extends LitElement {
               } else if (row.status === MonitorEnvStoreResponseSnapshot_Status.HIDDEN) {
                 val = row.originalValue
               }
+              val = val.replaceAll('\n', ' ').replaceAll('\r', '')
 
               return html`<env-viewer
                 .displaySecret="${displaySecret}"

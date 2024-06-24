@@ -50,7 +50,7 @@ export class EnvViewer extends LitElement implements Disposable {
     .secret-text {
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: normal;
+      white-space: nowrap;
       max-height: 100px;
     }
 
