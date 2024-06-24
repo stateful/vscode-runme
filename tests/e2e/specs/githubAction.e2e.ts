@@ -3,6 +3,8 @@ import { Key } from 'webdriverio'
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import type { NotebookCell } from '../pageobjects/cell.page.js'
 
+const UI_LATENCY_TIMEOUT_SECS = 2 * 60 * 1000
+
 describe('Runme GitHub Workflow Integration', async () => {
   const notebook = new RunmeNotebook()
   const token = process.env.RUNME_TEST_TOKEN
@@ -62,15 +64,15 @@ describe('Runme GitHub Workflow Integration', async () => {
       await outputContainer.$('aria/Run Workflow').click()
       await outputContainer
         .$('github-workflow-run[status="queued"]')
-        .waitForExist({ timeout: 60000 })
+        .waitForExist({ timeout: UI_LATENCY_TIMEOUT_SECS })
         // run again if workflow is not triggered
         .catch(() => outputContainer.$('aria/Run Workflow').click())
       await outputContainer
         .$('github-workflow-run[status="in_progress"]')
-        .waitForExist({ timeout: 60000 })
+        .waitForExist({ timeout: UI_LATENCY_TIMEOUT_SECS })
       await outputContainer
         .$('github-workflow-run[status="completed"][conclusion="success"]')
-        .waitForExist({ timeout: 60000 })
+        .waitForExist({ timeout: UI_LATENCY_TIMEOUT_SECS })
     })
 
     after(() => cell.switchOutOfCellFrame())
