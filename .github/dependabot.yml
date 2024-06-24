@@ -5,6 +5,7 @@ updates:
     schedule:
       interval: weekly
       time: "11:00"
+      day: "wednesday"
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
     ignore:
