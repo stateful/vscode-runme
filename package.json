@@ -1121,6 +1121,7 @@
     "@apollo/client": "^3.8.3",
     "@aws-sdk/client-ec2": "^3.515.0",
     "@aws-sdk/client-eks": "^3.583.0",
+    "@aws-sdk/credential-providers": "^3.600.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240430201511-d9455265c5d4.3",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240524203529-27f0371f1064.3",
     "@google-cloud/compute": "^4.1.0",

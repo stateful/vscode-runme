@@ -4,6 +4,7 @@ import {
   type Reservation,
   type Instance,
 } from '@aws-sdk/client-ec2'
+import { AwsCredentialIdentityProvider } from '@smithy/types'
 
 import { AWSEC2Instance, AWSEC2InstanceDetails } from '../../../types'
 
@@ -29,9 +30,10 @@ function _mapInstanceDetails(instance: Instance): AWSEC2Instance {
   }
 }
 
-export async function listEC2Instances(region: string) {
+export async function listEC2Instances(region: string, credentials: AwsCredentialIdentityProvider) {
   const ec2ClientInstance = new EC2Client({
     region,
+    credentials,
   })
 
   const commandResult = await ec2ClientInstance.send(new DescribeInstancesCommand({}))

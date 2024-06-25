@@ -20,6 +20,10 @@ Runme seamlessly integrates with your AWS EC2 resource URLs, mirroring your navi
 
 Experience it firsthand by running the following URL to see Runme in action:
 
+```sh {"id":"01J15VQSZ4Y96N3YJX889QR5W7","terminalRows":"2"}
+export AWS_PROFILE="stateful"
+```
+
 ```sh {"id":"01HQRAF82SC4YPTNRGQ2TZ7DK2"}
 https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances
 ```

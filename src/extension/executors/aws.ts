@@ -1,4 +1,6 @@
 import { window } from 'vscode'
+import { fromIni } from '@aws-sdk/credential-providers'
+import { AwsCredentialIdentityProvider } from '@smithy/types'
 
 import { OutputType } from '../../constants'
 import { AWSResolver, AWSSupportedView } from '../resolvers/awsResolver'
@@ -18,9 +20,14 @@ export const aws: IKernelExecutor = async (executor) => {
       throw new Error('Could not resolve AWS resource')
     }
 
+    let credentials: AwsCredentialIdentityProvider
+
+    const profile = awsResolver.data.profile || 'default'
+    credentials = fromIni({ profile })
+
     switch (awsResolver.view) {
       case AWSSupportedView.EC2Instances: {
-        const instances = await listEC2Instances(awsResolver.data.region)
+        const instances = await listEC2Instances(awsResolver.data.region, credentials)
         outputs.setState({
           type: OutputType.aws,
           state: {
