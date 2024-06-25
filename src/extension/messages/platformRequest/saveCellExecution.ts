@@ -80,8 +80,7 @@ export default async function saveCellExecution(
     const gitCtx = await getGitContext()
     const path = window.activeTextEditor?.document.uri.fsPath
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
-
-    const content = path ? await workspace.fs.readFile(Uri.file(path)) : null
+    const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : null
 
     if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
       notebookInput = {
@@ -115,7 +114,7 @@ export default async function saveCellExecution(
           branch: gitCtx?.branch,
           repository: gitCtx?.repository,
           commit: gitCtx?.commit,
-          content,
+          fileContent: fileContent,
           filePath,
         },
       },

@@ -30,6 +30,9 @@ vi.mock('vscode', async () => {
       activeTextEditor: {
         document: {
           fileName: '/foo/bar/README.md',
+          uri: {
+            fsPath: '/foo/bar/README.md',
+          },
         },
       },
     },
