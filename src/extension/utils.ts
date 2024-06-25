@@ -168,20 +168,27 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
 }
 
 export function getKey(runningCell: vscode.TextDocument): string {
-  if (isDenoScript(runningCell)) {
-    return 'deno'
-  }
+  try {
+    if (isDenoScript(runningCell)) {
+      return 'deno'
+    }
 
-  if (isGitHubLink(runningCell)) {
-    return 'github'
-  }
+    if (isGitHubLink(runningCell)) {
+      return 'github'
+    }
 
-  if (new GCPResolver(runningCell.getText()).match()) {
-    return 'gcp'
-  }
+    if (new GCPResolver(runningCell.getText()).match()) {
+      return 'gcp'
+    }
 
-  if (new AWSResolver(runningCell.getText()).match()) {
-    return 'aws'
+    if (new AWSResolver(runningCell.getText()).match()) {
+      return 'aws'
+    }
+  } catch (err: any) {
+    if (err?.code !== 'ERR_INVALID_URL') {
+      throw err
+    }
+    console.error(err)
   }
 
   const { languageId } = runningCell
