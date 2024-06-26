@@ -9,7 +9,7 @@ import { EC2Icon } from '../icons/ec2'
 import { AWSEC2Instance } from '../../../types'
 import { formatDate } from '../../utils'
 
-const HIDDEN_COLUMNS = ['instanceId']
+const HIDDEN_COLUMNS = ['instanceId', 'imageName']
 const COLUMNS = [
   {
     text: 'Name',
@@ -135,6 +135,7 @@ export class EC2Instances extends LitElement implements Disposable {
             keyName: instance.keyName,
             launchTime: instance.launchTime ? formatDate(new Date(instance.launchTime)) : '',
             platform: instance.platform,
+            imageName: instance.imageName,
             actions: '',
           }
         })}"

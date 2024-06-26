@@ -9,6 +9,8 @@ import { CloudShellIcon } from '../icons/cloudShell'
 import { AWSActionType, AWSEC2Instance } from '../../../types'
 import { ClusterIcon } from '../icons/cluster'
 
+import { resolveOsUserName } from './ec2Helper'
+
 enum MESSAGE_OPTIONS {
   Yes = 'Yes',
   No = 'No',
@@ -75,6 +77,7 @@ export class AWSInstanceActions extends LitElement implements Disposable {
             postClientMessage(ctx, ClientMessages.awsEC2InstanceAction, {
               cellId: this.cellId,
               instance: this.instance?.instanceId!,
+              osUser: resolveOsUserName(this.instance?.imageName),
               region: this.region,
               action: this._selectedAction!,
             })
