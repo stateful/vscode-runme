@@ -20,8 +20,9 @@ Runme seamlessly integrates with your AWS EC2 resource URLs, mirroring your navi
 
 Experience it firsthand by running the following URL to see Runme in action:
 
-```sh {"id":"01J15VQSZ4Y96N3YJX889QR5W7","terminalRows":"2"}
+```sh {"id":"01J15VQSZ4Y96N3YJX889QR5W7","promptEnv":"yes","terminalRows":"2"}
 export AWS_PROFILE="stateful"
+echo "Using AWS Profile $AWS_PROFILE"
 ```
 
 ```sh {"id":"01HQRAF82SC4YPTNRGQ2TZ7DK2"}
