@@ -101,7 +101,7 @@ export const aws: IKernelExecutor = async (executor) => {
 
     switch (awsResolver.view) {
       case AWSSupportedView.EC2Instances: {
-        const instances = await listEC2Instances(awsResolver.data.region, credentials)
+        const instances = await listEC2Instances(credentials, awsResolver.data.region)
         outputs.setState({
           type: OutputType.aws,
           state: {
@@ -117,6 +117,7 @@ export const aws: IKernelExecutor = async (executor) => {
 
       case AWSSupportedView.EC2InstanceDetails: {
         const instanceDetails = await getEC2InstanceDetail(
+          credentials,
           awsResolver.data.region,
           awsResolver.data.instanceId!,
         )
@@ -138,7 +139,11 @@ export const aws: IKernelExecutor = async (executor) => {
          * EKS Details and Clusters shares the same URL.
          */
         if (awsResolver.data.cluster) {
-          const cluster = await getCluster(awsResolver.data.region, awsResolver.data.cluster)
+          const cluster = await getCluster(
+            credentials,
+            awsResolver.data.region,
+            awsResolver.data.cluster,
+          )
           outputs.setState({
             type: OutputType.aws,
             state: {
@@ -149,7 +154,7 @@ export const aws: IKernelExecutor = async (executor) => {
             },
           })
         } else {
-          const clusters = await listClusters(awsResolver.data.region)
+          const clusters = await listClusters(credentials, awsResolver.data.region)
           outputs.setState({
             type: OutputType.aws,
             state: {

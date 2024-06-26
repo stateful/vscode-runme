@@ -12,6 +12,15 @@ Discover how you can leverage Runme's robust Notebook Cloud Renderers to engage 
 
 💡 **Important!** Be sure to run through the one-time guide [Getting started with Runme Noteboks for AWS](setup.md).
 
+## AWS Profile
+
+Set up the AWS Profile to ensure proper configuration. If not specified, the default profile will be used.
+
+```sh {"id":"01J15VQSZ4Y96N3YJX889QR5W7","promptEnv":"yes","terminalRows":"2"}
+export AWS_PROFILE="stateful"
+echo "Using AWS Profile $AWS_PROFILE"
+```
+
 ## List EC2 Instances
 
 One of the fundamental tasks in working with EC2 is to list your instances, serving as the foundation for other operations such as managing instance states —starting, stopping, rebooting, or terminating them— or securely connecting via SSH.
@@ -19,11 +28,6 @@ One of the fundamental tasks in working with EC2 is to list your instances, serv
 Runme seamlessly integrates with your AWS EC2 resource URLs, mirroring your navigation in the AWS Console directly within your Notebook. This eliminates the need to open the console separately; instead, you can access its functionality right within your Notebook file!
 
 Experience it firsthand by running the following URL to see Runme in action:
-
-```sh {"id":"01J15VQSZ4Y96N3YJX889QR5W7","promptEnv":"yes","terminalRows":"2"}
-export AWS_PROFILE="stateful"
-echo "Using AWS Profile $AWS_PROFILE"
-```
 
 ```sh {"id":"01HQRAF82SC4YPTNRGQ2TZ7DK2"}
 https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances

@@ -30,10 +30,10 @@ function _mapInstanceDetails(instance: Instance): AWSEC2Instance {
   }
 }
 
-export async function listEC2Instances(region: string, credentials: AwsCredentialIdentityProvider) {
+export async function listEC2Instances(credentials: AwsCredentialIdentityProvider, region: string) {
   const ec2ClientInstance = new EC2Client({
-    region,
     credentials,
+    region,
   })
 
   const commandResult = await ec2ClientInstance.send(new DescribeInstancesCommand({}))
@@ -54,8 +54,13 @@ export async function listEC2Instances(region: string, credentials: AwsCredentia
   return instances
 }
 
-export async function getEC2InstanceDetail(region: string, instanceId: string) {
+export async function getEC2InstanceDetail(
+  credentials: AwsCredentialIdentityProvider,
+  region: string,
+  instanceId: string,
+) {
   const ec2ClientInstance = new EC2Client({
+    credentials,
     region,
   })
 
