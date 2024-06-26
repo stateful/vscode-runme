@@ -70,6 +70,10 @@ echo "EC2_INSTANCE_ID set to $EC2_INSTANCE_ID"
 https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID
 ```
 
+```sh {"background":"true","id":"01J1APZ2HW09ZNB41V8N2ZKQWH"}
+aws ec2-instance-connect ssh --instance-id i-015097a0646c45ea8 --os-user=ubuntu
+```
+
 ## Connect to EC2 instance via SSH
 
 You can leverage the AWS CLI to connect securely via SSH to a EC2 instance, run the following commands:
