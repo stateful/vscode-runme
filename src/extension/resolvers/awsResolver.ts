@@ -8,22 +8,18 @@ export enum AWSSupportedView {
   EKSClusters = 'eksClusters',
 }
 
-export type AWSCredentials = {
-  profile?: string
-}
-
-export interface EC2InstancePath extends AWSCredentials, StringIndexable {
+export interface EC2InstancePath extends StringIndexable {
   region: string | null
   urlRegex?: RegExp
 }
 
-export interface EC2InstanceDetailsPath extends AWSCredentials, StringIndexable {
+export interface EC2InstanceDetailsPath extends StringIndexable {
   region: string | null
   instanceId: string | null
   urlRegex?: RegExp
 }
 
-export interface EKSClustersPath extends AWSCredentials, StringIndexable {
+export interface EKSClustersPath extends StringIndexable {
   region: string | null
   urlRegex?: RegExp
   cluster?: string | undefined
@@ -80,9 +76,6 @@ export class AWSResolver implements Disposable {
         }
       }
       if (supportedFeature) {
-        // TODO: hardcoded
-        supportedFeature.data.profile = 'stateful'
-
         if (supportedFeature.data.urlRegex && supportedFeature.data) {
           if (supportedFeature.view === AWSSupportedView.EC2InstanceDetails) {
             const instanceMatch = /instanceId=([^&]+)/.exec(url.toString())
