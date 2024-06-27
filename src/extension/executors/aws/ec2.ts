@@ -3,7 +3,9 @@ import {
   DescribeInstancesCommand,
   type Reservation,
   type Instance,
+  DescribeImagesCommand,
 } from '@aws-sdk/client-ec2'
+import { AwsCredentialIdentityProvider } from '@smithy/types'
 
 import { AWSEC2Instance, AWSEC2InstanceDetails } from '../../../types'
 
@@ -25,12 +27,14 @@ function _mapInstanceDetails(instance: Instance): AWSEC2Instance {
     launchTime: instance.LaunchTime,
     platform: instance.PlatformDetails,
     lifecycle: instance.InstanceLifecycle,
+    imageName: '',
     ...instance,
   }
 }
 
-export async function listEC2Instances(region: string) {
+export async function listEC2Instances(credentials: AwsCredentialIdentityProvider, region: string) {
   const ec2ClientInstance = new EC2Client({
+    credentials,
     region,
   })
 
@@ -49,11 +53,31 @@ export async function listEC2Instances(region: string) {
     },
   )
 
+  const describeImagesCommand = new DescribeImagesCommand({
+    ImageIds: instances.map((i) => i.ImageId),
+  })
+
+  const describeImagesResponse = await ec2ClientInstance.send(describeImagesCommand)
+
+  if (describeImagesResponse.Images) {
+    for (const image of describeImagesResponse.Images) {
+      const index = instances.findIndex((i) => i.ImageId === image.ImageId)
+      if (index >= 0) {
+        instances[index].imageName = image.Name!
+      }
+    }
+  }
+
   return instances
 }
 
-export async function getEC2InstanceDetail(region: string, instanceId: string) {
+export async function getEC2InstanceDetail(
+  credentials: AwsCredentialIdentityProvider,
+  region: string,
+  instanceId: string,
+) {
   const ec2ClientInstance = new EC2Client({
+    credentials,
     region,
   })
 

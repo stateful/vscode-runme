@@ -30,7 +30,7 @@ export async function handleAWSMessage({ message, editor }: AWSStatusMessaging):
               message.output.cellId,
               editor,
               // eslint-disable-next-line max-len
-              `aws ec2-instance-connect ssh --instance-id ${message.output.instance}`,
+              `aws ec2-instance-connect ssh --instance-id ${message.output.instance} --os-user=${message.output.osUser}`,
               'sh',
               true,
             )

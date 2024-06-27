@@ -8,6 +8,8 @@ import {
 import { ENV_STORE, DEFAULT_ENV } from '../constants'
 import { NotebookCellOutputManager } from '../cell'
 import { Kernel } from '../kernel'
+import { IRunner } from '../runner'
+import { IRunnerEnvironment } from '../runner/environment'
 
 import { sh, bash } from './task'
 import { vercel } from './vercel'
@@ -24,6 +26,8 @@ export interface IKernelExecutorOptions {
   outputs: NotebookCellOutputManager
   messaging: NotebookRendererMessaging
   envMgr: IEnvironmentManager
+  runner?: IRunner
+  runnerEnv?: IRunnerEnvironment
   cellText?: string
   runScript?: (exeResult?: string) => Promise<boolean>
 }
