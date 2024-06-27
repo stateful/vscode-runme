@@ -1,5 +1,5 @@
-import { TelemetryReporter } from 'vscode-telemetry'
 import { Uri, window, workspace } from 'vscode'
+import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -13,8 +13,8 @@ import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
-import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 import getLogger from '../../logger'
+import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -108,7 +108,7 @@ export default async function saveCellExecution(
           branch: gitCtx?.branch,
           repository: gitCtx?.repository,
           commit: gitCtx?.commit,
-          fileContent: fileContent,
+          fileContent,
           filePath,
         },
       },
