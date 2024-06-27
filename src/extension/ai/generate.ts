@@ -6,7 +6,8 @@ import { Serializer } from '../../types'
 import getLogger from '../logger'
 import { initAIServiceClient } from '../grpc/aiClient'
 import { AIServiceClient } from '../grpc/aiTypes'
-import { CellKind } from '../grpc/serializerTypes'
+import { CellKind, RunmeIdentity } from '../grpc/serializerTypes'
+import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 
 import * as converters from './converters'
 const log = getLogger('AIGenerate')
@@ -100,7 +101,11 @@ function addAIGeneratedCells(index: number, response: GenerateCellsResponse): vs
     notebook.cells.push(newCell)
   }
 
-  let newCellData = serializer.SerializerBase.revive(notebook)
+  const identity: ServerLifecycleIdentity = getServerConfigurationValue<ServerLifecycleIdentity>(
+    'lifecycleIdentity',
+    RunmeIdentity.ALL,
+  )
+  let newCellData = serializer.SerializerBase.revive(notebook, identity)
   // Now insert the new cells at the end of the notebook
   return vscode.NotebookEdit.insertCells(index, newCellData)
 }

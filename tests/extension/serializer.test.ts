@@ -7,8 +7,10 @@ import {
   workspace,
 } from 'vscode'
 import { expect, vi, it, describe, beforeEach } from 'vitest'
+import { isValid } from 'ulidx'
 
 import { GrpcSerializer, SerializerBase, WasmSerializer } from '../../src/extension/serializer'
+import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
@@ -246,6 +248,46 @@ describe('GrpcSerializer', () => {
         'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
       })
       expect(res).toBeTruthy()
+    })
+  })
+
+  describe('#addCellId', () => {
+    const copyCell = () =>
+      JSON.parse(
+        JSON.stringify({
+          kind: 2,
+          value: '$ date | tee /dev/stderr',
+          languageId: 'sh',
+          metadata: {
+            'runme.dev/id': '01HF7B0KJPF469EG9ZVSTKPEZ6',
+            interactive: 'true',
+            name: 'stdio-test',
+          },
+        }),
+      )
+
+    it('should never run against cells returned by the kernel', () => {
+      const cell = copyCell()
+      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.ALL)
+      expect(res['runme.dev/id']).toStrictEqual(cell.metadata['runme.dev/id'])
+      expect(res['id']).toBeUndefined()
+    })
+
+    it('should add id to cell metadata when identity requires it', () => {
+      const cell = { metadata: {} }
+      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.CELL)
+      expect(res['runme.dev/id']).toBeDefined()
+      expect(isValid(res['runme.dev/id'])).toBeTruthy()
+      expect(res['id']).toBeDefined()
+      expect(isValid(res['id'])).toBeTruthy()
+    })
+
+    it('should only add runme.dev/id to cell metadata when no identity is required', () => {
+      const cell = { metadata: {} }
+      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.DOCUMENT)
+      expect(res['runme.dev/id']).toBeDefined()
+      expect(isValid(res['runme.dev/id'])).toBeTruthy()
+      expect(res['id']).toBeUndefined()
     })
   })
 
