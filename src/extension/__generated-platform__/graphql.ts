@@ -171,7 +171,7 @@ export type CellExecutionHistoryArgs = {
 
 export type CellInput = {
   __typename?: 'CellInput';
-  cellNotebookContexts: Array<Maybe<CellNotebookContext>>;
+  cellNotebookMetadataList: Array<Maybe<CellNotebookMetadata>>;
   createTime: Scalars['DateTime']['output'];
   data: Scalars['Byte']['output'];
   hash: Scalars['String']['output'];
@@ -183,23 +183,23 @@ export type CellInput = {
   updateTime: Scalars['DateTime']['output'];
 };
 
-export type CellNotebookContext = {
-  __typename?: 'CellNotebookContext';
+export type CellNotebookMetadata = {
+  __typename?: 'CellNotebookMetadata';
   cell: Cell;
   cellId: Scalars['String']['output'];
   cellInput: CellInput;
   cellInputId: Scalars['String']['output'];
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
-  notebookContext: NotebookContext;
-  notebookContextId: Scalars['String']['output'];
+  notebookMetadata: NotebookMetadata;
+  notebookMetadataId: Scalars['String']['output'];
   organization: Organization;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
 
 
-export type CellNotebookContextCellInputArgs = {
+export type CellNotebookMetadataCellInputArgs = {
   id?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -209,8 +209,8 @@ export type CellOutput = {
   autoSave?: Maybe<Scalars['Boolean']['output']>;
   cell?: Maybe<Cell>;
   cellId: Scalars['String']['output'];
-  cellNotebookContext: CellNotebookContext;
-  cellNotebookContextId?: Maybe<Scalars['String']['output']>;
+  cellNotebookMetadata: CellNotebookMetadata;
+  cellNotebookMetadataId?: Maybe<Scalars['String']['output']>;
   cellSharings?: Maybe<Array<Maybe<CellSharing>>>;
   conversation?: Maybe<Conversation>;
   createTime: Scalars['DateTime']['output'];
@@ -364,12 +364,6 @@ export type CreateCellInputInput = {
   updateTime: Scalars['DateTime']['input'];
 };
 
-export type CreateCellNotebookContextInput = {
-  cellId: Scalars['String']['input'];
-  notebookContextId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-};
-
 export type CreateCellOutputInput = {
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
   branch?: InputMaybe<Scalars['String']['input']>;
@@ -453,21 +447,6 @@ export type CreateMessageInput = {
   parentMessageId?: InputMaybe<Scalars['String']['input']>;
   referenceId: Scalars['String']['input'];
   referenceTable: Scalars['String']['input'];
-};
-
-export type CreateNotebookContextHistoryInput = {
-  notebookContextId: Scalars['String']['input'];
-  notebookId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-};
-
-export type CreateNotebookContextInput = {
-  branch?: InputMaybe<Scalars['String']['input']>;
-  commit?: InputMaybe<Scalars['String']['input']>;
-  filePath?: InputMaybe<Scalars['String']['input']>;
-  notebookId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-  repository?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateNotebookIdentityInput = {
@@ -995,45 +974,13 @@ export type Notebook = {
   __typename?: 'Notebook';
   cells?: Maybe<Array<Maybe<Cell>>>;
   createTime?: Maybe<Scalars['DateTime']['output']>;
-  currentNotebookContext: NotebookContext;
+  currentNotebookMetadata: NotebookMetadata;
   id: Scalars['String']['output'];
   notebookIdentity: NotebookIdentity;
   organizationId: Scalars['String']['output'];
   updateTime?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
   userId: Scalars['String']['output'];
-};
-
-export type NotebookContext = {
-  __typename?: 'NotebookContext';
-  branch?: Maybe<Scalars['String']['output']>;
-  cellNotebookContexts: Array<Maybe<CellNotebookContext>>;
-  commit?: Maybe<Scalars['String']['output']>;
-  createTime: Scalars['DateTime']['output'];
-  extensionVersion?: Maybe<Scalars['String']['output']>;
-  filePath?: Maybe<Scalars['String']['output']>;
-  id: Scalars['String']['output'];
-  notebookIdentity: NotebookIdentity;
-  notebookIdentityId?: Maybe<Scalars['String']['output']>;
-  notebookInput?: Maybe<NotebookInput>;
-  notebookInputId?: Maybe<Scalars['String']['output']>;
-  organization: Organization;
-  organizationId: Scalars['String']['output'];
-  repository?: Maybe<Scalars['String']['output']>;
-  updateTime: Scalars['DateTime']['output'];
-};
-
-export type NotebookContextHistory = {
-  __typename?: 'NotebookContextHistory';
-  createTime: Scalars['DateTime']['output'];
-  id: Scalars['String']['output'];
-  notebook: Notebook;
-  notebookContext: NotebookContext;
-  notebookContextId: Scalars['String']['output'];
-  notebookId: Scalars['String']['output'];
-  organization: Organization;
-  organizationId: Scalars['String']['output'];
-  updateTime: Scalars['DateTime']['output'];
 };
 
 export type NotebookIdentity = {
@@ -1061,8 +1008,40 @@ export type NotebookInput = {
   hash: Scalars['String']['output'];
   id: Scalars['String']['output'];
   notebook: Notebook;
-  notebookContexts: Array<Maybe<NotebookContext>>;
   notebookId: Scalars['String']['output'];
+  notebookMetadataList: Array<Maybe<NotebookMetadata>>;
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+};
+
+export type NotebookMetadata = {
+  __typename?: 'NotebookMetadata';
+  branch?: Maybe<Scalars['String']['output']>;
+  cellNotebookMetadataList: Array<Maybe<CellNotebookMetadata>>;
+  commit?: Maybe<Scalars['String']['output']>;
+  createTime: Scalars['DateTime']['output'];
+  extensionVersion?: Maybe<Scalars['String']['output']>;
+  filePath?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  notebookIdentity: NotebookIdentity;
+  notebookIdentityId?: Maybe<Scalars['String']['output']>;
+  notebookInput?: Maybe<NotebookInput>;
+  notebookInputId?: Maybe<Scalars['String']['output']>;
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  repository?: Maybe<Scalars['String']['output']>;
+  updateTime: Scalars['DateTime']['output'];
+};
+
+export type NotebookMetadataHistory = {
+  __typename?: 'NotebookMetadataHistory';
+  createTime: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  notebook: Notebook;
+  notebookId: Scalars['String']['output'];
+  notebookMetadata: NotebookMetadata;
+  notebookMetadataId: Scalars['String']['output'];
   organization: Organization;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
@@ -1511,14 +1490,6 @@ export type UpdateCellInputInput = {
   updateTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
-export type UpdateCellNotebookContextInput = {
-  cellId?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  notebookContextId?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
 export type UpdateCellOutputInput = {
   groupIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   notify?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1594,24 +1565,6 @@ export type UpdateLogInput = {
 export type UpdateLogTypeInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateNotebookContextHistoryInput = {
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  notebookContextId?: InputMaybe<Scalars['String']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
-export type UpdateNotebookContextInput = {
-  branch?: InputMaybe<Scalars['String']['input']>;
-  commit?: InputMaybe<Scalars['String']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  filePath?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  repository?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type UpdateNotebookIdentityInput = {
