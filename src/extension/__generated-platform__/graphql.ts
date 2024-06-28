@@ -171,36 +171,33 @@ export type CellExecutionHistoryArgs = {
 
 export type CellInput = {
   __typename?: 'CellInput';
-  cellNotebookMetadataList: Array<Maybe<CellNotebookMetadata>>;
+  cellNotebookMetadataList?: Maybe<Array<Maybe<CellNotebookMetadata>>>;
   createTime: Scalars['DateTime']['output'];
   data: Scalars['Byte']['output'];
   hash: Scalars['String']['output'];
   id: Scalars['String']['output'];
   input?: Maybe<Scalars['String']['output']>;
   maskedInput?: Maybe<Scalars['String']['output']>;
-  organization: Organization;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
 
 export type CellNotebookMetadata = {
   __typename?: 'CellNotebookMetadata';
-  cell: Cell;
+  category?: Maybe<Scalars['String']['output']>;
+  cell?: Maybe<Cell>;
   cellId: Scalars['String']['output'];
-  cellInput: CellInput;
+  cellInput?: Maybe<CellInput>;
   cellInputId: Scalars['String']['output'];
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
-  notebookMetadata: NotebookMetadata;
+  name?: Maybe<Scalars['String']['output']>;
+  notebookMetadata?: Maybe<NotebookMetadata>;
   notebookMetadataId: Scalars['String']['output'];
-  organization: Organization;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
-};
-
-
-export type CellNotebookMetadataCellInputArgs = {
-  id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CellOutput = {
@@ -209,12 +206,14 @@ export type CellOutput = {
   autoSave?: Maybe<Scalars['Boolean']['output']>;
   cell?: Maybe<Cell>;
   cellId: Scalars['String']['output'];
-  cellNotebookMetadata: CellNotebookMetadata;
+  cellNotebookMetadata?: Maybe<CellNotebookMetadata>;
   cellNotebookMetadataId?: Maybe<Scalars['String']['output']>;
   cellSharings?: Maybe<Array<Maybe<CellSharing>>>;
   conversation?: Maybe<Conversation>;
   createTime: Scalars['DateTime']['output'];
+  endTime?: Maybe<Scalars['DateTime']['output']>;
   exitCode: Scalars['Int']['output'];
+  exitType?: Maybe<Scalars['String']['output']>;
   fileName?: Maybe<Scalars['String']['output']>;
   hasMaskedData?: Maybe<Scalars['Boolean']['output']>;
   htmlUrl?: Maybe<Scalars['String']['output']>;
@@ -228,11 +227,13 @@ export type CellOutput = {
   maskedStderr?: Maybe<Scalars['Bytes']['output']>;
   maskedStdout?: Maybe<Scalars['Bytes']['output']>;
   metadata: Metadata;
+  mimeType?: Maybe<Scalars['String']['output']>;
   organization?: Maybe<Organization>;
   organizationId?: Maybe<Scalars['String']['output']>;
   owner?: Maybe<User>;
   pid: Scalars['Int']['output'];
   shareType: ShareType;
+  startTime?: Maybe<Scalars['DateTime']['output']>;
   stderr?: Maybe<Scalars['Bytes']['output']>;
   stderrData: Scalars['Bytes']['output'];
   stdout?: Maybe<Scalars['Bytes']['output']>;
@@ -344,24 +345,11 @@ export type CreateCellExecutionInput = {
   notebook?: InputMaybe<CreateNotebookInput>;
   pid: Scalars['Int']['input'];
   repository?: InputMaybe<Scalars['String']['input']>;
+  sessionId?: InputMaybe<Scalars['String']['input']>;
   shareType?: InputMaybe<ShareType>;
   stderr: Scalars['Bytes']['input'];
   stdout: Scalars['Bytes']['input'];
   updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
-export type CreateCellInput = {
-  lifecycleIdentityId: Scalars['String']['input'];
-  notebookId: Scalars['String']['input'];
-  notebookSessionId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type CreateCellInputInput = {
-  createTime: Scalars['DateTime']['input'];
-  data: Scalars['Byte']['input'];
-  hash: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-  updateTime: Scalars['DateTime']['input'];
 };
 
 export type CreateCellOutputInput = {
@@ -380,6 +368,7 @@ export type CreateCellOutputInput = {
   notebookLifecycleIdentityId: Scalars['String']['input'];
   pid: Scalars['Int']['input'];
   repository?: InputMaybe<Scalars['String']['input']>;
+  sessionId?: InputMaybe<Scalars['String']['input']>;
   shareType?: InputMaybe<ShareType>;
   stderrData: Scalars['Bytes']['input'];
   stdoutData: Scalars['Bytes']['input'];
@@ -449,26 +438,10 @@ export type CreateMessageInput = {
   referenceTable: Scalars['String']['input'];
 };
 
-export type CreateNotebookIdentityInput = {
-  notebookId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-  type: NotebookIdentityType;
-  value: Scalars['String']['input'];
-};
-
 export type CreateNotebookInput = {
   fileName?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
   runmeVersion?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type CreateNotebookInputInput = {
-  createTime: Scalars['DateTime']['input'];
-  data: Scalars['Byte']['input'];
-  hash: Scalars['String']['input'];
-  notebookId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
-  updateTime: Scalars['DateTime']['input'];
 };
 
 export type CreateNotebookSessionInput = {
@@ -812,6 +785,7 @@ export type Mutation = {
   updateCellOutput: CellOutput;
   updateGroup: Group;
   updateOrganization: Organization;
+  updateOrganizationUser: Organization;
   updateSlackInstallation: SlackInstallation;
   updateUserRole: User;
 };
@@ -961,6 +935,11 @@ export type MutationUpdateOrganizationArgs = {
 };
 
 
+export type MutationUpdateOrganizationUserArgs = {
+  input: UpdateOrganizationUserInput;
+};
+
+
 export type MutationUpdateSlackInstallationArgs = {
   input: UpdateSlackInstallationInput;
 };
@@ -972,11 +951,12 @@ export type MutationUpdateUserRoleArgs = {
 
 export type Notebook = {
   __typename?: 'Notebook';
+  Organization?: Maybe<Organization>;
   cells?: Maybe<Array<Maybe<Cell>>>;
   createTime?: Maybe<Scalars['DateTime']['output']>;
-  currentNotebookMetadata: NotebookMetadata;
+  currentNotebookMetadata?: Maybe<NotebookMetadata>;
   id: Scalars['String']['output'];
-  notebookIdentity: NotebookIdentity;
+  notebookIdentity?: Maybe<NotebookIdentity>;
   organizationId: Scalars['String']['output'];
   updateTime?: Maybe<Scalars['DateTime']['output']>;
   user?: Maybe<User>;
@@ -987,9 +967,9 @@ export type NotebookIdentity = {
   __typename?: 'NotebookIdentity';
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
-  notebook: Notebook;
+  notebook?: Maybe<Notebook>;
   notebookId: Scalars['String']['output'];
-  organization: Organization;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   type: NotebookIdentityType;
   updateTime: Scalars['DateTime']['output'];
@@ -1007,10 +987,10 @@ export type NotebookInput = {
   data: Scalars['Bytes']['output'];
   hash: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  notebook: Notebook;
+  notebook?: Maybe<Notebook>;
   notebookId: Scalars['String']['output'];
-  notebookMetadataList: Array<Maybe<NotebookMetadata>>;
-  organization: Organization;
+  notebookMetadataList?: Maybe<Array<Maybe<NotebookMetadata>>>;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
@@ -1018,17 +998,19 @@ export type NotebookInput = {
 export type NotebookMetadata = {
   __typename?: 'NotebookMetadata';
   branch?: Maybe<Scalars['String']['output']>;
-  cellNotebookMetadataList: Array<Maybe<CellNotebookMetadata>>;
+  cellNotebookMetadataList?: Maybe<Array<Maybe<CellNotebookMetadata>>>;
   commit?: Maybe<Scalars['String']['output']>;
   createTime: Scalars['DateTime']['output'];
   extensionVersion?: Maybe<Scalars['String']['output']>;
   filePath?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
-  notebookIdentity: NotebookIdentity;
+  notebookIdentity?: Maybe<NotebookIdentity>;
   notebookIdentityId?: Maybe<Scalars['String']['output']>;
   notebookInput?: Maybe<NotebookInput>;
   notebookInputId?: Maybe<Scalars['String']['output']>;
-  organization: Organization;
+  notebookSession?: Maybe<NotebookSession>;
+  notebookSessionId?: Maybe<Scalars['String']['output']>;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   repository?: Maybe<Scalars['String']['output']>;
   updateTime: Scalars['DateTime']['output'];
@@ -1038,24 +1020,22 @@ export type NotebookMetadataHistory = {
   __typename?: 'NotebookMetadataHistory';
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
-  notebook: Notebook;
+  notebook?: Maybe<Notebook>;
   notebookId: Scalars['String']['output'];
-  notebookMetadata: NotebookMetadata;
+  notebookMetadata?: Maybe<NotebookMetadata>;
   notebookMetadataId: Scalars['String']['output'];
-  organization: Organization;
+  organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
 
 export type NotebookSession = {
   __typename?: 'NotebookSession';
-  cells: Array<Maybe<Cell>>;
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
-  notebook: Notebook;
-  notebookId: Scalars['String']['output'];
   organization: Organization;
   organizationId: Scalars['String']['output'];
+  sessionId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
 
@@ -1103,6 +1083,7 @@ export type OrgMetadataInput = {
 export type Organization = {
   __typename?: 'Organization';
   createTime: Scalars['DateTime']['output'];
+  defaultShareType?: Maybe<ShareType>;
   domain?: Maybe<Scalars['String']['output']>;
   groups?: Maybe<Array<Maybe<Group>>>;
   id: Scalars['String']['output'];
@@ -1116,6 +1097,7 @@ export type Organization = {
 
 export type OrganizationUser = {
   __typename?: 'OrganizationUser';
+  defaultShareType?: Maybe<ShareType>;
   id: Scalars['String']['output'];
   isActive?: Maybe<Scalars['Boolean']['output']>;
   organization?: Maybe<Organization>;
@@ -1188,6 +1170,8 @@ export enum PermissionEnum {
   UserReadAnalytics = 'user_read_analytics',
   UserReadAssistant = 'user_read_assistant',
   UserReadCell = 'user_read_cell',
+  UserReadCellInput = 'user_read_cell_input',
+  UserReadCellNotebookMetadata = 'user_read_cell_notebook_metadata',
   UserReadCellOutput = 'user_read_cell_output',
   UserReadChat = 'user_read_chat',
   UserReadConversation = 'user_read_conversation',
@@ -1197,6 +1181,9 @@ export enum PermissionEnum {
   UserReadInvitation = 'user_read_invitation',
   UserReadMessage = 'user_read_message',
   UserReadNotebook = 'user_read_notebook',
+  UserReadNotebookIdentity = 'user_read_notebook_identity',
+  UserReadNotebookInput = 'user_read_notebook_input',
+  UserReadNotebookMetadata = 'user_read_notebook_metadata',
   UserReadNotification = 'user_read_notification',
   UserReadOrganization = 'user_read_organization',
   UserReadOrganizationUser = 'user_read_organization_user',
@@ -1476,20 +1463,6 @@ export type UpdateCellExecutionInput = {
   isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-export type UpdateCellInput = {
-  lifecycleIdentityId?: InputMaybe<Scalars['String']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  notebookSessionId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateCellInputInput = {
-  content?: InputMaybe<Scalars['Byte']['input']>;
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  hash?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-};
-
 export type UpdateCellOutputInput = {
   groupIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   notify?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1567,27 +1540,9 @@ export type UpdateLogTypeInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type UpdateNotebookIdentityInput = {
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  type?: InputMaybe<NotebookIdentityType>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
-  value?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type UpdateNotebookInput = {
   id: Scalars['String']['input'];
   lifecycleIdentityId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type UpdateNotebookInputInput = {
-  createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  data?: InputMaybe<Scalars['Byte']['input']>;
-  hash?: InputMaybe<Scalars['String']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type UpdateNotebookSessionInput = {
@@ -1612,13 +1567,13 @@ export type UpdateOrgUserRoleInput = {
 };
 
 export type UpdateOrganizationInput = {
+  defaultShareType?: InputMaybe<ShareType>;
   metadata?: InputMaybe<OrgMetadataInput>;
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateOrganizationUserInput = {
-  organizationId?: InputMaybe<Scalars['String']['input']>;
-  userId?: InputMaybe<Scalars['String']['input']>;
+  defaultShareType?: InputMaybe<ShareType>;
 };
 
 export type UpdateRoleInput = {

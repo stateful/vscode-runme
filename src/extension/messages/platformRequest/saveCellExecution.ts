@@ -27,6 +27,7 @@ export default async function saveCellExecution(
   log.info('Saving cell execution')
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+  const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
   log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 
   try {
@@ -110,6 +111,7 @@ export default async function saveCellExecution(
           commit: gitCtx?.commit,
           fileContent,
           filePath,
+          sessionId,
         },
       },
     })
