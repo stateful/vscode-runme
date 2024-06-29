@@ -31,6 +31,7 @@ const COLUMNS = [
 @customElement('gcp-run-revisions')
 export class Revisions extends LitElement implements Disposable {
   protected disposables: Disposable[] = []
+  protected maxRevisionCount = 15
 
   @property({ type: Array })
   revisions!: Revision[]
@@ -46,6 +47,9 @@ export class Revisions extends LitElement implements Disposable {
 
   @property({ type: String })
   region!: string
+
+  @state()
+  private more = false
 
   @state()
   private _selectedResource: Revision | null | undefined
@@ -87,8 +91,8 @@ export class Revisions extends LitElement implements Disposable {
 
     .footer {
       display: flex;
-      place-content: center flex-end;
       margin-top: 10px;
+      justify-content: space-between;
       align-items: baseline;
     }
 
@@ -124,6 +128,14 @@ export class Revisions extends LitElement implements Disposable {
     )
   }
 
+  private toggleMore(e: Event) {
+    if (!e.defaultPrevented) {
+      e.preventDefault()
+    }
+    this.more = !this.more
+    this.requestUpdate()
+  }
+
   private viewRevisionDetails(revision: Revision) {
     this._selectedResource = revision
     this.requestUpdate()
@@ -134,10 +146,12 @@ export class Revisions extends LitElement implements Disposable {
   }
 
   private renderRevisions() {
+    const revisions = this.more ? this.revisions : this.revisions.slice(0, this.maxRevisionCount)
+
     return html` <div>
       <table-view
         .columns="${COLUMNS}"
-        .rows="${this.revisions.map((revision) => {
+        .rows="${revisions.map((revision) => {
           const createTime = Number(revision.createTime)
           return {
             name: revision.name,
@@ -204,6 +218,20 @@ export class Revisions extends LitElement implements Disposable {
     this._selectedResource = null
   }
 
+  renderFooter() {
+    if (this.revisions.length <= this.maxRevisionCount) {
+      return html`<div />`
+    }
+
+    return html`<vscode-link class="link" @click="${this.toggleMore}"
+      >${when(
+        this.more,
+        () => 'Show less',
+        () => 'Show more',
+      )}</vscode-link
+    >`
+  }
+
   render() {
     return html`<div class="integration">
         <div class="flex">
@@ -230,6 +258,7 @@ export class Revisions extends LitElement implements Disposable {
         () => this.renderRevisions(),
       )}
       <div class="footer">
+        ${this.renderFooter()}
         <vscode-link
           class="link"
           href="${`https://console.cloud.google.com/run/detail/${this.region}/${this.serviceId}/revisions?project=${this.projectId}`}"

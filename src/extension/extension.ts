@@ -247,7 +247,9 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
-      RunmeExtension.registerCommand('runme.runWithPrompts', () => runCellWithPrompts()),
+      RunmeExtension.registerCommand('runme.runWithPrompts', (cell) =>
+        runCellWithPrompts(cell, kernel),
+      ),
       runmeTaskProvider,
 
       /**

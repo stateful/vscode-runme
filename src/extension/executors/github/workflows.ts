@@ -115,7 +115,8 @@ export async function checkWorkflowRunStatus({
  * @param workflowUrl
  */
 export function parseGitHubURL(workflowUrl: string): IGitHubURLParts {
-  const parts = workflowUrl.split('/')
+  const lines = workflowUrl.split('\n')
+  const parts = lines[0].trim().split('/') // only support a single URL, take first
   const owner = parts[3]
   const repo = parts[4]
   const ref = parts[5] === 'actions' && parts[6] === 'workflows' ? 'main' : parts[6]

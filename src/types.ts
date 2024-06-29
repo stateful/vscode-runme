@@ -298,6 +298,7 @@ export interface AWSEC2Instance extends StringIndexable {
   platform: string | undefined
   securityGroups?: GroupIdentifier[]
   lifecycle: InstanceLifecycleType | undefined
+  imageName: string
 }
 
 export interface AWSEC2InstanceDetails {
@@ -559,6 +560,7 @@ export interface ClientMessagePayload {
   [ClientMessages.awsEC2InstanceAction]: {
     cellId: string
     instance: string
+    osUser: string
     region: string
     action: AWSActionType
   }

@@ -1,9 +1,11 @@
 import { EKSClient, ListClustersCommand, DescribeClusterCommand } from '@aws-sdk/client-eks'
+import { AwsCredentialIdentityProvider } from '@smithy/types'
 
 import { type IndexableCluster } from './types'
 
-export async function listClusters(region: string) {
+export async function listClusters(credentials: AwsCredentialIdentityProvider, region: string) {
   const eksClient = new EKSClient({
+    credentials,
     region,
   })
 
@@ -29,8 +31,13 @@ export async function listClusters(region: string) {
   return clusters
 }
 
-export async function getCluster(region: string, clusterName: string) {
+export async function getCluster(
+  credentials: AwsCredentialIdentityProvider,
+  region: string,
+  clusterName: string,
+) {
   const eksClient = new EKSClient({
+    credentials,
     region,
   })
 

@@ -14,7 +14,7 @@ You can interact with your AWS Resources with Runme via the AWS CLI or Runme Not
 
 Available guides:
 
--  [AWS EC2 Cloud Renderers](ec2.md)
+- [AWS EC2 Cloud Renderers](ec2.md)
 - [AWS EKS Cloud Renderers](eks.md)
 
 ## Installing AWS CLI
@@ -46,12 +46,12 @@ aws configure list-profiles
 To display profile details, including access key, secret key, and region configuration information utilized for a specific profile, execute the following commands:
 
 ```sh {"id":"01HV6VWQWV48H1P32E3FBTZXQZ","promptEnv":"yes","terminalRows":"2"}
-export PROFILE_NAME="default"
-echo "PROFILE NAME SET TO $PROFILE_NAME"
+export AWS_PROFILE="stateful"
+echo "Using AWS Profile $AWS_PROFILE"
 ```
 
 ```sh {"id":"01HV6VR5P3DNBBRS24G43P384G"}
-aws configure list --profile $PROFILE_NAME
+aws configure list --profile $AWS_PROFILE
 ```
 
 ### Configuring a default profile

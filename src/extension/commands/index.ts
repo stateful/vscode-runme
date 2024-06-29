@@ -361,9 +361,9 @@ export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
   ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, maskingIsOn)
 }
 
-export async function runCellWithPrompts() {
+export async function runCellWithPrompts(cell: NotebookCell, kernel: Kernel) {
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
-  await commands.executeCommand('notebook.cell.execute')
+  await kernel.executeAndFocusNotebookCell(cell)
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, false)
 }
 

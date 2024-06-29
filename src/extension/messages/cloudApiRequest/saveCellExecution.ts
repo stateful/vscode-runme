@@ -1,4 +1,5 @@
 import { TelemetryReporter } from 'vscode-telemetry'
+import YAML from 'yaml'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -64,7 +65,11 @@ export default async function saveCellExecution(
     const graphClient = InitializeClient({ runmeToken: runmeTokenResponse.token })
     const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
 
-    const fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
+    let fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
+    if (!fmParsed) {
+      const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
+      fmParsed = yamlDocs[0].toJS()
+    }
 
     let notebookInput: NotebookInput | undefined
 

@@ -11,6 +11,7 @@ import { CloudShellIcon } from '../icons/cloudShell'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { ClientMessages } from '../../../constants'
 
+import { resolveOsUserName } from './ec2Helper'
 enum MESSAGE_OPTIONS {
   Yes = 'Yes',
   No = 'No',
@@ -219,6 +220,7 @@ export class EC2InstanceDetails extends LitElement implements Disposable {
             postClientMessage(ctx, ClientMessages.awsEC2InstanceAction, {
               cellId: this.cellId,
               instance: this.instance?.instanceId!,
+              osUser: resolveOsUserName(this.instance?.imageName),
               region: this.region,
               action: AWSActionType.ConnectViaSSH,
             })

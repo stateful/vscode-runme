@@ -146,6 +146,19 @@ test('getKey', () => {
       languageId: 'shellscript',
     } as any),
   ).toBe('sh')
+
+  expect(
+    getKey({
+      getText: vi
+        .fn()
+        .mockReturnValue(
+          'export EC2_INSTANCE_ID=123\n' +
+            'https://us-east-1.console.aws.amazon.com/ec2/home' +
+            '?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
+        ),
+      languageId: 'sh',
+    } as any),
+  ).toBe('sh')
 })
 
 suite('normalizeLanguage', () => {
@@ -436,7 +449,7 @@ suite('validateAnnotations', () => {
     }
     const result = validateAnnotations(cell)
     expect(result.hasErrors).toBe(true)
-    expect(result.errors && Object.entries(result.errors).length).toBe(2)
+    expect(result.errors && Object.entries(result.errors).length).toBe(4)
   })
 
   test('it should pass for valid annotations values', () => {

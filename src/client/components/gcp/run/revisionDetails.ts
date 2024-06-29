@@ -168,7 +168,6 @@ export class RevisionDetails extends LitElement implements Disposable {
     .long-word {
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
       max-width: 80%;
     }
 

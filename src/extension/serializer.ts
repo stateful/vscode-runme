@@ -105,7 +105,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellId(cellAdded.metadata),
+          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity),
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -142,14 +142,31 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     await workspace.applyEdit(edit)
   }
 
-  public static addCellId(metadata: Serializer.Metadata | undefined): {
+  public static addCellId(
+    metadata: Serializer.Metadata | undefined,
+    identity: RunmeIdentity,
+  ): {
     [key: string]: any
   } {
-    const id = metadata?.id || metadata?.['runme.dev/id']
-    const newId = id || ulid()
+    // never run for cells that came out of kernel
+    if (metadata?.['runme.dev/id']) {
+      return metadata
+    }
+
+    // newly inserted cells have blank metadata
+    const newCellId = ulid()
+
+    // only set `id` if all or cell identity is required
+    if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
+      return {
+        ...(metadata || {}),
+        ...{ 'runme.dev/id': newCellId, id: newCellId },
+      }
+    }
+
     return {
       ...(metadata || {}),
-      ...{ id: newId, 'runme.dev/id': newId },
+      ...{ 'runme.dev/id': newCellId },
     }
   }
 
@@ -169,8 +186,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const metadata = data.metadata
     data = new NotebookData(cells)
     data.metadata = metadata
-
-    this.reconcileCellIdentity(data)
 
     let encoded: Uint8Array
     try {
@@ -289,7 +304,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     notebook.metadata ??= {}
     notebook.metadata['runme.dev/frontmatterParsed'] = notebook.frontmatter
 
-    const notebookData = new NotebookData(SerializerBase.revive(notebook))
+    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity))
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     } else {
@@ -301,7 +316,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   // revive converts the Notebook proto to VSCode's NotebookData.
   // It returns a an array of VSCode NotebookCellData objects.
-  public static revive(notebook: Serializer.Notebook) {
+  public static revive(notebook: Serializer.Notebook, identity: RunmeIdentity) {
     return notebook.cells.reduce(
       (accu, elem) => {
         let cell: NotebookCellData
@@ -320,7 +335,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
           // The serializer used to own the lifecycle of IDs, however,
           // that's no longer true since they are coming out of the kernel now.
           // However, if "net new" cells show up after deserialization, ie inserts, we backfill them here.
-          cell.metadata = SerializerBase.addCellId(elem.metadata)
+          cell.metadata = SerializerBase.addCellId(elem.metadata, identity)
         }
 
         cell.metadata ??= {}
@@ -342,26 +357,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   protected printCell(content: string, languageId = 'markdown') {
     return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
-  }
-
-  /**
-   * Reconciles cell identity based on lifecycle identity, ie removes it if cell identity is not required.
-   */
-  protected reconcileCellIdentity(data: NotebookData): NotebookData {
-    const identity = this.lifecycleIdentity
-
-    if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
-      return data
-    }
-
-    data.cells.forEach((cell) => {
-      if (cell.metadata?.['id'] !== undefined) {
-        cell.metadata['runme.dev/id'] = cell.metadata['id']
-        delete cell.metadata['id']
-      }
-    })
-
-    return data
   }
 
   protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<number>

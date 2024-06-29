@@ -728,6 +728,8 @@ export class Kernel implements Disposable {
             return executorByKey({
               context: this.context,
               kernel: this,
+              runner: this.runner,
+              runnerEnv: this.runnerEnv,
               doc: runningCell,
               exec,
               outputs,
