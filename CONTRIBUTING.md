@@ -160,12 +160,14 @@ npm run bundle
 The Runme project has several test stages that you can run individually or as a whole:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PFZ87Q58","name":"test"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
 When testing in CI environment, run:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PGJBDGG0","name":"test:ci"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
 npx runme run test:format test:lint test:unit test:e2e:ci
 ```
 
