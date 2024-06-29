@@ -1,5 +1,5 @@
+import { Uri, window, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
-import { window } from 'vscode'
 import YAML from 'yaml'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
@@ -14,8 +14,8 @@ import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
-import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 import getLogger from '../../logger'
+import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -28,6 +28,7 @@ export default async function saveCellExecution(
   log.info('Saving cell execution')
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
+  const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
   log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 
   try {
@@ -72,22 +73,23 @@ export default async function saveCellExecution(
 
     if (!fmParsed) {
       const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
-      fmParsed = yamlDocs[0].toJS()
+      fmParsed = yamlDocs[0].toJS?.()
     }
 
     let notebookInput: CreateNotebookInput | undefined
 
-    if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
-      const fileName = window.activeTextEditor?.document.fileName
+    const gitCtx = await getGitContext()
+    const path = window.activeTextEditor?.document.uri.fsPath
+    const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
+    const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : null
 
+    if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
       notebookInput = {
-        fileName,
+        fileName: path,
         id: fmParsed?.runme?.id,
         runmeVersion: fmParsed?.runme?.version,
       }
     }
-
-    const gitCtx = await getGitContext()
 
     const result = await graphClient.mutate({
       mutation: CreateCellExecutionDocument,
@@ -113,6 +115,9 @@ export default async function saveCellExecution(
           branch: gitCtx?.branch,
           repository: gitCtx?.repository,
           commit: gitCtx?.commit,
+          fileContent,
+          filePath,
+          sessionId,
         },
       },
     })
