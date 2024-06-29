@@ -73,7 +73,7 @@ export default async function saveCellExecution(
 
     if (!fmParsed) {
       const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
-      fmParsed = yamlDocs[0].toJS()
+      fmParsed = yamlDocs[0].toJS?.()
     }
 
     let notebookInput: CreateNotebookInput | undefined
