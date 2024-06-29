@@ -322,8 +322,10 @@ export class RunmeExtension {
 
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-      // Required to populate the Accounts Menu in the Activity Bar
-      getPlatformAuthSession(false)
+      const session = await getPlatformAuthSession(true)
+      if (session) {
+        window.showInformationMessage('Logged into the Stateful Platform')
+      }
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
     }
