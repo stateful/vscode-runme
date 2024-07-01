@@ -29,8 +29,9 @@ export async function handleAWSMessage({ message, editor }: AWSStatusMessaging):
             return insertCodeCell(
               message.output.cellId,
               editor,
-              // eslint-disable-next-line max-len
-              `aws ec2-instance-connect ssh --instance-id ${message.output.instance} --os-user=${message.output.osUser}`,
+              'echo "Connecting to instance via SSH..."\n' +
+                // eslint-disable-next-line max-len
+                `aws ec2-instance-connect ssh --instance-id ${message.output.instance} --os-user=${message.output.osUser}`,
               'sh',
               true,
             )

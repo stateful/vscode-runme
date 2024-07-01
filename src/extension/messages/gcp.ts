@@ -85,8 +85,9 @@ export async function handleGCPMessage({ messaging, message, editor }: GCPStatus
           return insertCodeCell(
             message.output.cellId,
             editor,
-            // eslint-disable-next-line max-len
-            `gcloud compute ssh --zone "${message.output.zone}" "${message.output.instance}" --project "${message.output.project}"`,
+            'echo "Connecting to instance via SSH..."\n' +
+              // eslint-disable-next-line max-len
+              `gcloud compute ssh --zone "${message.output.zone}" "${message.output.instance}" --project "${message.output.project}"`,
             'sh',
             true,
           )

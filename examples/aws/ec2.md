@@ -79,6 +79,7 @@ https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetai
 ```
 
 ```sh {"background":"true","id":"01J1APZ2HW09ZNB41V8N2ZKQWH"}
+echo "Connecting to instance via SSH..."
 aws ec2-instance-connect ssh --instance-id i-015097a0646c45ea8 --os-user=ubuntu
 ```
 
@@ -94,6 +95,7 @@ echo "Configured EC2 Instance is $EC2_INSTANCE_ID"
 Now that you have the instance configured, run the following command to connect:
 
 ```sh {"background":"true","id":"01HQRAMMXGPYTFGQDMREZHNB37","terminalRows":"25"}
+echo "Connecting to instance via SSH..."
 aws ec2-instance-connect ssh --instance-id $EC2_INSTANCE_ID --os-user=ubuntu
 ```
 
