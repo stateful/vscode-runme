@@ -60,6 +60,9 @@ jobs:
         with:
           node-version: 18
 
+      - name: Install xvfb
+        run: sudo apt-get update -y && sudo apt-get install xvfb
+
       - name: Install Dependencies
         run: npm ci
         env:
@@ -82,10 +85,7 @@ jobs:
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
 
       - name: Run Tests
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: npm test
-          options: "-screen 0 1600x1200x24"
+        run: xvfb-run --server-args="-screen 0 1600x1200x24" npm test
         env:
           NODE_ENV: production
 
