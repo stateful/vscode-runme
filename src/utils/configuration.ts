@@ -4,10 +4,10 @@ import path from 'node:path'
 import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
-import { SERVER_PORT } from '../constants'
+import { RUNME_FRONTMATTER_PARSED, SERVER_PORT } from '../constants'
 import { RunmeIdentity } from '../extension/grpc/serializerTypes'
 import { getAnnotations, isWindows } from '../extension/utils'
-import { NotebookAutoSaveSetting } from '../types'
+import { NotebookAutoSaveSetting, Serializer } from '../types'
 
 const ACTIONS_SECTION_NAME = 'runme.actions'
 const SERVER_SECTION_NAME = 'runme.server'
@@ -259,16 +259,25 @@ const isNotebookTerminalFeatureEnabled = (
   return getRunmeTerminalConfigurationValue(featureName, false)
 }
 
-const getNotebookTerminalConfigurations = () => {
+const getNotebookTerminalConfigurations = (metadata: Serializer.Metadata) => {
   const schema = z.object(notebookTerminalSchema)
   const keys = Object.keys(notebookTerminalSchema) as Array<keyof typeof notebookTerminalSchema>
-  return keys.reduce(
+  const config = keys.reduce(
     (p, c) => {
       p[c] = getRunmeTerminalConfigurationValue<never>(c, undefined as never)
       return p
     },
     {} as z.infer<typeof schema>,
   )
+  const parsedFm = metadata?.[RUNME_FRONTMATTER_PARSED]
+  if (parsedFm?.terminalRows) {
+    const rows = Number(parsedFm.terminalRows)
+    if (!Number.isFinite(rows)) {
+      return config
+    }
+    config.rows = rows
+  }
+  return config
 }
 
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {

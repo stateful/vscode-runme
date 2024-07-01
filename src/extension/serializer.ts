@@ -29,6 +29,7 @@ import {
   NOTEBOOK_HAS_OUTPUTS,
   NOTEBOOK_OUTPUTS_MASKED,
   OutputType,
+  RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
 import {
@@ -302,7 +303,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     }
 
     notebook.metadata ??= {}
-    notebook.metadata['runme.dev/frontmatterParsed'] = notebook.frontmatter
+    notebook.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
 
     const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity))
     if (notebook.metadata) {
@@ -619,7 +620,7 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     const ephemeralId = metadata['runme.dev/id'] as string | undefined
-    const lid = metadata['runme.dev/frontmatterParsed']?.['runme']?.['id'] as string | undefined
+    const lid = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['id'] as string | undefined
 
     return lid ?? ephemeralId
   }
@@ -629,7 +630,7 @@ export class GrpcSerializer extends SerializerBase {
       // it's not session outputs unless known
       return false
     }
-    const sessionOutputId = metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['id']
+    const sessionOutputId = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['id']
     return Boolean(sessionOutputId)
   }
 
@@ -742,8 +743,8 @@ export class GrpcSerializer extends SerializerBase {
     const notebook = Notebook.clone(data as any)
 
     // cannot gurantee it wasn't changed
-    if (notebook.metadata['runme.dev/frontmatterParsed']) {
-      delete notebook.metadata['runme.dev/frontmatterParsed']
+    if (notebook.metadata[RUNME_FRONTMATTER_PARSED]) {
+      delete notebook.metadata[RUNME_FRONTMATTER_PARSED]
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {

@@ -1108,3 +1108,5 @@ export const EXECUTION_CELL_CREATION_DATE_STORAGE_KEY = 'executionCellCreationDa
 export const SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY = 'loginConsent'
 export const CLOUD_USER_SIGNED_IN = 'userSignedIn'
 export const PLATFORM_USER_SIGNED_IN = 'platformUserSignedIn'
+
+export const RUNME_FRONTMATTER_PARSED = 'runme.dev/frontmatterParsed'
