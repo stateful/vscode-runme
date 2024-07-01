@@ -19,7 +19,7 @@ import {
 } from '@aws-sdk/client-ec2'
 import { google } from '@google-cloud/run/build/protos/protos'
 
-import { OutputType, ClientMessages } from './constants'
+import { OutputType, ClientMessages, RUNME_FRONTMATTER_PARSED } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
 import type * as Grpc from './extension/grpc/serializerTypes'
@@ -103,7 +103,7 @@ export namespace Serializer {
     ['runme.dev/denoState']?: DenoState
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState
-    ['runme.dev/frontmatterParsed']?: Grpc.Frontmatter
+    [RUNME_FRONTMATTER_PARSED]?: Grpc.Frontmatter
     ['runme.dev/textRange']?: Grpc.Cell['textRange']
     ['runme.dev/gcpState']?: GCPState
   }

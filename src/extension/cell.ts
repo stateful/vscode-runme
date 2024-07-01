@@ -216,7 +216,7 @@ export class NotebookCellOutputManager {
 
           const terminalStateStr = terminalState.serialize()
           if (!terminalOutputItem) {
-            const terminalConfigurations = getNotebookTerminalConfigurations()
+            const terminalConfigurations = getNotebookTerminalConfigurations(cell.notebook.metadata)
 
             const isSignedIn = isPlatformAuthEnabled()
               ? ContextState.getKey(PLATFORM_USER_SIGNED_IN)
