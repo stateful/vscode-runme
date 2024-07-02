@@ -272,6 +272,7 @@ export class EC2InstanceDetails extends LitElement implements Disposable {
           <div class="instance-state state-${this.instance.instanceState || 'unknown'}">
             ${this.instance.instanceState}
           </div>
+          <!--
           <vscode-button
             class="control"
             @click="${() => this.executeAction(AWSActionType.ConnectViaSSH)}"
@@ -279,6 +280,7 @@ export class EC2InstanceDetails extends LitElement implements Disposable {
           >
             ${CloudShellIcon}
           </vscode-button>
+          -->
         </div>
       </div>
       <div class="columns">
