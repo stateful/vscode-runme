@@ -105,5 +105,23 @@ export async function getEC2InstanceDetail(
     },
   )[0]
 
+  if (!instanceDetails?.instance) {
+    return
+  }
+
+  const describeImagesCommand = new DescribeImagesCommand({
+    ImageIds: [instanceDetails.instance.ImageId],
+  })
+
+  const describeImagesResponse = await ec2ClientInstance.send(describeImagesCommand)
+
+  if (describeImagesResponse.Images) {
+    for (const image of describeImagesResponse.Images) {
+      if (instanceDetails.instance.ImageId === image.ImageId) {
+        instanceDetails.instance.imageName = image.Name!
+      }
+    }
+  }
+
   return instanceDetails
 }
