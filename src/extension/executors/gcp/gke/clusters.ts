@@ -1,5 +1,6 @@
 import container from '@google-cloud/container'
 import compute from '@google-cloud/compute'
+import { KubeConfig, CoreV1Api } from '@kubernetes/client-node'
 
 import { GcpGkeCluster } from '../../../../types'
 
@@ -92,6 +93,17 @@ export async function getCluster(clusterName: string, location: string, project:
   }
 }
 
+type NodeInfo = {
+  name: string
+  instanceStatus: string
+  cpuRequested?: string
+  cpuAllocatable?: string
+  memoryRequested?: string
+  memoryAllocatable?: string
+  storageRequested?: string
+  storageAllocatable?: string
+}
+
 /**
  * Get full cluster details including Nodes information.
  * Response is mapped to reflect cluster details in Google Cloud Console.
@@ -102,7 +114,52 @@ export async function getClusterDetails(clusterName: string, location: string, p
     const response = await clusterManagement.getCluster({
       name: `projects/${project}/locations/${location}/clusters/${clusterName}`,
     })
+
     const [cluster] = response
+    const instanceGroupsUrls = cluster.instanceGroupUrls || []
+
+    let gcloudNodes: NodeInfo[] = []
+
+    for (const instanceGroupUrl of instanceGroupsUrls) {
+      const instanceGroupName = instanceGroupUrl.split('/').pop()
+      const instancesClient = new compute.v1.InstanceGroupManagersClient()
+      const [instances] = await instancesClient.listManagedInstances({
+        project: project,
+        zone: location,
+        instanceGroupManager: instanceGroupName,
+      })
+
+      const nodes: NodeInfo[] = instances.map((instance) => ({
+        name: instance?.name?.split('/').pop()!,
+        instanceStatus: instance.instanceStatus as string,
+      }))
+
+      gcloudNodes.push(...nodes)
+    }
+
+    const kubeConfig = new KubeConfig()
+    kubeConfig.loadFromDefault()
+    const coreV1Api = kubeConfig.makeApiClient(CoreV1Api)
+
+    const k8sNodes = await coreV1Api.listNode()
+
+    const clusterNodes = gcloudNodes.map((gcloudNode) => {
+      const node = k8sNodes.body.items.find((node) => node.metadata?.name === gcloudNode.name)
+      if (!node) {
+        return gcloudNode
+      }
+
+      return {
+        ...gcloudNode,
+        cpuRequested: '-',
+        cpuAllocatable: node?.status?.allocatable?.cpu,
+        memoryRequested: node?.status?.capacity?.memory,
+        memoryAllocatable: node?.status?.allocatable?.memory,
+        storageRequested: node?.status?.capacity?.['ephemeral-storage'],
+        storageAllocatable: node?.status?.allocatable?.['ephemeral-storage'],
+      }
+    })
+
     return {
       itFailed: false,
       data: {
@@ -116,7 +173,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
           privateEndpoint: cluster.privateClusterConfig?.privateEndpoint,
           clusterCertificate: cluster.masterAuth?.clusterCaCertificate,
           basicCredentialsEnabled: !!cluster.masterAuth?.password,
-          node: cluster.nodePools?.map((nodePool) => {
+          nodePools: cluster.nodePools?.map((nodePool) => {
             return {
               name: nodePool.name,
               status: nodePool.status,
@@ -128,6 +185,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
               ipv4PodAddressRange: nodePool.networkConfig?.podIpv4CidrBlock,
             }
           }),
+          clusterNodes,
         },
         automation: {
           maintenance: cluster.maintenancePolicy?.window,
@@ -172,6 +230,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
       },
     }
   } catch (error: any) {
+    console.log(error)
     return { itFailed: true, reason: error.message }
   }
 }

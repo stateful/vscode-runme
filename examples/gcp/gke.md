@@ -47,7 +47,11 @@ You'll be presented with a resources table akin to the Google Cloud interface, s
 Run the following command (ensure you have provided a valid value for project-id)
 
 ```sh {"id":"01HP535BD16K2VDKBSB2RX7AZW"}
-https://console.cloud.google.com/kubernetes/list/overview?project=project-id
+https://console.cloud.google.com/kubernetes/list/overview?project=$CLUSTERS_PROJECT_NAME
+```
+
+```sh {"background":"false","id":"01J1QPXCQB3WQ41SCHQHNS93T0"}
+https://console.cloud.google.com/kubernetes/clusters/details/us-central1-c/cluster-2/details?project=runme-ci
 ```
 
 You can also paste a cluster details link:

@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit'
+import { LitElement, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
@@ -12,6 +12,8 @@ import { onClientMessage } from '../../../../utils/messaging'
 import { getContext } from '../../../utils'
 import { ArrowLeft } from '../../icons/arrowLeft'
 import { ClusterIcon } from '../../icons/cluster'
+
+import { clusterStyles } from './styles'
 
 @customElement('gcp-gke-cluster')
 export class Clusters extends LitElement implements Disposable {
@@ -44,111 +46,7 @@ export class Clusters extends LitElement implements Disposable {
   @state()
   executedInNewCell?: boolean | undefined
 
-  /* eslint-disable */
-  static styles = css`
-    vscode-button {
-      color: var(--vscode-button-foreground);
-      background-color: var(--vscode-button-background);
-      transform: scale(0.9);
-    }
-
-    vscode-button:hover {
-      background: var(--vscode-button-secondaryHoverBackground);
-    }
-
-    table {
-      box-sizing: border-box;
-      margin: 0px;
-      padding: 0px;
-      font-weight: 400;
-      line-height: 20px;
-      text-indent: 0px;
-      vertical-align: baseline;
-    }
-
-    .action-notice {
-      position: relative;
-      border-bottom: 2px solid var(--vscode-settings-rowHoverBackground);
-      animation-name: action-notice;
-      animation-duration: 2s;
-      animation-iteration-count: 2;
-    }
-
-    @keyframes action-notice {
-      0% {
-        border-color: var(--vscode-settings-rowHoverBackground);
-      }
-
-      50% {
-        border-color: var(--github-button-background);
-      }
-
-      100% {
-        border-color: var(--vscode-settings-rowHoverBackground);
-      }
-    }
-
-    .integration {
-      display: flex;
-      margin: 10px 0;
-      gap: 2px;
-      align-items: center;
-      font-weight: 400;
-      font-size: 18px;
-    }
-
-    .footer {
-      display: flex;
-      place-content: center flex-end;
-      margin-top: 10px;
-      align-items: baseline;
-    }
-
-    .footer .link {
-      font-size: 10px;
-      padding: 0 5px;
-    }
-
-    .tab,
-    .panel {
-      color: var(--vscode-editor-foreground);
-    }
-
-    .active-tab {
-      color: var(--vscode-textLink-activeForeground);
-      fill: currentcolor;
-      border-bottom: solid 2px var(--vscode-activityBarTop-activeBorder);
-    }
-
-    .cluster-view {
-      width: 100%;
-    }
-
-    .cluster-view tbody tr {
-      text-align: left;
-    }
-
-    .cluster-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-top: solid 1px var(--vscode-editorInlayHint-foreground);
-      border-bottom: solid 1px var(--vscode-editorInlayHint-foreground);
-      border-left: none;
-      border-right: none;
-    }
-
-    tbody tr {
-      text-align: left;
-    }
-
-    .loading {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      place-content: center;
-    }
-  `
+  static styles = clusterStyles
 
   private getClusterDetails() {
     const ctx = getContext()
@@ -246,7 +144,7 @@ export class Clusters extends LitElement implements Disposable {
           value: clusterBasics.privateEndpoint,
         },
       ]}"
-      .displayable="${(row: GcpGkeCluster, field: string) => {
+      .displayable="${(_row: GcpGkeCluster, _field: string) => {
         return true
       }}"
       .renderer="${(row: GcpGkeCluster, field: string) => {
@@ -298,7 +196,7 @@ export class Clusters extends LitElement implements Disposable {
           value: automation.autoscaling?.autoscalingProfile,
         },
       ]}"
-      .displayable="${(row: GcpGkeCluster, field: string) => {
+      .displayable="${(_row: GcpGkeCluster, _field: string) => {
         return true
       }}"
       .renderer="${(row: GcpGkeCluster, field: string) => {
@@ -408,13 +306,139 @@ export class Clusters extends LitElement implements Disposable {
           value: this.displayFeatureStatus(networking.multinetworking),
         },
       ]}"
-      .displayable="${(row: GcpGkeCluster, field: string) => {
+      .displayable="${(_row: GcpGkeCluster, _field: string) => {
         return true
       }}"
       .renderer="${(row: GcpGkeCluster, field: string) => {
         return html`${row[field]}`
       }}"
     ></table-view>`
+  }
+
+  private resolveNodeLink(nodeName: string) {
+    return `https://console.cloud.google.com/kubernetes/node/${this.location}/${this.cluster}/${nodeName}/summary?project=${this.projectId}`
+  }
+
+  private resolveNodePoolLink(nodePoolName: string) {
+    return `https://console.cloud.google.com/kubernetes/nodepool/${this.location}/${this.cluster}/${nodePoolName}?project=${this.projectId}`
+  }
+
+  private renderClusterNodePools() {
+    const basePath = `https://console.cloud.google.com/kubernetes/clusters/details/${this.location}/${this.cluster}`
+
+    const {
+      clusterBasics: { nodePools, clusterNodes },
+    } = this._clusterDetails
+    return html`<div>
+      <vscode-link href="${basePath}/nodes?project=${this.projectId}">
+        <h3>Node Pools</h3>
+      </vscode-link>
+      <table-view
+        .columns="${[
+          {
+            text: 'Name',
+            key: 'name',
+          },
+          {
+            text: 'Status',
+            key: 'status',
+          },
+          {
+            text: 'Version',
+          },
+          {
+            text: 'Number of nodes',
+          },
+          {
+            text: 'Machine type',
+          },
+          {
+            text: 'Image type',
+          },
+        ]}"
+        .rows="${nodePools.map((nodePool: any) => {
+          return {
+            name: nodePool.name,
+            status: nodePool.status,
+            version: nodePool.version,
+            numberOfNodes: nodePool.numberOfNodes,
+            machineType: nodePool.machineType,
+            imageType: nodePool.imageType,
+          }
+        })}"
+        .displayable="${(_row: GcpGkeCluster, _field: string) => {
+          return true
+        }}"
+        .renderer="${(row: GcpGkeCluster, field: string) => {
+          switch (field) {
+            case 'name':
+              return html`<vscode-link href="${this.resolveNodePoolLink(row[field])}"
+                >${row[field]}</vscode-link
+              >`
+            default:
+              return html`${row[field]}`
+          }
+        }}"
+      ></table-view>
+      <vscode-link href="${basePath}/nodes?project=${this.projectId}">
+        <h3>Nodes</h3>
+      </vscode-link>
+      <table-view
+        .columns="${[
+          {
+            text: 'Name',
+            key: 'name',
+          },
+          {
+            text: 'Status',
+            key: 'status',
+          },
+          {
+            text: 'CPU Requested',
+          },
+          {
+            text: 'CPU Allocatable',
+          },
+          {
+            text: 'Memory Requested',
+          },
+          {
+            text: 'Memory Allocatable',
+          },
+          {
+            text: 'Storage Requested',
+          },
+          {
+            text: 'Storage Allocatable',
+          },
+        ]}"
+        .rows="${clusterNodes.map((node: any) => {
+          return {
+            name: node.name,
+            instanceStatus: node.instanceStatus,
+            cpuRequested: node.cpuRequested,
+            cpuAllocatable: node.cpuAllocatable,
+            memoryRequested: node.memoryRequested,
+            memoryAllocatable: node.memoryAllocatable,
+            storageRequested: node.storageRequested,
+            storageAllocatable: node.storageAllocatable,
+          }
+        })}"
+        .displayable="${(_row: GcpGkeCluster, _field: string) => {
+          return true
+        }}"
+        .renderer="${(row: GcpGkeCluster, field: string) => {
+          switch (field) {
+            case 'name':
+              return html`<vscode-link href="${this.resolveNodeLink(row[field])}"
+                >${row[field]}</vscode-link
+              >`
+            default:
+              return html`${row[field]}`
+          }
+        }}"
+      ></table-view>
+    </div>`
   }
 
   private getTabClass(tab: string) {
@@ -502,9 +526,9 @@ export class Clusters extends LitElement implements Disposable {
             </section>
           </vscode-panel-view>
           <vscode-panel-view id="view-2" class="panel">
-            <vscode-link href="${basePath}/nodes?project=${this.projectId}">
-              View nodes
-            </vscode-link>
+            <section class="cluster-view flex flex-column">
+              ${this.renderClusterNodePools()}
+            </section>
           </vscode-panel-view>
           <vscode-panel-view id="view-3" class="panel">
             <vscode-link href="${basePath}/storage?project=${this.projectId}">
