@@ -4,7 +4,7 @@ import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
 
 import '../../table'
-import '../../statusAttribute'
+import '../statusIcon'
 
 import { ClientMessages } from '../../../../constants'
 import { ClientMessage, GcpGkeCluster } from '../../../../types'
@@ -336,12 +336,12 @@ export class Clusters extends LitElement implements Disposable {
       <table-view
         .columns="${[
           {
-            text: 'Name',
-            key: 'name',
-          },
-          {
             text: 'Status',
             key: 'status',
+          },
+          {
+            text: 'Name',
+            key: 'name',
           },
           {
             text: 'Version',
@@ -358,8 +358,8 @@ export class Clusters extends LitElement implements Disposable {
         ]}"
         .rows="${nodePools.map((nodePool: any) => {
           return {
-            name: nodePool.name,
             status: nodePool.status,
+            name: nodePool.name,
             version: nodePool.version,
             numberOfNodes: nodePool.numberOfNodes,
             machineType: nodePool.machineType,
@@ -376,7 +376,7 @@ export class Clusters extends LitElement implements Disposable {
                 >${row[field]}</vscode-link
               >`
             case 'status':
-              return html`<status-attribute .status="${row[field]}"></status-attribute>`
+              return html`<status-icon .status="${row[field]}"></status-icon>`
             default:
               return html`${row[field]}`
           }
@@ -388,10 +388,10 @@ export class Clusters extends LitElement implements Disposable {
       <table-view
         .columns="${[
           {
-            text: 'Name',
+            text: 'Status',
           },
           {
-            text: 'Status',
+            text: 'Name',
           },
           {
             text: 'CPU Requested',
@@ -414,8 +414,8 @@ export class Clusters extends LitElement implements Disposable {
         ]}"
         .rows="${clusterNodes.map((node: any) => {
           return {
-            name: node.name,
             instanceStatus: node.instanceStatus,
+            name: node.name,
             cpuRequested: node.cpuRequested,
             cpuAllocatable: node.cpuAllocatable,
             memoryRequested: node.memoryRequested,
@@ -434,7 +434,7 @@ export class Clusters extends LitElement implements Disposable {
                 >${row[field]}</vscode-link
               >`
             case 'instanceStatus':
-              return html`<status-attribute .status="${row[field]}"></status-attribute>`
+              return html`<status-icon .status="${row[field]}"></status-icon>`
             default:
               return html`${row[field]}`
           }
