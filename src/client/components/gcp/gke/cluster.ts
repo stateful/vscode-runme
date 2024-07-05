@@ -4,7 +4,7 @@ import { Disposable } from 'vscode'
 import { when } from 'lit/directives/when.js'
 
 import '../../table'
-import './clusterStatus'
+import '../../statusAttribute'
 
 import { ClientMessages } from '../../../../constants'
 import { ClientMessage, GcpGkeCluster } from '../../../../types'
@@ -375,6 +375,8 @@ export class Clusters extends LitElement implements Disposable {
               return html`<vscode-link href="${this.resolveNodePoolLink(row[field])}"
                 >${row[field]}</vscode-link
               >`
+            case 'status':
+              return html`<status-attribute .status="${row[field]}"></status-attribute>`
             default:
               return html`${row[field]}`
           }
@@ -387,11 +389,9 @@ export class Clusters extends LitElement implements Disposable {
         .columns="${[
           {
             text: 'Name',
-            key: 'name',
           },
           {
             text: 'Status',
-            key: 'status',
           },
           {
             text: 'CPU Requested',
@@ -433,6 +433,8 @@ export class Clusters extends LitElement implements Disposable {
               return html`<vscode-link href="${this.resolveNodeLink(row[field])}"
                 >${row[field]}</vscode-link
               >`
+            case 'instanceStatus':
+              return html`<status-attribute .status="${row[field]}"></status-attribute>`
             default:
               return html`${row[field]}`
           }
