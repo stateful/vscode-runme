@@ -6,6 +6,8 @@ runme:
 
 # Azure
 
+While Azure cloud renderers are being worked on. Runme's bash support allows usage of the Azure CLI, aka `az`, to manage cloud resources.
+
 ## Environment setup
 
 ```sh {"id":"01J1FNNMPCRRVGC7N5Y8J7QJDJ","terminalRows":"4"}
