@@ -137,8 +137,15 @@ export async function getClusterDetails(clusterName: string, location: string, p
       gcloudNodes.push(...nodes)
     }
 
+    const k8sClusterName = `gke_${project}_${location}_${cluster.name}`
     const kubeConfig = new KubeConfig()
     kubeConfig.loadFromDefault()
+
+    const context = kubeConfig.getContexts().find((context) => context.cluster === k8sClusterName)
+    if (context) {
+      kubeConfig.setCurrentContext(context.name)
+    }
+
     const coreV1Api = kubeConfig.makeApiClient(CoreV1Api)
 
     const k8sNodes = await coreV1Api.listNode()

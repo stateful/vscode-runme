@@ -30,6 +30,15 @@ Now you have configured the region and project, run the following command to lis
 $ gcloud container clusters list --region=$CLUSTERS_REGION --project $CLUSTERS_PROJECT_NAME
 ```
 
+### Connect gcloud with Kubectl
+
+[Install kubectl and configure cluster access](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl)
+
+```sh {"id":"01J254YX4R2EZK3B63WX8ZFFQ5"}
+$ export CLUSTER_NAME="cluster-2"
+$ gcloud container clusters get-credentials $CLUSTER_NAME --region=$CLUSTERS_REGION --project=$CLUSTERS_PROJECT_NAME
+```
+
 ### Using Runme Native Cloud Renderers
 
 Runme introduces a **Cloud Native Renderer** tailored for listing Kubernetes clusters, essentially functioning as a mission control dashboard.
