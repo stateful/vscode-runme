@@ -154,6 +154,15 @@ export async function getVMInstance(project: string, instance: string, zone: str
   }
 }
 
+export async function getVMInstanceDetail(project: string, instance: string, zone: string) {
+  try {
+    const [instanceResult] = await getVMInstance(project, instance, zone)
+    return instanceResult
+  } catch {
+    return []
+  }
+}
+
 /**
  * Waits until a vm instance status is in final state
  */

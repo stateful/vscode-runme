@@ -4,6 +4,7 @@ import { customElement, property } from 'lit/decorators.js'
 import './gke/clusters'
 import './gke/cluster'
 import './gce/vmInstances'
+import './gce/vmInstance'
 import './run/services'
 import './run/revisions'
 
@@ -54,6 +55,12 @@ export class GCPViews extends LitElement {
           cellId="${this.state.cellId}"
           projectId="${this.state.project!}"
         ></vm-instances>`
+      case GCPSupportedView.VM_INSTANCE:
+        return html`<vm-instance
+          .instance="${this.state.instance!}"
+          cellId="${this.state.cellId}"
+          projectId="${this.state.project!}"
+        ></vm-instance>`
       case GCPSupportedView.CLOUD_RUN_SERVICES:
         return html`<gcp-run-services
           cellId="${this.state.cellId}"

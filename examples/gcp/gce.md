@@ -43,3 +43,7 @@ echo "PROJECT_ID set to $PROJECT_ID"
 ```sh {"id":"01HQE7NWNH8T6WRBNPE3943XBY"}
 https://console.cloud.google.com/compute/instances?project=$PROJECT_ID
 ```
+
+```sh {"id":"01J228GMBF7GFQENVNTM27WXHN"}
+https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/instance-20240220-223319?project=runme-ci
+```
