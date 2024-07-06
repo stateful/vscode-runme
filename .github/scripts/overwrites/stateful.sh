@@ -3,7 +3,7 @@
 # package.json stateful overwrites
 npm pkg set name="$EXTENSION_NAME"
 npm pkg set displayName="Stateful DevOps Notebooks"
-npm pkg set description="Secure collaboration for DevOps workflows"
+npm pkg set description="DevOps Notebooks, connected for secure collaboration through the Stateful Platform."
 npm pkg set homepage="https://stateful.com"
 npm pkg set contributes.configuration[0].properties[runme.app.baseDomain].default="platform.stateful.com"
 npm pkg set contributes.configuration[0].properties[runme.app.platformAuth].default=true --json
