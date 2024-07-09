@@ -3,7 +3,7 @@
   "version": "3.6.1",
   "publisher": "stateful",
   "displayName": "Runme DevOps Notebooks",
-  "description": "DevOps Workflows Built with Markdown.",
+  "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
     "Christian Bromann <christian@stateful.com>"
