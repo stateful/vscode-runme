@@ -129,79 +129,81 @@ export class VMInstancesDetail extends LitElement implements Disposable {
   }
 
   private get instanceBasicInformation() {
-    return html`<table-view
-      .columns="${[{ text: 'Basic Information', colspan: 3 }]}"
-      .rows="${[
-        { key: 'Name', value: this.instance.name },
-        { key: 'Instance Id', value: this.instance.id },
-        { key: 'Description', value: this.instance.description },
-        { key: 'Type', value: this.instance.kind },
-        { key: 'Status', value: this.instance.status },
-        { key: 'Creation Time', value: this.instance.creationTimestamp },
-        { key: 'Zone', value: this.zone },
-        { key: 'Instance Template', value: '-' },
-        { key: 'In use by', value: '-' },
-        { key: 'Reservations', value: this.instance.reservationAffinity?.consumeReservationType },
-        { key: 'Labels', value: JSON.stringify(this.instance.labels) },
-        { key: 'Tags', value: JSON.stringify(this.instance.tags?.items) },
-        { key: 'Deletion protection', value: this.instance.deletionProtection },
-        {
-          key: 'Confidential VM service',
-          value: this.instance.confidentialInstanceConfig?.enableConfidentialCompute,
-        },
-        { key: 'Preserved state size', value: '-' },
-      ]}"
-    /> `
+    return html`<h3>Basic Information</h3>
+      <table-view
+        .rows="${[
+          { key: 'Name', value: this.instance.name },
+          { key: 'Instance Id', value: this.instance.id },
+          { key: 'Description', value: this.instance.description },
+          { key: 'Type', value: this.instance.kind },
+          { key: 'Status', value: this.instance.status },
+          { key: 'Creation Time', value: this.instance.creationTimestamp },
+          { key: 'Zone', value: this.zone },
+          { key: 'Instance Template', value: '-' },
+          { key: 'In use by', value: '-' },
+          { key: 'Reservations', value: this.instance.reservationAffinity?.consumeReservationType },
+          { key: 'Labels', value: JSON.stringify(this.instance.labels) },
+          { key: 'Tags', value: JSON.stringify(this.instance.tags?.items) },
+          { key: 'Deletion protection', value: this.instance.deletionProtection },
+          {
+            key: 'Confidential VM service',
+            value: this.instance.confidentialInstanceConfig?.enableConfidentialCompute,
+          },
+          { key: 'Preserved state size', value: '-' },
+        ]}"
+      ></table-view>`
   }
 
   private get instanceMachineConfiguration() {
-    return html`<table-view
-      .columns="${[{ text: 'Machine configuration', colspan: 3 }]}"
-      .rows="${[
-        { key: 'Machine type', value: this.instance.machineType?.split('/').pop() },
-        { key: 'CPU platform', value: this.instance.cpuPlatform },
-        { key: 'Minimum CPU Platform', value: this.instance.minCpuPlatform },
-        { key: 'Architecture', value: this.instance.disks?.[0]?.architecture || '-' },
-        { key: 'vCPUS to core ratio', value: '-' },
-        { key: 'Custom visible cores', value: '-' },
-        { key: 'Display device', value: this.instance.displayDevice?.enableDisplay },
-        { key: 'GPUs', value: '-' },
-        { key: 'Resource policies', value: '-' },
-      ]}"
-    /> `
+    return html`
+      <h3>Machine configuration</h3>
+      <table-view
+        .rows="${[
+          { key: 'Machine type', value: this.instance.machineType?.split('/').pop() },
+          { key: 'CPU platform', value: this.instance.cpuPlatform },
+          { key: 'Minimum CPU Platform', value: this.instance.minCpuPlatform },
+          { key: 'Architecture', value: this.instance.disks?.[0]?.architecture || '-' },
+          { key: 'vCPUS to core ratio', value: '-' },
+          { key: 'Custom visible cores', value: '-' },
+          { key: 'Display device', value: this.instance.displayDevice?.enableDisplay },
+          { key: 'GPUs', value: '-' },
+          { key: 'Resource policies', value: '-' },
+        ]}"
+      ></table-view>
+    `
   }
 
   private get instanceNetworking() {
-    return html`<table-view
-      .columns="${[{ text: 'Networking', colspan: 3 }]}"
-      .rows="${[
-        { key: 'Public DNS PTR Record', value: '-' },
-        { key: 'Total egress bandwidth tier', value: '-' },
-        { key: 'NIC Type', value: '-' },
-      ]}"
-    /> `
+    return html`<h3>Networking</h3>
+      <table-view
+        .rows="${[
+          { key: 'Public DNS PTR Record', value: '-' },
+          { key: 'Total egress bandwidth tier', value: '-' },
+          { key: 'NIC Type', value: '-' },
+        ]}"
+      ></table-view>`
   }
 
   private get instanceFirewall() {
-    return html`<table-view
-      .columns="${[{ text: 'Firewall', colspan: 3 }]}"
-      .rows="${[
-        { key: 'HTTP traffic', value: '-' },
-        { key: 'HTTPS traffic', value: '-' },
-        { key: 'Allow Load Balancer Health checks', value: '-' },
-        { key: 'Network tags', value: '-' },
-      ]}"
-      .displayable="${(_row: any, _field: string) => {
-        return true
-      }}"
-      .renderer="${(row: any, field: string) => {
-        return html`${row[field]}`
-      }}"
-    /> `
+    return html`<h4>Firewal</h4>
+      <table-view
+        .rows="${[
+          { key: 'HTTP traffic', value: '-' },
+          { key: 'HTTPS traffic', value: '-' },
+          { key: 'Allow Load Balancer Health checks', value: '-' },
+          { key: 'Network tags', value: '-' },
+        ]}"
+        .displayable="${(_row: any, _field: string) => {
+          return true
+        }}"
+        .renderer="${(row: any, field: string) => {
+          return html`${row[field]}`
+        }}"
+      /> `
   }
 
   private get instanceNetworkInterfaces() {
-    return html`<table-view .columns="${['Network Interfaces']}"></table-view>
+    return html`<h4>Network Interfaces</h4>
       <table-view
       .columns="${[
         'Name',
@@ -258,8 +260,10 @@ export class VMInstancesDetail extends LitElement implements Disposable {
   }
 
   private get instanceStorage() {
-    return html`<table-view .columns="${[{ text: 'Storage', colspan: 3 }]}" ></table-view>
+    return html`
+      <h3>Storage</h3>
       <table-view .columns="${[{ text: 'Boot disk', colspan: 3 }]}"></table-view>
+      <h4>Boot disk</h4>
       <table-view
         .columns="${[
           'Name',
@@ -276,8 +280,8 @@ export class VMInstancesDetail extends LitElement implements Disposable {
   }
 
   private get instanceManagement() {
-    return html`<table-view
-      .columns="${[{ text: 'Machine configuration', colspan: 3 }]}"
+    return html`<h3>Machine configuration</h3>
+    <table-view
       .rows="${[
         { key: 'Machine type', value: this.instance.machineType?.split('/').pop() },
         { key: 'CPU platform', value: this.instance.cpuPlatform },
@@ -289,7 +293,7 @@ export class VMInstancesDetail extends LitElement implements Disposable {
         { key: 'GPUs', value: '-' },
         { key: 'Resource policies', value: '-' },
       ]}"
-    /> `
+    /></table-view>`
   }
 
   render() {
