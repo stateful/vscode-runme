@@ -136,6 +136,7 @@ export const LANGUAGES = new Map(
  * "shellscript," so this object maps "shellscript" -> "sh"
  */
 export const VSCODE_LANGUAGEID_MAP: Record<string, string | undefined> = {
+  shell: 'sh',
   shellscript: 'sh',
   javascriptreact: 'jsx',
   typescriptreact: 'tsx',

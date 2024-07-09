@@ -286,7 +286,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       const cells = notebook.cells ?? []
       notebook.cells = await Promise.all(
         cells.map((elem) => {
-          if (elem.kind === NotebookCellKind.Code && elem.value && (elem.languageId || '') === '') {
+          if (elem.kind !== NotebookCellKind.Code) {
+            return Promise.resolve(elem)
+          }
+
+          if (elem.value && (elem.languageId || '') === '') {
             const norm = SerializerBase.normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               if (guessed) {
@@ -295,6 +299,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
               return elem
             })
           }
+
+          if (elem.languageId && VSCODE_LANGUAGEID_MAP[elem.languageId]) {
+            elem.languageId = VSCODE_LANGUAGEID_MAP[elem.languageId]
+          }
+
           return Promise.resolve(elem)
         }),
       )
