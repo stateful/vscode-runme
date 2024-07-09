@@ -10,15 +10,17 @@ export interface Column {
 @customElement('table-view')
 export class Table extends LitElement {
   @property({ type: Array })
-  columns?: Column[]
+  columns?: Column[] = []
 
   @property({ type: Array })
-  rows?: Record<string, string>[]
+  rows?: Record<string, string>[] = []
 
   @property({ type: Object })
-  renderer?: (row: any, field: string) => TemplateResult<1>
-  displayable?: (row: any, field: string) => boolean
-  hasErrors?: (row: any) => boolean
+  renderer?: (row: any, field: string) => TemplateResult<1> = (row: any, field: string) => {
+    return html`${row[field]}`
+  }
+  displayable?: (row: any, field: string) => boolean = () => true
+  hasErrors?: (row: any) => boolean = () => false
 
   /* eslint-disable */
   static styles = css`
@@ -167,9 +169,14 @@ export class Table extends LitElement {
     return html`<table>
       <thead>
         <tr>
-          ${this.columns?.map(
-            ({ text, colspan }) => html`<th colspan="${colspan || 1}">${text}</th>`,
-          )}
+          ${this.columns?.map((colum) => {
+            if (typeof colum === 'string') {
+              return html`<th>${colum}</th>`
+            } else if (typeof colum === 'object') {
+              const { text, colspan } = colum
+              return html`<th colspan="${colspan || 1}">${text}</th>`
+            }
+          })}
         </tr>
       </thead>
       <tbody>
