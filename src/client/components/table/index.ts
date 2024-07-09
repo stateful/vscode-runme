@@ -1,4 +1,4 @@
-import { LitElement, TemplateResult, css, html } from 'lit'
+import { LitElement, TemplateResult, css, html, nothing } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
@@ -165,8 +165,12 @@ export class Table extends LitElement {
     }
   `
 
-  render() {
-    return html`<table>
+  private get heading() {
+    if (!this.columns?.length) {
+      return nothing
+    }
+
+    return html`
       <thead>
         <tr>
           ${this.columns?.map((colum) => {
@@ -179,6 +183,16 @@ export class Table extends LitElement {
           })}
         </tr>
       </thead>
+    `
+  }
+
+  render() {
+    if (!this.rows?.length && !this.columns?.length) {
+      return nothing
+    }
+
+    return html`<table>
+      ${this.heading}
       <tbody>
         ${this.rows?.map(
           (row) =>
@@ -191,9 +205,9 @@ export class Table extends LitElement {
             >
               ${Object.keys(row).map((key) =>
                 when(
-                  this.displayable && this.displayable(row, key),
-                  () => html`<td>${this.renderer ? this.renderer(row, key) : row[key]}</td>`,
-                  () => html``,
+                  this.displayable?.(row, key),
+                  () => html`<td>${this.renderer?.(row, key) || row[key]}</td>`,
+                  () => nothing,
                 ),
               )}
             </tr>`,
