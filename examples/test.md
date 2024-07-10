@@ -26,5 +26,10 @@ export FOO="don't prompt me"
 # GitHub Action Integration
 
 ```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
-https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
+https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.ymlf
+```
+
+```bash {"id":"01J2D7ZAER1XB6TRG9F0QHN14M"}
+This is ghost text: input was:
+https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.ymlf
 ```
