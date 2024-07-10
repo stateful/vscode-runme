@@ -33,3 +33,14 @@ https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.ymlf
 This is ghost text: input was:
 https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.ymlf
 ```
+
+This is a new cell.adfadf
+
+```bash {"id":"01J2ER7BC1XFB9JD0PBYMKQH00"}
+asdfasdfadfadfadfsfdfsadfadfadfadf
+```
+
+```bash {"ghostCell":"true","id":"01J2ER7SDZQX3TPF20EPGKZP66"}
+This is ghost text: input was:
+asdfasdfadfadfadfsfdfsadfadfadfadf
+```
