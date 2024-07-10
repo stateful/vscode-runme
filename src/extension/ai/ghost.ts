@@ -13,45 +13,23 @@ var lastRange: vscode.NotebookRange = new vscode.NotebookRange(0, 0)
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
 export function registerGhostCellEvents(context: vscode.ExtensionContext) {
-  vscode.workspace.onDidOpenTextDocument((doc) => {
-    if (doc.uri.scheme !== 'vscode-notebook-cell') {
-      // ignore other open events
-      return
-    }
-    const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
-      const cell = notebook.getCells().find((cell) => cell.document === doc)
-      return Boolean(cell)
-    })
-    if (notebook === undefined) {
-      log.error(`notebook for cell ${doc.uri} NOT found`)
-      return
-    }
-    log.info(
-      `onDidOpenTextDocument Fired for notebook ${doc.uri} found; this should fire when a cell is added to a notebook`,
-    )
-  })
-
+  // onDidChangeTextDocument fires when the contents of a cell changes.
+  // We use this to generate completions.
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument(handleOnDidChangeNotebookCell),
   )
 
-  // onDidChangeTextEditorVisibleRanges fires when the notebook editor changes; the notebook editor
-  // is for the entire notebook (i.e. one editor per file).
-  context.subscriptions.push(
-    vscode.window.onDidChangeVisibleNotebookEditors(handleOnDidChangeVisibileNotebookEditors),
-  )
-
-  // onDidChangeNotebookEditorVisibleRanges fires when the visible ranges of the notebook editor changes.
-  // context.subscriptions.push(
-  //   vscode.window.onDidChangeNotebookEditorVisibleRanges(handleOnDidChangeTextEditorVisibleRanges),
-  // )
-
-  // Check for new editors whenever the visible editors change
+  // onDidChangeVisibleTextEditors fires when the visible text editors change.
+  // We need to trap this event to apply decorations to turn cells into ghost cells.
   context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(handleOnDidChangeVisibleTextEditors),
   )
 }
 
+// handleOnDidChangeNotebookCell is called when the contents of a cell changes.
+// We use this function to trigger the generation of completions in response to a user
+// typing in a cell.
+// N.B. This doesn't appear to get called when a cell is added to a notebook.
 function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
   if (event.document.uri.scheme !== 'vscode-notebook-cell') {
     // ignore other open events
@@ -100,6 +78,7 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
   const edits: vscode.NotebookEdit[] = []
   if (!lastRange.isEmpty) {
     // TODO(jeremy): Should we use replaceCells instead of deleteCells?
+    // Would we end up triggering the OnDidChangeNotebookCell event again?
     log.info(`Deleting lastRange: ${lastRange.start} ${lastRange.end}`)
     // If there was previously a range added delete it.
     const deleteCells = vscode.NotebookEdit.deleteCells(lastRange)
@@ -128,15 +107,6 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
   })
 }
 
-// handleOnDidChangeTextEditorVisibleRanges is called when the visible ranges of the notebook editor changes.
-// function handleOnDidChangeTextEditorVisibleRanges(
-//   event: vscode.NotebookEditorVisibleRangesChangeEvent,
-// ) {
-//   // We need to update decorations for any ghost cells
-//   log.info('onDidChangeTextEditorVisibleRanges calling renderGhostCell')
-//   renderGhostCell(event.notebookEditor)
-// }
-
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
 // This includes when a TextEditor is created.
 function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
@@ -161,80 +131,6 @@ function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor
   }
 }
 
-// handleOnDidChangeVisibileNotebookEditors is called when the visible notebook editors changes.
-// The notebook editor corresponds to the entire file. So this event is fired when the user switches
-// between notebooks e.g. from doc1.md to doc2.md.
-//
-// TODO(jeremy): Do we need to handle this event and call renderGhostCell? Is handleOnDidChangeTextEditorVisibleRanges
-// sufficient to handle rendering of ghost cells?
-function handleOnDidChangeVisibileNotebookEditors(editors: readonly vscode.NotebookEditor[]) {
-  for (const editor of editors) {
-    const notebook = editor.notebook
-    if (notebook === undefined) {
-      log.error('notebook is undefined')
-      return
-    }
-    log.info(`onDidChangeVisibleNotebookEditors Fired for notebook ${notebook.uri}`)
-
-    renderGhostCell(editor)
-  }
-}
-
-// renderGhostCell applies ghost cell decorations to any visible cells in a notebook.
-// TextDecorations are properties of TextEditors. Each notebook cell gets its own TextEditor.
-// However, the TextEditor for a cell are only guaranteed to exist when the cell is visible.
-// This function gets the visible range in a notebook and applies a decoration to each cell in the range.
-function renderGhostCell(editor: vscode.NotebookEditor) {
-  const notebook = editor.notebook
-  if (notebook === undefined) {
-    log.error('notebook is undefined')
-    return
-  }
-
-  // Create a map of the URI to visible textEditors
-  const visibleTextEditors = new Map<string, vscode.TextEditor>()
-  vscode.window.visibleTextEditors.forEach((textEditor) => {
-    const uri = textEditor.document.uri.toString()
-    log.info(`Visible Editor For URI: ${uri}`)
-    visibleTextEditors.set(uri, textEditor)
-  })
-
-  editor.visibleRanges.forEach((range) => {
-    log.info(`Visible Range: ${range.start} : ${range.end}`)
-    for (let i = range.start; i < range.end; i++) {
-      // Get the cell and change the font
-      const cell = editor.notebook.cellAt(i)
-
-      if (!isGhostCell(cell)) {
-        log.info(`Not a ghost cell index: ${i} doc:${cell.document.uri}`)
-        continue
-      }
-
-      // vscode.window.visibleTextEditors.forEach((textEditor) => {
-      //   log.info(`Visible Editor: ${textEditor.document.uri.toString()}`)
-
-      //   const cells  = editor.notebook.getCells()
-      //   for (let i = 0; i < cells.length; i++) {
-      //       if (cell.document.uri.toString() === textEditor.document.uri.toString()) {
-      //         log.info(`Found cell for editor ${textEditor.document.uri.toString()}`)
-      //       }
-      //     })
-      //   }
-      // })
-      // Find the TextEditor for this cell
-      // const cellTextEditor = vscode.window.visibleTextEditors.find((editor) => {
-      //   editor.document.uri.toString() === cell.document.uri.toString()
-      // })
-      const cellTextEditor = visibleTextEditors.get(cell.document.uri.toString())
-      if (cellTextEditor === undefined) {
-        log.error(`cellTextEditor for cell index: ${i}  URI: ${cell.document.uri} NOT found`)
-        return
-      }
-      editorAsGhost(cellTextEditor)
-    }
-  })
-}
-
 // editorAsGhost decorates an editor as a ghost cell.
 function editorAsGhost(editor: vscode.TextEditor) {
   const decoration = vscode.window.createTextEditorDecorationType({
@@ -247,15 +143,6 @@ function editorAsGhost(editor: vscode.TextEditor) {
     textDoc.positionAt(textDoc.getText().length),
   )
 
-  // // Find the TextEditor for this cell
-  // const cellTextEditor = vscode.window.visibleTextEditors.find(
-  //   (editor) => editor.document.uri.toString() === cell.document.uri.toString(),
-  // )
-  // if (cellTextEditor === undefined) {
-  //   log.error(`cellTextEditor for cell ${cell.document.uri} NOT found`)
-  //   return
-  // }
-  //log.info(`Applying ghost decoration to cell index: ${i} doc:${cell.document.uri}`)
   editor.setDecorations(decoration, [range])
 }
 
@@ -265,6 +152,9 @@ function isGhostCell(cell: vscode.NotebookCell): boolean {
 }
 
 // getCellFromCellDocument returns the notebook cell that corresponds to a given text document.
+// We do this by iterating over all notebook documents and cells to find the cell that has the same URI as the
+// text document.
+// TODO(jeremy): Should we cache this information?
 function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookCell | undefined {
   var matchedCell: vscode.NotebookCell | undefined
   vscode.workspace.notebookDocuments.find((notebook) => {
