@@ -103,7 +103,7 @@ export class RunmeExtension {
       kernel.useRunner(runner)
     }
 
-    registerGhostCellEvents()
+    registerGhostCellEvents(context)
 
     // register ahead of attempting to server launch for error handling
     context.subscriptions.push(
