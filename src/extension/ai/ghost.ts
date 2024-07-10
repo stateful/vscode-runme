@@ -5,6 +5,10 @@ const log = getLogger()
 
 const ghostKey = 'ghostCell'
 
+const ghostDecoration = vscode.window.createTextEditorDecorationType({
+  color: '#888888', // Light grey color
+})
+
 // TODO(jeremy): I think we need to keep track of lastRange as a function of document
 // because a user could be editing multiple documents at once.
 var lastRange: vscode.NotebookRange = new vscode.NotebookRange(0, 0)
@@ -23,6 +27,11 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
   // We need to trap this event to apply decorations to turn cells into ghost cells.
   context.subscriptions.push(
     vscode.window.onDidChangeVisibleTextEditors(handleOnDidChangeVisibleTextEditors),
+  )
+
+  // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor(handleOnDidChangeActiveTextEditor),
   )
 }
 
@@ -133,17 +142,20 @@ function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor
 
 // editorAsGhost decorates an editor as a ghost cell.
 function editorAsGhost(editor: vscode.TextEditor) {
-  const decoration = vscode.window.createTextEditorDecorationType({
-    color: '#888888', // Light grey color
-  })
-
   const textDoc = editor.document
   const range = new vscode.Range(
     textDoc.positionAt(0),
     textDoc.positionAt(textDoc.getText().length),
   )
 
-  editor.setDecorations(decoration, [range])
+  editor.setDecorations(ghostDecoration, [range])
+}
+
+function editorAsNonGhost(editor: vscode.TextEditor) {
+  // To remove the decoration we set the range to an empty range and pass in a reference
+  // to the original decoration
+  // https://github.com/microsoft/vscode-extension-samples/blob/main/decorator-sample/USAGE.md#tips
+  editor.setDecorations(ghostDecoration, [])
 }
 
 function isGhostCell(cell: vscode.NotebookCell): boolean {
@@ -166,4 +178,41 @@ function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookC
     return result
   })
   return matchedCell
+}
+
+// handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
+// when it is selected
+function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
+  log.info(`onDidChangeActiveTextEditor Fired for editor ${editor?.document.uri}`)
+  if (editor === undefined) {
+    return
+  }
+
+  if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
+    // Doesn't correspond to a notebook cell so do nothing
+    return
+  }
+
+  const cell = getCellFromCellDocument(editor.document)
+  if (cell === undefined) {
+    return
+  }
+
+  if (!isGhostCell(cell)) {
+    return
+  }
+
+  const update = vscode.NotebookEdit.updateCellMetadata(cell.index, { [ghostKey]: false })
+  const edit = new vscode.WorkspaceEdit()
+  edit.set(editor.document.uri, [update])
+  vscode.workspace.applyEdit(edit).then((result: boolean) => {
+    log.trace(`updateCellMetadata to deactivate ghostcell resolved with ${result}`)
+    if (!result) {
+      log.error('applyEdit failed')
+      return
+    }
+  })
+  // If the cell is a ghost cell we want to remove the decoration
+  // and replace it with a non-ghost cell.
+  editorAsNonGhost(editor)
 }
