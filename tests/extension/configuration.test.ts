@@ -234,7 +234,7 @@ suite('Configuration', () => {
     })
   })
 
-  suite.only('app domain resolution', () => {
+  suite('app domain resolution', () => {
     beforeEach(() => {
       workspace.getConfiguration().update('baseDomain', undefined)
     })
