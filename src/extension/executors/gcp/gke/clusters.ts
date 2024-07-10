@@ -237,7 +237,6 @@ export async function getClusterDetails(clusterName: string, location: string, p
       },
     }
   } catch (error: any) {
-    console.log(error)
     return { itFailed: true, reason: error.message }
   }
 }

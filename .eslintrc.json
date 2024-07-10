@@ -38,7 +38,7 @@
     ],
     "max-len": [
       2,
-      { "code": 120, "ignoreUrls": true }
+      { "code": 120, "ignoreUrls": true, "ignoreTemplateLiterals": true }
     ]
   },
   "ignorePatterns": [
