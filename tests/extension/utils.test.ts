@@ -208,7 +208,7 @@ test('getKeyInfo', () => {
     } as any),
   ).toStrictEqual({
     key: 'sh',
-    uriResource: false,
+    resource: 'None',
   })
 })
 
