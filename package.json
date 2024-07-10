@@ -784,7 +784,7 @@
           },
           "runme.app.panel.runme.cloud": {
             "type": "string",
-            "default": "",
+            "default": "runme.placeholder",
             "scope": "window",
             "markdownDescription": "Customize cloud panel assignment"
           },
