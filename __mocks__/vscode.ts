@@ -30,8 +30,8 @@ export class Uri extends URI {
     /**
      * Allow testing against http endpoints
      */
-    if (uri.authority?.includes('.runme.dev')) {
-      return  `https://testing.runme.dev${path.join(...paths)}`
+    if (uri.authority?.includes('.stateful.com')) {
+      return  `https://testing.stateful.com${path.join(...paths)}`
     }
     return super.file(path.join(uri.fsPath, ...paths))
   })
