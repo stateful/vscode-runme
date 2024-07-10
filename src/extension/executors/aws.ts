@@ -5,6 +5,7 @@ import { AwsCredentialIdentityProvider } from '@smithy/types'
 import { OutputType } from '../../constants'
 import { AWSResolver, AWSSupportedView } from '../resolvers/awsResolver'
 import { RunProgramOptions } from '../runner'
+import { getAnnotations } from '../utils'
 
 import { getEC2InstanceDetail, listEC2Instances } from './aws/ec2'
 import { getCluster, listClusters } from './aws/eks'
@@ -15,7 +16,10 @@ import { IKernelExecutor } from '.'
 export const aws: IKernelExecutor = async (executor) => {
   const { cellText, exec, runner, runnerEnv, doc, outputs, context } = executor
 
+  const annotations = getAnnotations(exec.cell)
+
   try {
+    const cellId = annotations['id'] ?? ''
     const text = cellText ?? ''
     const awsResolver = new AWSResolver(text).get()
     if (!awsResolver?.data.region) {
@@ -34,6 +38,7 @@ export const aws: IKernelExecutor = async (executor) => {
       runnerEnv,
       runningCell: doc,
       runner,
+      cellId,
     })
 
     // todo(sebastian): move down into kernel?
