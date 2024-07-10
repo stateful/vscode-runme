@@ -20,9 +20,9 @@ const APP_SECTION_NAME = 'runme.app'
 
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
-const DEFAULT_RUNME_APP_API_URL = 'https://api.runme.dev'
-const DEFAULT_RUNME_BASE_DOMAIN = 'runme.dev'
-const DEFAULT_RUNME_REMOTE_DEV = 'staging.runme.dev'
+const DEFAULT_RUNME_APP_API_URL = 'https://platform.stateful.com'
+const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
+const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
@@ -363,7 +363,7 @@ const getRunmeAppUrl = (subdomains: string[]): string => {
   }
   const isLoopback = APP_LOOPBACKS.map((host) => base.includes(host)).reduce((p, c) => p || c)
 
-  if (!isLoopback && isPlatformAuthEnabled()) {
+  if (!isLoopback) {
     subdomains = subdomains.map((s) => {
       if (s === 'app') {
         return ''

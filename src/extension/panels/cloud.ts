@@ -72,6 +72,11 @@ export default class CloudPanel extends TanglePanel {
     let staticHtml: string
     try {
       appToken = await this.getAppToken(false).then((appToken) => appToken?.token ?? null)
+    } catch (err: any) {
+      log.error(err?.message || err)
+      appToken = null
+    }
+    try {
       staticHtml = await fetchStaticHtml(this.appUrl).then((r) => r.text())
     } catch (err: any) {
       log.error(err?.message || err)
