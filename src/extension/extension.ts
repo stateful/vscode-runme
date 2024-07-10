@@ -7,6 +7,10 @@ import {
   tasks,
   window,
   NotebookCell,
+  NotebookEdit,
+  NotebookCellData,
+  NotebookCellKind,
+  WorkspaceEdit,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -443,18 +447,46 @@ function registerEvents() {
       return
     }
 
-    // const notebook = workspace.notebookDocuments.find((notebook) => {
-    //   const cell = notebook.getCells().find((cell) => cell.document === doc)
-    //   return Boolean(cell)
-    // })
-    // if (notebook === undefined) {
-    //   log.error(`notebook for cell ${doc.uri} NOT found`)
-    //   return
-    // }
+    // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
+    // Could we cache it somewhere.
+    var matchedCell: NotebookCell | undefined
+    const notebook = workspace.notebookDocuments.find((notebook) => {
+      const cell = notebook.getCells().find((cell) => cell.document === doc.document)
+      const result = Boolean(cell)
+      if (cell !== undefined) {
+        matchedCell = cell
+      }
+      return result
+    })
+    if (notebook === undefined) {
+      log.error(`notebook for cell ${doc.document.uri} NOT found`)
+      return
+    }
+
+    if (matchedCell === undefined) {
+      log.error(`cell for document ${doc.document.uri} NOT found`)
+      return
+    }
+
+    matchedCell.index
     log.info(
       `onDidChangeTextDocument Fired for notebook ${doc.document.uri}; reason ${doc.reason} ` +
         'this should fire when a cell is added to a notebook',
     )
     log.info(`onDidChangeTextDocument: latest contents ${doc.document.getText()}`)
+
+    const newCellData: NotebookCellData[] = [
+      {
+        languageId: 'bash',
+        kind: NotebookCellKind.Code,
+        value: 'This is ghost text: input was:\n' + doc.document.getText(),
+      },
+    ]
+    const insertCells = NotebookEdit.insertCells(matchedCell.index + 1, newCellData)
+    const edit = new WorkspaceEdit()
+    edit.set(doc.document.uri, [insertCells])
+    workspace.applyEdit(edit).then((result: boolean) => {
+      log.trace(`applyedit resolved with ${result}`)
+    })
   })
 }
