@@ -164,25 +164,40 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
 export function isGitHubLink(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
   const isWorkflowUrl = text.includes('.github/workflows') || text.includes('actions/workflows')
-  return text.startsWith('https://github.com') && isWorkflowUrl
+  return text.trimStart().startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): string {
+export function isDaggerCli(text: string): boolean {
+  const trimmed = text.trimStart()
+  return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
+}
+
+export type ExecResourceType = 'None' | 'URI' | 'Dagger'
+export interface IExecKeyInfo {
+  key: string
+  resource: ExecResourceType
+}
+
+export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
   try {
+    if (isDaggerCli(runningCell.getText())) {
+      return { key: 'dagger', resource: 'Dagger' }
+    }
+
     if (isDenoScript(runningCell)) {
-      return 'deno'
+      return { key: 'deno', resource: 'URI' }
     }
 
     if (isGitHubLink(runningCell)) {
-      return 'github'
+      return { key: 'github', resource: 'URI' }
     }
 
     if (new GCPResolver(runningCell.getText()).match()) {
-      return 'gcp'
+      return { key: 'gcp', resource: 'URI' }
     }
 
     if (new AWSResolver(runningCell.getText()).match()) {
-      return 'aws'
+      return { key: 'aws', resource: 'URI' }
     }
   } catch (err: any) {
     if (err?.code !== 'ERR_INVALID_URL') {
@@ -194,10 +209,10 @@ export function getKey(runningCell: vscode.TextDocument): string {
   const { languageId } = runningCell
 
   if (languageId === 'shellscript') {
-    return 'sh'
+    return { key: 'sh', resource: 'None' }
   }
 
-  return languageId
+  return { key: languageId, resource: 'None' }
 }
 
 export function normalizeLanguage(l?: string) {

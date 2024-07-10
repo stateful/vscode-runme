@@ -14,6 +14,7 @@ export enum OutputType {
   stdout = 'application/vnd.code.notebook.stdout',
   gcp = 'stateful.runme/gcp',
   aws = 'stateful.runme/aws',
+  dagger = 'stateful.runme/dagger',
 }
 
 export enum ClientMessages {
@@ -67,6 +68,8 @@ export enum ClientMessages {
   gcpCloudRunAction = 'gcp:cloudRunAction',
   gcpLoadServices = 'gcp:loadServices',
   gcpServicesLoaded = 'gcp:servicesLoaded',
+  daggerSyncState = 'dagger:syncState',
+  daggerCliAction = 'dagger:cliAction',
 }
 
 // [pretty print, languageId, destination]
@@ -160,6 +163,7 @@ export enum RENDERERS {
   GitHubWorkflowViewer = 'github-workflow-viewer',
   GCPView = 'gcp-view',
   AWSView = 'aws-view',
+  DaggerCli = 'dagger-cli',
 }
 
 export enum AuthenticationProviders {

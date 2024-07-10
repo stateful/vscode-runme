@@ -101,6 +101,7 @@ export namespace Serializer {
     ['runme.dev/nameGenerated']?: string
     ['runme.dev/id']?: string
     ['runme.dev/denoState']?: DenoState
+    ['runme.dev/daggerState']?: DaggerState
     ['runme.dev/vercelState']?: VercelState
     ['runme.dev/githubState']?: GitHubState
     [RUNME_FRONTMATTER_PARSED]?: Grpc.Frontmatter
@@ -142,6 +143,23 @@ export interface GitHubState {
   error?: any
   cellId?: string
   environments?: RepositoryEnvironments
+}
+
+export type DaggerStateAction = {
+  label: string
+  action: string
+  argument?: string
+  command?: string
+}
+
+export interface DaggerState {
+  cellId?: string
+  cli?: {
+    status: string
+    actions: [DaggerStateAction]
+    returnType?: string
+    returnText?: string
+  }
 }
 
 export interface StringIndexable {
@@ -355,6 +373,7 @@ interface Payload {
     | GcpCloudRunServicesState
     | GcpCloudRunRevisionsState
   [OutputType.aws]?: AWSState
+  [OutputType.dagger]?: DaggerState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any
@@ -601,6 +620,20 @@ export interface ClientMessagePayload {
     cluster: string
     region: string
     action: AWSActionType
+  }
+
+  [ClientMessages.daggerSyncState]: {
+    id: string
+    cellId: string
+    text?: string
+    json?: any
+    state?: DaggerState
+  }
+
+  [ClientMessages.daggerCliAction]: {
+    cellId: string
+    command: string
+    argument?: string
   }
 }
 

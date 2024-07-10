@@ -10,6 +10,7 @@ import { NotebookCellOutputManager } from '../cell'
 import { Kernel } from '../kernel'
 import { IRunner } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
+import { ExecResourceType } from '../utils'
 
 import { sh, bash } from './task'
 import { vercel } from './vercel'
@@ -17,6 +18,7 @@ import { deno } from './deno'
 import { github } from './github'
 import { gcp } from './gcp'
 import { aws } from './aws'
+import { dagger } from './dagger'
 
 export interface IKernelExecutorOptions {
   context: ExtensionContext
@@ -29,6 +31,7 @@ export interface IKernelExecutorOptions {
   runner?: IRunner
   runnerEnv?: IRunnerEnvironment
   cellText?: string
+  resource?: ExecResourceType
   runScript?: (exeResult?: string) => Promise<boolean>
 }
 
@@ -52,4 +55,4 @@ export const ENV_STORE_MANAGER: IEnvironmentManager = {
   },
 }
 
-export default { sh, bash, vercel, deno, github, gcp, aws }
+export default { sh, bash, vercel, deno, github, gcp, aws, dagger }

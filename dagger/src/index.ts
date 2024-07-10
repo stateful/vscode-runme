@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { dag, Container, File, Directory, object, func, field } from '@dagger.io/dagger'
+import { dag, Container, File, Directory, object, func, field, Secret } from '@dagger.io/dagger'
 
 @object()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -14,10 +14,10 @@ class VscodeRunme {
    * The working repository directory for the VscodeRunme instance.
    */
   @field()
-  dir: Directory
+  directory: Directory
 
   /**
-   * The base container being used for building the extension
+   * The base container being used for building the extension.
    */
   @field()
   container: Container
@@ -30,7 +30,7 @@ class VscodeRunme {
    */
   @func()
   withRemote(remote: string, ref: string): VscodeRunme {
-    this.dir = dag
+    this.directory = dag
     .git(`https://${remote}.git`)
     .ref(ref)
     .tree()
@@ -45,7 +45,7 @@ class VscodeRunme {
    * @returns The modified VscodeRunme instance.
    */
   @func()
-  withContainer(binary?: File, presetup?: File): VscodeRunme {
+  withContainer(binary: File, presetup: File): VscodeRunme {
     this.container = dag
       .container()
       .from('node:18')
@@ -53,7 +53,7 @@ class VscodeRunme {
       .withFile('/usr/local/bin/runme', binary)
       .withFile('/usr/local/bin/presetup', presetup)
       .withEntrypoint([])
-      .withMountedDirectory('/mnt/vscode-runme', this.dir)
+      .withMountedDirectory('/mnt/vscode-runme', this.directory)
       .withWorkdir('/mnt/vscode-runme')
       .withExec('bash /usr/local/bin/presetup'.split(' '))
 
@@ -62,14 +62,51 @@ class VscodeRunme {
 
   /**
    * Sets up the container for the VscodeRunme instance.
-   * @param ghToken - Valid GitHub access token for API access.
-   * @returns The modified VscodeRunme instance.
+   * @param path - Path to file inside the container.
+   * @returns The file or error
    */
   @func()
-  async buildExtension(ghToken: string): Promise<string> {
+  async getFile(path: string): Promise<File> {
+    return this.container.file(path)
+  }
+
+  /**
+   * Sets up the container for the VscodeRunme instance.
+   * @param path - Path to file inside the container.
+   * @returns The file or error
+   */
+  @func()
+  async getRepoFile(repo: string, path: string): Promise<File> {
+    return dag
+    .git(repo)
+    .head()
+    .tree()
+    .file(path)
+  }
+
+  /**
+   * Sets up the container for the VscodeRunme instance.
+   * @param name - Name of the secret.
+   * @param plain - Plaintext.
+   * @returns The Secret or error
+   */
+  @func()
+  async getSecret(name: string, value: Secret): Promise<Secret> {
+    const plain = await value.plaintext()
+    return dag.setSecret(name, plain)
+  }
+
+  /**
+   * Sets up the container for the VscodeRunme instance.
+   * @param ghToken - Valid GitHub access token for API access.
+   * @returns The packaged VSIX extension file.
+   */
+  @func()
+  async buildExtension(githubToken: string): Promise<File> {
     return this.container
-      .withEnvVariable('GITHUB_TOKEN', ghToken)
-      .withExec('runme run setup build'.split(' ')).
-      stdout()
+      .withEnvVariable('GITHUB_TOKEN', githubToken)
+      // .withExec('runme run setup'.split(' '))
+      .withExec('runme run setup build bundle'.split(' '))
+      .file('runme-extension.vsix')
   }
 }
