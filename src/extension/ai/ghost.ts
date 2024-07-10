@@ -42,9 +42,9 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
   )
 
   // onDidChangeNotebookEditorVisibleRanges fires when the visible ranges of the notebook editor changes.
-  context.subscriptions.push(
-    vscode.window.onDidChangeNotebookEditorVisibleRanges(handleOnDidChangeTextEditorVisibleRanges),
-  )
+  // context.subscriptions.push(
+  //   vscode.window.onDidChangeNotebookEditorVisibleRanges(handleOnDidChangeTextEditorVisibleRanges),
+  // )
 
   // Check for new editors whenever the visible editors change
   context.subscriptions.push(
@@ -120,7 +120,7 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
     if (vscode.window.activeNotebookEditor?.notebook.uri !== notebook.uri) {
       log.error('activeNotebookEditor is not the same as the notebook that was edited')
     }
-    renderGhostCell(vscode.window.activeNotebookEditor!)
+    //renderGhostCell(vscode.window.activeNotebookEditor!)
     if (!result) {
       log.error('applyEdit failed')
       return
@@ -129,12 +129,13 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
 }
 
 // handleOnDidChangeTextEditorVisibleRanges is called when the visible ranges of the notebook editor changes.
-function handleOnDidChangeTextEditorVisibleRanges(
-  event: vscode.NotebookEditorVisibleRangesChangeEvent,
-) {
-  // We need to update decorations for any ghost cells
-  renderGhostCell(event.notebookEditor)
-}
+// function handleOnDidChangeTextEditorVisibleRanges(
+//   event: vscode.NotebookEditorVisibleRangesChangeEvent,
+// ) {
+//   // We need to update decorations for any ghost cells
+//   log.info('onDidChangeTextEditorVisibleRanges calling renderGhostCell')
+//   renderGhostCell(event.notebookEditor)
+// }
 
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
 // This includes when a TextEditor is created.
@@ -142,8 +143,9 @@ function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor
   for (const editor of editors) {
     log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
     if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
+      log.info(`onDidChangeVisibleTextEditors Fired fo ${editor.document.uri}`)
       // Doesn't correspond to a notebook cell so do nothing
-      return
+      continue
     }
     const cell = getCellFromCellDocument(editor.document)
     if (cell === undefined) {
@@ -189,7 +191,16 @@ function renderGhostCell(editor: vscode.NotebookEditor) {
     return
   }
 
+  // Create a map of the URI to visible textEditors
+  const visibleTextEditors = new Map<string, vscode.TextEditor>()
+  vscode.window.visibleTextEditors.forEach((textEditor) => {
+    const uri = textEditor.document.uri.toString()
+    log.info(`Visible Editor For URI: ${uri}`)
+    visibleTextEditors.set(uri, textEditor)
+  })
+
   editor.visibleRanges.forEach((range) => {
+    log.info(`Visible Range: ${range.start} : ${range.end}`)
     for (let i = range.start; i < range.end; i++) {
       // Get the cell and change the font
       const cell = editor.notebook.cellAt(i)
@@ -199,13 +210,22 @@ function renderGhostCell(editor: vscode.NotebookEditor) {
         continue
       }
 
-      vscode.window.visibleTextEditors.forEach((editor) => {
-        log.info(`Visible Editor: ${editor.document.uri.toString()}`)
-      })
+      // vscode.window.visibleTextEditors.forEach((textEditor) => {
+      //   log.info(`Visible Editor: ${textEditor.document.uri.toString()}`)
+
+      //   const cells  = editor.notebook.getCells()
+      //   for (let i = 0; i < cells.length; i++) {
+      //       if (cell.document.uri.toString() === textEditor.document.uri.toString()) {
+      //         log.info(`Found cell for editor ${textEditor.document.uri.toString()}`)
+      //       }
+      //     })
+      //   }
+      // })
       // Find the TextEditor for this cell
-      const cellTextEditor = vscode.window.visibleTextEditors.find(
-        (editor) => editor.document.uri.toString() === cell.document.uri.toString(),
-      )
+      // const cellTextEditor = vscode.window.visibleTextEditors.find((editor) => {
+      //   editor.document.uri.toString() === cell.document.uri.toString()
+      // })
+      const cellTextEditor = visibleTextEditors.get(cell.document.uri.toString())
       if (cellTextEditor === undefined) {
         log.error(`cellTextEditor for cell index: ${i}  URI: ${cell.document.uri} NOT found`)
         return
