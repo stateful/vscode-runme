@@ -3,6 +3,10 @@ import * as vscode from 'vscode'
 import getLogger from '../logger'
 const log = getLogger()
 
+// TODO(jeremy): I think we need to keep track of lastRange as a function of document
+// because a user could be editing multiple documents at once.
+var lastRange: vscode.NotebookRange = new vscode.NotebookRange(0, 0)
+
 // registerGhostCellEvents should be called when the extension is activated.
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
@@ -69,10 +73,20 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
       value: 'This is ghost text: input was:\n' + event.document.getText(),
     },
   ]
-  //vscode.NotebookEdit.deleteCells(lastRange)
-  const insertCells = vscode.NotebookEdit.insertCells(matchedCell.index + 1, newCellData)
   const edit = new vscode.WorkspaceEdit()
-  edit.set(event.document.uri, [insertCells])
+  const edits: vscode.NotebookEdit[] = []
+  if (!lastRange.isEmpty) {
+    log.info(`Deleting lastRange: ${lastRange.start} ${lastRange.end}`)
+    // If there was previously a range added delete it.
+    const deleteCells = vscode.NotebookEdit.deleteCells(lastRange)
+    edits.push(deleteCells)
+  }
+  const startIndex = matchedCell.index + 1
+  const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
+  // Update lastRange to the new range
+  lastRange = new vscode.NotebookRange(startIndex, startIndex + newCellData.length)
+  edits.push(insertCells)
+  edit.set(event.document.uri, edits)
   vscode.workspace.applyEdit(edit).then((result: boolean) => {
     log.trace(`applyedit resolved with ${result}`)
   })
