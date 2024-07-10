@@ -45,6 +45,11 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeNotebookEditorVisibleRanges(handleOnDidChangeTextEditorVisibleRanges),
   )
+
+  // Check for new editors whenever the visible editors change
+  context.subscriptions.push(
+    vscode.window.onDidChangeVisibleTextEditors(handleOnDidChangeVisibleTextEditors),
+  )
 }
 
 function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
@@ -131,6 +136,29 @@ function handleOnDidChangeTextEditorVisibleRanges(
   renderGhostCell(event.notebookEditor)
 }
 
+// handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
+// This includes when a TextEditor is created.
+function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
+  for (const editor of editors) {
+    log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
+    if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
+      // Doesn't correspond to a notebook cell so do nothing
+      return
+    }
+    const cell = getCellFromCellDocument(editor.document)
+    if (cell === undefined) {
+      continue
+    }
+
+    if (!isGhostCell(cell)) {
+      log.info(`Not a ghost editor doc:${cell.document.uri}`)
+      continue
+    }
+
+    editorAsGhost(editor)
+  }
+}
+
 // handleOnDidChangeVisibileNotebookEditors is called when the visible notebook editors changes.
 // The notebook editor corresponds to the entire file. So this event is fired when the user switches
 // between notebooks e.g. from doc1.md to doc2.md.
@@ -170,30 +198,62 @@ function renderGhostCell(editor: vscode.NotebookEditor) {
         log.info(`Not a ghost cell index: ${i} doc:${cell.document.uri}`)
         continue
       }
-      const decoration = vscode.window.createTextEditorDecorationType({
-        color: '#888888', // Light grey color
+
+      vscode.window.visibleTextEditors.forEach((editor) => {
+        log.info(`Visible Editor: ${editor.document.uri.toString()}`)
       })
-
-      const range = new vscode.Range(
-        cell.document.positionAt(0),
-        cell.document.positionAt(cell.document.getText().length),
-      )
-
       // Find the TextEditor for this cell
       const cellTextEditor = vscode.window.visibleTextEditors.find(
         (editor) => editor.document.uri.toString() === cell.document.uri.toString(),
       )
       if (cellTextEditor === undefined) {
-        log.error(`cellTextEditor for cell ${cell.document.uri} NOT found`)
+        log.error(`cellTextEditor for cell index: ${i}  URI: ${cell.document.uri} NOT found`)
         return
       }
-      log.info(`Applying ghost decoration to cell index: ${i} doc:${cell.document.uri}`)
-      cellTextEditor.setDecorations(decoration, [range])
+      editorAsGhost(cellTextEditor)
     }
   })
+}
+
+// editorAsGhost decorates an editor as a ghost cell.
+function editorAsGhost(editor: vscode.TextEditor) {
+  const decoration = vscode.window.createTextEditorDecorationType({
+    color: '#888888', // Light grey color
+  })
+
+  const textDoc = editor.document
+  const range = new vscode.Range(
+    textDoc.positionAt(0),
+    textDoc.positionAt(textDoc.getText().length),
+  )
+
+  // // Find the TextEditor for this cell
+  // const cellTextEditor = vscode.window.visibleTextEditors.find(
+  //   (editor) => editor.document.uri.toString() === cell.document.uri.toString(),
+  // )
+  // if (cellTextEditor === undefined) {
+  //   log.error(`cellTextEditor for cell ${cell.document.uri} NOT found`)
+  //   return
+  // }
+  //log.info(`Applying ghost decoration to cell index: ${i} doc:${cell.document.uri}`)
+  editor.setDecorations(decoration, [range])
 }
 
 function isGhostCell(cell: vscode.NotebookCell): boolean {
   const metadata = cell.metadata
   return metadata?.[ghostKey] === true
+}
+
+// getCellFromCellDocument returns the notebook cell that corresponds to a given text document.
+function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookCell | undefined {
+  var matchedCell: vscode.NotebookCell | undefined
+  vscode.workspace.notebookDocuments.find((notebook) => {
+    const cell = notebook.getCells().find((cell) => cell.document === textDoc)
+    const result = Boolean(cell)
+    if (cell !== undefined) {
+      matchedCell = cell
+    }
+    return result
+  })
+  return matchedCell
 }
