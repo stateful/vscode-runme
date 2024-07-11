@@ -21,3 +21,5 @@ cp -f "assets/$EXTENSION_NAME-icon.gif" "assets/icon.gif"
 cp -f "assets/$EXTENSION_NAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
 cp -f "assets/$EXTENSION_NAME-logo-open-light.svg" "assets/logo-open-light.svg"
 cp -f "assets/$EXTENSION_NAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
+
+cp -f "README-$EXTENSION_NAME.md" "README.md"
