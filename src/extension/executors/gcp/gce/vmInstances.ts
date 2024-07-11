@@ -163,6 +163,16 @@ export async function getVMInstanceDetail(project: string, instance: string, zon
   }
 }
 
+export async function getDisk(project: string, zone: string, disk: string) {
+  const disksClient = new compute.v1.DisksClient()
+  const [diskResult] = await disksClient.get({
+    project,
+    zone,
+    disk,
+  })
+
+  return diskResult
+}
 /**
  * Waits until a vm instance status is in final state
  */

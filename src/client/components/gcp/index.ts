@@ -58,6 +58,7 @@ export class GCPViews extends LitElement {
       case GCPSupportedView.VM_INSTANCE:
         return html`<vm-instances-detail
           .instance="${this.state.instance!}"
+          .disks="${this.state.disks!}"
           cellId="${this.state.cellId}"
           projectId="${this.state.project!}"
         ></vm-instances-detail>`

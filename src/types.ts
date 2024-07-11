@@ -279,7 +279,8 @@ export interface GcpGceVMInstancesState {
 export interface GcpGceVMInstanceState {
   project?: string
   zone?: string
-  instance?: protos.google.cloud.compute.v1.IInstance | never[]
+  instance: protos.google.cloud.compute.v1.IInstance
+  disks: protos.google.cloud.compute.v1.IDisk[]
   view: GCPSupportedView.VM_INSTANCE
   cellId: string
 }
