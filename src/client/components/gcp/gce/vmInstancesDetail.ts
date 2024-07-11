@@ -431,13 +431,19 @@ export class VMInstancesDetail extends LitElement implements Disposable {
       <h4>SSH Keys</h4>
       <table-view
         .rows="${[
-          { key: 'SSH keys', value: this.instance.name },
-          { key: 'vTPM', value: this.instance.id },
-          { key: 'Block project-wide SSH keys', value: this.instance.description },
+          { key: 'SSH keys', value: '-' },
+          { key: 'Block project-wide SSH keys', value: '-' },
         ]}"
       ></table-view>
       <h4>API and identity management</h4>
-      <table-view .rows="${[{ key: 'Service account', value: this.instance.name }]}"></table-view>`
+      <table-view
+        .rows="${[
+          {
+            key: 'Service account',
+            value: this.instance.serviceAccounts?.map((sa) => sa.email).join(','),
+          },
+        ]}"
+      ></table-view>`
   }
 
   private get instanceManagement() {
@@ -454,11 +460,11 @@ export class VMInstancesDetail extends LitElement implements Disposable {
       .rows="${[
         { key: 'VM provisioning model', value: this.instance.scheduling?.provisioningModel },
         { key: 'Max duration', value: '-' },
-        { key: 'Preemptibility', value: '-' },
+        { key: 'Preemptibility', value: this.instance.scheduling?.preemptible },
         { key: 'On VM termination', value: '-' },
         { key: 'Host error timeout ', value: '-' },
-        { key: 'On host maintenance', value: '-' },
-        { key: 'Automatic restart', value: '-' },
+        { key: 'On host maintenance', value: this.instance.scheduling?.onHostMaintenance },
+        { key: 'Automatic restart', value: this.instance.scheduling?.automaticRestart },
         {
           key: 'Customer Managed Encryption Key (CMEK) revocation policy',
           value: '-',
