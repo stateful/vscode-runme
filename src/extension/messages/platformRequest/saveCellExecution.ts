@@ -1,4 +1,4 @@
-import { Uri, window, workspace } from 'vscode'
+import { Uri, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import YAML from 'yaml'
 
@@ -79,7 +79,7 @@ export default async function saveCellExecution(
     let notebookInput: CreateNotebookInput | undefined
 
     const gitCtx = await getGitContext()
-    const path = window.activeTextEditor?.document.uri.fsPath
+    const path = editor.notebook.uri.fsPath
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
     const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : null
 
