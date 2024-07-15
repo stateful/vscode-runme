@@ -18,6 +18,7 @@ import {
   _InstanceType,
 } from '@aws-sdk/client-ec2'
 import { google } from '@google-cloud/run/build/protos/protos'
+import { protos } from '@google-cloud/compute'
 
 import { OutputType, ClientMessages, RUNME_FRONTMATTER_PARSED } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
@@ -275,6 +276,15 @@ export interface GcpGceVMInstancesState {
   cellId: string
 }
 
+export interface GcpGceVMInstanceState {
+  project?: string
+  zone?: string
+  instance: protos.google.cloud.compute.v1.IInstance
+  disks: protos.google.cloud.compute.v1.IDisk[]
+  view: GCPSupportedView.VM_INSTANCE
+  cellId: string
+}
+
 export interface GcpCloudRunServicesState {
   project?: string
   zone?: string
@@ -296,6 +306,7 @@ export type GCPState =
   | GcpGkeClustersState
   | GcpGkeClusterState
   | GcpGceVMInstancesState
+  | GcpGceVMInstanceState
   | GcpCloudRunServicesState
   | GcpCloudRunRevisionsState
 
