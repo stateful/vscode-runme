@@ -26,6 +26,10 @@ export default async function saveCellExecution(
   kernel: Kernel,
 ): Promise<void | boolean> {
   const { messaging, message, editor } = requestMessage
+  // Save the file to ensure the serialization completes before saving the cell execution.
+  // This guarantees we access the latest cache state of the serializer.
+  await editor.notebook.save()
+
   log.info('Saving cell execution')
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
