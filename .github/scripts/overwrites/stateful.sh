@@ -11,7 +11,6 @@ npm pkg set contributes.configuration[0].properties[runme.app.enableShare].defau
 npm pkg set contributes.configuration[0].properties[runme.experiments.escalationButton].default=true --json
 npm pkg set contributes.configuration[0].properties[runme.server.lifecycleIdentity].default=1 --json
 npm pkg set contributes.configuration[0].properties[runme.app.notebookAutoSave].default="yes"
-npm pkg set contributes.configuration[0].properties[runme.app.sessionOutputs].default=true --json
 npm pkg set contributes.configuration[0].properties[runme.app.panel.runme.cloud].default="\"\"" --json
 npm pkg set contributes.views.runme[0].name="Platform"
 npm pkg set contributes.viewsContainers.activitybar[0].title="Stateful"

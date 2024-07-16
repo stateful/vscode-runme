@@ -35,8 +35,8 @@ export default async function saveCellExecution(
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
   const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
   const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
-  const plainSessionOutput = await kernel.getSerializer()?.getPlainCache(cacheId)
-  const maskedSessionOutput = await kernel.getSerializer()?.getMaskedCache(cacheId)
+  const plainSessionOutput = await kernel.getPlainCache(cacheId)
+  const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
   log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 

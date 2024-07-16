@@ -189,10 +189,6 @@ export class Kernel implements Disposable {
     this.serializer = serializer
   }
 
-  getSerializer() {
-    return this.serializer
-  }
-
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
     return this.#experiments.get(key) ?? defaultValue
   }
@@ -1081,5 +1077,13 @@ export class Kernel implements Disposable {
 
     await commands.executeCommand('notebook.cell.execute')
     await commands.executeCommand('notebook.cell.focusInOutput')
+  }
+
+  public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.serializer?.getMaskedCache(cacheId)
+  }
+
+  public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.serializer?.getPlainCache(cacheId)
   }
 }

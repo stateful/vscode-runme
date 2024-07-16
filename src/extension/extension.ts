@@ -112,7 +112,6 @@ export class RunmeExtension {
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
     this.serializer = serializer
-    kernel.registerCellTerminalState
     kernel.setSerializer(serializer as GrpcSerializer)
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
