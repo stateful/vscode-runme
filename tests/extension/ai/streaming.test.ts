@@ -2,6 +2,7 @@ import { test } from 'vitest'
 import { vi } from 'vitest'
 
 import getLogger from '../../../src/extension/logger'
+import * as stream from '../../../src/extension/ai/stream'
 const log = getLogger()
 
 vi.mock('vscode', async () => {
@@ -13,6 +14,10 @@ vi.mock('vscode', async () => {
 })
 
 // Create a manual test for working with the foyle AI service
-test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')('manual foyle streaming RPC test', () => {
-  log.info('Starting manual test for foyle streaming RPC')
-})
+test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
+  'manual foyle streaming RPC test',
+  async () => {
+    stream.callSimpleMethod()
+    log.info('Starting manual test for foyle streaming RPC')
+  },
+)
