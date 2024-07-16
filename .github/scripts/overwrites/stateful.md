@@ -14,5 +14,5 @@ bash .github/scripts/overwrites/stateful.sh
 To clean up and revert back to Runme's defaults, run the following commands:
 
 ```sh {"id":"01J1N2CE95P9D3ZQZNDQGMVFGX","name":"overwrite-reset"}
-git checkout -f assets package.json README.md
+git checkout -f assets package*.json README.md
 ```
