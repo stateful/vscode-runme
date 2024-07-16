@@ -48,7 +48,7 @@ async function* generateNumbers(): AsyncIterable<StreamGenerateRequest> {
         }),
       },
     })
-    yield blockUpdate
+    yield await blockUpdate
   }
 }
 
@@ -79,10 +79,12 @@ export async function callStreamGenerate() {
     const responseIterable = client.streamGenerate(generateNumbers())
 
     // Await all responses
+    console.log('Waiting for responses...')
     for await (const response of responseIterable) {
       console.log('Block Recieved:', response)
     }
 
+    console.log('Stream closeds...')
     // The stream will automatically close after all responses are received
 
     //return responses
