@@ -9,10 +9,6 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
 })
 
-// TODO(jeremy): I think we need to keep track of lastRange as a function of document
-// because a user could be editing multiple documents at once.
-var lastRange: vscode.NotebookRange = new vscode.NotebookRange(0, 0)
-
 // registerGhostCellEvents should be called when the extension is activated.
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
@@ -85,19 +81,21 @@ function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
 
   const edit = new vscode.WorkspaceEdit()
   const edits: vscode.NotebookEdit[] = []
-  if (!lastRange.isEmpty) {
-    // TODO(jeremy): Should we use replaceCells instead of deleteCells?
-    // Would we end up triggering the OnDidChangeNotebookCell event again?
-    log.info(`Deleting lastRange: ${lastRange.start} ${lastRange.end}`)
-    // If there was previously a range added delete it.
-    const deleteCells = vscode.NotebookEdit.deleteCells(lastRange)
-    edits.push(deleteCells)
-  }
 
+  // We want to insert the new cells and get rid of any existing ghost cells.
+  // The old cells may not be located at the same location as the new cells.
+  // So we don't use replace.
   const startIndex = matchedCell.index + 1
+  notebook.getCells().forEach((cell) => {
+    if (isGhostCell(cell)) {
+      const deleteCells = vscode.NotebookEdit.deleteCells(
+        new vscode.NotebookRange(cell.index, cell.index + 1),
+      )
+      edits.push(deleteCells)
+    }
+  })
+
   const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
-  // Update lastRange to the new range
-  lastRange = new vscode.NotebookRange(startIndex, startIndex + newCellData.length)
   edits.push(insertCells)
   edit.set(event.document.uri, edits)
   vscode.workspace.applyEdit(edit).then((result: boolean) => {
