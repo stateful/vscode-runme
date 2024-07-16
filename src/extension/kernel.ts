@@ -87,7 +87,7 @@ import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import PanelManager from './panels/panelManager'
-import { GrpcSerializer } from './serializer'
+import { GrpcSerializer, SerializerBase } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
@@ -129,6 +129,7 @@ export class Kernel implements Disposable {
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
   protected panelManager: PanelManager
+  protected serializer?: SerializerBase
 
   readonly onVarsChangeEvent: EnvVarsChangedEvent
 
@@ -182,6 +183,14 @@ export class Kernel implements Disposable {
   }
   setCategory(category: string) {
     this.category = category
+  }
+
+  setSerializer(serializer: GrpcSerializer) {
+    this.serializer = serializer
+  }
+
+  getSerializer() {
+    return this.serializer
   }
 
   hasExperimentEnabled(key: string, defaultValue?: boolean) {

@@ -16,6 +16,7 @@ import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
 import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
+import { GrpcSerializer } from '../../serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -29,6 +30,10 @@ export default async function saveCellExecution(
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
   const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
+  const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
+  const plainSessionOutput = await kernel.getSerializer()?.getPlainCache(cacheId)
+  const maskedSessionOutput = await kernel.getSerializer()?.getMaskedCache(cacheId)
+
   log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 
   try {
@@ -118,6 +123,8 @@ export default async function saveCellExecution(
           fileContent,
           filePath,
           sessionId,
+          plainSessionOutput,
+          maskedSessionOutput,
         },
       },
     })
