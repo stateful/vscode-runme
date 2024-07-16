@@ -112,6 +112,7 @@ export class RunmeExtension {
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
     this.serializer = serializer
+    kernel.setSerializer(serializer as GrpcSerializer)
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const runmeTaskProvider = tasks.registerTaskProvider(
