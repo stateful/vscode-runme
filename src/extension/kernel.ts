@@ -995,8 +995,8 @@ export class Kernel implements Disposable {
 
   registerTerminalProfile(): Disposable {
     const kernel = this
-    const baseUri = workspace.workspaceFolders![0].uri
-    const cwd = baseUri.fsPath
+    const baseUri = workspace.workspaceFolders?.[0].uri
+    const cwd = baseUri?.fsPath
 
     return window.registerTerminalProfileProvider('runme.terminalProfile', {
       async provideTerminalProfile(
