@@ -158,6 +158,10 @@ export default class Table extends LitElement {
     }
 
     if (field === 'spec') {
+      // if (!['Opaque', 'Plain', 'Secret', 'Password'].includes(row.spec)) {
+      //   return html`${format()}
+      //     <vscode-button appearance="icon" class="cursor-pointer">${AntennaIcon}</vscode-button>`
+      // }
       return html`<div class="flex">
         <tooltip-text
           .tooltipText="${html`<div class="flex">Info: Variable is ${row.specClass}</div>`}"

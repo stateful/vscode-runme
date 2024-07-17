@@ -41,6 +41,7 @@ export class EnvViewer extends LitElement implements Disposable {
     vscode-button:hover {
       background: var(--vscode-button-hoverBackground);
     }
+
     .secret-container {
       display: flex;
       gap: 1px;
