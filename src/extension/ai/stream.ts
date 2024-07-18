@@ -27,6 +27,7 @@ import {
   defer,
   windowCount,
   EmptyError,
+  delay,
 } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
@@ -111,6 +112,28 @@ export function observableToIterable<T>(observable: Observable<T>): AsyncIterabl
   }
 }
 
+function iterableToObservable<T>(asyncIterable: AsyncIterable<T>): Observable<T> {
+  return new Observable<T>((observer) => {
+    const process = async () => {
+      try {
+        for await (const value of asyncIterable) {
+          observer.next(value)
+        }
+        observer.complete()
+      } catch (error) {
+        observer.error(error)
+      }
+    }
+
+    process()
+
+    return () => {
+      // If the AsyncIterable has a method to cancel or stop iteration, call it here
+      // For example: asyncIterable.cancel();
+    }
+  })
+}
+
 // // processEvent is a function that processes an event
 // function processEvent(event: string) {
 //   console.log('Event:', event)
@@ -137,7 +160,10 @@ function createDefaultTransport(): Transport {
 
 // streamObservable takes an Observable<string> repsenting a stream of strings.
 // This stream is mapped onto a streaming RPC call to the AI service.
-export async function streamObservable(inputPipe: Observable<string>, streamCount: number) {
+export function streamObservable(
+  inputPipe: Observable<string>,
+  streamCount: number,
+): AsyncIterable<StreamGenerateRequest> {
   try {
     console.log(`streamObservable: Stream Count: ${streamCount}`)
     let count = 0
@@ -147,11 +173,12 @@ export async function streamObservable(inputPipe: Observable<string>, streamCoun
           request: {
             case: 'update',
             value: new BlockUpdate({
-              blockId: `stream-${streamCount}-${count++}`,
+              blockId: `stream-${streamCount}-${count}`,
               blockContent: value,
             }),
           },
         })
+        count++
         return blockUpdate
       }),
     )
@@ -159,18 +186,19 @@ export async function streamObservable(inputPipe: Observable<string>, streamCoun
     let requestPipeIterable: AsyncIterable<StreamGenerateRequest> =
       observableToIterable(requestPipe)
 
-    // Start the bidirectional stream
-    const responseIterable = client.streamGenerate(requestPipeIterable)
+    return requestPipeIterable
+    //   // Start the bidirectional stream
+    //   const responseIterable = client.streamGenerate(requestPipeIterable)
 
-    // Await all responses
-    console.log('Waiting for responses...')
-    for await (const response of responseIterable) {
-      console.log('Block Recieved:', response)
-    }
-    console.log('All responses recieved')
-    console.log('Stream closeds...')
+    //   // Await all responses
+    //   console.log('Waiting for responses...')
+    //   for await (const response of responseIterable) {
+    //     console.log('Block Recieved:', response)
+    //   }
+    //   console.log('All responses recieved')
+    //   console.log('Stream closeds...')
 
-    //return responses
+    //   //return responses
   } catch (error) {
     console.error('Error in StreamGenerate:', error)
     throw error
@@ -230,54 +258,71 @@ export async function callStreamGenerate() {
 
     let streamCount = 0
 
-    let final: Observable<string> = windowed.pipe(
+    let final: Observable<Observable<StreamGenerateResponse>> = windowed.pipe(
       // Turn Observable of string into observable of StreamGenerateRequest
-      map(async (subStream: Observable<string>): Promise<string> => {
+      map((subStream: Observable<string>): Observable<StreamGenerateResponse> => {
         // Turn each observable into a request
-        await streamObservable(subStream, streamCount)
-        console.log('call subStream.pipe')
-
-        // Without the lastValueFrom, the stream will not start because we won't subscribe to it
-        // lastValueFrom(
-        //   subStream.pipe(
-        //     map((value: string): void => {
-        //       console.log(`Value: ${value} StreamCount: ${streamCount}`)
-        //     }),
-        //   ),
-        // ).catch((error) => {
-        //   if (error instanceof EmptyError) {
-        //     // This means we started a new window but ended up not getting any items in that window.
-        //     console.log('No values were emitted by the Observable')
-        //     return 'No windows were processed'
-        //   }
-        //   throw error // Re-throw if it's not an EmptyError
-        // })
+        const requestIterable: AsyncIterable<StreamGenerateRequest> = streamObservable(
+          subStream,
+          streamCount,
+        )
         streamCount++
-        return 'done'
+        // start the bidirectional stream
+        const responseIterable = client.streamGenerate(requestIterable)
+
+        const observeResponses: Observable<StreamGenerateResponse> =
+          iterableToObservable(responseIterable)
+
+        return observeResponses.pipe(
+          map((response: StreamGenerateResponse): StreamGenerateResponse => {
+            console.log('Block Recieved:', response)
+            return response
+          }),
+        )
       }),
-      //mergeAll(), // flatten the Observable-of-Observables
-      // map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
-      //   const requestIterable = observableToIterable(requests)
-      //   // Start the bidirectional stream
-      //   return client.streamGenerate(requestIterable)
-      //   // for await (const response of responseIterable) {
-      //   //   console.log('Block Recieved:', response)
-      //   // }
-      // }),
-      // map(async (responseIterable: AsyncIterable<StreamGenerateResponse>) => {
-      //   // Await all responses
-      //   console.log('Waiting for responses...')
-      //   for await (const response of responseIterable) {
-      //     console.log('Block Recieved:', response)
-      //   }
-      //   console.log('All responses recieved')
-      //   console.log('Stream closeds...')
-      // }),
     )
 
-    // Wait for the Observable to be completed
-    await lastValueFrom(final)
+    // Without the lastValueFrom, the stream will not start because we won't subscribe to it
+    // lastValueFrom(
+    //   subStream.pipe(
+    //     map((value: string): void => {
+    //       console.log(`Value: ${value} StreamCount: ${streamCount}`)
+    //     }),
+    //   ),
+    // ).catch((error) => {
+    //   if (error instanceof EmptyError) {
+    //     // This means we started a new window but ended up not getting any items in that window.
+    //     console.log('No values were emitted by the Observable')
+    //     return 'No windows were processed'
+    //   }
+    //   throw error // Re-throw if it's not an EmptyError
+    // })
 
+    //return 'done'
+    //}),
+    // We flatten the Observable of Observables into a single Observable
+    // Each inner Observable will be a stream corresponding to the items in the window
+    //mergeAll(), // flatten the Observable-of-Observables
+    // map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
+    //   const requestIterable = observableToIterable(requests)
+    //   // Start the bidirectional stream
+    //   return client.streamGenerate(requestIterable)
+    //   // for await (const response of responseIterable) {
+    //   //   console.log('Block Recieved:', response)
+    //   // }
+    // }),
+    // map(async (responseIterable: AsyncIterable<StreamGenerateResponse>) => {
+    //   // Await all responses
+    //   console.log('Waiting for responses...')
+    //   for await (const response of responseIterable) {
+    //     console.log('Block Recieved:', response)
+    //   }
+    //   console.log('All responses recieved')
+    //   console.log('Stream closeds...')
+    // }),
+
+    // Wait for the last stream to be completed
+    await lastValueFrom(final)
     //return responses
   } catch (error) {
     console.error('Error in StreamGenerate:', error)
