@@ -5,11 +5,54 @@ import { AIService } from './foyle/v1alpha1/agent_connect'
 import { StreamGenerateRequest, FullContext, BlockUpdate } from './foyle/v1alpha1/agent_pb'
 import { Doc } from './foyle/v1alpha1/doc_pb'
 import * as http2 from 'http2'
+import { Observable, fromEventPattern } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
 
 // Create a client
 const client = createPromiseClient(AIService, createDefaultTransport())
+
+// So we create an iterator that will generate some responses and then exit
+class Iterator {
+  count = 0
+  // next(value?: any): Promise<IteratorResult<string>> {
+  next(value?: string): Promise<IteratorResult<StreamGenerateRequest>> {
+    const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
+    if (this.count < updates.length) {
+      var msg = updates[this.count]
+      msg += ` input: ${value}`
+      const blockUpdate = new StreamGenerateRequest({
+        request: {
+          case: 'update',
+          value: new BlockUpdate({
+            blockId: `block-${this.count}`,
+            blockContent: msg,
+          }),
+        },
+      })
+      this.count++
+      return Promise.resolve({ done: false, value: blockUpdate })
+    }
+    return Promise.resolve({ done: true, value: 'The end.' })
+  }
+
+  // TODO(jeremy): When is return invoked?
+  return?(value?: any): Promise<IteratorResult<StreamGenerateRequest>> {
+    return Promise.resolve({ done: true, value: value })
+  }
+
+  // TODO(jeremy): When is throw invoked?
+  throw?(e?: any): Promise<IteratorResult<StreamGenerateRequest>> {
+    return Promise.reject(e)
+  }
+}
+
+// Completion Generator implements the AsyncIterable interface and is used to generate requests.
+class CompletionGenerator implements AsyncIterable<StreamGenerateRequest> {
+  [Symbol.asyncIterator](): AsyncIterator<StreamGenerateRequest> {
+    return new Iterator()
+  }
+}
 
 function createDefaultTransport(): Transport {
   return createConnectTransport({
@@ -35,48 +78,50 @@ function createDefaultTransport(): Transport {
 // TODO(jeremy): To wire this up to vscode, I think the generator would be created
 // in response to user input events; e.g. key press that would trigger a completion request.
 // I'm not quite sure how
-async function* generateNumbers(): AsyncIterable<StreamGenerateRequest> {
-  const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
-  // Send block updates
-  for (const [index, update] of updates.entries()) {
-    const blockUpdate = new StreamGenerateRequest({
-      request: {
-        case: 'update',
-        value: new BlockUpdate({
-          blockId: `block-${index}`,
-          blockContent: update,
-        }),
-      },
-    })
-    yield await blockUpdate
-  }
+// firstRequest = "hello"
+// async function* generateNumbers(firstRequest): AsyncIterable<StreamGenerateRequest> {
+//   //const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
+//   // Send block updates
+//   for (const [index, update] of updates.entries()) {
+//     const blockUpdate = new StreamGenerateRequest({
+//       request: {
+//         case: 'update',
+//         value: new BlockUpdate({
+//           blockId: `block-${index}`,
+//           blockContent: update,
+//         }),
+//       },
+//     })
+//     yield await blockUpdate
+//   }
+// }
+
+// function main() {
+//   generator = generateNumbers('hello')
+
+//   //generator.next("how are you")
+// }
+
+// Create an exampleProgram
+export async function exampleProgram() {
+  // Create an observable from the handler
+  const observable = fromEventPattern<string>(
+    (handler) => {
+      // This is where we would subscribe to the event
+      // In this example, we're just calling the handler directly
+      handler('Hello World!')
+    },
+    (handler) => {
+      // This is where we would unsubscribe from the event
+      // In this example, we don't need to do anything
+    },
+  )
 }
 
 export async function callStreamGenerate() {
-  // Create an initial FullContext message
-  // const fullContext = new FullContext({
-  //   doc: new Doc({
-  //     // Fill in the necessary fields for the Doc message
-  //     id: 'example-doc',
-  //     // other fields as needed
-  //   }),
-  //   selected: 0,
-  // })
-
-  // Create an initial StreamGenerateRequest message
-  // const initialRequest = new StreamGenerateRequest({
-  //   request: {
-  //     case: 'fullContext',
-  //     value: fullContext,
-  //   },
-  // })
-
-  // const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
-  // const responses: StreamGenerateResponse[] = []
-
   try {
     // Start the bidirectional stream
-    const responseIterable = client.streamGenerate(generateNumbers())
+    const responseIterable = client.streamGenerate(new CompletionGenerator())
 
     // Await all responses
     console.log('Waiting for responses...')
@@ -95,15 +140,12 @@ export async function callStreamGenerate() {
 }
 
 // Helper function to simulate getting user input (replace with actual implementation)
-async function getUserInput(): Promise<string> {
-  return new Promise((resolve) => {
-    // This is a placeholder. In a real application, you'd get input from the user.
-    setTimeout(() => resolve('Some user input'), 1000)
-  })
-}
-
-// Call the function
-//callStreamGenerate()
+// async function getUserInput(): Promise<string> {
+//   return new Promise((resolve) => {
+//     // This is a placeholder. In a real application, you'd get input from the user.
+//     setTimeout(() => resolve('Some user input'), 1000)
+//   })
+// }
 
 export async function callSimpleMethod() {
   // Create a FullContext message
@@ -142,6 +184,3 @@ export async function callSimpleMethod() {
     console.error('Error calling Simple method:', error)
   }
 }
-
-// Call the function
-//callSimpleMethod()
