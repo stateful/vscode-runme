@@ -19,6 +19,8 @@ import {
   window,
   mergeAll,
   lastValueFrom,
+  mergeMap,
+  concatMap,
 } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
@@ -129,8 +131,6 @@ function createDefaultTransport(): Transport {
 
 export async function callStreamGenerate() {
   try {
-    // Create an observable from an array to simulate the events
-    // TODO(jeremy): Should we eventually turn this into an observable of TextDocumentChangeEvents
     const data = [
       'hello',
       'how are you?',
@@ -143,70 +143,43 @@ export async function callStreamGenerate() {
     ]
 
     const inputPipe: Observable<string> = from(data)
-
-    // windowTrigger$ is an Observable indicating when a new window should be started
-    // The $ suffix is just a convention to indicate that this is an Observable.
     const windowTrigger$ = inputPipe.pipe(filter((lyric) => lyric === 'stop'))
 
-    // windowed is an Observable of Observables. Each inner Observable will be a stream
-    // corresponding to the items in the window. We will turn each of these streams into
-    // separate Streaming request and cell generation
-    let windowed: Observable<Observable<string>> = inputPipe.pipe(
-      // Start a new window when click value is greater than 0.5
+    //let streamCount = 0
+
+    const result$ = inputPipe.pipe(
       window(windowTrigger$),
-      // TODO(jeremy); I think we could apply rate limiting here.
-      //map((win) => win.pipe(take(3))), // take at most 3 emissions from each window
-      // The mergeAll() operator subscribes to each of these window Observables as soon as they're created,
-      // and immediately starts emitting values from them.
-      // mergeAll(), // flatten the Observable-of-Observables
-    )
-
-    let streamCount = 0
-    let itemCount = 0
-
-    let final: Observable<void> = windowed.pipe(
-      // Turn Observable of string into observable of StreamGenerateRequest
-      map((subStream: Observable<string>): Observable<StreamGenerateRequest> => {
-        streamCount++
-        return subStream.pipe(
-          map((value: string): StreamGenerateRequest => {
-            const blockUpdate = new StreamGenerateRequest({
+      mergeMap((window$, windowIndex) =>
+        window$.pipe(
+          filter((lyric) => lyric !== 'stop'),
+          concatMap(async (lyric, lyricIndex) => {
+            const request = new StreamGenerateRequest({
               request: {
                 case: 'update',
                 value: new BlockUpdate({
-                  blockId: `stream-${streamCount}-item-${itemCount}`,
-                  blockContent: value,
+                  blockId: `stream-${windowIndex + 1}-item-${lyricIndex}`,
+                  blockContent: lyric,
                 }),
               },
             })
-            return blockUpdate
-          }),
-        )
-      }),
 
-      map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
-        const requestIterable = observableToIterable(requests)
-        // Start the bidirectional stream
-        return client.streamGenerate(requestIterable)
-        // for await (const response of responseIterable) {
-        //   console.log('Block Recieved:', response)
-        // }
-      }),
-      map(async (responseIterable: AsyncIterable<StreamGenerateResponse>) => {
-        // Await all responses
-        console.log('Waiting for responses...')
-        for await (const response of responseIterable) {
-          console.log('Block Recieved:', response)
-        }
-        console.log('All responses recieved')
-        console.log('Stream closeds...')
-      }),
+            const requestIterable = observableToIterable(from([request]))
+            const responseIterable = client.streamGenerate(requestIterable)
+
+            console.log(`Processing: Window ${windowIndex + 1}, Lyric: ${lyric}`)
+            for await (const response of responseIterable) {
+              console.log('Block Received:', response)
+            }
+
+            return `Processed: Window ${windowIndex + 1}, Lyric: ${lyric}`
+          }),
+        ),
+      ),
     )
 
-    // Wait for the Observable to be completed
-    await lastValueFrom(final)
-
-    //return responses
+    console.log('Waiting for all streams to complete...')
+    const finalResult = await lastValueFrom(result$)
+    console.log('All streams completed. Final result:', finalResult)
   } catch (error) {
     console.error('Error in StreamGenerate:', error)
     throw error
