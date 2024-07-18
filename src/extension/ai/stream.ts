@@ -5,89 +5,72 @@ import { AIService } from './foyle/v1alpha1/agent_connect'
 import { StreamGenerateRequest, FullContext, BlockUpdate } from './foyle/v1alpha1/agent_pb'
 import { Doc } from './foyle/v1alpha1/doc_pb'
 import * as http2 from 'http2'
-import { Observable, fromEventPattern, from, firstValueFrom } from 'rxjs'
+import { Observable, fromEventPattern, from, map } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
 
 // Create a client
 const client = createPromiseClient(AIService, createDefaultTransport())
 
-// So we create an iterator that will generate some responses and then exit
-class Iterator {
-  o: Observable<string>
-  constructor(o: Observable<string>) {
-    this.o = o
+// Function to convert an Observable to an AsyncIterable
+export function observableToIterable<T>(observable: Observable<T>): AsyncIterable<T> {
+  // Construct and return an object implementating the AsyncIterable protocol
+  return {
+    [Symbol.asyncIterator]: () => {
+      const values: T[] = []
+      let resolve: (value: IteratorResult<T>) => void
+      let reject: (error: any) => void
+      let completed = false
+      let error: any = null
 
-    this.o.subscribe({
-      next: (value) => {
-        console.log('Next:', value)
-      },
-      error: (error) => {
-        console.error('Error:', error)
-      },
-      complete: () => {
-        console.log('Complete')
-      },
-    })
-  }
-  count = 0
-  // next(value?: any): Promise<IteratorResult<string>> {
-  next(value?: string): Promise<IteratorResult<StreamGenerateRequest>> {
-    //const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
-
-    return firstValueFrom(this.o).then((value: string) => {
-      const blockUpdate = new StreamGenerateRequest({
-        request: {
-          case: 'update',
-          value: new BlockUpdate({
-            blockId: 'some-block',
-            blockContent: value,
-          }),
+      const subscription = observable.subscribe({
+        next: (value) => {
+          if (resolve) {
+            resolve({ value, done: false })
+            resolve = undefined
+          } else {
+            values.push(value)
+          }
+        },
+        error: (err) => {
+          error = err
+          if (reject) reject(err)
+        },
+        complete: () => {
+          completed = true
+          if (resolve) resolve({ value: undefined, done: true })
         },
       })
-      }).then((blockUpdate) => {
-        return Promise.resolve({ done: true, value: blockUpdate })
-      })
-      //this.count++
 
-      // So we should return a promise that resolves to value that will get set by the next subscribe event.
-      // return Promise.resolve({ done: false, value: blockUpdate })
-    }
-    return Promise.resolve({ done: true, value: 'The end.' })
-  }
-
-  // Per the spec return is invoked by the client to indicate it will not call next
-  // anymore. This allows the iterator to potentially do any cleanup.
-  return?(value?: any): Promise<IteratorResult<StreamGenerateRequest>> {
-    return Promise.resolve({ done: true, value: value })
-  }
-
-  // TODO(jeremy): When is throw invoked?
-  throw?(e?: any): Promise<IteratorResult<StreamGenerateRequest>> {
-    return Promise.reject(e)
-  }
-}
-
-
-// function createPromiseWithResolver<T>(): [Promise<T>, (value: T) => void] {
-//   // Declare a variable that allows
-//   let resolve: (value: T) => void;
-//   const promise = new Promise<T>((res) => {
-//     resolve = res;
-//   });
-//   return [promise, resolve!];
-// }
-
-// Completion Generator implements the AsyncIterable interface and is used to generate requests.
-class CompletionGenerator implements AsyncIterable<StreamGenerateRequest> {
-  o: Observable<string>
-
-  // Define a constructor that takes an observable
-  constructor(o: Observable<string>) {
-    this.o = o
-  }
-  [Symbol.asyncIterator](): AsyncIterator<StreamGenerateRequest> {
-    return new Iterator(this.o)
+      // Construct and return an object implementating the iterator protocol
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
+      return {
+        next: () => {
+          return new Promise<IteratorResult<T>>((res, rej) => {
+            if (error) {
+              rej(error)
+            } else if (values.length) {
+              res({ value: values.shift()!, done: false })
+            } else if (completed) {
+              res({ value: undefined, done: true })
+            } else {
+              resolve = res
+              reject = rej
+            }
+          })
+        },
+        return: () => {
+          subscription.unsubscribe()
+          return Promise.resolve({ value: undefined, done: true })
+        },
+        // The connect method requires this method to be implemented even though it is optional in AsyncIterable.
+        // TODO(jeremy): Presumably this is where we need to add error handling.
+        throw: (err: any) => {
+          subscription.unsubscribe()
+          return Promise.reject(err)
+        },
+      }
+    },
   }
 }
 
@@ -110,94 +93,33 @@ function createDefaultTransport(): Transport {
   })
 }
 
-// Requests are created asynchronously by an async generator function.
-//
-// TODO(jeremy): To wire this up to vscode, I think the generator would be created
-// in response to user input events; e.g. key press that would trigger a completion request.
-// I'm not quite sure how
-// firstRequest = "hello"
-// async function* generateNumbers(firstRequest): AsyncIterable<StreamGenerateRequest> {
-//   //const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
-//   // Send block updates
-//   for (const [index, update] of updates.entries()) {
-//     const blockUpdate = new StreamGenerateRequest({
-//       request: {
-//         case: 'update',
-//         value: new BlockUpdate({
-//           blockId: `block-${index}`,
-//           blockContent: update,
-//         }),
-//       },
-//     })
-//     yield await blockUpdate
-//   }
-// }
-
-// function main() {
-//   generator = generateNumbers('hello')
-
-//   //generator.next("how are you")
-// }
-
-// Create an exampleProgram
-export async function exampleProgram() {
-  // Create an observable from the handler
-  const observable = fromEventPattern<string>(
-    (handler) => {
-      // This is where we would subscribe to the event
-      // In this example, we're just calling the handler directly
-      handler('Hello World!')
-    },
-    (handler) => {
-      // This is where we would unsubscribe from the event
-      // In this example, we don't need to do anything
-    },
-  )
-}
-
 export async function callStreamGenerate() {
   try {
     // Create an observable from an array to simulate the events
     // TODO(jeremy): Should we eventually turn this into an observable of TextDocumentChangeEvents
     const data = ['hello', 'how are you?', "Is it me you're looking for?"]
     const inputPipe: Observable<string> = from(data)
-
-    // We need to create a promise that will be returned by iterator.next.
-    // The promise needs to wrap the subscribe function that will be invoked by the observable.
-
-    // The resolve function will be passed to the subscriber and invoked when a new value is recieved
-    // from the observable.
-    // The promise will be returned by the next function in the iterator.
-
-    inputPipe.subscribe({
-      next: (value) => {
-        // We need to create a promise that will resolve to the StreamRequest.
-        // Reject function is used when there's an error
-        const p = new Promise(function(resolver, reject){
-
+    let count = 0
+    const requestPipe = inputPipe.pipe(
+      map((value: string): StreamGenerateRequest => {
         const blockUpdate = new StreamGenerateRequest({
           request: {
             case: 'update',
             value: new BlockUpdate({
-              blockId: 'block-',
+              blockId: `block-${count++}`,
               blockContent: value,
             }),
           },
         })
-          setTimeout(() => {
-            resolver(blockUpdate);
-          }, 2000);
-        });
-      },
-      error: (error) => {
-        console.error('Error:', error)
-      },
-      complete: () => {
-        console.log('Complete')
-      },
-    })
+        return blockUpdate
+      }),
+    )
+
+    let requestPipeIterable: AsyncIterable<StreamGenerateRequest> =
+      observableToIterable(requestPipe)
+
     // Start the bidirectional stream
-    const responseIterable = client.streamGenerate(new CompletionGenerator(inputPipe))
+    const responseIterable = client.streamGenerate(requestPipeIterable)
 
     // Await all responses
     console.log('Waiting for responses...')
@@ -213,14 +135,6 @@ export async function callStreamGenerate() {
     throw error
   }
 }
-
-// Helper function to simulate getting user input (replace with actual implementation)
-// async function getUserInput(): Promise<string> {
-//   return new Promise((resolve) => {
-//     // This is a placeholder. In a real application, you'd get input from the user.
-//     setTimeout(() => resolve('Some user input'), 1000)
-//   })
-// }
 
 export async function callSimpleMethod() {
   // Create a FullContext message
