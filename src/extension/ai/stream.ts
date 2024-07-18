@@ -205,27 +205,16 @@ export function streamObservable(
   }
 }
 
-export async function callStreamGenerate() {
+export function callStreamGenerate(
+  inputPipe: Observable<string>,
+): Observable<AsyncIterable<StreamGenerateResponse>> {
   try {
-    // Create an observable from an array to simulate the events
-    // TODO(jeremy): Should we eventually turn this into an observable of TextDocumentChangeEvents
-    const data = [
-      'hello',
-      'how are you?',
-      'stop',
-      "Is it me you're looking for?",
-      'stop',
-      'here we go',
-      'again',
-      'down the only road I have ever known',
-    ]
-
-    const inputPipe: Observable<string> = from(data).pipe(
-      map((value: string) => {
-        console.log(`Input Value: ${value}`)
-        return value
-      }),
-    )
+    // const inputPipe: Observable<string> = from(data).pipe(
+    //   map((value: string) => {
+    //     console.log(`Input Value: ${value}`)
+    //     return value
+    //   }),
+    // )
 
     // windowTrigger$ is an Observable indicating when a new window should be started
     // The $ suffix is just a convention to indicate that this is an Observable.
@@ -258,9 +247,9 @@ export async function callStreamGenerate() {
 
     let streamCount = 0
 
-    let final: Observable<Observable<StreamGenerateResponse>> = windowed.pipe(
+    let final: Observable<AsyncIterable<StreamGenerateResponse>> = windowed.pipe(
       // Turn Observable of string into observable of StreamGenerateRequest
-      map((subStream: Observable<string>): Observable<StreamGenerateResponse> => {
+      map((subStream: Observable<string>): AsyncIterable<StreamGenerateResponse> => {
         // Turn each observable into a request
         const requestIterable: AsyncIterable<StreamGenerateRequest> = streamObservable(
           subStream,
@@ -270,17 +259,21 @@ export async function callStreamGenerate() {
         // start the bidirectional stream
         const responseIterable = client.streamGenerate(requestIterable)
 
-        const observeResponses: Observable<StreamGenerateResponse> =
-          iterableToObservable(responseIterable)
+        //return  iterableToObservable(responseIterable)
+        return responseIterable
+        // const observeResponses: Observable<StreamGenerateResponse> =
+        //   iterableToObservable(responseIterable)
 
-        return observeResponses.pipe(
-          map((response: StreamGenerateResponse): StreamGenerateResponse => {
-            console.log('Block Recieved:', response)
-            return response
-          }),
-        )
+        // return observeResponses.pipe(
+        //   map((response: StreamGenerateResponse): StreamGenerateResponse => {
+        //     console.log('Block Recieved:', response)
+        //     return response
+        //   }),
+        // )
       }),
     )
+
+    return final
 
     // Without the lastValueFrom, the stream will not start because we won't subscribe to it
     // lastValueFrom(
@@ -322,7 +315,7 @@ export async function callStreamGenerate() {
     // }),
 
     // Wait for the last stream to be completed
-    await lastValueFrom(final)
+    //await lastValueFrom(final)
     //return responses
   } catch (error) {
     console.error('Error in StreamGenerate:', error)

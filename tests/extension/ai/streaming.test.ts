@@ -3,7 +3,14 @@ import { vi } from 'vitest'
 
 import getLogger from '../../../src/extension/logger'
 import * as stream from '../../../src/extension/ai/stream'
-import { Observable, from } from 'rxjs'
+import { Observable, lastValueFrom, from, Subject } from 'rxjs'
+
+import {
+  StreamGenerateRequest,
+  FullContext,
+  BlockUpdate,
+  StreamGenerateResponse,
+} from './foyle/v1alpha1/agent_pb'
 
 const log = getLogger()
 
@@ -15,26 +22,56 @@ vi.mock('vscode', async () => {
   }
 })
 
+function createSource(): Observable<string> {
+  const data = [
+    'hello',
+    'how are you?',
+    'stop',
+    "Is it me you're looking for?",
+    'stop',
+    'here we go',
+    'again',
+    'down the only road I have ever known',
+  ]
+
+  return new Observable((subscriber) => {
+    subscriber.next(data[0])
+    for (let i = 1; i < data.length; i++) {
+      // Delay the next data point by 2 seconds to simulate typing
+      setTimeout(() => {
+        subscriber.next(data[i])
+      }, 2000)
+    }
+  })
+}
+
+// Increase the timeout for this test
 // Create a manual test for working with the foyle AI service
 test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
-    const data = [
-      'hello',
-      'how are you?',
-      'stop',
-      "Is it me you're looking for?",
-      'stop',
-      'here we go',
-      'again',
-      'down the only road I have ever known',
-    ]
-    //const observable: Observable<string> = from(data)
-    //await stream.streamObservable(observable, 0)
-    await stream.callStreamGenerate()
-    //await main()
-    log.info('Starting manual test for foyle streaming RPC')
+    let source: Observable<string> = createSource()
+
+    // Create a subscription to the observable
+    let responseIterables: Observable<AsyncIterable<StreamGenerateResponse>> =
+      stream.callStreamGenerate(source)
+
+    // Create a subscription to the observable
+    responseIterables.forEach(async (responseIterable) => {
+      for await (const response of responseIterable) {
+        log.info('response:', response)
+      }
+    })
+
+    await lastValueFrom(responseIterables)
   },
+  // Increase the test timeout
+  60000,
+  //const observable: Observable<string> = from(data)
+  //await stream.streamObservable(observable, 0)
+  //await stream.callStreamGenerate()
+  //await main()
+  //
 )
 
 // async function main() {
