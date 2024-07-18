@@ -21,6 +21,10 @@ import {
   lastValueFrom,
   mergeMap,
   concatMap,
+  toArray,
+  shareReplay,
+  takeUntil,
+  defer,
 } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
@@ -142,50 +146,60 @@ export async function callStreamGenerate() {
       'down the only road I have ever known',
     ]
 
-    const inputPipe: Observable<string> = from(data)
-    const windowTrigger$ = inputPipe.pipe(filter((lyric) => lyric === 'stop'))
-
-    //let streamCount = 0
-
-    const result$ = inputPipe.pipe(
-      window(windowTrigger$),
-      mergeMap((window$, windowIndex) =>
-        window$.pipe(
-          filter((lyric) => lyric !== 'stop'),
-          concatMap(async (lyric, lyricIndex) => {
-            const request = new StreamGenerateRequest({
-              request: {
-                case: 'update',
-                value: new BlockUpdate({
-                  blockId: `stream-${windowIndex + 1}-item-${lyricIndex}`,
-                  blockContent: lyric,
-                }),
-              },
-            })
-
-            const requestIterable = observableToIterable(from([request]))
-            const responseIterable = client.streamGenerate(requestIterable)
-
-            console.log(`Processing: Window ${windowIndex + 1}, Lyric: ${lyric}`)
-            for await (const response of responseIterable) {
-              console.log('Block Received:', response)
-            }
-
-            return `Processed: Window ${windowIndex + 1}, Lyric: ${lyric}`
-          }),
-        ),
-      ),
+    const inputPipe: Observable<string> = from(data).pipe(shareReplay())
+    const windowTrigger$ = inputPipe.pipe(
+      filter((lyric) => lyric === 'stop'),
+      shareReplay(),
     )
 
-    console.log('Waiting for all streams to complete...')
+    const windows$ = inputPipe.pipe(
+      window(windowTrigger$),
+      map((window$, windowIndex) => ({ window$, windowIndex })),
+      shareReplay(),
+    )
+
+    const result$ = windows$.pipe(
+      mergeMap(({ window$, windowIndex }) =>
+        defer(() => {
+          let itemIndex = 0
+          const requestObservable = window$.pipe(
+            takeUntil(windowTrigger$),
+            filter((lyric) => lyric !== 'stop'),
+            map(
+              (lyric) =>
+                new StreamGenerateRequest({
+                  request: {
+                    case: 'update',
+                    value: new BlockUpdate({
+                      blockId: `stream-${windowIndex + 1}-item-${itemIndex++}`,
+                      blockContent: lyric,
+                    }),
+                  },
+                }),
+            ),
+          )
+
+          const requestIterable = observableToIterable(requestObservable)
+          return from(client.streamGenerate(requestIterable))
+        }),
+      ),
+      mergeMap(async (responseIterable, windowIndex) => {
+        console.log(`Processing responses for Window ${windowIndex + 1}`)
+        for await (const response of responseIterable) {
+          console.log(`Response received for Window ${windowIndex + 1}:`, response)
+        }
+        return `Completed Window ${windowIndex + 1}`
+      }),
+    )
+
+    console.log('Starting stream processing...')
     const finalResult = await lastValueFrom(result$)
-    console.log('All streams completed. Final result:', finalResult)
+    console.log('All windows completed. Final result:', finalResult)
   } catch (error) {
     console.error('Error in StreamGenerate:', error)
     throw error
   }
 }
-
 export async function callSimpleMethod() {
   // Create a FullContext message
   const fullContext = new FullContext({
