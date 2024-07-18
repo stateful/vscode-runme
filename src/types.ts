@@ -374,6 +374,7 @@ interface Payload {
     enableShareButton: boolean
     isAutoSaveEnabled: boolean
     isSessionOutputsEnabled: boolean
+    isPlatformAuthEnabled: boolean
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
