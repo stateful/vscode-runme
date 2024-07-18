@@ -244,6 +244,7 @@ export class NotebookCellOutputManager {
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
+                isPlatformAuthEnabled: isPlatformAuthEnabled(),
                 isSessionOutputsEnabled,
                 ...terminalConfigurations,
               },

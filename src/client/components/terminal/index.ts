@@ -376,6 +376,9 @@ export class TerminalView extends LitElement {
   @property({ type: Boolean })
   isSessionOutputsEnabled: boolean = false
 
+  @property({ type: Boolean })
+  isPlatformAuthEnabled: boolean = false
+
   constructor() {
     super()
     this.windowSize = {
@@ -837,7 +840,7 @@ export class TerminalView extends LitElement {
           }}"
         ></copy-button>
         ${when(
-          this.isSessionOutputsEnabled,
+          this.isSessionOutputsEnabled && !this.isPlatformAuthEnabled,
           () => {
             return html`<gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>`
           },

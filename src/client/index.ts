@@ -148,6 +148,13 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             )
           }
 
+          if (payload.output.isPlatformAuthEnabled) {
+            terminalElement.setAttribute(
+              'isPlatformAuthEnabled',
+              payload.output.isPlatformAuthEnabled.toString(),
+            )
+          }
+
           element.appendChild(terminalElement)
           break
 
