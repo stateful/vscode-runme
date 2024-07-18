@@ -26,6 +26,7 @@ import {
   takeUntil,
   defer,
   windowCount,
+  EmptyError,
 } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
@@ -242,7 +243,14 @@ export async function callStreamGenerate() {
               console.log(`Value: ${value} StreamCount: ${streamCount}`)
             }),
           ),
-        )
+        ).catch((error) => {
+          if (error instanceof EmptyError) {
+            // This means we started a new window but ended up not getting any items in that window.
+            console.log('No values were emitted by the Observable')
+            return 'No windows were processed'
+          }
+          throw error // Re-throw if it's not an EmptyError
+        })
         streamCount++
         return 'done'
       }),
