@@ -133,8 +133,51 @@ function createDefaultTransport(): Transport {
   })
 }
 
+// streamObservable takes an Observable<string> repsenting a stream of strings.
+// This stream is mapped onto a streaming RPC call to the AI service.
+export async function streamObservable(inputPipe: Observable<string>, streamCount: number) {
+  try {
+    let count = 0
+    const requestPipe = inputPipe.pipe(
+      map((value: string): StreamGenerateRequest => {
+        const blockUpdate = new StreamGenerateRequest({
+          request: {
+            case: 'update',
+            value: new BlockUpdate({
+              blockId: `stream-${streamCount}-${count++}`,
+              blockContent: value,
+            }),
+          },
+        })
+        return blockUpdate
+      }),
+    )
+
+    let requestPipeIterable: AsyncIterable<StreamGenerateRequest> =
+      observableToIterable(requestPipe)
+
+    // Start the bidirectional stream
+    const responseIterable = client.streamGenerate(requestPipeIterable)
+
+    // Await all responses
+    console.log('Waiting for responses...')
+    for await (const response of responseIterable) {
+      console.log('Block Recieved:', response)
+    }
+    console.log('All responses recieved')
+    console.log('Stream closeds...')
+
+    //return responses
+  } catch (error) {
+    console.error('Error in StreamGenerate:', error)
+    throw error
+  }
+}
+
 export async function callStreamGenerate() {
   try {
+    // Create an observable from an array to simulate the events
+    // TODO(jeremy): Should we eventually turn this into an observable of TextDocumentChangeEvents
     const data = [
       'hello',
       'how are you?',
@@ -146,60 +189,71 @@ export async function callStreamGenerate() {
       'down the only road I have ever known',
     ]
 
-    const inputPipe: Observable<string> = from(data).pipe(shareReplay())
-    const windowTrigger$ = inputPipe.pipe(
-      filter((lyric) => lyric === 'stop'),
-      shareReplay(),
-    )
+    const inputPipe: Observable<string> = from(data)
 
-    const windows$ = inputPipe.pipe(
+    // windowTrigger$ is an Observable indicating when a new window should be started
+    // The $ suffix is just a convention to indicate that this is an Observable.
+    const windowTrigger$ = inputPipe.pipe(filter((lyric) => lyric === 'stop'))
+
+    // windowed is an Observable of Observables. Each inner Observable will be a stream
+    // corresponding to the items in the window. We will turn each of these streams into
+    // separate Streaming request and cell generation
+    let windowed: Observable<Observable<string>> = inputPipe.pipe(
+      // Start a new window when click value is greater than 0.5
       window(windowTrigger$),
-      map((window$, windowIndex) => ({ window$, windowIndex })),
-      shareReplay(),
+      // TODO(jeremy); I think we could apply rate limiting here.
+      //map((win) => win.pipe(take(3))), // take at most 3 emissions from each window
+      // The mergeAll() operator subscribes to each of these window Observables as soon as they're created,
+      // and immediately starts emitting values from them.
+      // mergeAll(), // flatten the Observable-of-Observables
     )
 
-    const result$ = windows$.pipe(
-      mergeMap(({ window$, windowIndex }) =>
-        defer(() => {
-          let itemIndex = 0
-          const requestObservable = window$.pipe(
-            takeUntil(windowTrigger$),
-            filter((lyric) => lyric !== 'stop'),
-            map(
-              (lyric) =>
-                new StreamGenerateRequest({
-                  request: {
-                    case: 'update',
-                    value: new BlockUpdate({
-                      blockId: `stream-${windowIndex + 1}-item-${itemIndex++}`,
-                      blockContent: lyric,
-                    }),
-                  },
-                }),
-            ),
-          )
+    let streamCount = 0
 
-          const requestIterable = observableToIterable(requestObservable)
-          return from(client.streamGenerate(requestIterable))
-        }),
-      ),
-      mergeMap(async (responseIterable, windowIndex) => {
-        console.log(`Processing responses for Window ${windowIndex + 1}`)
-        for await (const response of responseIterable) {
-          console.log(`Response received for Window ${windowIndex + 1}:`, response)
-        }
-        return `Completed Window ${windowIndex + 1}`
+    let final: Observable<string> = windowed.pipe(
+      // Turn Observable of string into observable of StreamGenerateRequest
+      map((subStream: Observable<string>): string => {
+        // Turn each observable into a request
+        //streamObservable(subStream, streamCount)
+
+        subStream.pipe(
+          map((value: string): void => {
+            console.log(`Value: ${value} StreamCount: ${streamCount}`)
+          }),
+        )
+        streamCount++
+        return 'done'
       }),
+
+      // map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
+      //   const requestIterable = observableToIterable(requests)
+      //   // Start the bidirectional stream
+      //   return client.streamGenerate(requestIterable)
+      //   // for await (const response of responseIterable) {
+      //   //   console.log('Block Recieved:', response)
+      //   // }
+      // }),
+      // map(async (responseIterable: AsyncIterable<StreamGenerateResponse>) => {
+      //   // Await all responses
+      //   console.log('Waiting for responses...')
+      //   for await (const response of responseIterable) {
+      //     console.log('Block Recieved:', response)
+      //   }
+      //   console.log('All responses recieved')
+      //   console.log('Stream closeds...')
+      // }),
     )
 
-    console.log('Starting stream processing...')
-    const finalResult = await lastValueFrom(result$)
-    console.log('All windows completed. Final result:', finalResult)
+    // Wait for the Observable to be completed
+    await lastValueFrom(final)
+
+    //return responses
   } catch (error) {
     console.error('Error in StreamGenerate:', error)
     throw error
   }
 }
+
 export async function callSimpleMethod() {
   // Create a FullContext message
   const fullContext = new FullContext({
