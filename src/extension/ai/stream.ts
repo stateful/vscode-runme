@@ -2,10 +2,24 @@ import { createPromiseClient, Transport } from '@bufbuild/connect'
 
 import { createConnectTransport } from '@bufbuild/connect-node'
 import { AIService } from './foyle/v1alpha1/agent_connect'
-import { StreamGenerateRequest, FullContext, BlockUpdate } from './foyle/v1alpha1/agent_pb'
+import {
+  StreamGenerateRequest,
+  FullContext,
+  BlockUpdate,
+  StreamGenerateResponse,
+} from './foyle/v1alpha1/agent_pb'
 import { Doc } from './foyle/v1alpha1/doc_pb'
 import * as http2 from 'http2'
-import { Observable, fromEventPattern, from, map } from 'rxjs'
+import {
+  Observable,
+  fromEventPattern,
+  from,
+  map,
+  filter,
+  window,
+  mergeAll,
+  lastValueFrom,
+} from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
 
@@ -89,6 +103,11 @@ export function observableToIterable<T>(observable: Observable<T>): AsyncIterabl
   }
 }
 
+// // processEvent is a function that processes an event
+// function processEvent(event: string) {
+//   console.log('Event:', event)
+// }
+
 function createDefaultTransport(): Transport {
   return createConnectTransport({
     // Copied from https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
@@ -112,37 +131,80 @@ export async function callStreamGenerate() {
   try {
     // Create an observable from an array to simulate the events
     // TODO(jeremy): Should we eventually turn this into an observable of TextDocumentChangeEvents
-    const data = ['hello', 'how are you?', "Is it me you're looking for?"]
+    const data = [
+      'hello',
+      'how are you?',
+      'stop',
+      "Is it me you're looking for?",
+      'stop',
+      'here we go',
+      'again',
+      'down the only road I have ever known',
+    ]
+
     const inputPipe: Observable<string> = from(data)
-    let count = 0
-    const requestPipe = inputPipe.pipe(
-      map((value: string): StreamGenerateRequest => {
-        const blockUpdate = new StreamGenerateRequest({
-          request: {
-            case: 'update',
-            value: new BlockUpdate({
-              blockId: `block-${count++}`,
-              blockContent: value,
-            }),
-          },
-        })
-        return blockUpdate
+
+    // windowTrigger$ is an Observable indicating when a new window should be started
+    // The $ suffix is just a convention to indicate that this is an Observable.
+    const windowTrigger$ = inputPipe.pipe(filter((lyric) => lyric === 'stop'))
+
+    // windowed is an Observable of Observables. Each inner Observable will be a stream
+    // corresponding to the items in the window. We will turn each of these streams into
+    // separate Streaming request and cell generation
+    let windowed: Observable<Observable<string>> = inputPipe.pipe(
+      // Start a new window when click value is greater than 0.5
+      window(windowTrigger$),
+      // TODO(jeremy); I think we could apply rate limiting here.
+      //map((win) => win.pipe(take(3))), // take at most 3 emissions from each window
+      // The mergeAll() operator subscribes to each of these window Observables as soon as they're created,
+      // and immediately starts emitting values from them.
+      // mergeAll(), // flatten the Observable-of-Observables
+    )
+
+    let streamCount = 0
+    let itemCount = 0
+
+    let final: Observable<void> = windowed.pipe(
+      // Turn Observable of string into observable of StreamGenerateRequest
+      map((subStream: Observable<string>): Observable<StreamGenerateRequest> => {
+        streamCount++
+        return subStream.pipe(
+          map((value: string): StreamGenerateRequest => {
+            const blockUpdate = new StreamGenerateRequest({
+              request: {
+                case: 'update',
+                value: new BlockUpdate({
+                  blockId: `stream-${streamCount}-item-${itemCount}`,
+                  blockContent: value,
+                }),
+              },
+            })
+            return blockUpdate
+          }),
+        )
+      }),
+
+      map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
+        const requestIterable = observableToIterable(requests)
+        // Start the bidirectional stream
+        return client.streamGenerate(requestIterable)
+        // for await (const response of responseIterable) {
+        //   console.log('Block Recieved:', response)
+        // }
+      }),
+      map(async (responseIterable: AsyncIterable<StreamGenerateResponse>) => {
+        // Await all responses
+        console.log('Waiting for responses...')
+        for await (const response of responseIterable) {
+          console.log('Block Recieved:', response)
+        }
+        console.log('All responses recieved')
+        console.log('Stream closeds...')
       }),
     )
 
-    let requestPipeIterable: AsyncIterable<StreamGenerateRequest> =
-      observableToIterable(requestPipe)
-
-    // Start the bidirectional stream
-    const responseIterable = client.streamGenerate(requestPipeIterable)
-
-    // Await all responses
-    console.log('Waiting for responses...')
-    for await (const response of responseIterable) {
-      console.log('Block Recieved:', response)
-    }
-    console.log('All responses recieved')
-    console.log('Stream closeds...')
+    // Wait for the Observable to be completed
+    await lastValueFrom(final)
 
     //return responses
   } catch (error) {
