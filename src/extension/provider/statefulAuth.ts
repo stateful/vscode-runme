@@ -54,7 +54,8 @@ const passthrough = (value: any, resolve: (value?: any) => void) => resolve(valu
 
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
   #disposables: Disposable[] = []
-  #hashedApiUrl: string = crypto
+  // used as compound key in a hash-table; does not contain sensitive data
+  #insensitiveHashedApiUrl: string = crypto
     .createHash('sha1')
     .update(getRunmeAppUrl(['api']))
     .digest('hex')
@@ -462,7 +463,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private get sessionSecretKey() {
-    return `${SESSIONS_SECRET_KEY}.${this.#hashedApiUrl}`
+    return `${SESSIONS_SECRET_KEY}.${this.#insensitiveHashedApiUrl}`
   }
 
   private async getAllSessions(): Promise<StatefulAuthSession[]> {
