@@ -36,7 +36,8 @@ class Iterator {
     return Promise.resolve({ done: true, value: 'The end.' })
   }
 
-  // TODO(jeremy): When is return invoked?
+  // Per the spec return is invoked by the client to indicate it will not call next
+  // anymore. This allows the iterator to potentially do any cleanup.
   return?(value?: any): Promise<IteratorResult<StreamGenerateRequest>> {
     return Promise.resolve({ done: true, value: value })
   }
@@ -128,9 +129,8 @@ export async function callStreamGenerate() {
     for await (const response of responseIterable) {
       console.log('Block Recieved:', response)
     }
-
+    console.log('All responses recieved')
     console.log('Stream closeds...')
-    // The stream will automatically close after all responses are received
 
     //return responses
   } catch (error) {

@@ -17,7 +17,7 @@ vi.mock('vscode', async () => {
 test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
-    stream.callStreamGenerate()
+    await stream.callStreamGenerate()
     log.info('Starting manual test for foyle streaming RPC')
   },
 )
