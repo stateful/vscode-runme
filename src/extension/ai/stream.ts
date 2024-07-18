@@ -25,6 +25,7 @@ import {
   shareReplay,
   takeUntil,
   defer,
+  windowCount,
 } from 'rxjs'
 
 const baseUrl = 'http://localhost:8080/api'
@@ -189,23 +190,40 @@ export async function callStreamGenerate() {
       'down the only road I have ever known',
     ]
 
-    const inputPipe: Observable<string> = from(data)
+    const inputPipe: Observable<string> = from(data).pipe(
+      map((value: string) => {
+        console.log(`Input Value: ${value}`)
+        return value
+      }),
+    )
 
     // windowTrigger$ is an Observable indicating when a new window should be started
     // The $ suffix is just a convention to indicate that this is an Observable.
-    const windowTrigger$ = inputPipe.pipe(filter((lyric) => lyric === 'stop'))
+    const windowTrigger$ = inputPipe.pipe(
+      filter((lyric) => {
+        console.log(`Lyric: ${lyric}`)
+        const startWindow = lyric === 'stop'
+        console.log(`Start Window: ${startWindow}`)
+        return startWindow
+      }),
+    )
 
     // windowed is an Observable of Observables. Each inner Observable will be a stream
     // corresponding to the items in the window. We will turn each of these streams into
     // separate Streaming request and cell generation
     let windowed: Observable<Observable<string>> = inputPipe.pipe(
+      windowCount(2),
       // Start a new window when click value is greater than 0.5
-      window(windowTrigger$),
+      //window(windowTrigger$),
       // TODO(jeremy); I think we could apply rate limiting here.
+      map((win) => {
+        console.log('Windowed called')
+        return win
+      }),
       //map((win) => win.pipe(take(3))), // take at most 3 emissions from each window
       // The mergeAll() operator subscribes to each of these window Observables as soon as they're created,
       // and immediately starts emitting values from them.
-      // mergeAll(), // flatten the Observable-of-Observables
+      //mergeAll(), // flatten the Observable-of-Observables
     )
 
     let streamCount = 0
@@ -215,16 +233,20 @@ export async function callStreamGenerate() {
       map((subStream: Observable<string>): string => {
         // Turn each observable into a request
         //streamObservable(subStream, streamCount)
+        console.log('call subStream.pipe')
 
-        subStream.pipe(
-          map((value: string): void => {
-            console.log(`Value: ${value} StreamCount: ${streamCount}`)
-          }),
+        // Without the lastValueFrom, the stream will not start because we won't subscribe to it
+        lastValueFrom(
+          subStream.pipe(
+            map((value: string): void => {
+              console.log(`Value: ${value} StreamCount: ${streamCount}`)
+            }),
+          ),
         )
         streamCount++
         return 'done'
       }),
-
+      mergeAll(), // flatten the Observable-of-Observables
       // map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
       //   const requestIterable = observableToIterable(requests)
       //   // Start the bidirectional stream
