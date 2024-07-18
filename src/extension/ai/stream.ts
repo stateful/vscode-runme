@@ -14,8 +14,23 @@ const client = createPromiseClient(AIService, createDefaultTransport())
 
 // Function to convert an Observable to an AsyncIterable
 export function observableToIterable<T>(observable: Observable<T>): AsyncIterable<T> {
-  // Construct and return an object implementating the AsyncIterable protocol
+  // Construct and return an AsyncIterable object. An AsyncIterable is any object
+  // That has a property whose name is Symbol.asyncIterator and whose value is a function.
+  // That returns an AsyncIterator iterator.
   return {
+    // The notation [Symbol.asyncIterator] is a computed property name. It means define the property
+    // whose name is the value of the Symbol.asyncIterator symbol.
+    //
+    // Observables are push based. The subscriber function is invoked for each value emitted by the observable.
+    // Iterators are pull based. When next is invoked it pulls a value.
+    // (see https://rxjs.dev/guide/observable).
+    //
+    // So to connect them we use a list to act as a buffer. The observable subscriber adds them to the list
+    // and the iterator pulls them from the list.
+    //
+    // Since the iterator could be pulled before the observable has emitted any values, the iterator
+    // actually returns a promise that is resolved immediately if there are values in the list, otherwise
+    // it will resolve when the next item arrives.
     [Symbol.asyncIterator]: () => {
       const values: T[] = []
       let resolve: (value: IteratorResult<T>) => void
