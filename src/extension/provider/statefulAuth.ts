@@ -54,6 +54,10 @@ const passthrough = (value: any, resolve: (value?: any) => void) => resolve(valu
 
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
   #disposables: Disposable[] = []
+  #hashedApiUrl: string = crypto
+    .createHash('sha1')
+    .update(getRunmeAppUrl(['api']))
+    .digest('hex')
   #pendingStates: string[] = []
   #codeVerfifiers = new Map<string, string>()
   #scopes = new Map<string, string[]>()
@@ -457,8 +461,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return currentTime < oneHourBeforeExpiration
   }
 
+  private get sessionSecretKey() {
+    return `${SESSIONS_SECRET_KEY}.${this.#hashedApiUrl}`
+  }
+
   private async getAllSessions(): Promise<StatefulAuthSession[]> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY)
+    const allSessions = await this.context.secrets.get(this.sessionSecretKey)
     if (!allSessions) {
       return []
     }
@@ -487,7 +495,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       changed: StatefulAuthSession[]
     },
   ) {
-    await this.context.secrets.store(SESSIONS_SECRET_KEY, JSON.stringify(sessions))
+    await this.context.secrets.store(this.sessionSecretKey, JSON.stringify(sessions))
     this.#onSessionChange.fire(changes)
   }
 
