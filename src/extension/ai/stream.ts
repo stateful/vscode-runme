@@ -139,6 +139,7 @@ function createDefaultTransport(): Transport {
 // This stream is mapped onto a streaming RPC call to the AI service.
 export async function streamObservable(inputPipe: Observable<string>, streamCount: number) {
   try {
+    console.log(`streamObservable: Stream Count: ${streamCount}`)
     let count = 0
     const requestPipe = inputPipe.pipe(
       map((value: string): StreamGenerateRequest => {
@@ -231,30 +232,30 @@ export async function callStreamGenerate() {
 
     let final: Observable<string> = windowed.pipe(
       // Turn Observable of string into observable of StreamGenerateRequest
-      map((subStream: Observable<string>): string => {
+      map(async (subStream: Observable<string>): Promise<string> => {
         // Turn each observable into a request
-        //streamObservable(subStream, streamCount)
+        await streamObservable(subStream, streamCount)
         console.log('call subStream.pipe')
 
         // Without the lastValueFrom, the stream will not start because we won't subscribe to it
-        lastValueFrom(
-          subStream.pipe(
-            map((value: string): void => {
-              console.log(`Value: ${value} StreamCount: ${streamCount}`)
-            }),
-          ),
-        ).catch((error) => {
-          if (error instanceof EmptyError) {
-            // This means we started a new window but ended up not getting any items in that window.
-            console.log('No values were emitted by the Observable')
-            return 'No windows were processed'
-          }
-          throw error // Re-throw if it's not an EmptyError
-        })
+        // lastValueFrom(
+        //   subStream.pipe(
+        //     map((value: string): void => {
+        //       console.log(`Value: ${value} StreamCount: ${streamCount}`)
+        //     }),
+        //   ),
+        // ).catch((error) => {
+        //   if (error instanceof EmptyError) {
+        //     // This means we started a new window but ended up not getting any items in that window.
+        //     console.log('No values were emitted by the Observable')
+        //     return 'No windows were processed'
+        //   }
+        //   throw error // Re-throw if it's not an EmptyError
+        // })
         streamCount++
         return 'done'
       }),
-      mergeAll(), // flatten the Observable-of-Observables
+      //mergeAll(), // flatten the Observable-of-Observables
       // map((requests: Observable<StreamGenerateRequest>): AsyncIterable<StreamGenerateResponse> => {
       //   const requestIterable = observableToIterable(requests)
       //   // Start the bidirectional stream
