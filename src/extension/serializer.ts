@@ -155,20 +155,20 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       return metadata
     }
 
-    // newly inserted cells have blank metadata
-    const newCellId = ulid()
+    // newly inserted cells may have blank metadata
+    const id = metadata?.['id'] || ulid()
 
     // only set `id` if all or cell identity is required
     if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
       return {
         ...(metadata || {}),
-        ...{ 'runme.dev/id': newCellId, id: newCellId },
+        ...{ 'runme.dev/id': id, id },
       }
     }
 
     return {
       ...(metadata || {}),
-      ...{ 'runme.dev/id': newCellId },
+      ...{ 'runme.dev/id': id },
     }
   }
 
