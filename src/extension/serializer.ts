@@ -203,18 +203,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
     return Promise.all(
       data.cells.map(async (cell) => {
-        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
         let id: string = ''
-        for (const out of cell.outputs || []) {
-          Object.entries(out.metadata ?? {}).find(([k, v]) => {
-            if (k === 'runme.dev/id') {
-              terminalOutput = out
-              id = v
-            }
-          })
+        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
 
-          if (terminalOutput) {
-            delete out.metadata?.['runme.dev/id']
+        for (const cellOutput of cell.outputs || []) {
+          id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
+          if (id) {
+            terminalOutput = cellOutput
             break
           }
         }

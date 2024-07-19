@@ -141,7 +141,9 @@ function getCellId(cell: vscode.NotebookCell): string {
     throw new Error('Cannot get cell ID for non-code cell!')
   }
 
-  return getAnnotations(cell)['runme.dev/id']!
+  const annotations = getAnnotations(cell)
+
+  return annotations['runme.dev/id'] || annotations['id'] || ''
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
