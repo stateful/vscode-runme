@@ -37,10 +37,11 @@ function createSource(): Observable<string> {
   return new Observable((subscriber) => {
     subscriber.next(data[0])
     for (let i = 1; i < data.length; i++) {
-      // Delay the next data point by 2 seconds to simulate typing
+      // We need to delay each successive data point by 2 seconds to simulate typing
+      // The timeouts are asynchronous which is why we need to increase the timeout for each item
       setTimeout(() => {
         subscriber.next(data[i])
-      }, 2000)
+      }, 2000 * i)
     }
   })
 }
