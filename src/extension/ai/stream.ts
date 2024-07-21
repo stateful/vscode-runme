@@ -48,7 +48,7 @@ export class StreamCreator {
   handleEvent = (event: string): void => {
     if (this.lastIterator !== undefined && this.lastIterator !== null && event === 'stop') {
       console.log('Stopping the current stream')
-      this.lastIterator.completed = true
+      this.lastIterator.close()
       this.lastIterator = null
       return
     }
@@ -122,6 +122,15 @@ class PromiseIterator<T> {
       this.pending = null
     } else {
       this.values.push(item)
+    }
+  }
+
+  // Close the iterator
+  close() {
+    this.completed = true
+    if (this.pending !== null) {
+      this.pending.resolve({ value: undefined, done: true })
+      this.pending = null
     }
   }
 
