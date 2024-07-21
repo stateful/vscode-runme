@@ -79,47 +79,19 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
     let source: Observable<string> = createSource()
-    let window = 0
-    let windowed: Observable<string> = source.pipe(
-      // map((value: string): string => {
-      //   console.log(`Input Value: ${value}`)
-      //   return value
-      // }),
-      windowCount(2),
-      // Start a new window when click value is greater than 0.5
-      //window(windowTrigger$),
-      // TODO(jeremy); I think we could apply rate limiting here.
-      map((win: Observable<string>) => {
-        window++
 
-        win.pipe(
-          map((value: string): string => {
-            let result = `window-{window}-value-${value}`
-            console.log(result)
-            return result
-          }),
-        )
-        // // We need to subscript to it or it never completes
-        // let lastVal = await lastValueFrom(win).catch((err) => {
-        //   if (err instanceof EmptyError) {
-        //     // This means we started a new window but ended up not getting any items in that window.
-        //     console.log('No values were emitted by the Observable')
-        //     return 'No windows were processed'
-        //   }
-        //   console.error(err)
-        // })
+    let creator = new stream.StreamCreator()
 
-        // console.log(`Last Value: ${lastVal}`)
-        return win
-      }),
-      //map((win) => win.pipe(take(3))), // take at most 3 emissions from each window
-      // The mergeAll() operator subscribes to each of these window Observables as soon as they're created,
-      // and immediately starts emitting values from them.
-      mergeAll(), // flatten the Observable-of-Observables
-    )
+    let final = source.pipe(map(creator.handleEvent))
 
-    let lastVal = await lastValueFrom(windowed)
+    let lastVal = await lastValueFrom(final)
     console.log(`final Value: ${lastVal}`)
+
+    // Await any promises for the requests
+    for (const p of stream.processedEvents) {
+      let value = await p
+      console.log(`processed value: ${value}`)
+    }
     // // Create a subscription to the observable
     // let responseIterables: Observable<AsyncIterable<StreamGenerateResponse>> =
     //   stream.callStreamGenerate(source)

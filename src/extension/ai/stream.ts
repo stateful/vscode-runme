@@ -35,6 +35,131 @@ const baseUrl = 'http://localhost:8080/api'
 // Create a client
 const client = createPromiseClient(AIService, createDefaultTransport())
 
+export const processedEvents: Promise<number>[] = []
+
+// StreamCreator processes a stream of events.
+// These events are split into windows and then turned into a stream of requests.
+export class StreamCreator {
+  lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
+
+  // handleEvent is that processes an event
+  // n.b we use arror function definition to ensure this gets properly bound
+  // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
+  handleEvent = (event: string): void => {
+    if (this.lastIterator !== undefined && this.lastIterator !== null && event === 'stop') {
+      console.log('Stopping the current stream')
+      this.lastIterator.completed = true
+      this.lastIterator = null
+      return
+    }
+    if (this.lastIterator === null) {
+      this.lastIterator = new PromiseIterator<StreamGenerateRequest>()
+      // start the bidirectional stream
+      let iterable = {
+        [Symbol.asyncIterator]: () => {
+          return this.lastIterator!
+        },
+      }
+
+      const responseIterable = client.streamGenerate(iterable)
+      // Hack: Add them to global variable so we can await them later
+      processedEvents.push(processResponses(responseIterable))
+    }
+
+    this.lastIterator.enQueue(
+      new StreamGenerateRequest({
+        request: {
+          case: 'update',
+          value: new BlockUpdate({
+            blockId: 'block-1',
+            blockContent: event,
+          }),
+        },
+      }),
+    )
+  }
+}
+
+class PromiseFunctions<T> {
+  resolve: (value: T) => void
+  reject: (error: any) => void
+  constructor(res: (value: T) => void, rej: (error: any) => void) {
+    this.resolve = res
+    this.reject = rej
+  }
+}
+
+async function processResponses(responses: AsyncIterable<StreamGenerateResponse>): Promise<number> {
+  let count = 0
+  for await (const response of responses) {
+    count++
+    console.log('Block Recieved:', response)
+  }
+  return count
+}
+
+// PromiseIterator implements the iterator protocol for an AsyncIterable.
+// It is used to convert from a push based Observable to a pull based AsyncIterable.
+// It implements the iterator protocol; wrapped around a list. The list is used
+// to buffer values from the Observable. The iterator returns promises that get
+// resolved by the Observable.
+class PromiseIterator<T> {
+  values: T[] = []
+
+  // Keep track of the resolve and reject functions for the promise returned by next
+  // That needs to be closed when the next value is added to the list.
+  pending: PromiseFunctions<IteratorResult<T>> | null = null
+
+  // resolve: (value: IteratorResult<T>) => void
+  // reject: (error: any) => void | undefined = undefined
+  completed = false
+  error: any = null
+
+  // enQueue the item to be returned by the iterator
+  enQueue(item: T) {
+    if (this.pending !== null) {
+      this.pending.resolve({ value: item, done: false })
+      this.pending = null
+    } else {
+      this.values.push(item)
+    }
+  }
+
+  // Implement the iterator protocol
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
+  next(): Promise<IteratorResult<T>> {
+    let outer = this
+    // Each call to next returns a promise. If we already have a value in the list, we return it.
+    // If the list is empty, we store the resolve and reject functions so that we can invoke resolve when
+    // a value is added to the list
+    return new Promise<IteratorResult<T>>((res, rej) => {
+      if (outer.error) {
+        rej(outer.error)
+      } else if (outer.values.length) {
+        // If there is a value in the list, return it
+        res({ value: outer.values.shift()!, done: false })
+      } else if (outer.completed) {
+        // If the has completed, return done
+        res({ value: undefined, done: true })
+      } else {
+        // Store the resolve and reject functions so that we can
+        outer.pending = new PromiseFunctions(res, rej)
+      }
+    })
+  }
+
+  return(): Promise<IteratorResult<T>> {
+    //subscription.unsubscribe()
+    return Promise.resolve({ value: undefined, done: true })
+  }
+  // The connect method requires this method to be implemented even though it is optional in AsyncIterable.
+  // TODO(jeremy): Presumably this is where we need to add error handling.
+  throw(err: any) {
+    //subscription.unsubscribe()
+    return Promise.reject(err)
+  }
+}
+
 // Function to convert an Observable to an AsyncIterable
 export function observableToIterable<T>(observable: Observable<T>): AsyncIterable<T> {
   // Construct and return an AsyncIterable object. An AsyncIterable is any object
