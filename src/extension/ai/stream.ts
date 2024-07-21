@@ -32,8 +32,8 @@ import {
 
 const baseUrl = 'http://localhost:8080/api'
 
-// Create a client
-const client = createPromiseClient(AIService, createDefaultTransport())
+// Create a client this is actually a PromiseClient
+export const client = createPromiseClient(AIService, createDefaultTransport())
 
 export const processedEvents: Promise<number>[] = []
 
@@ -53,11 +53,16 @@ export class StreamCreator {
       return
     }
     if (this.lastIterator === null) {
-      this.lastIterator = new PromiseIterator<StreamGenerateRequest>()
+      // n.b. we need to define newIterator and then refer to newIterator in the closure
+      let newIterator = new PromiseIterator<StreamGenerateRequest>()
+      this.lastIterator = newIterator
       // start the bidirectional stream
       let iterable = {
         [Symbol.asyncIterator]: () => {
-          return this.lastIterator!
+          // n.b. We don't want to refer to this.lastIterator because we need to create a closure
+          // this.lastIterator is a reference that will get be updated over time. We don't want the iterator though
+          // to change.
+          return newIterator
         },
       }
 
@@ -140,6 +145,16 @@ class PromiseIterator<T> {
   close() {
     this.completed = true
     if (this.pending !== null) {
+      // If the has completed, return done
+      // let finalRequest = new StreamGenerateRequest({
+      //   request: {
+      //     case: 'update',
+      //     value: new BlockUpdate({
+      //       blockId: 'final-request',
+      //       blockContent: 'final-request',
+      //     }),
+      //   },
+      // })
       this.pending.resolve({ value: undefined, done: true })
       this.pending = null
     }
@@ -160,6 +175,15 @@ class PromiseIterator<T> {
         res({ value: outer.values.shift()!, done: false })
       } else if (outer.completed) {
         // If the has completed, return done
+        // let finalRequest = new StreamGenerateRequest({
+        //   request: {
+        //     case: 'update',
+        //     value: new BlockUpdate({
+        //       blockId: 'final-request',
+        //       blockContent: 'final-request',
+        //     }),
+        //   },
+        // })
         res({ value: undefined, done: true })
       } else {
         // Store the resolve and reject functions so that we can
@@ -175,7 +199,7 @@ class PromiseIterator<T> {
   // The connect method requires this method to be implemented even though it is optional in AsyncIterable.
   // TODO(jeremy): Presumably this is where we need to add error handling.
   throw(err: any) {
-    //subscription.unsubscribe()
+    console.log('Error in PromiseIterator:', err)
     return Promise.reject(err)
   }
 }

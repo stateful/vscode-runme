@@ -100,10 +100,10 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
     console.log(`final Value: ${lastVal}`)
 
     // Await any promises for the requests
-    for (const p of stream.processedEvents) {
-      let value = await p
-      console.log(`processed value: ${value}`)
-    }
+    // for (const p of stream.processedEvents) {
+    //   let value = await p
+    //   console.log(`processed value: ${value}`)
+    // }
     // // Create a subscription to the observable
     // let responseIterables: Observable<AsyncIterable<StreamGenerateResponse>> =
     //   stream.callStreamGenerate(source)
