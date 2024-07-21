@@ -231,6 +231,10 @@ export function callStreamGenerate(
     // corresponding to the items in the window. We will turn each of these streams into
     // separate Streaming request and cell generation
     let windowed: Observable<Observable<string>> = inputPipe.pipe(
+      map((value: string): string => {
+        console.log(`Input Value: ${value}`)
+        return value
+      }),
       windowCount(2),
       // Start a new window when click value is greater than 0.5
       //window(windowTrigger$),
