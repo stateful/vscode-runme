@@ -13,6 +13,8 @@ import {
   map,
   mergeAll,
   EmptyError,
+  tap,
+  finalize,
 } from 'rxjs'
 
 import {
@@ -82,7 +84,17 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
 
     let creator = new stream.StreamCreator()
 
-    let final = source.pipe(map(creator.handleEvent))
+    let final = source.pipe(
+      // Use tap and map since we don't transform any values
+      tap({
+        next: (event) => creator.handleEvent(event),
+        error: (err) => console.error('Error in stream:', err),
+      }),
+      finalize(() => {
+        console.log('Stream completed, cleaning up StreamCreator')
+        creator.shutdown() // You'll need to implement this method
+      }),
+    )
 
     let lastVal = await lastValueFrom(final)
     console.log(`final Value: ${lastVal}`)

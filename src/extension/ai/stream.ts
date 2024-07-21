@@ -78,6 +78,17 @@ export class StreamCreator {
       }),
     )
   }
+
+  // shutdown should be invoked when the stream is to be stopped
+  shutdown = (): void => {
+    // Close the last iterator
+    if (this.lastIterator !== undefined && this.lastIterator !== null) {
+      console.log('Stopping the current stream')
+      this.lastIterator.close()
+      this.lastIterator = null
+      return
+    }
+  }
 }
 
 class PromiseFunctions<T> {
