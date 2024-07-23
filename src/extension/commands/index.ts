@@ -23,8 +23,8 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import {
   OpenViewInEditorAction,
   getActionsOpenViewInEditor,
-  getBinaryPath,
-  getCLIUseIntegratedRunme,
+  // getBinaryPath,
+  // getCLIUseIntegratedRunme,
   getTLSEnabled,
   isNotebookTerminalEnabledForCell,
   isRunmeAppButtonsEnabled,
@@ -156,7 +156,7 @@ export function stopBackgroundTask(cell: NotebookCell) {
   terminal.dispose()
 }
 
-export function runCLICommand(extensionBaseUri: Uri, grpcRunner: boolean) {
+export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
     if (cell.notebook.isDirty) {
       const option = await window.showInformationMessage(
@@ -198,16 +198,17 @@ export function runCLICommand(extensionBaseUri: Uri, grpcRunner: boolean) {
       }
     }
 
+    const program = await kernel.createTerminalProgram(cwd)
+
     const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
-      name: `CLI: ${annotations.name}`,
-      cwd,
+      name: `Fork: ${annotations.name}`,
+      pty: program,
     })
 
-    const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
-
+    // const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
     term.show(false)
-    term.sendText(`${runmeExec} run ${args.join(' ')}`)
+    // term.sendText(`${runmeExec} run ${args.join(' ')}`)
   }
 }
 

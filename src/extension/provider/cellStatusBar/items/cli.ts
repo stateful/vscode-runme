@@ -7,7 +7,7 @@ import CellStatusBarItem from './cellStatusBarItem'
 export class CLIStatusBarItem extends CellStatusBarItem {
   getStatusBarItem(cell: NotebookCell): NotebookCellStatusBarItem | undefined {
     /**
-     * only show CLI if runme.dev/name is known
+     * only show Fork if runme.dev/name is known
      */
     const annotations = getAnnotations(cell)
     if (!annotations.name) {
@@ -15,7 +15,7 @@ export class CLIStatusBarItem extends CellStatusBarItem {
     }
 
     const item = new NotebookCellStatusBarItem(
-      '$(github-action) CLI',
+      '$(github-action) Fork ENV',
       NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.runCliCommand'
