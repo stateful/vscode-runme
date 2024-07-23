@@ -612,7 +612,7 @@ export class TerminalView extends LitElement {
 
   #createResizeHandle(): HTMLElement {
     const dragHandle = document.createElement('div')
-    dragHandle.setAttribute('class', '@xterm/drag-handle')
+    dragHandle.setAttribute('class', 'xterm-drag-handle')
 
     let dragState:
       | {
