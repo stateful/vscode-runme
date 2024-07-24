@@ -5,7 +5,7 @@
 
 // Adjusted to use more direct method in cell size computation
 
-import { Terminal, ITerminalAddon } from 'xterm'
+import { Terminal, ITerminalAddon } from '@xterm/xterm'
 
 interface IOffset {
   top: number
