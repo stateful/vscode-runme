@@ -1078,7 +1078,7 @@
     "@graphql-codegen/typescript": "4.0.7",
     "@octokit/rest": "^19.0.13",
     "@types/node": "^18.19.14",
-    "@types/uuid": "^9.0.7",
+    "@types/uuid": "^10.0.0",
     "@types/vscode": "1.72.0",
     "@types/vscode-notebook-renderer": "^1.72.3",
     "@types/webpack-env": "^1.18.1",
@@ -1156,7 +1156,7 @@
     "simple-git": "^3.24.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.2.1",
-    "uuid": "^9.0.1",
+    "uuid": "^10.0.0",
     "vscode-telemetry": "^1.0.2",
     "yaml": "^2.4.2",
     "zod": "^3.22.2"
