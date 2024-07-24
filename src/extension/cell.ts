@@ -321,7 +321,7 @@ export class NotebookCellOutputManager {
     let terminalState: ITerminalState
 
     switch (type) {
-      case '@xterm/xterm':
+      case 'xterm':
         {
           const _terminalState = new XTermState()
           const _write = _terminalState.write

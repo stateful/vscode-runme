@@ -4,7 +4,7 @@ import { SerializeAddon } from '@xterm/addon-serialize'
 import { OutputType } from '../../constants'
 import { RunnerExitReason } from '../runner'
 
-export type NotebookTerminalType = '@xterm/xterm' | 'local'
+export type NotebookTerminalType = 'xterm' | 'local'
 
 export interface IProcessInfoState {
   exitReason: RunnerExitReason
