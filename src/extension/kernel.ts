@@ -903,7 +903,8 @@ export class Kernel implements Disposable {
       return
     }
 
-    this.address = address
+    // keep old address unless there's a new one
+    this.address = address || this.address
 
     log.info('Requesting new runner environment.')
 
@@ -929,7 +930,7 @@ export class Kernel implements Disposable {
 
       registerExtensionEnvVarsMutation(
         this.context,
-        getRunnerSessionEnvs(this.context.extensionUri, runnerEnv, address),
+        getRunnerSessionEnvs(this.context, runnerEnv, true, address),
       )
 
       const monitor = await this.runner.createMonitorEnvStore()
@@ -1019,7 +1020,7 @@ export class Kernel implements Disposable {
   async createTerminalProgram(cwd: string | undefined) {
     const runner = this.runner!
     // todo(sebastian): why are the env collection mutations not doing this?
-    const envVars = getRunnerSessionEnvs(this.context.extensionUri, this.runnerEnv, this.address)
+    const envVars = getRunnerSessionEnvs(this.context, this.runnerEnv, false, this.address)
     const sysShell = getSystemShellPath() || '/bin/bash'
     const program = await runner.createProgramSession({
       programName: `${sysShell} -l`,
