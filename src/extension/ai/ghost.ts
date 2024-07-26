@@ -1,6 +1,9 @@
 import * as vscode from 'vscode'
-
+import * as rxjs from 'rxjs'
+import * as stream from './stream'
 import getLogger from '../logger'
+import * as agent_pb from './foyle/v1alpha1/agent_pb'
+import * as doc_pb from './foyle/v1alpha1/doc_pb'
 const log = getLogger()
 
 const ghostKey = 'ghostCell'
@@ -27,11 +30,34 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
     createRegisterOnDidChangeTextDocumentHandler(context),
   )
 
-  // So now we can subscribe
-  textDocumentEvents.subscribe({
-    next: handleOnDidChangeNotebookCell,
-    error: (err) => log.error(`Error: ${err}`),
-    complete: () => log.info('complete'),
+  // Create a stream creator. The StreamCreator is a class that effectively windows events
+  // and turns each window into an AsyncIterable of streaming requests.
+  let creator = new stream.StreamCreator()
+
+  let cellGenerator = new GhostCellGenerator()
+
+  let finalResult = textDocumentEvents.pipe(
+    rxjs.map((event) => cellGenerator.textDocumentChangeEventToCompletionRequest(event)),
+    rxjs.filter((request) => request !== null),
+    rxjs.map((request) => creator.handleEvent(request)),
+    rxjs.finalize(() => {
+      console.log('TextDocumentEvents Stream completed, cleaning up StreamCreator')
+      creator.shutdown()
+    }),
+  )
+
+  // TODO(jeremy): If we don't subscribe no events will get processed.
+  // What should the subscription actually do? Nothing?
+  finalResult.subscribe({
+    next: (result) => {
+      log.info(`final result: ${result}`)
+    },
+    error: (err) => {
+      log.error(`Error: ${err}`)
+    },
+    complete: () => {
+      log.info('complete')
+    },
   })
 
   // onDidChangeVisibleTextEditors fires when the visible text editors change.
@@ -62,6 +88,135 @@ function createRegisterOnDidChangeTextDocumentHandler(
     observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
   ) {
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(observableHandler))
+  }
+}
+
+// GhostCellGenerator is a class that generates completions for a notebook cell.
+// It contains a bunch of functions that can process events and responses.
+// Its a class because these transformations are stateful. For example,
+// We get a VSCode TextDocumentChangeEvent telling us that a cell has changed. Based on this
+// we create completion requests to the AIService. In order to handle the response we need to
+// know where in the notebook the new cells should be inserted. So we store that as state
+// in the class.
+// TODO(jeremy): Multiple notebooks could be processed simulatenously. How do we handle that?
+// Where should we store per notebook state?
+// How would we unload that state? Track notebook open/close envents
+class GhostCellGenerator {
+  private notebookState: Map<vscode.Uri, NotebookState>
+
+  constructor() {
+    this.notebookState = new Map<vscode.Uri, NotebookState>()
+  }
+
+  // Updated method to check and initialize notebook state
+  private getNotebookState(notebook: vscode.NotebookDocument): NotebookState {
+    if (!this.notebookState.has(notebook.uri)) {
+      this.notebookState.set(notebook.uri, new NotebookState())
+    }
+    return this.notebookState.get(notebook.uri)!
+  }
+
+  // textDocumentChangeEventToCompletionRequest converts a VSCode TextDocumentChangeEvent to a Request proto.
+  // This is a stateful transformation because we need to decide whether to send the full document or
+  // the incremental changes.  It will return a null request if the event should be ignored or if there
+  // is an error preventing it from computing a proper request.
+  textDocumentChangeEventToCompletionRequest(
+    event: vscode.TextDocumentChangeEvent,
+  ): agent_pb.StreamGenerateRequest | null {
+    if (event.document.uri.scheme !== 'vscode-notebook-cell') {
+      // ignore other open events
+      return null
+    }
+    var matchedCell: vscode.NotebookCell | undefined
+
+    // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
+    // Can we cache it in the class? Since we keep track of notebooks in NotebookState
+    // Is there a way we can go from the URI of the cell to the URI of the notebook directly
+    const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
+      const cell = notebook.getCells().find((cell) => cell.document === event.document)
+      const result = Boolean(cell)
+      if (cell !== undefined) {
+        matchedCell = cell
+      }
+      return result
+    })
+    if (notebook === undefined) {
+      log.error(`notebook for cell ${event.document.uri} NOT found`)
+      return null
+    }
+
+    // Get the notebook state; this will initialize it if this is the first time we
+    // process an event for this notebook.
+    let nbState = this.getNotebookState(notebook)
+
+    if (matchedCell === undefined) {
+      log.error(`cell for document ${event.document.uri} NOT found`)
+      return null
+    }
+
+    // Decide whether
+    let newCell = true
+    if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
+      newCell = false
+    }
+
+    log.info(
+      `onDidChangeTextDocument Fired for notebook ${event.document.uri}; reason ${event.reason} ` +
+        'this should fire when a cell is added to a notebook',
+    )
+    log.info(`onDidChangeTextDocument: latest contents ${event.document.getText()}`)
+
+    // Update notebook state
+    nbState.activeCell = matchedCell
+    this.notebookState.set(notebook.uri, nbState)
+
+    if (newCell) {
+      // Generate a new request
+      // TODO(jeremy): This code needs to be changed to properly send the complete document.
+      // We should really change the Protos to use the RunMe Notebook and Cell protos
+      // Then we can use RunMe's covnersion routines to generate those protos from the vscode data structurs.
+      let doc = new doc_pb.Doc({
+        blocks: [
+          new doc_pb.Block({
+            kind: doc_pb.BlockKind.MARKUP,
+            contents: event.document.getText(),
+          }),
+        ],
+      })
+
+      let request = new agent_pb.StreamGenerateRequest({
+        request: {
+          case: 'fullContext',
+          value: new agent_pb.FullContext({
+            doc: doc,
+            selected: matchedCell.index,
+          }),
+        },
+      })
+
+      return request
+    } else {
+      // Generate an update request
+      let request = new agent_pb.StreamGenerateRequest({
+        request: {
+          case: 'update',
+          value: new agent_pb.BlockUpdate({
+            blockId: 'block-1',
+            blockContent: event.document.getText(),
+          }),
+        },
+      })
+
+      return request
+    }
+  }
+}
+
+// NotebookState keeps track of state information for a given notebook.
+class NotebookState {
+  public activeCell: vscode.NotebookCell | null
+  constructor() {
+    this.activeCell = null
   }
 }
 

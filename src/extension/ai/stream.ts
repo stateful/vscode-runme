@@ -43,11 +43,16 @@ export const processedEvents: Promise<number>[] = []
 export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
-  // handleEvent processes an event
+  // handleEvent processes a request
   // n.b we use arror function definition to ensure this gets properly bound
   // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
-  handleEvent = (event: string): void => {
-    if (this.lastIterator !== undefined && this.lastIterator !== null && event === 'stop') {
+  handleEvent = (req: StreamGenerateRequest): void => {
+    // Start a new stream when ever the full document gets sent
+    if (
+      this.lastIterator !== undefined &&
+      this.lastIterator !== null &&
+      req.request.case === 'fullContext'
+    ) {
       console.log('Stopping the current stream')
       this.lastIterator.close()
       this.lastIterator = null
@@ -72,17 +77,7 @@ export class StreamCreator {
       processedEvents.push(processResponses(responseIterable))
     }
 
-    this.lastIterator.enQueue(
-      new StreamGenerateRequest({
-        request: {
-          case: 'update',
-          value: new BlockUpdate({
-            blockId: 'block-1',
-            blockContent: event,
-          }),
-        },
-      }),
-    )
+    this.lastIterator.enQueue(req)
   }
 
   // shutdown should be invoked when the stream is to be stopped

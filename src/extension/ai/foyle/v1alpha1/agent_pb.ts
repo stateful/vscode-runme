@@ -162,6 +162,10 @@ export class ExecuteResponse extends Message<ExecuteResponse> {
 }
 
 /**
+ * TODO(jeremy): We should probably be using RunMe Notebook and Cell protos
+ * https://github.com/stateful/runme/blob/9658f77dde406abc775fd3f1eb249b5a06e20f4f/pkg/api/proto/runme/ai/v1alpha1/ai.proto#L9
+ * Because the primary client will be RunMe and we will want to send vscode data structures rather than our own.
+ *
  * @generated from message StreamGenerateRequest
  */
 export class StreamGenerateRequest extends Message<StreamGenerateRequest> {
