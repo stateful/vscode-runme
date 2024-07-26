@@ -98,45 +98,7 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
 
     let lastVal = await lastValueFrom(final)
     console.log(`final Value: ${lastVal}`)
-
-    // Await any promises for the requests
-    // for (const p of stream.processedEvents) {
-    //   let value = await p
-    //   console.log(`processed value: ${value}`)
-    // }
-    // // Create a subscription to the observable
-    // let responseIterables: Observable<AsyncIterable<StreamGenerateResponse>> =
-    //   stream.callStreamGenerate(source)
-
-    // // Create a subscription to the observable
-    // responseIterables.forEach(async (responseIterable) => {
-    //   for await (const response of responseIterable) {
-    //     log.info('response:', response)
-    //   }
-    // })
-
-    // await lastValueFrom(responseIterables)
   },
   // Increase the test timeout
   60000,
-  //const observable: Observable<string> = from(data)
-  //await stream.streamObservable(observable, 0)
-  //await stream.callStreamGenerate()
-  //await main()
-  //
 )
-
-// async function main() {
-//   // Create an array of strings
-//   const steps = ['one step', 'two step', 'three step']
-
-//   // Create an Observable from the array
-//   const observable: Observable<string> = from(steps)
-
-//   const asyncIterable = stream.observableToIterable(observable)
-
-//   // Loop over the AsyncIterable and print the strings
-//   for await (const step of asyncIterable) {
-//     console.log(step)
-//   }
-// }
