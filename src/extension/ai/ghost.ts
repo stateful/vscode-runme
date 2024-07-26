@@ -9,7 +9,7 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
 })
 
-import { Observable, fromEventPattern } from 'rxjs'
+import { fromEventPattern } from 'rxjs'
 
 // registerGhostCellEvents should be called when the extension is activated.
 // It registers event handlers to listen to when cells are added or removed
@@ -23,11 +23,12 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
 
   // TODO(jeremy): How would we use the removeEventHandler to make sure the observable is disposed of
   // when the extension is deactivated?
-  const textDocumentEvents = fromEventPattern<vscode.TextDocumentChangeEvent>(registerOnDidChangeTextDocumentHandler)
-
+  const textDocumentEvents = fromEventPattern<vscode.TextDocumentChangeEvent>(
+    createRegisterOnDidChangeTextDocumentHandler(context),
+  )
 
   // So now we can subscribe
-  const subscription = textDocumentEvents.subscribe({
+  textDocumentEvents.subscribe({
     next: handleOnDidChangeNotebookCell,
     error: (err) => log.error(`Error: ${err}`),
     complete: () => log.info('complete'),
@@ -45,31 +46,23 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
   )
 }
 
-async function* generateNumbers(): AsyncIterable<StreamGenerateRequest> {
-  const updates = ['hello', 'how are you?', "Is it me you're looking for?"]
-  // Send block updates
-  for (const [index, update] of updates.entries()) {
-    const blockUpdate = new StreamGenerateRequest({
-      request: {
-        case: 'update',
-        value: new BlockUpdate({
-          blockId: `block-${index}`,
-          blockContent: update,
-        }),
-      },
-    })
-    yield await blockUpdate
+// createRegisterOnDidChangeTextDocumentHandler is a factory function that creates a function
+// that will register the observable handler for the onDidChangeTextDocument event.
+// The reason we need to use a factory function is that we need to pass in the vscode context
+// so we can add the subscription to the list of subscriptions so they can be properly disposed
+// of
+function createRegisterOnDidChangeTextDocumentHandler(
+  context: vscode.ExtensionContext,
+): (observableHandler: (event: vscode.TextDocumentChangeEvent) => void) => void {
+  // registerOnDidChangeTextDocumentHandler will be used to register the observable handler
+  // for the onDidChangeTextDocument event. This function will be invoked by the observable
+  // handler when a subscription is created. The argument, observableHandler, will be
+  // a function that will add the events to the observable.
+  return function registerOnDidChangeTextDocumentHandler(
+    observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
+  ) {
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(observableHandler))
   }
-}
-
-// registerOnDidChangeTextDocumentHandler will be used to register the observable handler
-// for the onDidChangeTextDocument event. This function will be invoked by the observable
-// handler when a subscription is created. The argument, observableHandler, will be
-// a function that will add the events to the observable.
-function registerOnDidChangeTextDocumentHandler(
-  observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
-) {
-  vscode.workspace.onDidChangeTextDocument(observableHandler)
 }
 
 // handleOnDidChangeNotebookCell is called when the contents of a cell changes.
