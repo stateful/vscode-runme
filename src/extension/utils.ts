@@ -48,6 +48,7 @@ import {
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getLoginPrompt,
+  getMaskOutputs,
   getNotebookAutoSave,
   getPortNumber,
   getTLSDir,
@@ -693,8 +694,7 @@ export async function handleNotebookAutosaveSettings() {
 }
 
 export async function resetNotebookSettings() {
-  // todo(sebastian): consider adding a setting to toggle default masking
-  await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, true)
+  await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, getMaskOutputs())
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

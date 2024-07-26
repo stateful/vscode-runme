@@ -87,6 +87,7 @@ const configurationSchema = {
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
       .default(NotebookAutoSaveSetting.No),
     sessionOutputs: z.boolean().default(true),
+    maskOutputs: z.boolean().default(true),
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
   },
@@ -419,6 +420,10 @@ const getSessionOutputs = (): boolean => {
   return getCloudConfigurationValue('sessionOutputs', true)
 }
 
+const getMaskOutputs = (): boolean => {
+  return getCloudConfigurationValue('maskOutputs', true)
+}
+
 const getLoginPrompt = (): boolean => {
   return getCloudConfigurationValue('loginPrompt', true)
 }
@@ -455,5 +460,6 @@ export {
   isPlatformAuthEnabled,
   registerExtensionEnvVarsMutation,
   getSessionOutputs,
+  getMaskOutputs,
   getLoginPrompt,
 }
