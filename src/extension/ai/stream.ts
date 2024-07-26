@@ -39,10 +39,11 @@ export const processedEvents: Promise<number>[] = []
 
 // StreamCreator processes a stream of events.
 // These events are split into windows and then turned into a stream of requests.
+//
 export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
-  // handleEvent is that processes an event
+  // handleEvent processes an event
   // n.b we use arror function definition to ensure this gets properly bound
   // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
   handleEvent = (event: string): void => {
@@ -145,16 +146,6 @@ class PromiseIterator<T> {
   close() {
     this.completed = true
     if (this.pending !== null) {
-      // If the has completed, return done
-      // let finalRequest = new StreamGenerateRequest({
-      //   request: {
-      //     case: 'update',
-      //     value: new BlockUpdate({
-      //       blockId: 'final-request',
-      //       blockContent: 'final-request',
-      //     }),
-      //   },
-      // })
       this.pending.resolve({ value: undefined, done: true })
       this.pending = null
     }
@@ -174,16 +165,6 @@ class PromiseIterator<T> {
         // If there is a value in the list, return it
         res({ value: outer.values.shift()!, done: false })
       } else if (outer.completed) {
-        // If the has completed, return done
-        // let finalRequest = new StreamGenerateRequest({
-        //   request: {
-        //     case: 'update',
-        //     value: new BlockUpdate({
-        //       blockId: 'final-request',
-        //       blockContent: 'final-request',
-        //     }),
-        //   },
-        // })
         res({ value: undefined, done: true })
       } else {
         // Store the resolve and reject functions so that we can
@@ -193,7 +174,6 @@ class PromiseIterator<T> {
   }
 
   return(): Promise<IteratorResult<T>> {
-    //subscription.unsubscribe()
     return Promise.resolve({ value: undefined, done: true })
   }
   // The connect method requires this method to be implemented even though it is optional in AsyncIterable.
@@ -280,33 +260,6 @@ export function observableToIterable<T>(observable: Observable<T>): AsyncIterabl
     },
   }
 }
-
-function iterableToObservable<T>(asyncIterable: AsyncIterable<T>): Observable<T> {
-  return new Observable<T>((observer) => {
-    const process = async () => {
-      try {
-        for await (const value of asyncIterable) {
-          observer.next(value)
-        }
-        observer.complete()
-      } catch (error) {
-        observer.error(error)
-      }
-    }
-
-    process()
-
-    return () => {
-      // If the AsyncIterable has a method to cancel or stop iteration, call it here
-      // For example: asyncIterable.cancel();
-    }
-  })
-}
-
-// // processEvent is a function that processes an event
-// function processEvent(event: string) {
-//   console.log('Event:', event)
-// }
 
 function createDefaultTransport(): Transport {
   return createConnectTransport({
