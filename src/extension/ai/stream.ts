@@ -37,11 +37,20 @@ export const client = createPromiseClient(AIService, createDefaultTransport())
 
 export const processedEvents: Promise<number>[] = []
 
+// StreamGenerateResponseHandler is a function that processes a stream of StreamGenerateResponse
+type StreamGenerateResponseHandler = (response: AsyncIterable<StreamGenerateResponse>) => void
+
 // StreamCreator processes a stream of events.
 // These events are split into windows and then turned into a stream of requests.
 //
 export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
+
+  generateResponseHandler: StreamGenerateResponseHandler
+
+  constructor(handler: StreamGenerateResponseHandler) {
+    this.generateResponseHandler = handler
+  }
 
   // handleEvent processes a request
   // n.b we use arror function definition to ensure this gets properly bound
@@ -73,8 +82,9 @@ export class StreamCreator {
       }
 
       const responseIterable = client.streamGenerate(iterable)
-      // Hack: Add them to global variable so we can await them later
-      processedEvents.push(processResponses(responseIterable))
+      // generateResponseHandler should be an async function
+      // Thus by calling the async function gets started and then execution resumes immediately
+      this.generateResponseHandler(responseIterable)
     }
 
     this.lastIterator.enQueue(req)

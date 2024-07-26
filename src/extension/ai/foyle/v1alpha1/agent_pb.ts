@@ -225,9 +225,16 @@ export class FullContext extends Message<FullContext> {
   doc?: Doc;
 
   /**
+   * TODO(jeremy): Should we move selected and notebook_uri out of the full_context and into the StreamGenerateRequest?
+   *
    * @generated from field: int32 selected = 2;
    */
   selected = 0;
+
+  /**
+   * @generated from field: string notebook_uri = 3;
+   */
+  notebookUri = "";
 
   constructor(data?: PartialMessage<FullContext>) {
     super();
@@ -239,6 +246,7 @@ export class FullContext extends Message<FullContext> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "doc", kind: "message", T: Doc },
     { no: 2, name: "selected", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "notebook_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FullContext {
@@ -349,6 +357,20 @@ export class StreamGenerateResponse extends Message<StreamGenerateResponse> {
    */
   blocks: Block[] = [];
 
+  /**
+   * The URI of the notebook to which the block belongs.
+   *
+   * @generated from field: string notebook_uri = 3;
+   */
+  notebookUri = "";
+
+  /**
+   * The cell index at which to insert at
+   *
+   * @generated from field: int32 insert_at = 4;
+   */
+  insertAt = 0;
+
   constructor(data?: PartialMessage<StreamGenerateResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -358,6 +380,8 @@ export class StreamGenerateResponse extends Message<StreamGenerateResponse> {
   static readonly typeName = "StreamGenerateResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "blocks", kind: "message", T: Block, repeated: true },
+    { no: 3, name: "notebook_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "insert_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StreamGenerateResponse {

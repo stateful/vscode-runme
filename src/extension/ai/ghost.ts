@@ -13,6 +13,11 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
 })
 
 import { fromEventPattern } from 'rxjs'
+import { StreamResponse } from '@bufbuild/connect'
+
+// TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
+// completions for the active notebook. So as soon as the active notebook changes we should
+// stop generating completions for the old notebook and start generating completions for the new notebook.
 
 // registerGhostCellEvents should be called when the extension is activated.
 // It registers event handlers to listen to when cells are added or removed
@@ -30,11 +35,11 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
     createRegisterOnDidChangeTextDocumentHandler(context),
   )
 
+  let cellGenerator = new GhostCellGenerator()
+
   // Create a stream creator. The StreamCreator is a class that effectively windows events
   // and turns each window into an AsyncIterable of streaming requests.
-  let creator = new stream.StreamCreator()
-
-  let cellGenerator = new GhostCellGenerator()
+  let creator = new stream.StreamCreator(cellGenerator.handleGenerateResponses)
 
   let finalResult = textDocumentEvents.pipe(
     rxjs.map((event) => cellGenerator.textDocumentChangeEventToCompletionRequest(event)),
@@ -190,6 +195,7 @@ class GhostCellGenerator {
           value: new agent_pb.FullContext({
             doc: doc,
             selected: matchedCell.index,
+            notebookUri: notebook.uri.toString(),
           }),
         },
       })
@@ -209,6 +215,77 @@ class GhostCellGenerator {
 
       return request
     }
+  }
+
+  // handleGenerateResponses is called by the streamCreator to handle the responses from the AIService.
+  // i.e.  handleInitiateChanges(client.streamGenerate(iterable))
+  // Use arrow function to make sure this gets bound
+  handleGenerateResponses = async (responses: AsyncIterable<agent_pb.StreamGenerateResponse>) => {
+    console.log('handleGenerateResponses called')
+    for await (const response of responses) {
+      this.applyChanges(response)
+    }
+  }
+
+  // applyChanges applies the changes from the response to the notebook.
+  applyChanges(response: agent_pb.StreamGenerateResponse) {
+    console.log('applyChanges called')
+    // TODO(jeremy): How do we know which notebook and cell this response corresponds to?
+    // Should we store that in the response?
+    const newCellData: vscode.NotebookCellData[] = [
+      {
+        languageId: 'bash',
+        kind: vscode.NotebookCellKind.Code,
+        value: 'This is ghost text: input was:\n' + response.blocks[0].contents,
+        metadata: {
+          [ghostKey]: true,
+        },
+      },
+    ]
+
+    const edit = new vscode.WorkspaceEdit()
+    const edits: vscode.NotebookEdit[] = []
+
+    const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
+      return notebook.uri.toString() === response.notebookUri
+    })
+
+    if (notebook === undefined) {
+      // Could this happen e.g because the notebook was closed?
+      console.log(`notebook for cell ${response.notebookUri} NOT found`)
+      return
+    }
+
+    // We want to insert the new cells and get rid of any existing ghost cells.
+    // The old cells may not be located at the same location as the new cells.
+    // So we don't use replace.
+    const startIndex = response.insertAt
+    notebook.getCells().forEach((cell) => {
+      if (isGhostCell(cell)) {
+        const deleteCells = vscode.NotebookEdit.deleteCells(
+          new vscode.NotebookRange(cell.index, cell.index + 1),
+        )
+        edits.push(deleteCells)
+      }
+    })
+
+    const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
+    edits.push(insertCells)
+    edit.set(notebook.uri, edits)
+    vscode.workspace.applyEdit(edit).then((result: boolean) => {
+      log.trace(`applyedit resolved with ${result}`)
+
+      // Apply renderings to the newly inserted ghost cells
+      // TODO(jeremy): We are just assuming that activeNotebookEditor is the correct editor
+      if (vscode.window.activeNotebookEditor?.notebook.uri !== notebook.uri) {
+        log.error('activeNotebookEditor is not the same as the notebook that was edited')
+      }
+      //renderGhostCell(vscode.window.activeNotebookEditor!)
+      if (!result) {
+        log.error('applyEdit failed')
+        return
+      }
+    })
   }
 }
 
