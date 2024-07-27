@@ -165,11 +165,7 @@ class GhostCellGenerator {
       newCell = false
     }
 
-    log.info(
-      `onDidChangeTextDocument Fired for notebook ${event.document.uri}; reason ${event.reason} ` +
-        'this should fire when a cell is added to a notebook',
-    )
-    log.info(`onDidChangeTextDocument: latest contents ${event.document.getText()}`)
+    log.info(`onDidChangeTextDocument: is newCell: ${newCell}`)
 
     // Update notebook state
     nbState.activeCell = matchedCell
@@ -222,8 +218,13 @@ class GhostCellGenerator {
   // Use arrow function to make sure this gets bound
   handleGenerateResponses = async (responses: AsyncIterable<agent_pb.StreamGenerateResponse>) => {
     console.log('handleGenerateResponses called')
-    for await (const response of responses) {
-      this.applyChanges(response)
+    try {
+      for await (const response of responses) {
+        this.applyChanges(response)
+      }
+    } catch (error) {
+      log.error(`Error in handleGenerateResponses: ${error}`)
+      throw error
     }
   }
 
@@ -245,6 +246,11 @@ class GhostCellGenerator {
 
     const edit = new vscode.WorkspaceEdit()
     const edits: vscode.NotebookEdit[] = []
+
+    if (response.notebookUri === undefined || response.notebookUri.toString() === '') {
+      log.error('notebookUri is undefined')
+      return
+    }
 
     const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
       return notebook.uri.toString() === response.notebookUri
