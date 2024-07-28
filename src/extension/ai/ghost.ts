@@ -23,47 +23,18 @@ import { StreamResponse } from '@bufbuild/connect'
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
 export function registerGhostCellEvents(context: vscode.ExtensionContext) {
-  // onDidChangeTextDocument fires when the contents of a cell changes.
-  // We use this to generate completions.
-  // context.subscriptions.push(
-  //   vscode.workspace.onDidChangeTextDocument(handleOnDidChangeNotebookCell),
-  // )
-
-  // TODO(jeremy): How would we use the removeEventHandler to make sure the observable is disposed of
-  // when the extension is deactivated?
-  const textDocumentEvents = fromEventPattern<vscode.TextDocumentChangeEvent>(
-    createRegisterOnDidChangeTextDocumentHandler(context),
-  )
-
   let cellGenerator = new GhostCellGenerator()
 
   // Create a stream creator. The StreamCreator is a class that effectively windows events
   // and turns each window into an AsyncIterable of streaming requests.
-  let creator = new stream.StreamCreator(cellGenerator.handleGenerateResponses)
+  let creator = new stream.StreamCreator(cellGenerator)
 
-  let finalResult = textDocumentEvents.pipe(
-    rxjs.map((event) => cellGenerator.textDocumentChangeEventToCompletionRequest(event)),
-    rxjs.filter((request) => request !== null),
-    rxjs.map((request) => creator.handleEvent(request)),
-    rxjs.finalize(() => {
-      console.log('TextDocumentEvents Stream completed, cleaning up StreamCreator')
-      creator.shutdown()
-    }),
+  let eventGenerator = new CellChangeEventGenerator(creator)
+  // onDidChangeTextDocument fires when the contents of a cell changes.
+  // We use this to generate completions.
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
   )
-
-  // TODO(jeremy): If we don't subscribe no events will get processed.
-  // What should the subscription actually do? Nothing?
-  finalResult.subscribe({
-    next: (result) => {
-      log.info(`final result: ${result}`)
-    },
-    error: (err) => {
-      log.error(`Error: ${err}`)
-    },
-    complete: () => {
-      log.info('complete')
-    },
-  })
 
   // onDidChangeVisibleTextEditors fires when the visible text editors change.
   // We need to trap this event to apply decorations to turn cells into ghost cells.
@@ -82,31 +53,30 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
 // The reason we need to use a factory function is that we need to pass in the vscode context
 // so we can add the subscription to the list of subscriptions so they can be properly disposed
 // of
-function createRegisterOnDidChangeTextDocumentHandler(
-  context: vscode.ExtensionContext,
-): (observableHandler: (event: vscode.TextDocumentChangeEvent) => void) => void {
-  // registerOnDidChangeTextDocumentHandler will be used to register the observable handler
-  // for the onDidChangeTextDocument event. This function will be invoked by the observable
-  // handler when a subscription is created. The argument, observableHandler, will be
-  // a function that will add the events to the observable.
-  return function registerOnDidChangeTextDocumentHandler(
-    observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
-  ) {
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(observableHandler))
-  }
-}
+// function createRegisterOnDidChangeTextDocumentHandler(
+//   context: vscode.ExtensionContext,
+// ): (observableHandler: (event: vscode.TextDocumentChangeEvent) => void) => void {
+//   // registerOnDidChangeTextDocumentHandler will be used to register the observable handler
+//   // for the onDidChangeTextDocument event. This function will be invoked by the observable
+//   // handler when a subscription is created. The argument, observableHandler, will be
+//   // a function that will add the events to the observable.
+//   return function registerOnDidChangeTextDocumentHandler(
+//     observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
+//   ) {
+//     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(observableHandler))
+//   }
+// }
 
 // GhostCellGenerator is a class that generates completions for a notebook cell.
-// It contains a bunch of functions that can process events and responses.
-// Its a class because these transformations are stateful. For example,
-// We get a VSCode TextDocumentChangeEvent telling us that a cell has changed. Based on this
-// we create completion requests to the AIService. In order to handle the response we need to
-// know where in the notebook the new cells should be inserted. So we store that as state
-// in the class.
-// TODO(jeremy): Multiple notebooks could be processed simulatenously. How do we handle that?
-// Where should we store per notebook state?
-// How would we unload that state? Track notebook open/close envents
-class GhostCellGenerator {
+// This class implements the stream.CompletionHandlers. It is responsible
+// for generating a request to the AIService given an event and it is
+// also responsible for applying the changes to the notebook.
+//
+// Generating a request to the AIService is stateful because the data that gets sent
+// depends on whether this is the first request for a given selected cell in which
+// case we send the full notebook or if it is an incremental change because
+// the cell contents have changed.
+class GhostCellGenerator implements stream.CompletionHandlers {
   private notebookState: Map<vscode.Uri, NotebookState>
 
   constructor() {
@@ -125,28 +95,22 @@ class GhostCellGenerator {
   // This is a stateful transformation because we need to decide whether to send the full document or
   // the incremental changes.  It will return a null request if the event should be ignored or if there
   // is an error preventing it from computing a proper request.
-  textDocumentChangeEventToCompletionRequest(
-    event: vscode.TextDocumentChangeEvent,
+  buildRequest(
+    cellChangeEvent: stream.CellChangeEvent,
+    firstRequest: boolean,
   ): agent_pb.StreamGenerateRequest | null {
-    if (event.document.uri.scheme !== 'vscode-notebook-cell') {
-      // ignore other open events
-      return null
-    }
-    var matchedCell: vscode.NotebookCell | undefined
-
     // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
     // Can we cache it in the class? Since we keep track of notebooks in NotebookState
     // Is there a way we can go from the URI of the cell to the URI of the notebook directly
     const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
-      const cell = notebook.getCells().find((cell) => cell.document === event.document)
-      const result = Boolean(cell)
-      if (cell !== undefined) {
-        matchedCell = cell
-      }
-      return result
+      // We need to do the comparison on the actual values so we use the string.
+      // If we just used === we would be checking if the references are to the same object.
+      return notebook.uri.toString() === cellChangeEvent.notebookUri
     })
+
     if (notebook === undefined) {
-      log.error(`notebook for cell ${event.document.uri} NOT found`)
+      log.error(`notebook for cell ${cellChangeEvent.notebookUri} NOT found`)
+      // TODO(jermey): Should we change the return type to be nullable?
       return null
     }
 
@@ -154,24 +118,22 @@ class GhostCellGenerator {
     // process an event for this notebook.
     let nbState = this.getNotebookState(notebook)
 
-    if (matchedCell === undefined) {
-      log.error(`cell for document ${event.document.uri} NOT found`)
-      return null
-    }
+    // TODO(jeremy): We should probably at the cellUri to the event so we can verify the cell URI matches
+    let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
-    // Decide whether
+    // Has the cell changed since the last time we processed an event?
     let newCell = true
     if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
       newCell = false
     }
 
-    log.info(`onDidChangeTextDocument: is newCell: ${newCell}`)
+    log.info(`buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}`)
 
     // Update notebook state
     nbState.activeCell = matchedCell
     this.notebookState.set(notebook.uri, nbState)
 
-    if (newCell) {
+    if (newCell || firstRequest) {
       // Generate a new request
       // TODO(jeremy): This code needs to be changed to properly send the complete document.
       // We should really change the Protos to use the RunMe Notebook and Cell protos
@@ -180,7 +142,7 @@ class GhostCellGenerator {
         blocks: [
           new doc_pb.Block({
             kind: doc_pb.BlockKind.MARKUP,
-            contents: event.document.getText(),
+            contents: matchedCell.document.getText(),
           }),
         ],
       })
@@ -204,7 +166,7 @@ class GhostCellGenerator {
           case: 'update',
           value: new agent_pb.BlockUpdate({
             blockId: 'block-1',
-            blockContent: event.document.getText(),
+            blockContent: matchedCell.document.getText(),
           }),
         },
       })
@@ -213,23 +175,8 @@ class GhostCellGenerator {
     }
   }
 
-  // handleGenerateResponses is called by the streamCreator to handle the responses from the AIService.
-  // i.e.  handleInitiateChanges(client.streamGenerate(iterable))
-  // Use arrow function to make sure this gets bound
-  handleGenerateResponses = async (responses: AsyncIterable<agent_pb.StreamGenerateResponse>) => {
-    console.log('handleGenerateResponses called')
-    try {
-      for await (const response of responses) {
-        this.applyChanges(response)
-      }
-    } catch (error) {
-      log.error(`Error in handleGenerateResponses: ${error}`)
-      throw error
-    }
-  }
-
-  // applyChanges applies the changes from the response to the notebook.
-  applyChanges(response: agent_pb.StreamGenerateResponse) {
+  // processResponse applies the changes from the response to the notebook.
+  processResponse(response: agent_pb.StreamGenerateResponse) {
     console.log('applyChanges called')
     // TODO(jeremy): How do we know which notebook and cell this response corresponds to?
     // Should we store that in the response?
@@ -293,6 +240,10 @@ class GhostCellGenerator {
       }
     })
   }
+
+  shutdown(): void {
+    log.info('Shutting down')
+  }
 }
 
 // NotebookState keeps track of state information for a given notebook.
@@ -303,87 +254,52 @@ class NotebookState {
   }
 }
 
-// handleOnDidChangeNotebookCell is called when the contents of a cell changes.
-// We use this function to trigger the generation of completions in response to a user
-// typing in a cell.
-// N.B. This doesn't appear to get called when a cell is added to a notebook.
-function handleOnDidChangeNotebookCell(event: vscode.TextDocumentChangeEvent) {
-  if (event.document.uri.scheme !== 'vscode-notebook-cell') {
-    // ignore other open events
-    return
-  }
-  var matchedCell: vscode.NotebookCell | undefined
+// CellChangeEventGenerator is a class that generates events when a cell changes.
+// It converts vscode.TextDocumentChangeEvents into a stream.CellChangeEvent
+// and then enques them in the StreamCreator.
+class CellChangeEventGenerator {
+  streamCreator: stream.StreamCreator
 
-  // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
-  // Could we cache it somewhere.
-  const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
-    const cell = notebook.getCells().find((cell) => cell.document === event.document)
-    const result = Boolean(cell)
-    if (cell !== undefined) {
-      matchedCell = cell
-    }
-    return result
-  })
-  if (notebook === undefined) {
-    log.error(`notebook for cell ${event.document.uri} NOT found`)
-    return
+  constructor(streamCreator: stream.StreamCreator) {
+    this.streamCreator = streamCreator
   }
 
-  if (matchedCell === undefined) {
-    log.error(`cell for document ${event.document.uri} NOT found`)
-    return
-  }
-
-  log.info(
-    `onDidChangeTextDocument Fired for notebook ${event.document.uri}; reason ${event.reason} ` +
-      'this should fire when a cell is added to a notebook',
-  )
-  log.info(`onDidChangeTextDocument: latest contents ${event.document.getText()}`)
-
-  const newCellData: vscode.NotebookCellData[] = [
-    {
-      languageId: 'bash',
-      kind: vscode.NotebookCellKind.Code,
-      value: 'This is ghost text: input was:\n' + event.document.getText(),
-      metadata: {
-        [ghostKey]: true,
-      },
-    },
-  ]
-
-  const edit = new vscode.WorkspaceEdit()
-  const edits: vscode.NotebookEdit[] = []
-
-  // We want to insert the new cells and get rid of any existing ghost cells.
-  // The old cells may not be located at the same location as the new cells.
-  // So we don't use replace.
-  const startIndex = matchedCell.index + 1
-  notebook.getCells().forEach((cell) => {
-    if (isGhostCell(cell)) {
-      const deleteCells = vscode.NotebookEdit.deleteCells(
-        new vscode.NotebookRange(cell.index, cell.index + 1),
-      )
-      edits.push(deleteCells)
-    }
-  })
-
-  const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
-  edits.push(insertCells)
-  edit.set(event.document.uri, edits)
-  vscode.workspace.applyEdit(edit).then((result: boolean) => {
-    log.trace(`applyedit resolved with ${result}`)
-
-    // Apply renderings to the newly inserted ghost cells
-    // TODO(jeremy): We are just assuming that activeNotebookEditor is the correct editor
-    if (vscode.window.activeNotebookEditor?.notebook.uri !== notebook.uri) {
-      log.error('activeNotebookEditor is not the same as the notebook that was edited')
-    }
-    //renderGhostCell(vscode.window.activeNotebookEditor!)
-    if (!result) {
-      log.error('applyEdit failed')
+  handleOnDidChangeNotebookCell = (event: vscode.TextDocumentChangeEvent) => {
+    if (event.document.uri.scheme !== 'vscode-notebook-cell') {
+      // ignore other open events
       return
     }
-  })
+    var matchedCell: vscode.NotebookCell | undefined
+
+    // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
+    // Could we cache it somewhere.
+    const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
+      const cell = notebook.getCells().find((cell) => cell.document === event.document)
+      const result = Boolean(cell)
+      if (cell !== undefined) {
+        matchedCell = cell
+      }
+      return result
+    })
+    if (notebook === undefined) {
+      log.error(`notebook for cell ${event.document.uri} NOT found`)
+      return
+    }
+
+    if (matchedCell === undefined) {
+      log.error(`cell for document ${event.document.uri} NOT found`)
+      return
+    }
+
+    log.info(
+      `onDidChangeTextDocument Fired for notebook ${event.document.uri}` +
+        'this should fire when a cell is added to a notebook',
+    )
+
+    this.streamCreator.handleEvent(
+      new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
+    )
+  }
 }
 
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.

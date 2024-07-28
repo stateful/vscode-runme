@@ -5,26 +5,6 @@ import getLogger from '../../../src/extension/logger'
 import * as stream from '../../../src/extension/ai/stream'
 import * as agent_pb from '../../../src/extension/ai/foyle/v1alpha1/agent_pb'
 import * as doc_pb from '../../../src/extension/ai/foyle/v1alpha1/doc_pb'
-import {
-  Observable,
-  lastValueFrom,
-  Subscriber,
-  from,
-  Subject,
-  windowCount,
-  map,
-  mergeAll,
-  EmptyError,
-  tap,
-  finalize,
-} from 'rxjs'
-
-import {
-  StreamGenerateRequest,
-  FullContext,
-  BlockUpdate,
-  StreamGenerateResponse,
-} from './foyle/v1alpha1/agent_pb'
 
 const log = getLogger()
 
@@ -78,7 +58,7 @@ class FakeCompletion implements stream.CompletionHandlers {
   buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
     firstRequest: boolean,
-  ): StreamGenerateRequest {
+  ): agent_pb.StreamGenerateRequest {
     console.log('Building request:', cellChangeEvent, firstRequest)
 
     // Decide that we need a new rewuest
@@ -120,7 +100,7 @@ class FakeCompletion implements stream.CompletionHandlers {
     return req
   }
 
-  processResponse(response: StreamGenerateResponse): void {
+  processResponse(response: agent_pb.StreamGenerateResponse): void {
     // Stub implementation
     console.log('Processing response:', response)
     response.blocks.forEach((cell) => {

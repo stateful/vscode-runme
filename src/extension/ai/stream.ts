@@ -10,26 +10,9 @@ import {
 } from './foyle/v1alpha1/agent_pb'
 import { Doc } from './foyle/v1alpha1/doc_pb'
 import * as http2 from 'http2'
-import {
-  Observable,
-  fromEventPattern,
-  from,
-  map,
-  filter,
-  window,
-  mergeAll,
-  lastValueFrom,
-  mergeMap,
-  concatMap,
-  toArray,
-  shareReplay,
-  takeUntil,
-  defer,
-  windowCount,
-  EmptyError,
-  delay,
-} from 'rxjs'
 
+import getLogger from '../logger'
+const log = getLogger()
 const baseUrl = 'http://localhost:8080/api'
 
 // Create a client this is actually a PromiseClient
@@ -42,7 +25,11 @@ export interface CompletionHandlers {
   // buildRequest is a function that generates a StreamGenerateRequest based on
   // a cellChangeEvent and a value indicating whether this is the first request in the stream.
   // The latter allows the request to vary depending on whether its the first in the stream.
-  buildRequest: (cellChangeEvent: CellChangeEvent, firstRequest: boolean) => StreamGenerateRequest
+  // If null is returned then no request is generated
+  buildRequest: (
+    cellChangeEvent: CellChangeEvent,
+    firstRequest: boolean,
+  ) => StreamGenerateRequest | null
 
   // processResponse is a function that processes a StreamGenerateResponse
   processResponse: (response: StreamGenerateResponse) => void
@@ -101,7 +88,13 @@ export class StreamCreator {
       firstRequest = true
     }
 
+    log.info('handleEvent: building request')
     let req = this.handlers.buildRequest(event, firstRequest)
+
+    if (req === null) {
+      log.info(`Notebook: ${event.notebookUri}; no request generated`)
+      return
+    }
 
     // If the request is a fullContext request we need to start a new stream
     if (req.request.case === 'fullContext') {
@@ -188,20 +181,12 @@ class PromiseFunctions<T> {
   }
 }
 
-async function processResponses(responses: AsyncIterable<StreamGenerateResponse>): Promise<number> {
-  let count = 0
-  for await (const response of responses) {
-    count++
-    console.log('Block Recieved:', response)
-  }
-  return count
-}
-
 // PromiseIterator implements the iterator protocol for an AsyncIterable.
-// It is used to convert from a push based Observable to a pull based AsyncIterable.
+// It is used to create a "channel" that allows us to turn events into requests
+// to be sent via the streaming protocol.
 // It implements the iterator protocol; wrapped around a list. The list is used
-// to buffer values from the Observable. The iterator returns promises that get
-// resolved by the Observable.
+// to buffer values from a pusher. The iterator returns promises that get
+// resolved when values get pushed..
 class PromiseIterator<T> {
   values: T[] = []
 
