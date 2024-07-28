@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import * as rxjs from 'rxjs'
 import * as stream from './stream'
 import getLogger from '../logger'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
@@ -11,9 +10,6 @@ const ghostKey = 'ghostCell'
 const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
 })
-
-import { fromEventPattern } from 'rxjs'
-import { StreamResponse } from '@bufbuild/connect'
 
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
@@ -47,25 +43,6 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveTextEditor(handleOnDidChangeActiveTextEditor),
   )
 }
-
-// createRegisterOnDidChangeTextDocumentHandler is a factory function that creates a function
-// that will register the observable handler for the onDidChangeTextDocument event.
-// The reason we need to use a factory function is that we need to pass in the vscode context
-// so we can add the subscription to the list of subscriptions so they can be properly disposed
-// of
-// function createRegisterOnDidChangeTextDocumentHandler(
-//   context: vscode.ExtensionContext,
-// ): (observableHandler: (event: vscode.TextDocumentChangeEvent) => void) => void {
-//   // registerOnDidChangeTextDocumentHandler will be used to register the observable handler
-//   // for the onDidChangeTextDocument event. This function will be invoked by the observable
-//   // handler when a subscription is created. The argument, observableHandler, will be
-//   // a function that will add the events to the observable.
-//   return function registerOnDidChangeTextDocumentHandler(
-//     observableHandler: (event: vscode.TextDocumentChangeEvent) => void,
-//   ) {
-//     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(observableHandler))
-//   }
-// }
 
 // GhostCellGenerator is a class that generates completions for a notebook cell.
 // This class implements the stream.CompletionHandlers. It is responsible
