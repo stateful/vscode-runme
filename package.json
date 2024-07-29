@@ -810,6 +810,12 @@
             "default": true,
             "markdownDescription": "If set to `true`, the notebook's outputs are stored inside a full copy of the original file per session."
           },
+          "runme.app.maskOutputs": {
+            "type": "boolean",
+            "scope": "window",
+            "default": true,
+            "markdownDescription": "If set to `true`, the notebook's outputs are first masked (best effort) before optionally unmasked. `false` inverts the behavior."
+          },
           "runme.app.loginPrompt": {
             "type": "boolean",
             "scope": "window",
