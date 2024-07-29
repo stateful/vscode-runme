@@ -13,7 +13,7 @@ import type {
 } from '@bufbuild/protobuf'
 import { Message, proto3 } from '@bufbuild/protobuf'
 import { Block, BlockOutput, Doc } from './doc_pb'
-import { Cell, Notebook } from '@buf/stateful_runme.bufbuild_es'
+import { Cell, Notebook } from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
 
 /**
  * @generated from message GenerateRequest
