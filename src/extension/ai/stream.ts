@@ -3,17 +3,10 @@ import * as http2 from 'node:http2'
 import { createPromiseClient, Transport } from '@bufbuild/connect'
 import { createConnectTransport } from '@bufbuild/connect-node'
 
-import * as parser_pb from '../runme/parser/v1/parser_pb'
 import getLogger from '../logger'
 
 import { AIService } from './foyle/v1alpha1/agent_connect'
-import {
-  StreamGenerateRequest,
-  FullContext,
-  BlockUpdate,
-  StreamGenerateResponse,
-} from './foyle/v1alpha1/agent_pb'
-import { Doc } from './foyle/v1alpha1/doc_pb'
+import { StreamGenerateRequest, StreamGenerateResponse } from './foyle/v1alpha1/agent_pb'
 
 const log = getLogger()
 const baseUrl = 'http://localhost:8080/api'
@@ -259,21 +252,23 @@ class PromiseIterator<T> {
 }
 
 function createDefaultTransport(): Transport {
+  let options = {
+    // Create a custom HTTP/2 client
+    createClient: (authority: string | URL) => {
+      return http2.connect(authority, {
+        // Allow insecure HTTP connections
+        rejectUnauthorized: false,
+      })
+    },
+  }
   return createConnectTransport({
+    // eslint-disable-next-line max-len
     // Copied from https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
     // Do we need to use http2?
     httpVersion: '2',
     // baseUrl needs to include the path prefix.
     baseUrl: baseUrl,
-    nodeOptions: {
-      // Create a custom HTTP/2 client
-      createClient: (authority) => {
-        return http2.connect(authority, {
-          // Allow insecure HTTP connections
-          rejectUnauthorized: false,
-        })
-      },
-    },
+    nodeOptions: options,
   })
 }
 

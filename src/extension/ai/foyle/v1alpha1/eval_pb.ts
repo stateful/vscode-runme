@@ -3,17 +3,10 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type {
-  BinaryReadOptions,
-  FieldList,
-  JsonReadOptions,
-  JsonValue,
-  PartialMessage,
-  PlainMessage,
-} from '@bufbuild/protobuf'
-import { Message, proto3 } from '@bufbuild/protobuf'
-import { Example, RAGResult } from './trainer_pb'
-import { Block } from './doc_pb'
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import { Message, proto3 } from "@bufbuild/protobuf";
+import { Example, RAGResult } from "./trainer_pb";
+import { Block } from "./doc_pb";
 
 /**
  * @generated from enum EvalResultStatus
@@ -35,11 +28,11 @@ export enum EvalResultStatus {
   ERROR = 2,
 }
 // Retrieve enum metadata with: proto3.getEnumType(EvalResultStatus)
-proto3.util.setEnumType(EvalResultStatus, 'EvalResultStatus', [
-  { no: 0, name: 'UNKNOWN_EVAL_RESULT_STATUS' },
-  { no: 1, name: 'DONE' },
-  { no: 2, name: 'ERROR' },
-])
+proto3.util.setEnumType(EvalResultStatus, "EvalResultStatus", [
+  { no: 0, name: "UNKNOWN_EVAL_RESULT_STATUS" },
+  { no: 1, name: "DONE" },
+  { no: 2, name: "ERROR" },
+]);
 
 /**
  * EvalResult represents an evaluation result
@@ -52,96 +45,93 @@ export class EvalResult extends Message<EvalResult> {
    *
    * @generated from field: Example example = 1;
    */
-  example?: Example
+  example?: Example;
 
   /**
    * example_file is the file containing the example
    *
    * @generated from field: string example_file = 2;
    */
-  exampleFile = ''
+  exampleFile = "";
 
   /**
    * Actual response
    *
    * @generated from field: repeated Block actual = 3;
    */
-  actual: Block[] = []
+  actual: Block[] = [];
 
   /**
    * The distance between the actual and expected response
    *
    * @generated from field: int32 distance = 4;
    */
-  distance = 0
+  distance = 0;
 
   /**
    * @generated from field: float normalized_distance = 7;
    */
-  normalizedDistance = 0
+  normalizedDistance = 0;
 
   /**
    * @generated from field: string error = 5;
    */
-  error = ''
+  error = "";
 
   /**
    * Status of the evaluation
    *
    * @generated from field: EvalResultStatus status = 6;
    */
-  status = EvalResultStatus.UNKNOWN_EVAL_RESULT_STATUS
+  status = EvalResultStatus.UNKNOWN_EVAL_RESULT_STATUS;
 
   /**
    * The ID of the generate trace
    *
    * @generated from field: string gen_trace_id = 8;
    */
-  genTraceId = ''
+  genTraceId = "";
 
   /**
    * Best matching RAG result
    *
    * @generated from field: RAGResult best_rag_result = 9;
    */
-  bestRagResult?: RAGResult
+  bestRagResult?: RAGResult;
 
   constructor(data?: PartialMessage<EvalResult>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'EvalResult'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "EvalResult";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'example', kind: 'message', T: Example },
-    { no: 2, name: 'example_file', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: 'actual', kind: 'message', T: Block, repeated: true },
-    { no: 4, name: 'distance', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
-    { no: 7, name: 'normalized_distance', kind: 'scalar', T: 2 /* ScalarType.FLOAT */ },
-    { no: 5, name: 'error', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 6, name: 'status', kind: 'enum', T: proto3.getEnumType(EvalResultStatus) },
-    { no: 8, name: 'gen_trace_id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 9, name: 'best_rag_result', kind: 'message', T: RAGResult },
-  ])
+    { no: 1, name: "example", kind: "message", T: Example },
+    { no: 2, name: "example_file", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "actual", kind: "message", T: Block, repeated: true },
+    { no: 4, name: "distance", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 7, name: "normalized_distance", kind: "scalar", T: 2 /* ScalarType.FLOAT */ },
+    { no: 5, name: "error", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "status", kind: "enum", T: proto3.getEnumType(EvalResultStatus) },
+    { no: 8, name: "gen_trace_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "best_rag_result", kind: "message", T: RAGResult },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EvalResult {
-    return new EvalResult().fromBinary(bytes, options)
+    return new EvalResult().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EvalResult {
-    return new EvalResult().fromJson(jsonValue, options)
+    return new EvalResult().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EvalResult {
-    return new EvalResult().fromJsonString(jsonString, options)
+    return new EvalResult().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: EvalResult | PlainMessage<EvalResult> | undefined,
-    b: EvalResult | PlainMessage<EvalResult> | undefined,
-  ): boolean {
-    return proto3.util.equals(EvalResult, a, b)
+  static equals(a: EvalResult | PlainMessage<EvalResult> | undefined, b: EvalResult | PlainMessage<EvalResult> | undefined): boolean {
+    return proto3.util.equals(EvalResult, a, b);
   }
 }
 
@@ -154,42 +144,33 @@ export class EvalResultListRequest extends Message<EvalResultListRequest> {
    *
    * @generated from field: string database = 1;
    */
-  database = ''
+  database = "";
 
   constructor(data?: PartialMessage<EvalResultListRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'EvalResultListRequest'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "EvalResultListRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'database', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-  ])
+    { no: 1, name: "database", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): EvalResultListRequest {
-    return new EvalResultListRequest().fromBinary(bytes, options)
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EvalResultListRequest {
+    return new EvalResultListRequest().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EvalResultListRequest {
-    return new EvalResultListRequest().fromJson(jsonValue, options)
+    return new EvalResultListRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): EvalResultListRequest {
-    return new EvalResultListRequest().fromJsonString(jsonString, options)
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EvalResultListRequest {
+    return new EvalResultListRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: EvalResultListRequest | PlainMessage<EvalResultListRequest> | undefined,
-    b: EvalResultListRequest | PlainMessage<EvalResultListRequest> | undefined,
-  ): boolean {
-    return proto3.util.equals(EvalResultListRequest, a, b)
+  static equals(a: EvalResultListRequest | PlainMessage<EvalResultListRequest> | undefined, b: EvalResultListRequest | PlainMessage<EvalResultListRequest> | undefined): boolean {
+    return proto3.util.equals(EvalResultListRequest, a, b);
   }
 }
 
@@ -200,44 +181,33 @@ export class EvalResultListResponse extends Message<EvalResultListResponse> {
   /**
    * @generated from field: repeated EvalResult items = 1;
    */
-  items: EvalResult[] = []
+  items: EvalResult[] = [];
 
   constructor(data?: PartialMessage<EvalResultListResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'EvalResultListResponse'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "EvalResultListResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'items', kind: 'message', T: EvalResult, repeated: true },
-  ])
+    { no: 1, name: "items", kind: "message", T: EvalResult, repeated: true },
+  ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): EvalResultListResponse {
-    return new EvalResultListResponse().fromBinary(bytes, options)
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EvalResultListResponse {
+    return new EvalResultListResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): EvalResultListResponse {
-    return new EvalResultListResponse().fromJson(jsonValue, options)
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EvalResultListResponse {
+    return new EvalResultListResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): EvalResultListResponse {
-    return new EvalResultListResponse().fromJsonString(jsonString, options)
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EvalResultListResponse {
+    return new EvalResultListResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: EvalResultListResponse | PlainMessage<EvalResultListResponse> | undefined,
-    b: EvalResultListResponse | PlainMessage<EvalResultListResponse> | undefined,
-  ): boolean {
-    return proto3.util.equals(EvalResultListResponse, a, b)
+  static equals(a: EvalResultListResponse | PlainMessage<EvalResultListResponse> | undefined, b: EvalResultListResponse | PlainMessage<EvalResultListResponse> | undefined): boolean {
+    return proto3.util.equals(EvalResultListResponse, a, b);
   }
 }
+

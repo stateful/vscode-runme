@@ -3,23 +3,24 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { EvalResultListRequest, EvalResultListResponse } from './eval_pb'
-import { MethodKind } from '@bufbuild/protobuf'
+import { EvalResultListRequest, EvalResultListResponse } from "./eval_pb";
+import { MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service EvalService
  */
 export const EvalService = {
-  typeName: 'EvalService',
+  typeName: "EvalService",
   methods: {
     /**
      * @generated from rpc EvalService.List
      */
     list: {
-      name: 'List',
+      name: "List",
       I: EvalResultListRequest,
       O: EvalResultListResponse,
       kind: MethodKind.Unary,
     },
-  },
-} as const
+  }
+} as const;
+

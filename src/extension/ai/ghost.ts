@@ -1,9 +1,7 @@
-import { parse } from 'node:path'
-
 import * as vscode from 'vscode'
 
 import getLogger from '../logger'
-import * as parser_pb from '../runme/parser/v1/parser_pb'
+import * as parser_pb from '../grpc/serializerTypes'
 
 import * as stream from './stream'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
@@ -120,9 +118,10 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       // TODO(jeremy): This code needs to be changed to properly send the complete document.
       // We should really change the Protos to use the RunMe Notebook and Cell protos
       // Then we can use RunMe's covnersion routines to generate those protos from the vscode data structurs.
-      let nb = new parser_pb.Notebook({
+
+      let nb = parser_pb.Notebook.create({
         cells: [
-          new parser_pb.Cell({
+          parser_pb.Cell.create({
             value: matchedCell.document.getText(),
           }),
         ],
@@ -146,7 +145,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
-            cell: new parser_pb.Cell({
+            cell: parser_pb.Cell.create({
               value: matchedCell.document.getText(),
             }),
           }),

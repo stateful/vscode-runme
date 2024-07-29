@@ -50,7 +50,7 @@ class FakeCompletion implements stream.CompletionHandlers {
   public done: Promise<void>
   resolveDone: () => void
   constructor() {
-    this.done = new Promise<void>((resolve, reject) => {
+    this.done = new Promise<void>((resolve, _reject) => {
       this.resolveDone = resolve
     })
   }
@@ -91,9 +91,9 @@ class FakeCompletion implements stream.CompletionHandlers {
     let req = new agent_pb.StreamGenerateRequest({
       request: {
         case: 'update',
-        value: new agent_pb.BlockUpdate({
-          blockId: 'block-1',
-          blockContent: cellChangeEvent.notebookUri,
+        value: new agent_pb.UpdateContext({
+          selected: cellChangeEvent.cellIndex,
+          contents: cellChangeEvent.notebookUri,
         }),
       },
     })
@@ -103,7 +103,7 @@ class FakeCompletion implements stream.CompletionHandlers {
   processResponse(response: agent_pb.StreamGenerateResponse): void {
     // Stub implementation
     console.log('Processing response:', response)
-    response.blocks.forEach((cell) => {
+    response.cells.forEach((cell) => {
       if (cell.contents.includes('done')) {
         log.info('Stopping')
         this.shutdown()
