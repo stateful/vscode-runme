@@ -3,8 +3,15 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { ExecuteRequest, ExecuteResponse, GenerateRequest, GenerateResponse, StreamGenerateRequest, StreamGenerateResponse } from "./agent_pb";
-import { MethodKind } from "@bufbuild/protobuf";
+import {
+  ExecuteRequest,
+  ExecuteResponse,
+  GenerateRequest,
+  GenerateResponse,
+  StreamGenerateRequest,
+  StreamGenerateResponse,
+} from './agent_pb'
+import { MethodKind } from '@bufbuild/protobuf'
 
 /**
  * Generate completions using AI
@@ -12,7 +19,7 @@ import { MethodKind } from "@bufbuild/protobuf";
  * @generated from service GenerateService
  */
 export const GenerateService = {
-  typeName: "GenerateService",
+  typeName: 'GenerateService',
   methods: {
     /**
      * Generate generates new cells given an existing document.
@@ -20,13 +27,13 @@ export const GenerateService = {
      * @generated from rpc GenerateService.Generate
      */
     generate: {
-      name: "Generate",
+      name: 'Generate',
       I: GenerateRequest,
       O: GenerateResponse,
       kind: MethodKind.Unary,
     },
-  }
-} as const;
+  },
+} as const
 
 /**
  * Execute code and commands
@@ -34,7 +41,7 @@ export const GenerateService = {
  * @generated from service ExecuteService
  */
 export const ExecuteService = {
-  typeName: "ExecuteService",
+  typeName: 'ExecuteService',
   methods: {
     /**
      * Execute executes a cell in an existing document.
@@ -42,13 +49,13 @@ export const ExecuteService = {
      * @generated from rpc ExecuteService.Execute
      */
     execute: {
-      name: "Execute",
+      name: 'Execute',
       I: ExecuteRequest,
       O: ExecuteResponse,
       kind: MethodKind.Unary,
     },
-  }
-} as const;
+  },
+} as const
 
 /**
  * TODO(jeremy): This should move to https://github.com/stateful/runme/tree/main/pkg/api/proto/runme/ai/v1alpha1
@@ -57,7 +64,7 @@ export const ExecuteService = {
  * @generated from service AIService
  */
 export const AIService = {
-  typeName: "AIService",
+  typeName: 'AIService',
   methods: {
     /**
      * StreamGenerate is a bidirectional streaming RPC for generating completions
@@ -65,7 +72,7 @@ export const AIService = {
      * @generated from rpc AIService.StreamGenerate
      */
     streamGenerate: {
-      name: "StreamGenerate",
+      name: 'StreamGenerate',
       I: StreamGenerateRequest,
       O: StreamGenerateResponse,
       kind: MethodKind.BiDiStreaming,
@@ -76,11 +83,10 @@ export const AIService = {
      * @generated from rpc AIService.Simple
      */
     simple: {
-      name: "Simple",
+      name: 'Simple',
       I: StreamGenerateRequest,
       O: StreamGenerateResponse,
       kind: MethodKind.Unary,
     },
-  }
-} as const;
-
+  },
+} as const

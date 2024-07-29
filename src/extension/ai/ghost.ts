@@ -1,8 +1,13 @@
+import { parse } from 'node:path'
+
 import * as vscode from 'vscode'
-import * as stream from './stream'
+
 import getLogger from '../logger'
+import * as parser_pb from '../runme/parser/v1/parser_pb'
+
+import * as stream from './stream'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
-import * as doc_pb from './foyle/v1alpha1/doc_pb'
+
 const log = getLogger()
 
 const ghostKey = 'ghostCell'
@@ -115,11 +120,10 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       // TODO(jeremy): This code needs to be changed to properly send the complete document.
       // We should really change the Protos to use the RunMe Notebook and Cell protos
       // Then we can use RunMe's covnersion routines to generate those protos from the vscode data structurs.
-      let doc = new doc_pb.Doc({
-        blocks: [
-          new doc_pb.Block({
-            kind: doc_pb.BlockKind.MARKUP,
-            contents: matchedCell.document.getText(),
+      let nb = new parser_pb.Notebook({
+        cells: [
+          new parser_pb.Cell({
+            value: matchedCell.document.getText(),
           }),
         ],
       })
@@ -128,7 +132,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
-            doc: doc,
+            notebook: nb,
             selected: matchedCell.index,
             notebookUri: notebook.uri.toString(),
           }),
@@ -141,9 +145,10 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       let request = new agent_pb.StreamGenerateRequest({
         request: {
           case: 'update',
-          value: new agent_pb.BlockUpdate({
-            blockId: 'block-1',
-            blockContent: matchedCell.document.getText(),
+          value: new agent_pb.UpdateContext({
+            cell: new parser_pb.Cell({
+              value: matchedCell.document.getText(),
+            }),
           }),
         },
       })
@@ -161,7 +166,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       {
         languageId: 'bash',
         kind: vscode.NotebookCellKind.Code,
-        value: 'This is ghost text: input was:\n' + response.blocks[0].contents,
+        value: 'This is ghost text: input was:\n' + response.cells[0].value,
         metadata: {
           [ghostKey]: true,
         },

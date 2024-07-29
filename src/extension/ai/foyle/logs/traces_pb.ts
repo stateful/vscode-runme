@@ -3,11 +3,26 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
-import { RAGResult } from "../v1alpha1/trainer_pb";
-import { ExecuteRequest, ExecuteResponse, GenerateRequest, GenerateResponse } from "../v1alpha1/agent_pb";
-import { ExecuteRequest as ExecuteRequest$1, ExecuteResponse as ExecuteResponse$1 } from "../../runme/runner/v1/runner_pb";
+import type {
+  BinaryReadOptions,
+  FieldList,
+  JsonReadOptions,
+  JsonValue,
+  PartialMessage,
+  PlainMessage,
+} from '@bufbuild/protobuf'
+import { Message, proto3, Timestamp } from '@bufbuild/protobuf'
+import { RAGResult } from '../v1alpha1/trainer_pb'
+import {
+  ExecuteRequest,
+  ExecuteResponse,
+  GenerateRequest,
+  GenerateResponse,
+} from '../v1alpha1/agent_pb'
+import {
+  ExecuteRequest as ExecuteRequest$1,
+  ExecuteResponse as ExecuteResponse$1,
+} from '../../runme/runner/v1/runner_pb'
 
 /**
  * @generated from message foyle.logs.Trace
@@ -16,87 +31,94 @@ export class Trace extends Message<Trace> {
   /**
    * @generated from field: string id = 1;
    */
-  id = "";
+  id = ''
 
   /**
    * @generated from field: google.protobuf.Timestamp start_time = 2;
    */
-  startTime?: Timestamp;
+  startTime?: Timestamp
 
   /**
    * @generated from field: google.protobuf.Timestamp end_time = 3;
    */
-  endTime?: Timestamp;
+  endTime?: Timestamp
 
   /**
    * TODO(jeremy): Should these really be spans?
    *
    * @generated from oneof foyle.logs.Trace.data
    */
-  data: {
-    /**
-     * @generated from field: foyle.logs.GenerateTrace generate = 4;
-     */
-    value: GenerateTrace;
-    case: "generate";
-  } | {
-    /**
-     * @generated from field: foyle.logs.ExecuteTrace execute = 5;
-     */
-    value: ExecuteTrace;
-    case: "execute";
-  } | {
-    /**
-     * @generated from field: foyle.logs.RunMeTrace run_me = 7;
-     */
-    value: RunMeTrace;
-    case: "runMe";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  data:
+    | {
+        /**
+         * @generated from field: foyle.logs.GenerateTrace generate = 4;
+         */
+        value: GenerateTrace
+        case: 'generate'
+      }
+    | {
+        /**
+         * @generated from field: foyle.logs.ExecuteTrace execute = 5;
+         */
+        value: ExecuteTrace
+        case: 'execute'
+      }
+    | {
+        /**
+         * @generated from field: foyle.logs.RunMeTrace run_me = 7;
+         */
+        value: RunMeTrace
+        case: 'runMe'
+      }
+    | { case: undefined; value?: undefined } = { case: undefined }
 
   /**
    * Eval mode is true if the trace was generated in eval mode.
    *
    * @generated from field: bool eval_mode = 6;
    */
-  evalMode = false;
+  evalMode = false
 
   /**
    * @generated from field: repeated foyle.logs.Span spans = 8;
    */
-  spans: Span[] = [];
+  spans: Span[] = []
 
   constructor(data?: PartialMessage<Trace>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.Trace";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.Trace'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "start_time", kind: "message", T: Timestamp },
-    { no: 3, name: "end_time", kind: "message", T: Timestamp },
-    { no: 4, name: "generate", kind: "message", T: GenerateTrace, oneof: "data" },
-    { no: 5, name: "execute", kind: "message", T: ExecuteTrace, oneof: "data" },
-    { no: 7, name: "run_me", kind: "message", T: RunMeTrace, oneof: "data" },
-    { no: 6, name: "eval_mode", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 8, name: "spans", kind: "message", T: Span, repeated: true },
-  ]);
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'start_time', kind: 'message', T: Timestamp },
+    { no: 3, name: 'end_time', kind: 'message', T: Timestamp },
+    { no: 4, name: 'generate', kind: 'message', T: GenerateTrace, oneof: 'data' },
+    { no: 5, name: 'execute', kind: 'message', T: ExecuteTrace, oneof: 'data' },
+    { no: 7, name: 'run_me', kind: 'message', T: RunMeTrace, oneof: 'data' },
+    { no: 6, name: 'eval_mode', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
+    { no: 8, name: 'spans', kind: 'message', T: Span, repeated: true },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Trace {
-    return new Trace().fromBinary(bytes, options);
+    return new Trace().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Trace {
-    return new Trace().fromJson(jsonValue, options);
+    return new Trace().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Trace {
-    return new Trace().fromJsonString(jsonString, options);
+    return new Trace().fromJsonString(jsonString, options)
   }
 
-  static equals(a: Trace | PlainMessage<Trace> | undefined, b: Trace | PlainMessage<Trace> | undefined): boolean {
-    return proto3.util.equals(Trace, a, b);
+  static equals(
+    a: Trace | PlainMessage<Trace> | undefined,
+    b: Trace | PlainMessage<Trace> | undefined,
+  ): boolean {
+    return proto3.util.equals(Trace, a, b)
   }
 }
 
@@ -107,45 +129,50 @@ export class Span extends Message<Span> {
   /**
    * @generated from field: string id = 1;
    */
-  id = "";
+  id = ''
 
   /**
    * @generated from oneof foyle.logs.Span.data
    */
-  data: {
-    /**
-     * @generated from field: foyle.logs.RAGSpan rag = 2;
-     */
-    value: RAGSpan;
-    case: "rag";
-  } | { case: undefined; value?: undefined } = { case: undefined };
+  data:
+    | {
+        /**
+         * @generated from field: foyle.logs.RAGSpan rag = 2;
+         */
+        value: RAGSpan
+        case: 'rag'
+      }
+    | { case: undefined; value?: undefined } = { case: undefined }
 
   constructor(data?: PartialMessage<Span>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.Span";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.Span'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "rag", kind: "message", T: RAGSpan, oneof: "data" },
-  ]);
+    { no: 1, name: 'id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'rag', kind: 'message', T: RAGSpan, oneof: 'data' },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Span {
-    return new Span().fromBinary(bytes, options);
+    return new Span().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Span {
-    return new Span().fromJson(jsonValue, options);
+    return new Span().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Span {
-    return new Span().fromJsonString(jsonString, options);
+    return new Span().fromJsonString(jsonString, options)
   }
 
-  static equals(a: Span | PlainMessage<Span> | undefined, b: Span | PlainMessage<Span> | undefined): boolean {
-    return proto3.util.equals(Span, a, b);
+  static equals(
+    a: Span | PlainMessage<Span> | undefined,
+    b: Span | PlainMessage<Span> | undefined,
+  ): boolean {
+    return proto3.util.equals(Span, a, b)
   }
 }
 
@@ -156,39 +183,42 @@ export class RAGSpan extends Message<RAGSpan> {
   /**
    * @generated from field: string query = 1;
    */
-  query = "";
+  query = ''
 
   /**
    * @generated from field: repeated RAGResult results = 2;
    */
-  results: RAGResult[] = [];
+  results: RAGResult[] = []
 
   constructor(data?: PartialMessage<RAGSpan>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.RAGSpan";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.RAGSpan'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "query", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "results", kind: "message", T: RAGResult, repeated: true },
-  ]);
+    { no: 1, name: 'query', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'results', kind: 'message', T: RAGResult, repeated: true },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RAGSpan {
-    return new RAGSpan().fromBinary(bytes, options);
+    return new RAGSpan().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RAGSpan {
-    return new RAGSpan().fromJson(jsonValue, options);
+    return new RAGSpan().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RAGSpan {
-    return new RAGSpan().fromJsonString(jsonString, options);
+    return new RAGSpan().fromJsonString(jsonString, options)
   }
 
-  static equals(a: RAGSpan | PlainMessage<RAGSpan> | undefined, b: RAGSpan | PlainMessage<RAGSpan> | undefined): boolean {
-    return proto3.util.equals(RAGSpan, a, b);
+  static equals(
+    a: RAGSpan | PlainMessage<RAGSpan> | undefined,
+    b: RAGSpan | PlainMessage<RAGSpan> | undefined,
+  ): boolean {
+    return proto3.util.equals(RAGSpan, a, b)
   }
 }
 
@@ -199,39 +229,42 @@ export class GenerateTrace extends Message<GenerateTrace> {
   /**
    * @generated from field: GenerateRequest request = 1;
    */
-  request?: GenerateRequest;
+  request?: GenerateRequest
 
   /**
    * @generated from field: GenerateResponse response = 2;
    */
-  response?: GenerateResponse;
+  response?: GenerateResponse
 
   constructor(data?: PartialMessage<GenerateTrace>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.GenerateTrace";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.GenerateTrace'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "request", kind: "message", T: GenerateRequest },
-    { no: 2, name: "response", kind: "message", T: GenerateResponse },
-  ]);
+    { no: 1, name: 'request', kind: 'message', T: GenerateRequest },
+    { no: 2, name: 'response', kind: 'message', T: GenerateResponse },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GenerateTrace {
-    return new GenerateTrace().fromBinary(bytes, options);
+    return new GenerateTrace().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GenerateTrace {
-    return new GenerateTrace().fromJson(jsonValue, options);
+    return new GenerateTrace().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GenerateTrace {
-    return new GenerateTrace().fromJsonString(jsonString, options);
+    return new GenerateTrace().fromJsonString(jsonString, options)
   }
 
-  static equals(a: GenerateTrace | PlainMessage<GenerateTrace> | undefined, b: GenerateTrace | PlainMessage<GenerateTrace> | undefined): boolean {
-    return proto3.util.equals(GenerateTrace, a, b);
+  static equals(
+    a: GenerateTrace | PlainMessage<GenerateTrace> | undefined,
+    b: GenerateTrace | PlainMessage<GenerateTrace> | undefined,
+  ): boolean {
+    return proto3.util.equals(GenerateTrace, a, b)
   }
 }
 
@@ -242,39 +275,42 @@ export class ExecuteTrace extends Message<ExecuteTrace> {
   /**
    * @generated from field: ExecuteRequest request = 1;
    */
-  request?: ExecuteRequest;
+  request?: ExecuteRequest
 
   /**
    * @generated from field: ExecuteResponse response = 2;
    */
-  response?: ExecuteResponse;
+  response?: ExecuteResponse
 
   constructor(data?: PartialMessage<ExecuteTrace>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.ExecuteTrace";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.ExecuteTrace'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "request", kind: "message", T: ExecuteRequest },
-    { no: 2, name: "response", kind: "message", T: ExecuteResponse },
-  ]);
+    { no: 1, name: 'request', kind: 'message', T: ExecuteRequest },
+    { no: 2, name: 'response', kind: 'message', T: ExecuteResponse },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteTrace {
-    return new ExecuteTrace().fromBinary(bytes, options);
+    return new ExecuteTrace().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExecuteTrace {
-    return new ExecuteTrace().fromJson(jsonValue, options);
+    return new ExecuteTrace().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExecuteTrace {
-    return new ExecuteTrace().fromJsonString(jsonString, options);
+    return new ExecuteTrace().fromJsonString(jsonString, options)
   }
 
-  static equals(a: ExecuteTrace | PlainMessage<ExecuteTrace> | undefined, b: ExecuteTrace | PlainMessage<ExecuteTrace> | undefined): boolean {
-    return proto3.util.equals(ExecuteTrace, a, b);
+  static equals(
+    a: ExecuteTrace | PlainMessage<ExecuteTrace> | undefined,
+    b: ExecuteTrace | PlainMessage<ExecuteTrace> | undefined,
+  ): boolean {
+    return proto3.util.equals(ExecuteTrace, a, b)
   }
 }
 
@@ -285,39 +321,42 @@ export class RunMeTrace extends Message<RunMeTrace> {
   /**
    * @generated from field: runme.runner.v1.ExecuteRequest request = 1;
    */
-  request?: ExecuteRequest$1;
+  request?: ExecuteRequest$1
 
   /**
    * @generated from field: runme.runner.v1.ExecuteResponse response = 2;
    */
-  response?: ExecuteResponse$1;
+  response?: ExecuteResponse$1
 
   constructor(data?: PartialMessage<RunMeTrace>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.RunMeTrace";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.RunMeTrace'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "request", kind: "message", T: ExecuteRequest$1 },
-    { no: 2, name: "response", kind: "message", T: ExecuteResponse$1 },
-  ]);
+    { no: 1, name: 'request', kind: 'message', T: ExecuteRequest$1 },
+    { no: 2, name: 'response', kind: 'message', T: ExecuteResponse$1 },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RunMeTrace {
-    return new RunMeTrace().fromBinary(bytes, options);
+    return new RunMeTrace().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RunMeTrace {
-    return new RunMeTrace().fromJson(jsonValue, options);
+    return new RunMeTrace().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RunMeTrace {
-    return new RunMeTrace().fromJsonString(jsonString, options);
+    return new RunMeTrace().fromJsonString(jsonString, options)
   }
 
-  static equals(a: RunMeTrace | PlainMessage<RunMeTrace> | undefined, b: RunMeTrace | PlainMessage<RunMeTrace> | undefined): boolean {
-    return proto3.util.equals(RunMeTrace, a, b);
+  static equals(
+    a: RunMeTrace | PlainMessage<RunMeTrace> | undefined,
+    b: RunMeTrace | PlainMessage<RunMeTrace> | undefined,
+  ): boolean {
+    return proto3.util.equals(RunMeTrace, a, b)
   }
 }
 
@@ -330,39 +369,41 @@ export class LogEntries extends Message<LogEntries> {
   /**
    * @generated from field: repeated string lines = 1;
    */
-  lines: string[] = [];
+  lines: string[] = []
 
   /**
    * @generated from field: string resource_version = 2;
    */
-  resourceVersion = "";
+  resourceVersion = ''
 
   constructor(data?: PartialMessage<LogEntries>) {
-    super();
-    proto3.util.initPartial(data, this);
+    super()
+    proto3.util.initPartial(data, this)
   }
 
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "foyle.logs.LogEntries";
+  static readonly runtime: typeof proto3 = proto3
+  static readonly typeName = 'foyle.logs.LogEntries'
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "lines", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
-    { no: 2, name: "resource_version", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
+    { no: 1, name: 'lines', kind: 'scalar', T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 2, name: 'resource_version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+  ])
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): LogEntries {
-    return new LogEntries().fromBinary(bytes, options);
+    return new LogEntries().fromBinary(bytes, options)
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): LogEntries {
-    return new LogEntries().fromJson(jsonValue, options);
+    return new LogEntries().fromJson(jsonValue, options)
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): LogEntries {
-    return new LogEntries().fromJsonString(jsonString, options);
+    return new LogEntries().fromJsonString(jsonString, options)
   }
 
-  static equals(a: LogEntries | PlainMessage<LogEntries> | undefined, b: LogEntries | PlainMessage<LogEntries> | undefined): boolean {
-    return proto3.util.equals(LogEntries, a, b);
+  static equals(
+    a: LogEntries | PlainMessage<LogEntries> | undefined,
+    b: LogEntries | PlainMessage<LogEntries> | undefined,
+  ): boolean {
+    return proto3.util.equals(LogEntries, a, b)
   }
 }
-
