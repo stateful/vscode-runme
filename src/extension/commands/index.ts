@@ -23,6 +23,8 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import {
   OpenViewInEditorAction,
   getActionsOpenViewInEditor,
+  getBinaryPath,
+  getCLIUseIntegratedRunme,
   // getBinaryPath,
   // getCLIUseIntegratedRunme,
   getTLSEnabled,
@@ -156,21 +158,43 @@ export function stopBackgroundTask(cell: NotebookCell) {
   terminal.dispose()
 }
 
+async function runStatusCommand(cell: NotebookCell) {
+  if (cell.notebook.isDirty) {
+    const option = await window.showInformationMessage(
+      'You have unsaved changes. Save and run in CLI?',
+      'Save',
+      'Cancel',
+    )
+
+    if (option === 'Cancel' || !option) {
+      return
+    }
+
+    await cell.notebook.save()
+  }
+}
+
+export function runForkCommand(kernel: Kernel, _extensionBaseUri: Uri, _grpcRunner: boolean) {
+  return async function (cell: NotebookCell) {
+    await runStatusCommand(cell)
+
+    const cwd = path.dirname(cell.document.uri.fsPath)
+
+    const program = await kernel.createTerminalProgram(cwd)
+
+    const annotations = getAnnotations(cell.metadata)
+    const term = window.createTerminal({
+      name: `Fork: ${annotations.name}`,
+      pty: program,
+    })
+
+    term.show(false)
+  }
+}
+
 export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
-    if (cell.notebook.isDirty) {
-      const option = await window.showInformationMessage(
-        'You have unsaved changes. Save and run in CLI?',
-        'Save',
-        'Cancel',
-      )
-
-      if (option === 'Cancel' || !option) {
-        return
-      }
-
-      await cell.notebook.save()
-    }
+    await runStatusCommand(cell)
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
@@ -198,17 +222,16 @@ export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner:
       }
     }
 
-    const program = await kernel.createTerminalProgram(cwd)
-
     const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
-      name: `Fork: ${annotations.name}`,
-      pty: program,
+      name: `CLI: ${annotations.name}`,
+      cwd,
     })
 
-    // const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
+    const runmeExec = getCLIUseIntegratedRunme() ? getBinaryPath(extensionBaseUri).fsPath : 'runme'
+
     term.show(false)
-    // term.sendText(`${runmeExec} run ${args.join(' ')}`)
+    term.sendText(`${runmeExec} run ${args.join(' ')}`)
   }
 }
 

@@ -87,6 +87,10 @@
         "title": "Run CLI command in new terminal"
       },
       {
+        "command": "runme.runForkCommand",
+        "title": "Run fork ENV in new terminal"
+      },
+      {
         "command": "runme.surveyWinDefaultShell",
         "category": "Runme",
         "title": "Prompt to participate in Windows Default Shell survey"
