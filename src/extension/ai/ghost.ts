@@ -1,10 +1,11 @@
 import * as vscode from 'vscode'
 
 import getLogger from '../logger'
-import * as parser_pb from '../grpc/serializerTypes'
-
+import * as serializer from '../serializer'
+import * as converters from './converters'
 import * as stream from './stream'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
+import * as protos from './protos'
 
 const log = getLogger()
 
@@ -115,23 +116,19 @@ class GhostCellGenerator implements stream.CompletionHandlers {
 
     if (newCell || firstRequest) {
       // Generate a new request
-      // TODO(jeremy): This code needs to be changed to properly send the complete document.
-      // We should really change the Protos to use the RunMe Notebook and Cell protos
-      // Then we can use RunMe's covnersion routines to generate those protos from the vscode data structurs.
 
-      let nb = parser_pb.Notebook.create({
-        cells: [
-          parser_pb.Cell.create({
-            value: matchedCell.document.getText(),
-          }),
-        ],
-      })
+      // Notebook uses the vscode interface types NotebookDocument and NotebookCell. We
+      // need to convert this to NotebookCellData which is the concrete type used by the serializer.
+      // This allows us to reuse the existing serializer code.
+      let cellData = notebook.getCells().map((cell) => converters.cellToCellData(cell))
+      let notebookData = new vscode.NotebookData(cellData)
 
+      let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
-            notebook: nb,
+            notebook: protos.notebookESToTS(notebookProto),
             selected: matchedCell.index,
             notebookUri: notebook.uri.toString(),
           }),
@@ -140,14 +137,17 @@ class GhostCellGenerator implements stream.CompletionHandlers {
 
       return request
     } else {
+      let cellData = converters.cellToCellData(matchedCell)
+      let notebookData = new vscode.NotebookData([cellData])
+
+      let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
+      let notebook = protos.notebookESToTS(notebookProto)
       // Generate an update request
       let request = new agent_pb.StreamGenerateRequest({
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
-            cell: parser_pb.Cell.create({
-              value: matchedCell.document.getText(),
-            }),
+            cell: notebook.cells[0],
           }),
         },
       })
