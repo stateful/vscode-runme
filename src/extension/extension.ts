@@ -6,6 +6,8 @@ import {
   ExtensionContext,
   tasks,
   window,
+  env,
+  Uri,
   NotebookCell,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
@@ -14,6 +16,7 @@ import Channel from 'tangle/webviews'
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
+  getRunmeAppUrl,
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
@@ -325,7 +328,17 @@ export class RunmeExtension {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
       const session = await getPlatformAuthSession(true)
       if (session) {
-        window.showInformationMessage('Logged into the Stateful Platform')
+        const openDashboardStr = 'Open Dahsboard'
+        const answer = await window.showInformationMessage(
+          'Logged into the Stateful Platform',
+          openDashboardStr,
+        )
+
+        if (answer === openDashboardStr) {
+          const dashboardUri = getRunmeAppUrl(['app'])
+          const uri = Uri.parse(dashboardUri)
+          env.openExternal(uri)
+        }
       }
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
