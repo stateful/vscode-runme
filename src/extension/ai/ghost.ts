@@ -1,11 +1,11 @@
 import * as vscode from 'vscode'
 
 import getLogger from '../logger'
-import * as serializer from '../serializer'
 import * as converters from './converters'
 import * as stream from './stream'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
 import * as protos from './protos'
+import * as serializer from '../serializer'
 
 const log = getLogger()
 
@@ -128,7 +128,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
-            notebook: protos.notebookESToTS(notebookProto),
+            notebook: protos.notebookTSToES(notebookProto),
             selected: matchedCell.index,
             notebookUri: notebook.uri.toString(),
           }),
@@ -141,7 +141,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       let notebookData = new vscode.NotebookData([cellData])
 
       let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
-      let notebook = protos.notebookESToTS(notebookProto)
+      let notebook = protos.notebookTSToES(notebookProto)
       // Generate an update request
       let request = new agent_pb.StreamGenerateRequest({
         request: {
@@ -158,19 +158,8 @@ class GhostCellGenerator implements stream.CompletionHandlers {
 
   // processResponse applies the changes from the response to the notebook.
   processResponse(response: agent_pb.StreamGenerateResponse) {
-    console.log('applyChanges called')
-    // TODO(jeremy): How do we know which notebook and cell this response corresponds to?
-    // Should we store that in the response?
-    const newCellData: vscode.NotebookCellData[] = [
-      {
-        languageId: 'bash',
-        kind: vscode.NotebookCellKind.Code,
-        value: 'This is ghost text: input was:\n' + response.cells[0].value,
-        metadata: {
-          [ghostKey]: true,
-        },
-      },
-    ]
+    let cellsTs = protos.cellsESToTS(response.cells)
+    let newCellData = converters.cellProtosTocellData(cellsTs)
 
     const edit = new vscode.WorkspaceEdit()
     const edits: vscode.NotebookEdit[] = []
