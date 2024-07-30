@@ -147,7 +147,7 @@ suite('runCliCommand', () => {
       isDirty: false,
     }
 
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       'runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
@@ -168,13 +168,13 @@ suite('runCliCommand', () => {
     vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
     vi.mocked(getCLIUseIntegratedRunme).mockReturnValueOnce(true)
 
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       '/bin/runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
   })
 
-  test('prompts user when dirty and fails if cancelled or closed', async () => {
+  test('prompts user when dirty and fails if canceled or closed', async () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
@@ -189,14 +189,14 @@ suite('runCliCommand', () => {
 
     // Cancelled
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
     vi.mocked(terminal.sendText).mockClear()
 
     // Closed
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
@@ -204,7 +204,7 @@ suite('runCliCommand', () => {
 
     // Saved
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).toHaveBeenCalled()
     expect(cell.notebook.save).toHaveBeenCalledOnce()

@@ -158,25 +158,29 @@ export function stopBackgroundTask(cell: NotebookCell) {
   terminal.dispose()
 }
 
-async function runStatusCommand(cell: NotebookCell) {
+async function runStatusCommand(cell: NotebookCell): Promise<boolean> {
   if (cell.notebook.isDirty) {
     const option = await window.showInformationMessage(
-      'You have unsaved changes. Save and run in CLI?',
+      'You have unsaved changes. Save and proceed?',
       'Save',
       'Cancel',
     )
 
     if (option === 'Cancel' || !option) {
-      return
+      return false
     }
 
     await cell.notebook.save()
   }
+
+  return true
 }
 
 export function runForkCommand(kernel: Kernel, _extensionBaseUri: Uri, _grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
-    await runStatusCommand(cell)
+    if (!(await runStatusCommand(cell))) {
+      return
+    }
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
@@ -194,7 +198,9 @@ export function runForkCommand(kernel: Kernel, _extensionBaseUri: Uri, _grpcRunn
 
 export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
-    await runStatusCommand(cell)
+    if (!(await runStatusCommand(cell))) {
+      return
+    }
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
