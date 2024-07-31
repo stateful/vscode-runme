@@ -1,5 +1,5 @@
 import { Disposable } from 'vscode'
-import { LitElement, css, html } from 'lit'
+import { LitElement, TemplateResult, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
@@ -26,7 +26,7 @@ export class EnvViewer extends LitElement implements Disposable {
   displaySecret: boolean = false
 
   @property({ type: String })
-  maskedValue?: string | undefined
+  maskedValue?: string | TemplateResult<1> | undefined
 
   @state()
   _copied: boolean = false
@@ -41,6 +41,7 @@ export class EnvViewer extends LitElement implements Disposable {
     vscode-button:hover {
       background: var(--vscode-button-hoverBackground);
     }
+
     .secret-container {
       display: flex;
       gap: 1px;
