@@ -1126,8 +1126,8 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.3",
-    "@aws-sdk/client-ec2": "^3.515.0",
-    "@aws-sdk/client-eks": "^3.583.0",
+    "@aws-sdk/client-ec2": "^3.621.0",
+    "@aws-sdk/client-eks": "^3.621.0",
     "@aws-sdk/credential-providers": "^3.600.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240617172854-9d87e32e5325.4",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240701165231-bc6fb672a119.4",
