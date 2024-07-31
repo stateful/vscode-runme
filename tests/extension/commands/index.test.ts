@@ -127,7 +127,7 @@ test('copyCellToClipboard', () => {
   expect(window.showInformationMessage).toBeCalledTimes(1)
 })
 
-suite.only('runForkCommand', () => {
+suite('runForkCommand', () => {
   const mockKernel = {
     createTerminalProgram: vi.fn(),
   } as any
