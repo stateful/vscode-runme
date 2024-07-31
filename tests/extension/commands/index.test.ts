@@ -20,6 +20,7 @@ import {
   toggleTerminal,
   copyCellToClipboard,
   runCLICommand,
+  runForkCommand,
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText,
   stopBackgroundTask,
@@ -124,6 +125,70 @@ test('copyCellToClipboard', () => {
   copyCellToClipboard(cell)
   expect(env.clipboard.writeText).toBeCalledWith('foobar')
   expect(window.showInformationMessage).toBeCalledTimes(1)
+})
+
+suite('runForkCommand', () => {
+  const mockKernel = { createTerminalProgram: vi.fn() } as any
+
+  beforeEach(() => {
+    vi.mocked(getBinaryPath).mockClear()
+    vi.mocked(window.showInformationMessage).mockClear()
+    vi.mocked(getAnnotations).mockClear()
+    vi.mocked(window.createTerminal).mockClear()
+    vi.mocked(getCLIUseIntegratedRunme).mockClear()
+  })
+
+  test('creates new terminal', async () => {
+    const cell: any = {
+      metadata: { name: 'foobar' },
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
+      kind: 2,
+    }
+
+    cell.notebook = {
+      getCells: () => [cell],
+      isDirty: false,
+    }
+
+    await runForkCommand(mockKernel, {} as any, false)(cell)
+    expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
+  })
+
+  test('prompts user when dirty and fails if canceled or closed', async () => {
+    const cell: any = {
+      metadata: { name: 'foobar' },
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
+      kind: 2,
+    }
+
+    cell.notebook = {
+      getCells: () => [cell],
+      isDirty: true,
+      save: vi.fn(),
+    }
+
+    // Cancelled
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
+    await runForkCommand(mockKernel, {} as any, false)(cell)
+    expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
+
+    vi.mocked(window.createTerminal).mockClear()
+
+    // Closed
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
+    await runForkCommand(mockKernel, {} as any, false)(cell)
+
+    expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
+
+    vi.mocked(window.createTerminal).mockClear()
+
+    // Saved
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
+    await runForkCommand(mockKernel, {} as any, false)(cell)
+
+    expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
+    expect(cell.notebook.save).toHaveBeenCalledOnce()
+  })
 })
 
 suite('runCliCommand', () => {
