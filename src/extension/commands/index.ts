@@ -25,8 +25,6 @@ import {
   getActionsOpenViewInEditor,
   getBinaryPath,
   getCLIUseIntegratedRunme,
-  // getBinaryPath,
-  // getCLIUseIntegratedRunme,
   getTLSEnabled,
   isNotebookTerminalEnabledForCell,
   isRunmeAppButtonsEnabled,
