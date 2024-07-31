@@ -1006,10 +1006,11 @@ export class Kernel implements Disposable {
         token: CancellationToken,
       ) {
         const program = await kernel.createTerminalProgram(cwd)
+        const sid = kernel.runnerEnv?.getSessionId()
 
         return {
           options: {
-            name: 'Runme Session',
+            name: `Session${sid ? `: ${sid}` : ''}`,
             pty: program,
             iconPath: {
               dark: Uri.joinPath(kernel.context.extensionUri, 'assets', 'logo-open-dark.svg'),

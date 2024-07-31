@@ -174,7 +174,7 @@ async function runStatusCommand(cell: NotebookCell): Promise<boolean> {
   return true
 }
 
-export function runForkCommand(kernel: Kernel, _extensionBaseUri: Uri, _grpcRunner: boolean) {
+export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
     if (!(await runStatusCommand(cell))) {
       return
@@ -188,6 +188,10 @@ export function runForkCommand(kernel: Kernel, _extensionBaseUri: Uri, _grpcRunn
     const term = window.createTerminal({
       name: `Fork: ${annotations.name}`,
       pty: program,
+      iconPath: {
+        dark: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-dark.svg'),
+        light: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-light.svg'),
+      },
     })
 
     term.show(false)
