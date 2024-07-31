@@ -1132,7 +1132,7 @@
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240617172854-9d87e32e5325.4",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240701165231-bc6fb672a119.4",
     "@google-cloud/compute": "^4.1.0",
-    "@google-cloud/container": "^5.6.0",
+    "@google-cloud/container": "^5.16.0",
     "@google-cloud/run": "^1.2.0",
     "@kubernetes/client-node": "^0.21.0",
     "@protobuf-ts/grpc-transport": "^2.9.1",
