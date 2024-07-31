@@ -127,8 +127,13 @@ test('copyCellToClipboard', () => {
   expect(window.showInformationMessage).toBeCalledTimes(1)
 })
 
-suite('runForkCommand', () => {
-  const mockKernel = { createTerminalProgram: vi.fn() } as any
+suite.only('runForkCommand', () => {
+  const mockKernel = {
+    createTerminalProgram: vi.fn(),
+  } as any
+  const fakeExtensionUri = {
+    fsPath: '/path/to/extensions',
+  } as any
 
   beforeEach(() => {
     vi.mocked(getBinaryPath).mockClear()
@@ -150,7 +155,7 @@ suite('runForkCommand', () => {
       isDirty: false,
     }
 
-    await runForkCommand(mockKernel, {} as any, false)(cell)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
     expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
   })
 
@@ -169,14 +174,14 @@ suite('runForkCommand', () => {
 
     // Cancelled
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
-    await runForkCommand(mockKernel, {} as any, false)(cell)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
     expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
 
     vi.mocked(window.createTerminal).mockClear()
 
     // Closed
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
-    await runForkCommand(mockKernel, {} as any, false)(cell)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
 
     expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
 
@@ -184,7 +189,7 @@ suite('runForkCommand', () => {
 
     // Saved
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
-    await runForkCommand(mockKernel, {} as any, false)(cell)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
 
     expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
     expect(cell.notebook.save).toHaveBeenCalledOnce()
