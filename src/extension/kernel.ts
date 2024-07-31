@@ -1009,8 +1009,12 @@ export class Kernel implements Disposable {
 
         return {
           options: {
-            name: 'Runme Terminal',
+            name: 'Runme Session',
             pty: program,
+            iconPath: {
+              dark: Uri.joinPath(kernel.context.extensionUri, 'assets', 'logo-open-dark.svg'),
+              light: Uri.joinPath(kernel.context.extensionUri, 'assets', 'logo-open-light.svg'),
+            },
           },
         }
       },
