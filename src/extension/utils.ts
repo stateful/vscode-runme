@@ -45,6 +45,7 @@ import {
   NOTEBOOK_OUTPUTS_MASKED,
 } from '../constants'
 import {
+  getBinaryPath,
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getLoginPrompt,
@@ -604,8 +605,9 @@ export function fetchStaticHtml(appUrl: string) {
 }
 
 export function getRunnerSessionEnvs(
-  extensionBaseUri: Uri,
+  context: ExtensionContext,
   runnerEnv: IRunnerEnvironment | undefined,
+  skipRunmePath: boolean,
   address?: string,
 ) {
   const envs: Record<string, string> = {}
@@ -614,8 +616,14 @@ export function getRunnerSessionEnvs(
     envs['RUNME_SESSION_STRATEGY'] = 'recent'
   }
 
+  if (!skipRunmePath) {
+    const binaryBasePath =
+      path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':')
+    envs['PATH'] = `${binaryBasePath}${envs.PATH || process.env.PATH}`
+  }
+
   if (getTLSEnabled()) {
-    envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
+    envs['RUNME_TLS_DIR'] = getTLSDir(context.extensionUri)
   }
 
   // todo(sebastian): consider making recent vs specific session a setting

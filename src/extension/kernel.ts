@@ -97,6 +97,7 @@ import EnvVarsChangedEvent from './events/envVarsChanged'
 import { SessionEnvStoreType } from './grpc/runner/v1'
 import ContextState from './contextState'
 import { uri as runUriResource } from './executors/resource'
+import { CommandModeEnum } from './grpc/runner/types'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -902,7 +903,8 @@ export class Kernel implements Disposable {
       return
     }
 
-    this.address = address
+    // keep old address unless there's a new one
+    this.address = address || this.address
 
     log.info('Requesting new runner environment.')
 
@@ -928,7 +930,7 @@ export class Kernel implements Disposable {
 
       registerExtensionEnvVarsMutation(
         this.context,
-        getRunnerSessionEnvs(this.context.extensionUri, runnerEnv, address),
+        getRunnerSessionEnvs(this.context, runnerEnv, true, address),
       )
 
       const monitor = await this.runner.createMonitorEnvStore()
@@ -1003,23 +1005,7 @@ export class Kernel implements Disposable {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         token: CancellationToken,
       ) {
-        const runner = kernel.runner!
-        // todo(sebastian): why are the env collection mutations not doing this?
-        const envsRecords = getRunnerSessionEnvs(
-          kernel.context.extensionUri,
-          kernel.runnerEnv,
-          kernel.address,
-        )
-        const sysShell = getSystemShellPath() || '/bin/bash'
-        const program = await runner.createProgramSession({
-          programName: `${sysShell} -l`,
-          tty: true,
-          cwd,
-          envs: Object.entries(envsRecords).map(([k, v]) => `${k}=${v}`),
-        })
-
-        program.registerTerminalWindow('vscode')
-        program.setActiveTerminalWindow('vscode')
+        const program = await kernel.createTerminalProgram(cwd)
 
         return {
           options: {
@@ -1029,6 +1015,25 @@ export class Kernel implements Disposable {
         }
       },
     })
+  }
+
+  async createTerminalProgram(cwd: string | undefined) {
+    const runner = this.runner!
+    // todo(sebastian): why are the env collection mutations not doing this?
+    const envVars = getRunnerSessionEnvs(this.context, this.runnerEnv, false, this.address)
+    const sysShell = getSystemShellPath() || '/bin/bash'
+    const program = await runner.createProgramSession({
+      programName: `${sysShell} -l`,
+      tty: true,
+      cwd,
+      runnerEnv: this.runnerEnv,
+      envs: Object.entries(envVars).map(([k, v]) => `${k}=${v}`),
+      commandMode: CommandModeEnum().TERMINAL,
+    })
+
+    program.registerTerminalWindow('vscode')
+    program.setActiveTerminalWindow('vscode')
+    return program
   }
 
   getTerminal(runmeId: string) {

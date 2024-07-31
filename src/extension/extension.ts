@@ -62,6 +62,7 @@ import {
   createGistCommand,
   toggleAuthorMode,
   createCellGistCommand,
+  runForkCommand,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -171,7 +172,8 @@ export class RunmeExtension {
     ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
-    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner)
+    const runCLI = runCLICommand(kernel, context.extensionUri, !!grpcRunner)
+    const runFork = runForkCommand(kernel, context.extensionUri, !!grpcRunner)
 
     const codeLensProvider = new RunmeCodeLensProvider(
       context.extensionUri,
@@ -232,6 +234,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),
+      RunmeExtension.registerCommand('runme.runForkCommand', runFork),
       RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand(
