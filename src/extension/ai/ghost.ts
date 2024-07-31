@@ -1,11 +1,12 @@
 import * as vscode from 'vscode'
 
 import getLogger from '../logger'
+import * as serializer from '../serializer'
+
 import * as converters from './converters'
 import * as stream from './stream'
 import * as agent_pb from './foyle/v1alpha1/agent_pb'
 import * as protos from './protos'
-import * as serializer from '../serializer'
 
 const log = getLogger()
 
@@ -192,6 +193,14 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       }
     })
 
+    // Mark all newCells as ghost cells
+    newCellData.forEach((cell) => {
+      if (cell.metadata === undefined) {
+        cell.metadata = {}
+      }
+      cell.metadata[ghostKey] = true
+    })
+
     const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
     edits.push(insertCells)
     edit.set(notebook.uri, edits)
@@ -203,7 +212,6 @@ class GhostCellGenerator implements stream.CompletionHandlers {
       if (vscode.window.activeNotebookEditor?.notebook.uri !== notebook.uri) {
         log.error('activeNotebookEditor is not the same as the notebook that was edited')
       }
-      //renderGhostCell(vscode.window.activeNotebookEditor!)
       if (!result) {
         log.error('applyEdit failed')
         return

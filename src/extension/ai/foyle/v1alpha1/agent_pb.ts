@@ -3,17 +3,10 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import type {
-  BinaryReadOptions,
-  FieldList,
-  JsonReadOptions,
-  JsonValue,
-  PartialMessage,
-  PlainMessage,
-} from '@bufbuild/protobuf'
-import { Message, proto3 } from '@bufbuild/protobuf'
-import { Block, BlockOutput, Doc } from './doc_pb'
-import { Cell, Notebook } from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
+import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
+import { Message, proto3 } from "@bufbuild/protobuf";
+import { Block, BlockOutput, Doc } from "./doc_pb";
+import { Cell, Notebook } from "@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb";
 
 /**
  * @generated from message GenerateRequest
@@ -22,36 +15,33 @@ export class GenerateRequest extends Message<GenerateRequest> {
   /**
    * @generated from field: Doc doc = 1;
    */
-  doc?: Doc
+  doc?: Doc;
 
   constructor(data?: PartialMessage<GenerateRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'GenerateRequest'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "GenerateRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'doc', kind: 'message', T: Doc },
-  ])
+    { no: 1, name: "doc", kind: "message", T: Doc },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GenerateRequest {
-    return new GenerateRequest().fromBinary(bytes, options)
+    return new GenerateRequest().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GenerateRequest {
-    return new GenerateRequest().fromJson(jsonValue, options)
+    return new GenerateRequest().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GenerateRequest {
-    return new GenerateRequest().fromJsonString(jsonString, options)
+    return new GenerateRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: GenerateRequest | PlainMessage<GenerateRequest> | undefined,
-    b: GenerateRequest | PlainMessage<GenerateRequest> | undefined,
-  ): boolean {
-    return proto3.util.equals(GenerateRequest, a, b)
+  static equals(a: GenerateRequest | PlainMessage<GenerateRequest> | undefined, b: GenerateRequest | PlainMessage<GenerateRequest> | undefined): boolean {
+    return proto3.util.equals(GenerateRequest, a, b);
   }
 }
 
@@ -62,42 +52,39 @@ export class GenerateResponse extends Message<GenerateResponse> {
   /**
    * @generated from field: repeated Block blocks = 1;
    */
-  blocks: Block[] = []
+  blocks: Block[] = [];
 
   /**
    * @generated from field: string trace_id = 2;
    */
-  traceId = ''
+  traceId = "";
 
   constructor(data?: PartialMessage<GenerateResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'GenerateResponse'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "GenerateResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'blocks', kind: 'message', T: Block, repeated: true },
-    { no: 2, name: 'trace_id', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-  ])
+    { no: 1, name: "blocks", kind: "message", T: Block, repeated: true },
+    { no: 2, name: "trace_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GenerateResponse {
-    return new GenerateResponse().fromBinary(bytes, options)
+    return new GenerateResponse().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GenerateResponse {
-    return new GenerateResponse().fromJson(jsonValue, options)
+    return new GenerateResponse().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GenerateResponse {
-    return new GenerateResponse().fromJsonString(jsonString, options)
+    return new GenerateResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: GenerateResponse | PlainMessage<GenerateResponse> | undefined,
-    b: GenerateResponse | PlainMessage<GenerateResponse> | undefined,
-  ): boolean {
-    return proto3.util.equals(GenerateResponse, a, b)
+  static equals(a: GenerateResponse | PlainMessage<GenerateResponse> | undefined, b: GenerateResponse | PlainMessage<GenerateResponse> | undefined): boolean {
+    return proto3.util.equals(GenerateResponse, a, b);
   }
 }
 
@@ -108,36 +95,33 @@ export class ExecuteRequest extends Message<ExecuteRequest> {
   /**
    * @generated from field: Block block = 1;
    */
-  block?: Block
+  block?: Block;
 
   constructor(data?: PartialMessage<ExecuteRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'ExecuteRequest'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "ExecuteRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'block', kind: 'message', T: Block },
-  ])
+    { no: 1, name: "block", kind: "message", T: Block },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteRequest {
-    return new ExecuteRequest().fromBinary(bytes, options)
+    return new ExecuteRequest().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExecuteRequest {
-    return new ExecuteRequest().fromJson(jsonValue, options)
+    return new ExecuteRequest().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExecuteRequest {
-    return new ExecuteRequest().fromJsonString(jsonString, options)
+    return new ExecuteRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: ExecuteRequest | PlainMessage<ExecuteRequest> | undefined,
-    b: ExecuteRequest | PlainMessage<ExecuteRequest> | undefined,
-  ): boolean {
-    return proto3.util.equals(ExecuteRequest, a, b)
+  static equals(a: ExecuteRequest | PlainMessage<ExecuteRequest> | undefined, b: ExecuteRequest | PlainMessage<ExecuteRequest> | undefined): boolean {
+    return proto3.util.equals(ExecuteRequest, a, b);
   }
 }
 
@@ -148,36 +132,33 @@ export class ExecuteResponse extends Message<ExecuteResponse> {
   /**
    * @generated from field: repeated BlockOutput outputs = 1;
    */
-  outputs: BlockOutput[] = []
+  outputs: BlockOutput[] = [];
 
   constructor(data?: PartialMessage<ExecuteResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'ExecuteResponse'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "ExecuteResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'outputs', kind: 'message', T: BlockOutput, repeated: true },
-  ])
+    { no: 1, name: "outputs", kind: "message", T: BlockOutput, repeated: true },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ExecuteResponse {
-    return new ExecuteResponse().fromBinary(bytes, options)
+    return new ExecuteResponse().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ExecuteResponse {
-    return new ExecuteResponse().fromJson(jsonValue, options)
+    return new ExecuteResponse().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ExecuteResponse {
-    return new ExecuteResponse().fromJsonString(jsonString, options)
+    return new ExecuteResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: ExecuteResponse | PlainMessage<ExecuteResponse> | undefined,
-    b: ExecuteResponse | PlainMessage<ExecuteResponse> | undefined,
-  ): boolean {
-    return proto3.util.equals(ExecuteResponse, a, b)
+  static equals(a: ExecuteResponse | PlainMessage<ExecuteResponse> | undefined, b: ExecuteResponse | PlainMessage<ExecuteResponse> | undefined): boolean {
+    return proto3.util.equals(ExecuteResponse, a, b);
   }
 }
 
@@ -192,58 +173,46 @@ export class StreamGenerateRequest extends Message<StreamGenerateRequest> {
   /**
    * @generated from oneof StreamGenerateRequest.request
    */
-  request:
-    | {
-        /**
-         * @generated from field: FullContext full_context = 1;
-         */
-        value: FullContext
-        case: 'fullContext'
-      }
-    | {
-        /**
-         * @generated from field: UpdateContext update = 2;
-         */
-        value: UpdateContext
-        case: 'update'
-      }
-    | { case: undefined; value?: undefined } = { case: undefined }
+  request: {
+    /**
+     * @generated from field: FullContext full_context = 1;
+     */
+    value: FullContext;
+    case: "fullContext";
+  } | {
+    /**
+     * @generated from field: UpdateContext update = 2;
+     */
+    value: UpdateContext;
+    case: "update";
+  } | { case: undefined; value?: undefined } = { case: undefined };
 
   constructor(data?: PartialMessage<StreamGenerateRequest>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'StreamGenerateRequest'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "StreamGenerateRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'full_context', kind: 'message', T: FullContext, oneof: 'request' },
-    { no: 2, name: 'update', kind: 'message', T: UpdateContext, oneof: 'request' },
-  ])
+    { no: 1, name: "full_context", kind: "message", T: FullContext, oneof: "request" },
+    { no: 2, name: "update", kind: "message", T: UpdateContext, oneof: "request" },
+  ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): StreamGenerateRequest {
-    return new StreamGenerateRequest().fromBinary(bytes, options)
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StreamGenerateRequest {
+    return new StreamGenerateRequest().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StreamGenerateRequest {
-    return new StreamGenerateRequest().fromJson(jsonValue, options)
+    return new StreamGenerateRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): StreamGenerateRequest {
-    return new StreamGenerateRequest().fromJsonString(jsonString, options)
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StreamGenerateRequest {
+    return new StreamGenerateRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: StreamGenerateRequest | PlainMessage<StreamGenerateRequest> | undefined,
-    b: StreamGenerateRequest | PlainMessage<StreamGenerateRequest> | undefined,
-  ): boolean {
-    return proto3.util.equals(StreamGenerateRequest, a, b)
+  static equals(a: StreamGenerateRequest | PlainMessage<StreamGenerateRequest> | undefined, b: StreamGenerateRequest | PlainMessage<StreamGenerateRequest> | undefined): boolean {
+    return proto3.util.equals(StreamGenerateRequest, a, b);
   }
 }
 
@@ -254,50 +223,47 @@ export class FullContext extends Message<FullContext> {
   /**
    * @generated from field: runme.parser.v1.Notebook notebook = 1;
    */
-  notebook?: Notebook
+  notebook?: Notebook;
 
   /**
    * TODO(jeremy): Should we move selected and notebook_uri out of the full_context and into the StreamGenerateRequest?
    *
    * @generated from field: int32 selected = 2;
    */
-  selected = 0
+  selected = 0;
 
   /**
    * @generated from field: string notebook_uri = 3;
    */
-  notebookUri = ''
+  notebookUri = "";
 
   constructor(data?: PartialMessage<FullContext>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'FullContext'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "FullContext";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'notebook', kind: 'message', T: Notebook },
-    { no: 2, name: 'selected', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
-    { no: 3, name: 'notebook_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-  ])
+    { no: 1, name: "notebook", kind: "message", T: Notebook },
+    { no: 2, name: "selected", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "notebook_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FullContext {
-    return new FullContext().fromBinary(bytes, options)
+    return new FullContext().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FullContext {
-    return new FullContext().fromJson(jsonValue, options)
+    return new FullContext().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FullContext {
-    return new FullContext().fromJsonString(jsonString, options)
+    return new FullContext().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: FullContext | PlainMessage<FullContext> | undefined,
-    b: FullContext | PlainMessage<FullContext> | undefined,
-  ): boolean {
-    return proto3.util.equals(FullContext, a, b)
+  static equals(a: FullContext | PlainMessage<FullContext> | undefined, b: FullContext | PlainMessage<FullContext> | undefined): boolean {
+    return proto3.util.equals(FullContext, a, b);
   }
 }
 
@@ -308,36 +274,33 @@ export class UpdateContext extends Message<UpdateContext> {
   /**
    * @generated from field: runme.parser.v1.Cell cell = 1;
    */
-  cell?: Cell
+  cell?: Cell;
 
   constructor(data?: PartialMessage<UpdateContext>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'UpdateContext'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "UpdateContext";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'cell', kind: 'message', T: Cell },
-  ])
+    { no: 1, name: "cell", kind: "message", T: Cell },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdateContext {
-    return new UpdateContext().fromBinary(bytes, options)
+    return new UpdateContext().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdateContext {
-    return new UpdateContext().fromJson(jsonValue, options)
+    return new UpdateContext().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdateContext {
-    return new UpdateContext().fromJsonString(jsonString, options)
+    return new UpdateContext().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: UpdateContext | PlainMessage<UpdateContext> | undefined,
-    b: UpdateContext | PlainMessage<UpdateContext> | undefined,
-  ): boolean {
-    return proto3.util.equals(UpdateContext, a, b)
+  static equals(a: UpdateContext | PlainMessage<UpdateContext> | undefined, b: UpdateContext | PlainMessage<UpdateContext> | undefined): boolean {
+    return proto3.util.equals(UpdateContext, a, b);
   }
 }
 
@@ -350,36 +313,33 @@ export class Finish extends Message<Finish> {
    *
    * @generated from field: bool accepted = 1;
    */
-  accepted = false
+  accepted = false;
 
   constructor(data?: PartialMessage<Finish>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'Finish'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "Finish";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'accepted', kind: 'scalar', T: 8 /* ScalarType.BOOL */ },
-  ])
+    { no: 1, name: "accepted", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+  ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Finish {
-    return new Finish().fromBinary(bytes, options)
+    return new Finish().fromBinary(bytes, options);
   }
 
   static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Finish {
-    return new Finish().fromJson(jsonValue, options)
+    return new Finish().fromJson(jsonValue, options);
   }
 
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Finish {
-    return new Finish().fromJsonString(jsonString, options)
+    return new Finish().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: Finish | PlainMessage<Finish> | undefined,
-    b: Finish | PlainMessage<Finish> | undefined,
-  ): boolean {
-    return proto3.util.equals(Finish, a, b)
+  static equals(a: Finish | PlainMessage<Finish> | undefined, b: Finish | PlainMessage<Finish> | undefined): boolean {
+    return proto3.util.equals(Finish, a, b);
   }
 }
 
@@ -390,60 +350,49 @@ export class StreamGenerateResponse extends Message<StreamGenerateResponse> {
   /**
    * @generated from field: repeated runme.parser.v1.Cell cells = 1;
    */
-  cells: Cell[] = []
+  cells: Cell[] = [];
 
   /**
    * The URI of the notebook to which the block belongs.
    *
    * @generated from field: string notebook_uri = 3;
    */
-  notebookUri = ''
+  notebookUri = "";
 
   /**
    * The cell index at which to insert at
    *
    * @generated from field: int32 insert_at = 4;
    */
-  insertAt = 0
+  insertAt = 0;
 
   constructor(data?: PartialMessage<StreamGenerateResponse>) {
-    super()
-    proto3.util.initPartial(data, this)
+    super();
+    proto3.util.initPartial(data, this);
   }
 
-  static readonly runtime: typeof proto3 = proto3
-  static readonly typeName = 'StreamGenerateResponse'
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "StreamGenerateResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: 'cells', kind: 'message', T: Cell, repeated: true },
-    { no: 3, name: 'notebook_uri', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: 'insert_at', kind: 'scalar', T: 5 /* ScalarType.INT32 */ },
-  ])
+    { no: 1, name: "cells", kind: "message", T: Cell, repeated: true },
+    { no: 3, name: "notebook_uri", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "insert_at", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
 
-  static fromBinary(
-    bytes: Uint8Array,
-    options?: Partial<BinaryReadOptions>,
-  ): StreamGenerateResponse {
-    return new StreamGenerateResponse().fromBinary(bytes, options)
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StreamGenerateResponse {
+    return new StreamGenerateResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(
-    jsonValue: JsonValue,
-    options?: Partial<JsonReadOptions>,
-  ): StreamGenerateResponse {
-    return new StreamGenerateResponse().fromJson(jsonValue, options)
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StreamGenerateResponse {
+    return new StreamGenerateResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(
-    jsonString: string,
-    options?: Partial<JsonReadOptions>,
-  ): StreamGenerateResponse {
-    return new StreamGenerateResponse().fromJsonString(jsonString, options)
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StreamGenerateResponse {
+    return new StreamGenerateResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(
-    a: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined,
-    b: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined,
-  ): boolean {
-    return proto3.util.equals(StreamGenerateResponse, a, b)
+  static equals(a: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined, b: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined): boolean {
+    return proto3.util.equals(StreamGenerateResponse, a, b);
   }
 }
+

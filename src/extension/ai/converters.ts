@@ -3,6 +3,7 @@
 // See ../vscode_apis.md for an exlanation. It is very helpful for understanding this folder.
 
 import * as vscode from 'vscode'
+
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 import { Serializer } from '../../types'
 import * as serializerTypes from '../grpc/serializerTypes'
