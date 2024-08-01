@@ -31,34 +31,52 @@ export async function getClusters(
   const projectId = useDefaultProject ? await clusterManagement.getProjectId() : project
 
   const [response] = await clusterManagement.listClusters({
-    parent: `projects/${projectId}/locations/-`,
+    projectId: projectId,
+    zone: '-',
   })
+
   if (!response.clusters) {
     return
   }
+
   const clusters: GcpGkeCluster[] = []
 
   for await (const cluster of response.clusters) {
     if (cluster.nodeConfig && !cluster.autopilot?.enabled) {
-      const machineType = await machineTypes.get({
-        machineType: cluster.nodeConfig.machineType,
-        project: projectId,
-        zone: cluster.zone,
-      })
-      if (!machineType.length) {
-        return
+      const location = cluster.location || ''
+      const zones = cluster.locations || [location]
+
+      let totalVCpus = 0
+      let totalMemoryMb = 0
+
+      for (const zone of zones) {
+        const machineType = await machineTypes.get({
+          machineType: cluster.nodeConfig.machineType,
+          project: projectId,
+          zone: zone,
+        })
+
+        if (!machineType.length) {
+          continue
+        }
+
+        const [{ guestCpus, memoryMb }] = machineType
+        const nodeCount = cluster.currentNodeCount || 0
+
+        totalVCpus += (guestCpus || 0) * nodeCount
+        totalMemoryMb += (memoryMb || 0) * nodeCount
       }
-      const [{ guestCpus, memoryMb }] = machineType
+
       clusters.push({
         clusterId: cluster.id!,
         status: (cluster.status || 'STATUS_UNSPECIFIED') as any,
         name: cluster.name || '',
-        location: cluster.location || '',
+        location: location,
         mode: 'Standard',
-        nodes: cluster.currentNodeCount || 0, // As seen on Node pool details
+        nodes: cluster.currentNodeCount || 0,
         clusterLink: getClusterLink(cluster.location!, cluster.name!, projectId),
-        vCPUs: (cluster.currentNodeCount || 0) * (guestCpus || 0),
-        totalMemory: ((memoryMb || 0) / oneGbInMb) * (cluster.currentNodeCount || 0),
+        vCPUs: totalVCpus,
+        totalMemory: totalMemoryMb / oneGbInMb,
         labels: cluster.resourceLabels,
         statusMessage: cluster.statusMessage,
       })
@@ -121,11 +139,17 @@ export async function getClusterDetails(clusterName: string, location: string, p
     let gcloudNodes: NodeInfo[] = []
 
     for (const instanceGroupUrl of instanceGroupsUrls) {
-      const instanceGroupName = instanceGroupUrl.split('/').pop()
+      const parts = instanceGroupUrl.split('/')
+      const instanceGroupName = parts.pop()
+      const zone = parts[parts.indexOf('zones') + 1]
+      if (!zone) {
+        continue
+      }
+
       const instancesClient = new compute.v1.InstanceGroupManagersClient()
       const [instances] = await instancesClient.listManagedInstances({
         project: project,
-        zone: location,
+        zone: zone,
         instanceGroupManager: instanceGroupName,
       })
 
@@ -147,7 +171,6 @@ export async function getClusterDetails(clusterName: string, location: string, p
     }
 
     const coreV1Api = kubeConfig.makeApiClient(CoreV1Api)
-
     const k8sNodes = await coreV1Api.listNode()
 
     const clusterNodes = gcloudNodes.map((gcloudNode) => {
