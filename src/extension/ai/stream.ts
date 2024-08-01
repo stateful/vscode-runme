@@ -137,6 +137,9 @@ export class StreamCreator {
       if (this.lastIterator !== undefined && this.lastIterator !== null) {
         // Do we need to call close here? What if the error indicates the stream already closed?
         this.lastIterator.close()
+        log.info('Stream closed due to error; resetting iterator')
+        // We need to unset the iterator so that a new one will be created in the next event.
+        this.lastIterator = null
       }
     }
   }
