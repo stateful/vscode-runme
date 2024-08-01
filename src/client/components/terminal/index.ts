@@ -2,10 +2,10 @@ import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable, TerminalDimensions } from 'vscode'
-import { ITheme, Terminal as XTermJS } from 'xterm'
-import { SerializeAddon } from 'xterm-addon-serialize'
-import { Unicode11Addon } from 'xterm-addon-unicode11'
-import { WebLinksAddon } from 'xterm-addon-web-links'
+import { ITheme, Terminal as XTermJS } from '@xterm/xterm'
+import { SerializeAddon } from '@xterm/addon-serialize'
+import { Unicode11Addon } from '@xterm/addon-unicode11'
+import { WebLinksAddon } from '@xterm/addon-web-links'
 
 import { FitAddon, type ITerminalDimensions } from '../../fitAddon'
 import { ClientMessages, RENDERERS, OutputType, WebViews } from '../../../constants'
@@ -375,6 +375,9 @@ export class TerminalView extends LitElement {
 
   @property({ type: Boolean })
   isSessionOutputsEnabled: boolean = false
+
+  @property({ type: Boolean })
+  isPlatformAuthEnabled: boolean = false
 
   constructor() {
     super()
@@ -837,7 +840,7 @@ export class TerminalView extends LitElement {
           }}"
         ></copy-button>
         ${when(
-          this.isSessionOutputsEnabled,
+          this.isSessionOutputsEnabled && !this.isPlatformAuthEnabled,
           () => {
             return html`<gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>`
           },

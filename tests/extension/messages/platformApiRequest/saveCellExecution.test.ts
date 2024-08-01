@@ -27,14 +27,6 @@ vi.mock('vscode', async () => {
     },
     window: {
       ...mocked.window,
-      activeTextEditor: {
-        document: {
-          fileName: '/foo/bar/README.md',
-          uri: {
-            fsPath: '/foo/bar/README.md',
-          },
-        },
-      },
     },
   }
 })
@@ -122,6 +114,8 @@ suite('Save cell execution', () => {
       message,
       editor: {
         notebook: {
+          save: vi.fn(),
+          uri: { fsPath: '/foo/bar/README.md' },
           metadata: {
             ['runme.dev/frontmatterParsed']: { runme: { id: 'ulid' } },
           },
@@ -201,6 +195,8 @@ suite('Save cell execution', () => {
       message,
       editor: {
         notebook: {
+          save: vi.fn(),
+          uri: { fsPath: '/foo/bar/README.md' },
           metadata: {
             ['runme.dev/frontmatterParsed']: { runme: { id: 'ulid' } },
           },

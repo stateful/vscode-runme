@@ -20,6 +20,7 @@ import {
   toggleTerminal,
   copyCellToClipboard,
   runCLICommand,
+  runForkCommand,
   openAsRunmeNotebook,
   openSplitViewAsMarkdownText,
   stopBackgroundTask,
@@ -126,6 +127,75 @@ test('copyCellToClipboard', () => {
   expect(window.showInformationMessage).toBeCalledTimes(1)
 })
 
+suite('runForkCommand', () => {
+  const mockKernel = {
+    createTerminalProgram: vi.fn(),
+  } as any
+  const fakeExtensionUri = {
+    fsPath: '/path/to/extensions',
+  } as any
+
+  beforeEach(() => {
+    vi.mocked(getBinaryPath).mockClear()
+    vi.mocked(window.showInformationMessage).mockClear()
+    vi.mocked(getAnnotations).mockClear()
+    vi.mocked(window.createTerminal).mockClear()
+    vi.mocked(getCLIUseIntegratedRunme).mockClear()
+  })
+
+  test('creates new terminal', async () => {
+    const cell: any = {
+      metadata: { name: 'foobar' },
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
+      kind: 2,
+    }
+
+    cell.notebook = {
+      getCells: () => [cell],
+      isDirty: false,
+    }
+
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
+    expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
+  })
+
+  test('prompts user when dirty and fails if canceled or closed', async () => {
+    const cell: any = {
+      metadata: { name: 'foobar' },
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
+      kind: 2,
+    }
+
+    cell.notebook = {
+      getCells: () => [cell],
+      isDirty: true,
+      save: vi.fn(),
+    }
+
+    // Cancelled
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
+    expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
+
+    vi.mocked(window.createTerminal).mockClear()
+
+    // Closed
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
+
+    expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
+
+    vi.mocked(window.createTerminal).mockClear()
+
+    // Saved
+    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
+
+    expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
+    expect(cell.notebook.save).toHaveBeenCalledOnce()
+  })
+})
+
 suite('runCliCommand', () => {
   beforeEach(() => {
     vi.mocked(getBinaryPath).mockClear()
@@ -147,7 +217,7 @@ suite('runCliCommand', () => {
       isDirty: false,
     }
 
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       'runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
@@ -168,13 +238,13 @@ suite('runCliCommand', () => {
     vi.mocked(getBinaryPath).mockReturnValueOnce(Uri.file('/bin/runme'))
     vi.mocked(getCLIUseIntegratedRunme).mockReturnValueOnce(true)
 
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked((terminal as any).sendText)).toHaveBeenCalledWith(
       '/bin/runme run --chdir="/foo/bar" --filename="README.md" --index=0',
     )
   })
 
-  test('prompts user when dirty and fails if cancelled or closed', async () => {
+  test('prompts user when dirty and fails if canceled or closed', async () => {
     const cell: any = {
       metadata: { name: 'foobar' },
       document: { uri: { fsPath: '/foo/bar/README.md' } },
@@ -189,14 +259,14 @@ suite('runCliCommand', () => {
 
     // Cancelled
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
     vi.mocked(terminal.sendText).mockClear()
 
     // Closed
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce(undefined as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).not.toHaveBeenCalled()
 
@@ -204,7 +274,7 @@ suite('runCliCommand', () => {
 
     // Saved
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
-    await runCLICommand({} as any, false)(cell)
+    await runCLICommand({} as any, {} as any, false)(cell)
 
     expect(vi.mocked(terminal.sendText)).toHaveBeenCalled()
     expect(cell.notebook.save).toHaveBeenCalledOnce()

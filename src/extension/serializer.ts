@@ -36,6 +36,7 @@ import {
   ServerLifecycleIdentity,
   getServerConfigurationValue,
   getSessionOutputs,
+  isPlatformAuthEnabled,
 } from '../utils/configuration'
 
 import {
@@ -155,20 +156,20 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
       return metadata
     }
 
-    // newly inserted cells have blank metadata
-    const newCellId = ulid()
+    // newly inserted cells may have blank metadata
+    const id = metadata?.['id'] || ulid()
 
     // only set `id` if all or cell identity is required
     if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
       return {
         ...(metadata || {}),
-        ...{ 'runme.dev/id': newCellId, id: newCellId },
+        ...{ 'runme.dev/id': id, id },
       }
     }
 
     return {
       ...(metadata || {}),
-      ...{ 'runme.dev/id': newCellId },
+      ...{ 'runme.dev/id': id },
     }
   }
 
@@ -213,18 +214,13 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
     return Promise.all(
       data.cells.map(async (cell) => {
-        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
         let id: string = ''
-        for (const out of cell.outputs || []) {
-          Object.entries(out.metadata ?? {}).find(([k, v]) => {
-            if (k === 'runme.dev/id') {
-              terminalOutput = out
-              id = v
-            }
-          })
+        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
 
-          if (terminalOutput) {
-            delete out.metadata?.['runme.dev/id']
+        for (const cellOutput of cell.outputs || []) {
+          id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
+          if (id) {
+            terminalOutput = cellOutput
             break
           }
         }
@@ -383,6 +379,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<number>
 
   public abstract saveNotebookOutputs(uri: Uri): Promise<number>
+
+  public abstract getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
+
+  public abstract getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -435,6 +435,16 @@ export class WasmSerializer extends SerializerBase {
   public async saveNotebookOutputs(_uri: Uri): Promise<number> {
     console.error('saveNotebookOutputs not implemented for WasmSerializer')
     return -1
+  }
+
+  public getMaskedCache(): Promise<Uint8Array> | undefined {
+    console.error('getMaskedCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
+  }
+
+  public getPlainCache(): Promise<Uint8Array> | undefined {
+    console.error('getPlainCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
   }
 }
 
@@ -557,6 +567,14 @@ export class GrpcSerializer extends SerializerBase {
     if (!sessionFile) {
       this.togglePreviewButton(false)
       return -1
+    }
+
+    // Don't write to disk if platform auth is enabled
+    const isPlatform = isPlatformAuthEnabled()
+    if (isPlatform) {
+      this.togglePreviewButton(false)
+      // But still return a valid bytes length so the cache keeps working
+      return bytes.length
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
@@ -853,6 +871,14 @@ export class GrpcSerializer extends SerializerBase {
   public dispose(): void {
     this.serverReadyListener?.dispose()
     super.dispose()
+  }
+
+  public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.maskedCache.get(cacheId)
+  }
+
+  public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.plainCache.get(cacheId)
   }
 }
 

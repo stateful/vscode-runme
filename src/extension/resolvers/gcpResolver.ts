@@ -6,6 +6,7 @@ export enum GCPSupportedView {
   CLUSTERS = 'clusters',
   CLUSTER = 'cluster',
   VM_INSTANCES = 'vm_instances',
+  VM_INSTANCE = 'vm_instance',
   CLOUD_RUN_SERVICES = 'cloud_run_services',
   CLOUD_RUN_REVISIONS = 'cloud_run_revisions',
 }
@@ -37,6 +38,7 @@ export interface GCPData {
   [GCPSupportedView.CLUSTER]: ClusterPath
   [GCPSupportedView.CLUSTERS]: ClustersPath
   [GCPSupportedView.VM_INSTANCES]: GcpPath
+  [GCPSupportedView.VM_INSTANCE]: GcpPath
   [GCPSupportedView.CLOUD_RUN_SERVICES]: CloudRunServicesPath
   [GCPSupportedView.CLOUD_RUN_REVISIONS]: CloudRunRevisionsPath
 }
@@ -72,6 +74,16 @@ export class GCPResolver implements Disposable {
       view: GCPSupportedView.VM_INSTANCES,
       data: {
         urlRegex: /compute\/instances[?]project=.+/,
+        project: '',
+      },
+    })
+
+    this.supportedFeatures.set('/compute/instancesDetail', {
+      view: GCPSupportedView.VM_INSTANCE,
+      data: {
+        urlRegex: /compute\/instancesDetail\/zones\/([^/]+)\/instances\/([^/]+)(\?project=(.+))?/,
+        location: '',
+        instance: '',
         project: '',
       },
     })

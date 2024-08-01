@@ -134,6 +134,7 @@ export class NotebookCellOutputManager {
     [OutputType.github, false],
     [OutputType.gcp, false],
     [OutputType.aws, false],
+    [OutputType.dagger, false],
   ])
 
   protected sessionExecutionOrder = new Map<string, number | undefined>()
@@ -174,6 +175,17 @@ export class NotebookCellOutputManager {
           NotebookCellOutputItem.json(annotationJson, OutputType.annotations),
           NotebookCellOutputItem.json(annotationJson),
         ])
+      }
+
+      case OutputType.dagger: {
+        const payload: CellOutputPayload<OutputType.dagger> = {
+          type: OutputType.dagger,
+          output: { cellId: cell.metadata['runme.dev/id'] },
+        }
+
+        return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
+          // deno: { deploy: true },
+        })
       }
 
       case OutputType.deno: {
@@ -232,6 +244,7 @@ export class NotebookCellOutputManager {
                 initialRows: terminalRows || terminalConfigurations.rows,
                 enableShareButton: isRunmeAppButtonsEnabled(),
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
+                isPlatformAuthEnabled: isPlatformAuthEnabled(),
                 isSessionOutputsEnabled,
                 ...terminalConfigurations,
               },

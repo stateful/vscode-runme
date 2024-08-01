@@ -45,9 +45,11 @@ import {
   NOTEBOOK_OUTPUTS_MASKED,
 } from '../constants'
 import {
+  getBinaryPath,
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getLoginPrompt,
+  getMaskOutputs,
   getNotebookAutoSave,
   getPortNumber,
   getTLSDir,
@@ -141,7 +143,9 @@ function getCellId(cell: vscode.NotebookCell): string {
     throw new Error('Cannot get cell ID for non-code cell!')
   }
 
-  return getAnnotations(cell)['runme.dev/id']!
+  const annotations = getAnnotations(cell)
+
+  return annotations['runme.dev/id'] || annotations['id'] || ''
 }
 
 export function getTerminalByCell(cell: vscode.NotebookCell): RunmeTerminal | undefined {
@@ -164,25 +168,40 @@ export function isDenoScript(runningCell: vscode.TextDocument) {
 export function isGitHubLink(runningCell: vscode.TextDocument) {
   const text = runningCell.getText()
   const isWorkflowUrl = text.includes('.github/workflows') || text.includes('actions/workflows')
-  return text.startsWith('https://github.com') && isWorkflowUrl
+  return text.trimStart().startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function getKey(runningCell: vscode.TextDocument): string {
+export function isDaggerCli(text: string): boolean {
+  const trimmed = text.trimStart()
+  return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
+}
+
+export type ExecResourceType = 'None' | 'URI' | 'Dagger'
+export interface IExecKeyInfo {
+  key: string
+  resource: ExecResourceType
+}
+
+export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
   try {
+    if (isDaggerCli(runningCell.getText())) {
+      return { key: 'dagger', resource: 'Dagger' }
+    }
+
     if (isDenoScript(runningCell)) {
-      return 'deno'
+      return { key: 'deno', resource: 'URI' }
     }
 
     if (isGitHubLink(runningCell)) {
-      return 'github'
+      return { key: 'github', resource: 'URI' }
     }
 
     if (new GCPResolver(runningCell.getText()).match()) {
-      return 'gcp'
+      return { key: 'gcp', resource: 'URI' }
     }
 
     if (new AWSResolver(runningCell.getText()).match()) {
-      return 'aws'
+      return { key: 'aws', resource: 'URI' }
     }
   } catch (err: any) {
     if (err?.code !== 'ERR_INVALID_URL') {
@@ -194,10 +213,10 @@ export function getKey(runningCell: vscode.TextDocument): string {
   const { languageId } = runningCell
 
   if (languageId === 'shellscript') {
-    return 'sh'
+    return { key: 'sh', resource: 'None' }
   }
 
-  return languageId
+  return { key: languageId, resource: 'None' }
 }
 
 export function normalizeLanguage(l?: string) {
@@ -586,8 +605,9 @@ export function fetchStaticHtml(appUrl: string) {
 }
 
 export function getRunnerSessionEnvs(
-  extensionBaseUri: Uri,
+  context: ExtensionContext,
   runnerEnv: IRunnerEnvironment | undefined,
+  skipRunmePath: boolean,
   address?: string,
 ) {
   const envs: Record<string, string> = {}
@@ -596,8 +616,14 @@ export function getRunnerSessionEnvs(
     envs['RUNME_SESSION_STRATEGY'] = 'recent'
   }
 
+  if (!skipRunmePath) {
+    const binaryBasePath =
+      path.dirname(getBinaryPath(context.extensionUri).fsPath) + (isWindows() ? ';' : ':')
+    envs['PATH'] = `${binaryBasePath}${envs.PATH || process.env.PATH}`
+  }
+
   if (getTLSEnabled()) {
-    envs['RUNME_TLS_DIR'] = getTLSDir(extensionBaseUri)
+    envs['RUNME_TLS_DIR'] = getTLSDir(context.extensionUri)
   }
 
   // todo(sebastian): consider making recent vs specific session a setting
@@ -676,8 +702,7 @@ export async function handleNotebookAutosaveSettings() {
 }
 
 export async function resetNotebookSettings() {
-  // todo(sebastian): consider adding a setting to toggle default masking
-  await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, true)
+  await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, getMaskOutputs())
   const configAutoSaveSetting = getNotebookAutoSave()
   const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

@@ -154,6 +154,25 @@ export async function getVMInstance(project: string, instance: string, zone: str
   }
 }
 
+export async function getVMInstanceDetail(project: string, instance: string, zone: string) {
+  try {
+    const [instanceResult] = await getVMInstance(project, instance, zone)
+    return instanceResult
+  } catch {
+    return []
+  }
+}
+
+export async function getDisk(project: string, zone: string, disk: string) {
+  const disksClient = new compute.v1.DisksClient()
+  const [diskResult] = await disksClient.get({
+    project,
+    zone,
+    disk,
+  })
+
+  return diskResult
+}
 /**
  * Waits until a vm instance status is in final state
  */

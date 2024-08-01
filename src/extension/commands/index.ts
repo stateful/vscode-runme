@@ -156,20 +156,52 @@ export function stopBackgroundTask(cell: NotebookCell) {
   terminal.dispose()
 }
 
-export function runCLICommand(extensionBaseUri: Uri, grpcRunner: boolean) {
+async function runStatusCommand(cell: NotebookCell): Promise<boolean> {
+  if (cell.notebook.isDirty) {
+    const option = await window.showInformationMessage(
+      'You have unsaved changes. Save and proceed?',
+      'Save',
+      'Cancel',
+    )
+
+    if (option === 'Cancel' || !option) {
+      return false
+    }
+
+    await cell.notebook.save()
+  }
+
+  return true
+}
+
+export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
-    if (cell.notebook.isDirty) {
-      const option = await window.showInformationMessage(
-        'You have unsaved changes. Save and run in CLI?',
-        'Save',
-        'Cancel',
-      )
+    if (!(await runStatusCommand(cell))) {
+      return
+    }
 
-      if (option === 'Cancel' || !option) {
-        return
-      }
+    const cwd = path.dirname(cell.document.uri.fsPath)
 
-      await cell.notebook.save()
+    const program = await kernel.createTerminalProgram(cwd)
+
+    const annotations = getAnnotations(cell.metadata)
+    const term = window.createTerminal({
+      name: `Fork: ${annotations.name}`,
+      pty: program,
+      iconPath: {
+        dark: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-dark.svg'),
+        light: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-light.svg'),
+      },
+    })
+
+    term.show(false)
+  }
+}
+
+export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner: boolean) {
+  return async function (cell: NotebookCell) {
+    if (!(await runStatusCommand(cell))) {
+      return
     }
 
     const cwd = path.dirname(cell.document.uri.fsPath)

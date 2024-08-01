@@ -14,6 +14,7 @@ export enum OutputType {
   stdout = 'application/vnd.code.notebook.stdout',
   gcp = 'stateful.runme/gcp',
   aws = 'stateful.runme/aws',
+  dagger = 'stateful.runme/dagger',
 }
 
 export enum ClientMessages {
@@ -67,6 +68,8 @@ export enum ClientMessages {
   gcpCloudRunAction = 'gcp:cloudRunAction',
   gcpLoadServices = 'gcp:loadServices',
   gcpServicesLoaded = 'gcp:servicesLoaded',
+  daggerSyncState = 'dagger:syncState',
+  daggerCliAction = 'dagger:cliAction',
 }
 
 // [pretty print, languageId, destination]
@@ -136,6 +139,7 @@ export const LANGUAGES = new Map(
  * "shellscript," so this object maps "shellscript" -> "sh"
  */
 export const VSCODE_LANGUAGEID_MAP: Record<string, string | undefined> = {
+  console: 'sh',
   shell: 'sh',
   shellscript: 'sh',
   javascriptreact: 'jsx',
@@ -160,6 +164,7 @@ export enum RENDERERS {
   GitHubWorkflowViewer = 'github-workflow-viewer',
   GCPView = 'gcp-view',
   AWSView = 'aws-view',
+  DaggerCli = 'dagger-cli',
 }
 
 export enum AuthenticationProviders {

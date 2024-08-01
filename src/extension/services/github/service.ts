@@ -128,13 +128,15 @@ export class GitHubService {
     if (total_count && environments) {
       return {
         total_count,
-        environments: environments.map(({ html_url, id, name }) => {
-          return {
-            html_url,
-            id,
-            name,
-          }
-        }) as RepositoryEnvironment[],
+        environments: environments.map(
+          ({ html_url, id, name }: { html_url: any; id: any; name: any }) => {
+            return {
+              html_url,
+              id,
+              name,
+            }
+          },
+        ) as RepositoryEnvironment[],
       }
     }
 

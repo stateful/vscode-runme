@@ -24,7 +24,11 @@ export type CommandMode = v1.CommandMode | v2.progconf.CommandMode
 
 export const CommandModeEnum = () => {
   if (getServerRunnerVersion() === v2.version) {
-    return { TEMP_FILE: v2.progconf.CommandMode.FILE, INLINE_SHELL: v2.progconf.CommandMode.INLINE }
+    return {
+      TEMP_FILE: v2.progconf.CommandMode.FILE,
+      INLINE_SHELL: v2.progconf.CommandMode.INLINE,
+      TERMINAL: v2.progconf.CommandMode.TERMINAL,
+    }
   }
   return v1.CommandMode
 }

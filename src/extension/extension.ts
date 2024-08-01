@@ -6,6 +6,8 @@ import {
   ExtensionContext,
   tasks,
   window,
+  env,
+  Uri,
   NotebookCell,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
@@ -14,6 +16,7 @@ import Channel from 'tangle/webviews'
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
   getForceNewWindowConfig,
+  getRunmeAppUrl,
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
@@ -59,6 +62,7 @@ import {
   createGistCommand,
   toggleAuthorMode,
   createCellGistCommand,
+  runForkCommand,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -112,6 +116,7 @@ export class RunmeExtension {
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
     this.serializer = serializer
+    kernel.setSerializer(serializer as GrpcSerializer)
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const runmeTaskProvider = tasks.registerTaskProvider(
@@ -173,7 +178,8 @@ export class RunmeExtension {
     ]
     const stopBackgroundTaskProvider = new StopBackgroundTaskProvider()
 
-    const runCLI = runCLICommand(context.extensionUri, !!grpcRunner)
+    const runCLI = runCLICommand(kernel, context.extensionUri, !!grpcRunner)
+    const runFork = runForkCommand(kernel, context.extensionUri, !!grpcRunner)
 
     const codeLensProvider = new RunmeCodeLensProvider(
       context.extensionUri,
@@ -234,6 +240,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openIntegratedTerminal', openIntegratedTerminal),
       RunmeExtension.registerCommand('runme.toggleTerminal', toggleTerminal(kernel, !!grpcRunner)),
       RunmeExtension.registerCommand('runme.runCliCommand', runCLI),
+      RunmeExtension.registerCommand('runme.runForkCommand', runFork),
       RunmeExtension.registerCommand('runme.copyCellToClipboard', copyCellToClipboard),
       RunmeExtension.registerCommand('runme.stopBackgroundTask', stopBackgroundTask),
       RunmeExtension.registerCommand(
@@ -330,7 +337,17 @@ export class RunmeExtension {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
       const session = await getPlatformAuthSession(true)
       if (session) {
-        window.showInformationMessage('Logged into the Stateful Platform')
+        const openDashboardStr = 'Open Dashboard'
+        const answer = await window.showInformationMessage(
+          'Logged into the Stateful Platform',
+          openDashboardStr,
+        )
+
+        if (answer === openDashboardStr) {
+          const dashboardUri = getRunmeAppUrl(['app'])
+          const uri = Uri.parse(dashboardUri)
+          env.openExternal(uri)
+        }
       }
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
