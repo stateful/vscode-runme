@@ -10,7 +10,7 @@ import * as protos from './protos'
 
 const log = getLogger()
 
-const ghostKey = 'ghostCell'
+export const ghostKey = 'ghostCell'
 
 const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
