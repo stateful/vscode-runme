@@ -331,7 +331,7 @@ export class RunmeExtension {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
       const session = await getPlatformAuthSession(true)
       if (session) {
-        const openDashboardStr = 'Open Dahsboard'
+        const openDashboardStr = 'Open Dashboard'
         const answer = await window.showInformationMessage(
           'Logged into the Stateful Platform',
           openDashboardStr,
