@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
 import { RAGResult } from "../v1alpha1/trainer_pb";
 import { ExecuteRequest, ExecuteResponse, GenerateRequest, GenerateResponse } from "../v1alpha1/agent_pb";
-import { ExecuteRequest as ExecuteRequest$1, ExecuteResponse as ExecuteResponse$1 } from "../../runme/runner/v1/runner_pb";
+import { ExecuteRequest as ExecuteRequest$1, ExecuteResponse as ExecuteResponse$1 } from "@buf/stateful_runme.bufbuild_es/runme/runner/v1/runner_pb";
 
 /**
  * @generated from message foyle.logs.Trace

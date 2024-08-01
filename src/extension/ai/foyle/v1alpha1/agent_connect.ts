@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { ExecuteRequest, ExecuteResponse, GenerateRequest, GenerateResponse, StreamGenerateRequest, StreamGenerateResponse } from "./agent_pb";
+import { ExecuteRequest, ExecuteResponse, GenerateRequest, GenerateResponse, StatusRequest, StatusResponse, StreamGenerateRequest, StreamGenerateResponse } from "./agent_pb";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -73,12 +73,12 @@ export const AIService = {
     /**
      * N.B. This is for testing only. Wanted to add a non streaming response which we can use to verify things are working.
      *
-     * @generated from rpc AIService.Simple
+     * @generated from rpc AIService.Status
      */
-    simple: {
-      name: "Simple",
-      I: StreamGenerateRequest,
-      O: StreamGenerateResponse,
+    status: {
+      name: "Status",
+      I: StatusRequest,
+      O: StatusResponse,
       kind: MethodKind.Unary,
     },
   }

@@ -9,6 +9,32 @@ import { Block, BlockOutput, Doc } from "./doc_pb";
 import { Cell, Notebook } from "@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb";
 
 /**
+ * @generated from enum AIServiceStatus
+ */
+export enum AIServiceStatus {
+  /**
+   * @generated from enum value: UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: OK = 1;
+   */
+  OK = 1,
+
+  /**
+   * @generated from enum value: NOT_OK = 2;
+   */
+  NOT_OK = 2,
+}
+// Retrieve enum metadata with: proto3.getEnumType(AIServiceStatus)
+proto3.util.setEnumType(AIServiceStatus, "AIServiceStatus", [
+  { no: 0, name: "UNKNOWN" },
+  { no: 1, name: "OK" },
+  { no: 2, name: "NOT_OK" },
+]);
+
+/**
  * @generated from message GenerateRequest
  */
 export class GenerateRequest extends Message<GenerateRequest> {
@@ -393,6 +419,74 @@ export class StreamGenerateResponse extends Message<StreamGenerateResponse> {
 
   static equals(a: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined, b: StreamGenerateResponse | PlainMessage<StreamGenerateResponse> | undefined): boolean {
     return proto3.util.equals(StreamGenerateResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message StatusRequest
+ */
+export class StatusRequest extends Message<StatusRequest> {
+  constructor(data?: PartialMessage<StatusRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "StatusRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StatusRequest {
+    return new StatusRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StatusRequest {
+    return new StatusRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StatusRequest {
+    return new StatusRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: StatusRequest | PlainMessage<StatusRequest> | undefined, b: StatusRequest | PlainMessage<StatusRequest> | undefined): boolean {
+    return proto3.util.equals(StatusRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message StatusResponse
+ */
+export class StatusResponse extends Message<StatusResponse> {
+  /**
+   * @generated from field: AIServiceStatus status = 1;
+   */
+  status = AIServiceStatus.UNKNOWN;
+
+  constructor(data?: PartialMessage<StatusResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "StatusResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "status", kind: "enum", T: proto3.getEnumType(AIServiceStatus) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): StatusResponse {
+    return new StatusResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): StatusResponse {
+    return new StatusResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): StatusResponse {
+    return new StatusResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: StatusResponse | PlainMessage<StatusResponse> | undefined, b: StatusResponse | PlainMessage<StatusResponse> | undefined): boolean {
+    return proto3.util.equals(StatusResponse, a, b);
   }
 }
 
