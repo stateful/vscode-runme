@@ -24,6 +24,7 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
 export function registerGhostCellEvents(context: vscode.ExtensionContext) {
+  log.info('AI: Enabling AutoCell Generation')
   let cellGenerator = new GhostCellGenerator()
 
   // Create a stream creator. The StreamCreator is a class that effectively windows events
