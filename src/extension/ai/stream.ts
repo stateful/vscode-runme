@@ -2,11 +2,13 @@ import * as http2 from 'node:http2'
 
 import { createPromiseClient, Transport } from '@bufbuild/connect'
 import { createConnectTransport } from '@bufbuild/connect-node'
+import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
+import {
+  StreamGenerateRequest,
+  StreamGenerateResponse,
+} from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
-
-import { AIService } from './foyle/v1alpha1/agent_connect'
-import { StreamGenerateRequest, StreamGenerateResponse } from './foyle/v1alpha1/agent_pb'
 
 const log = getLogger()
 const baseUrl = 'http://localhost:8080/api'

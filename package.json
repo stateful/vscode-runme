@@ -1130,6 +1130,8 @@
     "@aws-sdk/client-eks": "^3.583.0",
     "@aws-sdk/credential-providers": "^3.600.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240617172854-9d87e32e5325.4",
+    "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20240801044500-fba3b5ceb26b.1",
+    "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-20240801044500-fba3b5ceb26b.3",
     "@buf/stateful_runme.bufbuild_es": "^1.10.0-20240701165231-bc6fb672a119.1",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240701165231-bc6fb672a119.4",
     "@bufbuild/connect": "^0.13.0",
