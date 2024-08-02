@@ -206,6 +206,11 @@ export class Kernel implements Disposable {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
+  async saveDaggerState(cell: NotebookCell, value: any) {
+    const outputs = await this.getCellOutputs(cell)
+    outputs.saveDaggerState(cell.metadata?.['runme.dev/id'], value)
+  }
+
   async registerCellTerminalState(
     cell: NotebookCell,
     type: NotebookTerminalType,
@@ -788,47 +793,49 @@ export class Kernel implements Disposable {
       return runUriResource(opts)
     }
 
-    // if (execKey === 'dagger' && supportsGrpcRunner) {
-    //   const notify = (res?: string): Promise<boolean> => {
-    //     try {
-    //       const daggerJsonParsed = JSON.parse(res || '{}')
-    //       daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-    //       return new Promise<boolean>((resolve) => {
-    //         this.messaging
-    //           .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
-    //             type: ClientMessages.daggerSyncState,
-    //             output: {
-    //               id: runnerOpts.cellId,
-    //               cellId: runnerOpts.cellId,
-    //               json: daggerJsonParsed,
-    //             },
-    //           })
-    //           .then(() => resolve(true))
-    //       })
-    //     } catch (e) {
-    //       // not a fatal error
-    //       if (e instanceof Error) {
-    //         console.error(e.message)
-    //       }
-    //       return new Promise<boolean>((resolve) => {
-    //         this.messaging
-    //           .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
-    //             type: ClientMessages.daggerSyncState,
-    //             output: {
-    //               id: runnerOpts.cellId,
-    //               cellId: runnerOpts.cellId,
-    //               text: res,
-    //             },
-    //           })
-    //           .then(() => resolve(true))
-    //       })
-    //     }
-    //   }
-    //   const runSecondary = () => {
-    //     return runUriResource({ ...runnerOpts, runScript: notify })
-    //   }
-    //   return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
-    // }
+    if (execKey === 'dagger' && supportsGrpcRunner) {
+      const notify = async (res?: string): Promise<boolean> => {
+        try {
+          const daggerJsonParsed = JSON.parse(res || '{}')
+          daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
+          await this.saveDaggerState(runnerOpts.exec.cell, daggerJsonParsed)
+
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  json: daggerJsonParsed,
+                },
+              })
+              .then(() => resolve(true))
+          })
+        } catch (e) {
+          // not a fatal error
+          if (e instanceof Error) {
+            console.error(e.message)
+          }
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  text: res,
+                },
+              })
+              .then(() => resolve(true))
+          })
+        }
+      }
+      const runSecondary = () => {
+        return runUriResource({ ...runnerOpts, runScript: notify })
+      }
+      return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
+    }
 
     return executorByKey(executorOpts)
   }

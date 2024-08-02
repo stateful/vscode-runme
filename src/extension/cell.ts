@@ -150,6 +150,7 @@ export class NotebookCellOutputManager {
 
   protected terminalState?: ITerminalState
   protected terminalEnabled = false
+  protected daggerState: Record<string, any> = {}
 
   constructor(
     protected cell: NotebookCell,
@@ -181,6 +182,15 @@ export class NotebookCellOutputManager {
         const payload: CellOutputPayload<OutputType.dagger> = {
           type: OutputType.dagger,
           output: { cellId: cell.metadata['runme.dev/id'] },
+        }
+
+        const state = this.daggerState[cell.metadata['runme.dev/id']]
+
+        if (state) {
+          payload.output = {
+            ...payload.output,
+            json: state,
+          }
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
@@ -315,6 +325,10 @@ export class NotebookCellOutputManager {
         return undefined
       }
     }
+  }
+
+  saveDaggerState(cellId: string, value: any) {
+    this.daggerState[cellId] = value
   }
 
   registerCellTerminalState(type: NotebookTerminalType): ITerminalState {
