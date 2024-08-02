@@ -12,4 +12,6 @@ export class AIManager {
       ghost.registerGhostCellEvents(context)
     }
   }
+  // Cleanup method. We will use this to clean up any resources when extension is closed.
+  dispose() {}
 }
