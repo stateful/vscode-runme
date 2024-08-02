@@ -1,5 +1,3 @@
-import * as http2 from 'node:http2'
-
 import { createPromiseClient, Transport } from '@bufbuild/connect'
 import { createConnectTransport } from '@bufbuild/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
@@ -257,22 +255,13 @@ class PromiseIterator<T> {
 }
 
 function createDefaultTransport(): Transport {
-  let options = {
-    // Create a custom HTTP/2 client
-    createClient: (authority: string | URL) => {
-      return http2.connect(authority, {
-        // Allow insecure HTTP connections
-        rejectUnauthorized: false,
-      })
-    },
-  }
   return createConnectTransport({
     // eslint-disable-next-line max-len
-    // Copied from https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
+    // N.B unlike https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
+    // For some reason I didn't seem to have to allow unauthorized connections.
     // Do we need to use http2?
     httpVersion: '2',
     // baseUrl needs to include the path prefix.
     baseUrl: baseUrl,
-    nodeOptions: options,
   })
 }
