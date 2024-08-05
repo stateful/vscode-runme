@@ -550,6 +550,13 @@
             "default": false,
             "markdownDescription": "If set to `true`, enable logging server logs used for training AIs."
           },
+          "runme.experiments.aiAutoCell": {
+              "type": "boolean",
+              "scope": "window",
+              "default": false,
+              "title": "AI Auto Cell",
+              "markdownDescription": "If set to `true`, enable AI auto generation of cells. Reload the window after changing this setting."
+          },
           "runme.experiments.escalationButton": {
             "type": "boolean",
             "scope": "window",
