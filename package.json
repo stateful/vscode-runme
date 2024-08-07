@@ -1130,9 +1130,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.3",
-    "@aws-sdk/client-ec2": "^3.621.0",
-    "@aws-sdk/client-eks": "^3.621.0",
-    "@aws-sdk/credential-providers": "^3.621.0",
+    "@aws-sdk/client-ec2": "^3.624.0",
+    "@aws-sdk/client-eks": "^3.624.0",
+    "@aws-sdk/credential-providers": "^3.624.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240709201032-5be6b6661793.4",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240731204114-2df61af8e022.4",
     "@google-cloud/compute": "^4.1.0",
