@@ -12,10 +12,6 @@ const log = getLogger()
 
 export const ghostKey = 'ghostCell'
 
-const ghostDecoration = vscode.window.createTextEditorDecorationType({
-  color: '#888888', // Light grey color
-})
-
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
 // stop generating completions for the old notebook and start generating completions for the new notebook.
@@ -313,14 +309,14 @@ function editorAsGhost(editor: vscode.TextEditor) {
     textDoc.positionAt(textDoc.getText().length),
   )
 
-  editor.setDecorations(ghostDecoration, [range])
+  editor.setDecorations(getGhostDecoration(), [range])
 }
 
 function editorAsNonGhost(editor: vscode.TextEditor) {
   // To remove the decoration we set the range to an empty range and pass in a reference
   // to the original decoration
   // https://github.com/microsoft/vscode-extension-samples/blob/main/decorator-sample/USAGE.md#tips
-  editor.setDecorations(ghostDecoration, [])
+  editor.setDecorations(getGhostDecoration(), [])
 }
 
 function isGhostCell(cell: vscode.NotebookCell): boolean {
@@ -380,4 +376,12 @@ function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined
   // If the cell is a ghost cell we want to remove the decoration
   // and replace it with a non-ghost cell.
   editorAsNonGhost(editor)
+}
+
+// n.b. this is a function and not a top level const because that causes problems with the vitest
+// mocking framework.
+function getGhostDecoration(): vscode.TextEditorDecorationType {
+  return vscode.window.createTextEditorDecorationType({
+    color: '#888888', // Light grey color
+  })
 }
