@@ -769,7 +769,7 @@ suite('getGitContext', () => {
 
     vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
 
-    const { branch, commit, repository, relativePath } = await getGitContext()
+    const { branch, commit, repository, relativePath } = await getGitContext('/path/to/repo')
 
     expect(branch).toBe('main')
     expect(commit).toBe('commit-hash')
@@ -787,7 +787,7 @@ suite('getGitContext', () => {
 
     vi.mocked(simpleGit).mockReturnValueOnce(gitMock as unknown as ReturnType<typeof simpleGit>)
 
-    const { branch, commit, repository, relativePath } = await getGitContext()
+    const { branch, commit, repository, relativePath } = await getGitContext('/path/to/repo')
 
     expect(branch).toBe(null)
     expect(commit).toBe(null)

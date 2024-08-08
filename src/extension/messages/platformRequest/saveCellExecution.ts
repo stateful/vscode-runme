@@ -87,8 +87,8 @@ export default async function saveCellExecution(
 
     let notebookInput: CreateNotebookInput | undefined
 
-    const gitCtx = await getGitContext()
     const path = editor.notebook.uri.fsPath
+    const gitCtx = await getGitContext(path)
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
     const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : null
 
