@@ -179,17 +179,18 @@ export class NotebookCellOutputManager {
       }
 
       case OutputType.dagger: {
+        const cellId = cell.metadata['runme.dev/id']
         const payload: CellOutputPayload<OutputType.dagger> = {
           type: OutputType.dagger,
-          output: { cellId: cell.metadata['runme.dev/id'] },
+          output: { cellId },
         }
 
-        const state = this.daggerState[cell.metadata['runme.dev/id']]
+        const jsonOutput = this.daggerState[cellId]
 
-        if (state) {
+        if (jsonOutput) {
           payload.output = {
             ...payload.output,
-            json: state,
+            jsonOutput: jsonOutput,
           }
         }
 
@@ -329,6 +330,10 @@ export class NotebookCellOutputManager {
 
   saveDaggerState(cellId: string, value: any) {
     this.daggerState[cellId] = value
+  }
+
+  cleanDaggerState(cellId: string) {
+    delete this.daggerState[cellId]
   }
 
   registerCellTerminalState(type: NotebookTerminalType): ITerminalState {

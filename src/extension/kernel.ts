@@ -211,6 +211,11 @@ export class Kernel implements Disposable {
     outputs.saveDaggerState(cell.metadata?.['runme.dev/id'], value)
   }
 
+  async cleanDaggerState(cell: NotebookCell) {
+    const outputs = await this.getCellOutputs(cell)
+    outputs.cleanDaggerState(cell.metadata?.['runme.dev/id'])
+  }
+
   async registerCellTerminalState(
     cell: NotebookCell,
     type: NotebookTerminalType,
@@ -834,6 +839,7 @@ export class Kernel implements Disposable {
       const runSecondary = () => {
         return runUriResource({ ...runnerOpts, runScript: notify })
       }
+      this.cleanDaggerState(runnerOpts.exec.cell)
       return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
     }
 
