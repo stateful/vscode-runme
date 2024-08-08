@@ -787,9 +787,8 @@ export function isValidEnvVarName(name: string): boolean {
   return new RegExp('^[A-Z_][A-Z0-9_]{1}[A-Z0-9_]*[A-Z][A-Z0-9_]*$').test(name)
 }
 
-export async function getGitContext() {
-  const document = window.activeTextEditor?.document
-  const filePath = document?.uri?.fsPath?.split('/').slice(0, -1).join('/')
+export async function getGitContext(path: string) {
+  const filePath = path?.split('/').slice(0, -1).join('/')
 
   try {
     const git = simpleGit({
