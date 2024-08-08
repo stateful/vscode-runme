@@ -1,10 +1,10 @@
 import { test } from 'vitest'
 import { vi } from 'vitest'
+import * as doc_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/doc_pb'
+import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../../../src/extension/logger'
 import * as stream from '../../../src/extension/ai/stream'
-import * as agent_pb from '../../../src/extension/ai/foyle/v1alpha1/agent_pb'
-import * as doc_pb from '../../../src/extension/ai/foyle/v1alpha1/doc_pb'
 
 const log = getLogger()
 
