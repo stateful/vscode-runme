@@ -196,7 +196,7 @@ npx eslint src tests --ext ts
 You can fix any linting errors via:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PQ1YA4G5","name":"test:lint:fix"}
-eslint src tests --ext ts --fix
+npx eslint src tests --ext ts --fix
 ```
 
 #### Unit Testing

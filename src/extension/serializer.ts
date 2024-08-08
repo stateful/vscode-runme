@@ -58,6 +58,7 @@ import { Kernel } from './kernel'
 import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
+import * as ghost from './ai/ghost'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -186,7 +187,17 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const cells = await SerializerBase.addExecInfo(data, this.kernel)
 
     const metadata = data.metadata
-    data = new NotebookData(cells)
+
+    // Prune any ghost cells when saving.
+    let cellsToSave = []
+    for (let i = 0; i < cells.length; i++) {
+      if (isGhostCell(cells[i])) {
+        continue
+      }
+      cellsToSave.push(cells[i])
+    }
+
+    data = new NotebookData(cellsToSave)
     data.metadata = metadata
 
     let encoded: Uint8Array
@@ -869,4 +880,9 @@ export class GrpcSerializer extends SerializerBase {
   public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
     return this.plainCache.get(cacheId)
   }
+}
+
+function isGhostCell(cell: NotebookCellData): boolean {
+  const metadata = cell.metadata
+  return metadata?.[ghost.ghostKey] === true
 }
