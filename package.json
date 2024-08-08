@@ -1097,7 +1097,7 @@
     "@vitest/coverage-v8": "^2.0.5",
     "@vscode/vsce": "^2.21.0",
     "@wdio/cli": "^8.27.2",
-    "@wdio/local-runner": "^8.40.1",
+    "@wdio/local-runner": "^8.40.2",
     "@wdio/mocha-framework": "^8.40.2",
     "@wdio/spec-reporter": "^8.27.2",
     "chromedriver": "^127.0.1",
