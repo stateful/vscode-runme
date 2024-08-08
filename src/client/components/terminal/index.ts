@@ -19,6 +19,7 @@ import '../closeCellButton'
 import '../copyButton'
 import './share'
 import './gistCell'
+import './open'
 
 interface IWindowSize {
   width: number
@@ -820,6 +821,10 @@ export class TerminalView extends LitElement {
     postClientMessage(getContext(), ClientMessages.openLink, uri)
   }
 
+  #triggerOpenCellOutput(): void {
+    postClientMessage(getContext(), ClientMessages.openLink, this.shareUrl!)
+  }
+
   // Render the UI as a function of component state
   render() {
     return html`<section>
@@ -856,6 +861,15 @@ export class TerminalView extends LitElement {
               @onShare="${this.#triggerShareCellOutput}"
             >
             </share-cell>`
+          },
+          () => {},
+        )}
+        ${when(
+          this.cloudId && !this.isCloudApiLoading,
+          () => {
+            return html` <open-cell
+            ?disabled=${!this.isPlatformAuthEnabled}
+            @onOpen="${this.#triggerOpenCellOutput}"></share-cell>`
           },
           () => {},
         )}
