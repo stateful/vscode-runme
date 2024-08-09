@@ -14,7 +14,7 @@ export const dagger: IKernelExecutor = async (executor) => {
     updateCellMetadata(exec.cell, {
       'runme.dev/daggerState': {},
     })
-    outputs.showOutput(OutputType.vercel)
+    outputs.showOutput(OutputType.dagger)
 
     return false
   }

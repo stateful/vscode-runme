@@ -189,6 +189,15 @@ export class DaggerCli extends LitElement {
   connectedCallback(): void {
     super.connectedCallback()
     const ctx = getContext()
+
+    if (this.state.jsonOutput) {
+      this.#applyState({
+        id: this.cellId,
+        cellId: this.cellId,
+        json: this.state.jsonOutput,
+      })
+    }
+
     this.disposables.push(
       onClientMessage(ctx, async (e) => {
         switch (e.type) {
