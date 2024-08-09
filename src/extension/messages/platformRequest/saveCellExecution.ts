@@ -1,6 +1,9 @@
-import { Uri, workspace } from 'vscode'
+import os from 'node:os'
+
+import { Uri, workspace, env } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import YAML from 'yaml'
+import getMAC from 'getmac'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -39,6 +42,39 @@ export default async function saveCellExecution(
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
   log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
+
+  const vsEnv = {
+    appHost: env.appHost,
+    appName: env.appName,
+    appRoot: env.appRoot,
+    isNewAppInstall: env.isNewAppInstall,
+    language: env.language,
+    machineId: env.machineId,
+    remoteName: env.remoteName,
+    sessionId: env.sessionId,
+    shell: env.shell,
+    uiKind: env.uiKind,
+    uriScheme: env.uriScheme,
+  }
+
+  const device = {
+    macAddress: getMAC(),
+    hostname: os.hostname(),
+    platform: os.platform(),
+    release: os.release(),
+    arch: os.arch(),
+    vendor: os.cpus()[0].model,
+    shell: vsEnv.shell,
+    // Only save the relevant env variables
+    vsAppHost: vsEnv.appHost,
+    vsAppName: vsEnv.appName,
+    vsAppSessionId: vsEnv.sessionId,
+    vsMachineId: vsEnv.machineId,
+    metadata: {
+      // Let's save the entire env object for future reference if needed
+      vsEnv,
+    },
+  }
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
@@ -129,6 +165,7 @@ export default async function saveCellExecution(
           sessionId,
           plainSessionOutput,
           maskedSessionOutput,
+          device,
         },
       },
     })
