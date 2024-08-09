@@ -185,13 +185,11 @@ export class NotebookCellOutputManager {
           output: { cellId },
         }
 
-        const jsonOutput = this.outputsState?.get?.(type)?.get?.(cellId)
+        const output = this.outputsState?.get?.(type)?.get?.(cellId)
 
-        if (jsonOutput) {
-          payload.output = {
-            ...payload.output,
-            jsonOutput: jsonOutput,
-          }
+        payload.output = {
+          ...payload.output,
+          output: { json: output?.json, text: output?.text },
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {

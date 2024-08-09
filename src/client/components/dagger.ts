@@ -190,11 +190,17 @@ export class DaggerCli extends LitElement {
     super.connectedCallback()
     const ctx = getContext()
 
-    if (this.state.jsonOutput) {
+    if (this.state.output?.json) {
       this.#applyState({
         id: this.cellId,
         cellId: this.cellId,
-        json: this.state.jsonOutput,
+        json: JSON.parse(this.state.output?.json),
+      })
+    } else if (this.state.output?.text) {
+      this.#applyState({
+        id: this.cellId,
+        cellId: this.cellId,
+        text: this.state.output?.text,
       })
     }
 

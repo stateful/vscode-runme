@@ -806,7 +806,9 @@ export class Kernel implements Disposable {
         try {
           const daggerJsonParsed = JSON.parse(res || '{}')
           daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, daggerJsonParsed)
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+            json: JSON.stringify(daggerJsonParsed),
+          })
 
           return new Promise<boolean>((resolve) => {
             this.messaging
@@ -825,6 +827,11 @@ export class Kernel implements Disposable {
           if (e instanceof Error) {
             console.error(e.message)
           }
+
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+            text: res,
+          })
+
           return new Promise<boolean>((resolve) => {
             this.messaging
               .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
