@@ -1158,6 +1158,7 @@
     "filenamify": "^6.0.0",
     "filesize": "^10.1.4",
     "get-port": "^7.0.0",
+    "getmac": "^6.6.0",
     "got": "^11.8.2",
     "graphql": "^16.8.0",
     "jsonc-parser": "^3.2.1",
