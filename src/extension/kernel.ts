@@ -38,6 +38,7 @@ import {
   CATEGORY_SEPARATOR,
   NOTEBOOK_MODE,
   NotebookMode,
+  OutputType,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
@@ -206,14 +207,16 @@ export class Kernel implements Disposable {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
-  async saveDaggerState(cell: NotebookCell, value: any) {
+  async saveOutputState(cell: NotebookCell, type: OutputType, value: any) {
+    const cellId = cell.metadata?.['runme.dev/id']
     const outputs = await this.getCellOutputs(cell)
-    outputs.saveDaggerState(cell.metadata?.['runme.dev/id'], value)
+    outputs.saveOutputState(cellId, type, value)
   }
 
-  async cleanDaggerState(cell: NotebookCell) {
+  async cleanOutputState(cell: NotebookCell, type: OutputType) {
+    const cellId = cell.metadata?.['runme.dev/id']
     const outputs = await this.getCellOutputs(cell)
-    outputs.cleanDaggerState(cell.metadata?.['runme.dev/id'])
+    outputs.cleanOutputState(cellId, type)
   }
 
   async registerCellTerminalState(
@@ -803,7 +806,7 @@ export class Kernel implements Disposable {
         try {
           const daggerJsonParsed = JSON.parse(res || '{}')
           daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-          await this.saveDaggerState(runnerOpts.exec.cell, daggerJsonParsed)
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, daggerJsonParsed)
 
           return new Promise<boolean>((resolve) => {
             this.messaging
@@ -839,7 +842,7 @@ export class Kernel implements Disposable {
       const runSecondary = () => {
         return runUriResource({ ...runnerOpts, runScript: notify })
       }
-      this.cleanDaggerState(runnerOpts.exec.cell)
+      this.cleanOutputState(runnerOpts.exec.cell, OutputType.dagger)
       return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
     }
 
