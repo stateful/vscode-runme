@@ -11,7 +11,10 @@ One function's output is being used as another function's input. This is a commo
 
 In this notebook, we will explore how to express such pipelines using Dagger inside a literal notebook environment. As an example, we build and bundle this VS Code extension.
 
-> 💡 This demo is using a "slightly" modified version of the dagger binary based on https://github.com/dagger/dagger/pull/7479.
+```sh {"id":"01J4WF41PRJZAMC6DYK4VMKMEE","promptEnv":"no"}
+export PROGRESS="plain"
+echo "Using Dagger's ${PROGRESS} progress logger"
+```
 
 ### Build the Kernel Binary
 

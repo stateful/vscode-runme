@@ -155,6 +155,10 @@ export type DaggerStateAction = {
 
 export interface DaggerState {
   cellId?: string
+  output?: {
+    json?: string
+    text?: string
+  }
   cli?: {
     status: string
     actions: [DaggerStateAction]
