@@ -29,5 +29,3 @@ dagger --progress=plain \
     container \
         --packages=cowsay
 ```
-
-👉 Let's continue over here with the [pipeline demo](../../dagger/Pipeline.md).
