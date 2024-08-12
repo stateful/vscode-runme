@@ -189,9 +189,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const metadata = data.metadata
 
     // Prune any ghost cells when saving.
-    let cellsToSave = []
+    const cellsToSave = []
     for (let i = 0; i < cells.length; i++) {
-      if (isGhostCell(cells[i])) {
+      if (SerializerBase.isGhostCell(cells[i])) {
         continue
       }
       cellsToSave.push(cells[i])
@@ -383,6 +383,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public abstract getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
 
   public abstract getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
+
+  static isGhostCell(cell: NotebookCellData): boolean {
+    const metadata = cell.metadata
+    return metadata?.[ghost.ghostKey] === true
+  }
 }
 
 export class WasmSerializer extends SerializerBase {
@@ -880,9 +885,4 @@ export class GrpcSerializer extends SerializerBase {
   public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
     return this.plainCache.get(cacheId)
   }
-}
-
-function isGhostCell(cell: NotebookCellData): boolean {
-  const metadata = cell.metadata
-  return metadata?.[ghost.ghostKey] === true
 }

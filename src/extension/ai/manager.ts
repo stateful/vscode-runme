@@ -11,13 +11,13 @@ export class AIManager {
 
   subscriptions: vscode.Disposable[] = []
 
-  constructor(context: vscode.ExtensionContext) {
+  constructor() {
     const config = vscode.workspace.getConfiguration('runme.experiments')
     const autoComplete = config.get<boolean>('aiAutoCell', false)
 
     this.log = getLogger('AIManager')
     if (autoComplete) {
-      this.registerGhostCellEvents(context)
+      this.registerGhostCellEvents()
     }
   }
 
