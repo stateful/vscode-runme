@@ -380,6 +380,8 @@ function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined
 
 // n.b. this is a function and not a top level const because that causes problems with the vitest
 // mocking framework.
+// N.B. I think we could potentially have solved that by doing something like
+// https://github.com/stateful/vscode-runme/pull/1475#issuecomment-2278636467
 function getGhostDecoration(): vscode.TextEditorDecorationType {
   return vscode.window.createTextEditorDecorationType({
     color: '#888888', // Light grey color
