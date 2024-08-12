@@ -172,7 +172,11 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
 }
 
 export function isDaggerCli(text: string): boolean {
-  const trimmed = text.trimStart()
+  const trimmed = text
+    .trimStart()
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'))
+    .join('\n')
   return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
 }
 
