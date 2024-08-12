@@ -1,5 +1,5 @@
-import { createPromiseClient, PromiseClient, Transport } from '@bufbuild/connect'
-import { createConnectTransport } from '@bufbuild/connect-node'
+import { createPromiseClient, PromiseClient, Transport } from '@connectrpc/connect'
+import { createConnectTransport } from '@connectrpc/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   StreamGenerateRequest,

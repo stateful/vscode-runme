@@ -1149,6 +1149,8 @@
     "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20240801044500-fba3b5ceb26b.1",
     "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-20240801044500-fba3b5ceb26b.3",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240731204114-2df61af8e022.4",
+    "@connectrpc/connect": "^1.4.0",
+    "@connectrpc/connect-node": "^1.1.2",
     "@google-cloud/compute": "^4.1.0",
     "@google-cloud/container": "^5.16.0",
     "@google-cloud/run": "^1.4.0",
@@ -1183,7 +1185,6 @@
     "uuid": "^10.0.0",
     "vscode-telemetry": "^1.0.2",
     "yaml": "^2.5.0",
-    "zod": "^3.23.8",
-    "@connectrpc/connect-node": "^1.1.2"
+    "zod": "^3.23.8"
   }
 }
