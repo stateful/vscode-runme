@@ -78,7 +78,7 @@ export async function generateCompletion() {
 // index is the position in the notebook at which the new the new cells should be inserted.
 //
 function addAIGeneratedCells(index: number, response: GenerateCellsResponse): vscode.NotebookEdit {
-  let newCellData = converters.cellProtosTocellData(response.cells)
+  let newCellData = converters.cellProtosToCellData(response.cells)
   // Now insert the new cells at the end of the notebook
   return vscode.NotebookEdit.insertCells(index, newCellData)
 }

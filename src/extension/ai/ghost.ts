@@ -10,7 +10,10 @@ import * as protos from './protos'
 
 const log = getLogger()
 
-export const ghostKey = 'ghostCell'
+// n.b. using the prefix _ or runme.dev indicates the metadata is ephemeral and shouldn't
+// be persisted to the markdown file. This ensures that if a ghost cell is accepted
+// the ghost metadata is not persisted to the markdown file.
+export const ghostKey = '_ghostCell'
 
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
@@ -20,12 +23,15 @@ export const ghostKey = 'ghostCell'
 // It registers event handlers to listen to when cells are added or removed
 // as well as when cells change. This is used to create ghost cells.
 export function registerGhostCellEvents(context: vscode.ExtensionContext) {
+  const config = vscode.workspace.getConfiguration('runme')
+  const baseUrl = config.get<string>('runme.aiBaseURL', 'http://localhost:8080/api')
+
   log.info('AI: Enabling AutoCell Generation')
   let cellGenerator = new GhostCellGenerator()
 
   // Create a stream creator. The StreamCreator is a class that effectively windows events
   // and turns each window into an AsyncIterable of streaming requests.
-  let creator = new stream.StreamCreator(cellGenerator)
+  let creator = new stream.StreamCreator(cellGenerator, baseUrl)
 
   let eventGenerator = new CellChangeEventGenerator(creator)
   // onDidChangeTextDocument fires when the contents of a cell changes.
@@ -157,7 +163,7 @@ class GhostCellGenerator implements stream.CompletionHandlers {
   // processResponse applies the changes from the response to the notebook.
   processResponse(response: agent_pb.StreamGenerateResponse) {
     let cellsTs = protos.cellsESToTS(response.cells)
-    let newCellData = converters.cellProtosTocellData(cellsTs)
+    let newCellData = converters.cellProtosToCellData(cellsTs)
 
     const edit = new vscode.WorkspaceEdit()
     const edits: vscode.NotebookEdit[] = []

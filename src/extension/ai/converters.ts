@@ -30,7 +30,7 @@ export function cellToCellData(cell: vscode.NotebookCell): vscode.NotebookCellDa
 }
 
 // cellProtosToCellData converts an array of RunMe cell protos to an array of VSCode CellData
-export function cellProtosTocellData(cells: serializerTypes.Cell[]): vscode.NotebookCellData[] {
+export function cellProtosToCellData(cells: serializerTypes.Cell[]): vscode.NotebookCellData[] {
   let notebook: Serializer.Notebook = {
     cells: [],
   }

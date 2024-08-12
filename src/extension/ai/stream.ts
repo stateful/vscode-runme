@@ -1,4 +1,4 @@
-import { createPromiseClient, Transport } from '@bufbuild/connect'
+import { createPromiseClient, PromiseClient, Transport } from '@bufbuild/connect'
 import { createConnectTransport } from '@bufbuild/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
@@ -9,10 +9,6 @@ import {
 import getLogger from '../logger'
 
 const log = getLogger()
-const baseUrl = 'http://localhost:8080/api'
-
-// Create a client this is actually a PromiseClient
-export const client = createPromiseClient(AIService, createDefaultTransport())
 
 export const processedEvents: Promise<number>[] = []
 
@@ -69,9 +65,14 @@ export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
-
-  constructor(handlers: CompletionHandlers) {
+  baseURL: string
+  client: PromiseClient<typeof AIService>
+  constructor(handlers: CompletionHandlers, baseURL: string) {
     this.handlers = handlers
+    this.baseURL = baseURL
+
+    // Create a client this is actually a PromiseClient
+    this.client = createPromiseClient(AIService, createDefaultTransport(baseURL))
   }
 
   // handleEvent processes a request
@@ -117,7 +118,7 @@ export class StreamCreator {
         },
       }
 
-      const responseIterable = client.streamGenerate(iterable)
+      const responseIterable = this.client.streamGenerate(iterable)
       // Start a coroutine to process responses from the completion service
       this.processResponses(responseIterable)
     }
@@ -254,7 +255,7 @@ class PromiseIterator<T> {
   }
 }
 
-function createDefaultTransport(): Transport {
+function createDefaultTransport(baseURL: string): Transport {
   return createConnectTransport({
     // eslint-disable-next-line max-len
     // N.B unlike https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
@@ -262,6 +263,6 @@ function createDefaultTransport(): Transport {
     // Do we need to use http2?
     httpVersion: '2',
     // baseUrl needs to include the path prefix.
-    baseUrl: baseUrl,
+    baseUrl: baseURL,
   })
 }
