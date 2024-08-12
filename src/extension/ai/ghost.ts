@@ -19,39 +19,6 @@ export const ghostKey = '_ghostCell'
 // completions for the active notebook. So as soon as the active notebook changes we should
 // stop generating completions for the old notebook and start generating completions for the new notebook.
 
-// registerGhostCellEvents should be called when the extension is activated.
-// It registers event handlers to listen to when cells are added or removed
-// as well as when cells change. This is used to create ghost cells.
-export function registerGhostCellEvents(context: vscode.ExtensionContext) {
-  const config = vscode.workspace.getConfiguration('runme')
-  const baseUrl = config.get<string>('runme.aiBaseURL', 'http://localhost:8080/api')
-
-  log.info('AI: Enabling AutoCell Generation')
-  let cellGenerator = new GhostCellGenerator()
-
-  // Create a stream creator. The StreamCreator is a class that effectively windows events
-  // and turns each window into an AsyncIterable of streaming requests.
-  let creator = new stream.StreamCreator(cellGenerator, baseUrl)
-
-  let eventGenerator = new CellChangeEventGenerator(creator)
-  // onDidChangeTextDocument fires when the contents of a cell changes.
-  // We use this to generate completions.
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
-  )
-
-  // onDidChangeVisibleTextEditors fires when the visible text editors change.
-  // We need to trap this event to apply decorations to turn cells into ghost cells.
-  context.subscriptions.push(
-    vscode.window.onDidChangeVisibleTextEditors(handleOnDidChangeVisibleTextEditors),
-  )
-
-  // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
-  context.subscriptions.push(
-    vscode.window.onDidChangeActiveTextEditor(handleOnDidChangeActiveTextEditor),
-  )
-}
-
 // GhostCellGenerator is a class that generates completions for a notebook cell.
 // This class implements the stream.CompletionHandlers. It is responsible
 // for generating a request to the AIService given an event and it is
@@ -61,7 +28,7 @@ export function registerGhostCellEvents(context: vscode.ExtensionContext) {
 // depends on whether this is the first request for a given selected cell in which
 // case we send the full notebook or if it is an incremental change because
 // the cell contents have changed.
-class GhostCellGenerator implements stream.CompletionHandlers {
+export class GhostCellGenerator implements stream.CompletionHandlers {
   private notebookState: Map<vscode.Uri, NotebookState>
 
   constructor() {
@@ -238,7 +205,7 @@ class NotebookState {
 // CellChangeEventGenerator is a class that generates events when a cell changes.
 // It converts vscode.TextDocumentChangeEvents into a stream.CellChangeEvent
 // and then enques them in the StreamCreator.
-class CellChangeEventGenerator {
+export class CellChangeEventGenerator {
   streamCreator: stream.StreamCreator
 
   constructor(streamCreator: stream.StreamCreator) {
@@ -285,7 +252,7 @@ class CellChangeEventGenerator {
 
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
 // This includes when a TextEditor is created.
-function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
+export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
   for (const editor of editors) {
     log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
     if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
@@ -349,7 +316,7 @@ function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookC
 
 // handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
 // when it is selected
-function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
+export function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
   log.info(`onDidChangeActiveTextEditor Fired for editor ${editor?.document.uri}`)
   if (editor === undefined) {
     return
