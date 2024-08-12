@@ -123,7 +123,7 @@ export class DaggerCli extends LitElement {
         e.preventDefault()
       }
 
-      let command = `${a.command} ${a.action}`
+      let command = `${a.command?.trimEnd()} ${a.action}`
       if (a.action === 'terminal') {
         command = command.replace(' --progress=plain', '')
       }
