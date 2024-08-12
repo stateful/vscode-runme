@@ -207,8 +207,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
 
         for (const cellOutput of cell.outputs || []) {
+          const terminalMime = cellOutput.items.find((item) => item.mime === OutputType.terminal)
           id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
-          if (id) {
+          if (terminalMime && id) {
             terminalOutput = cellOutput
             break
           }
