@@ -79,7 +79,7 @@ import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as generate from './ai/generate'
-
+import * as manager from './ai/manager'
 export class RunmeExtension {
   protected serializer?: SerializerBase
 
@@ -161,6 +161,12 @@ export class RunmeExtension {
           `Reason: ${(e as any).message}`,
       )
     }
+
+    // Start the AIManager. This will enable the AI services if the user has enabled them.
+    const aiManager = new manager.AIManager()
+    // We need to hang onto a reference to the AIManager so it doesn't get garbage collected until the
+    // extension is deactivated.
+    context.subscriptions.push(aiManager)
 
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
