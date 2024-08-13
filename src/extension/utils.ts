@@ -172,12 +172,16 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
 }
 
 export function isDaggerCli(text: string): boolean {
-  const trimmed = text
+  const simplified = text
     .trimStart()
+    .replaceAll('\\', ' ')
     .split('\n')
-    .filter((line) => !line.trim().startsWith('#'))
-    .join('\n')
-  return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
+    .map((line) => line.trim())
+    .filter((line) => !line.startsWith('#'))
+    .flatMap((line) => line.split(' '))
+    .filter((line) => !line.startsWith('--'))
+    .join(' ')
+  return simplified.startsWith('dagger call') || simplified.startsWith('$ dagger call')
 }
 
 export type ExecResourceType = 'None' | 'URI' | 'Dagger'
