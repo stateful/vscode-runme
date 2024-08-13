@@ -3,6 +3,7 @@ cwd: ..
 runme:
   id: 01HTNVRGFMWZERW6S2CZZ9E990
   version: v3
+terminalRows: 20
 ---
 
 ```sh {"id":"01HXF9X7750APY0DB81KPPZBN5","terminalRows":"5"}
@@ -33,5 +34,5 @@ dagger call --progress $PROGRESS_OUTPUT \
     --binary /tmp/runme/runme \
     --presetup dagger/scripts/presetup.sh \
   build-extension \
-    --gh-token cmd:"gh auth token"
+    --github-token cmd:"gh auth token"
 ```

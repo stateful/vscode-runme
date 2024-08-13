@@ -4,7 +4,7 @@ terminalRows: 20
 
 # Runme ▶️ for Dagger
 
-```sh {"id":"01J097BHJHQS28M29YR0WCZ3B8","interactive":"false"}
+```sh {"excludeFromRunAll":"true","id":"01J097BHJHQS28M29YR0WCZ3B8","interactive":"false"}
 curl -s "https://framerusercontent.com/images/tpJEZ337KKxXU4q1SSUXDx4FG4.png?scale-down-to=512"
 ```
 
@@ -30,5 +30,5 @@ dagger call \
 dagger call \
     -m github.com/shykes/daggerverse/wolfi@v0.1.4 \
     container \
-      --packages=cowsay
+        --packages=cowsay
 ```

@@ -102,9 +102,9 @@ class VscodeRunme {
    * @returns The packaged VSIX extension file.
    */
   @func()
-  async buildExtension(githubToken: string): Promise<File> {
+  async buildExtension(githubToken: Secret): Promise<File> {
     return this.container
-      .withEnvVariable('GITHUB_TOKEN', githubToken)
+      .withSecretVariable('GITHUB_TOKEN', githubToken)
       // .withExec('runme run setup'.split(' '))
       .withExec('runme run setup build bundle'.split(' '))
       .file('runme-extension.vsix')
