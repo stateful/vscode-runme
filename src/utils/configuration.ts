@@ -23,6 +23,7 @@ const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://platform.stateful.com'
 const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
 const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
+const DEFAULT_FAQ_URL = 'https://docs.runme.dev/faq'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
@@ -90,6 +91,7 @@ const configurationSchema = {
     maskOutputs: z.boolean().default(true),
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
+    faqUrl: z.string().default(DEFAULT_FAQ_URL),
   },
 }
 
@@ -432,6 +434,11 @@ const isPlatformAuthEnabled = (): boolean => {
   return getCloudConfigurationValue('platformAuth', false)
 }
 
+const getFaqUrl = (hash: string): string => {
+  const baseUrl = getCloudConfigurationValue('faqUrl', DEFAULT_FAQ_URL)
+  return `${baseUrl}#${hash}`
+}
+
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
@@ -462,4 +469,5 @@ export {
   getSessionOutputs,
   getMaskOutputs,
   getLoginPrompt,
+  getFaqUrl,
 }

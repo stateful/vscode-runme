@@ -844,6 +844,12 @@
             "type": "string",
             "default": "http://localhost:8877/api",
             "description": "The base URL of the AI service."
+          },
+          "runme.app.faqUrl": {
+            "type": "string",
+            "scope": "window",
+            "default": "https://docs.runme.dev/faq",
+            "markdownDescription": "Frequently Asked Questions page"
           }
         }
       }
