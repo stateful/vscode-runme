@@ -15,6 +15,7 @@ import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
+  getFaqUrl,
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getSessionOutputs,
@@ -80,6 +81,8 @@ import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as generate from './ai/generate'
 import * as manager from './ai/manager'
+import getLogger from './logger'
+
 export class RunmeExtension {
   protected serializer?: SerializerBase
 
@@ -351,6 +354,25 @@ export class RunmeExtension {
       }
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
+    }
+
+    try {
+      const { output } = await kernel.runProgram('echo $0')
+      const supportedShells = ['zsh', 'bash']
+      const isSupported = supportedShells.some((sh) => output?.includes(sh))
+
+      if (!isSupported) {
+        const showMore = 'Show more'
+        const answer = await window.showWarningMessage('Unsupported shell', showMore)
+
+        if (answer === showMore) {
+          const dashboardUri = getFaqUrl('supported-shells')
+          const uri = Uri.parse(dashboardUri)
+          env.openExternal(uri)
+        }
+      }
+    } catch (_e) {
+      getLogger().warn('An error occurred while verifying the supported shell')
     }
 
     await bootFile(context)
