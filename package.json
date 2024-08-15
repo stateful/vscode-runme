@@ -659,6 +659,7 @@
             "default": "v1",
             "enum": [
               "v1",
+              "v2",
               "v2alpha1"
             ],
             "markdownDescription": "Runner GRPC version to use"
