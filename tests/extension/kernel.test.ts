@@ -7,7 +7,6 @@ import { TelemetryReporter } from '../../__mocks__/vscode-telemetry'
 import { ClientMessages } from '../../src/constants'
 import { APIMethod } from '../../src/types'
 import * as platform from '../../src/extension/messages/platformRequest/saveCellExecution'
-import * as cloudApi from '../../src/extension/messages/cloudApiRequest/saveCellExecution'
 import { isPlatformAuthEnabled } from '../../src/utils/configuration'
 import { askAlternativeOutputsAction } from '../../src/extension/commands'
 
@@ -40,7 +39,6 @@ vi.mock('../../src/extension/runner', () => ({}))
 vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
 vi.mock('../../src/extension/commands', () => ({ askAlternativeOutputsAction: vi.fn() }))
 vi.mock('../../src/extension/messages/platformRequest/saveCellExecution')
-vi.mock('../../src/extension/messages/cloudApiRequest/saveCellExecution')
 vi.mock('../../../../src/extension/services/runme', () => ({
   RunmeService: class {
     async getUserToken() {}
@@ -97,33 +95,16 @@ suite('#handleRendererMessage', () => {
     })
   })
 
-  test(ClientMessages.cloudApiRequest, async () => {
-    message = {
-      ...message,
-      type: ClientMessages.cloudApiRequest,
-    }
-    const messaging = notebooks.createRendererMessaging('foo')
-    const requestMessage: cloudApi.APIRequestMessage = {
-      messaging: messaging,
-      message,
-      editor,
-    }
-
-    new Kernel({} as any)
-    await messaging.postMessage(requestMessage)
-    expect(cloudApi.default).toBeCalledTimes(1)
-  })
-
   test('isPlatformAuthEnabled', async () => {
     vi.mocked(platform.default).mockClear()
     vi.mocked(isPlatformAuthEnabled).mockReturnValue(true)
 
     message = {
       ...message,
-      type: ClientMessages.cloudApiRequest,
+      type: ClientMessages.platformApiRequest,
     }
     const messaging = notebooks.createRendererMessaging('foo')
-    const requestMessage: cloudApi.APIRequestMessage = {
+    const requestMessage: platform.APIRequestMessage = {
       messaging: messaging,
       message,
       editor,
