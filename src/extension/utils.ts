@@ -181,7 +181,7 @@ export function isDaggerCli(text: string): boolean {
     .flatMap((line) => line.split(' '))
     .filter((line) => !line.startsWith('--'))
     .join(' ')
-  return simplified.startsWith('dagger call') || simplified.startsWith('$ dagger call')
+  return simplified.includes('dagger call')
 }
 
 export type ExecResourceType = 'None' | 'URI' | 'Dagger'
