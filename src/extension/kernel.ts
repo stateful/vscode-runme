@@ -709,7 +709,9 @@ export class Kernel implements Disposable {
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     runmeExec.start(Date.now())
-    const { key: execKey, resource } = getKeyInfo(runningCell)
+
+    const annotations = getAnnotations(cell)
+    const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
 
     let successfulCellExecution: boolean
 
@@ -754,7 +756,6 @@ export class Kernel implements Disposable {
       window.showErrorMessage(e.message)
     }
 
-    const annotations = getAnnotations(cell)
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,

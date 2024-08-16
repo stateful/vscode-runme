@@ -190,9 +190,12 @@ export interface IExecKeyInfo {
   resource: ExecResourceType
 }
 
-export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
+export function getKeyInfo(
+  runningCell: vscode.TextDocument,
+  annotations: CellAnnotations,
+): IExecKeyInfo {
   try {
-    if (isDaggerCli(runningCell.getText())) {
+    if (!annotations.background && isDaggerCli(runningCell.getText())) {
       return { key: 'dagger', resource: 'Dagger' }
     }
 
