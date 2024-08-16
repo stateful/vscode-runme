@@ -1,7 +1,0 @@
-mutation UpdateCellExecution($id: String!, $data: CellExecutionUpdateInput!) {
-  updateCellExecution(id: $id, data: $data) {
-   id,
-   htmlUrl
-   exitCode
-  }
-}

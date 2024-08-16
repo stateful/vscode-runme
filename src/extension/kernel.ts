@@ -42,11 +42,7 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import {
-  getNotebookExecutionOrder,
-  isPlatformAuthEnabled,
-  registerExtensionEnvVarsMutation,
-} from '../utils/configuration'
+import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
 
 import getLogger from './logger'
 import executor, {
@@ -86,7 +82,6 @@ import {
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
-import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import PanelManager from './panels/panelManager'
 import { GrpcSerializer, SerializerBase } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
@@ -315,12 +310,6 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
-    // Check if the message type is a cloud API request and platform authentication is enabled.
-    if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
-      // Remap the message type to platform API request if platform authentication is enabled.
-      message = { ...message, type: ClientMessages.platformApiRequest }
-    }
-
     if (message.type === ClientMessages.mutateAnnotations) {
       const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
@@ -451,13 +440,6 @@ export class Kernel implements Disposable {
       })
     } else if (message.type === ClientMessages.platformApiRequest) {
       return handlePlatformApiMessage({
-        messaging: this.messaging,
-        message,
-        editor,
-        kernel: this,
-      })
-    } else if (message.type === ClientMessages.cloudApiRequest) {
-      return handleCloudApiMessage({
         messaging: this.messaging,
         message,
         editor,

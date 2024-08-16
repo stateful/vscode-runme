@@ -1,7 +1,0 @@
-mutation ArchiveCellExecution(
-    $archiveCellExecutionId: String!
-) {
-    archiveCellExecution(id: $archiveCellExecutionId) {
-        id
-    }
-}

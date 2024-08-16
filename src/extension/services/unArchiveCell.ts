@@ -2,7 +2,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { InitializeClient } from '../api/client'
 import { resolveAuthToken } from '../utils'
-import { UnArchiveCellExecutionDocument } from '../__generated__/graphql'
+import { UnArchiveCellExecutionDocument } from '../__generated-platform__/graphql'
 
 export default async function unArchiveCell(cellId: string): Promise<void | boolean> {
   try {
