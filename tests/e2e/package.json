@@ -13,6 +13,6 @@
     "runme": "^3.0.1",
     "ts-node": "^10.9.1",
     "wdio-vscode-service": "^6.1.0",
-    "webdriverio": "^8.39.1"
+    "webdriverio": "^9.0.1"
   }
 }
