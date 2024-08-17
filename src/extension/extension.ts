@@ -358,24 +358,26 @@ export class RunmeExtension {
       context.subscriptions.push(new CloudAuthProvider(context))
     }
 
-    try {
-      const { output } = await kernel.runProgram('echo $0')
-      const supportedShells = ['zsh', 'bash']
-      const isSupported = supportedShells.some((sh) => output?.includes(sh))
+    kernel
+      .runProgram('echo $0')
+      .then(({ output }) => {
+        const supportedShells = ['zsh', 'bash']
+        const isSupported = supportedShells.some((sh) => output?.includes(sh))
 
-      if (!isSupported) {
-        const showMore = 'Show more'
-        const answer = await window.showWarningMessage('Unsupported shell', showMore)
-
-        if (answer === showMore) {
-          const dashboardUri = getFaqUrl('supported-shells')
-          const uri = Uri.parse(dashboardUri)
-          env.openExternal(uri)
+        if (!isSupported) {
+          const showMore = 'Show more'
+          return window.showWarningMessage('Unsupported shell', showMore).then((answer) => {
+            if (answer === showMore) {
+              const dashboardUri = getFaqUrl('supported-shells')
+              const uri = Uri.parse(dashboardUri)
+              return env.openExternal(uri)
+            }
+          })
         }
-      }
-    } catch (_e) {
-      getLogger().warn('An error occurred while verifying the supported shell')
-    }
+      })
+      .catch((_e) => {
+        getLogger().warn('An error occurred while verifying the supported shell')
+      })
 
     await bootFile(context)
   }
