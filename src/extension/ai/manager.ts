@@ -50,7 +50,7 @@ export class AIManager {
 
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
-      vscode.window.onDidChangeActiveTextEditor(ghost.handleOnDidChangeActiveTextEditor),
+      vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
     )
   }
 
