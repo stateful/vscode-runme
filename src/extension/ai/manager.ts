@@ -4,6 +4,7 @@ import getLogger from '../logger'
 
 import * as ghost from './ghost'
 import * as stream from './stream'
+import { log } from 'node:console'
 
 // AIManager is a class that manages the AI services.
 export class AIManager {
@@ -43,6 +44,7 @@ export class AIManager {
     )
 
     // onDidChangeVisibleTextEditors fires when the visible text editors change.
+    // This can happen due to scrolling.
     // We need to trap this event to apply decorations to turn cells into ghost cells.
     this.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors(ghost.handleOnDidChangeVisibleTextEditors),
@@ -51,6 +53,7 @@ export class AIManager {
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
+      // vscode.window.onDidChangeActiveTextEditor(localOnDidChangeActiveTextEditor),
     )
   }
 
@@ -58,4 +61,8 @@ export class AIManager {
   dispose() {
     this.subscriptions.forEach((subscription) => subscription.dispose())
   }
+}
+
+function localOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
+  getLogger().info('localOnDidChangeActiveTextEditor')
 }

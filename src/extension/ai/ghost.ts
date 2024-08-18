@@ -105,6 +105,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
       let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
+        contextId: this.contextID,
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
@@ -124,6 +125,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let notebook = protos.notebookTSToES(notebookProto)
       // Generate an update request
       let request = new agent_pb.StreamGenerateRequest({
+        contextId: this.contextID,
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
@@ -208,7 +210,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
   // handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
   // when it is selected
-  handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
+  handleOnDidChangeActiveTextEditor = (editor: vscode.TextEditor | undefined) => {
     const oldCID = this.contextID
     // We need to generate a new context ID because the context has changed.
     this.contextID = ulid()
@@ -299,11 +301,6 @@ export class CellChangeEventGenerator {
       return
     }
 
-    log.info(
-      `onDidChangeTextDocument Fired for notebook ${event.document.uri}` +
-        'this should fire when a cell is added to a notebook',
-    )
-
     this.streamCreator.handleEvent(
       new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
     )
@@ -311,7 +308,7 @@ export class CellChangeEventGenerator {
 }
 
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
-// This includes when a TextEditor is created.
+// This includes when a TextEditor is created. I also think it can be the result of scrolling.
 export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
   for (const editor of editors) {
     log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
@@ -326,7 +323,6 @@ export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.Tex
     }
 
     if (!isGhostCell(cell)) {
-      log.info(`Not a ghost editor doc:${cell.document.uri}`)
       continue
     }
 
