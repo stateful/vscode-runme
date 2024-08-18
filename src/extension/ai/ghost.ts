@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import { ulid } from 'ulidx'
 
 import getLogger from '../logger'
 import * as serializer from '../serializer'
@@ -7,7 +8,6 @@ import * as serializer from '../serializer'
 import * as converters from './converters'
 import * as stream from './stream'
 import * as protos from './protos'
-import { ulid } from 'ulidx'
 
 const log = getLogger()
 
