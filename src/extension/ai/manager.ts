@@ -4,7 +4,6 @@ import getLogger from '../logger'
 
 import * as ghost from './ghost'
 import * as stream from './stream'
-import { log } from 'node:console'
 
 // AIManager is a class that manages the AI services.
 export class AIManager {
@@ -61,8 +60,4 @@ export class AIManager {
   dispose() {
     this.subscriptions.forEach((subscription) => subscription.dispose())
   }
-}
-
-function localOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
-  getLogger().info('localOnDidChangeActiveTextEditor')
 }

@@ -16,6 +16,10 @@ const log = getLogger()
 // the ghost metadata is not persisted to the markdown file.
 export const ghostKey = '_ghostCell'
 
+const ghostDecoration = vscode.window.createTextEditorDecorationType({
+  color: '#888888', // Light grey color
+})
+
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
 // stop generating completions for the old notebook and start generating completions for the new notebook.
@@ -338,14 +342,18 @@ function editorAsGhost(editor: vscode.TextEditor) {
     textDoc.positionAt(textDoc.getText().length),
   )
 
-  editor.setDecorations(getGhostDecoration(), [range])
+  editor.setDecorations(ghostDecoration, [range])
 }
 
 function editorAsNonGhost(editor: vscode.TextEditor) {
   // To remove the decoration we set the range to an empty range and pass in a reference
   // to the original decoration
   // https://github.com/microsoft/vscode-extension-samples/blob/main/decorator-sample/USAGE.md#tips
-  editor.setDecorations(getGhostDecoration(), [])
+  //
+  // Important: ghostDecoration must be a reference to the same object that was used to create the decoration.
+  // that's how VSCode knows which decoration to remove. If you use a "copy" (i.e. a decoration with the same value)
+  // the decoration won't get removed.
+  editor.setDecorations(ghostDecoration, [])
 }
 
 function isGhostCell(cell: vscode.NotebookCell): boolean {
@@ -368,14 +376,4 @@ function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookC
     return result
   })
   return matchedCell
-}
-
-// n.b. this is a function and not a top level const because that causes problems with the vitest
-// mocking framework.
-// N.B. I think we could potentially have solved that by doing something like
-// https://github.com/stateful/vscode-runme/pull/1475#issuecomment-2278636467
-function getGhostDecoration(): vscode.TextEditorDecorationType {
-  return vscode.window.createTextEditorDecorationType({
-    color: '#888888', // Light grey color
-  })
 }
