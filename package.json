@@ -840,11 +840,6 @@
             "default": false,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
-          "runme.foyleAddress": {
-            "type": "string",
-            "default": "localhost:9080",
-            "description": "The address of the Foyle Agent grpc service. The agent generates completions. This should in the form {host}:{port}."
-          },
           "runme.aiBaseURL": {
             "type": "string",
             "default": "http://localhost:8080/api",
