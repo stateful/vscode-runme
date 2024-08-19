@@ -1,4 +1,4 @@
-import { Uri, workspace } from 'vscode'
+import { NotebookData, Uri, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import YAML from 'yaml'
 
@@ -33,7 +33,6 @@ export default async function saveCellExecution(
   log.info('Saving cell execution')
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
-  const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
   const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
   const plainSessionOutput = await kernel.getPlainCache(cacheId)
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
@@ -54,84 +53,73 @@ export default async function saveCellExecution(
         id: message.output.id,
       })
     }
-    const cell = await getCellById({ editor, id: message.output.id })
-    if (!cell) {
-      throw new Error('Cell not found')
-    }
-
-    const runmeId = getCellRunmeId(cell)
-    const terminal = kernel.getTerminal(runmeId)
-    if (!terminal) {
-      throw new Error('Could not find an associated terminal')
-    }
-    const pid = (await terminal.processId) || 0
-    const runnerExitStatus = terminal.runnerSession?.hasExited()
-    const exitCode =
-      runnerExitStatus?.type === 'exit'
-        ? runnerExitStatus.code
-        : runnerExitStatus?.type === 'error'
-          ? 1
-          : 0
-    const annotations = getAnnotations(cell)
-    delete annotations['runme.dev/id']
-    const graphClient = InitializeClient({ runmeToken: session.accessToken })
-
-    const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
-
-    let fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
-
-    if (!fmParsed) {
-      const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
-      fmParsed = yamlDocs[0].toJS?.()
-    }
-
-    let notebookInput: CreateNotebookInput | undefined
 
     const path = editor.notebook.uri.fsPath
     const gitCtx = await getGitContext(path)
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
-    const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : null
+    const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : undefined
 
-    if (fmParsed?.runme?.id || fmParsed?.runme?.version) {
-      notebookInput = {
-        fileName: path,
-        id: fmParsed?.runme?.id,
-        runmeVersion: fmParsed?.runme?.version,
-      }
-    }
-
-    const result = await graphClient.mutate({
-      mutation: CreateCellExecutionDocument,
-      variables: {
-        input: {
-          stdout: terminalContents,
-          stderr: Array.from([]), // stderr will become applicable for non-terminal
-          exitCode,
-          pid,
-          input: encodeURIComponent(cell.document.getText()),
-          languageId: cell.document.languageId,
-          autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
-          metadata: {
-            mimeType: annotations.mimeType,
-            name: annotations.name,
-            category: annotations.category || '',
-            exitType: runnerExitStatus?.type,
-            startTime: cell.executionSummary?.timing?.startTime,
-            endTime: cell.executionSummary?.timing?.endTime,
-          },
-          id: annotations.id,
-          notebook: notebookInput,
-          branch: gitCtx?.branch,
-          repository: gitCtx?.repository,
-          commit: gitCtx?.commit,
-          fileContent,
-          filePath,
-          sessionId,
-          plainSessionOutput,
-          maskedSessionOutput,
-        },
-      },
+    const notebookData = kernel.getNotebookDataCache(cacheId) as NotebookData
+    const notebook = GrpcSerializer.marshalNotebook(notebookData, {
+      kernel,
+      marshalFrontmatter: true,
     })
+    // const payload = await kernel.getReporterPayload({
+    //   notebook,
+    //   autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
+    //   branch: gitCtx?.branch || undefined,
+    //   commit: gitCtx?.commit || undefined,
+    //   fileContent,
+    //   filePath,
+    //   maskedOutput: maskedSessionOutput,
+    //   plainOutput: plainSessionOutput,
+    //   repository: gitCtx?.repository || undefined,
+    // })
+
+    // console.log('payload', payload)
+
+    // const c = rawCache?.cells.find(
+    //   (c) => (c.metadata as Serializer.Metadata)?.id === message.output.id,
+    // )
+
+    // const payload = {
+    //   ...rawCache,
+    //   cells: [c],
+    // }
+    // console.log('payload', payload)
+
+    // const result = await graphClient.mutate({
+    //   mutation: CreateCellExecutionDocument,
+    //   variables: {
+    //     input: {
+    //       stdout: terminalContents,
+    //       stderr: Array.from([]), // stderr will become applicable for non-terminal
+    //       exitCode,
+    //       pid,
+    //       input: encodeURIComponent(cell.document.getText()),
+    //       languageId: cell.document.languageId,
+    //       autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
+    //       metadata: {
+    //         mimeType: annotations.mimeType,
+    //         name: annotations.name,
+    //         category: annotations.category || '',
+    //         exitType: runnerExitStatus?.type,
+    //         startTime: cell.executionSummary?.timing?.startTime,
+    //         endTime: cell.executionSummary?.timing?.endTime,
+    //       },
+    //       id: annotations.id,
+    //       notebook: notebookInput,
+    //       branch: gitCtx?.branch,
+    //       repository: gitCtx?.repository,
+    //       commit: gitCtx?.commit,
+    //       fileContent,
+    //       filePath,
+    //       sessionId,
+    //       plainSessionOutput,
+    //       maskedSessionOutput,
+    //     },
+    //   },
+    // })
     log.info('Cell execution saved')
 
     const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady

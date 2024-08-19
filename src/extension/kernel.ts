@@ -21,8 +21,10 @@ import {
   NotebookEditorRevealType,
   NotebookEditorSelectionChangeEvent,
   CancellationToken,
+  NotebookData,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
+import { UnaryCall } from '@protobuf-ts/runtime-rpc'
 
 import {
   type ActiveTerminal,
@@ -70,7 +72,7 @@ import {
 } from './utils'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
-import { RpcError } from './grpc/client'
+import { RpcError, TransformRequest, TransformResponse } from './grpc/client'
 import { IRunner, IRunnerReady } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
 import { IKernelRunnerOptions, executeRunner } from './executors/runner'
@@ -98,6 +100,7 @@ import { SessionEnvStoreType } from './grpc/runner/v1'
 import ContextState from './contextState'
 import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
+import { GrpcReporter } from './reporter'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -131,6 +134,7 @@ export class Kernel implements Disposable {
   protected category?: string
   protected panelManager: PanelManager
   protected serializer?: SerializerBase
+  protected reporter?: GrpcReporter
 
   readonly onVarsChangeEvent: EnvVarsChangedEvent
 
@@ -188,6 +192,10 @@ export class Kernel implements Disposable {
 
   setSerializer(serializer: GrpcSerializer) {
     this.serializer = serializer
+  }
+
+  setReporter(reporter: GrpcReporter) {
+    this.reporter = reporter
   }
 
   hasExperimentEnabled(key: string, defaultValue?: boolean) {
@@ -1095,5 +1103,15 @@ export class Kernel implements Disposable {
 
   public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
     return this.serializer?.getPlainCache(cacheId)
+  }
+
+  public getNotebookDataCache(cacheId: string): NotebookData | undefined {
+    return this.serializer?.getNotebookDataCache(cacheId)
+  }
+
+  public getReporterPayload(
+    input: TransformRequest,
+  ): UnaryCall<TransformRequest, TransformResponse> | undefined {
+    return this.reporter?.transform(input)
   }
 }
