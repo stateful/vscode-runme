@@ -335,8 +335,9 @@ export function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | un
   if (!isGhostCell(cell)) {
     return
   }
-
-  const update = vscode.NotebookEdit.updateCellMetadata(cell.index, { [ghostKey]: false })
+  // ...cell.metadata creates a shallow copy of the metadata object
+  const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
+  const update = vscode.NotebookEdit.updateCellMetadata(cell.index, updatedMetadata)
   const edit = new vscode.WorkspaceEdit()
   edit.set(editor.document.uri, [update])
   vscode.workspace.applyEdit(edit).then((result: boolean) => {
