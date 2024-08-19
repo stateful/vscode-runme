@@ -1136,7 +1136,7 @@
     "vitest": "^2.0.4",
     "vscode-uri": "^3.0.7",
     "wdio-vscode-service": "^6.1.0",
-    "webdriverio": "^8.39.1",
+    "webdriverio": "^9.0.4",
     "webpack": "^5.93.0",
     "webpack-cli": "^5.1.4"
   },
