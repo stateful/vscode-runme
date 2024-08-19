@@ -27,8 +27,6 @@ export enum ClientMessages {
   getState = 'common:getState',
   onGetState = 'common:onGetState',
   onCategoryChange = 'common:onCategoryChange',
-  cloudApiRequest = 'common:cloudApiRequest',
-  cloudApiResponse = 'common:cloudApiResponse',
   platformApiRequest = 'common:platformApiRequest',
   platformApiResponse = 'common:platformApiResponse',
   optionsMessage = 'common:optionsMessage',

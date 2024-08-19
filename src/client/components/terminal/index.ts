@@ -38,8 +38,6 @@ const toAnsi = (id: string) => `ansi${id.charAt(0).toUpperCase() + id.slice(1)}`
 const LISTEN_TO_EVENTS = [
   'terminal:',
   'theme:',
-  ClientMessages.cloudApiRequest,
-  ClientMessages.cloudApiResponse,
   ClientMessages.platformApiRequest,
   ClientMessages.platformApiResponse,
   ClientMessages.onOptionsMessage,
@@ -464,7 +462,6 @@ export class TerminalView extends LitElement {
               }
             }
             break
-          case ClientMessages.cloudApiResponse:
           case ClientMessages.platformApiResponse:
             {
               if (e.output.id !== this.id) {
@@ -786,7 +783,7 @@ export class TerminalView extends LitElement {
       }
       if (this.isShareReady) {
         this.isCloudApiLoading = true
-        await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
+        await postClientMessage(ctx, ClientMessages.platformApiRequest, {
           data: {
             id: this.cloudId,
           },
@@ -799,7 +796,7 @@ export class TerminalView extends LitElement {
       this.isCloudApiLoading = true
       const contentWithAnsi =
         this.serializer?.serialize({ excludeModes: true, excludeAltBuffer: true }) ?? ''
-      await postClientMessage(ctx, ClientMessages.cloudApiRequest, {
+      await postClientMessage(ctx, ClientMessages.platformApiRequest, {
         data: {
           stdout: contentWithAnsi,
           isUserAction,

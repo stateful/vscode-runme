@@ -500,18 +500,6 @@ export interface ClientMessagePayload {
     escalationButton: boolean
     hasErrors?: boolean
   }
-  [ClientMessages.cloudApiRequest]: {
-    data: any
-    id: string
-    hasErrors?: boolean
-    method: APIMethod
-  }
-  [ClientMessages.cloudApiResponse]: {
-    data: any
-    id: string
-    escalationButton: boolean
-    hasErrors?: boolean
-  }
   [ClientMessages.optionsModal]: {
     title: string
     id: string
