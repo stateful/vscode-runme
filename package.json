@@ -850,11 +850,11 @@
             "default": "http://localhost:8080/api",
             "description": "The base URL of the AI service."
           },
-          "runme.app.faqUrl": {
+          "runme.app.docsUrl": {
             "type": "string",
             "scope": "window",
-            "default": "https://docs.runme.dev/faq",
-            "markdownDescription": "Frequently Asked Questions page"
+            "default": "https://docs.runme.dev/",
+            "markdownDescription": "Documentation Base URL"
           }
         }
       }
