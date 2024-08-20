@@ -356,28 +356,26 @@ export class RunmeExtension {
       context.subscriptions.push(new CloudAuthProvider(context))
     }
 
-    kernel
-      .runProgram('echo $0')
-      .then(({ output }) => {
-        const supportedShells = ['zsh', 'bash']
-        const isSupported = supportedShells.some((sh) => output?.includes(sh))
-
-        if (!isSupported) {
-          const showMore = 'Show more'
-          return window.showWarningMessage('Unsupported shell', showMore).then((answer) => {
-            if (answer === showMore) {
-              const dashboardUri = getFaqUrl('supported-shells')
-              const uri = Uri.parse(dashboardUri)
-              return env.openExternal(uri)
-            }
-          })
-        }
-      })
-      .catch((_e) => {
-        getLogger().warn('An error occurred while verifying the supported shell')
-      })
-
     await bootFile(context)
+
+    try {
+      const { output } = await kernel.runProgram('echo $SHELL')
+      const supportedShells = ['bash', 'zsh']
+      const isSupported = supportedShells.some((sh) => output?.includes(sh))
+
+      if (!isSupported) {
+        const showMore = 'Show more'
+        return window.showErrorMessage('Unsupported shell', showMore).then((answer) => {
+          if (answer === showMore) {
+            const dashboardUri = getFaqUrl('supported-shells')
+            const uri = Uri.parse(dashboardUri)
+            return env.openExternal(uri)
+          }
+        })
+      }
+    } catch (_e) {
+      getLogger().error('An error occurred while verifying the supported shell')
+    }
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {
