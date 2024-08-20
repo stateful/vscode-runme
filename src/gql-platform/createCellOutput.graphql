@@ -1,0 +1,7 @@
+mutation CreateCellOutput($input: ReporterInput!) {
+  createCellOutput(input: $input) {
+   id
+   htmlUrl
+   exitCode
+  }
+}

@@ -1,26 +1,22 @@
 import os from 'node:os'
 
-import { NotebookData, Uri, workspace } from 'vscode'
-import { Uri, workspace, env } from 'vscode'
+import { NotebookData, Uri, env, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
-import YAML from 'yaml'
 import getMAC from 'getmac'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
-import {
-  CreateCellExecutionDocument,
-  CreateNotebookInput,
-} from '../../__generated-platform__/graphql'
-import { InitializeClient } from '../../api/client'
-import { getCellById } from '../../cell'
 import ContextState from '../../contextState'
-import { Frontmatter } from '../../grpc/serializerTypes'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
-import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
+import { getGitContext, getPlatformAuthSession } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
+import { InitializeClient } from '../../api/client'
+import {
+  CreateCellExecutionDocument,
+  CreateCellOutputDocument,
+} from '../../__generated-platform__/graphql'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -57,25 +53,6 @@ export default async function saveCellExecution(
     uriScheme: env.uriScheme,
   }
 
-  const device = {
-    macAddress: getMAC(),
-    hostname: os.hostname(),
-    platform: os.platform(),
-    release: os.release(),
-    arch: os.arch(),
-    vendor: os.cpus()[0].model,
-    shell: vsEnv.shell,
-    // Only save the relevant env variables
-    vsAppHost: vsEnv.appHost,
-    vsAppName: vsEnv.appName,
-    vsAppSessionId: vsEnv.sessionId,
-    vsMachineId: vsEnv.machineId,
-    metadata: {
-      // Let's save the entire env object for future reference if needed
-      vsEnv,
-    },
-  }
-
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
@@ -101,29 +78,49 @@ export default async function saveCellExecution(
       kernel,
       marshalFrontmatter: true,
     })
-    // const payload = await kernel.getReporterPayload({
-    //   notebook,
-    //   autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
-    //   branch: gitCtx?.branch || undefined,
-    //   commit: gitCtx?.commit || undefined,
-    //   fileContent,
-    //   filePath,
-    //   maskedOutput: maskedSessionOutput,
-    //   plainOutput: plainSessionOutput,
-    //   repository: gitCtx?.repository || undefined,
-    // })
+    const payload = await kernel.getReporterPayload({
+      notebook,
+      autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
+      branch: gitCtx?.branch || undefined,
+      commit: gitCtx?.commit || undefined,
+      fileContent,
+      filePath,
+      maskedOutput: maskedSessionOutput,
+      plainOutput: plainSessionOutput,
+      repository: gitCtx?.repository || undefined,
+      arch: os.arch(),
+      hostname: os.hostname(),
+      macAddress: getMAC(),
+      platform: os.platform(),
+      release: os.release(),
+      shell: vsEnv.shell,
+      vendor: os.cpus()[0].model,
+      vsAppHost: vsEnv.appHost,
+      vsAppName: vsEnv.appName,
+      vsAppSessionId: vsEnv.sessionId,
+      vsMachineId: vsEnv.machineId,
+      // add vs metadata
+    })
 
-    // console.log('payload', payload)
+    const cell = payload?.response.notebook?.cells.find(
+      (c) => c.metadata.id === message.output.id,
+    ) as any
 
-    // const c = rawCache?.cells.find(
-    //   (c) => (c.metadata as Serializer.Metadata)?.id === message.output.id,
-    // )
+    const graphClient = InitializeClient({ runmeToken: session.accessToken })
+    const platformPayload = {
+      input: {
+        extension: payload?.response.extension,
+        notebook: {
+          ...payload?.response.notebook,
+          cells: [cell],
+        },
+      },
+    }
 
-    // const payload = {
-    //   ...rawCache,
-    //   cells: [c],
-    // }
-    // console.log('payload', payload)
+    const result = await graphClient.mutate({
+      mutation: CreateCellOutputDocument,
+      variables: platformPayload,
+    })
 
     // const result = await graphClient.mutate({
     //   mutation: CreateCellExecutionDocument,
@@ -157,17 +154,17 @@ export default async function saveCellExecution(
     //     },
     //   },
     // })
-    log.info('Cell execution saved')
+    // log.info('Cell execution saved')
 
-    const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady
-    log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
+    // const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady
+    // log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
 
-    TelemetryReporter.sendTelemetryEvent('app.save')
-    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-      data: result,
-      id: message.output.id,
-      escalationButton: showEscalationButton,
-    })
+    // TelemetryReporter.sendTelemetryEvent('app.save')
+    // return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+    //   data: result,
+    //   id: message.output.id,
+    //   escalationButton: showEscalationButton,
+    // })
   } catch (error) {
     log.error('Error saving cell execution', (error as Error).message)
     TelemetryReporter.sendTelemetryEvent('app.error')

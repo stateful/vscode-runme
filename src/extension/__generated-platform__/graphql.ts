@@ -398,7 +398,6 @@ export type CreateCellExecutionInput = {
   branch?: InputMaybe<Scalars['String']['input']>;
   commit?: InputMaybe<Scalars['String']['input']>;
   createTime?: InputMaybe<Scalars['DateTime']['input']>;
-  device?: InputMaybe<DeviceInput>;
   exitCode?: InputMaybe<Scalars['Int']['input']>;
   fileContent?: InputMaybe<Scalars['Bytes']['input']>;
   filePath?: InputMaybe<Scalars['String']['input']>;
@@ -422,7 +421,6 @@ export type CreateCellOutputInput = {
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
   branch?: InputMaybe<Scalars['String']['input']>;
   commit?: InputMaybe<Scalars['String']['input']>;
-  device?: InputMaybe<DeviceInput>;
   exitCode: Scalars['Int']['input'];
   extensionVersion?: InputMaybe<Scalars['String']['input']>;
   fileContent: Scalars['Bytes']['input'];
@@ -594,21 +592,6 @@ export type Device = {
   vsSessionId?: Maybe<Scalars['String']['output']>;
 };
 
-export type DeviceInput = {
-  arch?: InputMaybe<Scalars['String']['input']>;
-  hostname?: InputMaybe<Scalars['String']['input']>;
-  macAddress?: InputMaybe<Scalars['String']['input']>;
-  metadata?: InputMaybe<Scalars['JSON']['input']>;
-  platform?: InputMaybe<Scalars['String']['input']>;
-  release?: InputMaybe<Scalars['String']['input']>;
-  shell?: InputMaybe<Scalars['String']['input']>;
-  vendor?: InputMaybe<Scalars['String']['input']>;
-  vsAppHost?: InputMaybe<Scalars['String']['input']>;
-  vsAppName?: InputMaybe<Scalars['String']['input']>;
-  vsAppSessionId?: InputMaybe<Scalars['String']['input']>;
-  vsMachineId?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type DocMetadata = {
   __typename?: 'DocMetadata';
   key: Scalars['String']['output'];
@@ -727,6 +710,10 @@ export type Hit = {
   distance?: Maybe<Scalars['Float']['output']>;
   document: Scalars['String']['output'];
   metadata: Array<DocMetadata>;
+};
+
+export type Int64Input = {
+  value?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Invitation = {
@@ -925,7 +912,7 @@ export type MutationCreateCellExecutionArgs = {
 
 
 export type MutationCreateCellOutputArgs = {
-  input: CreateCellOutputInput;
+  input: ReporterInput;
 };
 
 
@@ -1633,6 +1620,142 @@ export type RemoveUserFromOrganization = {
   userId: Scalars['String']['input'];
 };
 
+export type ReporterCellExecutionSummaryInput = {
+  executionOrder?: InputMaybe<UInt32>;
+  success?: InputMaybe<Scalars['Boolean']['input']>;
+  timing?: InputMaybe<ReporterExecutionSummaryTimingInput>;
+};
+
+export type ReporterCellInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  executionSummary?: InputMaybe<ReporterCellExecutionSummaryInput>;
+  kind?: InputMaybe<ReporterCellKind>;
+  languageId?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  outputs?: InputMaybe<Array<InputMaybe<ReporterCellOutputInput>>>;
+  textRange?: InputMaybe<ReporterTextRangeInput>;
+  value?: InputMaybe<Scalars['String']['input']>;
+};
+
+export enum ReporterCellKind {
+  CellKindCode = 'CELL_KIND_CODE',
+  CellKindMarkup = 'CELL_KIND_MARKUP',
+  CellKindUnspecified = 'CELL_KIND_UNSPECIFIED'
+}
+
+export type ReporterCellOutputInput = {
+  items?: InputMaybe<Array<InputMaybe<ReporterCellOutputItemInput>>>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  processInfo?: InputMaybe<ReporterCellOutputProcessInfoInput>;
+};
+
+export type ReporterCellOutputItemInput = {
+  data?: InputMaybe<Scalars['Bytes']['input']>;
+  mime?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterCellOutputProcessInfoInput = {
+  exitReason?: InputMaybe<ReporterProcessInfoExitReasonInput>;
+  pid?: InputMaybe<Int64Input>;
+};
+
+export type ReporterDeviceInput = {
+  arch?: InputMaybe<Scalars['String']['input']>;
+  hostname?: InputMaybe<Scalars['String']['input']>;
+  macAddress?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  release?: InputMaybe<Scalars['String']['input']>;
+  shell?: InputMaybe<Scalars['String']['input']>;
+  vendor?: InputMaybe<Scalars['String']['input']>;
+  vsAppHost?: InputMaybe<Scalars['String']['input']>;
+  vsAppName?: InputMaybe<Scalars['String']['input']>;
+  vsAppSessionId?: InputMaybe<Scalars['String']['input']>;
+  vsMachineId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterExecutionSummaryTimingInput = {
+  endTime?: InputMaybe<Int64Input>;
+  startTime?: InputMaybe<Int64Input>;
+};
+
+export type ReporterExtensionInput = {
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+  device?: InputMaybe<ReporterDeviceInput>;
+  file?: InputMaybe<ReporterFileInput>;
+  git?: InputMaybe<ReporterGitInput>;
+  session?: InputMaybe<ReporterSessionInput>;
+};
+
+export type ReporterFileInput = {
+  content?: InputMaybe<Scalars['Bytes']['input']>;
+  path?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterFrontmatterInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  cwd?: InputMaybe<Scalars['String']['input']>;
+  runme?: InputMaybe<ReporterFrontmatterRunmeInput>;
+  shell?: InputMaybe<Scalars['String']['input']>;
+  skipPrompts?: InputMaybe<Scalars['Boolean']['input']>;
+  terminalRows?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterFrontmatterRunmeInput = {
+  id?: InputMaybe<Scalars['String']['input']>;
+  session?: InputMaybe<ReporterRunmeSessionInput>;
+  version?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterGitInput = {
+  branch?: InputMaybe<Scalars['String']['input']>;
+  commit?: InputMaybe<Scalars['String']['input']>;
+  repository?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterInput = {
+  extension?: InputMaybe<ReporterExtensionInput>;
+  notebook?: InputMaybe<ReporterNotebookInput>;
+};
+
+export type ReporterNotebookInput = {
+  cells?: InputMaybe<Array<InputMaybe<ReporterCellInput>>>;
+  frontmatter?: InputMaybe<ReporterFrontmatterInput>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+};
+
+export type ReporterProcessInfoExitReasonInput = {
+  code?: InputMaybe<UInt32>;
+  type?: InputMaybe<Scalars['String']['input']>;
+};
+
+export enum ReporterRunmeIdentity {
+  RunmeIdentityAll = 'RUNME_IDENTITY_ALL',
+  RunmeIdentityCell = 'RUNME_IDENTITY_CELL',
+  RunmeIdentityDocument = 'RUNME_IDENTITY_DOCUMENT',
+  RunmeIdentityUnspecified = 'RUNME_IDENTITY_UNSPECIFIED'
+}
+
+export type ReporterRunmeSessionDocumentInput = {
+  relativePath?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterRunmeSessionInput = {
+  document?: InputMaybe<ReporterRunmeSessionDocumentInput>;
+  id?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ReporterSessionInput = {
+  maskedOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  plainOutput?: InputMaybe<Scalars['Bytes']['input']>;
+};
+
+export type ReporterTextRangeInput = {
+  end?: InputMaybe<UInt32>;
+  start?: InputMaybe<UInt32>;
+};
+
 export type ResourceAccess = {
   __typename?: 'ResourceAccess';
   accessRequested?: Maybe<Scalars['Boolean']['output']>;
@@ -1753,6 +1876,10 @@ export type Tag = {
   name: Scalars['String']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
+};
+
+export type UInt32 = {
+  value?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateAccessRequestInput = {
@@ -1994,6 +2121,13 @@ export type CreateCellExecutionMutationVariables = Exact<{
 
 export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady: boolean } };
 
+export type CreateCellOutputMutationVariables = Exact<{
+  input: ReporterInput;
+}>;
+
+
+export type CreateCellOutputMutation = { __typename?: 'Mutation', createCellOutput: { __typename?: 'CellOutput', id: string, htmlUrl?: string | null, exitCode: number } };
+
 export type UnArchiveCellExecutionMutationVariables = Exact<{
   unArchiveCellExecutionId: Scalars['String']['input'];
 }>;
@@ -2012,5 +2146,6 @@ export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellE
 
 export const ArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellExecutionMutation, ArchiveCellExecutionMutationVariables>;
 export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
+export const CreateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}}]}}]}}]} as unknown as DocumentNode<CreateCellOutputMutation, CreateCellOutputMutationVariables>;
 export const UnArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellExecutionMutation, UnArchiveCellExecutionMutationVariables>;
 export const UpdateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellExecutionMutation, UpdateCellExecutionMutationVariables>;

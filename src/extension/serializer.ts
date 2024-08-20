@@ -49,6 +49,7 @@ import {
   CellOutput,
   SerializeRequestOptions,
   RunmeSession,
+  Frontmatter,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient, type ReadyPromise } from './grpc/client'
 import Languages from './languages'
@@ -811,31 +812,16 @@ export class GrpcSerializer extends SerializerBase {
     if (config?.marshalFrontmatter) {
       const metadata = notebook.metadata as unknown as {
         ['runme.dev/frontmatter']: string
-        ['runme.dev/frontmatterParsed']: {
-          runme: {
-            id?: string
-            version?: string
-            session?: {
-              id?: string
-            }
-          }
-        }
       }
-      metadata[RUNME_FRONTMATTER_PARSED] = this.marshallFrontMatter(metadata, config.kernel)
+      notebook.frontmatter = this.marshallFrontMatter(metadata, config.kernel)
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
       const dataCell = data.cells[cellIdx]
-      const metadata = dataCell.metadata as {
-        category?: string
-        name?: string
-      }
       const dataExecSummary = dataCell.executionSummary
       cell.executionSummary = this.marshalCellExecutionSummary(dataExecSummary)
       const dataOutputs = dataCell.outputs
       cell.outputs = this.marshalCellOutputs(cell.outputs, dataOutputs)
-      cell.category = metadata.category
-      cell.name = metadata.name
     })
 
     console.log('notebook', notebook)
@@ -846,7 +832,7 @@ export class GrpcSerializer extends SerializerBase {
   private static marshallFrontMatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
-  ) {
+  ): Frontmatter {
     const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
     const data = (yamlDocs[0].toJS?.() || {}) as {
       runme: {
@@ -857,10 +843,15 @@ export class GrpcSerializer extends SerializerBase {
 
     return {
       runme: {
-        id: data.runme?.id,
-        version: data.runme?.version,
-        session: { id: kernel?.getRunnerEnvironment()?.getSessionId() },
+        id: data.runme?.id || '',
+        version: data.runme?.version || '',
+        session: { id: kernel?.getRunnerEnvironment()?.getSessionId() || '' },
       },
+      category: '',
+      cwd: '',
+      shell: '',
+      skipPrompts: false,
+      terminalRows: '0',
     }
   }
 
