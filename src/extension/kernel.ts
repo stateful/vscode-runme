@@ -1114,13 +1114,14 @@ export class Kernel implements Disposable {
       programOptions = program
     } else if (typeof program === 'string') {
       programOptions = {
-        programName: '',
+        programName: 'bash',
         background: false,
         exec: {
           type: 'script',
           script: program,
         },
         languageId: 'sh',
+        commandMode: CommandModeEnum().INLINE_SHELL,
         storeLastOutput: false,
         tty: true,
       }
@@ -1141,7 +1142,7 @@ export class Kernel implements Disposable {
 
     programSession.onDidWrite(onData)
     programSession.onDidErr(onData)
-    await programSession.run()
+    programSession.run()
 
     return new Promise<{ exitReason?: RunnerExitReason; code?: number | void; output?: string }>(
       (resolve, reject) => {
