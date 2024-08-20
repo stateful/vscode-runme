@@ -23,7 +23,7 @@ const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://platform.stateful.com'
 const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
 const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
-const DEFAULT_FAQ_URL = 'https://docs.runme.dev/faq'
+const DEFAULT_DOCS_URL = 'https://docs.runme.dev/'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
@@ -91,7 +91,10 @@ const configurationSchema = {
     maskOutputs: z.boolean().default(true),
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
-    faqUrl: z.string().default(DEFAULT_FAQ_URL),
+    docsUrl: z.string().default(DEFAULT_DOCS_URL),
+  },
+  beta: {
+    shellWarning: z.boolean().default(true),
   },
 }
 
@@ -434,9 +437,19 @@ const isPlatformAuthEnabled = (): boolean => {
   return getCloudConfigurationValue('platformAuth', false)
 }
 
-const getFaqUrl = (hash: string): string => {
-  const baseUrl = getCloudConfigurationValue('faqUrl', DEFAULT_FAQ_URL)
-  return `${baseUrl}#${hash}`
+const getDocsUrl = (path: string): string => {
+  const baseUrl = getCloudConfigurationValue('docsUrl', DEFAULT_DOCS_URL)
+  return `${baseUrl}#${path}`
+}
+
+const getBetaFlag = <T>(configName: keyof typeof configurationSchema.beta, defaultValue: T) => {
+  const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
+  const configurationValue = configurationSection.get<T>(configName)!
+  const parseResult = configurationSchema.beta[configName].safeParse(configurationValue)
+  if (parseResult.success) {
+    return parseResult.data as T
+  }
+  return defaultValue
 }
 
 export {
@@ -469,5 +482,6 @@ export {
   getSessionOutputs,
   getMaskOutputs,
   getLoginPrompt,
-  getFaqUrl,
+  getDocsUrl,
+  getBetaFlag,
 }

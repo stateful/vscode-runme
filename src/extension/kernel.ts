@@ -1103,78 +1103,79 @@ export class Kernel implements Disposable {
     return this.serializer?.getPlainCache(cacheId)
   }
 
-  async runProgram(program?: RunProgramOptions | string) {
-    let programOptions: RunProgramOptions
-
-    if (!this.runner) {
-      return Promise.reject(new Error('No runner available'))
-    }
-
-    if (typeof program === 'object') {
-      programOptions = program
-    } else if (typeof program === 'string') {
-      programOptions = {
-        programName: 'bash',
-        background: false,
-        exec: {
-          type: 'script',
-          script: program,
-        },
-        languageId: 'sh',
-        commandMode: CommandModeEnum().INLINE_SHELL,
-        storeLastOutput: false,
-        tty: true,
-      }
-    } else {
-      return Promise.reject(new Error('Invalid runProgram arguments'))
-    }
-
-    const programSession = await this.runner.createProgramSession(programOptions)
-    this.context.subscriptions.push(programSession)
-
-    let execRes: string | undefined
-    const onData = (data: string | Uint8Array) => {
-      if (execRes === undefined) {
-        execRes = ''
-      }
-      execRes += data.toString()
-    }
-
-    programSession.onDidWrite(onData)
-    programSession.onDidErr(onData)
-    programSession.run()
-
+  runProgram(program?: RunProgramOptions | string) {
     return new Promise<{ exitReason?: RunnerExitReason; code?: number | void; output?: string }>(
       (resolve, reject) => {
-        programSession.onDidClose(async (code) => {
-          return resolve({ code, output: execRes?.trim() })
-        })
+        let programOptions: RunProgramOptions
 
-        programSession.onInternalErr((e) => {
-          reject(e)
-        })
+        if (!this.runner) {
+          return reject(new Error('No runner available'))
+        }
 
-        const exitReason = programSession.hasExited()
+        if (typeof program === 'object') {
+          programOptions = program
+        } else if (typeof program === 'string') {
+          programOptions = {
+            programName: 'bash',
+            background: false,
+            exec: {
+              type: 'script',
+              script: program,
+            },
+            languageId: 'sh',
+            commandMode: CommandModeEnum().INLINE_SHELL,
+            storeLastOutput: false,
+            tty: false,
+          }
+        } else {
+          return reject(new Error('Invalid runProgram arguments'))
+        }
 
-        if (exitReason) {
-          switch (exitReason.type) {
-            case 'error':
-              {
+        this.runner.createProgramSession(programOptions).then((programSession) => {
+          this.context.subscriptions.push(programSession)
+
+          let execRes: string | undefined
+          const onData = (data: string | Uint8Array) => {
+            if (execRes === undefined) {
+              execRes = ''
+            }
+            execRes += data.toString()
+          }
+
+          programSession.onDidWrite(onData)
+          programSession.onDidErr(onData)
+          programSession.run()
+
+          programSession.onDidClose(async (code) => {
+            return resolve({ code, output: execRes?.trim() })
+          })
+
+          programSession.onInternalErr((e) => {
+            reject(e)
+          })
+
+          const exitReason = programSession.hasExited()
+
+          if (exitReason) {
+            switch (exitReason.type) {
+              case 'error':
+                {
+                  reject({ exitReason, output: execRes?.trim() })
+                }
+                break
+
+              case 'exit':
+                {
+                  reject({ exitReason, code: exitReason.code, output: execRes?.trim() })
+                }
+                break
+
+              default: {
                 reject({ exitReason, output: execRes?.trim() })
               }
-              break
-
-            case 'exit':
-              {
-                resolve({ exitReason, code: exitReason.code, output: execRes?.trim() })
-              }
-              break
-
-            default: {
-              resolve({ exitReason, output: execRes?.trim() })
             }
           }
-        }
+        })
       },
     )
   }

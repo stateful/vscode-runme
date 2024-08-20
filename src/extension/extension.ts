@@ -15,7 +15,8 @@ import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
-  getFaqUrl,
+  getBetaFlag,
+  getDocsUrl,
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getSessionOutputs,
@@ -80,7 +81,6 @@ import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as manager from './ai/manager'
-import getLogger from './logger'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -360,23 +360,32 @@ export class RunmeExtension {
 
     await bootFile(context)
 
-    try {
-      const { output } = await kernel.runProgram('echo $SHELL')
-      const supportedShells = ['bash', 'zsh']
-      const isSupported = supportedShells.some((sh) => output?.includes(sh))
-
-      if (!isSupported) {
+    if (getBetaFlag<boolean>('shellWarning', false)) {
+      const showUnsupportedShellMessage = async () => {
         const showMore = 'Show more'
-        return window.showErrorMessage('Unsupported shell', showMore).then((answer) => {
-          if (answer === showMore) {
-            const dashboardUri = getFaqUrl('supported-shells')
-            const uri = Uri.parse(dashboardUri)
-            return env.openExternal(uri)
+
+        const answer = await window.showErrorMessage('Unsupported shell', showMore)
+        if (answer === showMore) {
+          const url = getDocsUrl('/r/extension/supported-shells')
+          env.openExternal(Uri.parse(url))
+        }
+      }
+
+      kernel
+        .runProgram('echo $SHELL')
+        .then(({ output }) => {
+          const supportedShells = ['bash']
+          const isSupported = supportedShells.some((sh) => output?.includes(sh))
+          console.log(`[runme.beta.shellWarning] Shell: ${output}`)
+
+          if (!isSupported) {
+            showUnsupportedShellMessage()
           }
         })
-      }
-    } catch (_e) {
-      getLogger().error('An error occurred while verifying the supported shell')
+        .catch((e) => {
+          console.log(e)
+          showUnsupportedShellMessage()
+        })
     }
   }
 
