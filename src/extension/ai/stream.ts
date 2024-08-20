@@ -1,4 +1,4 @@
-import { PromiseClient } from '@connectrpc/connect'
+import { ConnectError, PromiseClient } from '@connectrpc/connect'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   StreamGenerateRequest,
@@ -128,8 +128,12 @@ export class StreamCreator {
       for await (const response of responses) {
         this.handlers.processResponse(response)
       }
-    } catch (error) {
-      console.log('Error processing responses:', error)
+    } catch (error ) {
+      if (error instanceof ConnectError) {
+        log.error(`Error processing response: ${error}; details: ${error.details}; rawMessage: ${error.rawMessage}`)
+      } else {
+        log.error(`Error processing response: ${error}`)
+      }
       // Since an error occurred we want to start a new stream for the next request
       if (this.lastIterator !== undefined && this.lastIterator !== null) {
         // Do we need to call close here? What if the error indicates the stream already closed?
