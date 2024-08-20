@@ -150,6 +150,7 @@ export class NotebookCellOutputManager {
 
   protected terminalState?: ITerminalState
   protected terminalEnabled = false
+  protected outputsState?: Map<OutputType, Map<string, any>>
 
   constructor(
     protected cell: NotebookCell,
@@ -178,9 +179,17 @@ export class NotebookCellOutputManager {
       }
 
       case OutputType.dagger: {
+        const cellId = cell.metadata['runme.dev/id']
         const payload: CellOutputPayload<OutputType.dagger> = {
           type: OutputType.dagger,
-          output: { cellId: cell.metadata['runme.dev/id'] },
+          output: { cellId },
+        }
+
+        const output = this.outputsState?.get?.(type)?.get?.(cellId)
+
+        payload.output = {
+          ...payload.output,
+          output: { json: output?.json, text: output?.text },
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
@@ -315,6 +324,34 @@ export class NotebookCellOutputManager {
         return undefined
       }
     }
+  }
+
+  saveOutputState(cellId: string, type: OutputType, value: any) {
+    if (!this.outputsState) {
+      this.outputsState = new Map()
+    }
+
+    let outputState = this.outputsState.get(type)
+
+    if (!outputState) {
+      outputState = new Map()
+    }
+
+    outputState.set(cellId, value)
+    this.outputsState.set(type, outputState)
+  }
+
+  cleanOutputState(cellId: string, type: OutputType) {
+    if (!this.outputsState) {
+      return
+    }
+
+    const outputState = this.outputsState.get(type)
+    if (!outputState) {
+      return
+    }
+
+    outputState.delete(cellId)
   }
 
   registerCellTerminalState(type: NotebookTerminalType): ITerminalState {

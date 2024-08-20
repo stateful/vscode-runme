@@ -172,8 +172,16 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
 }
 
 export function isDaggerCli(text: string): boolean {
-  const trimmed = text.trimStart()
-  return trimmed.startsWith('dagger ') || trimmed.startsWith('$ dagger')
+  const simplified = text
+    .trimStart()
+    .replaceAll('\\', ' ')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => !line.startsWith('#'))
+    .flatMap((line) => line.split(' '))
+    .filter((line) => !line.startsWith('--'))
+    .join(' ')
+  return simplified.includes('dagger call')
 }
 
 export type ExecResourceType = 'None' | 'URI' | 'Dagger'
@@ -182,9 +190,12 @@ export interface IExecKeyInfo {
   resource: ExecResourceType
 }
 
-export function getKeyInfo(runningCell: vscode.TextDocument): IExecKeyInfo {
+export function getKeyInfo(
+  runningCell: vscode.TextDocument,
+  annotations: CellAnnotations,
+): IExecKeyInfo {
   try {
-    if (isDaggerCli(runningCell.getText())) {
+    if (!annotations.background && isDaggerCli(runningCell.getText())) {
       return { key: 'dagger', resource: 'Dagger' }
     }
 

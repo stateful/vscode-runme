@@ -2,12 +2,9 @@ import * as vscode from 'vscode'
 
 import { GenerateCellsRequest, GenerateCellsResponse } from '../grpc/aiTypes'
 import * as serializer from '../serializer'
-import { Serializer } from '../../types'
 import getLogger from '../logger'
 import { initAIServiceClient } from '../grpc/aiClient'
 import { AIServiceClient } from '../grpc/aiTypes'
-import { CellKind, RunmeIdentity } from '../grpc/serializerTypes'
-import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 
 import * as converters from './converters'
 const log = getLogger('AIGenerate')
@@ -79,33 +76,9 @@ export async function generateCompletion() {
 // addAIGeneratedCells turns the response from the AI model into a set of cells that can be inserted into the notebook.
 // This is done by returning a mutation to add the new cells to the notebook.
 // index is the position in the notebook at which the new the new cells should be inserted.
+//
 function addAIGeneratedCells(index: number, response: GenerateCellsResponse): vscode.NotebookEdit {
-  let notebook: Serializer.Notebook = {
-    cells: [],
-  }
-  for (let cell of response.cells) {
-    let kind: vscode.NotebookCellKind = vscode.NotebookCellKind.Markup
-
-    if (cell.kind === CellKind.CODE) {
-      kind = vscode.NotebookCellKind.Code
-    }
-
-    let newCell: Serializer.Cell = {
-      value: cell.value,
-      metadata: cell.metadata,
-      kind: kind,
-      languageId: cell.languageId,
-      // TODO(jeremy): Should we include outputs? The generate response should never contain outputs so we shouldn't
-      // have to worry about them.
-    }
-    notebook.cells.push(newCell)
-  }
-
-  const identity: ServerLifecycleIdentity = getServerConfigurationValue<ServerLifecycleIdentity>(
-    'lifecycleIdentity',
-    RunmeIdentity.ALL,
-  )
-  let newCellData = serializer.SerializerBase.revive(notebook, identity)
+  let newCellData = converters.cellProtosToCellData(response.cells)
   // Now insert the new cells at the end of the notebook
   return vscode.NotebookEdit.insertCells(index, newCellData)
 }

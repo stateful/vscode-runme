@@ -29,11 +29,11 @@ export class NotebookCellStatusBarProvider implements NotebookCellStatusBarItemP
     this.#cellStatusBarItems.add(new NamedStatusBarItem(this.kernel))
 
     switch (getServerRunnerVersion()) {
-      case 'v2alpha1':
-        this.#cellStatusBarItems.add(new ForkStatusBarItem(this.kernel))
+      case 'v1':
+        this.#cellStatusBarItems.add(new CLIStatusBarItem(this.kernel))
         break
       default:
-        this.#cellStatusBarItems.add(new CLIStatusBarItem(this.kernel))
+        this.#cellStatusBarItems.add(new ForkStatusBarItem(this.kernel))
         break
     }
 

@@ -28,6 +28,7 @@ vi.mock('vscode', () => ({
   window: {
     activeNotebookEditor: undefined,
     showErrorMessage: vi.fn().mockResolvedValue({}),
+    createOutputChannel: vi.fn(),
   },
   Uri: { joinPath: vi.fn().mockReturnValue('/foo/bar') },
   workspace: {

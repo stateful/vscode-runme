@@ -155,6 +155,10 @@ export type DaggerStateAction = {
 
 export interface DaggerState {
   cellId?: string
+  output?: {
+    json?: string
+    text?: string
+  }
   cli?: {
     status: string
     actions: [DaggerStateAction]
@@ -491,18 +495,6 @@ export interface ClientMessagePayload {
     method: APIMethod
   }
   [ClientMessages.platformApiResponse]: {
-    data: any
-    id: string
-    escalationButton: boolean
-    hasErrors?: boolean
-  }
-  [ClientMessages.cloudApiRequest]: {
-    data: any
-    id: string
-    hasErrors?: boolean
-    method: APIMethod
-  }
-  [ClientMessages.cloudApiResponse]: {
     data: any
     id: string
     escalationButton: boolean

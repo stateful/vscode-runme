@@ -40,14 +40,11 @@ import {
   CATEGORY_SEPARATOR,
   NOTEBOOK_MODE,
   NotebookMode,
+  OutputType,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import {
-  getNotebookExecutionOrder,
-  isPlatformAuthEnabled,
-  registerExtensionEnvVarsMutation,
-} from '../utils/configuration'
+import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
 
 import getLogger from './logger'
 import executor, {
@@ -87,7 +84,6 @@ import {
 import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
-import { handleCloudApiMessage } from './messages/cloudApiRequest'
 import PanelManager from './panels/panelManager'
 import { GrpcSerializer, SerializerBase } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
@@ -214,6 +210,18 @@ export class Kernel implements Disposable {
     return (await this.getCellOutputs(cell)).getCellTerminalState()
   }
 
+  async saveOutputState(cell: NotebookCell, type: OutputType, value: any) {
+    const cellId = cell.metadata?.['runme.dev/id']
+    const outputs = await this.getCellOutputs(cell)
+    outputs.saveOutputState(cellId, type, value)
+  }
+
+  async cleanOutputState(cell: NotebookCell, type: OutputType) {
+    const cellId = cell.metadata?.['runme.dev/id']
+    const outputs = await this.getCellOutputs(cell)
+    outputs.cleanOutputState(cellId, type)
+  }
+
   async registerCellTerminalState(
     cell: NotebookCell,
     type: NotebookTerminalType,
@@ -310,12 +318,6 @@ export class Kernel implements Disposable {
     editor: NotebookEditor
     message: ClientMessage<ClientMessages>
   }) {
-    // Check if the message type is a cloud API request and platform authentication is enabled.
-    if (message.type === ClientMessages.cloudApiRequest && isPlatformAuthEnabled()) {
-      // Remap the message type to platform API request if platform authentication is enabled.
-      message = { ...message, type: ClientMessages.platformApiRequest }
-    }
-
     if (message.type === ClientMessages.mutateAnnotations) {
       const payload = message as ClientMessage<ClientMessages.mutateAnnotations>
 
@@ -446,13 +448,6 @@ export class Kernel implements Disposable {
       })
     } else if (message.type === ClientMessages.platformApiRequest) {
       return handlePlatformApiMessage({
-        messaging: this.messaging,
-        message,
-        editor,
-        kernel: this,
-      })
-    } else if (message.type === ClientMessages.cloudApiRequest) {
-      return handleCloudApiMessage({
         messaging: this.messaging,
         message,
         editor,
@@ -704,7 +699,9 @@ export class Kernel implements Disposable {
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
     runmeExec.start(Date.now())
-    const { key: execKey, resource } = getKeyInfo(runningCell)
+
+    const annotations = getAnnotations(cell)
+    const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
 
     let successfulCellExecution: boolean
 
@@ -749,7 +746,6 @@ export class Kernel implements Disposable {
       window.showErrorMessage(e.message)
     }
 
-    const annotations = getAnnotations(cell)
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
@@ -796,47 +792,57 @@ export class Kernel implements Disposable {
       return runUriResource(opts)
     }
 
-    // if (execKey === 'dagger' && supportsGrpcRunner) {
-    //   const notify = (res?: string): Promise<boolean> => {
-    //     try {
-    //       const daggerJsonParsed = JSON.parse(res || '{}')
-    //       daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-    //       return new Promise<boolean>((resolve) => {
-    //         this.messaging
-    //           .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
-    //             type: ClientMessages.daggerSyncState,
-    //             output: {
-    //               id: runnerOpts.cellId,
-    //               cellId: runnerOpts.cellId,
-    //               json: daggerJsonParsed,
-    //             },
-    //           })
-    //           .then(() => resolve(true))
-    //       })
-    //     } catch (e) {
-    //       // not a fatal error
-    //       if (e instanceof Error) {
-    //         console.error(e.message)
-    //       }
-    //       return new Promise<boolean>((resolve) => {
-    //         this.messaging
-    //           .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
-    //             type: ClientMessages.daggerSyncState,
-    //             output: {
-    //               id: runnerOpts.cellId,
-    //               cellId: runnerOpts.cellId,
-    //               text: res,
-    //             },
-    //           })
-    //           .then(() => resolve(true))
-    //       })
-    //     }
-    //   }
-    //   const runSecondary = () => {
-    //     return runUriResource({ ...runnerOpts, runScript: notify })
-    //   }
-    //   return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
-    // }
+    if (execKey === 'dagger' && supportsGrpcRunner) {
+      const notify = async (res?: string): Promise<boolean> => {
+        try {
+          const daggerJsonParsed = JSON.parse(res || '{}')
+          daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+            json: JSON.stringify(daggerJsonParsed),
+          })
+
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  json: daggerJsonParsed,
+                },
+              })
+              .then(() => resolve(true))
+          })
+        } catch (e) {
+          // not a fatal error
+          if (e instanceof Error) {
+            console.error(e.message)
+          }
+
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+            text: res,
+          })
+
+          return new Promise<boolean>((resolve) => {
+            this.messaging
+              .postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+                type: ClientMessages.daggerSyncState,
+                output: {
+                  id: runnerOpts.cellId,
+                  cellId: runnerOpts.cellId,
+                  text: res,
+                },
+              })
+              .then(() => resolve(true))
+          })
+        }
+      }
+      const runSecondary = () => {
+        return runUriResource({ ...runnerOpts, runScript: notify })
+      }
+      this.cleanOutputState(runnerOpts.exec.cell, OutputType.dagger)
+      return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
+    }
 
     return executorByKey(executorOpts)
   }

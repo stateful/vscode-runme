@@ -98,10 +98,10 @@ function initReporterClient(transport: GrpcTransport): ReporterServiceClient {
 type ReadyPromise = Promise<void | Error>
 
 function getRunnerServiceClient(transport: RpcTransport): IRunnerServiceClient {
-  if (getServerRunnerVersion() === 'v2alpha1') {
-    return new RunnerServiceClientV2(transport) as any
+  if (getServerRunnerVersion() === 'v1') {
+    return new RunnerServiceClientV1(transport) as any
   }
-  return new RunnerServiceClientV1(transport) as any
+  return new RunnerServiceClientV2(transport) as any
 }
 
 export {

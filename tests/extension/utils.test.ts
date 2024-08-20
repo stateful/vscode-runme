@@ -127,85 +127,108 @@ test('getTerminalByCell', () => {
 
 test('getKeyInfo', () => {
   expect(
-    getKeyInfo({
-      getText: vi.fn().mockReturnValue('foobar'),
-      languageId: 'barfoo',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi.fn().mockReturnValue('foobar'),
+        languageId: 'barfoo',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'barfoo',
     resource: 'None',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi.fn().mockReturnValue('deployctl deploy foobar'),
-      languageId: 'something else',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi.fn().mockReturnValue('deployctl deploy foobar'),
+        languageId: 'something else',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'deno',
     resource: 'URI',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi
-        .fn()
-        .mockReturnValue('https://github.com/stateful/vscode-runme/actions/workflows/release.yml'),
-      languageId: 'sh',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi
+          .fn()
+          .mockReturnValue(
+            'https://github.com/stateful/vscode-runme/actions/workflows/release.yml',
+          ),
+        languageId: 'sh',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'github',
     resource: 'URI',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi
-        .fn()
-        .mockReturnValue(
-          'https://console.cloud.google.com/kubernetes/list/overview?project=runme-ci',
-        ),
-      languageId: 'sh',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi
+          .fn()
+          .mockReturnValue(
+            'https://console.cloud.google.com/kubernetes/list/overview?project=runme-ci',
+          ),
+        languageId: 'sh',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'gcp',
     resource: 'URI',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi.fn().mockReturnValue(
-        // eslint-disable-next-line max-len
-        'https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
-      ),
-      languageId: 'sh',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi.fn().mockReturnValue(
+          // eslint-disable-next-line max-len
+          'https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
+        ),
+        languageId: 'sh',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'aws',
     resource: 'URI',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi.fn().mockReturnValue(''),
-      languageId: 'shellscript',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi.fn().mockReturnValue(''),
+        languageId: 'shellscript',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'sh',
     resource: 'None',
   })
 
   expect(
-    getKeyInfo({
-      getText: vi
-        .fn()
-        .mockReturnValue(
-          'export EC2_INSTANCE_ID=123\n' +
-            'https://us-east-1.console.aws.amazon.com/ec2/home' +
-            '?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
-        ),
-      languageId: 'sh',
-    } as any),
+    getKeyInfo(
+      {
+        getText: vi
+          .fn()
+          .mockReturnValue(
+            'export EC2_INSTANCE_ID=123\n' +
+              'https://us-east-1.console.aws.amazon.com/ec2/home' +
+              '?region=us-east-1#InstanceDetails:instanceId=$EC2_INSTANCE_ID',
+          ),
+        languageId: 'sh',
+      } as any,
+      {} as any,
+    ),
   ).toStrictEqual({
     key: 'sh',
     resource: 'None',

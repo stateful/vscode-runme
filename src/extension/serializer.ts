@@ -59,6 +59,7 @@ import { Kernel } from './kernel'
 import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
+import * as ghost from './ai/ghost'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -187,7 +188,17 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     const cells = await SerializerBase.addExecInfo(data, this.kernel)
 
     const metadata = data.metadata
-    data = new NotebookData(cells)
+
+    // Prune any ghost cells when saving.
+    const cellsToSave = []
+    for (let i = 0; i < cells.length; i++) {
+      if (SerializerBase.isGhostCell(cells[i])) {
+        continue
+      }
+      cellsToSave.push(cells[i])
+    }
+
+    data = new NotebookData(cellsToSave)
     data.metadata = metadata
 
     let encoded: Uint8Array
@@ -208,8 +219,9 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
 
         for (const cellOutput of cell.outputs || []) {
+          const terminalMime = cellOutput.items.find((item) => item.mime === OutputType.terminal)
           id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
-          if (id) {
+          if (terminalMime && id) {
             terminalOutput = cellOutput
             break
           }
@@ -375,6 +387,11 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public abstract getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
 
   public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
+
+  static isGhostCell(cell: NotebookCellData): boolean {
+    const metadata = cell.metadata
+    return metadata?.[ghost.ghostKey] === true
+  }
 }
 
 export class WasmSerializer extends SerializerBase {
