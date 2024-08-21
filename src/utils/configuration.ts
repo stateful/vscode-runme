@@ -93,9 +93,6 @@ const configurationSchema = {
     platformAuth: z.boolean().default(false),
     docsUrl: z.string().default(DEFAULT_DOCS_URL),
   },
-  beta: {
-    shellWarning: z.boolean().default(true),
-  },
 }
 
 const notebookTerminalSchemaObject = z.object(notebookTerminalSchema)
@@ -442,16 +439,6 @@ const getDocsUrl = (path: string): string => {
   return `${baseUrl}#${path}`
 }
 
-const getBetaFlag = <T>(configName: keyof typeof configurationSchema.beta, defaultValue: T) => {
-  const configurationSection = workspace.getConfiguration(CODELENS_SECTION_NAME)
-  const configurationValue = configurationSection.get<T>(configName)!
-  const parseResult = configurationSchema.beta[configName].safeParse(configurationValue)
-  if (parseResult.success) {
-    return parseResult.data as T
-  }
-  return defaultValue
-}
-
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
@@ -483,5 +470,4 @@ export {
   getMaskOutputs,
   getLoginPrompt,
   getDocsUrl,
-  getBetaFlag,
 }

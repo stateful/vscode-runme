@@ -15,7 +15,6 @@ import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
-  getBetaFlag,
   getDocsUrl,
   getForceNewWindowConfig,
   getRunmeAppUrl,
@@ -360,7 +359,7 @@ export class RunmeExtension {
 
     await bootFile(context)
 
-    if (getBetaFlag<boolean>('shellWarning', false)) {
+    if (kernel.hasExperimentEnabled('shellWarning', false)) {
       const showUnsupportedShellMessage = async () => {
         const showMore = 'Show more'
 
@@ -374,7 +373,7 @@ export class RunmeExtension {
       kernel
         .runProgram('echo $SHELL')
         .then(({ output }) => {
-          const supportedShells = ['bash']
+          const supportedShells = ['bash', 'zsh']
           const isSupported = supportedShells.some((sh) => output?.includes(sh))
           console.log(`[runme.beta.shellWarning] Shell: ${output}`)
 
