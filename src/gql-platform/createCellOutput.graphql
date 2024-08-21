@@ -3,5 +3,6 @@ mutation CreateCellOutput($input: ReporterInput!) {
    id
    htmlUrl
    exitCode
+   isSlackReady
   }
 }

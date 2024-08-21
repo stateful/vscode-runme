@@ -13,10 +13,7 @@ import getLogger from '../../logger'
 import { getGitContext, getPlatformAuthSession } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
 import { InitializeClient } from '../../api/client'
-import {
-  CreateCellExecutionDocument,
-  CreateCellOutputDocument,
-} from '../../__generated-platform__/graphql'
+import { CreateCellOutputDocument } from '../../__generated-platform__/graphql'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -99,7 +96,7 @@ export default async function saveCellExecution(
       vsAppName: vsEnv.appName,
       vsAppSessionId: vsEnv.sessionId,
       vsMachineId: vsEnv.machineId,
-      // add vs metadata
+      // TODO: Add vs metadata
     })
 
     const cell = payload?.response.notebook?.cells.find(
@@ -112,6 +109,7 @@ export default async function saveCellExecution(
         extension: payload?.response.extension,
         notebook: {
           ...payload?.response.notebook,
+          // Send only the cell that is being saved
           cells: [cell],
         },
       },
@@ -154,17 +152,17 @@ export default async function saveCellExecution(
     //     },
     //   },
     // })
-    // log.info('Cell execution saved')
+    log.info('Cell execution saved')
 
-    // const showEscalationButton = !!result.data?.createCellExecution?.isSlackReady
-    // log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
+    const showEscalationButton = !!result.data?.createCellOutput?.isSlackReady
+    log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
 
-    // TelemetryReporter.sendTelemetryEvent('app.save')
-    // return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-    //   data: result,
-    //   id: message.output.id,
-    //   escalationButton: showEscalationButton,
-    // })
+    TelemetryReporter.sendTelemetryEvent('app.save')
+    return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+      data: result,
+      id: message.output.id,
+      escalationButton: showEscalationButton,
+    })
   } catch (error) {
     log.error('Error saving cell execution', (error as Error).message)
     TelemetryReporter.sendTelemetryEvent('app.error')

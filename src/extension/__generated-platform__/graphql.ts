@@ -159,6 +159,10 @@ export type Bookmark = {
   workflow?: Maybe<Workflow>;
 };
 
+export type BooleanInput = {
+  value?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type Cell = {
   __typename?: 'Cell';
   cellOutputs?: Maybe<Array<Maybe<CellOutput>>>;
@@ -282,6 +286,7 @@ export type CellOutput = {
   input?: Maybe<Scalars['String']['output']>;
   inputData: Scalars['Bytes']['output'];
   isOwner?: Maybe<Scalars['Boolean']['output']>;
+  isSlackReady?: Maybe<Scalars['Boolean']['output']>;
   languageId?: Maybe<Scalars['String']['output']>;
   lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
   maskedInput?: Maybe<Scalars['String']['output']>;
@@ -1622,27 +1627,26 @@ export type RemoveUserFromOrganization = {
 
 export type ReporterCellExecutionSummaryInput = {
   executionOrder?: InputMaybe<UInt32>;
-  success?: InputMaybe<Scalars['Boolean']['input']>;
+  success?: InputMaybe<BooleanInput>;
   timing?: InputMaybe<ReporterExecutionSummaryTimingInput>;
 };
 
 export type ReporterCellInput = {
-  category?: InputMaybe<Scalars['String']['input']>;
   executionSummary?: InputMaybe<ReporterCellExecutionSummaryInput>;
-  kind?: InputMaybe<ReporterCellKind>;
+  kind?: InputMaybe<Scalars['Int']['input']>;
   languageId?: InputMaybe<Scalars['String']['input']>;
-  metadata?: InputMaybe<Scalars['JSON']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<ReporterCellMetadataInput>;
   outputs?: InputMaybe<Array<InputMaybe<ReporterCellOutputInput>>>;
   textRange?: InputMaybe<ReporterTextRangeInput>;
   value?: InputMaybe<Scalars['String']['input']>;
 };
 
-export enum ReporterCellKind {
-  CellKindCode = 'CELL_KIND_CODE',
-  CellKindMarkup = 'CELL_KIND_MARKUP',
-  CellKindUnspecified = 'CELL_KIND_UNSPECIFIED'
-}
+export type ReporterCellMetadataInput = {
+  category?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  mimeType?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+};
 
 export type ReporterCellOutputInput = {
   items?: InputMaybe<Array<InputMaybe<ReporterCellOutputItemInput>>>;
@@ -2126,7 +2130,7 @@ export type CreateCellOutputMutationVariables = Exact<{
 }>;
 
 
-export type CreateCellOutputMutation = { __typename?: 'Mutation', createCellOutput: { __typename?: 'CellOutput', id: string, htmlUrl?: string | null, exitCode: number } };
+export type CreateCellOutputMutation = { __typename?: 'Mutation', createCellOutput: { __typename?: 'CellOutput', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady?: boolean | null } };
 
 export type UnArchiveCellExecutionMutationVariables = Exact<{
   unArchiveCellExecutionId: Scalars['String']['input'];
@@ -2146,6 +2150,6 @@ export type UpdateCellExecutionMutation = { __typename?: 'Mutation', updateCellE
 
 export const ArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellExecutionMutation, ArchiveCellExecutionMutationVariables>;
 export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
-export const CreateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}}]}}]}}]} as unknown as DocumentNode<CreateCellOutputMutation, CreateCellOutputMutationVariables>;
+export const CreateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellOutputMutation, CreateCellOutputMutationVariables>;
 export const UnArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellExecutionMutation, UnArchiveCellExecutionMutationVariables>;
 export const UpdateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellExecutionMutation, UpdateCellExecutionMutationVariables>;
