@@ -41,7 +41,7 @@ vi.mock('../../../../src/extension/cell', async () => {
 })
 
 const graphqlHandlers = [
-  graphql.mutation('CreateCellExecution', () => {
+  graphql.mutation('CreateCellOutput', () => {
     return HttpResponse.json({
       data: {
         id: 'cell-id',
