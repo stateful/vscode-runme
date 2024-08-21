@@ -817,14 +817,11 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
-      const dataCell = data.cells[cellIdx]
-      const dataExecSummary = dataCell.executionSummary
+      const dataExecSummary = data.cells[cellIdx].executionSummary
       cell.executionSummary = this.marshalCellExecutionSummary(dataExecSummary)
-      const dataOutputs = dataCell.outputs
+      const dataOutputs = data.cells[cellIdx].outputs
       cell.outputs = this.marshalCellOutputs(cell.outputs, dataOutputs)
     })
-
-    console.log('notebook', notebook)
 
     return notebook
   }

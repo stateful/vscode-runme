@@ -13,7 +13,11 @@ import getLogger from '../../logger'
 import { getGitContext, getPlatformAuthSession } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
 import { InitializeClient } from '../../api/client'
-import { CreateCellOutputDocument } from '../../__generated-platform__/graphql'
+import {
+  CreateCellOutputDocument,
+  InputMaybe,
+  ReporterCellInput,
+} from '../../__generated-platform__/graphql'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -99,9 +103,7 @@ export default async function saveCellExecution(
       // TODO: Add vs metadata
     })
 
-    const cell = payload?.response.notebook?.cells.find(
-      (c) => c.metadata.id === message.output.id,
-    ) as any
+    const cell = payload?.response.notebook?.cells.find((c) => c.metadata.id === message.output.id)
 
     const graphClient = InitializeClient({ runmeToken: session.accessToken })
     const platformPayload = {
@@ -110,7 +112,7 @@ export default async function saveCellExecution(
         notebook: {
           ...payload?.response.notebook,
           // Send only the cell that is being saved
-          cells: [cell],
+          cells: [cell] as InputMaybe<ReporterCellInput>[],
         },
       },
     }
@@ -120,38 +122,6 @@ export default async function saveCellExecution(
       variables: platformPayload,
     })
 
-    // const result = await graphClient.mutate({
-    //   mutation: CreateCellExecutionDocument,
-    //   variables: {
-    //     input: {
-    //       stdout: terminalContents,
-    //       stderr: Array.from([]), // stderr will become applicable for non-terminal
-    //       exitCode,
-    //       pid,
-    //       input: encodeURIComponent(cell.document.getText()),
-    //       languageId: cell.document.languageId,
-    //       autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
-    //       metadata: {
-    //         mimeType: annotations.mimeType,
-    //         name: annotations.name,
-    //         category: annotations.category || '',
-    //         exitType: runnerExitStatus?.type,
-    //         startTime: cell.executionSummary?.timing?.startTime,
-    //         endTime: cell.executionSummary?.timing?.endTime,
-    //       },
-    //       id: annotations.id,
-    //       notebook: notebookInput,
-    //       branch: gitCtx?.branch,
-    //       repository: gitCtx?.repository,
-    //       commit: gitCtx?.commit,
-    //       fileContent,
-    //       filePath,
-    //       sessionId,
-    //       plainSessionOutput,
-    //       maskedSessionOutput,
-    //     },
-    //   },
-    // })
     log.info('Cell execution saved')
 
     const showEscalationButton = !!result.data?.createCellOutput?.isSlackReady
