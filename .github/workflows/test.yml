@@ -31,6 +31,7 @@ jobs:
           RUNME_TEST_TOKEN: ${{ secrets.RUNME_TEST_TOKEN }}
           RUNME_PROJECT: ${{ github.workspace }}
           SHELL: bash
+          GITHUB_ACTOR: ${{ github.actor }}
       - name: 🔼 Upload Artifacts
         uses: actions/upload-artifact@v3
         if: failure()
