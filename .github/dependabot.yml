@@ -4,8 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-      time: "11:00"
+      time: "09:00"
       day: "wednesday"
+      timezone: "America/Los_Angeles"
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
     ignore:
@@ -24,3 +25,9 @@ updates:
       - dependency-name: "@octokit/rest"
       # it breaks wdio-vscode-service
       - dependency-name: "vscode-uri"
+    groups:
+      aws-sdk:
+        patterns:
+          - "@aws-sdk/client-ec2"
+          - "@aws-sdk/client-eks"
+          - "@aws-sdk/credential-providers"
