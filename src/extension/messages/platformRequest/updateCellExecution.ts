@@ -37,6 +37,7 @@ export default async function updateCellExecution(
         id: message.output.data.id,
         input: {
           shareType: ShareType.Organization,
+          notify: true, // Always share to Slack, regarlless if there's or not an error in the cell
         },
       },
     })
