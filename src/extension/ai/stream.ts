@@ -128,9 +128,11 @@ export class StreamCreator {
       for await (const response of responses) {
         this.handlers.processResponse(response)
       }
-    } catch (error ) {
+    } catch (error) {
       if (error instanceof ConnectError) {
-        log.error(`Error processing response: ${error}; details: ${error.details}; rawMessage: ${error.rawMessage}`)
+        log.error(
+          `Error processing response: ${error}; details: ${error.details}; rawMessage: ${error.rawMessage}`,
+        )
       } else {
         log.error(`Error processing response: ${error}`)
       }
