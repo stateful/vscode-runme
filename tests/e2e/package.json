@@ -9,7 +9,7 @@
     "@wdio/spec-reporter": "^8.27.2",
     "chromedriver": "^127.0.2",
     "comment-json": "^4.2.5",
-    "expect-webdriverio": "^4.2.7",
+    "expect-webdriverio": "^4.15.4",
     "runme": "^3.0.1",
     "ts-node": "^10.9.1",
     "wdio-vscode-service": "^6.1.0",
