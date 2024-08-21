@@ -18,6 +18,7 @@ const documents = {
     "mutation CreateCellOutput($input: ReporterInput!) {\n  createCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellOutputDocument,
     "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}": types.UnArchiveCellExecutionDocument,
     "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellExecutionDocument,
+    "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellOutputDocument,
 };
 
 /**
@@ -54,6 +55,10 @@ export function graphql(source: "mutation UnArchiveCellExecution($unArchiveCellE
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
