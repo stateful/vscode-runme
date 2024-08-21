@@ -141,6 +141,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
     this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
     this.#experiments.set('aiLogs', config.get<boolean>('aiLogs', false))
+    this.#experiments.set('shellWarning', config.get<boolean>('shellWarning', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
