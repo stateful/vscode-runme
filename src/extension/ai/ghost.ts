@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import { ulid } from 'ulidx'
 
 import getLogger from '../logger'
 import * as serializer from '../serializer'
@@ -14,6 +15,10 @@ const log = getLogger()
 // be persisted to the markdown file. This ensures that if a ghost cell is accepted
 // the ghost metadata is not persisted to the markdown file.
 export const ghostKey = '_ghostCell'
+
+const ghostDecoration = vscode.window.createTextEditorDecorationType({
+  color: '#888888', // Light grey color
+})
 
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
@@ -31,8 +36,16 @@ export const ghostKey = '_ghostCell'
 export class GhostCellGenerator implements stream.CompletionHandlers {
   private notebookState: Map<vscode.Uri, NotebookState>
 
+  // contextID is the ID of the context we are generating completions for.
+  // It is used to detect whether a completion response is stale and should be
+  // discarded because the context has changed.
+  private contextID: string
+
   constructor() {
     this.notebookState = new Map<vscode.Uri, NotebookState>()
+    // Generate a random context ID. This should be unnecessary because presumable the event to change
+    // the active cell will be sent before any requests are sent but it doesn't hurt to be safe.
+    this.contextID = ulid()
   }
 
   // Updated method to check and initialize notebook state
@@ -96,6 +109,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
       let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
+        contextId: this.contextID,
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
@@ -115,6 +129,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let notebook = protos.notebookTSToES(notebookProto)
       // Generate an update request
       let request = new agent_pb.StreamGenerateRequest({
+        contextId: this.contextID,
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
@@ -129,6 +144,14 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
   // processResponse applies the changes from the response to the notebook.
   processResponse(response: agent_pb.StreamGenerateResponse) {
+    if (response.contextId !== this.contextID) {
+      // TODO(jeremy): Is this logging too verbose?
+      log.info(
+        `Ignoring response with contextID ${response.contextId} because it doesn't match the current contextID ${this.contextID}`,
+      )
+      return
+    }
+
     let cellsTs = protos.cellsESToTS(response.cells)
     let newCellData = converters.cellProtosToCellData(cellsTs)
 
@@ -189,6 +212,49 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     })
   }
 
+  // handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
+  // when it is selected
+  handleOnDidChangeActiveTextEditor = (editor: vscode.TextEditor | undefined) => {
+    const oldCID = this.contextID
+    // We need to generate a new context ID because the context has changed.
+    this.contextID = ulid()
+    log.info(
+      `onDidChangeActiveTextEditor fired: editor: ${editor?.document.uri}; new contextID: ${this.contextID}; old contextID: ${oldCID}`,
+    )
+    if (editor === undefined) {
+      return
+    }
+
+    if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
+      // Doesn't correspond to a notebook cell so do nothing
+      return
+    }
+
+    const cell = getCellFromCellDocument(editor.document)
+    if (cell === undefined) {
+      return
+    }
+
+    if (!isGhostCell(cell)) {
+      return
+    }
+    // ...cell.metadata creates a shallow copy of the metadata object
+    const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
+    const update = vscode.NotebookEdit.updateCellMetadata(cell.index, updatedMetadata)
+    const edit = new vscode.WorkspaceEdit()
+    edit.set(editor.document.uri, [update])
+    vscode.workspace.applyEdit(edit).then((result: boolean) => {
+      log.trace(`updateCellMetadata to deactivate ghostcell resolved with ${result}`)
+      if (!result) {
+        log.error('applyEdit failed')
+        return
+      }
+    })
+    // If the cell is a ghost cell we want to remove the decoration
+    // and replace it with a non-ghost cell.
+    editorAsNonGhost(editor)
+  }
+
   shutdown(): void {
     log.info('Shutting down')
   }
@@ -239,11 +305,6 @@ export class CellChangeEventGenerator {
       return
     }
 
-    log.info(
-      `onDidChangeTextDocument Fired for notebook ${event.document.uri}` +
-        'this should fire when a cell is added to a notebook',
-    )
-
     this.streamCreator.handleEvent(
       new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
     )
@@ -251,7 +312,7 @@ export class CellChangeEventGenerator {
 }
 
 // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
-// This includes when a TextEditor is created.
+// This includes when a TextEditor is created. I also think it can be the result of scrolling.
 export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
   for (const editor of editors) {
     log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
@@ -266,7 +327,6 @@ export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.Tex
     }
 
     if (!isGhostCell(cell)) {
-      log.info(`Not a ghost editor doc:${cell.document.uri}`)
       continue
     }
 
@@ -282,14 +342,18 @@ function editorAsGhost(editor: vscode.TextEditor) {
     textDoc.positionAt(textDoc.getText().length),
   )
 
-  editor.setDecorations(getGhostDecoration(), [range])
+  editor.setDecorations(ghostDecoration, [range])
 }
 
 function editorAsNonGhost(editor: vscode.TextEditor) {
   // To remove the decoration we set the range to an empty range and pass in a reference
   // to the original decoration
   // https://github.com/microsoft/vscode-extension-samples/blob/main/decorator-sample/USAGE.md#tips
-  editor.setDecorations(getGhostDecoration(), [])
+  //
+  // Important: ghostDecoration must be a reference to the same object that was used to create the decoration.
+  // that's how VSCode knows which decoration to remove. If you use a "copy" (i.e. a decoration with the same value)
+  // the decoration won't get removed.
+  editor.setDecorations(ghostDecoration, [])
 }
 
 function isGhostCell(cell: vscode.NotebookCell): boolean {
@@ -312,52 +376,4 @@ function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookC
     return result
   })
   return matchedCell
-}
-
-// handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
-// when it is selected
-export function handleOnDidChangeActiveTextEditor(editor: vscode.TextEditor | undefined) {
-  log.info(`onDidChangeActiveTextEditor Fired for editor ${editor?.document.uri}`)
-  if (editor === undefined) {
-    return
-  }
-
-  if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
-    // Doesn't correspond to a notebook cell so do nothing
-    return
-  }
-
-  const cell = getCellFromCellDocument(editor.document)
-  if (cell === undefined) {
-    return
-  }
-
-  if (!isGhostCell(cell)) {
-    return
-  }
-  // ...cell.metadata creates a shallow copy of the metadata object
-  const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
-  const update = vscode.NotebookEdit.updateCellMetadata(cell.index, updatedMetadata)
-  const edit = new vscode.WorkspaceEdit()
-  edit.set(editor.document.uri, [update])
-  vscode.workspace.applyEdit(edit).then((result: boolean) => {
-    log.trace(`updateCellMetadata to deactivate ghostcell resolved with ${result}`)
-    if (!result) {
-      log.error('applyEdit failed')
-      return
-    }
-  })
-  // If the cell is a ghost cell we want to remove the decoration
-  // and replace it with a non-ghost cell.
-  editorAsNonGhost(editor)
-}
-
-// n.b. this is a function and not a top level const because that causes problems with the vitest
-// mocking framework.
-// N.B. I think we could potentially have solved that by doing something like
-// https://github.com/stateful/vscode-runme/pull/1475#issuecomment-2278636467
-function getGhostDecoration(): vscode.TextEditorDecorationType {
-  return vscode.window.createTextEditorDecorationType({
-    color: '#888888', // Light grey color
-  })
 }

@@ -43,6 +43,7 @@ export class AIManager {
     )
 
     // onDidChangeVisibleTextEditors fires when the visible text editors change.
+    // This can happen due to scrolling.
     // We need to trap this event to apply decorations to turn cells into ghost cells.
     this.subscriptions.push(
       vscode.window.onDidChangeVisibleTextEditors(ghost.handleOnDidChangeVisibleTextEditors),
@@ -50,7 +51,8 @@ export class AIManager {
 
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
-      vscode.window.onDidChangeActiveTextEditor(ghost.handleOnDidChangeActiveTextEditor),
+      vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
+      // vscode.window.onDidChangeActiveTextEditor(localOnDidChangeActiveTextEditor),
     )
   }
 
