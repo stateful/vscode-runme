@@ -1113,7 +1113,7 @@
     "@wdio/mocha-framework": "^8.40.2",
     "@wdio/spec-reporter": "^8.27.2",
     "chromedriver": "^127.0.2",
-    "comment-json": "^4.2.3",
+    "comment-json": "^4.2.5",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.0",
