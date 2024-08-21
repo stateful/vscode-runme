@@ -1,8 +1,0 @@
-mutation CreateCellExecution($input: CreateCellExecutionInput!) {
-  createCellExecution(input: $input) {
-   id
-   htmlUrl
-   exitCode
-   isSlackReady
-  }
-}

@@ -1,7 +1,7 @@
-mutation UnArchiveCellExecution(
-    $unArchiveCellExecutionId: String!
+mutation UnArchiveCellOutput(
+    $id: String!
 ) {
-    unArchiveCellExecution(id: $unArchiveCellExecutionId) {
+    unArchiveCellOutput(id: $id) {
         id
     }
 }

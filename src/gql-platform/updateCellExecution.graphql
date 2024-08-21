@@ -1,8 +1,0 @@
-mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {
-  updateCellExecution(id: $id, input: $input) {
-   id
-   htmlUrl
-   exitCode
-   isSlackReady
-  }
-}
