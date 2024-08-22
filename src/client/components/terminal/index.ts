@@ -14,12 +14,15 @@ import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
 import { APIMethod } from '../../../types'
 import type { TerminalConfiguration } from '../../../utils/configuration'
-
 import '../closeCellButton'
 import '../copyButton'
 import './share'
 import './gistCell'
 import './open'
+import {
+  CreateCellOutputMutation,
+  UpdateCellOutputMutation,
+} from '../../../extension/__generated-platform__/graphql'
 
 interface IWindowSize {
   width: number
@@ -480,14 +483,15 @@ export class TerminalView extends LitElement {
                 return
               }
 
-              const { data } = e.output.data
+              const data = (e.output.data?.data || {}) as CreateCellOutputMutation &
+                UpdateCellOutputMutation
               const { escalationButton: escalationButtonEnabled } = e.output
-              if (data.createCellExecution) {
+              if (data.createCellOutput) {
                 const {
-                  createCellExecution: { id, exitCode, htmlUrl },
+                  createCellOutput: { id, exitCode, htmlUrl },
                 } = data
                 this.cloudId = id
-                this.shareUrl = htmlUrl
+                this.shareUrl = htmlUrl || ''
                 this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
                 this.isShareReady = true
                 // Dispatch tangle update event
@@ -498,9 +502,9 @@ export class TerminalView extends LitElement {
                   },
                 })
               }
-              if (data.updateCellExecution) {
+              if (data.updateCellOutput) {
                 const {
-                  updateCellExecution: { exitCode },
+                  updateCellOutput: { exitCode },
                 } = data
                 this.isUpdatedReady = true
                 this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
