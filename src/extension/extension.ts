@@ -80,6 +80,7 @@ import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as manager from './ai/manager'
+import getLogger from './logger'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -370,19 +371,21 @@ export class RunmeExtension {
         }
       }
 
+      const logger = getLogger('runme.beta.shellWarning')
+
       kernel
         .runProgram('echo $SHELL')
-        .then(({ output }) => {
+        .then((output) => {
           const supportedShells = ['bash', 'zsh']
           const isSupported = supportedShells.some((sh) => output?.includes(sh))
-          console.log(`[runme.beta.shellWarning] Shell: ${output}`)
+          logger.info(`[runme.beta.shellWarning] Shell: ${output}`)
 
           if (!isSupported) {
             showUnsupportedShellMessage()
           }
         })
         .catch((e) => {
-          console.log(e)
+          logger.error(e)
           showUnsupportedShellMessage()
         })
     }

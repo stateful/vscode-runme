@@ -47,8 +47,7 @@ export const aws: IKernelExecutor = async (executor) => {
         break
     }
 
-    const result = await kernel.runProgram(programOptions)
-    const profile = result.code === 0 ? result.output : 'default'
+    const profile = await kernel.runProgram(programOptions)
     credentials = fromIni({ profile })
 
     switch (awsResolver.view) {
