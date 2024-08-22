@@ -44,13 +44,13 @@ export default async function saveCellExecution(
     appHost: env.appHost,
     appName: env.appName,
     appRoot: env.appRoot,
-    isNewAppInstall: env.isNewAppInstall,
+    isNewAppInstall: `${env.isNewAppInstall}`,
     language: env.language,
     machineId: env.machineId,
-    remoteName: env.remoteName,
+    remoteName: env.remoteName || '',
     sessionId: env.sessionId,
     shell: env.shell,
-    uiKind: env.uiKind,
+    uiKind: `${env.uiKind}`,
     uriScheme: env.uriScheme,
   }
 
@@ -100,7 +100,7 @@ export default async function saveCellExecution(
       vsAppName: vsEnv.appName,
       vsAppSessionId: vsEnv.sessionId,
       vsMachineId: vsEnv.machineId,
-      // TODO: Add vs metadata
+      vsMetadata: vsEnv,
     })
 
     const cell = payload?.response.notebook?.cells.find((c) => c.metadata.id === message.output.id)
