@@ -378,7 +378,7 @@ export class RunmeExtension {
         .then((output) => {
           const supportedShells = ['bash', 'zsh']
           const isSupported = supportedShells.some((sh) => output?.includes(sh))
-          logger.info(`[runme.beta.shellWarning] Shell: ${output}`)
+          logger.info(`Shell: ${output}`)
 
           if (!isSupported) {
             showUnsupportedShellMessage()
