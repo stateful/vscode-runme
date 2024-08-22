@@ -813,7 +813,7 @@ export class GrpcSerializer extends SerializerBase {
       const metadata = notebook.metadata as unknown as {
         ['runme.dev/frontmatter']: string
       }
-      notebook.frontmatter = this.marshallFrontMatter(metadata, config.kernel)
+      notebook.frontmatter = this.marshallFrontmatter(metadata, config.kernel)
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
@@ -826,7 +826,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  private static marshallFrontMatter(
+  private static marshallFrontmatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {
@@ -848,7 +848,7 @@ export class GrpcSerializer extends SerializerBase {
       cwd: '',
       shell: '',
       skipPrompts: false,
-      terminalRows: '0',
+      terminalRows: '',
     }
   }
 

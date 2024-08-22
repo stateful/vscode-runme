@@ -100,7 +100,9 @@ export default async function saveCellExecution(
       vsAppName: vsEnv.appName,
       vsAppSessionId: vsEnv.sessionId,
       vsMachineId: vsEnv.machineId,
-      vsMetadata: vsEnv,
+      vsMetadata: {
+        foo: 'bar',
+      },
     })
 
     const cell = payload?.response.notebook?.cells.find((c) => c.metadata.id === message.output.id)
