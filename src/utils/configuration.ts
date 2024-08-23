@@ -23,7 +23,7 @@ const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
 const DEFAULT_RUNME_APP_API_URL = 'https://platform.stateful.com'
 const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
 const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
-const DEFAULT_DOCS_URL = 'https://docs.runme.dev/'
+const DEFAULT_DOCS_URL = 'https://docs.runme.dev'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
@@ -434,9 +434,13 @@ const isPlatformAuthEnabled = (): boolean => {
   return getCloudConfigurationValue('platformAuth', false)
 }
 
-const getDocsUrl = (path: string): string => {
-  const baseUrl = getCloudConfigurationValue('docsUrl', DEFAULT_DOCS_URL)
-  return `${baseUrl}#${path}`
+const getDocsUrl = (): string => {
+  return getCloudConfigurationValue('docsUrl', DEFAULT_DOCS_URL)
+}
+
+const getDocsUrlFor = (path: string): string => {
+  const baseUrl = getDocsUrl()
+  return `${baseUrl}${path}`
 }
 
 export {
@@ -469,5 +473,6 @@ export {
   getSessionOutputs,
   getMaskOutputs,
   getLoginPrompt,
+  getDocsUrlFor,
   getDocsUrl,
 }
