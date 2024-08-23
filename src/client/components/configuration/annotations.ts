@@ -2,7 +2,12 @@ import { LitElement, html } from 'lit'
 import { customElement, property } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 
-import type { ClientMessage, CellAnnotations, CellAnnotationsErrorResult } from '../../../types'
+import type {
+  ClientMessage,
+  CellAnnotations,
+  CellAnnotationsErrorResult,
+  Settings,
+} from '../../../types'
 import { CellAnnotationsSchema, AnnotationSchema } from '../../../schema'
 import {
   ClientMessages,
@@ -89,6 +94,9 @@ export class Annotations extends LitElement {
 
   @property({ type: Array })
   categories: string[] = []
+
+  @property({ type: Object })
+  settings: Settings = {}
 
   #getTargetValue(e: Target) {
     switch (e.target.type) {
@@ -228,7 +236,7 @@ export class Annotations extends LitElement {
   }
 
   renderDocsLink(id: string) {
-    const link = `https://docs.runme.dev/r/extension/${id}`
+    const link = `${this.settings?.docsUrl}/r/extension/${id}`
     return html`<vscode-link href="${link}">(docs ${ExternalLinkIcon})</vscode-link>`
   }
 
@@ -298,6 +306,7 @@ export class Annotations extends LitElement {
           identifier="${id}"
           @onChange=${this.onCategorySelectorChange}
           @onCreateNewCategory=${this.createNewCategoryClick}
+          @settings=${this.settings}
         ></category-selector>
       </div>
     </div>`

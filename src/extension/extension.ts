@@ -15,7 +15,7 @@ import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
-  getDocsUrl,
+  getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getSessionOutputs,
@@ -364,7 +364,7 @@ export class RunmeExtension {
 
         const answer = await window.showErrorMessage('Unsupported shell', showMore)
         if (answer === showMore) {
-          const url = getDocsUrl('/r/extension/supported-shells')
+          const url = getDocsUrlFor('/r/extension/supported-shells')
           env.openExternal(Uri.parse(url))
         }
       }

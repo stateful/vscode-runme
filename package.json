@@ -853,7 +853,7 @@
           "runme.app.docsUrl": {
             "type": "string",
             "scope": "window",
-            "default": "https://docs.runme.dev/",
+            "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
           }
         }

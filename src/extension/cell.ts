@@ -32,6 +32,7 @@ import {
 } from '../types'
 import { Mutex } from '../utils/sync'
 import {
+  getDocsUrl,
   getNotebookTerminalConfigurations,
   getSessionOutputs,
   isPlatformAuthEnabled,
@@ -169,6 +170,9 @@ export class NotebookCellOutputManager {
             annotations: getAnnotations(cell),
             validationErrors: validateAnnotations(cell),
             id: cell.metadata['runme.dev/id'],
+            settings: {
+              docsUrl: getDocsUrl(),
+            },
           },
         }
 

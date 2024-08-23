@@ -366,11 +366,7 @@ interface Payload {
   [OutputType.deno]?: DenoState
   [OutputType.vercel]: VercelState
   [OutputType.outputItems]: OutputItemsPayload
-  [OutputType.annotations]: {
-    annotations?: CellAnnotations
-    validationErrors?: CellAnnotationsErrorResult
-    id?: string
-  }
+  [OutputType.annotations]: AnnotationsPayload & { settings: Settings }
   [OutputType.terminal]: TerminalConfiguration & {
     ['runme.dev/id']: string
     content?: string
@@ -647,6 +643,12 @@ export interface OutputItemsPayload {
   id: string
 }
 
+export interface AnnotationsPayload {
+  annotations?: CellAnnotations
+  validationErrors?: CellAnnotationsErrorResult
+  id?: string
+}
+
 export interface RunmeTaskDefinition extends TaskDefinition {
   type: 'runme'
   filePath: string
@@ -718,4 +720,8 @@ export type NotebookUiEvent = {
     notebookUri: Uri
   }
   ui: boolean
+}
+
+export type Settings = {
+  docsUrl?: string
 }
