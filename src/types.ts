@@ -361,6 +361,12 @@ export interface AWSEKSClustersState {
   view: AWSSupportedView.EKSClusters
 }
 
+export interface AnnotationsPayload {
+  annotations?: CellAnnotations
+  validationErrors?: CellAnnotationsErrorResult
+  id?: string
+}
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
@@ -641,12 +647,6 @@ export interface OutputItemsPayload {
   content: string
   mime: string
   id: string
-}
-
-export interface AnnotationsPayload {
-  annotations?: CellAnnotations
-  validationErrors?: CellAnnotationsErrorResult
-  id?: string
 }
 
 export interface RunmeTaskDefinition extends TaskDefinition {

@@ -1106,9 +1106,11 @@ export class Kernel implements Disposable {
 
   async runProgram(program?: RunProgramOptions | string) {
     let programOptions: RunProgramOptions
+    const logger = getLogger('runProgram')
 
     if (!this.runner) {
-      throw new Error('No runner available')
+      logger.error('No runner available')
+      return
     }
 
     if (typeof program === 'object') {
@@ -1127,7 +1129,8 @@ export class Kernel implements Disposable {
         tty: false,
       }
     } else {
-      throw new Error('Invalid runProgram arguments')
+      logger.error('Invalid program options')
+      return
     }
 
     const programSession = await this.runner.createProgramSession(programOptions)
