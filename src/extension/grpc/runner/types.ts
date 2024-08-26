@@ -2,7 +2,7 @@ import { DuplexStreamingCall } from '@protobuf-ts/runtime-rpc'
 
 import { getServerRunnerVersion } from '../../../utils/configuration'
 
-import * as v2 from './v2alpha1'
+import * as v2 from './v2'
 import * as v1 from './v1'
 
 export type ResolveProgramResponse_VarResult =
