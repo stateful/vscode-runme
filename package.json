@@ -587,6 +587,12 @@
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
           },
+          "runme.experiments.shellWarning": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the extension will display an error message if an unsupported shell is detected."
+          },
           "runme.checkout.projectDir": {
             "type": "string",
             "scope": "machine",
