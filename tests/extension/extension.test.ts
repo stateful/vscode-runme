@@ -74,6 +74,8 @@ vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
 test('initializes all providers', async () => {
   const configValues = {
     binaryPath: 'bin',
+    // This is needed for the AIManager to initialize.
+    'runme.aiBaseURL': 'http://localhost:8877/api',
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config]),

@@ -78,7 +78,6 @@ import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
-import * as generate from './ai/generate'
 import * as manager from './ai/manager'
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -330,7 +329,10 @@ export class RunmeExtension {
       }),
 
       // Register a command to generate completions using foyle
-      RunmeExtension.registerCommand('runme.aiGenerate', generate.generateCompletion),
+      RunmeExtension.registerCommand(
+        'runme.aiGenerate',
+        aiManager.completionGenerator.generateCompletion,
+      ),
     )
 
     if (isPlatformAuthEnabled()) {

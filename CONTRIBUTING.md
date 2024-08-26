@@ -164,6 +164,11 @@ export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-si
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
+```sh {"id":"01J5VPD3TXY1EAZDCXNHN60S77"}
+export NODE_OPTIONS="--experimental-specifier-resolution=node --max-old-space-size=8192"
+npx runme run test:format test:lint test:unit 
+```
+
 When testing in CI environment, run:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4PGJBDGG0","name":"test:ci"}

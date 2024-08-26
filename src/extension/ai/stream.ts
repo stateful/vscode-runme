@@ -1,5 +1,4 @@
-import { createPromiseClient, PromiseClient, Transport } from '@connectrpc/connect'
-import { createConnectTransport } from '@connectrpc/connect-node'
+import { ConnectError, PromiseClient } from '@connectrpc/connect'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   StreamGenerateRequest,
@@ -65,14 +64,11 @@ export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
-  baseURL: string
   client: PromiseClient<typeof AIService>
-  constructor(handlers: CompletionHandlers, baseURL: string) {
+  constructor(handlers: CompletionHandlers, client: PromiseClient<typeof AIService>) {
     this.handlers = handlers
-    this.baseURL = baseURL
-
     // Create a client this is actually a PromiseClient
-    this.client = createPromiseClient(AIService, createDefaultTransport(baseURL))
+    this.client = client
   }
 
   // handleEvent processes a request
@@ -133,7 +129,13 @@ export class StreamCreator {
         this.handlers.processResponse(response)
       }
     } catch (error) {
-      console.log('Error processing responses:', error)
+      if (error instanceof ConnectError) {
+        log.error(
+          `Error processing response: ${error}; details: ${error.details}; rawMessage: ${error.rawMessage}`,
+        )
+      } else {
+        log.error(`Error processing response: ${error}`)
+      }
       // Since an error occurred we want to start a new stream for the next request
       if (this.lastIterator !== undefined && this.lastIterator !== null) {
         // Do we need to call close here? What if the error indicates the stream already closed?
@@ -253,16 +255,4 @@ class PromiseIterator<T> {
     console.log('Error in PromiseIterator:', err)
     return Promise.reject(err)
   }
-}
-
-function createDefaultTransport(baseURL: string): Transport {
-  return createConnectTransport({
-    // eslint-disable-next-line max-len
-    // N.B unlike https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25
-    // For some reason I didn't seem to have to allow unauthorized connections.
-    // Do we need to use http2?
-    httpVersion: '2',
-    // baseUrl needs to include the path prefix.
-    baseUrl: baseURL,
-  })
 }
