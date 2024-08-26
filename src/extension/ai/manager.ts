@@ -31,7 +31,7 @@ export class AIManager {
 
   createAIClient(): PromiseClient<typeof AIService> {
     const config = vscode.workspace.getConfiguration('runme')
-    const baseURL = config.get<string>('runme.aiBaseURL', 'http://localhost:8080/api')
+    const baseURL = config.get<string>('runme.aiBaseURL', 'http://localhost:8877/api')
     return createPromiseClient(AIService, createDefaultTransport(baseURL))
   }
 

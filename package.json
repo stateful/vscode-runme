@@ -842,7 +842,7 @@
           },
           "runme.aiBaseURL": {
             "type": "string",
-            "default": "http://localhost:8080/api",
+            "default": "http://localhost:8877/api",
             "description": "The base URL of the AI service."
           }
         }
