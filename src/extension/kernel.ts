@@ -65,6 +65,7 @@ import {
   getWorkspaceFolder,
   getRunnerSessionEnvs,
 } from './utils'
+import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
@@ -690,6 +691,7 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
+    getEventReporter().reportExecution(cell)
     runmeExec.start(Date.now())
 
     const annotations = getAnnotations(cell)

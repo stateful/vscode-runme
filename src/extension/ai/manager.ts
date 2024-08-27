@@ -8,7 +8,7 @@ import getLogger from '../logger'
 import * as ghost from './ghost'
 import * as stream from './stream'
 import * as generate from './generate'
-
+import * as events from './events'
 // AIManager is a class that manages the AI services.
 export class AIManager {
   log: ReturnType<typeof getLogger>
@@ -26,6 +26,9 @@ export class AIManager {
     this.completionGenerator = new generate.CompletionGenerator(this.client)
     if (autoComplete) {
       this.registerGhostCellEvents()
+
+      // Update the global event reporter to use the AI service
+      events.setEventReporter(new events.EventReporter(this.client))
     }
   }
 
