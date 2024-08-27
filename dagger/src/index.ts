@@ -31,9 +31,9 @@ class VscodeRunme {
   @func()
   withRemote(remote: string, ref: string): VscodeRunme {
     this.directory = dag
-    .git(`https://${remote}.git`)
-    .ref(ref)
-    .tree()
+      .git(`https://${remote}.git`)
+      .ref(ref)
+      .tree()
 
     return this
   }
@@ -57,7 +57,7 @@ class VscodeRunme {
       .withWorkdir('/mnt/vscode-runme')
       .withExec('bash /usr/local/bin/presetup'.split(' '))
 
-      return this
+    return this
   }
 
   /**
@@ -78,10 +78,10 @@ class VscodeRunme {
   @func()
   async getRepoFile(repo: string, path: string): Promise<File> {
     return dag
-    .git(repo)
-    .head()
-    .tree()
-    .file(path)
+      .git(repo)
+      .head()
+      .tree()
+      .file(path)
   }
 
   /**
@@ -91,22 +91,32 @@ class VscodeRunme {
    * @returns The Secret or error
    */
   @func()
-  async getSecret(name: string, value: Secret): Promise<Secret> {
+  async withSecret(name: string, value: Secret): Promise<Secret> {
     const plain = await value.plaintext()
     return dag.setSecret(name, plain)
   }
 
   /**
    * Sets up the container for the VscodeRunme instance.
-   * @param ghToken - Valid GitHub access token for API access.
+   * @param githubTokenSecret - Optional valid GitHub access token for API access passed as secret.
+   * @param githubToken - Valid GitHub access token for API access passed as plain text.
    * @returns The packaged VSIX extension file.
    */
   @func()
-  async buildExtension(githubToken: Secret): Promise<File> {
-    return this.container
-      .withSecretVariable('GITHUB_TOKEN', githubToken)
-      // .withExec('runme run setup'.split(' '))
-      .withExec('runme run setup build bundle'.split(' '))
+  async buildExtension(githubTokenSecret?: Secret, githubToken?: string): Promise<File> {
+    let c: Container
+
+    if (githubTokenSecret) {
+    c = this.container
+      .withSecretVariable('GITHUB_TOKEN', githubTokenSecret)
+    }
+    else if (githubToken) {
+      c = this.container.withEnvVariable('GITHUB_TOKEN', githubToken)
+    } else {
+      throw new Error('GitHub token is required')
+    }
+
+    return c.withExec('runme run setup build bundle'.split(' '))
       .file('runme-extension.vsix')
   }
 }
