@@ -82,7 +82,7 @@ const configurationSchema = {
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
     baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
-    enableShare: z.boolean().default(true),
+    enableShare: z.boolean().default(false),
     forceNewWindow: z.boolean().default(true),
     notebookAutoSave: z
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
@@ -401,7 +401,7 @@ const getRunmeBaseDomain = (): string => {
 }
 
 const isRunmeAppButtonsEnabled = (): boolean => {
-  return getCloudConfigurationValue('enableShare', true)
+  return getCloudConfigurationValue('enableShare', false)
 }
 
 const getRunmePanelIdentifier = (identifer: string): string => {

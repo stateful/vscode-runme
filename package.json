@@ -557,12 +557,6 @@
             "title": "AI Auto Cell",
             "markdownDescription": "If set to `true`, enable AI auto generation of cells. Reload the window after changing this setting."
           },
-          "runme.experiments.escalationButton": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
-          },
           "runme.experiments.smartEnvStore": {
             "type": "boolean",
             "scope": "window",
@@ -802,11 +796,6 @@
             "scope": "window",
             "markdownDescription": "Base domain to be use for Runme app"
           },
-          "runme.app.enableShare": {
-            "type": "boolean",
-            "default": false,
-            "markdownDescription": "Enable collaboration in notebook terminal"
-          },
           "runme.app.panel.runme.cloud": {
             "type": "string",
             "default": "runme.placeholder",
@@ -862,6 +851,24 @@
             "scope": "window",
             "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
+          },
+          "runme.features.escalate": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
+          },
+          "runme.features.gist": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the Gist button will be displayed to share the output through Github Gists."
+          },
+          "runme.features.share": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true` Enables collaboration in notebook terminal."
           }
         }
       }
@@ -1090,6 +1097,44 @@
       ]
     }
   },
+  "features": [
+    {
+      "name": "Escalate",
+      "enabled": true,
+      "conditions": {
+        "os": "All",
+        "vsCodeVersion": ">=1.58.0",
+        "statefulAuthRequired": true,
+        "allowedExtensions": [
+          "stateful.platform"
+        ]
+      }
+    },
+    {
+      "name": "Share",
+      "enabled": true,
+      "conditions": {
+        "os": "All",
+        "vsCodeVersion": ">=1.58.0",
+        "statefulAuthRequired": true,
+        "allowedExtensions": [
+          "stateful.platform"
+        ]
+      }
+    },
+    {
+      "name": "Gist",
+      "enabled": true,
+      "conditions": {
+        "os": "All",
+        "vsCodeVersion": ">=1.58.0",
+        "statefulAuthRequired": false,
+        "allowedExtensions": [
+          "stateful.runme"
+        ]
+      }
+    }
+  ],
   "scripts": {
     "build": "run-s build:dev",
     "build:dev": "webpack --mode development --node-env development",
@@ -1113,6 +1158,7 @@
     "@graphql-codegen/typescript": "4.0.9",
     "@octokit/rest": "^19.0.13",
     "@types/node": "^18.19.14",
+    "@types/semver": "^7.5.8",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "1.72.0",
     "@types/vscode-notebook-renderer": "^1.72.3",
