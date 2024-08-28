@@ -34,8 +34,14 @@ export class EventReporter implements IEventReporter {
     const contextCells: vscode.NotebookCell[] = []
 
     // Include the two previous cells as context.
-    // TODO(jeremy): Should we make this variable? Set some budget based on length?
-    let startIndex = cell.index - 2
+    // N.B. In principle we shouldn't need to send any additional context because we
+    // set the context id. So as soon as we put the focus on the execution cell we should
+    // start a streaming generate request which will include the entire notebook or a large portion of it.
+    // However, we still send some additional context here for two reasons
+    // 1. Help us verify that sending context ids is working correctly.
+    // 2. Its possible in the future we start rate limiting streaming generate requests and don't want to rely on it
+    // for providing the context of the cell execution.
+    let startIndex = cell.index - 1
     if (startIndex < 0) {
       startIndex = 0
     }
@@ -47,6 +53,7 @@ export class EventReporter implements IEventReporter {
     const cells = converters.vsCellsToESProtos(contextCells)
     const event = new LogEvent()
     event.selectedId = cell.metadata?.[RUNME_CELL_ID]
+    event.selectedIndex = cell.index
     event.type = LogEventType.EXECUTE
     event.cells = cells
     event.contextId = SessionManager.getManager().getID()
