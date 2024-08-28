@@ -9,6 +9,7 @@ import * as parser_pb from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/pars
 import * as vscode from 'vscode'
 
 import { RUNME_CELL_ID } from '../constants'
+import getLogger from '../logger'
 
 import * as converters from './converters'
 
@@ -21,9 +22,11 @@ export interface IEventReporter {
 // EventReporter handles reporting events to the AI service
 export class EventReporter implements IEventReporter {
   client: PromiseClient<typeof AIService>
+  log: ReturnType<typeof getLogger>
 
   constructor(client: PromiseClient<typeof AIService>) {
     this.client = client
+    this.log = getLogger('AIEventReporter')
   }
 
   async reportExecution(cell: vscode.NotebookCell) {
@@ -37,7 +40,9 @@ export class EventReporter implements IEventReporter {
     event.cells = cells
     req.events = [event]
 
-    await this.client.logEvents(req)
+    await this.client.logEvents(req).catch((e) => {
+      this.log.error(`Failed to log event; error: ${e}`)
+    })
   }
 }
 

@@ -22,7 +22,7 @@ export class AIManager {
 
     this.client = this.createAIClient()
     this.log = getLogger('AIManager')
-
+    this.log.info('AI: Initializing AI Manager')
     this.completionGenerator = new generate.CompletionGenerator(this.client)
     if (autoComplete) {
       this.registerGhostCellEvents()
@@ -32,9 +32,17 @@ export class AIManager {
     }
   }
 
-  createAIClient(): PromiseClient<typeof AIService> {
+  // N.B. We use arrow notation to ensure this is bound to the AIManager instance.
+  createAIClient = (): PromiseClient<typeof AIService> => {
     const config = vscode.workspace.getConfiguration('runme')
-    const baseURL = config.get<string>('runme.aiBaseURL', 'http://localhost:8877/api')
+    const baseURL = config.get<string>('aiBaseURL', 'http://localhost:8877/api')
+    // TODO(jeremy): The log.info statements prevents the extension from loading. My suspicion
+    // is that createAIClient is invoked from the constructor which is invoked at extension
+    // loading time. At this point maybe something related to the logger isn't initialized yet?
+    // getLogger('AIManager').info('AI: Using AI service at: ' + baseURL)
+    //this.log.info('AI: Using AI service at: ' + baseURL)
+    this.log.info(`AI: Using AI service at: ${baseURL}`)
+    //console.log(`AI: Using AI service at ${baseURL}`)
     return createPromiseClient(AIService, createDefaultTransport(baseURL))
   }
 
