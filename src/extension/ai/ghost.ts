@@ -1,6 +1,5 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
-import { ulid } from 'ulidx'
 
 import getLogger from '../logger'
 import * as serializer from '../serializer'
@@ -8,6 +7,7 @@ import * as serializer from '../serializer'
 import * as converters from './converters'
 import * as stream from './stream'
 import * as protos from './protos'
+import { SessionManager } from './sessions'
 
 const log = getLogger()
 
@@ -39,13 +39,11 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   // contextID is the ID of the context we are generating completions for.
   // It is used to detect whether a completion response is stale and should be
   // discarded because the context has changed.
-  private contextID: string
 
   constructor() {
     this.notebookState = new Map<vscode.Uri, NotebookState>()
     // Generate a random context ID. This should be unnecessary because presumable the event to change
     // the active cell will be sent before any requests are sent but it doesn't hurt to be safe.
-    this.contextID = ulid()
   }
 
   // Updated method to check and initialize notebook state
@@ -109,7 +107,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
       let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
-        contextId: this.contextID,
+        contextId: SessionManager.getManager().getID(),
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
@@ -129,7 +127,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let notebook = protos.notebookTSToES(notebookProto)
       // Generate an update request
       let request = new agent_pb.StreamGenerateRequest({
-        contextId: this.contextID,
+        contextId: SessionManager.getManager().getID(),
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
@@ -144,10 +142,10 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
 
   // processResponse applies the changes from the response to the notebook.
   processResponse(response: agent_pb.StreamGenerateResponse) {
-    if (response.contextId !== this.contextID) {
+    if (response.contextId !== SessionManager.getManager().getID()) {
       // TODO(jeremy): Is this logging too verbose?
       log.info(
-        `Ignoring response with contextID ${response.contextId} because it doesn't match the current contextID ${this.contextID}`,
+        `Ignoring response with contextID ${response.contextId} because it doesn't match the current contextID ${SessionManager.getManager().getID()}`,
       )
       return
     }
@@ -215,11 +213,11 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   // handleOnDidChangeActiveTextEditor updates the ghostKey cell decoration and rendering
   // when it is selected
   handleOnDidChangeActiveTextEditor = (editor: vscode.TextEditor | undefined) => {
-    const oldCID = this.contextID
+    const oldCID = SessionManager.getManager().getID()
     // We need to generate a new context ID because the context has changed.
-    this.contextID = ulid()
+    const contextID = SessionManager.getManager().newID()
     log.info(
-      `onDidChangeActiveTextEditor fired: editor: ${editor?.document.uri}; new contextID: ${this.contextID}; old contextID: ${oldCID}`,
+      `onDidChangeActiveTextEditor fired: editor: ${editor?.document.uri}; new contextID: ${contextID}; old contextID: ${oldCID}`,
     )
     if (editor === undefined) {
       return

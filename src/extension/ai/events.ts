@@ -10,12 +10,14 @@ import * as vscode from 'vscode'
 import { RUNME_CELL_ID } from '../constants'
 import getLogger from '../logger'
 
+import { SessionManager } from './sessions'
 import * as converters from './converters'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
 export interface IEventReporter {
   reportExecution(cell: vscode.NotebookCell): Promise<void>
+  reportEvents(events: LogEvent[]): Promise<void>
 }
 
 // EventReporter handles reporting events to the AI service
@@ -29,8 +31,6 @@ export class EventReporter implements IEventReporter {
   }
 
   async reportExecution(cell: vscode.NotebookCell) {
-    const req = new LogEventsRequest()
-
     const contextCells: vscode.NotebookCell[] = []
 
     // Include the two previous cells as context.
@@ -44,13 +44,18 @@ export class EventReporter implements IEventReporter {
     }
 
     contextCells.push(cell)
-
     const cells = converters.vsCellsToESProtos(contextCells)
     const event = new LogEvent()
     event.selectedId = cell.metadata?.[RUNME_CELL_ID]
     event.type = LogEventType.EXECUTE
     event.cells = cells
-    req.events = [event]
+    event.contextId = SessionManager.getManager().getID()
+    this.reportEvents([event])
+  }
+
+  async reportEvents(events: LogEvent[]) {
+    const req = new LogEventsRequest()
+    req.events = events
 
     await this.client.logEvents(req).catch((e) => {
       this.log.error(`Failed to log event; error: ${e}`)
@@ -61,6 +66,10 @@ export class EventReporter implements IEventReporter {
 // NullOpEventReporter is a null op implementation of the event reporter
 export class NullOpEventReporter implements IEventReporter {
   async reportExecution(_cell: vscode.NotebookCell) {
+    // Do nothing
+  }
+
+  async reportEvents(_events: LogEvent[]) {
     // Do nothing
   }
 }

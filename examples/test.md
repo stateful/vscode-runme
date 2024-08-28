@@ -32,3 +32,10 @@ https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
 ```sh {"id":"01J6AS7T4QYMZ1NTW0KH76MG4V"}
 echo Hello world
 ```
+
+Lets test generating some cells
+
+```bash {"id":"01J6BE698BEJ5K4NP4SCKEFTWN"}
+echo "This is a generated cell"
+echo "It demonstrates cell creation"
+```
