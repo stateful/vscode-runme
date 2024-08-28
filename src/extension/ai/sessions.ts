@@ -1,4 +1,7 @@
+import { LogEvent, LogEventType } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import { ulid } from 'ulidx'
+
+import { getEventReporter } from './events'
 
 // SessionManager is responsible for managing sessions of the AI requests.
 // A session consists of multiple requests/operations that are all related.
@@ -14,7 +17,10 @@ import { ulid } from 'ulidx'
 // can access.
 //
 // N.B. Currently we assume there is only one session at a time. Notably, we don't allow
-// for multiple sessions to be active corresponding to different notebooks.
+// for multiple sessions to be active corresponding to different notebooks. A new session
+// is activated when ever the cell focus changes so whenever a user switches to a different
+// notebook we will start a new session. However, the old notebook might still have some
+// ghost cells in it.
 export class SessionManager {
   static instance: SessionManager
 
@@ -39,7 +45,19 @@ export class SessionManager {
 
   // newID generates a new session id and returns it
   public newID(): string {
+    // Report the end of the current session and the start of the new session
+    const oldID = this.sessionID
+    const closeEvent = new LogEvent()
+    closeEvent.type = LogEventType.SESSION_END
+    closeEvent.contextId = oldID
+
     this.sessionID = ulid()
+
+    const openEvent = new LogEvent()
+    openEvent.type = LogEventType.SESSION_START
+    openEvent.contextId = this.sessionID
+
+    getEventReporter().reportEvents([closeEvent, openEvent])
     return this.sessionID
   }
 }

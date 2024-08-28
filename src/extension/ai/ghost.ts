@@ -3,13 +3,13 @@ import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
 import * as serializer from '../serializer'
+import { RUNME_CELL_ID } from '../constants'
 
 import * as converters from './converters'
 import * as stream from './stream'
 import * as protos from './protos'
 import { SessionManager } from './sessions'
 import { getEventReporter } from './events'
-import { RUNME_CELL_ID } from '../constants'
 
 const log = getLogger()
 

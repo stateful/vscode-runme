@@ -63,7 +63,6 @@ export class EventReporter implements IEventReporter {
   async reportEvents(events: LogEvent[]) {
     const req = new LogEventsRequest()
     req.events = events
-
     await this.client.logEvents(req).catch((e) => {
       this.log.error(`Failed to log event; error: ${e}`)
     })
