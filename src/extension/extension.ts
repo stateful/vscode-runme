@@ -376,6 +376,10 @@ export class RunmeExtension {
       kernel
         .runProgram('echo $SHELL')
         .then((output) => {
+          if (output === false) {
+            return
+          }
+
           const supportedShells = ['bash', 'zsh']
           const isSupported = supportedShells.some((sh) => output?.includes(sh))
           logger.info(`Shell: ${output}`)

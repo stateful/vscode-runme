@@ -1110,7 +1110,7 @@ export class Kernel implements Disposable {
 
     if (!this.runner) {
       logger.error('No runner available')
-      return
+      return false
     }
 
     if (typeof program === 'object') {
