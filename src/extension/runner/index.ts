@@ -23,7 +23,7 @@ import {
   SessionEnvStoreType,
 } from '../grpc/runner/types'
 import { ExecuteDuplex } from '../grpc/runner/types'
-import { progconf } from '../grpc/runner/v2alpha1'
+import { progconf } from '../grpc/runner/v2'
 import { IRunnerServiceClient, RpcError } from '../grpc/client'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/kernelServer'
