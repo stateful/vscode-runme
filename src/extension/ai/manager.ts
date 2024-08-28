@@ -41,7 +41,7 @@ export class AIManager {
     // loading time. At this point maybe something related to the logger isn't initialized yet?
     // getLogger('AIManager').info('AI: Using AI service at: ' + baseURL)
     //this.log.info('AI: Using AI service at: ' + baseURL)
-    this.log.info(`AI: Using AI service at: ${baseURL}`)
+    // this.log.info(`AI: Using AI service at: ${baseURL}`)
     //console.log(`AI: Using AI service at ${baseURL}`)
     return createPromiseClient(AIService, createDefaultTransport(baseURL))
   }

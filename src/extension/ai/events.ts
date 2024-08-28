@@ -5,7 +5,6 @@ import {
   LogEventType,
   LogEvent,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
-import * as parser_pb from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
 import * as vscode from 'vscode'
 
 import { RUNME_CELL_ID } from '../constants'
@@ -32,8 +31,21 @@ export class EventReporter implements IEventReporter {
   async reportExecution(cell: vscode.NotebookCell) {
     const req = new LogEventsRequest()
 
-    const cells: parser_pb.Cell[] = []
-    cells.push(converters.vsCellToESProto(cell))
+    const contextCells: vscode.NotebookCell[] = []
+
+    // Include the two previous cells as context.
+    // TODO(jeremy): Should we make this variable? Set some budget based on length?
+    let startIndex = cell.index - 2
+    if (startIndex < 0) {
+      startIndex = 0
+    }
+    for (let i = startIndex; i < cell.index; i++) {
+      contextCells.push(cell.notebook.cellAt(i))
+    }
+
+    contextCells.push(cell)
+
+    const cells = converters.vsCellsToESProtos(contextCells)
     const event = new LogEvent()
     event.selectedId = cell.metadata?.[RUNME_CELL_ID]
     event.type = LogEventType.EXECUTE

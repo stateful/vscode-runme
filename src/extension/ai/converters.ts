@@ -66,15 +66,22 @@ export function cellProtosToCellData(cells: serializerTypes.Cell[]): vscode.Note
 // uses the ES client library as opposed to the TS client library.
 // The reason we don't rely on the serialization routines is we don't want to
 // generate an RPC just to convert the cell to a proto.
-export function vsCellToESProto(cell: vscode.NotebookCell): parser_pb.Cell {
-  const cellProto = new parser_pb.Cell()
-  if (cell.kind === vscode.NotebookCellKind.Code) {
-    cellProto.kind = parser_pb.CellKind.CODE
-  } else if (cell.kind === vscode.NotebookCellKind.Markup) {
-    cellProto.kind = parser_pb.CellKind.MARKUP
+export function vsCellsToESProtos(cells: vscode.NotebookCell[]): parser_pb.Cell[] {
+  const cellProtos: parser_pb.Cell[] = []
+
+  for (let cell of cells) {
+    const cellProto = new parser_pb.Cell()
+    if (cell.kind === vscode.NotebookCellKind.Code) {
+      cellProto.kind = parser_pb.CellKind.CODE
+    } else if (cell.kind === vscode.NotebookCellKind.Markup) {
+      cellProto.kind = parser_pb.CellKind.MARKUP
+    }
+
+    cellProto.value = cell.document.getText()
+    cellProto.metadata = cell.metadata
+
+    cellProtos.push(cellProto)
   }
 
-  cellProto.value = cell.document.getText()
-  cellProto.metadata = cell.metadata
-  return cellProto
+  return cellProtos
 }
