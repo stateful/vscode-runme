@@ -12,6 +12,9 @@ import { ulid } from 'ulidx'
 // There is a single instance of the SessionManager that is accessed by the getManager
 // function. This is because we need a single global session id that multiple callers
 // can access.
+//
+// N.B. Currently we assume there is only one session at a time. Notably, we don't allow
+// for multiple sessions to be active corresponding to different notebooks.
 export class SessionManager {
   static instance: SessionManager
 

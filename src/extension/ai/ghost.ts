@@ -8,6 +8,8 @@ import * as converters from './converters'
 import * as stream from './stream'
 import * as protos from './protos'
 import { SessionManager } from './sessions'
+import { getEventReporter } from './events'
+import { RUNME_CELL_ID } from '../constants'
 
 const log = getLogger()
 
@@ -251,6 +253,13 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     // If the cell is a ghost cell we want to remove the decoration
     // and replace it with a non-ghost cell.
     editorAsNonGhost(editor)
+
+    const event = new agent_pb.LogEvent()
+    event.type = agent_pb.LogEventType.ACCEPTED
+    event.contextId = oldCID
+    event.selectedId = cell.metadata?.[RUNME_CELL_ID]
+    event.selectedIndex = cell.index
+    getEventReporter().reportEvents([event])
   }
 
   shutdown(): void {

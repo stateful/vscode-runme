@@ -33,7 +33,7 @@ export class EventReporter implements IEventReporter {
   async reportExecution(cell: vscode.NotebookCell) {
     const contextCells: vscode.NotebookCell[] = []
 
-    // Include the two previous cells as context.
+    // Include some previous cells as context.
     // N.B. In principle we shouldn't need to send any additional context because we
     // set the context id. So as soon as we put the focus on the execution cell we should
     // start a streaming generate request which will include the entire notebook or a large portion of it.
