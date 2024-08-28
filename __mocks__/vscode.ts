@@ -93,6 +93,7 @@ export const window = {
   showInformationMessage: vi.fn(),
   showErrorMessage: vi.fn(),
   createTerminal: vi.fn().mockReturnValue(terminal),
+  createTextEditorDecorationType: vi.fn(),
   showNotebookDocument: vi.fn(),
   showTextDocument: vi.fn(),
   onDidChangeActiveNotebookEditor: vi.fn().mockReturnValue({ dispose: vi.fn() }),

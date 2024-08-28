@@ -5,6 +5,7 @@ import type { TextField } from '@vscode/webview-ui-toolkit'
 
 import { ExternalLinkIcon } from '../icons/external'
 import { CATEGORY_SEPARATOR } from '../../../constants'
+import { Settings } from '../../../types'
 
 export interface ISelectedCategory {
   name: string
@@ -302,6 +303,9 @@ export class CategorySelector extends LitElement {
   @property()
   identifier: string | undefined
 
+  @property({ type: Object })
+  settings: Settings = {}
+
   private dispatchComponentEvent(name: string, e: Event) {
     if (e.defaultPrevented) {
       e.preventDefault()
@@ -334,7 +338,8 @@ export class CategorySelector extends LitElement {
   }
 
   renderLink() {
-    return html`<vscode-link href="https://docs.runme.dev/configuration#run-all-cells-by-category"
+    return html`<vscode-link
+      href="${this.settings?.docsUrl}/configuration#run-all-cells-by-category"
       >(docs ${ExternalLinkIcon})</vscode-link
     >`
   }

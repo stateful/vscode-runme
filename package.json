@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.7.1",
+  "version": "3.7.2",
   "publisher": "stateful",
   "displayName": "Runme DevOps Notebooks",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -587,6 +587,12 @@
             "default": true,
             "markdownDescription": "If set to `true`, the extension will bring up the GRPC server."
           },
+          "runme.experiments.shellWarning": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the extension will display an error message if an unsupported shell is detected."
+          },
           "runme.checkout.projectDir": {
             "type": "string",
             "scope": "machine",
@@ -840,15 +846,16 @@
             "default": false,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
-          "runme.foyleAddress": {
-            "type": "string",
-            "default": "localhost:9080",
-            "description": "The address of the Foyle Agent grpc service. The agent generates completions. This should in the form {host}:{port}."
-          },
           "runme.aiBaseURL": {
             "type": "string",
-            "default": "http://localhost:8080/api",
+            "default": "http://localhost:8877/api",
             "description": "The base URL of the AI service."
+          },
+          "runme.app.docsUrl": {
+            "type": "string",
+            "scope": "window",
+            "default": "https://docs.runme.dev",
+            "markdownDescription": "Documentation Base URL"
           }
         }
       }
@@ -1104,7 +1111,7 @@
     "@types/vscode": "1.72.0",
     "@types/vscode-notebook-renderer": "^1.72.3",
     "@types/webpack-env": "^1.18.1",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^2.0.5",
     "@vscode/vsce": "^2.21.0",
@@ -1113,17 +1120,17 @@
     "@wdio/mocha-framework": "^8.40.2",
     "@wdio/spec-reporter": "^8.27.2",
     "chromedriver": "^127.0.2",
-    "comment-json": "^4.2.3",
+    "comment-json": "^4.2.5",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.0",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-unicorn": "^55.0.0",
     "eslint-plugin-unused-imports": "^3.0.0",
-    "expect-webdriverio": "^4.2.7",
+    "expect-webdriverio": "^4.15.4",
     "fork-ts-checker-webpack-plugin": "^9.0.0",
-    "husky": "^9.0.10",
-    "msw": "^2.1.5",
+    "husky": "^9.1.5",
+    "msw": "^2.3.5",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.3",
     "runme": "^3.1.0",
@@ -1142,12 +1149,12 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.4",
-    "@aws-sdk/client-ec2": "^3.630.0",
-    "@aws-sdk/client-eks": "^3.630.0",
-    "@aws-sdk/credential-providers": "^3.630.0",
+    "@aws-sdk/client-ec2": "^3.635.0",
+    "@aws-sdk/client-eks": "^3.635.0",
+    "@aws-sdk/credential-providers": "^3.635.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240709201032-5be6b6661793.4",
-    "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20240801044500-fba3b5ceb26b.1",
-    "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-20240801044500-fba3b5ceb26b.3",
+    "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20240819224840-b69cd71876b1.1",
+    "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-20240819224840-b69cd71876b1.3",
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240731204114-2df61af8e022.4",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-node": "^1.1.2",
@@ -1158,7 +1165,7 @@
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",
-    "@vercel/client": "^13.3.4",
+    "@vercel/client": "^13.4.0",
     "@vscode/vscode-languagedetection": "^1.0.22",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "@xterm/addon-fit": "^0.10.0",

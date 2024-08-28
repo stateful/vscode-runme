@@ -15,13 +15,13 @@ import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runm
 // eslint-disable-next-line max-len
 import { ProjectServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/project/v1/project_pb.client'
 // eslint-disable-next-line max-len
-import { ReporterServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1/reporter_pb.client'
+import { ReporterServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1alpha1/reporter_pb.client'
 import { HealthClient } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import {
   TransformRequest,
   TransformResponse,
-} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1/reporter_pb'
+} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1alpha1/reporter_pb'
 
 import { getServerRunnerVersion } from '../../utils/configuration'
 
