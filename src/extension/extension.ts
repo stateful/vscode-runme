@@ -15,6 +15,7 @@ import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
 import {
+  getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getSessionOutputs,
@@ -79,6 +80,8 @@ import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as manager from './ai/manager'
+import getLogger from './logger'
+
 export class RunmeExtension {
   protected serializer?: SerializerBase
 
@@ -356,6 +359,40 @@ export class RunmeExtension {
     }
 
     await bootFile(context)
+
+    if (kernel.hasExperimentEnabled('shellWarning', false)) {
+      const showUnsupportedShellMessage = async () => {
+        const showMore = 'Show more'
+
+        const answer = await window.showErrorMessage('Unsupported shell', showMore)
+        if (answer === showMore) {
+          const url = getDocsUrlFor('/r/extension/supported-shells')
+          env.openExternal(Uri.parse(url))
+        }
+      }
+
+      const logger = getLogger('runme.beta.shellWarning')
+
+      kernel
+        .runProgram('echo $SHELL')
+        .then((output) => {
+          if (output === false) {
+            return
+          }
+
+          const supportedShells = ['bash', 'zsh']
+          const isSupported = supportedShells.some((sh) => output?.includes(sh))
+          logger.info(`Shell: ${output}`)
+
+          if (!isSupported) {
+            showUnsupportedShellMessage()
+          }
+        })
+        .catch((e) => {
+          logger.error(e)
+          showUnsupportedShellMessage()
+        })
+    }
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {

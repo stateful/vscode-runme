@@ -69,9 +69,8 @@ export const uri: IKernelRunner = async ({
 
   program.onDidWrite(onData)
   program.onDidErr(onData)
-  program.run()
 
-  const success = await new Promise<boolean>((resolve, reject) => {
+  const success = new Promise<boolean>((resolve, reject) => {
     program.onDidClose(async (code) => {
       if (code !== 0) {
         return resolve(false)
@@ -107,6 +106,9 @@ export const uri: IKernelRunner = async ({
     }
   })
 
-  const cellText = success ? execRes?.trim() : undefined
-  return runScript?.(cellText) || success
+  program.run()
+  const result = await success
+
+  const cellText = result ? execRes?.trim() : undefined
+  return runScript?.(cellText) || result
 }

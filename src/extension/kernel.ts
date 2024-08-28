@@ -68,7 +68,7 @@ import {
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError } from './grpc/client'
-import { IRunner, IRunnerReady } from './runner'
+import { IRunner, IRunnerReady, RunProgramOptions } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
 import { IKernelRunnerOptions, executeRunner } from './executors/runner'
 import { ITerminalState, NotebookTerminalType } from './terminal/terminalState'
@@ -141,6 +141,7 @@ export class Kernel implements Disposable {
     this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
     this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
     this.#experiments.set('aiLogs', config.get<boolean>('aiLogs', false))
+    this.#experiments.set('shellWarning', config.get<boolean>('shellWarning', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -1101,5 +1102,90 @@ export class Kernel implements Disposable {
 
   public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
     return this.serializer?.getPlainCache(cacheId)
+  }
+
+  async runProgram(program?: RunProgramOptions | string) {
+    let programOptions: RunProgramOptions
+    const logger = getLogger('runProgram')
+
+    if (!this.runner) {
+      logger.error('No runner available')
+      return false
+    }
+
+    if (typeof program === 'object') {
+      programOptions = program
+    } else if (typeof program === 'string') {
+      programOptions = {
+        programName: 'bash',
+        background: false,
+        exec: {
+          type: 'script',
+          script: program,
+        },
+        languageId: 'sh',
+        commandMode: CommandModeEnum().INLINE_SHELL,
+        storeLastOutput: false,
+        tty: false,
+      }
+    } else {
+      logger.error('Invalid program options')
+      return
+    }
+
+    const programSession = await this.runner.createProgramSession(programOptions)
+
+    this.context.subscriptions.push(programSession)
+
+    let execRes: string | undefined
+    const onData = (data: string | Uint8Array) => {
+      if (execRes === undefined) {
+        execRes = ''
+      }
+      execRes += data.toString()
+    }
+
+    programSession.onDidWrite(onData)
+    programSession.onDidErr(onData)
+
+    const success = new Promise<boolean>((resolve, reject) => {
+      programSession.onDidClose(async (code) => {
+        if (code !== 0) {
+          return resolve(false)
+        }
+        return resolve(true)
+      })
+
+      programSession.onInternalErr((e) => {
+        reject(e)
+      })
+
+      const exitReason = programSession.hasExited()
+
+      if (exitReason) {
+        switch (exitReason.type) {
+          case 'error':
+            {
+              reject(exitReason.error)
+            }
+            break
+
+          case 'exit':
+            {
+              resolve(exitReason.code === 0)
+            }
+            break
+
+          default: {
+            resolve(false)
+          }
+        }
+      }
+    })
+
+    programSession.run()
+    const result = await success
+
+    return result ? execRes?.trim() : undefined
   }
 }

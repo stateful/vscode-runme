@@ -14,7 +14,7 @@ import { resolveProgramOptionsScript } from './runner'
 import { IKernelExecutor } from '.'
 
 export const aws: IKernelExecutor = async (executor) => {
-  const { cellText, exec, runner, runnerEnv, doc, outputs, context } = executor
+  const { cellText, exec, runner, runnerEnv, doc, outputs, kernel } = executor
 
   const annotations = getAnnotations(exec.cell)
 
@@ -41,67 +41,19 @@ export const aws: IKernelExecutor = async (executor) => {
       cellId,
     })
 
-    // todo(sebastian): move down into kernel?
     switch (programOptions.exec?.type) {
       case 'script':
-        {
-          programOptions.exec.script = 'echo $AWS_PROFILE'
-        }
+        programOptions.exec.script = 'echo $AWS_PROFILE'
         break
     }
 
-    const program = await runner.createProgramSession(programOptions)
-    context.subscriptions.push(program)
+    let profile = ''
+    const result = await kernel.runProgram(programOptions)
 
-    let execRes: string | undefined
-    const onData = (data: string | Uint8Array) => {
-      if (execRes === undefined) {
-        execRes = ''
-      }
-      execRes += data.toString()
+    if (result) {
+      profile = result
     }
 
-    program.onDidWrite(onData)
-    program.onDidErr(onData)
-    program.run()
-
-    const success = await new Promise<boolean>((resolve, reject) => {
-      program.onDidClose(async (code) => {
-        if (code !== 0) {
-          return resolve(false)
-        }
-        return resolve(true)
-      })
-
-      program.onInternalErr((e) => {
-        reject(e)
-      })
-
-      const exitReason = program.hasExited()
-
-      // unexpected early return, likely an error
-      if (exitReason) {
-        switch (exitReason.type) {
-          case 'error':
-            {
-              reject(exitReason.error)
-            }
-            break
-
-          case 'exit':
-            {
-              resolve(exitReason.code === 0)
-            }
-            break
-
-          default: {
-            resolve(false)
-          }
-        }
-      }
-    })
-
-    const profile = success ? execRes?.trim() : 'default'
     credentials = fromIni({ profile })
 
     switch (awsResolver.view) {
