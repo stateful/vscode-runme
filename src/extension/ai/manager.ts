@@ -36,13 +36,17 @@ export class AIManager {
   createAIClient = (): PromiseClient<typeof AIService> => {
     const config = vscode.workspace.getConfiguration('runme')
     const baseURL = config.get<string>('aiBaseURL', 'http://localhost:8877/api')
-    // TODO(jeremy): The log.info statements prevents the extension from loading. My suspicion
+    // TODO(jeremy): The log.info statements prevents the extension from loading at least in debug
+    // mode. My suspicion
     // is that createAIClient is invoked from the constructor which is invoked at extension
-    // loading time. At this point maybe something related to the logger isn't initialized yet?
-    // getLogger('AIManager').info('AI: Using AI service at: ' + baseURL)
-    //this.log.info('AI: Using AI service at: ' + baseURL)
+    // loading time. In logger.ts there is a call to outputChannel = window.createOutputChannel('Runme')
+    // to setup the outputChannel. I wonder if that creates a race condition.
+    // The problem seemed to happen if I call console.log as well. It seemed somewhat intermittent
+    // Which would be consistent with a race condition. I wonder if the problem is specific to
+    // running in debug mode?
+    // this.log.info('AI: Using AI service at: ' + baseURL)
     // this.log.info(`AI: Using AI service at: ${baseURL}`)
-    //console.log(`AI: Using AI service at ${baseURL}`)
+    // console.log(`AI: Using AI service at ${baseURL}`)
     return createPromiseClient(AIService, createDefaultTransport(baseURL))
   }
 
