@@ -28,18 +28,3 @@ export FOO="don't prompt me"
 ```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
 https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
 ```
-
-Now lets see if we end a session    
-
-```bash {"id":"01J6CQW6FNVQ9AGKSC77DVZ7X7"}
-kubectl create deployment my-app --image=nginx
-kubectl expose deployment my-app --port=80 --type=LoadBalancer
-```
-
-```sh {"id":"01J6AS7T4QYMZ1NTW0KH76MG4V"}
-echo Hello world
-```
-
-Lets test generating some cells
-Use kubectl
-To start a session
