@@ -15,9 +15,9 @@ import { GrpcSerializer } from '../../serializer'
 import { InitializeClient } from '../../api/client'
 import {
   CreateCellOutputDocument,
-  InputMaybe,
-  ReporterCellInput,
+  ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
+import { Cell } from '../../grpc/serializerTypes'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -44,13 +44,13 @@ export default async function saveCellExecution(
     appHost: env.appHost,
     appName: env.appName,
     appRoot: env.appRoot,
-    isNewAppInstall: `${env.isNewAppInstall}`,
+    isNewAppInstall: env.isNewAppInstall,
     language: env.language,
     machineId: env.machineId,
     remoteName: env.remoteName || '',
     sessionId: env.sessionId,
     shell: env.shell,
-    uiKind: `${env.uiKind}`,
+    uiKind: env.uiKind,
     uriScheme: env.uriScheme,
   }
 
@@ -79,49 +79,65 @@ export default async function saveCellExecution(
       kernel,
       marshalFrontmatter: true,
     })
-    const payload = await kernel.getReporterPayload({
-      notebook,
-      extension: {
-        autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
-        branch: gitCtx?.branch || undefined,
-        commit: gitCtx?.commit || undefined,
-        fileContent,
-        filePath,
-        maskedOutput: maskedSessionOutput,
-        plainOutput: plainSessionOutput,
-        repository: gitCtx?.repository || undefined,
-        arch: os.arch(),
-        hostname: os.hostname(),
-        macAddress: getMAC(),
-        platform: os.platform(),
-        release: os.release(),
-        shell: vsEnv.shell,
-        vendor: os.cpus()[0].model,
-        vsAppHost: vsEnv.appHost,
-        vsAppName: vsEnv.appName,
-        vsAppSessionId: vsEnv.sessionId,
-        vsMachineId: vsEnv.machineId,
-        vsMetadata: vsEnv,
-      },
-    })
 
-    const cell = payload?.response.notebook?.cells.find((c) => c.metadata.id === message.output.id)
+    const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
 
     const graphClient = InitializeClient({ runmeToken: session.accessToken })
-    const platformPayload = {
-      input: {
-        extension: payload?.response.extension,
-        notebook: {
-          ...payload?.response.notebook,
-          // Send only the cell that is being saved
-          cells: [cell] as InputMaybe<ReporterCellInput>[],
-        },
-      },
-    }
 
+    // TODO: Implement the reporter to normalize the data into a valid Platform api payload
     const result = await graphClient.mutate({
       mutation: CreateCellOutputDocument,
-      variables: platformPayload,
+      variables: {
+        input: {
+          extension: {
+            autoSave: autoSaveIsOn,
+            device: {
+              arch: os.arch(),
+              hostname: os.hostname(),
+              platform: os.platform(),
+              macAddress: getMAC(),
+              release: os.release(),
+              shell: os.userInfo().shell,
+              vendor: os.userInfo().username,
+              vsAppHost: vsEnv.appHost,
+              vsAppName: vsEnv.appName,
+              vsAppSessionId: vsEnv.sessionId,
+              vsMachineId: vsEnv.machineId,
+              vsMetadata: vsEnv,
+            },
+            file: {
+              content: fileContent,
+              path: filePath,
+            },
+            git: {
+              branch: gitCtx.branch,
+              commit: gitCtx.commit,
+              repository: gitCtx.repository,
+            },
+            session: {
+              maskedOutput: maskedSessionOutput,
+              plainOutput: plainSessionOutput,
+            },
+          },
+          notebook: {
+            cells: [
+              {
+                ...cell,
+                outputs: cell.outputs.map((output) => ({
+                  ...output,
+                  items: output.items.filter((item) => {
+                    if (item.mime === 'application/vnd.code.notebook.stdout') {
+                      return item
+                    }
+                  }),
+                })),
+              },
+            ],
+            frontmatter: notebook?.frontmatter as ReporterFrontmatterInput,
+            metadata: notebook?.metadata,
+          },
+        },
+      },
     })
 
     log.info('Cell execution saved')
