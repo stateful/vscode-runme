@@ -1,5 +1,5 @@
-mutation CreateCellOutput($input: ReporterInput!) {
-  createCellOutput(input: $input) {
+mutation CreateExtensionCellOutput($input: ReporterInput!) {
+  createExtensionCellOutput(input: $input) {
    id
    htmlUrl
    exitCode

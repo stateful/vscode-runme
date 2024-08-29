@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "mutation ArchiveCellOutput($id: String!) {\n  archiveCellOutput(id: $id) {\n    id\n  }\n}": types.ArchiveCellOutputDocument,
-    "mutation CreateCellOutput($input: ReporterInput!) {\n  createCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellOutputDocument,
+    "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateExtensionCellOutputDocument,
     "mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}": types.UnArchiveCellOutputDocument,
     "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellOutputDocument,
 };
@@ -40,7 +40,7 @@ export function graphql(source: "mutation ArchiveCellOutput($id: String!) {\n  a
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation CreateCellOutput($input: ReporterInput!) {\n  createCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation CreateCellOutput($input: ReporterInput!) {\n  createCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
+export function graphql(source: "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

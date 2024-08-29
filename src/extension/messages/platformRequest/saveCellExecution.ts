@@ -14,7 +14,7 @@ import { getGitContext, getPlatformAuthSession } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
 import { InitializeClient } from '../../api/client'
 import {
-  CreateCellOutputDocument,
+  CreateExtensionCellOutputDocument,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
 import { Cell } from '../../grpc/serializerTypes'
@@ -86,7 +86,7 @@ export default async function saveCellExecution(
 
     // TODO: Implement the reporter to normalize the data into a valid Platform api payload
     const result = await graphClient.mutate({
-      mutation: CreateCellOutputDocument,
+      mutation: CreateExtensionCellOutputDocument,
       variables: {
         input: {
           extension: {
@@ -142,7 +142,7 @@ export default async function saveCellExecution(
 
     log.info('Cell execution saved')
 
-    const showEscalationButton = !!result.data?.createCellOutput?.isSlackReady
+    const showEscalationButton = !!result.data?.createExtensionCellOutput?.isSlackReady
     log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
 
     TelemetryReporter.sendTelemetryEvent('app.save')
