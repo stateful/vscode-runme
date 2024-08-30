@@ -593,6 +593,12 @@
             "default": false,
             "markdownDescription": "If set to `true`, the extension will display an error message if an unsupported shell is detected."
           },
+          "runme.experiments.reporter": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the extension will use the new reporter API to create outputs."
+          },
           "runme.checkout.projectDir": {
             "type": "string",
             "scope": "machine",
