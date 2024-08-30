@@ -12,6 +12,7 @@ import getLogger from '../logger'
 
 import { SessionManager } from './sessions'
 import * as converters from './converters'
+import { ulid } from 'ulidx'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
@@ -63,6 +64,11 @@ export class EventReporter implements IEventReporter {
   async reportEvents(events: LogEvent[]) {
     const req = new LogEventsRequest()
     req.events = events
+    for (const event of events) {
+      if (event.eventId === '') {
+        event.eventId = ulid()
+      }
+    }
     await this.client.logEvents(req).catch((e) => {
       this.log.error(`Failed to log event; error: ${e}`)
     })
