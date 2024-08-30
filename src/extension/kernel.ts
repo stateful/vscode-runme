@@ -692,7 +692,7 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    getEventReporter().reportExecution(cell)
+    await getEventReporter().reportExecution(cell)
     runmeExec.start(Date.now())
 
     const annotations = getAnnotations(cell)

@@ -58,7 +58,7 @@ export class EventReporter implements IEventReporter {
     event.type = LogEventType.EXECUTE
     event.cells = cells
     event.contextId = SessionManager.getManager().getID()
-    this.reportEvents([event])
+    return this.reportEvents([event])
   }
 
   async reportEvents(events: LogEvent[]) {
