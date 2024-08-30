@@ -2,7 +2,7 @@
   "name": "runme",
   "version": "3.7.3",
   "publisher": "stateful",
-  "displayName": "Runme DevOps Notebooks",
+  "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
   "author": "Sebastian Tiedtke <sebastian@stateful.com>",
   "contributors": [
