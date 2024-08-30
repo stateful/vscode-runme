@@ -8,7 +8,7 @@ updates:
       day: "wednesday"
       timezone: "America/Los_Angeles"
     open-pull-requests-limit: 10
-    versioning-strategy: increase-if-necessary
+    versioning-strategy: increase
     ignore:
       # we want to update this package manually as it changes
       # the minimum required VS Code version for this extension
