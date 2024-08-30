@@ -51,7 +51,7 @@ export default async function updateCellExecution(
 
     TelemetryReporter.sendTelemetryEvent('app.update')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-      data: result,
+      data: result.data?.updateCellOutput,
       id: message.output.id,
       escalationButton: showEscalationButton,
     })

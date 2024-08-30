@@ -20,6 +20,7 @@ import './share'
 import './gistCell'
 import './open'
 import {
+  CreateCellExecutionMutation,
   CreateExtensionCellOutputMutation,
   UpdateCellOutputMutation,
 } from '../../../extension/__generated-platform__/graphql'
@@ -484,12 +485,12 @@ export class TerminalView extends LitElement {
               }
 
               const data = (e.output.data?.data || {}) as CreateExtensionCellOutputMutation &
+                CreateCellExecutionMutation &
                 UpdateCellOutputMutation
               const { escalationButton: escalationButtonEnabled } = e.output
-              if (data.createExtensionCellOutput) {
-                const {
-                  createExtensionCellOutput: { id, exitCode, htmlUrl },
-                } = data
+              if (data.createExtensionCellOutput || data.createCellExecution) {
+                const objData = data.createCellExecution || data.createExtensionCellOutput || {}
+                const { exitCode, id, htmlUrl } = objData
                 this.cloudId = id
                 this.shareUrl = htmlUrl || ''
                 this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)

@@ -191,6 +191,47 @@ export type CellAttachment = {
   updateTime: Scalars['DateTime']['output'];
 };
 
+export type CellExecution = {
+  __typename?: 'CellExecution';
+  archivedTime?: Maybe<Scalars['DateTime']['output']>;
+  autoSave: Scalars['Boolean']['output'];
+  createTime: Scalars['DateTime']['output'];
+  exitCode: Scalars['Int']['output'];
+  history?: Maybe<Array<Maybe<CellExecution>>>;
+  htmlUrl?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  input?: Maybe<Scalars['String']['output']>;
+  inputData?: Maybe<Scalars['Bytes']['output']>;
+  isOwner?: Maybe<Scalars['Boolean']['output']>;
+  isSlackReady: Scalars['Boolean']['output'];
+  languageId?: Maybe<Scalars['String']['output']>;
+  lifecycleIdentityId?: Maybe<Scalars['String']['output']>;
+  maskedInput?: Maybe<Scalars['String']['output']>;
+  maskedStderr?: Maybe<Scalars['Bytes']['output']>;
+  maskedStdout?: Maybe<Scalars['Bytes']['output']>;
+  metadata?: Maybe<Metadata>;
+  notebook?: Maybe<Notebook>;
+  notebookId?: Maybe<Scalars['String']['output']>;
+  organizationId?: Maybe<Scalars['String']['output']>;
+  owner?: Maybe<Owner>;
+  pid?: Maybe<Scalars['Int']['output']>;
+  shareType?: Maybe<ShareType>;
+  stderr?: Maybe<Scalars['Bytes']['output']>;
+  stderrData?: Maybe<Scalars['Bytes']['output']>;
+  stdout?: Maybe<Scalars['Bytes']['output']>;
+  stdoutData?: Maybe<Scalars['Bytes']['output']>;
+  unmaskable: Scalars['Boolean']['output'];
+  updateTime?: Maybe<Scalars['DateTime']['output']>;
+  user?: Maybe<User>;
+  userId: Scalars['String']['output'];
+};
+
+
+export type CellExecutionHistoryArgs = {
+  archived?: InputMaybe<Scalars['Boolean']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type CellInput = {
   __typename?: 'CellInput';
   cellNotebookMetadataList?: Maybe<Array<Maybe<CellNotebookMetadata>>>;
@@ -357,6 +398,57 @@ export type CreateCellAttachmentInput = {
   type: Scalars['String']['input'];
 };
 
+export type CreateCellExecutionInput = {
+  archivedTime?: InputMaybe<Scalars['DateTime']['input']>;
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+  branch?: InputMaybe<Scalars['String']['input']>;
+  commit?: InputMaybe<Scalars['String']['input']>;
+  createTime?: InputMaybe<Scalars['DateTime']['input']>;
+  device?: InputMaybe<_DeviceInput>;
+  exitCode?: InputMaybe<Scalars['Int']['input']>;
+  fileContent?: InputMaybe<Scalars['Bytes']['input']>;
+  filePath?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  input: Scalars['Bytes']['input'];
+  languageId?: InputMaybe<Scalars['String']['input']>;
+  maskedSessionOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  metadata: MetadataInput;
+  notebook?: InputMaybe<CreateNotebookInput>;
+  pid: Scalars['Int']['input'];
+  plainSessionOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  repository?: InputMaybe<Scalars['String']['input']>;
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  shareType?: InputMaybe<ShareType>;
+  stderr: Scalars['Bytes']['input'];
+  stdout: Scalars['Bytes']['input'];
+  updateTime?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type CreateCellOutputInput = {
+  autoSave?: InputMaybe<Scalars['Boolean']['input']>;
+  branch?: InputMaybe<Scalars['String']['input']>;
+  commit?: InputMaybe<Scalars['String']['input']>;
+  device?: InputMaybe<_DeviceInput>;
+  exitCode: Scalars['Int']['input'];
+  extensionVersion?: InputMaybe<Scalars['String']['input']>;
+  fileContent: Scalars['Bytes']['input'];
+  fileName?: InputMaybe<Scalars['String']['input']>;
+  filePath?: InputMaybe<Scalars['String']['input']>;
+  inputData: Scalars['Bytes']['input'];
+  languageId?: InputMaybe<Scalars['String']['input']>;
+  lifecycleIdentityId: Scalars['String']['input'];
+  maskedSessionOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  metadata: MetadataInput;
+  notebookLifecycleIdentityId: Scalars['String']['input'];
+  pid: Scalars['Int']['input'];
+  plainSessionOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  repository?: InputMaybe<Scalars['String']['input']>;
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  shareType?: InputMaybe<ShareType>;
+  stderrData: Scalars['Bytes']['input'];
+  stdoutData: Scalars['Bytes']['input'];
+};
+
 export type CreateEnvironmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
@@ -406,6 +498,12 @@ export type CreateMessageInput = {
   parentMessageId?: InputMaybe<Scalars['String']['input']>;
   referenceId: Scalars['String']['input'];
   referenceTable: Scalars['String']['input'];
+};
+
+export type CreateNotebookInput = {
+  fileName?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  runmeVersion?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateNotebookSessionInput = {
@@ -741,8 +839,11 @@ export type Mutation = {
   acceptAccessRequest: AccessRequest;
   acceptInvitation: Invitation;
   activeOrganization: Organization;
+  archiveCellExecution?: Maybe<CellExecution>;
   archiveCellOutput: CellOutput;
   createAccessRequest: AccessRequest;
+  createCellExecution: CellExecution;
+  createCellOutput: CellOutput;
   createCellOutputBookmark: Bookmark;
   createConversationBookmark: Bookmark;
   createExtensionCellOutput: CellOutput;
@@ -766,7 +867,9 @@ export type Mutation = {
   shareCellOutputToSlack: CellOutput;
   shareNotebookMetadataOutputToSlack: Notebook;
   syncGithubInstallation: GithubInstallation;
+  unArchiveCellExecution?: Maybe<CellExecution>;
   unArchiveCellOutput: CellOutput;
+  updateCellExecution: CellExecution;
   updateCellOutput: CellOutput;
   updateCellOutputTags?: Maybe<Array<Maybe<Tag>>>;
   updateConversation: Conversation;
@@ -798,6 +901,12 @@ export type MutationActiveOrganizationArgs = {
 };
 
 
+export type MutationArchiveCellExecutionArgs = {
+  all?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationArchiveCellOutputArgs = {
   all?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['String']['input'];
@@ -806,6 +915,16 @@ export type MutationArchiveCellOutputArgs = {
 
 export type MutationCreateAccessRequestArgs = {
   input: CreateAccessRequestInput;
+};
+
+
+export type MutationCreateCellExecutionArgs = {
+  input: CreateCellExecutionInput;
+};
+
+
+export type MutationCreateCellOutputArgs = {
+  input: CreateCellOutputInput;
 };
 
 
@@ -914,9 +1033,22 @@ export type MutationShareNotebookMetadataOutputToSlackArgs = {
 };
 
 
+export type MutationUnArchiveCellExecutionArgs = {
+  all?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['String']['input'];
+};
+
+
 export type MutationUnArchiveCellOutputArgs = {
   all?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateCellExecutionArgs = {
+  id: Scalars['String']['input'];
+  input: UpdateCellExecutionInput;
+  notifySlack?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -1189,6 +1321,18 @@ export type OrganizationUser = {
   organizationId: Scalars['String']['output'];
   user?: Maybe<User>;
   userId: Scalars['String']['output'];
+};
+
+export type Owner = {
+  __typename?: 'Owner';
+  bio?: Maybe<Scalars['String']['output']>;
+  company?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  githubUsername?: Maybe<Scalars['String']['output']>;
+  linkedin?: Maybe<Scalars['String']['output']>;
+  photoUrl?: Maybe<Scalars['String']['output']>;
+  siteUrl?: Maybe<Scalars['String']['output']>;
+  twitter?: Maybe<Scalars['String']['output']>;
 };
 
 export type PaginatedLogs = {
@@ -1788,6 +1932,10 @@ export type UpdateCellAttachmentInput = {
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateCellExecutionInput = {
+  isPrivate?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type UpdateCellOutputInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   groupIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
@@ -1991,12 +2139,34 @@ export type _CreateNotebookInput = {
   lifecycleIdentityId: Scalars['String']['input'];
 };
 
+export type _DeviceInput = {
+  arch?: InputMaybe<Scalars['String']['input']>;
+  hostname?: InputMaybe<Scalars['String']['input']>;
+  macAddress?: InputMaybe<Scalars['String']['input']>;
+  metadata?: InputMaybe<Scalars['JSON']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  release?: InputMaybe<Scalars['String']['input']>;
+  shell?: InputMaybe<Scalars['String']['input']>;
+  vendor?: InputMaybe<Scalars['String']['input']>;
+  vsAppHost?: InputMaybe<Scalars['String']['input']>;
+  vsAppName?: InputMaybe<Scalars['String']['input']>;
+  vsAppSessionId?: InputMaybe<Scalars['String']['input']>;
+  vsMachineId?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ArchiveCellOutputMutationVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
 
 
 export type ArchiveCellOutputMutation = { __typename?: 'Mutation', archiveCellOutput: { __typename?: 'CellOutput', id: string } };
+
+export type CreateCellExecutionMutationVariables = Exact<{
+  input: CreateCellExecutionInput;
+}>;
+
+
+export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady: boolean } };
 
 export type CreateExtensionCellOutputMutationVariables = Exact<{
   input: ReporterInput;
@@ -2022,6 +2192,7 @@ export type UpdateCellOutputMutation = { __typename?: 'Mutation', updateCellOutp
 
 
 export const ArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellOutputMutation, ArchiveCellOutputMutationVariables>;
+export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
 export const CreateExtensionCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateExtensionCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createExtensionCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateExtensionCellOutputMutation, CreateExtensionCellOutputMutationVariables>;
 export const UnArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellOutputMutation, UnArchiveCellOutputMutationVariables>;
 export const UpdateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellOutputInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellOutputMutation, UpdateCellOutputMutationVariables>;
