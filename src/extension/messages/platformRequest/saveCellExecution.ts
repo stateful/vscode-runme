@@ -86,6 +86,8 @@ export default async function saveCellExecution(
       })
     }
 
+    // If the reporter is enabled, we will save the cell execution using the reporter API.
+    // This is only temporary, until the reporter is fully tested.
     if (isReporterEnabled) {
       const notebookData = kernel.getNotebookDataCache(cacheId) as NotebookData
       const notebook = GrpcSerializer.marshalNotebook(notebookData, {
@@ -152,7 +154,9 @@ export default async function saveCellExecution(
       })
       data = result.data as CreateExtensionCellOutputMutation
       showEscalationButton = !!data?.createExtensionCellOutput.isSlackReady
-    } else {
+    }
+    // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
+    else {
       const cell = await getCellById({ editor, id: message.output.id })
       if (!cell) {
         throw new Error('Cell not found')

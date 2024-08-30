@@ -488,6 +488,7 @@ export class TerminalView extends LitElement {
                 CreateCellExecutionMutation &
                 UpdateCellOutputMutation
               const { escalationButton: escalationButtonEnabled } = e.output
+              // TODO: Remove createCellExecution once the transition is complete and tested enough.
               if (data.createExtensionCellOutput || data.createCellExecution) {
                 const objData = data.createCellExecution || data.createExtensionCellOutput || {}
                 const { exitCode, id, htmlUrl } = objData
