@@ -72,7 +72,6 @@ export default async function saveCellExecution(
     const gitCtx = await getGitContext(path)
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
     const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : undefined
-    // : Partial<CreateExtensionCellOutputMutation> | Partial<CreateCellExecutionMutation>
     let data: CreateExtensionCellOutputMutation | CreateCellExecutionMutation
     let showEscalationButton: boolean
 
