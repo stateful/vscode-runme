@@ -1189,7 +1189,7 @@
     "octokit": "^4.0.2",
     "simple-git": "^3.24.0",
     "tangle": "^4.0.0",
-    "ulidx": "^2.4.0",
+    "ulidx": "^2.4.1",
     "uuid": "^10.0.0",
     "vscode-telemetry": "^1.0.2",
     "yaml": "^2.5.0",
