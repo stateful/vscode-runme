@@ -6,13 +6,13 @@ import {
   LogEvent,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
+import { ulid } from 'ulidx'
 
 import { RUNME_CELL_ID } from '../constants'
 import getLogger from '../logger'
 
 import { SessionManager } from './sessions'
 import * as converters from './converters'
-import { ulid } from 'ulidx'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
