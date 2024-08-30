@@ -1,4 +1,4 @@
-import type { ActivationFunction, RendererContext } from 'vscode-notebook-renderer'
+import type { ActivationFunction } from 'vscode-notebook-renderer'
 
 import { OutputType, RENDERERS } from '../constants'
 import type { CellOutput } from '../types'
@@ -13,7 +13,7 @@ import './components'
 // rendering logic inside of the `render()` function.
 // ----------------------------------------------------------------------------
 
-export const activate: ActivationFunction = (context: RendererContext<void>) => {
+export const activate: ActivationFunction<void> = (context) => {
   setContext(context)
   return {
     renderOutputItem(outputItem, element) {
@@ -90,6 +90,7 @@ export const activate: ActivationFunction = (context: RendererContext<void>) => 
             'validationErrors',
             JSON.stringify(payload.output.validationErrors ?? []),
           )
+          annoElem.setAttribute('settings', JSON.stringify(payload.output.settings))
           element.appendChild(annoElem)
           break
         case OutputType.terminal:

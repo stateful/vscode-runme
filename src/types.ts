@@ -361,16 +361,18 @@ export interface AWSEKSClustersState {
   view: AWSSupportedView.EKSClusters
 }
 
+export interface AnnotationsPayload {
+  annotations?: CellAnnotations
+  validationErrors?: CellAnnotationsErrorResult
+  id?: string
+}
+
 interface Payload {
   [OutputType.error]: string
   [OutputType.deno]?: DenoState
   [OutputType.vercel]: VercelState
   [OutputType.outputItems]: OutputItemsPayload
-  [OutputType.annotations]: {
-    annotations?: CellAnnotations
-    validationErrors?: CellAnnotationsErrorResult
-    id?: string
-  }
+  [OutputType.annotations]: AnnotationsPayload & { settings: Settings }
   [OutputType.terminal]: TerminalConfiguration & {
     ['runme.dev/id']: string
     content?: string
@@ -718,4 +720,8 @@ export type NotebookUiEvent = {
     notebookUri: Uri
   }
   ui: boolean
+}
+
+export type Settings = {
+  docsUrl?: string
 }
