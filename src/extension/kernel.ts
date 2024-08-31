@@ -692,6 +692,7 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
+    // todo(sebastian): rewrite to use non-blocking impl
     await getEventReporter().reportExecution(cell)
     runmeExec.start(Date.now())
 
