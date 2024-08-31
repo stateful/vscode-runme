@@ -86,7 +86,7 @@ export class NullOpEventReporter implements IEventReporter {
   }
 }
 
-var _globalReporter = new NullOpEventReporter()
+let _globalReporter = new NullOpEventReporter()
 
 // getEventReporter returns the global event reporter
 export function getEventReporter(): IEventReporter {
