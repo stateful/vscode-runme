@@ -285,7 +285,7 @@
         "command": "runme.environments",
         "category": "Runme",
         "title": "Click to select your environment",
-        "icon": "$(stop-circle)",
+        "icon": "$(server-environment)",
         "shortTitle": "Environments"
       }
     ],
