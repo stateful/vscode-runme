@@ -319,6 +319,13 @@
       {
         "command": "runme.aiGenerate",
         "title": "Generate cells using the Foyle AI assistant"
+      },
+      {
+        "command": "runme.environments",
+        "category": "Runme",
+        "title": "Click to select your environment",
+        "icon": "$(stop-circle)",
+        "shortTitle": "Environments"
       }
     ],
     "menus": {
@@ -494,6 +501,11 @@
           "command": "runme.notebookExplorerMode",
           "when": "notebookType == runme && false",
           "group": "navigation"
+        },
+        {
+          "command": "runme.environments",
+          "when": "config.runme.experiments.environments === true",
+          "group": "navigation"
         }
       ],
       "notebook/cell/execute": [
@@ -631,6 +643,12 @@
             "scope": "window",
             "default": false,
             "markdownDescription": "If set to `true`, the extension will use the new reporter API to create outputs."
+          },
+          "runme.experiments.environments": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true`, the extension will allow the user to select an environment."
           },
           "runme.checkout.projectDir": {
             "type": "string",

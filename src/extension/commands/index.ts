@@ -32,6 +32,7 @@ import { Kernel } from '../kernel'
 import {
   getAnnotations,
   getNotebookCategories,
+  getPlatformAuthSession,
   getTerminalByCell,
   openFileAsRunmeNotebook,
   promptUserSession,
@@ -49,6 +50,9 @@ import {
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
+import { InitializeClient } from '../api/client'
+import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
+import { EnvironmentManager } from '../environment/manager'
 
 const log = getLogger('Commands')
 
@@ -526,5 +530,38 @@ export async function createCellGistCommand(cell: NotebookCell, context: Extensi
     TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.CellGist, {
       error: gitShared.toString(),
     })
+  }
+}
+
+export async function selectEnvironment(manager: EnvironmentManager) {
+  const session = await getPlatformAuthSession()
+  const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
+
+  const result = await graphClient.query({
+    query: GetUserEnvironmentsDocument,
+  })
+
+  const options = result.data.userEnvironments.map((env) => ({
+    id: env.id,
+    label: env.name,
+    description: env.description || '',
+  }))
+
+  options.push({
+    id: '',
+    label: 'None',
+    description: '',
+  })
+
+  const selected = await window.showQuickPick(options, {
+    placeHolder: 'Select an environment',
+    canPickMany: false,
+  })
+  if (selected) {
+    const isEnv = !!selected.id
+    manager.setEnv(isEnv ? selected : null)
+    window.showInformationMessage(
+      isEnv ? `Selected environment: ${selected.label}` : 'Environment cleared',
+    )
   }
 }

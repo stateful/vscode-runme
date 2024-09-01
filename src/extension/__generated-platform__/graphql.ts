@@ -64,6 +64,17 @@ export type AccessCellOutput = {
   updateTime: Scalars['DateTime']['output'];
 };
 
+export type AccessEnvironment = {
+  __typename?: 'AccessEnvironment';
+  access?: Maybe<Access>;
+  accessId: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  organization?: Maybe<Organization>;
+  organizationId: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+};
+
 export type AccessNotebookMetadataOutput = {
   __typename?: 'AccessNotebookMetadataOutput';
   access?: Maybe<Access>;
@@ -452,7 +463,6 @@ export type CreateCellOutputInput = {
 export type CreateEnvironmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
 };
 
 export type CreateGithubInstallationInput = {
@@ -608,6 +618,7 @@ export type DocMetadata = {
 
 export type Environment = {
   __typename?: 'Environment';
+  accessEnvironments?: Maybe<Array<Maybe<AccessEnvironment>>>;
   createTime: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
@@ -846,7 +857,11 @@ export type Mutation = {
   createCellOutput: CellOutput;
   createCellOutputBookmark: Bookmark;
   createConversationBookmark: Bookmark;
+<<<<<<< HEAD
   createExtensionCellOutput: CellOutput;
+=======
+  createEnvironment: Environment;
+>>>>>>> 0154e2b (Add environments)
   createGroup: Group;
   createMarkdownBookmark: Bookmark;
   createMessage: Message;
@@ -854,6 +869,7 @@ export type Mutation = {
   declineInvitation: Invitation;
   deleteBookmark: Bookmark;
   deleteCellOutput: CellOutput;
+  deleteEnvironment: Environment;
   deleteGroup: Group;
   deleteMessage: Message;
   deleteOrganizationUser: OrganizationUser;
@@ -874,6 +890,10 @@ export type Mutation = {
   updateCellOutputTags?: Maybe<Array<Maybe<Tag>>>;
   updateConversation: Conversation;
   updateConversationTags?: Maybe<Array<Maybe<Tag>>>;
+<<<<<<< HEAD
+=======
+  updateEnvironment: Environment;
+>>>>>>> 0154e2b (Add environments)
   updateGroup: Group;
   updateMarkdownTags?: Maybe<Array<Maybe<Tag>>>;
   updateNotebookMetadataOutput?: Maybe<Notebook>;
@@ -938,8 +958,13 @@ export type MutationCreateConversationBookmarkArgs = {
 };
 
 
+<<<<<<< HEAD
 export type MutationCreateExtensionCellOutputArgs = {
   input: ReporterInput;
+=======
+export type MutationCreateEnvironmentArgs = {
+  input: CreateEnvironmentInput;
+>>>>>>> 0154e2b (Add environments)
 };
 
 
@@ -974,6 +999,11 @@ export type MutationDeleteBookmarkArgs = {
 
 
 export type MutationDeleteCellOutputArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteEnvironmentArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -1071,6 +1101,12 @@ export type MutationUpdateConversationArgs = {
 
 export type MutationUpdateConversationTagsArgs = {
   input: UpdateEntityTagsInput;
+};
+
+
+export type MutationUpdateEnvironmentArgs = {
+  id: Scalars['String']['input'];
+  input: UpdateEnvironmentInput;
 };
 
 
@@ -1347,6 +1383,18 @@ export type PaginatedNotifications = {
   meta: PaginationMeta;
 };
 
+export type PaginatedWorkflows = {
+  __typename?: 'PaginatedWorkflows';
+  data: Array<Workflow>;
+  meta: PaginatedWorkflowsMeta;
+};
+
+export type PaginatedWorkflowsMeta = {
+  __typename?: 'PaginatedWorkflowsMeta';
+  total: Scalars['Int']['output'];
+  totalPages: Scalars['Int']['output'];
+};
+
 export type PaginationMeta = {
   __typename?: 'PaginationMeta';
   totalPages: Scalars['Int']['output'];
@@ -1441,6 +1489,8 @@ export type Query = {
   cells: Array<Cell>;
   conversation?: Maybe<Conversation>;
   conversations: Array<Conversation>;
+  environment?: Maybe<Environment>;
+  environments: Array<Environment>;
   getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
   githubInstallation?: Maybe<GithubInstallation>;
   group?: Maybe<Group>;
@@ -1467,8 +1517,9 @@ export type Query = {
   tags: Array<Tag>;
   totalCellOutputs: Scalars['Int']['output'];
   totalNotebooks: Scalars['Int']['output'];
+  userEnvironments: Array<Environment>;
   workflow: Workflow;
-  workflows: Array<Workflow>;
+  workflows: PaginatedWorkflows;
 };
 
 
@@ -1513,6 +1564,12 @@ export type QueryConversationArgs = {
 export type QueryConversationsArgs = {
   referenceId?: InputMaybe<Scalars['String']['input']>;
   referenceTable?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+/** About the Redwood queries. */
+export type QueryEnvironmentArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -1614,6 +1671,15 @@ export type QueryTotalNotebooksArgs = {
 /** About the Redwood queries. */
 export type QueryWorkflowArgs = {
   id: Scalars['String']['input'];
+};
+
+
+/** About the Redwood queries. */
+export type QueryWorkflowsArgs = {
+  all?: InputMaybe<Scalars['Boolean']['input']>;
+  fileName?: InputMaybe<Scalars['String']['input']>;
+  page: Scalars['Int']['input'];
+  take?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type RateMarkdownInput = {
@@ -1957,8 +2023,9 @@ export type UpdateEntityTagsInput = {
 
 export type UpdateEnvironmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  groupIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   name?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
+  userIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
 export type UpdateGithubInstallationInput = {
@@ -2168,8 +2235,18 @@ export type CreateCellExecutionMutationVariables = Exact<{
 
 export type CreateCellExecutionMutation = { __typename?: 'Mutation', createCellExecution: { __typename?: 'CellExecution', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady: boolean } };
 
+<<<<<<< HEAD
 export type CreateExtensionCellOutputMutationVariables = Exact<{
   input: ReporterInput;
+=======
+export type GetUserEnvironmentsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetUserEnvironmentsQuery = { __typename?: 'Query', userEnvironments: Array<{ __typename?: 'Environment', id: string, name: string, description?: string | null }> };
+
+export type UnArchiveCellExecutionMutationVariables = Exact<{
+  unArchiveCellExecutionId: Scalars['String']['input'];
+>>>>>>> 0154e2b (Add environments)
 }>;
 
 
@@ -2193,6 +2270,12 @@ export type UpdateCellOutputMutation = { __typename?: 'Mutation', updateCellOutp
 
 export const ArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellOutputMutation, ArchiveCellOutputMutationVariables>;
 export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
+<<<<<<< HEAD
 export const CreateExtensionCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateExtensionCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createExtensionCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateExtensionCellOutputMutation, CreateExtensionCellOutputMutationVariables>;
 export const UnArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellOutputMutation, UnArchiveCellOutputMutationVariables>;
 export const UpdateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellOutputInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellOutputMutation, UpdateCellOutputMutationVariables>;
+=======
+export const GetUserEnvironmentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getUserEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]} as unknown as DocumentNode<GetUserEnvironmentsQuery, GetUserEnvironmentsQueryVariables>;
+export const UnArchiveCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"unArchiveCellExecutionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellExecutionMutation, UnArchiveCellExecutionMutationVariables>;
+export const UpdateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellExecutionMutation, UpdateCellExecutionMutationVariables>;
+>>>>>>> 0154e2b (Add environments)
