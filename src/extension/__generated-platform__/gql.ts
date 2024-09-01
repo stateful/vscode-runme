@@ -15,6 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
 const documents = {
     "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}": types.ArchiveCellExecutionDocument,
     "mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellExecutionDocument,
+    "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}": types.GetUserEnvironmentsDocument,
     "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}": types.UnArchiveCellExecutionDocument,
     "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellExecutionDocument,
 };
@@ -41,6 +42,10 @@ export function graphql(source: "mutation ArchiveCellExecution($archiveCellExecu
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"): (typeof documents)["query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -64,6 +64,7 @@ import {
   toggleAuthorMode,
   createCellGistCommand,
   runForkCommand,
+  selectEnvironment,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
@@ -81,6 +82,7 @@ import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import * as manager from './ai/manager'
 import getLogger from './logger'
+import { EnvironmentManager } from './environment/manager'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -192,6 +194,7 @@ export class RunmeExtension {
       kernel,
       server,
     )
+    const environment = new EnvironmentManager(context)
 
     await resetNotebookSettings()
 
@@ -314,6 +317,7 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
+      RunmeExtension.registerCommand('runme.environments', () => selectEnvironment(environment)),
       RunmeExtension.registerCommand('runme.notebookAuthorMode', () =>
         toggleAuthorMode(false, kernel),
       ),
