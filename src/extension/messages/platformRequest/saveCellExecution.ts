@@ -32,8 +32,7 @@ export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
 ): Promise<void | boolean> {
-  const config = workspace.getConfiguration('runme.experiments')
-  const isReporterEnabled = config.get<boolean>('reporter', false)
+  const isReporterEnabled = kernel.hasExperimentEnabled('reporter')
   const { messaging, message, editor } = requestMessage
   // Save the file to ensure the serialization completes before saving the cell execution.
   // This guarantees we access the latest cache state of the serializer.
