@@ -17,21 +17,22 @@ export class AIManager {
   client: PromiseClient<typeof AIService>
   completionGenerator: generate.CompletionGenerator
   constructor() {
+    this.log = getLogger('AIManager')
+    this.log.info('AI: Initializing AI Manager')
     const config = vscode.workspace.getConfiguration('runme.experiments')
     const autoComplete = config.get<boolean>('aiAutoCell', false)
-
     this.client = this.createAIClient()
-    this.log = getLogger('AIManager')
-
     this.completionGenerator = new generate.CompletionGenerator(this.client)
     if (autoComplete) {
       this.registerGhostCellEvents()
     }
   }
 
-  createAIClient(): PromiseClient<typeof AIService> {
+  // N.B. We use arrow notation to ensure this is bound to the AIManager instance.
+  createAIClient = (): PromiseClient<typeof AIService> => {
     const config = vscode.workspace.getConfiguration('runme')
-    const baseURL = config.get<string>('runme.aiBaseURL', 'http://localhost:8877/api')
+    const baseURL = config.get<string>('aiBaseURL', 'http://localhost:8877/api')
+    this.log.info(`AI: Using AI service at: ${baseURL}`)
     return createPromiseClient(AIService, createDefaultTransport(baseURL))
   }
 

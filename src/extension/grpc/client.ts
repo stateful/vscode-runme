@@ -11,7 +11,7 @@ import { ParserServiceClient } from '@buf/stateful_runme.community_timostamm-pro
 // eslint-disable-next-line max-len
 import { RunnerServiceClient as RunnerServiceClientV1 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v1/runner_pb.client'
 // eslint-disable-next-line max-len
-import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v2alpha1/runner_pb.client'
+import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v2/runner_pb.client'
 // eslint-disable-next-line max-len
 import { ProjectServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/project/v1/project_pb.client'
 // eslint-disable-next-line max-len
