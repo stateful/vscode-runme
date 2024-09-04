@@ -33,7 +33,7 @@ jobs:
           SHELL: bash
           GITHUB_ACTOR: ${{ github.actor }}
       - name: 🔼 Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: screenshots
@@ -41,7 +41,7 @@ jobs:
             tests/e2e/screenshots
             tests/e2e/logs
       - name: 🔼 Upload coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{github.actor != 'dependabot[bot]' && matrix.os == 'ubuntu-latest'}}
         with:
           name: coverage
