@@ -13,10 +13,11 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}": types.ArchiveCellExecutionDocument,
+    "mutation ArchiveCellOutput($id: String!) {\n  archiveCellOutput(id: $id) {\n    id\n  }\n}": types.ArchiveCellOutputDocument,
     "mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellExecutionDocument,
-    "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}": types.UnArchiveCellExecutionDocument,
-    "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellExecutionDocument,
+    "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateExtensionCellOutputDocument,
+    "mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}": types.UnArchiveCellOutputDocument,
+    "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellOutputDocument,
 };
 
 /**
@@ -36,7 +37,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}"): (typeof documents)["mutation ArchiveCellExecution($archiveCellExecutionId: String!) {\n  archiveCellExecution(id: $archiveCellExecutionId) {\n    id\n  }\n}"];
+export function graphql(source: "mutation ArchiveCellOutput($id: String!) {\n  archiveCellOutput(id: $id) {\n    id\n  }\n}"): (typeof documents)["mutation ArchiveCellOutput($id: String!) {\n  archiveCellOutput(id: $id) {\n    id\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -44,11 +45,15 @@ export function graphql(source: "mutation CreateCellExecution($input: CreateCell
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}"): (typeof documents)["mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}"];
+export function graphql(source: "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
+export function graphql(source: "mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}"): (typeof documents)["mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

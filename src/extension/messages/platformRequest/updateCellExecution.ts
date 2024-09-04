@@ -3,10 +3,9 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { InitializeClient } from '../../api/client'
-import { getCellById } from '../../cell'
-import { getCellRunmeId, getPlatformAuthSession } from '../../utils'
+import { getPlatformAuthSession } from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
-import { UpdateCellExecutionDocument } from '../../__generated-platform__/graphql'
+import { ShareType, UpdateCellOutputDocument } from '../../__generated-platform__/graphql'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
 
@@ -18,7 +17,7 @@ export default async function updateCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
 ): Promise<void | boolean> {
-  const { messaging, message, editor } = requestMessage
+  const { messaging, message } = requestMessage
   log.info('Updating cell execution', message.output.data.id)
 
   const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
@@ -30,30 +29,21 @@ export default async function updateCellExecution(
     if (!session) {
       throw new Error('You must authenticate with your Stateful account')
     }
-    const cell = await getCellById({ editor, id: message.output.id })
-    if (!cell) {
-      throw new Error('Cell not found')
-    }
-
-    const runmeId = getCellRunmeId(cell)
-    const terminal = kernel.getTerminal(runmeId)
-    if (!terminal) {
-      throw new Error('Could not find an associated terminal')
-    }
 
     const graphClient = InitializeClient({ runmeToken: session.accessToken })
     const result = await graphClient.mutate({
-      mutation: UpdateCellExecutionDocument,
+      mutation: UpdateCellOutputDocument,
       variables: {
         id: message.output.data.id,
         input: {
-          isPrivate: false,
+          shareType: ShareType.Organization,
+          notify: true, // Always share to Slack, regardless if the cell exists with an error code or not
         },
       },
     })
     log.info('Cell execution updated', message.output.data.id)
 
-    const showEscalationButton = !!result.data?.updateCellExecution?.isSlackReady
+    const showEscalationButton = !!result.data?.updateCellOutput?.isSlackReady
     log.info(
       `showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`,
       message.output.data.id,

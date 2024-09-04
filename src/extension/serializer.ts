@@ -22,6 +22,7 @@ import {
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
+import YAML from 'yaml'
 
 import { Serializer } from '../types'
 import {
@@ -48,6 +49,7 @@ import {
   CellOutput,
   SerializeRequestOptions,
   RunmeSession,
+  Frontmatter,
 } from './grpc/serializerTypes'
 import { initParserClient, ParserServiceClient, type ReadyPromise } from './grpc/client'
 import Languages from './languages'
@@ -385,6 +387,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public abstract getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
 
+  public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
+
   static isGhostCell(cell: NotebookCellData): boolean {
     const metadata = cell.metadata
     return metadata?.[ghost.ghostKey] === true
@@ -452,6 +456,11 @@ export class WasmSerializer extends SerializerBase {
     console.error('getPlainCache not implemented for WasmSerializer')
     return Promise.resolve(new Uint8Array())
   }
+
+  public getNotebookDataCache(): NotebookData | undefined {
+    console.error('getNotebookDataCache not implemented for WasmSerializer')
+    return {} as NotebookData
+  }
 }
 
 export class GrpcSerializer extends SerializerBase {
@@ -460,6 +469,7 @@ export class GrpcSerializer extends SerializerBase {
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly plainCache = new Map<string, Promise<Uint8Array>>()
   protected readonly maskedCache = new Map<string, Promise<Uint8Array>>()
+  protected readonly notebookDataCache = new Map<string, NotebookData>()
   protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener: Disposable | undefined
@@ -686,6 +696,8 @@ export class GrpcSerializer extends SerializerBase {
     const notebook = GrpcSerializer.marshalNotebook(data)
 
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
+    this.notebookDataCache.set(cacheId as string, data)
+
     const serialRequest = <SerializeRequest>{ notebook }
 
     const cacheOutputs = this.cacheNotebookOutputs(notebook, cacheId)
@@ -782,13 +794,26 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   // marshalNotebook converts VSCode's NotebookData to the Notebook proto.
-  public static marshalNotebook(data: NotebookData): Notebook {
+  public static marshalNotebook(
+    data: NotebookData,
+    config?: {
+      marshalFrontmatter?: boolean
+      kernel?: Kernel
+    },
+  ): Notebook {
     // the bulk copies cleanly except for what's below
     const notebook = Notebook.clone(data as any)
 
     // cannot gurantee it wasn't changed
     if (notebook.metadata[RUNME_FRONTMATTER_PARSED]) {
       delete notebook.metadata[RUNME_FRONTMATTER_PARSED]
+    }
+
+    if (config?.marshalFrontmatter) {
+      const metadata = notebook.metadata as unknown as {
+        ['runme.dev/frontmatter']: string
+      }
+      notebook.frontmatter = this.marshallFrontmatter(metadata, config.kernel)
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
@@ -799,6 +824,32 @@ export class GrpcSerializer extends SerializerBase {
     })
 
     return notebook
+  }
+
+  private static marshallFrontmatter(
+    metadata: { ['runme.dev/frontmatter']: string },
+    kernel?: Kernel,
+  ): Frontmatter {
+    const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
+    const data = (yamlDocs[0].toJS?.() || {}) as {
+      runme: {
+        id?: string
+        version?: string
+      }
+    }
+
+    return {
+      runme: {
+        id: data.runme?.id || '',
+        version: data.runme?.version || '',
+        session: { id: kernel?.getRunnerEnvironment()?.getSessionId() || '' },
+      },
+      category: '',
+      cwd: '',
+      shell: '',
+      skipPrompts: false,
+      terminalRows: '',
+    }
   }
 
   private static marshalCellOutputs(
@@ -885,5 +936,9 @@ export class GrpcSerializer extends SerializerBase {
 
   public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
     return this.plainCache.get(cacheId)
+  }
+
+  public getNotebookDataCache(cacheId: string): NotebookData | undefined {
+    return this.notebookDataCache.get(cacheId)
   }
 }

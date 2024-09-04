@@ -9,7 +9,7 @@ import saveCellExecution, {
 import { Kernel } from '../../../../src/extension/kernel'
 import { ClientMessages } from '../../../../src/constants'
 import { APIMethod } from '../../../../src/types'
-import { getCellById } from '../../../../src/extension/cell'
+import { GrpcSerializer } from '../../../../src/extension/serializer'
 
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
@@ -40,7 +40,7 @@ vi.mock('../../../../src/extension/cell', async () => {
 })
 
 const graphqlHandlers = [
-  graphql.mutation('CreateCellExecution', () => {
+  graphql.mutation('CreateExtensionCellOutput', () => {
     return HttpResponse.json({
       data: {
         id: 'cell-id',
@@ -66,29 +66,8 @@ afterEach(() => {
 
 suite('Save cell execution', () => {
   const kernel = new Kernel({} as any)
-  kernel.getTerminal = vi.fn().mockReturnValue({
-    processId: 100,
-    runnerSession: {
-      hasExited: vi.fn(),
-    },
-  })
-
+  kernel.hasExperimentEnabled = vi.fn((params) => params === 'reporter')
   it('Should save the output for authenticated user', async () => {
-    const cell: any = {
-      metadata: { name: 'foobar', id: 'cell-id', ['runme.dev/id']: 'cell-id' },
-      document: {
-        uri: { fsPath: '/foo/bar/README.md' },
-        getText: () => 'hello world',
-        languageId: 'sh',
-      },
-      kind: 2,
-    }
-
-    cell.notebook = {
-      getCells: () => [cell],
-      isDirty: false,
-    }
-    vi.mocked(getCellById).mockResolvedValue(cell)
     const messaging = notebooks.createRendererMessaging('runme-renderer')
     const authenticationSession: AuthenticationSession = {
       accessToken: '',
@@ -122,6 +101,10 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
+    vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValue({
+      cells: [],
+      metadata: {},
+    })
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
 
     await saveCellExecution(requestMessage, kernel)
@@ -165,20 +148,6 @@ suite('Save cell execution', () => {
   })
 
   it('Should not save cell output when user is not authenticated', async () => {
-    const cell: any = {
-      metadata: { name: 'foobar', id: 'cell-id', ['runme.dev/id']: 'cell-id' },
-      document: {
-        uri: { fsPath: '/foo/bar/README.md' },
-        getText: () => 'hello world',
-        languageId: 'sh',
-      },
-      kind: 2,
-    }
-    cell.notebook = {
-      getCells: () => [cell],
-      isDirty: false,
-    }
-    vi.mocked(getCellById).mockResolvedValue(cell)
     const messaging = notebooks.createRendererMessaging('runme-renderer')
     const message = {
       type: ClientMessages.platformApiRequest,
@@ -204,6 +173,10 @@ suite('Save cell execution', () => {
       } as any,
     }
     vi.mocked(authentication.getSession).mockResolvedValue(undefined)
+    vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValue({
+      cells: [],
+      metadata: {},
+    })
 
     await saveCellExecution(requestMessage, kernel)
 

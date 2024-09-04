@@ -14,8 +14,14 @@ import { RunnerServiceClient as RunnerServiceClientV1 } from '@buf/stateful_runm
 import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/runner/v2/runner_pb.client'
 // eslint-disable-next-line max-len
 import { ProjectServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/project/v1/project_pb.client'
+// eslint-disable-next-line max-len
+import { ReporterServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1alpha1/reporter_pb.client'
 import { HealthClient } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
+import {
+  TransformRequest,
+  TransformResponse,
+} from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1alpha1/reporter_pb'
 
 import { getServerRunnerVersion } from '../../utils/configuration'
 
@@ -85,6 +91,10 @@ function initProjectClient(transport: GrpcTransport): ProjectServiceClient {
   return new ProjectServiceClient(transport)
 }
 
+function initReporterClient(transport: GrpcTransport): ReporterServiceClient {
+  return new ReporterServiceClient(transport)
+}
+
 type ReadyPromise = Promise<void | Error>
 
 function getRunnerServiceClient(transport: RpcTransport): IRunnerServiceClient {
@@ -101,7 +111,11 @@ export {
   ProjectServiceClient,
   initParserClient,
   initProjectClient,
+  initReporterClient,
   HealthClient,
   ReadyPromise,
   RpcError,
+  ReporterServiceClient,
+  TransformRequest,
+  TransformResponse,
 }

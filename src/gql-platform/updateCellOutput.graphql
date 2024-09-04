@@ -1,0 +1,8 @@
+mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {
+  updateCellOutput(id: $id, input: $input) {
+   id
+   htmlUrl
+   exitCode
+   isSlackReady
+  }
+}

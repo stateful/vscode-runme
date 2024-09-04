@@ -79,6 +79,7 @@ import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
+import { GrpcReporter } from './reporter'
 import * as manager from './ai/manager'
 import getLogger from './logger'
 
@@ -114,11 +115,13 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openSettings', openRunmeSettings),
     )
 
+    const reporter = new GrpcReporter(context, server)
     const serializer = grpcSerializer
       ? new GrpcSerializer(context, server, kernel)
       : new WasmSerializer(context, kernel)
     this.serializer = serializer
     kernel.setSerializer(serializer as GrpcSerializer)
+    kernel.setReporter(reporter)
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     const runmeTaskProvider = tasks.registerTaskProvider(

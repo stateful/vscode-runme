@@ -46,6 +46,7 @@ vi.mock('../../src/extension/grpc/client', () => {
         return { responses: { onMessage: vi.fn() } }
       }),
     })),
+    initReporterClient: vi.fn(() => ({})),
     HealthClient: class {
       async check() {
         return {
