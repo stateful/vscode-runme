@@ -9,9 +9,19 @@ import { APIMethod } from '../../src/types'
 import * as platform from '../../src/extension/messages/platformRequest/saveCellExecution'
 import { isPlatformAuthEnabled } from '../../src/utils/configuration'
 import { askAlternativeOutputsAction } from '../../src/extension/commands'
+import { getEventReporter } from '../../src/extension/ai/events'
+
+const reportExecution = vi.fn()
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
+vi.mock('../../src/extension/ai/events', async () => {
+  return {
+    getEventReporter: () => ({
+      reportExecution,
+    }),
+  }
+})
 vi.mock('../../src/extension/utils', async () => {
   return {
     getKeyInfo: vi.fn((cell) => ({ key: cell.languageId, uriResource: false })),
@@ -325,6 +335,7 @@ suite('_doExecuteCell', () => {
   beforeEach(() => {
     vi.mocked(workspace.openTextDocument).mockReset()
     vi.mocked(TelemetryReporter.sendTelemetryEvent).mockClear()
+    vi.mocked(reportExecution).mockClear()
   })
 
   test('calls proper executor if present', async () => {
@@ -350,6 +361,7 @@ suite('_doExecuteCell', () => {
     } as any)
     // @ts-expect-error mocked out
     expect(executors.foobar).toBeCalledTimes(1)
+    expect(getEventReporter().reportExecution).toBeCalledTimes(1)
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.startExecute')
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.endExecute', {
       'cell.success': undefined,
@@ -388,6 +400,7 @@ suite('_doExecuteCell', () => {
       console.error(e)
     }
 
+    expect(getEventReporter().reportExecution).toBeCalledTimes(1)
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.startExecute')
     expect(TelemetryReporter.sendTelemetryEvent).toHaveBeenCalledWith('cell.endExecute', {
       'cell.success': 'false',
