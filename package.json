@@ -1161,7 +1161,7 @@
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240809200651-8507e5a24938.4",
     "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20240819224840-b69cd71876b1.1",
     "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-20240819224840-b69cd71876b1.3",
-    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240826183545-20a8540bddaf.4",
+    "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20240903224300-611a892c2067.4",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-node": "^1.1.2",
     "@google-cloud/compute": "^4.1.0",
