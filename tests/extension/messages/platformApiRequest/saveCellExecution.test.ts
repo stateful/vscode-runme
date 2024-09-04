@@ -66,7 +66,7 @@ afterEach(() => {
 
 suite('Save cell execution', () => {
   const kernel = new Kernel({} as any)
-
+  kernel.hasExperimentEnabled = vi.fn((params) => params === 'reporter')
   it('Should save the output for authenticated user', async () => {
     const messaging = notebooks.createRendererMessaging('runme-renderer')
     const authenticationSession: AuthenticationSession = {

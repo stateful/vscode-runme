@@ -4,6 +4,7 @@ import { NotebookData, Uri, env, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
+import { FetchResult } from '@apollo/client'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
@@ -71,7 +72,9 @@ export default async function saveCellExecution(
     const gitCtx = await getGitContext(path)
     const filePath = gitCtx.repository ? `${gitCtx.relativePath}${path?.split('/').pop()}` : path
     const fileContent = path ? await workspace.fs.readFile(Uri.file(path)) : undefined
-    let data: CreateExtensionCellOutputMutation | CreateCellExecutionMutation
+    let data:
+      | FetchResult<CreateExtensionCellOutputMutation>
+      | FetchResult<CreateCellExecutionMutation>
     let showEscalationButton: boolean
 
     if (!session) {
@@ -134,9 +137,9 @@ export default async function saveCellExecution(
               cells: [
                 {
                   ...cell,
-                  outputs: cell.outputs.map((output) => ({
+                  outputs: (cell?.outputs || [])?.map((output) => ({
                     ...output,
-                    items: output.items.filter((item) => {
+                    items: (output?.items || [])?.filter((item) => {
                       if (item.mime === 'application/vnd.code.notebook.stdout') {
                         return item
                       }
@@ -150,8 +153,9 @@ export default async function saveCellExecution(
           },
         },
       })
-      data = result.data as CreateExtensionCellOutputMutation
-      showEscalationButton = !!data?.createExtensionCellOutput.isSlackReady
+      data = result
+      showEscalationButton = !!(result.data as CreateExtensionCellOutputMutation)
+        ?.createExtensionCellOutput?.isSlackReady
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
     else {
@@ -196,7 +200,7 @@ export default async function saveCellExecution(
       }
       const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
 
-      const _result = await graphClient.mutate({
+      const result = await graphClient.mutate({
         mutation: CreateCellExecutionDocument,
         variables: {
           input: {
@@ -247,8 +251,9 @@ export default async function saveCellExecution(
         },
       })
 
-      data = _result.data as CreateCellExecutionMutation
-      showEscalationButton = !!data?.createCellExecution.isSlackReady
+      data = result
+      showEscalationButton = !!(result.data as CreateCellExecutionMutation)?.createCellExecution
+        ?.isSlackReady
     }
 
     log.info('Cell execution saved')
