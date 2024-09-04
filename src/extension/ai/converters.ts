@@ -3,6 +3,7 @@
 // See ../vscode_apis.md for an exlanation. It is very helpful for understanding this folder.
 
 import * as vscode from 'vscode'
+import * as parser_pb from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
 
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 import { Serializer } from '../../types'
@@ -58,4 +59,29 @@ export function cellProtosToCellData(cells: serializerTypes.Cell[]): vscode.Note
   )
   let newCellData = serializer.SerializerBase.revive(notebook, identity)
   return newCellData
+}
+
+// vsCellsToESProto converts a VSCode NotebookCell to a RunMe Cell proto
+// Its not quite the inverse of cellProtosToCellData because this function
+// uses the ES client library as opposed to the TS client library.
+// The reason we don't rely on the serialization routines is we don't want to
+// generate an RPC just to convert the cell to a proto.
+export function vsCellsToESProtos(cells: vscode.NotebookCell[]): parser_pb.Cell[] {
+  const cellProtos: parser_pb.Cell[] = []
+
+  for (let cell of cells) {
+    const cellProto = new parser_pb.Cell()
+    if (cell.kind === vscode.NotebookCellKind.Code) {
+      cellProto.kind = parser_pb.CellKind.CODE
+    } else if (cell.kind === vscode.NotebookCellKind.Markup) {
+      cellProto.kind = parser_pb.CellKind.MARKUP
+    }
+
+    cellProto.value = cell.document.getText()
+    cellProto.metadata = cell.metadata
+
+    cellProtos.push(cellProto)
+  }
+
+  return cellProtos
 }

@@ -67,6 +67,7 @@ import {
   getWorkspaceFolder,
   getRunnerSessionEnvs,
 } from './utils'
+import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
 import { RpcError, TransformRequest, TransformResponse } from './grpc/client'
@@ -700,6 +701,8 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
+    // todo(sebastian): rewrite to use non-blocking impl
+    await getEventReporter().reportExecution(cell)
     runmeExec.start(Date.now())
 
     const annotations = getAnnotations(cell)
