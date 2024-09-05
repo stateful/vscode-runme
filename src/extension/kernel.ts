@@ -53,6 +53,7 @@ import {
   getFeatureSnapshot,
   loadFeaturesState,
   updateFeatureContext,
+  FEATURES_CONTEXT_STATE_KEY,
 } from '../features'
 
 import getLogger from './logger'
@@ -208,6 +209,7 @@ export class Kernel implements Disposable {
     if (this.featuresState$) {
       const subscription = this.featuresState$.subscribe((_state) => {
         const snapshot = getFeatureSnapshot(this.featuresState$)
+        ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
         postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
           snapshot: snapshot,
         })

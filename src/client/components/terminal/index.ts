@@ -1,5 +1,5 @@
 import { LitElement, css, html, PropertyValues, unsafeCSS } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { when } from 'lit/directives/when.js'
 import { Disposable, TerminalDimensions } from 'vscode'
 import { ITheme, Terminal as XTermJS } from '@xterm/xterm'
@@ -324,6 +324,8 @@ export class TerminalView extends LitElement {
   protected windowSize: IWindowSize
 
   protected rows: number = 10
+
+  @state()
   protected featureState$?: FeatureObserver
 
   @property({ type: String })
@@ -863,7 +865,8 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          isFeatureActive(this.featureState$, 'Share'),
+          isFeatureActive(this.featureState$, 'Escalate') ||
+            isFeatureActive(this.featureState$, 'Share'),
           () => {
             return html` <share-cell
               ?disabled=${this.isLoading}

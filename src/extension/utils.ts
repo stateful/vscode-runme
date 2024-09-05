@@ -55,8 +55,8 @@ import {
   getTLSDir,
   getTLSEnabled,
   isPlatformAuthEnabled,
-  isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
+import { FEATURES_CONTEXT_STATE_KEY, isFeatureActive, loadFeatureSnapshot } from '../features'
 
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
@@ -715,13 +715,20 @@ export async function resolveUserSession(
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
-export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
-  let session: AuthenticationSession | undefined = await resolveUserSession(false)
-  const displayLoginPrompt = getLoginPrompt() && isRunmeAppButtonsEnabled()
+export async function promptUserSession() {
+  let session = await resolveUserSession(false)
+  // if (session) {
+  //   return Promise.resolve()
+  // }
+
+  const provider = isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'
+  const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
+  const displayLoginPrompt = getLoginPrompt() && isFeatureActive(featureState$, 'Share')
+
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell outputs.
-      Sign in with ${isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'} is required, do you want to proceed?`,
+      Sign in with ${provider} is required, do you want to proceed?`,
       'Yes',
       'No',
       'Open Settings',
@@ -736,11 +743,11 @@ export async function promptUserSession(): Promise<AuthenticationSession | undef
 
     session = await resolveUserSession(true)
     if (!session) {
-      throw new Error('You must authenticate with your GitHub account')
+      throw new Error(`You must authenticate with your ${provider} account`)
     }
   }
 
-  return session
+  // return session
 }
 
 export async function checkSession(context: ExtensionContext) {

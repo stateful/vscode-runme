@@ -1,6 +1,8 @@
 import { BehaviorSubject } from 'rxjs'
 import { satisfies } from 'semver'
 
+export const FEATURES_CONTEXT_STATE_KEY = 'features'
+
 export type FeatureContext = {
   os?: string
   vsCodeVersion?: string
