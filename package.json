@@ -56,6 +56,45 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
+  "runme": {
+    "features": [
+      {
+        "name": "Escalate",
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "statefulAuthRequired": true,
+          "allowedExtensions": [
+            "stateful.platform"
+          ]
+        }
+      },
+      {
+        "name": "Share",
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "statefulAuthRequired": true,
+          "allowedExtensions": [
+            "stateful.platform"
+          ]
+        }
+      },
+      {
+        "name": "Gist",
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "allowedExtensions": [
+            "stateful.runme"
+          ]
+        }
+      }
+    ]
+  },
   "contributes": {
     "commands": [
       {
@@ -1097,43 +1136,6 @@
       ]
     }
   },
-  "features": [
-    {
-      "name": "Escalate",
-      "enabled": true,
-      "conditions": {
-        "os": "All",
-        "vsCodeVersion": ">=1.58.0",
-        "statefulAuthRequired": true,
-        "allowedExtensions": [
-          "stateful.platform"
-        ]
-      }
-    },
-    {
-      "name": "Share",
-      "enabled": true,
-      "conditions": {
-        "os": "All",
-        "vsCodeVersion": ">=1.58.0",
-        "statefulAuthRequired": true,
-        "allowedExtensions": [
-          "stateful.platform"
-        ]
-      }
-    },
-    {
-      "name": "Gist",
-      "enabled": true,
-      "conditions": {
-        "os": "All",
-        "vsCodeVersion": ">=1.58.0",
-        "allowedExtensions": [
-          "stateful.runme"
-        ]
-      }
-    }
-  ],
   "scripts": {
     "build": "run-s build:dev",
     "build:dev": "webpack --mode development --node-env development",

@@ -12,34 +12,36 @@ import {
 } from '../../src/features'
 
 const packageJSON = {
-  features: [
-    {
-      name: 'Escalate',
-      enabled: true,
-      conditions: {
-        os: 'All',
-        vsCodeVersion: '>=1.0.0',
-        runmeVersion: '>=1.0.0',
-        extensionVersion: '>=1.0.0',
-        githubAuthRequired: undefined,
-        statefulAuthRequired: true,
-        allowedExtensions: ['stateful.platform'],
+  runme: {
+    features: [
+      {
+        name: 'Escalate',
+        enabled: true,
+        conditions: {
+          os: 'All',
+          vsCodeVersion: '>=1.0.0',
+          runmeVersion: '>=1.0.0',
+          extensionVersion: '>=1.0.0',
+          githubAuthRequired: undefined,
+          statefulAuthRequired: true,
+          allowedExtensions: ['stateful.platform'],
+        },
       },
-    },
-    {
-      name: 'Feature B',
-      enabled: true,
-      conditions: {
-        os: 'win32',
-        vsCodeVersion: '>=1.0.0',
-        runmeVersion: '>=1.0.0',
-        extensionVersion: '>=1.0.0',
-        githubAuthRequired: true,
-        statefulAuthRequired: false,
-        allowedExtensions: ['stateful.runme', 'stateful.platform'],
+      {
+        name: 'Feature B',
+        enabled: true,
+        conditions: {
+          os: 'win32',
+          vsCodeVersion: '>=1.0.0',
+          runmeVersion: '>=1.0.0',
+          extensionVersion: '>=1.0.0',
+          githubAuthRequired: true,
+          statefulAuthRequired: false,
+          allowedExtensions: ['stateful.runme', 'stateful.platform'],
+        },
       },
-    },
-  ],
+    ],
+  },
 }
 
 describe('Feature Store', () => {

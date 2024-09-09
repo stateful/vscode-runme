@@ -38,7 +38,7 @@ export type FeatureState = {
 export type FeatureObserver = BehaviorSubject<FeatureState>
 
 function loadFeaturesFromPackageJson(packageJSON: any): Feature[] {
-  const features = (packageJSON?.features || []) as Feature[]
+  const features = (packageJSON?.runme?.features || []) as Feature[]
   return features
 }
 
