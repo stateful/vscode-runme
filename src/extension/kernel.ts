@@ -27,6 +27,7 @@ import {
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { map } from 'rxjs/operators'
 
 import {
   type ActiveTerminal,
@@ -207,13 +208,14 @@ export class Kernel implements Disposable {
     this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)
 
     if (this.featuresState$) {
-      const subscription = this.featuresState$.subscribe((_state) => {
-        const snapshot = getFeatureSnapshot(this.featuresState$)
-        ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
-        postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
-          snapshot: snapshot,
+      const subscription = this.featuresState$
+        .pipe(map((_state) => getFeatureSnapshot(this.featuresState$)))
+        .subscribe((snapshot) => {
+          ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
+          postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
+            snapshot: snapshot,
+          })
         })
-      })
 
       this.#disposables.push({
         dispose: () => subscription.unsubscribe(),
