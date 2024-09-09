@@ -121,12 +121,6 @@ export const activate: ActivationFunction<void> = (context) => {
           if (typeof payload.output.scrollback === 'number') {
             terminalElement.setAttribute('scrollback', payload.output.scrollback.toString())
           }
-          if (payload.output.enableShareButton) {
-            terminalElement.setAttribute(
-              'enableShareButton',
-              payload.output.enableShareButton.toString(),
-            )
-          }
           if (payload.output.initialRows !== undefined) {
             terminalElement.setAttribute('initialRows', payload.output.initialRows.toString())
           }
@@ -135,7 +129,7 @@ export const activate: ActivationFunction<void> = (context) => {
             terminalElement.setAttribute('initialContent', payload.output.content)
           }
 
-          if (payload.output.isAutoSaveEnabled && payload.output.enableShareButton) {
+          if (payload.output.isAutoSaveEnabled) {
             terminalElement.setAttribute(
               'isAutoSaveEnabled',
               payload.output.isAutoSaveEnabled.toString(),

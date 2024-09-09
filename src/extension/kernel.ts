@@ -1,4 +1,5 @@
 import path from 'node:path'
+import os from 'node:os'
 
 import {
   Disposable,
@@ -22,9 +23,11 @@ import {
   NotebookEditorSelectionChangeEvent,
   CancellationToken,
   NotebookData,
+  version,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
+import { map } from 'rxjs/operators'
 
 import {
   type ActiveTerminal,
@@ -45,6 +48,14 @@ import {
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
+import {
+  isFeatureActive,
+  FeatureContext,
+  getFeatureSnapshot,
+  loadFeaturesState,
+  updateFeatureContext,
+  FEATURES_CONTEXT_STATE_KEY,
+} from '../features'
 
 import getLogger from './logger'
 import executor, {
@@ -112,6 +123,7 @@ export class Kernel implements Disposable {
   static readonly type = 'runme' as const
 
   readonly #experiments = new Map<string, boolean>()
+  readonly #featuresSettings = new Map<string, boolean>()
 
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -132,22 +144,23 @@ export class Kernel implements Disposable {
   protected panelManager: PanelManager
   protected serializer?: SerializerBase
   protected reporter?: GrpcReporter
+  protected featuresState$?
 
   readonly onVarsChangeEvent: EnvVarsChangedEvent
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
+    const features = workspace.getConfiguration('runme.features')
 
     this.onVarsChangeEvent = new EnvVarsChangedEvent()
-
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
-    this.#experiments.set('escalationButton', config.get<boolean>('escalationButton', false))
     this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
     this.#experiments.set('aiLogs', config.get<boolean>('aiLogs', false))
     this.#experiments.set('shellWarning', config.get<boolean>('shellWarning', false))
     this.#experiments.set('reporter', config.get<boolean>('reporter', false))
+    this.#featuresSettings.set('escalate', features.get<boolean>('escalate', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -170,6 +183,7 @@ export class Kernel implements Disposable {
 
     this.messaging.postMessage({ from: 'kernel' })
     this.panelManager = new PanelManager(context)
+
     this.#disposables.push(
       this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
@@ -180,6 +194,45 @@ export class Kernel implements Disposable {
       this.onVarsChangeEvent,
       this.registerTerminalProfile(),
     )
+
+    const packageJSON = context?.extension?.packageJSON || {}
+    const featContext: FeatureContext = {
+      os: os.platform(),
+      vsCodeVersion: version as string,
+      extensionVersion: packageJSON?.version,
+      extensionId: context?.extension?.id,
+      githubAuth: false,
+      statefulAuth: false,
+    }
+
+    this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)
+
+    if (this.featuresState$) {
+      const subscription = this.featuresState$
+        .pipe(map((_state) => getFeatureSnapshot(this.featuresState$)))
+        .subscribe((snapshot) => {
+          ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
+          postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
+            snapshot: snapshot,
+          })
+        })
+
+      this.#disposables.push({
+        dispose: () => subscription.unsubscribe(),
+      })
+    }
+  }
+
+  isFeatureActive(featureName: string): boolean {
+    if (!this.featuresState$) {
+      return false
+    }
+
+    return isFeatureActive(this.featuresState$, featureName)
+  }
+
+  updateFeatureState<K extends keyof FeatureContext>(key: K, value: FeatureContext[K]) {
+    updateFeatureContext(this.featuresState$, key, value, this.#featuresSettings)
   }
 
   registerNotebookCell(cell: NotebookCell) {
@@ -568,6 +621,12 @@ export class Kernel implements Disposable {
       const cellText = `${message.output.command} ${args.join(' ')}`
       return insertCodeCell(message.output.cellId, editor, cellText, 'sh', false)
     } else if (message.type.startsWith('terminal:')) {
+      return
+    } else if (message.type === ClientMessages.featuresRequest) {
+      const snapshot = getFeatureSnapshot(this.featuresState$)
+      postClientMessage(this.messaging, ClientMessages.featuresResponse, {
+        snapshot: snapshot,
+      })
       return
     }
 
