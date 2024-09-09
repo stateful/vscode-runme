@@ -68,6 +68,7 @@ vi.mock('../../src/extension/utils', async () => ({
   checkSession: vi.fn(),
   togglePreviewButton: vi.fn(),
   resetNotebookSettings: vi.fn(),
+  getGithubAuthSession: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
