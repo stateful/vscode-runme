@@ -285,7 +285,6 @@
         "command": "runme.environments",
         "category": "Runme",
         "title": "Click to select your environment",
-        "icon": "$(server-environment)",
         "shortTitle": "Environments"
       }
     ],
@@ -461,11 +460,6 @@
         {
           "command": "runme.notebookExplorerMode",
           "when": "notebookType == runme && false",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.environments",
-          "when": "config.runme.experiments.environments === true",
           "group": "navigation"
         }
       ],

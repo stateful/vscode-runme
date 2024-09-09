@@ -560,7 +560,7 @@ export async function selectEnvironment(manager: EnvironmentManager) {
   })
   if (selected) {
     const isEnv = !!selected.id
-    manager.setEnv(isEnv ? selected : null)
+    manager.setEnvironment(isEnv ? selected : null)
     window.showInformationMessage(
       isEnv ? `Selected environment: ${selected.label}` : 'Environment cleared',
     )

@@ -13,6 +13,8 @@ type Environment = {
   id: string
 } | null
 
+const WORKSPACE_STORAGE_KEY = 'runme.environments.current'
+
 export class EnvironmentManager {
   private context: ExtensionContext
   private environment: Environment = null
@@ -23,6 +25,7 @@ export class EnvironmentManager {
     this.context.subscriptions.push(
       workspace.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)),
     )
+
     if (this.isEnabled()) {
       this.registerStatusbar()
     }
@@ -33,31 +36,29 @@ export class EnvironmentManager {
     return config.get<boolean>('environments', false) === true
   }
 
-  setEnv(environment: Environment) {
+  setEnvironment(environment: Environment) {
     this.environment = environment
-    this.updateCtx(this.environment)
-    this.statusBarItem.text = this.environment
-      ? `Environments (${environment?.label})`
-      : 'Environments'
+    this.updateCurrent(this.environment)
+    this.statusBarItem.text = this.environment ? `${environment?.label} (env)` : 'Select env'
   }
 
-  getEnv() {
+  getEnvironment() {
     return this.environment
   }
 
   private registerStatusbar() {
-    this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 100)
-    this.setEnv(this.getCtx())
+    this.statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, -10)
+    this.setEnvironment(this.getCurrent())
     this.statusBarItem.command = 'runme.environments'
     this.statusBarItem.show()
   }
 
-  private getCtx() {
-    return (this.context.globalState.get('environment') || null) as Environment
+  private getCurrent() {
+    return (this.context.workspaceState.get(WORKSPACE_STORAGE_KEY) || null) as Environment
   }
 
-  private updateCtx(environment: Environment) {
-    this.context.globalState.update('environment', environment)
+  private updateCurrent(environment: Environment) {
+    this.context.workspaceState.update(WORKSPACE_STORAGE_KEY, environment)
   }
 
   private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -66,8 +67,6 @@ export class EnvironmentManager {
     }
     if (this.isEnabled()) {
       this.registerStatusbar()
-    } else {
-      this.statusBarItem.dispose()
     }
   }
 }
