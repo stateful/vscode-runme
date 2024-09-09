@@ -16,7 +16,7 @@ import { APIMethod } from '../../../types'
 import type { TerminalConfiguration } from '../../../utils/configuration'
 import '../closeCellButton'
 import '../copyButton'
-import './share'
+import './actionButton'
 import './gistCell'
 import './open'
 import {
@@ -862,20 +862,20 @@ export class TerminalView extends LitElement {
           (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
             isFeatureActive(this.featureState$, 'Share'),
           () => {
-            return html` <share-cell
+            return html` <action-button
               ?loading=${this.isLoading}
               ?shareIcon="${true}"
               text="Save"
               @onClick="${this.#triggerShareCellOutput}"
             >
-            </share-cell>`
+            </action-button>`
           },
           () => {},
         )}
         ${when(
           this.exitCode !== 0 && this.platformId && isFeatureActive(this.featureState$, 'Escalate'),
           () => {
-            return html` <share-cell
+            return html` <action-button
               ?disabled=${!this.isSlackReady}
               ?loading=${this.isLoading}
               ?saveIcon="${true}"
@@ -883,7 +883,7 @@ export class TerminalView extends LitElement {
               @onClick="${this.#triggerShareCellOutput}"
               @onClickDisabled=${this.#onEscalateDisabled}
             >
-            </share-cell>`
+            </action-button>`
           },
           () => {},
         )}
@@ -891,8 +891,9 @@ export class TerminalView extends LitElement {
           this.platformId && !this.isLoading,
           () => {
             return html` <open-cell
-            ?disabled=${!this.isPlatformAuthEnabled}
-            @onOpen="${this.#triggerOpenCellOutput}"></share-cell>`
+              ?disabled=${!this.isPlatformAuthEnabled}
+              @onOpen="${this.#triggerOpenCellOutput}"
+            ></open-cell>`
           },
           () => {},
         )}

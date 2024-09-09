@@ -5,8 +5,8 @@ import { when } from 'lit/directives/when.js'
 import { ShareIcon } from '../icons/share'
 import { SaveIcon } from '../icons/save'
 
-@customElement('share-cell')
-export class ShareCell extends LitElement {
+@customElement('action-button')
+export class ActionButton extends LitElement {
   @property({ type: String })
   text: string = 'Copy'
 
