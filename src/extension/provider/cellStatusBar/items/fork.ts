@@ -5,7 +5,7 @@ import CellStatusBarItem from './cellStatusBarItem'
 export class ForkStatusBarItem extends CellStatusBarItem {
   getStatusBarItem(_cell: NotebookCell): NotebookCellStatusBarItem | undefined {
     const item = new NotebookCellStatusBarItem(
-      '$(github-action) Fork ENV',
+      '$(github-action) Fork',
       NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.runForkCommand'
