@@ -16,7 +16,7 @@ import { APIMethod } from '../../../types'
 import type { TerminalConfiguration } from '../../../utils/configuration'
 import '../closeCellButton'
 import '../copyButton'
-import './share'
+import './actionButton'
 import './gistCell'
 import './open'
 import {
@@ -76,10 +76,6 @@ const ANSI_COLORS = [
 @customElement(RENDERERS.TerminalView)
 export class TerminalView extends LitElement {
   protected copyText = 'Copy'
-  protected shareText = 'Save'
-  protected saveText = 'Save'
-  protected shareEnabledText = 'Share'
-  protected escalateEnabledText = 'Escalate'
 
   static styles = css`
     .xterm {
@@ -322,8 +318,12 @@ export class TerminalView extends LitElement {
   protected fitAddon?: FitAddon
   protected serializer?: SerializeAddon
   protected windowSize: IWindowSize
-
   protected rows: number = 10
+
+  protected platformId?: string
+  protected exitCode?: number | void
+  protected isSlackReady?: boolean
+  protected isShareReady: boolean = false
 
   @state()
   protected featureState$?: FeatureObserver
@@ -365,13 +365,7 @@ export class TerminalView extends LitElement {
   isLoading: boolean = false
 
   @property()
-  cloudId?: string
-
-  @property()
   shareUrl?: string
-
-  @property({ type: Boolean })
-  isShareReady: boolean = false
 
   @property({ type: Boolean })
   isUpdatedReady: boolean = false
@@ -487,7 +481,6 @@ export class TerminalView extends LitElement {
                 e.output.data.hasOwnProperty('displayShare') &&
                 e.output.data.displayShare === false
               ) {
-                this.shareText = this.saveText
                 return
               }
 
@@ -498,9 +491,10 @@ export class TerminalView extends LitElement {
               if (data.createExtensionCellOutput || data.createCellExecution) {
                 const objData = data.createCellExecution || data.createExtensionCellOutput || {}
                 const { exitCode, id, htmlUrl, isSlackReady } = objData
-                this.cloudId = id
+                this.platformId = id
                 this.shareUrl = htmlUrl || ''
-                this.shareText = this.getSecondaryButtonLabel(exitCode, !!isSlackReady)
+                this.exitCode = exitCode
+                this.isSlackReady = !!isSlackReady
                 this.isShareReady = true
                 // Dispatch tangle update event
                 return postClientMessage(ctx, ClientMessages.tangleEvent, {
@@ -515,8 +509,9 @@ export class TerminalView extends LitElement {
                   updateCellOutput: { exitCode, isSlackReady },
                 } = data
                 this.isUpdatedReady = true
-                this.shareText = this.getSecondaryButtonLabel(exitCode, !!isSlackReady)
-                this.#displayShareDialog(this.shareText)
+                this.exitCode = exitCode
+                this.isSlackReady = !!isSlackReady
+                this.#displayShareDialog()
               }
             }
             break
@@ -552,12 +547,15 @@ export class TerminalView extends LitElement {
           }
           case ClientMessages.onProgramClose: {
             const { 'runme.dev/id': id, code } = e.output
-            if (id !== this.id || !this.isAutoSaveEnabled) {
+            if (id !== this.id) {
+              return
+            }
+            this.exitCode = code
+
+            if (!this.isAutoSaveEnabled) {
               return
             }
 
-            const btnSecondaryText = this.getSecondaryButtonLabel(code, true)
-            this.shareText = this.isAutoSaveEnabled ? btnSecondaryText : this.saveText
             return this.#shareCellOutput(false)
           }
         }
@@ -571,14 +569,6 @@ export class TerminalView extends LitElement {
     )
 
     postClientMessage(ctx, ClientMessages.featuresRequest, {})
-  }
-
-  getSecondaryButtonLabel(code: number | null | void, isSlackReady: boolean): string {
-    if (!isFeatureActive(this.featureState$, 'Escalate')) {
-      return this.shareEnabledText
-    }
-
-    return code !== 0 && isSlackReady ? this.escalateEnabledText : this.shareEnabledText
   }
 
   disconnectedCallback(): void {
@@ -754,13 +744,12 @@ export class TerminalView extends LitElement {
     })
   }
 
-  async #displayShareDialog(btnText?: string): Promise<boolean | void> {
+  async #displayShareDialog(): Promise<boolean | void> {
     const ctx = getContext()
     if (!ctx.postMessage || !this.shareUrl) {
       return
     }
-    this.shareText = btnText ?? this.shareEnabledText
-    this.isShareReady = true
+
     return postClientMessage(ctx, ClientMessages.optionsMessage, {
       title:
         'Please share link with caution. Anyone with the link has access. Click "Open" to toggle visibility.',
@@ -801,7 +790,7 @@ export class TerminalView extends LitElement {
         this.isLoading = true
         await postClientMessage(ctx, ClientMessages.platformApiRequest, {
           data: {
-            id: this.cloudId,
+            id: this.platformId,
           },
           id: this.id!,
           method: APIMethod.UpdateCellExecution,
@@ -838,6 +827,11 @@ export class TerminalView extends LitElement {
     postClientMessage(getContext(), ClientMessages.openLink, this.shareUrl!)
   }
 
+  #onEscalateDisabled(): void {
+    const message = 'There is no Slack integration configured yet. \nOpen Dashboard to configure it'
+    postClientMessage(getContext(), ClientMessages.errorMessage, message)
+  }
+
   // Render the UI as a function of component state
   render() {
     return html`<section>
@@ -865,25 +859,41 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          isFeatureActive(this.featureState$, 'Escalate') ||
+          (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
             isFeatureActive(this.featureState$, 'Share'),
           () => {
-            return html` <share-cell
-              ?disabled=${this.isLoading}
-              ?displayShareIcon=${this.isShareReady}
-              shareText="${this.isLoading ? 'Saving ...' : this.shareText}"
-              @onShare="${this.#triggerShareCellOutput}"
+            return html` <action-button
+              ?loading=${this.isLoading}
+              ?shareIcon="${true}"
+              text="Save"
+              @onClick="${this.#triggerShareCellOutput}"
             >
-            </share-cell>`
+            </action-button>`
           },
           () => {},
         )}
         ${when(
-          this.cloudId && !this.isLoading,
+          this.exitCode !== 0 && this.platformId && isFeatureActive(this.featureState$, 'Escalate'),
+          () => {
+            return html` <action-button
+              ?disabled=${!this.isSlackReady}
+              ?loading=${this.isLoading}
+              ?saveIcon="${true}"
+              text="Escalate"
+              @onClick="${this.#triggerShareCellOutput}"
+              @onClickDisabled=${this.#onEscalateDisabled}
+            >
+            </action-button>`
+          },
+          () => {},
+        )}
+        ${when(
+          this.platformId && !this.isLoading,
           () => {
             return html` <open-cell
-            ?disabled=${!this.isPlatformAuthEnabled}
-            @onOpen="${this.#triggerOpenCellOutput}"></share-cell>`
+              ?disabled=${!this.isPlatformAuthEnabled}
+              @onOpen="${this.#triggerOpenCellOutput}"
+            ></open-cell>`
           },
           () => {},
         )}
