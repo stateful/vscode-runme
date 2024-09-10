@@ -6,7 +6,7 @@ cwd: ../../..
 
 To overwrite Runme's defaults to match Stateful's run following commands:
 
-```sh {"id":"01J1N29F9C3BCHS56FWF55DA0E","name":"overwrite-stateful"}
+```sh {"id":"01J1N29F9C3BCHS56FWF55DA0E","name":"overwrite-stateful","promptEnv":"no"}
 export EXTENSION_NAME="platform"
 bash .github/scripts/overwrites/stateful.sh
 ```
