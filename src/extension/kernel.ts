@@ -285,8 +285,7 @@ export class Kernel implements Disposable {
           action,
         )
         if (taken && taken === action) {
-          const doc = await workspace.openTextDocument(notebookDocument.uri)
-          openSplitViewAsMarkdownText(doc)
+          openSplitViewAsMarkdownText(notebookDocument.uri)
         }
       }
     }

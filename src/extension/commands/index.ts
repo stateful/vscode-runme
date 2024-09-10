@@ -243,7 +243,7 @@ export function runCLICommand(kernel: Kernel, extensionBaseUri: Uri, grpcRunner:
   }
 }
 
-function openDocumentAs(doc: { text?: TextDocument; notebook?: NotebookDocument }) {
+async function openDocumentAs(doc: { text?: TextDocument; notebook?: NotebookDocument }) {
   const openIn = getActionsOpenViewInEditor()
   switch (openIn) {
     case OpenViewInEditorAction.enum.toggle:
@@ -254,11 +254,11 @@ function openDocumentAs(doc: { text?: TextDocument; notebook?: NotebookDocument 
     default:
       {
         if (doc.notebook) {
-          window.showNotebookDocument(doc.notebook, {
+          await window.showNotebookDocument(doc.notebook, {
             viewColumn: ViewColumn.Active,
           })
         } else if (doc.text) {
-          window.showTextDocument(doc.text, {
+          await window.showTextDocument(doc.text, {
             viewColumn: ViewColumn.Beside,
           })
         }
@@ -267,12 +267,14 @@ function openDocumentAs(doc: { text?: TextDocument; notebook?: NotebookDocument 
   }
 }
 
-export function openAsRunmeNotebook(doc: NotebookDocument) {
-  openDocumentAs({ notebook: doc })
+export async function openAsRunmeNotebook(uri: Uri) {
+  const notebook = await workspace.openNotebookDocument(uri)
+  await openDocumentAs({ notebook })
 }
 
-export function openSplitViewAsMarkdownText(doc: TextDocument) {
-  openDocumentAs({ text: doc })
+export async function openSplitViewAsMarkdownText(uri: Uri) {
+  const text = await workspace.openTextDocument(uri)
+  await openDocumentAs({ text })
 }
 
 export async function askNewRunnerSession(kernel: Kernel) {
