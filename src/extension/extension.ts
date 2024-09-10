@@ -20,7 +20,6 @@ import {
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getSessionOutputs,
-  isPlatformAuthEnabled,
 } from '../utils/configuration'
 import { AuthenticationProviders, WebViews } from '../constants'
 
@@ -379,28 +378,26 @@ export class RunmeExtension {
         })
     }
 
-    if (isPlatformAuthEnabled()) {
-      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-      getPlatformAuthSession(true).then((session) => {
-        if (session) {
-          const openDashboardStr = 'Open Dashboard'
-          window
-            .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-            .then((answer) => {
-              if (answer === openDashboardStr) {
-                const dashboardUri = getRunmeAppUrl(['app'])
-                const uri = Uri.parse(dashboardUri)
-                env.openExternal(uri)
-              }
-            })
-        }
-      })
-    } else {
-      context.subscriptions.push(new GithubAuthProvider(context))
-      getGithubAuthSession(false).then((session) => {
-        kernel.updateFeatureState('githubAuth', !!session)
-      })
-    }
+    context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+    getPlatformAuthSession(kernel.isFeatureActive('ForceLogin')).then((session) => {
+      if (session) {
+        const openDashboardStr = 'Open Dashboard'
+        window
+          .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+          .then((answer) => {
+            if (answer === openDashboardStr) {
+              const dashboardUri = getRunmeAppUrl(['app'])
+              const uri = Uri.parse(dashboardUri)
+              env.openExternal(uri)
+            }
+          })
+      }
+    })
+
+    context.subscriptions.push(new GithubAuthProvider(context))
+    getGithubAuthSession(false).then((session) => {
+      kernel.updateFeatureState('githubAuth', !!session)
+    })
 
     authentication.onDidChangeSessions((e) => {
       if (e.provider.id === AuthenticationProviders.Stateful) {
