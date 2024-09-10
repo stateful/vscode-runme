@@ -16,7 +16,7 @@ import {
 } from 'vscode'
 
 import {
-  GITHUB_USER_SIGNED_IN,
+  CLOUD_USER_SIGNED_IN,
   NOTEBOOK_AUTOSAVE_ON,
   OutputType,
   PLATFORM_USER_SIGNED_IN,
@@ -36,6 +36,7 @@ import {
   getNotebookTerminalConfigurations,
   getSessionOutputs,
   isPlatformAuthEnabled,
+  isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
 
 import { RUNME_TRANSIENT_REVISION } from './constants'
@@ -244,7 +245,7 @@ export class NotebookCellOutputManager {
 
             const isSignedIn = isPlatformAuthEnabled()
               ? ContextState.getKey(PLATFORM_USER_SIGNED_IN)
-              : ContextState.getKey(GITHUB_USER_SIGNED_IN)
+              : ContextState.getKey(CLOUD_USER_SIGNED_IN)
 
             const isSessionOutputsEnabled = getSessionOutputs()
 
@@ -254,6 +255,7 @@ export class NotebookCellOutputManager {
                 'runme.dev/id': cellId,
                 content: stdoutBase64,
                 initialRows: terminalRows || terminalConfigurations.rows,
+                enableShareButton: isRunmeAppButtonsEnabled(),
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
                 isPlatformAuthEnabled: isPlatformAuthEnabled(),
                 isSessionOutputsEnabled,

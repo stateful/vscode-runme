@@ -9,7 +9,6 @@ import {
   env,
   Uri,
   NotebookCell,
-  authentication,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -22,7 +21,7 @@ import {
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import { AuthenticationProviders, WebViews } from '../constants'
+import { WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -37,7 +36,6 @@ import {
   bootFile,
   resetNotebookSettings,
   getPlatformAuthSession,
-  getGithubAuthSession,
   openFileAsRunmeNotebook,
 } from './utils'
 import { RunmeTaskProvider } from './provider/runmeTask'
@@ -75,7 +73,7 @@ import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import CloudPanel from './panels/cloud'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
-import { GithubAuthProvider } from './provider/githubAuth'
+import { CloudAuthProvider } from './provider/cloudAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { IPanel } from './panels/base'
 import { NotebookPanel as EnvStorePanel } from './panels/notebook'
@@ -343,6 +341,26 @@ export class RunmeExtension {
       ),
     )
 
+    if (isPlatformAuthEnabled()) {
+      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const session = await getPlatformAuthSession(true)
+      if (session) {
+        const openDashboardStr = 'Open Dashboard'
+        const answer = await window.showInformationMessage(
+          'Logged into the Stateful Platform',
+          openDashboardStr,
+        )
+
+        if (answer === openDashboardStr) {
+          const dashboardUri = getRunmeAppUrl(['app'])
+          const uri = Uri.parse(dashboardUri)
+          env.openExternal(uri)
+        }
+      }
+    } else {
+      context.subscriptions.push(new CloudAuthProvider(context))
+    }
+
     await bootFile(context)
 
     if (kernel.hasExperimentEnabled('shellWarning', false)) {
@@ -356,7 +374,7 @@ export class RunmeExtension {
         }
       }
 
-      const logger = getLogger('runme.experiments.shellWarning')
+      const logger = getLogger('runme.beta.shellWarning')
 
       kernel
         .runProgram('echo $SHELL')
@@ -378,42 +396,6 @@ export class RunmeExtension {
           showUnsupportedShellMessage()
         })
     }
-
-    if (isPlatformAuthEnabled()) {
-      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-      getPlatformAuthSession(true).then((session) => {
-        if (session) {
-          const openDashboardStr = 'Open Dashboard'
-          window
-            .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-            .then((answer) => {
-              if (answer === openDashboardStr) {
-                const dashboardUri = getRunmeAppUrl(['app'])
-                const uri = Uri.parse(dashboardUri)
-                env.openExternal(uri)
-              }
-            })
-        }
-      })
-    } else {
-      context.subscriptions.push(new GithubAuthProvider(context))
-      getGithubAuthSession(false).then((session) => {
-        kernel.updateFeatureState('githubAuth', !!session)
-      })
-    }
-
-    authentication.onDidChangeSessions((e) => {
-      if (e.provider.id === AuthenticationProviders.Stateful) {
-        getPlatformAuthSession(false).then((session) => {
-          kernel.updateFeatureState('statefulAuth', !!session)
-        })
-      }
-      if (e.provider.id === AuthenticationProviders.GitHub) {
-        getGithubAuthSession(false).then((session) => {
-          kernel.updateFeatureState('githubAuth', !!session)
-        })
-      }
-    })
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {

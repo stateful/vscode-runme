@@ -14,15 +14,6 @@ import { GrpcSerializer } from '../../../../src/extension/serializer'
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
-vi.mock('node:os', async (importOriginal) => {
-  const original = (await importOriginal()) as any
-  return {
-    default: {
-      ...original.default,
-      platform: vi.fn().mockReturnValue('linux'),
-    },
-  }
-})
 
 vi.mock('vscode', async () => {
   const mocked = (await vi.importActual('../../../../__mocks__/vscode')) as any
@@ -129,20 +120,13 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "snapshot": "{"features":[],"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
-              },
-              "type": "features:updateAction",
-            },
-          ],
-          [
-            {
-              "output": {
                 "data": {
                   "data": {
                     "htmlUrl": "https://app.runme.dev/cell/gotyou!",
                     "id": "cell-id",
                   },
                 },
+                "escalationButton": false,
                 "id": "cell-id",
               },
               "type": "common:platformApiResponse",
@@ -150,10 +134,6 @@ suite('Save cell execution', () => {
           ],
         ],
         "results": [
-          {
-            "type": "return",
-            "value": undefined,
-          },
           {
             "type": "return",
             "value": undefined,
@@ -211,20 +191,13 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "snapshot": "{"features":[],"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
-              },
-              "type": "features:updateAction",
-            },
-          ],
-          [
-            {
-              "output": {
                 "data": {
                   "data": {
                     "htmlUrl": "https://app.runme.dev/cell/gotyou!",
                     "id": "cell-id",
                   },
                 },
+                "escalationButton": false,
                 "id": "cell-id",
               },
               "type": "common:platformApiResponse",
@@ -236,6 +209,7 @@ suite('Save cell execution', () => {
                 "data": {
                   "displayShare": false,
                 },
+                "escalationButton": false,
                 "id": "cell-id",
               },
               "type": "common:platformApiResponse",
@@ -243,10 +217,6 @@ suite('Save cell execution', () => {
           ],
         ],
         "results": [
-          {
-            "type": "return",
-            "value": undefined,
-          },
           {
             "type": "return",
             "value": undefined,

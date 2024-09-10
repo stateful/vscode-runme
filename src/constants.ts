@@ -68,9 +68,6 @@ export enum ClientMessages {
   gcpServicesLoaded = 'gcp:servicesLoaded',
   daggerSyncState = 'dagger:syncState',
   daggerCliAction = 'dagger:cliAction',
-  featuresUpdateAction = 'features:updateAction',
-  featuresRequest = 'features:request',
-  featuresResponse = 'features:response',
 }
 
 // [pretty print, languageId, destination]
@@ -1113,7 +1110,7 @@ export const CATEGORY_SEPARATOR = ','
 export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'
 export const EXECUTION_CELL_CREATION_DATE_STORAGE_KEY = 'executionCellCreationDate'
 export const SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY = 'loginConsent'
-export const GITHUB_USER_SIGNED_IN = 'userSignedIn'
+export const CLOUD_USER_SIGNED_IN = 'userSignedIn'
 export const PLATFORM_USER_SIGNED_IN = 'platformUserSignedIn'
 
 export const RUNME_FRONTMATTER_PARSED = 'runme.dev/frontmatterParsed'

@@ -322,5 +322,3 @@ export enum EndOfLine {
    */
   CRLF = 2
 }
-
-export const version = '9.9.9'

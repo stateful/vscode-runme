@@ -5,25 +5,16 @@ import { when } from 'lit/directives/when.js'
 import { ShareIcon } from '../icons/share'
 import { SaveIcon } from '../icons/save'
 
-@customElement('action-button')
-export class ActionButton extends LitElement {
+@customElement('share-cell')
+export class ShareCell extends LitElement {
   @property({ type: String })
-  text: string = 'Copy'
-
-  @property({ type: String })
-  loadingText: string = 'Saving...'
-
-  @property({ type: Boolean, reflect: true })
-  loading: boolean = false
+  shareText: string = 'Copy'
 
   @property({ type: Boolean, reflect: true })
   disabled: boolean = false
 
   @property({ type: Boolean, reflect: true })
-  shareIcon: boolean = false
-
-  @property({ type: Boolean, reflect: true })
-  saveIcon: boolean = false
+  displayShareIcon: boolean = false
 
   /* eslint-disable */
   static styles = css`
@@ -48,32 +39,33 @@ export class ActionButton extends LitElement {
     }
   `
 
-  private onClick(e: Event) {
+  private onShareClick(e: Event) {
     if (e.defaultPrevented) {
       e.preventDefault()
     }
-
-    const event = new CustomEvent(this.disabled ? 'onClickDisabled' : 'onClick')
-
+    const event = new CustomEvent('onShare')
     this.dispatchEvent(event)
   }
 
   render() {
-    const className = this.text.toLocaleLowerCase()
-    return html`
-      <vscode-button
-        ?disabled=${this.loading}
-        class=${className}
-        appearance="secondary"
-        @click=${this.onClick}
-      >
-        ${when(this.shareIcon, () => ShareIcon)} ${when(this.saveIcon, () => SaveIcon)}
-        ${when(
-          this.loading,
-          () => html`${this.loadingText}`,
-          () => html`${this.text}`,
-        )}
-      </vscode-button>
-    `
+    const className = this.shareText.toLocaleLowerCase()
+    return when(
+      this.disabled,
+      () => html`
+        <vscode-button
+          class=${className}
+          disabled
+          appearance="secondary"
+          @click=${this.onShareClick}
+        >
+          ${ShareIcon} ${this.shareText}
+        </vscode-button>
+      `,
+      () => html`
+        <vscode-button class=${className} appearance="secondary" @click=${this.onShareClick}>
+          ${this.displayShareIcon ? ShareIcon : SaveIcon} ${this.shareText}
+        </vscode-button>
+      `,
+    )
   }
 }
