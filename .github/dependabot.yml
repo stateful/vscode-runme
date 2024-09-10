@@ -31,3 +31,12 @@ updates:
           - "@aws-sdk/client-ec2"
           - "@aws-sdk/client-eks"
           - "@aws-sdk/credential-providers"
+      e2e-tests:
+        patterns:
+          - "@wdio/cli"
+          - "@wdio/local-runner"
+          - "@wdio/mocha-framework"
+          - "@wdio/spec-reporter"
+          - "chromedriver"
+          - "wdio-vscode-service"
+          - "webdriverio"
