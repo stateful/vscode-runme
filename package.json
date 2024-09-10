@@ -127,7 +127,7 @@
       },
       {
         "command": "runme.runForkCommand",
-        "title": "Run fork ENV in new terminal"
+        "title": "Run fork session in new terminal"
       },
       {
         "command": "runme.surveyWinDefaultShell",
