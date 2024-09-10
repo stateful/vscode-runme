@@ -400,6 +400,10 @@ const getRunmeBaseDomain = (): string => {
   return baseDomain
 }
 
+const isRunmeAppButtonsEnabled = (): boolean => {
+  return getCloudConfigurationValue('enableShare', true)
+}
+
 const getRunmePanelIdentifier = (identifer: string): string => {
   const configurationSection = workspace.getConfiguration(`${APP_SECTION_NAME}.panel`)
   const configurationValue = configurationSection.get<string>(identifer) || identifer
@@ -463,6 +467,7 @@ export {
   getTLSEnabled,
   isNotebookTerminalEnabledForCell,
   isNotebookTerminalFeatureEnabled,
+  isRunmeAppButtonsEnabled,
   isPlatformAuthEnabled,
   registerExtensionEnvVarsMutation,
   getSessionOutputs,

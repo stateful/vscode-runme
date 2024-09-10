@@ -27,6 +27,7 @@ import {
   getCLIUseIntegratedRunme,
   getTLSEnabled,
   isNotebookTerminalEnabledForCell,
+  isRunmeAppButtonsEnabled,
 } from '../../utils/configuration'
 import { Kernel } from '../kernel'
 import {
@@ -382,7 +383,7 @@ export async function addToRecommendedExtensions(context: ExtensionContext) {
 }
 
 export async function toggleAutosave(autoSaveIsOn: boolean) {
-  if (autoSaveIsOn) {
+  if (autoSaveIsOn && isRunmeAppButtonsEnabled()) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

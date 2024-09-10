@@ -377,6 +377,7 @@ interface Payload {
     ['runme.dev/id']: string
     content?: string
     initialRows?: number
+    enableShareButton: boolean
     isAutoSaveEnabled: boolean
     isSessionOutputsEnabled: boolean
     isPlatformAuthEnabled: boolean
@@ -437,6 +438,7 @@ export interface ClientMessagePayload {
   [ClientMessages.onProgramClose]: {
     ['runme.dev/id']: string
     code: number | void
+    escalationButton: boolean
   }
   [ClientMessages.activeThemeChanged]: string
   [ClientMessages.openLink]: string
@@ -497,6 +499,7 @@ export interface ClientMessagePayload {
   [ClientMessages.platformApiResponse]: {
     data: any
     id: string
+    escalationButton: boolean
     hasErrors?: boolean
   }
   [ClientMessages.optionsModal]: {
@@ -637,16 +640,6 @@ export interface ClientMessagePayload {
     cellId: string
     command: string
     argument?: string
-  }
-
-  [ClientMessages.featuresUpdateAction]: {
-    snapshot: string
-  }
-
-  [ClientMessages.featuresRequest]: {}
-
-  [ClientMessages.featuresResponse]: {
-    snapshot: string
   }
 }
 

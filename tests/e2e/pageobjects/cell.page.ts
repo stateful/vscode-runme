@@ -106,9 +106,7 @@ export class NotebookCell extends BasePage<typeof notebookCellLocators, typeof l
         expectedTerminal !== OutputType.Display ? await row.getText() : await row.getHTML(false)
 
       if (expectedTerminal === OutputType.TerminalView) {
-        // TODO: Why?
-        // const stopTerm = text.lastIndexOf('Copy\n')
-        const stopTerm = text.lastIndexOf('Copy')
+        const stopTerm = text.lastIndexOf('Copy\n')
         text = text.slice(0, stopTerm).trim()
       }
 

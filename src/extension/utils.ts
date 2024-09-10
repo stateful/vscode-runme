@@ -41,7 +41,7 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
-  GITHUB_USER_SIGNED_IN,
+  CLOUD_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
 } from '../constants'
 import {
@@ -55,8 +55,8 @@ import {
   getTLSDir,
   getTLSEnabled,
   isPlatformAuthEnabled,
+  isRunmeAppButtonsEnabled,
 } from '../utils/configuration'
-import { FEATURES_CONTEXT_STATE_KEY, isFeatureActive, loadFeatureSnapshot } from '../features'
 
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
@@ -65,6 +65,7 @@ import { BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { IRunnerEnvironment } from './runner/environment'
 import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
+import { RunmeService } from './services/runme'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
 
@@ -551,7 +552,7 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
   )
 }
 
-export function getGithubAuthSession(createIfNone: boolean = true) {
+export function getAuthSession(createIfNone: boolean = true) {
   return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
     createIfNone,
   })
@@ -566,20 +567,48 @@ export async function getPlatformAuthSession(createIfNone: boolean = true) {
 
 export async function resolveAuthToken(createIfNone: boolean = true) {
   let session: AuthenticationSession | undefined
-  session = await getPlatformAuthSession(createIfNone)
-  if (!session) {
-    throw new Error('You must authenticate with your Stateful account')
+
+  if (isPlatformAuthEnabled()) {
+    session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      throw new Error('You must authenticate with your Stateful account')
+    }
+
+    return session.accessToken
   }
 
-  return session.accessToken
+  session = await getAuthSession(createIfNone)
+  if (!session) {
+    throw new Error('You must authenticate with your GitHub account')
+  }
+
+  const service = new RunmeService({ githubAccessToken: session.accessToken })
+  const response = await service.getUserToken()
+  if (!response) {
+    throw new Error('Unable to retrieve an access token')
+  }
+
+  return response.token
 }
 
 export async function resolveAppToken(createIfNone: boolean = true) {
-  const session = await getPlatformAuthSession(createIfNone)
-  if (!session) {
-    return null
+  if (isPlatformAuthEnabled()) {
+    const session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      return null
+    }
+    return { token: session.accessToken }
   }
-  return { token: session.accessToken }
+
+  const session = await getAuthSession(createIfNone)
+
+  if (session) {
+    const service = new RunmeService({ githubAccessToken: session.accessToken })
+    const userToken = await service.getUserToken()
+    return await service.getAppToken(userToken)
+  }
+
+  return null
 }
 
 export function fetchStaticHtml(appUrl: string) {
@@ -706,7 +735,7 @@ export async function resolveUserSession(
 ): Promise<AuthenticationSession | undefined> {
   return isPlatformAuthEnabled()
     ? await getPlatformAuthSession(createIfNone)
-    : await getGithubAuthSession(createIfNone)
+    : await getAuthSession(createIfNone)
 }
 
 /**
@@ -715,20 +744,13 @@ export async function resolveUserSession(
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
-export async function promptUserSession() {
-  let session = await resolveUserSession(false)
-  // if (session) {
-  //   return Promise.resolve()
-  // }
-
-  const provider = isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'
-  const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-  const displayLoginPrompt = getLoginPrompt() && isFeatureActive(featureState$, 'Share')
-
+export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
+  let session: AuthenticationSession | undefined = await resolveUserSession(false)
+  const displayLoginPrompt = getLoginPrompt() && isRunmeAppButtonsEnabled()
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell outputs.
-      Sign in with ${provider} is required, do you want to proceed?`,
+      Sign in with ${isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'} is required, do you want to proceed?`,
       'Yes',
       'No',
       'Open Settings',
@@ -743,17 +765,17 @@ export async function promptUserSession() {
 
     session = await resolveUserSession(true)
     if (!session) {
-      throw new Error(`You must authenticate with your ${provider} account`)
+      throw new Error('You must authenticate with your GitHub account')
     }
   }
 
-  // return session
+  return session
 }
 
 export async function checkSession(context: ExtensionContext) {
-  const session = await getGithubAuthSession(false)
-  context.globalState.update(GITHUB_USER_SIGNED_IN, !!session)
-  ContextState.addKey(GITHUB_USER_SIGNED_IN, !!session)
+  const session = await getAuthSession(false)
+  context.globalState.update(CLOUD_USER_SIGNED_IN, !!session)
+  ContextState.addKey(CLOUD_USER_SIGNED_IN, !!session)
 }
 
 export function editJsonc(
