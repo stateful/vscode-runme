@@ -1202,9 +1202,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.6",
-    "@aws-sdk/client-ec2": "^3.641.0",
-    "@aws-sdk/client-eks": "^3.637.0",
-    "@aws-sdk/credential-providers": "^3.637.0",
+    "@aws-sdk/client-ec2": "^3.645.0",
+    "@aws-sdk/client-eks": "^3.645.0",
+    "@aws-sdk/credential-providers": "^3.645.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240809200651-8507e5a24938.4",
     "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-00000000000000-d14934cb2733.1",
     "@buf/jlewi_foyle.connectrpc_es": "^1.4.0-00000000000000-d14934cb2733.3",
