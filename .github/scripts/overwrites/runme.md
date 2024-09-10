@@ -7,8 +7,8 @@ cwd: ../../..
 Remove panels mostly relevant for development.
 
 ```sh {"id":"01J7EZNXTG43WAYRWPFX7MHN7F","interactive":"false","name":"deactivate-panels"}
-npm pkg delete "contributes.views.runme[id='runme.chat']"
-npm pkg delete "contributes.views.runme[id='runme.search']"
+npm pkg delete "contributes.views.runme[1]" # remove chat
+npm pkg delete "contributes.views.runme[1]" # remove search
 npm pkg delete "contributes.terminal"
 git diff package.json
 ```
