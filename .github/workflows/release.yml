@@ -94,9 +94,10 @@ jobs:
           echo "EXTENSION_NAME=${EXTENSION_NAME}" >> $GITHUB_ENV
 
       - name: Overwrite Extension Definition
+        uses: stateful/runme-action@v2
+        with:
+          workflows: overwrite-stateful
         if: env.EXTENSION_NAME != 'runme'
-        run: |
-          .github/scripts/overwrites/stateful.sh
 
       - name: Get Stable Releases
         uses: actions/github-script@v6
@@ -167,13 +168,16 @@ jobs:
         if: ${{ github.event.inputs.releaseChannel == 'edge' || env.EXTENSION_NAME != 'runme' }}
         run: node .github/scripts/updateEdgeVersion.js
 
-      - name: Deactivate additional panel
-        run: |
-          jq 'del( .contributes.views.runme[1], .contributes.views.runme[2] )' package.json > _package.json
-          jq 'del( .contributes.views["runme-notebook"], .contributes.viewsContainers.panel, .contributes.terminal )' _package.json > __package.json
-          mv -f __package.json package.json
-          rm -f _package.json
-        # if: ${{ github.event.inputs.releaseChannel == 'stable' }}
+      - name: Deactivate additional panel & terminal
+        uses: stateful/runme-action@v2
+        with:
+          workflows: deactivate-panels
+
+      - name: Deactivate smart env store for stable
+        uses: stateful/runme-action@v2
+        with:
+          workflows: deactivate-smartenv
+        if: ${{ github.event.inputs.releaseChannel == 'stable' }}
 
       # Linux X86
       - name: Package Extension Linux x86_64 (Edge)
