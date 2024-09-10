@@ -15,15 +15,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
 const documents = {
     "mutation ArchiveCellOutput($id: String!) {\n  archiveCellOutput(id: $id) {\n    id\n  }\n}": types.ArchiveCellOutputDocument,
     "mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellExecutionDocument,
-<<<<<<< HEAD
     "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateExtensionCellOutputDocument,
+    "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}": types.GetUserEnvironmentsDocument,
     "mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}": types.UnArchiveCellOutputDocument,
     "mutation UpdateCellOutput($id: String!, $input: UpdateCellOutputInput!) {\n  updateCellOutput(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellOutputDocument,
-=======
-    "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}": types.GetUserEnvironmentsDocument,
-    "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}": types.UnArchiveCellExecutionDocument,
-    "mutation UpdateCellExecution($id: String!, $input: UpdateCellExecutionInput!) {\n  updateCellExecution(id: $id, input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.UpdateCellExecutionDocument,
->>>>>>> 0154e2b (Add environments)
 };
 
 /**
@@ -51,15 +46,11 @@ export function graphql(source: "mutation CreateCellExecution($input: CreateCell
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-<<<<<<< HEAD
 export function graphql(source: "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"): (typeof documents)["mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}"];
-=======
-export function graphql(source: "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"): (typeof documents)["query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}"): (typeof documents)["mutation UnArchiveCellExecution($unArchiveCellExecutionId: String!) {\n  unArchiveCellExecution(id: $unArchiveCellExecutionId) {\n    id\n  }\n}"];
->>>>>>> 0154e2b (Add environments)
+export function graphql(source: "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"): (typeof documents)["query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
