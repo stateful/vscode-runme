@@ -56,7 +56,12 @@ import {
   getTLSEnabled,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import { FEATURES_CONTEXT_STATE_KEY, isFeatureActive, loadFeatureSnapshot } from '../features'
+import {
+  FeatureName,
+  FEATURES_CONTEXT_STATE_KEY,
+  isFeatureActive,
+  loadFeatureSnapshot,
+} from '../features'
 
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
@@ -726,7 +731,7 @@ export async function promptUserSession(): Promise<AuthenticationSession | undef
 
   const provider = isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'
   const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-  const displayLoginPrompt = getLoginPrompt() && isFeatureActive(featureState$, 'Share')
+  const displayLoginPrompt = getLoginPrompt() && isFeatureActive(FeatureName.Share, featureState$)
 
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(

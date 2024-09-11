@@ -24,7 +24,12 @@ import {
   CreateExtensionCellOutputMutation,
   UpdateCellOutputMutation,
 } from '../../../extension/__generated-platform__/graphql'
-import { isFeatureActive, loadFeatureSnapshot, FeatureObserver } from '../../../features'
+import {
+  isFeatureActive,
+  loadFeatureSnapshot,
+  FeatureObserver,
+  FeatureName,
+} from '../../../features'
 
 interface IWindowSize {
   width: number
@@ -852,7 +857,7 @@ export class TerminalView extends LitElement {
           }}"
         ></copy-button>
         ${when(
-          this.isSessionOutputsEnabled && isFeatureActive(this.featureState$, 'Gist'),
+          this.isSessionOutputsEnabled && isFeatureActive(FeatureName.Gist, this.featureState$),
           () => {
             return html`<gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>`
           },
@@ -860,7 +865,7 @@ export class TerminalView extends LitElement {
         )}
         ${when(
           (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
-            isFeatureActive(this.featureState$, 'Share'),
+            isFeatureActive(FeatureName.Share, this.featureState$),
           () => {
             return html` <action-button
               ?loading=${this.isLoading}
@@ -874,7 +879,9 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          this.exitCode !== 0 && this.platformId && isFeatureActive(this.featureState$, 'Escalate'),
+          this.exitCode !== 0 &&
+            this.platformId &&
+            isFeatureActive(FeatureName.Escalate, this.featureState$),
           () => {
             return html` <action-button
               ?disabled=${!this.isSlackReady}

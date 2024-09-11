@@ -57,9 +57,8 @@
   ],
   "main": "./out/extension.js",
   "runme": {
-    "features": [
-      {
-        "name": "ForceLogin",
+    "features": {
+      "ForceLogin": {
         "enabled": true,
         "conditions": {
           "os": "All",
@@ -69,8 +68,7 @@
           ]
         }
       },
-      {
-        "name": "Escalate",
+      "Escalate": {
         "enabled": true,
         "conditions": {
           "os": "All",
@@ -81,8 +79,7 @@
           ]
         }
       },
-      {
-        "name": "Share",
+      "Share": {
         "enabled": true,
         "conditions": {
           "os": "All",
@@ -93,8 +90,7 @@
           ]
         }
       },
-      {
-        "name": "Gist",
+      "Gist": {
         "enabled": true,
         "conditions": {
           "os": "All",
@@ -104,7 +100,7 @@
           ]
         }
       }
-    ]
+    }
   },
   "contributes": {
     "commands": [

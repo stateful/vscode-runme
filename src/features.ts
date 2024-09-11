@@ -23,22 +23,30 @@ export type FeatureCondition = {
   enabledForExtensions?: string[]
 }
 
+export enum FeatureName {
+  Gist = 'Gist',
+  Share = 'Share',
+  Escalate = 'Escalate',
+  ForceLogin = 'ForceLogin',
+}
+
 export type Feature = {
-  name: string
   enabled: boolean
   activated: boolean
   conditions: FeatureCondition
 }
 
+export type Features = Partial<Record<keyof typeof FeatureName, Feature>>
+
 export type FeatureState = {
-  features: Feature[]
+  features: Features
   context?: FeatureContext
 }
 
 export type FeatureObserver = BehaviorSubject<FeatureState>
 
-function loadFeaturesFromPackageJson(packageJSON: any): Feature[] {
-  const features = (packageJSON?.runme?.features || []) as Feature[]
+function loadFeaturesFromPackageJson(packageJSON: any): Features {
+  const features = (packageJSON?.runme?.features || {}) as Features
   return features
 }
 
@@ -47,7 +55,7 @@ export function loadFeaturesState(
   context?: FeatureContext,
   overrides: Map<string, boolean> = new Map(),
 ): FeatureObserver {
-  const initialFeatures: Feature[] = loadFeaturesFromPackageJson(packageJSON)
+  const initialFeatures = loadFeaturesFromPackageJson(packageJSON)
   const state = new BehaviorSubject<FeatureState>({
     features: initialFeatures,
     context,
@@ -105,6 +113,7 @@ function checkExtensionId(enabledForExtensions?: string[], extensionId?: string)
 }
 
 function isActive(
+  featureName: FeatureName,
   feature: Feature,
   context?: FeatureContext,
   overrides: Map<string, boolean> = new Map(),
@@ -119,61 +128,61 @@ function isActive(
     enabledForExtensions,
   } = feature.conditions
 
-  if (!checkEnabled(feature.enabled, overrides.get(feature.name.toLowerCase()))) {
-    console.log(`Feature "${feature.name}" is inactive due to checkEnabled.`)
+  if (!checkEnabled(feature.enabled, overrides.get(featureName.toLowerCase()))) {
+    console.log(`Feature "${featureName}" is inactive due to checkEnabled.`)
     return false
   }
 
   if (!checkOS(os, context?.os)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkOS. Expected OS: ${os}, actual OS: ${context?.os}`,
+      `Feature "${featureName}" is inactive due to checkOS. Expected OS: ${os}, actual OS: ${context?.os}`,
     )
     return false
   }
 
   if (!checkVersion(vsCodeVersion, context?.vsCodeVersion)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkVersion (vsCodeVersion). Expected: ${vsCodeVersion}, actual: ${context?.vsCodeVersion}`,
+      `Feature "${featureName}" is inactive due to checkVersion (vsCodeVersion). Expected: ${vsCodeVersion}, actual: ${context?.vsCodeVersion}`,
     )
     return false
   }
 
   if (!checkVersion(runmeVersion, context?.runmeVersion)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkVersion (runmeVersion). Expected: ${runmeVersion}, actual: ${context?.runmeVersion}`,
+      `Feature "${featureName}" is inactive due to checkVersion (runmeVersion). Expected: ${runmeVersion}, actual: ${context?.runmeVersion}`,
     )
     return false
   }
 
   if (!checkVersion(extensionVersion, context?.extensionVersion)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkVersion (extensionVersion). Expected: ${extensionVersion}, actual: ${context?.extensionVersion}`,
+      `Feature "${featureName}" is inactive due to checkVersion (extensionVersion). Expected: ${extensionVersion}, actual: ${context?.extensionVersion}`,
     )
     return false
   }
 
   if (!checkAuth(githubAuthRequired, context?.githubAuth)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkAuth (githubAuth). Required: ${githubAuthRequired}, actual: ${context?.githubAuth}`,
+      `Feature "${featureName}" is inactive due to checkAuth (githubAuth). Required: ${githubAuthRequired}, actual: ${context?.githubAuth}`,
     )
     return false
   }
 
   if (!checkAuth(statefulAuthRequired, context?.statefulAuth)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkAuth (statefulAuth). Required: ${statefulAuthRequired}, actual: ${context?.statefulAuth}`,
+      `Feature "${featureName}" is inactive due to checkAuth (statefulAuth). Required: ${statefulAuthRequired}, actual: ${context?.statefulAuth}`,
     )
     return false
   }
 
   if (!checkExtensionId(enabledForExtensions, context?.extensionId)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkExtensionId. Expected: ${enabledForExtensions}, actual: ${context?.extensionId}`,
+      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${enabledForExtensions}, actual: ${context?.extensionId}`,
     )
     return false
   }
 
-  console.log(`Feature "${feature.name} is active`)
+  console.log(`Feature "${featureName} is active`)
   return true
 }
 
@@ -183,10 +192,18 @@ export function updateFeatureState(
   overrides: Map<string, boolean> = new Map(),
 ) {
   const currentState = featureState$.getValue()
-  const updatedFeatures = currentState.features.map((feature) => ({
-    ...feature,
-    activated: isActive(feature, context, overrides),
-  }))
+
+  const updatedFeatures = Object.entries(currentState.features).reduce(
+    (acc, [key, value]) => ({
+      ...acc,
+      [key]: {
+        ...value,
+        activated: isActive(key as FeatureName, value, context, overrides),
+      },
+    }),
+    {} as Features,
+  )
+
   featureState$.next({ features: updatedFeatures, context })
   return featureState$
 }
@@ -227,15 +244,14 @@ export function loadFeatureSnapshot(snapshot: string): FeatureObserver {
   return featureState$
 }
 
-export function isFeatureActive(featureState$?: FeatureObserver, featureName?: string): boolean {
+export function isFeatureActive(
+  featureName: FeatureName,
+  featureState$?: FeatureObserver,
+): boolean {
   if (!featureState$) {
     return false
   }
 
-  if (!featureName) {
-    return false
-  }
-
-  const feature = featureState$.getValue().features.find((f) => f.name === featureName)
+  const feature = featureState$.getValue().features[featureName]
   return feature ? feature.activated : false
 }

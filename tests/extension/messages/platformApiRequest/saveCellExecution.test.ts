@@ -129,7 +129,7 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "snapshot": "{"features":[],"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
+                "snapshot": "{"features":{},"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
               },
               "type": "features:updateAction",
             },
@@ -211,7 +211,7 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "snapshot": "{"features":[],"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
+                "snapshot": "{"features":{},"context":{"os":"linux","vsCodeVersion":"9.9.9","githubAuth":false,"statefulAuth":false}}",
               },
               "type": "features:updateAction",
             },

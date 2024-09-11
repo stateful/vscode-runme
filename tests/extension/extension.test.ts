@@ -82,6 +82,7 @@ test('initializes all providers', async () => {
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config]),
+    has: vi.fn(),
   } as any)
   const dummyFilePath = Uri.file('/foo/bar')
   vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)

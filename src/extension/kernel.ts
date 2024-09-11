@@ -55,6 +55,7 @@ import {
   loadFeaturesState,
   updateFeatureContext,
   FEATURES_CONTEXT_STATE_KEY,
+  FeatureName,
 } from '../features'
 
 import getLogger from './logger'
@@ -207,12 +208,14 @@ export class Kernel implements Disposable {
 
     if (this.featuresState$) {
       const features = workspace.getConfiguration('runme.features')
-      const feats = this.featuresState$.getValue().features.map((f) => f.name.toLowerCase())
-      feats.forEach((feature) => {
-        if (features.has(feature)) {
-          this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
-        }
-      })
+      const featureNames = Object.keys(FeatureName).map((f) => f.toLowerCase())
+      if (features) {
+        featureNames.forEach((feature) => {
+          if (features.has(feature)) {
+            this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
+          }
+        })
+      }
 
       const subscription = this.featuresState$
         .pipe(map((_state) => getFeatureSnapshot(this.featuresState$)))
@@ -229,12 +232,12 @@ export class Kernel implements Disposable {
     }
   }
 
-  isFeatureActive(featureName: string): boolean {
+  isFeatureActive(featureName: FeatureName): boolean {
     if (!this.featuresState$) {
       return false
     }
 
-    return isFeatureActive(this.featuresState$, featureName)
+    return isFeatureActive(featureName, this.featuresState$)
   }
 
   updateFeatureState<K extends keyof FeatureContext>(key: K, value: FeatureContext[K]) {

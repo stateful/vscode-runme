@@ -22,6 +22,7 @@ import {
   getSessionOutputs,
 } from '../utils/configuration'
 import { AuthenticationProviders, WebViews } from '../constants'
+import { FeatureName } from '../features'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -384,7 +385,7 @@ export class RunmeExtension {
 
     context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
 
-    const createIfNone = kernel.isFeatureActive('ForceLogin')
+    const createIfNone = kernel.isFeatureActive(FeatureName.ForceLogin)
     const silent = !createIfNone
     getPlatformAuthSession(createIfNone, silent).then((session) => {
       if (session) {

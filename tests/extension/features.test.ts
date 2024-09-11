@@ -9,13 +9,13 @@ import {
   FeatureContext,
   FeatureState,
   FeatureObserver,
+  FeatureName,
 } from '../../src/features'
 
 const packageJSON = {
   runme: {
-    features: [
-      {
-        name: 'Escalate',
+    features: {
+      Escalate: {
         enabled: true,
         conditions: {
           os: 'All',
@@ -27,8 +27,7 @@ const packageJSON = {
           enabledForExtensions: ['stateful.platform'],
         },
       },
-      {
-        name: 'Feature B',
+      Gist: {
         enabled: true,
         conditions: {
           os: 'win32',
@@ -40,7 +39,7 @@ const packageJSON = {
           enabledForExtensions: ['stateful.runme', 'stateful.platform'],
         },
       },
-    ],
+    },
   },
 }
 
@@ -68,8 +67,8 @@ describe('Feature Store', () => {
 
     const currentFeatures = (featureState$.getValue() as FeatureState).features
 
-    expect(currentFeatures[0].activated).toBe(false)
-    expect(currentFeatures[1].activated).toBe(true)
+    expect(currentFeatures.Escalate?.activated).toBe(false)
+    expect(currentFeatures.Gist?.activated).toBe(true)
   })
 
   it('should take a snapshot of the current state', () => {
@@ -105,29 +104,29 @@ describe('Feature Store', () => {
 
     featureState$.next({
       context: initialContext,
-      features: [
-        {
-          name: 'Escalate',
+      features: {
+        Escalate: {
           enabled: true,
+          activated: false,
           conditions: {
             os: 'All',
             vsCodeVersion: '>=1.58.0',
             runmeVersion: '>=1.2.0',
-            githubAuth: undefined,
-            statefulAuth: true,
+            githubAuthRequired: undefined,
+            statefulAuthRequired: true,
           },
         },
-        {
-          name: 'Feature B',
+        Gist: {
           enabled: true,
+          activated: false,
           conditions: {
             os: 'win32',
             vsCodeVersion: '>=1.60.0',
-            githubAuth: true,
-            statefulAuth: false,
+            githubAuthRequired: true,
+            statefulAuthRequired: false,
           },
         },
-      ],
+      },
     })
 
     const featureStateCopy$ = loadFeatureSnapshot(snapshot)
@@ -149,8 +148,8 @@ describe('Feature Store', () => {
     updateFeatureState(featureState$, newContext)
 
     const currentFeatures = (featureState$.getValue() as FeatureState).features
-    expect(currentFeatures[0].activated).toBe(false)
-    expect(currentFeatures[1].activated).toBe(false)
+    expect(currentFeatures.Escalate?.activated).toBe(false)
+    expect(currentFeatures.Gist?.activated).toBe(false)
   })
 
   it('should correctly identify if a feature is enabled by name', () => {
@@ -165,9 +164,8 @@ describe('Feature Store', () => {
     }
     updateFeatureState(featureState$, ctx)
 
-    expect(isFeatureActive(featureState$, 'Escalate')).toBe(true)
-    expect(isFeatureActive(featureState$, 'Feature B')).toBe(false)
-    expect(isFeatureActive(featureState$, 'Nonexistent Feature')).toBe(false)
+    expect(isFeatureActive(FeatureName.Escalate, featureState$)).toBe(true)
+    expect(isFeatureActive(FeatureName.Gist, featureState$)).toBe(false)
   })
 
   it('should correctly identify if a feature is enabled by extensionId', () => {
@@ -182,7 +180,7 @@ describe('Feature Store', () => {
     }
     updateFeatureState(featureState$, ctx)
 
-    expect(isFeatureActive(featureState$, 'Escalate')).toBe(false)
-    expect(isFeatureActive(featureState$, 'Feature B')).toBe(true)
+    expect(isFeatureActive(FeatureName.Escalate, featureState$)).toBe(false)
+    expect(isFeatureActive(FeatureName.Gist, featureState$)).toBe(true)
   })
 })
