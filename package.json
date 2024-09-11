@@ -860,7 +860,7 @@
           },
           "runme.app.panel.runme.cloud": {
             "type": "string",
-            "default": "runme.cloud",
+            "default": "runme.optin",
             "scope": "window",
             "markdownDescription": "Customize cloud panel assignment"
           },
