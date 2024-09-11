@@ -60,34 +60,34 @@
     "features": [
       {
         "name": "ForceLogin",
-        "enable": true,
+        "enabled": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "allowedExtensions": [
+          "enabledForExtensions": [
             "stateful.platform"
           ]
         }
       },
       {
         "name": "Escalate",
-        "enable": true,
+        "enabled": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
           "statefulAuthRequired": true,
-          "allowedExtensions": [
+          "enabledForExtensions": [
             "stateful.platform"
           ]
         }
       },
       {
         "name": "Share",
-        "enable": true,
+        "enabled": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "allowedExtensions": [
+          "enabledForExtensions": [
             "stateful.platform",
             "stateful.runme"
           ]
@@ -99,7 +99,7 @@
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "allowedExtensions": [
+          "enabledForExtensions": [
             "stateful.runme"
           ]
         }
@@ -913,30 +913,6 @@
             "scope": "window",
             "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
-          },
-          "runme.features.escalate": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
-          },
-          "runme.features.gist": {
-            "type": "boolean",
-            "scope": "window",
-            "default": true,
-            "markdownDescription": "If set to `true`, the Gist button will be displayed to share the output through Github Gists."
-          },
-          "runme.features.share": {
-            "type": "boolean",
-            "scope": "window",
-            "default": true,
-            "markdownDescription": "If set to `true` Enables collaboration in notebook terminal."
-          },
-          "runme.features.forceLogin": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true` Forces to show Login prompt."
           }
         }
       }

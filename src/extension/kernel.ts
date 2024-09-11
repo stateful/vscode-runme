@@ -150,7 +150,6 @@ export class Kernel implements Disposable {
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
-    const features = workspace.getConfiguration('runme.features')
 
     this.onVarsChangeEvent = new EnvVarsChangedEvent()
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
@@ -207,9 +206,12 @@ export class Kernel implements Disposable {
     this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)
 
     if (this.featuresState$) {
+      const features = workspace.getConfiguration('runme.features')
       const feats = this.featuresState$.getValue().features.map((f) => f.name.toLowerCase())
       feats.forEach((feature) => {
-        this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
+        if (features.has(feature)) {
+          this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
+        }
       })
 
       const subscription = this.featuresState$

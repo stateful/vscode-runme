@@ -24,7 +24,7 @@ const packageJSON = {
           extensionVersion: '>=1.0.0',
           githubAuthRequired: undefined,
           statefulAuthRequired: true,
-          allowedExtensions: ['stateful.platform'],
+          enabledForExtensions: ['stateful.platform'],
         },
       },
       {
@@ -37,7 +37,7 @@ const packageJSON = {
           extensionVersion: '>=1.0.0',
           githubAuthRequired: true,
           statefulAuthRequired: false,
-          allowedExtensions: ['stateful.runme', 'stateful.platform'],
+          enabledForExtensions: ['stateful.runme', 'stateful.platform'],
         },
       },
     ],

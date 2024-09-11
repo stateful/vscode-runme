@@ -20,7 +20,7 @@ export type FeatureCondition = {
   extensionVersion?: string
   githubAuthRequired?: boolean
   statefulAuthRequired?: boolean
-  allowedExtensions?: string[]
+  enabledForExtensions?: string[]
 }
 
 export type Feature = {
@@ -92,8 +92,8 @@ function checkAuth(required?: boolean, isAuthenticated?: boolean): boolean {
   return true
 }
 
-function checkExtensionId(allowedExtensions?: string[], extensionId?: string): boolean {
-  if (!allowedExtensions?.length) {
+function checkExtensionId(enabledForExtensions?: string[], extensionId?: string): boolean {
+  if (!enabledForExtensions?.length) {
     return true
   }
 
@@ -101,7 +101,7 @@ function checkExtensionId(allowedExtensions?: string[], extensionId?: string): b
     return false
   }
 
-  return allowedExtensions.includes(extensionId)
+  return enabledForExtensions.includes(extensionId)
 }
 
 function isActive(
@@ -116,7 +116,7 @@ function isActive(
     extensionVersion,
     githubAuthRequired,
     statefulAuthRequired,
-    allowedExtensions,
+    enabledForExtensions,
   } = feature.conditions
 
   if (!checkEnabled(feature.enabled, overrides.get(feature.name.toLowerCase()))) {
@@ -166,9 +166,9 @@ function isActive(
     return false
   }
 
-  if (!checkExtensionId(allowedExtensions, context?.extensionId)) {
+  if (!checkExtensionId(enabledForExtensions, context?.extensionId)) {
     console.log(
-      `Feature "${feature.name}" is inactive due to checkExtensionId. Expected: ${allowedExtensions}, actual: ${context?.extensionId}`,
+      `Feature "${feature.name}" is inactive due to checkExtensionId. Expected: ${enabledForExtensions}, actual: ${context?.extensionId}`,
     )
     return false
   }
