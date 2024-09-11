@@ -408,7 +408,7 @@ export class RunmeExtension {
 
     authentication.onDidChangeSessions((e) => {
       if (e.provider.id === AuthenticationProviders.Stateful) {
-        getPlatformAuthSession(false).then((session) => {
+        getPlatformAuthSession(false, true).then((session) => {
           kernel.updateFeatureState('statefulAuth', !!session)
         })
       }
