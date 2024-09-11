@@ -59,6 +59,17 @@
   "runme": {
     "features": [
       {
+        "name": "ForceLogin",
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "allowedExtensions": [
+            "stateful.platform"
+          ]
+        }
+      },
+      {
         "name": "Escalate",
         "enabled": true,
         "conditions": {
@@ -76,9 +87,9 @@
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "statefulAuthRequired": true,
           "allowedExtensions": [
-            "stateful.platform"
+            "stateful.platform",
+            "stateful.runme"
           ]
         }
       },
@@ -843,13 +854,13 @@
           },
           "runme.app.baseDomain": {
             "type": "string",
-            "default": "",
+            "default": "platform.stateful.com",
             "scope": "window",
             "markdownDescription": "Base domain to be use for Runme app"
           },
           "runme.app.panel.runme.cloud": {
             "type": "string",
-            "default": "runme.placeholder",
+            "default": "runme.cloud",
             "scope": "window",
             "markdownDescription": "Customize cloud panel assignment"
           },
@@ -889,7 +900,7 @@
           "runme.app.platformAuth": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
           "runme.aiBaseURL": {
@@ -1018,7 +1029,7 @@
         {
           "id": "runme.cloud",
           "type": "webview",
-          "name": "Cloud",
+          "name": "Commands",
           "visibility": "visible"
         },
         {
