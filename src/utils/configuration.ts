@@ -82,7 +82,6 @@ const configurationSchema = {
   app: {
     apiUrl: z.string().default(DEFAULT_RUNME_APP_API_URL),
     baseDomain: z.string().default(DEFAULT_RUNME_BASE_DOMAIN),
-    enableShare: z.boolean().default(true),
     forceNewWindow: z.boolean().default(true),
     notebookAutoSave: z
       .enum([NotebookAutoSaveSetting.Yes, NotebookAutoSaveSetting.No])
