@@ -383,7 +383,10 @@ export class RunmeExtension {
     }
 
     context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-    getPlatformAuthSession(kernel.isFeatureActive('ForceLogin')).then((session) => {
+
+    const createIfNone = kernel.isFeatureActive('ForceLogin')
+    const silent = !createIfNone
+    getPlatformAuthSession(createIfNone, silent).then((session) => {
       if (session) {
         const openDashboardStr = 'Open Dashboard'
         window
