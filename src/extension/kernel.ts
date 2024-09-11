@@ -160,7 +160,6 @@ export class Kernel implements Disposable {
     this.#experiments.set('aiLogs', config.get<boolean>('aiLogs', false))
     this.#experiments.set('shellWarning', config.get<boolean>('shellWarning', false))
     this.#experiments.set('reporter', config.get<boolean>('reporter', false))
-    this.#featuresSettings.set('escalate', features.get<boolean>('escalate', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -208,6 +207,11 @@ export class Kernel implements Disposable {
     this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)
 
     if (this.featuresState$) {
+      const feats = this.featuresState$.getValue().features.map((f) => f.name.toLowerCase())
+      feats.forEach((feature) => {
+        this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
+      })
+
       const subscription = this.featuresState$
         .pipe(map((_state) => getFeatureSnapshot(this.featuresState$)))
         .subscribe((snapshot) => {

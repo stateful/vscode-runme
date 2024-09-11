@@ -7,11 +7,13 @@ npm pkg set description="DevOps Notebooks built on Runme, connected for collabor
 npm pkg set homepage="https://stateful.com"
 npm pkg set contributes.configuration[0].properties[runme.app.baseDomain].default="platform.stateful.com"
 npm pkg set contributes.configuration[0].properties[runme.app.platformAuth].default=true --json
-npm pkg set contributes.configuration[0].properties[runme.features.share].default=true --json
-npm pkg set contributes.configuration[0].properties[runme.features.escalate].default=true --json
 npm pkg set contributes.configuration[0].properties[runme.server.lifecycleIdentity].default=1 --json
 npm pkg set contributes.configuration[0].properties[runme.app.notebookAutoSave].default="yes"
 npm pkg set contributes.configuration[0].properties[runme.app.panel.runme.cloud].default="\"\"" --json
+npm pkg set contributes.configuration[0].properties[runme.features.forceLogin].default=true --json
+npm pkg set contributes.configuration[0].properties[runme.features.share].default=true --json
+npm pkg set contributes.configuration[0].properties[runme.features.escalate].default=true --json
+npm pkg set contributes.configuration[0].properties[runme.features.gist].default=false --json
 npm pkg set contributes.views.runme[0].name="Platform"
 npm pkg set contributes.viewsContainers.activitybar[0].title="Stateful"
 npm pkg delete galleryBanner

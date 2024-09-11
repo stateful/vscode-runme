@@ -57,7 +57,11 @@ export function loadFeaturesState(
 }
 
 function checkEnabled(enabled?: boolean, contextEnabled?: boolean): boolean {
-  return enabled === true || contextEnabled === true
+  if (contextEnabled !== undefined) {
+    return contextEnabled === true
+  }
+
+  return enabled === true
 }
 
 function checkOS(os?: string, contextOS?: string): boolean {
@@ -115,7 +119,7 @@ function isActive(
     allowedExtensions,
   } = feature.conditions
 
-  if (!checkEnabled(feature.enabled, overrides.get(feature.name) ?? false)) {
+  if (!checkEnabled(feature.enabled, overrides.get(feature.name.toLowerCase()))) {
     console.log(`Feature "${feature.name}" is inactive due to checkEnabled.`)
     return false
   }

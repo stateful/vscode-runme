@@ -60,7 +60,7 @@
     "features": [
       {
         "name": "ForceLogin",
-        "enabled": true,
+        "enable": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
@@ -71,7 +71,7 @@
       },
       {
         "name": "Escalate",
-        "enabled": true,
+        "enable": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
@@ -83,7 +83,7 @@
       },
       {
         "name": "Share",
-        "enabled": true,
+        "enable": true,
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
@@ -923,14 +923,20 @@
           "runme.features.gist": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, the Gist button will be displayed to share the output through Github Gists."
           },
           "runme.features.share": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true` Enables collaboration in notebook terminal."
+          },
+          "runme.features.forceLogin": {
+            "type": "boolean",
+            "scope": "window",
+            "default": false,
+            "markdownDescription": "If set to `true` Forces to show Login prompt."
           }
         }
       }

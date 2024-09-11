@@ -864,8 +864,9 @@ export class TerminalView extends LitElement {
           () => {
             return html` <action-button
               ?loading=${this.isLoading}
-              ?shareIcon="${true}"
-              text="Save"
+              ?shareIcon="${!!this.platformId}"
+              ?saveIcon="${!this.platformId}"
+              text="${this.platformId ? 'Share' : 'Save'}"
               @onClick="${this.#triggerShareCellOutput}"
             >
             </action-button>`

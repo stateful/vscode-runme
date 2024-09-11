@@ -715,11 +715,8 @@ export async function resolveUserSession(
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
-export async function promptUserSession() {
+export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
   let session = await resolveUserSession(false)
-  // if (session) {
-  //   return Promise.resolve()
-  // }
 
   const provider = isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'
   const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
@@ -747,7 +744,7 @@ export async function promptUserSession() {
     }
   }
 
-  // return session
+  return session
 }
 
 export async function checkSession(context: ExtensionContext) {
