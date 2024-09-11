@@ -347,20 +347,20 @@ export class RunmeExtension {
 
     if (isPlatformAuthEnabled()) {
       context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
-      const session = await getPlatformAuthSession(true)
-      if (session) {
-        const openDashboardStr = 'Open Dashboard'
-        const answer = await window.showInformationMessage(
-          'Logged into the Stateful Platform',
-          openDashboardStr,
-        )
-
-        if (answer === openDashboardStr) {
-          const dashboardUri = getRunmeAppUrl(['app'])
-          const uri = Uri.parse(dashboardUri)
-          env.openExternal(uri)
+      getPlatformAuthSession(true).then((session) => {
+        if (session) {
+          const openDashboardStr = 'Open Dashboard'
+          window
+            .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+            .then((answer) => {
+              if (answer === openDashboardStr) {
+                const dashboardUri = getRunmeAppUrl(['app'])
+                const uri = Uri.parse(dashboardUri)
+                env.openExternal(uri)
+              }
+            })
         }
-      }
+      })
     } else {
       context.subscriptions.push(new CloudAuthProvider(context))
     }
