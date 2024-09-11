@@ -40,3 +40,11 @@ updates:
           - "chromedriver"
           - "wdio-vscode-service"
           - "webdriverio"
+  - package-ecosystem: npm
+    directory: "/examples/k8s"
+    schedule:
+      interval: monthly
+      time: "09:00"
+      day: "wednesday"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 1
