@@ -200,6 +200,8 @@ suite('runCliCommand', () => {
   beforeEach(() => {
     vi.mocked(getBinaryPath).mockClear()
     vi.mocked(window.showInformationMessage).mockClear()
+    vi.mocked(window.showNotebookDocument).mockClear()
+    vi.mocked(window.showTextDocument).mockClear()
     vi.mocked(getAnnotations).mockClear()
     vi.mocked(terminal.sendText).mockClear()
     vi.mocked(getCLIUseIntegratedRunme).mockClear()
@@ -281,27 +283,29 @@ suite('runCliCommand', () => {
   })
 })
 
-test('open markdown as Runme notebook split', (file: NotebookDocument) => {
+test('open markdown as Runme notebook split', async (file: NotebookDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('split' as const)
-  openAsRunmeNotebook(file)
+  vi.mocked(workspace.openNotebookDocument).mockResolvedValue(file)
+  await openAsRunmeNotebook(file.uri)
   expect(window.showNotebookDocument).toBeCalledWith(file, { viewColumn: undefined })
 })
 
-test('open Runme notebook in text editor split', (file: TextDocument) => {
+test('open Runme notebook in text editor split', async (file: TextDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('split' as const)
-  openSplitViewAsMarkdownText(file)
+  vi.mocked(workspace.openTextDocument).mockResolvedValue(file)
+  await openSplitViewAsMarkdownText(file.uri)
   expect(window.showTextDocument).toBeCalledWith(file, { viewColumn: ViewColumn.Beside })
 })
 
-test('open markdown as Runme notebook toggle', (file: NotebookDocument) => {
+test('open markdown as Runme notebook toggle', async (file: NotebookDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
-  openAsRunmeNotebook(file)
+  await openAsRunmeNotebook(file.uri)
   expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
 })
 
-test('open Runme notebook in text editor toggle', (file: TextDocument) => {
+test('open Runme notebook in text editor toggle', async (file: TextDocument) => {
   vi.mocked(getActionsOpenViewInEditor).mockReturnValue('toggle' as const)
-  openSplitViewAsMarkdownText(file)
+  await openSplitViewAsMarkdownText(file.uri)
   expect(commands.executeCommand).toBeCalledWith('workbench.action.toggleEditorType')
 })
 
@@ -345,6 +349,9 @@ suite('askAlternativeOutputsAction', () => {
 })
 
 suite('askNewRunnerSession', () => {
+  beforeEach(() => {
+    vi.mocked(workspace.openNotebookDocument).mockClear()
+  })
   test('asks are you sure first', async () => {
     const newRunnerEnvironment = vi.fn()
     const kernel = { newRunnerEnvironment }
@@ -381,7 +388,7 @@ test('createNewRunmeNotebook', async () => {
   await createNewRunmeNotebook()
   expect(workspace.openNotebookDocument).toBeCalledWith('runme', expect.any(Object))
   expect(NotebookCellData).toBeCalledTimes(3)
-  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', expect.any(String), 'runme')
+  expect(commands.executeCommand).toBeCalledWith('vscode.openWith', undefined, 'runme')
 })
 
 test('welcome command', async () => {
