@@ -524,7 +524,11 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    if (!ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)) {
+    if (
+      !ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) &&
+      // always set the terminal output if the platform auth is enabled
+      !isPlatformAuthEnabled()
+    ) {
       return Promise.resolve()
     }
     await this.withLock(async () => {
