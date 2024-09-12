@@ -364,6 +364,9 @@ export class TerminalView extends LitElement {
   @property()
   shareUrl?: string
 
+  @property()
+  escalationUrl?: string
+
   @property({ type: Boolean })
   enableShareButton: boolean = false
 
@@ -491,9 +494,10 @@ export class TerminalView extends LitElement {
               // TODO: Remove createCellExecution once the transition is complete and tested enough.
               if (data.createExtensionCellOutput || data.createCellExecution) {
                 const objData = data.createCellExecution || data.createExtensionCellOutput || {}
-                const { exitCode, id, htmlUrl } = objData
+                const { exitCode, id, htmlUrl, escalationUrl } = objData
                 this.cloudId = id
                 this.shareUrl = htmlUrl || ''
+                this.escalationUrl = escalationUrl || ''
                 this.shareText = this.getSecondaryButtonLabel(exitCode, escalationButtonEnabled)
                 this.isShareReady = true
                 // Dispatch tangle update event
@@ -605,6 +609,10 @@ export class TerminalView extends LitElement {
     if (this.lastLine) {
       this.terminal!.scrollToLine(this.lastLine)
     }
+  }
+
+  protected canEscalate(): boolean {
+    return this.shareText === this.escalateEnabledText
   }
 
   #resizeTerminal(rows?: number) {
@@ -788,6 +796,10 @@ export class TerminalView extends LitElement {
         return this.#displayShareDialog()
       }
       if (this.isShareReady) {
+        if (this.canEscalate()) {
+          return this.#triggerEscalateCellOutput()
+        }
+
         this.isCloudApiLoading = true
         await postClientMessage(ctx, ClientMessages.platformApiRequest, {
           data: {
@@ -826,6 +838,10 @@ export class TerminalView extends LitElement {
 
   #triggerOpenCellOutput(): void {
     postClientMessage(getContext(), ClientMessages.openLink, this.shareUrl!)
+  }
+
+  #triggerEscalateCellOutput(): void {
+    postClientMessage(getContext(), ClientMessages.openLink, this.escalationUrl!)
   }
 
   // Render the UI as a function of component state

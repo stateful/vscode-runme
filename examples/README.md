@@ -351,4 +351,8 @@ export FX_THEME="0"
 kubectl get pods -o json -n kube-system | fx
 ```
 
+```sh {"id":"01J7KMFTBVCBV73D03WZ5ZW1FT"}
+exit 1 | echo "it failed"
+```
+
 💡 Pro tip: If you want to explore the available fx commands, type **?**
