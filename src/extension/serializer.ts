@@ -719,7 +719,12 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    return getSessionOutputs() && ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    return (
+      getSessionOutputs() &&
+      (ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON) ||
+        // always enable session outputs if platform auth is enabled
+        isPlatformAuthEnabled())
+    )
   }
 
   private async cacheNotebookOutputs(
