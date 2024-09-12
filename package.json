@@ -1197,7 +1197,7 @@
     "data-guardian": "^1.1.2",
     "dotenv": "^16.3.1",
     "filenamify": "^6.0.0",
-    "filesize": "^10.1.4",
+    "filesize": "^10.1.6",
     "get-port": "^7.0.0",
     "getmac": "^6.6.0",
     "got": "^11.8.2",
