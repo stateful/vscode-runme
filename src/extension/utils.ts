@@ -566,8 +566,8 @@ export async function getPlatformAuthSession(createIfNone: boolean = true, silen
   const scopes = ['profile', 'offline_access']
   const options: AuthenticationGetSessionOptions = {}
 
-  if (silent) {
-    options.silent = true
+  if (silent !== undefined) {
+    options.silent = silent
   } else {
     options.createIfNone = createIfNone
   }
