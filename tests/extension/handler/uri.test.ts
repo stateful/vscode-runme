@@ -15,6 +15,7 @@ import {
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
+vi.mock('../../../src/utils/logger')
 vi.mock('../../../src/extension/handler/utils', () => ({
   parseParams: vi.fn().mockReturnValue({}),
   getProjectDir: vi.fn(),

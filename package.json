@@ -56,6 +56,55 @@
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
+  "runme": {
+    "features": {
+      "ForceLogin": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": false
+          }
+        }
+      },
+      "Escalate": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "statefulAuthRequired": true,
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": false
+          }
+        }
+      },
+      "Share": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
+      "Gist": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
+        }
+      }
+    }
+  },
   "contributes": {
     "commands": [
       {
@@ -563,12 +612,6 @@
             "title": "AI Auto Cell",
             "markdownDescription": "If set to `true`, enable AI auto generation of cells. Reload the window after changing this setting."
           },
-          "runme.experiments.escalationButton": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the secondary action button after saving a call will display Save or Escalate depending on the exit code."
-          },
           "runme.experiments.smartEnvStore": {
             "type": "boolean",
             "scope": "window",
@@ -810,18 +853,13 @@
           },
           "runme.app.baseDomain": {
             "type": "string",
-            "default": "",
+            "default": "platform.stateful.com",
             "scope": "window",
             "markdownDescription": "Base domain to be use for Runme app"
           },
-          "runme.app.enableShare": {
-            "type": "boolean",
-            "default": false,
-            "markdownDescription": "Enable collaboration in notebook terminal"
-          },
           "runme.app.panel.runme.cloud": {
             "type": "string",
-            "default": "runme.placeholder",
+            "default": "runme.optin",
             "scope": "window",
             "markdownDescription": "Customize cloud panel assignment"
           },
@@ -861,7 +899,7 @@
           "runme.app.platformAuth": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
           "runme.aiBaseURL": {
@@ -972,7 +1010,7 @@
         {
           "id": "runme.cloud",
           "type": "webview",
-          "name": "Cloud",
+          "name": "Commands",
           "visibility": "visible"
         },
         {
@@ -1125,6 +1163,7 @@
     "@graphql-codegen/typescript": "4.0.9",
     "@octokit/rest": "^19.0.13",
     "@types/node": "^18.19.14",
+    "@types/semver": "^7.5.8",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "1.78.0",
     "@types/vscode-notebook-renderer": "^1.72.3",
