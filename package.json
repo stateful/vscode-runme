@@ -63,9 +63,10 @@
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "enabledForExtensions": [
-            "stateful.platform"
-          ]
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": false
+          }
         }
       },
       "Escalate": {
@@ -74,9 +75,10 @@
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
           "statefulAuthRequired": true,
-          "enabledForExtensions": [
-            "stateful.platform"
-          ]
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": false
+          }
         }
       },
       "Share": {
@@ -84,10 +86,10 @@
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "enabledForExtensions": [
-            "stateful.platform",
-            "stateful.runme"
-          ]
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
         }
       },
       "Gist": {
@@ -95,9 +97,10 @@
         "conditions": {
           "os": "All",
           "vsCodeVersion": ">=1.58.0",
-          "enabledForExtensions": [
-            "stateful.runme"
-          ]
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
         }
       }
     }

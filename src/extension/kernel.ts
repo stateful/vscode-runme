@@ -56,6 +56,7 @@ import {
   updateFeatureContext,
   FEATURES_CONTEXT_STATE_KEY,
   FeatureName,
+  ExtensionName,
 } from '../features'
 
 import getLogger from './logger'
@@ -199,9 +200,9 @@ export class Kernel implements Disposable {
       os: os.platform(),
       vsCodeVersion: version as string,
       extensionVersion: packageJSON?.version,
-      extensionId: context?.extension?.id,
       githubAuth: false,
       statefulAuth: false,
+      extensionId: context?.extension?.id as ExtensionName,
     }
 
     this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)

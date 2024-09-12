@@ -10,6 +10,7 @@ import {
   FeatureState,
   FeatureObserver,
   FeatureName,
+  ExtensionName,
 } from '../../src/features'
 
 const packageJSON = {
@@ -24,7 +25,10 @@ const packageJSON = {
           extensionVersion: '>=1.0.0',
           githubAuthRequired: undefined,
           statefulAuthRequired: true,
-          enabledForExtensions: ['stateful.platform'],
+          enabledForExtensions: {
+            'stateful.platform': true,
+            'stateful.runme': false,
+          },
         },
       },
       Gist: {
@@ -36,7 +40,10 @@ const packageJSON = {
           extensionVersion: '>=1.0.0',
           githubAuthRequired: true,
           statefulAuthRequired: false,
-          enabledForExtensions: ['stateful.runme', 'stateful.platform'],
+          enabledForExtensions: {
+            'stateful.platform': true,
+            'stateful.runme': true,
+          },
         },
       },
     },
@@ -60,7 +67,7 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
 
     updateFeatureState(featureState$, initialContext)
@@ -96,7 +103,7 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
 
     updateFeatureState(featureState$, initialContext)
@@ -143,7 +150,7 @@ describe('Feature Store', () => {
       runmeVersion: '0.0.1',
       githubAuth: false,
       statefulAuth: false,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
     updateFeatureState(featureState$, newContext)
 
@@ -160,7 +167,7 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.platform',
+      extensionId: ExtensionName.StatefulPlatform,
     }
     updateFeatureState(featureState$, ctx)
 
@@ -176,7 +183,7 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
     updateFeatureState(featureState$, ctx)
 

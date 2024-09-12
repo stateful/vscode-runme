@@ -10,8 +10,15 @@ export type FeatureContext = {
   extensionVersion?: string
   githubAuth?: boolean // `true`, `false`, or `undefined`
   statefulAuth?: boolean // `true`, `false`, or `undefined`
-  extensionId?: string
+  extensionId?: ExtensionName
 }
+
+export enum ExtensionName {
+  StatefulRunme = 'stateful.runme',
+  StatefulPlatform = 'stateful.platform',
+}
+
+type EnabledForExtensions = Partial<Record<ExtensionName, boolean>>
 
 export type FeatureCondition = {
   os?: string
@@ -20,7 +27,7 @@ export type FeatureCondition = {
   extensionVersion?: string
   githubAuthRequired?: boolean
   statefulAuthRequired?: boolean
-  enabledForExtensions?: string[]
+  enabledForExtensions?: EnabledForExtensions
 }
 
 export enum FeatureName {
@@ -100,8 +107,11 @@ function checkAuth(required?: boolean, isAuthenticated?: boolean): boolean {
   return true
 }
 
-function checkExtensionId(enabledForExtensions?: string[], extensionId?: string): boolean {
-  if (!enabledForExtensions?.length) {
+function checkExtensionId(
+  enabledForExtensions?: EnabledForExtensions,
+  extensionId?: ExtensionName,
+): boolean {
+  if (!enabledForExtensions) {
     return true
   }
 
@@ -109,7 +119,7 @@ function checkExtensionId(enabledForExtensions?: string[], extensionId?: string)
     return false
   }
 
-  return enabledForExtensions.includes(extensionId)
+  return enabledForExtensions[extensionId] === true
 }
 
 function isActive(
