@@ -33,7 +33,6 @@ export interface IServerConfig {
     intents: number
     interval: number
   }
-  aiLogs?: boolean
 }
 
 const log = getLogger('KernelServer')
@@ -65,7 +64,6 @@ class KernelServer implements IServer {
   #transport?: GrpcTransport
   #serverDisposables: Disposable[] = []
   #forceExternalServer: boolean
-  #aiLogs: boolean
 
   readonly #onClose = this.register(new EventEmitter<{ code: number | null }>())
   readonly #onTransportReady = this.register(
@@ -96,7 +94,6 @@ class KernelServer implements IServer {
     this.#acceptsIntents = options.acceptsConnection?.intents || 50
     this.#acceptsInterval = options.acceptsConnection?.interval || 200
     this.#forceExternalServer = externalServer
-    this.#aiLogs = options.aiLogs || false
   }
 
   dispose() {
@@ -233,11 +230,6 @@ class KernelServer implements IServer {
 
     if (this.enableRunner) {
       args.push('--runner')
-    }
-
-    if (this.#aiLogs) {
-      log.info('AI logs enabled')
-      args.push('--ai-logs=true')
     }
 
     if (getTLSEnabled()) {
