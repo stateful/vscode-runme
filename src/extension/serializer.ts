@@ -37,8 +37,13 @@ import {
   ServerLifecycleIdentity,
   getServerConfigurationValue,
   getSessionOutputs,
-  isPlatformAuthEnabled,
 } from '../utils/configuration'
+import {
+  FeatureName,
+  FEATURES_CONTEXT_STATE_KEY,
+  isFeatureActive,
+  loadFeatureSnapshot,
+} from '../features'
 
 import {
   DeserializeRequest,
@@ -551,12 +556,6 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
-    // if session outputs are disabled, we don't write anything
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      this.togglePreviewButton(false)
-      return -1
-    }
-
     const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
     const cache = mode ? this.maskedCache : this.plainCache
     const bytes = await cache.get(cacheId ?? '')
@@ -579,18 +578,17 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
+    // Don't write to disk if sessionOutputs are disabled
+    if (!GrpcSerializer.sessionOutputsEnabled()) {
+      this.togglePreviewButton(false)
+      // But still return a valid bytes length so the cache keeps working
+      return bytes.length
+    }
+
     const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
       this.togglePreviewButton(false)
       return -1
-    }
-
-    // Don't write to disk if platform auth is enabled
-    const isPlatform = isPlatformAuthEnabled()
-    if (isPlatform) {
-      this.togglePreviewButton(false)
-      // But still return a valid bytes length so the cache keeps working
-      return bytes.length
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
@@ -719,22 +717,17 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    return (
-      getSessionOutputs() &&
-      (ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON) ||
-        // always enable session outputs if platform auth is enabled
-        isPlatformAuthEnabled())
-    )
+    const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
+    const isSignedIn = isFeatureActive(FeatureName.SignedIn, featureState$)
+    const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+
+    return getSessionOutputs() && (isSignedIn || isAutoSaveOn)
   }
 
   private async cacheNotebookOutputs(
     notebook: Notebook,
     cacheId: string | undefined,
   ): Promise<void> {
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      return Promise.resolve(undefined)
-    }
-
     let session: RunmeSession | undefined
     const docUri = this.cacheDocUriMapping.get(cacheId ?? '')
     const sid = this.kernel.getRunnerEnvironment()?.getSessionId()

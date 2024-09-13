@@ -35,6 +35,7 @@ export enum FeatureName {
   Share = 'Share',
   Escalate = 'Escalate',
   ForceLogin = 'ForceLogin',
+  SignedIn = 'SignedIn',
 }
 
 export type Feature = {

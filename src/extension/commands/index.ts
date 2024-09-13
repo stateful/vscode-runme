@@ -53,6 +53,12 @@ import { createGist } from '../services/github/gist'
 import { InitializeClient } from '../api/client'
 import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
+import {
+  FeatureName,
+  FEATURES_CONTEXT_STATE_KEY,
+  isFeatureActive,
+  loadFeatureSnapshot,
+} from '../../features'
 
 const log = getLogger('Commands')
 
@@ -388,7 +394,10 @@ export async function addToRecommendedExtensions(context: ExtensionContext) {
 }
 
 export async function toggleAutosave(autoSaveIsOn: boolean) {
-  if (autoSaveIsOn) {
+  const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
+  const createIfNone = isFeatureActive(FeatureName.ForceLogin, featureState$)
+
+  if (autoSaveIsOn && createIfNone) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

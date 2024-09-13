@@ -37,6 +37,12 @@ import {
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
+import {
+  FeatureName,
+  FEATURES_CONTEXT_STATE_KEY,
+  isFeatureActive,
+  loadFeatureSnapshot,
+} from '../features'
 
 import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -524,11 +530,11 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    if (
-      !ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) &&
-      // always set the terminal output if the platform auth is enabled
-      !isPlatformAuthEnabled()
-    ) {
+    const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
+    const isSignedIn = isFeatureActive(FeatureName.SignedIn, featureState$)
+    const isAutoSaveOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+
+    if (!isAutoSaveOn && !isSignedIn) {
       return Promise.resolve()
     }
     await this.withLock(async () => {
