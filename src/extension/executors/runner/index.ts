@@ -504,7 +504,7 @@ export async function resolveRunProgramExecution(
   const resolver = await runner.createProgramResolver(promptMode, envs)
   // todo(sebastian): removing $-prompts from shell scripts should move kernel-side
   const rawCommands = prepareCommandSeq(script, languageId)
-  const result = await resolver.resolveProgram(rawCommands, runnerEnv?.getSessionId())
+  const result = await resolver.resolveProgram(rawCommands, languageId, runnerEnv?.getSessionId())
   const vars = result.response.vars
 
   // todo(sebastian): once normalization is all kernel-side, it should return commands
