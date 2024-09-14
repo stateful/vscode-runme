@@ -14,15 +14,9 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { NotebookUiEvent, Serializer, SyncSchema } from '../types'
-import {
-  getDocsUrlFor,
-  getForceNewWindowConfig,
-  getRunmeAppUrl,
-  getSessionOutputs,
-} from '../utils/configuration'
+import { NotebookUiEvent, Serializer, SyncSchema, FeatureName } from '../types'
+import { getDocsUrlFor, getForceNewWindowConfig, getRunmeAppUrl } from '../utils/configuration'
 import { AuthenticationProviders, WebViews } from '../constants'
-import { FeatureName } from '../features'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -203,8 +197,6 @@ export class RunmeExtension {
 
     await resetNotebookSettings()
 
-    const transientOutputs = !getSessionOutputs()
-
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/nameGenerated']: undefined,
@@ -222,7 +214,7 @@ export class RunmeExtension {
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientCellMetadata,
-        transientOutputs,
+        transientOutputs: false,
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider(
@@ -387,10 +379,10 @@ export class RunmeExtension {
     context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
 
     getGithubAuthSession(false).then((session) => {
-      kernel.updateFeatureState('githubAuth', !!session)
+      kernel.updateFeatureContext('githubAuth', !!session)
     })
 
-    const createIfNone = kernel.isFeatureActive(FeatureName.ForceLogin)
+    const createIfNone = kernel.isFeatureOn(FeatureName.ForceLogin)
     const silent = createIfNone ? undefined : true
 
     getPlatformAuthSession(createIfNone, silent)
@@ -427,12 +419,12 @@ export class RunmeExtension {
     authentication.onDidChangeSessions((e) => {
       if (e.provider.id === AuthenticationProviders.Stateful) {
         getPlatformAuthSession(false, true).then((session) => {
-          kernel.updateFeatureState('statefulAuth', !!session)
+          kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }
       if (e.provider.id === AuthenticationProviders.GitHub) {
         getGithubAuthSession(false).then((session) => {
-          kernel.updateFeatureState('githubAuth', !!session)
+          kernel.updateFeatureContext('githubAuth', !!session)
         })
       }
     })

@@ -58,6 +58,18 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "SignedIn": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "vsCodeVersion": ">=1.58.0",
+          "statefulAuthRequired": true,
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "ForceLogin": {
         "enabled": true,
         "conditions": {

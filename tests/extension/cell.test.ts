@@ -30,7 +30,7 @@ vi.mock('../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
 
-vi.mock('../../src/features')
+vi.mock('../../src/extension/features')
 
 describe('NotebookCellManager', () => {
   it('can register cells', async () => {

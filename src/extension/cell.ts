@@ -25,6 +25,7 @@ import {
   AWSState,
   CellOutputPayload,
   DenoState,
+  FeatureName,
   GCPState,
   GitHubState,
   Serializer,
@@ -37,8 +38,8 @@ import {
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import { FeatureName, isFeatureActive } from '../features'
 
+import features from './features'
 import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
 import {
@@ -49,7 +50,6 @@ import {
 } from './terminal/terminalState'
 import ContextState from './contextState'
 import { IRunnerEnvironment } from './runner/environment'
-import { GrpcSerializer } from './serializer'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -525,7 +525,7 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    const isSignedIn = isFeatureActive(FeatureName.SignedIn)
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
     const isAutoSaveOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
 
     if (!isAutoSaveOn && !isSignedIn) {
@@ -554,7 +554,7 @@ export class NotebookCellOutputManager {
           }
         }
 
-        if (!GrpcSerializer.sessionOutputsEnabled() || !terminalOutput || !terminalOutputItem) {
+        if (!terminalOutput || !terminalOutputItem) {
           return
         }
 

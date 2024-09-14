@@ -24,7 +24,7 @@ import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { Serializer } from '../types'
+import { Serializer, FeatureName } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
@@ -38,8 +38,8 @@ import {
   getServerConfigurationValue,
   getSessionOutputs,
 } from '../utils/configuration'
-import { FeatureName, isFeatureActive } from '../features'
 
+import features from './features'
 import {
   DeserializeRequest,
   SerializeRequest,
@@ -712,7 +712,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    const isSignedIn = isFeatureActive(FeatureName.SignedIn)
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
     const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
 
     return getSessionOutputs() && (isSignedIn || isAutoSaveOn)

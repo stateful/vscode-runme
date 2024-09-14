@@ -33,6 +33,7 @@ import {
   NotebookAutoSaveSetting,
   RunmeTerminal,
   Serializer,
+  FeatureName,
 } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
@@ -56,8 +57,8 @@ import {
   getTLSEnabled,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import { FeatureName, isFeatureActive } from '../features'
 
+import features from './features'
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
@@ -722,12 +723,13 @@ export async function resolveUserSession(
  * @returns AuthenticationSession
  */
 export async function promptUserSession() {
-  const createIfNone = isFeatureActive(FeatureName.ForceLogin)
+  const createIfNone = features.isOnInContextState(FeatureName.ForceLogin)
   const silent = createIfNone ? undefined : true
 
   const session = await getPlatformAuthSession(false, silent)
 
-  const displayLoginPrompt = getLoginPrompt() && createIfNone && isFeatureActive(FeatureName.Share)
+  const displayLoginPrompt =
+    getLoginPrompt() && createIfNone && features.isOnInContextState(FeatureName.Share)
 
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
