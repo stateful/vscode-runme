@@ -37,12 +37,7 @@ import {
   getSessionOutputs,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import {
-  FeatureName,
-  FEATURES_CONTEXT_STATE_KEY,
-  isFeatureActive,
-  loadFeatureSnapshot,
-} from '../features'
+import { FeatureName, isFeatureActive } from '../features'
 
 import { RUNME_TRANSIENT_REVISION } from './constants'
 import { getAnnotations, replaceOutput, validateAnnotations } from './utils'
@@ -530,8 +525,7 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-    const isSignedIn = isFeatureActive(FeatureName.SignedIn, featureState$)
+    const isSignedIn = isFeatureActive(FeatureName.SignedIn)
     const isAutoSaveOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
 
     if (!isAutoSaveOn && !isSignedIn) {

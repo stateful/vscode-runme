@@ -1,6 +1,8 @@
 import { BehaviorSubject } from 'rxjs'
 import { satisfies } from 'semver'
 
+import ContextState from './extension/contextState'
+
 export const FEATURES_CONTEXT_STATE_KEY = 'features'
 
 export type FeatureContext = {
@@ -260,7 +262,13 @@ export function isFeatureActive(
   featureState$?: FeatureObserver,
 ): boolean {
   if (!featureState$) {
-    return false
+    // Fallbacks to ContextState
+    const snapshot = ContextState.getKey<string>(FEATURES_CONTEXT_STATE_KEY)
+    if (!snapshot) {
+      return false
+    }
+
+    featureState$ = loadFeatureSnapshot(snapshot)
   }
 
   const feature = featureState$.getValue().features[featureName]

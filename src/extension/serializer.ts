@@ -38,12 +38,7 @@ import {
   getServerConfigurationValue,
   getSessionOutputs,
 } from '../utils/configuration'
-import {
-  FeatureName,
-  FEATURES_CONTEXT_STATE_KEY,
-  isFeatureActive,
-  loadFeatureSnapshot,
-} from '../features'
+import { FeatureName, isFeatureActive } from '../features'
 
 import {
   DeserializeRequest,
@@ -717,8 +712,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-    const isSignedIn = isFeatureActive(FeatureName.SignedIn, featureState$)
+    const isSignedIn = isFeatureActive(FeatureName.SignedIn)
     const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
 
     return getSessionOutputs() && (isSignedIn || isAutoSaveOn)

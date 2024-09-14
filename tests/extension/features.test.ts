@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import {
   updateFeatureState,
@@ -50,6 +50,9 @@ const packageJSON = {
   },
 }
 
+vi.mock('vscode')
+vi.mock('../../src/extension/contextState')
+
 describe('Feature Store', () => {
   let featureState$: FeatureObserver
 
@@ -86,7 +89,7 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
 
     updateFeatureState(featureState$, initialContext)

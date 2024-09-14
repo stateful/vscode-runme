@@ -56,12 +56,7 @@ import {
   getTLSEnabled,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import {
-  FeatureName,
-  FEATURES_CONTEXT_STATE_KEY,
-  isFeatureActive,
-  loadFeatureSnapshot,
-} from '../features'
+import { FeatureName, isFeatureActive } from '../features'
 
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
@@ -727,14 +722,12 @@ export async function resolveUserSession(
  * @returns AuthenticationSession
  */
 export async function promptUserSession() {
-  const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-  const createIfNone = isFeatureActive(FeatureName.ForceLogin, featureState$)
+  const createIfNone = isFeatureActive(FeatureName.ForceLogin)
   const silent = createIfNone ? undefined : true
 
   const session = await getPlatformAuthSession(false, silent)
 
-  const displayLoginPrompt =
-    getLoginPrompt() && createIfNone && isFeatureActive(FeatureName.Share, featureState$)
+  const displayLoginPrompt = getLoginPrompt() && createIfNone && isFeatureActive(FeatureName.Share)
 
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
