@@ -15,7 +15,12 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema, FeatureName } from '../types'
-import { getDocsUrlFor, getForceNewWindowConfig, getRunmeAppUrl } from '../utils/configuration'
+import {
+  getDocsUrlFor,
+  getForceNewWindowConfig,
+  getRunmeAppUrl,
+  getSessionOutputs,
+} from '../utils/configuration'
 import { AuthenticationProviders, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
@@ -442,9 +447,11 @@ export class RunmeExtension {
       if (!e.ui) {
         return
       }
-      const uri = e.notebookEditor.notebookUri
       const runnerEnv = kernel.getRunnerEnvironment()
       const sessionId = runnerEnv?.getSessionId()
+      const uri = getSessionOutputs()
+        ? e.notebookEditor.notebookUri
+        : Uri.parse(`memfs:/session-${sessionId}.md`)
 
       if (!sessionId || !uri.fsPath.includes(sessionId)) {
         await showSessionExpiryErrMessage()

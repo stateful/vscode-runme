@@ -105,6 +105,7 @@ import ContextState from './contextState'
 import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
+import MemFS from './memFs'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -141,11 +142,13 @@ export class Kernel implements Disposable {
   protected serializer?: SerializerBase
   protected reporter?: GrpcReporter
   protected featuresState$?
+  protected memFs = new MemFS()
 
   readonly onVarsChangeEvent: EnvVarsChangedEvent
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
+    workspace.registerFileSystemProvider('memfs', this.memFs, { isReadonly: false })
 
     this.onVarsChangeEvent = new EnvVarsChangedEvent()
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
@@ -225,6 +228,10 @@ export class Kernel implements Disposable {
         dispose: () => subscription.unsubscribe(),
       })
     }
+  }
+
+  writeMemFs(documentUri: Uri, bytes: Uint8Array) {
+    this.memFs.writeFile(documentUri, bytes, { create: true, overwrite: true })
   }
 
   isFeatureOn(featureName: FeatureName): boolean {

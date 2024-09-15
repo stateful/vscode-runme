@@ -1,4 +1,4 @@
-import { NotebookEditor, NotebookRendererMessaging, workspace, window, commands } from 'vscode'
+import { NotebookEditor, NotebookRendererMessaging, window, commands, Uri, workspace } from 'vscode'
 
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
@@ -8,6 +8,7 @@ import { Kernel } from '../kernel'
 import { getCellById } from '../cell'
 import { GrpcSerializer } from '../serializer'
 import { openFileAsRunmeNotebook } from '../utils'
+import { getSessionOutputs } from '../../utils/configuration'
 
 export interface IGitHubMessaging {
   messaging: NotebookRendererMessaging
@@ -61,7 +62,10 @@ export async function handleGistMessage({
   }
   const cell = await getCellById({ editor, id: message.output.cellId })
   if (cell) {
-    const outputFilePath = GrpcSerializer.getOutputsUri(cell.document.uri, sessionId)
+    const outputFilePath = getSessionOutputs()
+      ? GrpcSerializer.getOutputsUri(cell.document.uri, sessionId)
+      : Uri.parse(`memfs:/session-${sessionId}.md`)
+
     const sessionFileExists = await workspace.fs.stat(outputFilePath).then(
       () => true,
       () => false,

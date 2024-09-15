@@ -576,7 +576,8 @@ export class GrpcSerializer extends SerializerBase {
     // Don't write to disk if sessionOutputs are disabled
     if (!GrpcSerializer.sessionOutputsEnabled()) {
       this.togglePreviewButton(false)
-      // But still return a valid bytes length so the cache keeps working
+      const documentUri = Uri.parse(`memfs:/session-${sessionId}.md`)
+      this.kernel.writeMemFs(documentUri, bytes)
       return bytes.length
     }
 
