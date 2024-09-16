@@ -24,7 +24,7 @@ import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { Serializer, FeatureName } from '../types'
+import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
@@ -39,7 +39,6 @@ import {
   getSessionOutputs,
 } from '../utils/configuration'
 
-import features from './features'
 import {
   DeserializeRequest,
   SerializeRequest,
@@ -575,6 +574,7 @@ export class GrpcSerializer extends SerializerBase {
 
     // Don't write to disk if sessionOutputs are disabled
     if (!GrpcSerializer.sessionOutputsEnabled()) {
+      // if (!getSessionOutputs()) {
       this.togglePreviewButton(false)
       // But still return a valid bytes length so the cache keeps working
       return bytes.length
@@ -712,10 +712,10 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
     const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isSessionOutputs = getSessionOutputs()
 
-    return getSessionOutputs() && (isSignedIn || isAutoSaveOn)
+    return isSessionOutputs && isAutoSaveOn
   }
 
   private async cacheNotebookOutputs(
