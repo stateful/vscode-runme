@@ -149,7 +149,7 @@ function isActive(
 
   if (!checkExtensionId(enabledForExtensions, context?.extensionId)) {
     console.log(
-      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${enabledForExtensions}, actual: ${context?.extensionId}`,
+      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${JSON.stringify(enabledForExtensions)}, actual: ${context?.extensionId}`,
     )
     return false
   }
