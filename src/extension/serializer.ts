@@ -730,6 +730,10 @@ export class GrpcSerializer extends SerializerBase {
     notebook: Notebook,
     cacheId: string | undefined,
   ): Promise<void> {
+    if (!GrpcSerializer.sessionOutputsEnabled()) {
+      return Promise.resolve(undefined)
+    }
+
     let session: RunmeSession | undefined
     const docUri = this.cacheDocUriMapping.get(cacheId ?? '')
     const sid = this.kernel.getRunnerEnvironment()?.getSessionId()
