@@ -68,6 +68,8 @@ vi.mock('../../src/extension/utils', async () => ({
   checkSession: vi.fn(),
   togglePreviewButton: vi.fn(),
   resetNotebookSettings: vi.fn(),
+  getGithubAuthSession: vi.fn().mockResolvedValue(undefined),
+  getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
@@ -80,6 +82,7 @@ test('initializes all providers', async () => {
   }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn((config: string) => configValues[config]),
+    has: vi.fn(),
   } as any)
   const dummyFilePath = Uri.file('/foo/bar')
   vi.mocked(Uri.joinPath).mockReturnValue(dummyFilePath)

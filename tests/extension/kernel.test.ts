@@ -29,7 +29,7 @@ vi.mock('../../src/extension/utils', async () => {
     getNotebookCategories: vi.fn().mockResolvedValue([]),
     isWindows: () => false,
     isShellLanguage: () => false,
-    getAuthSession: vi.fn().mockResolvedValue({
+    getGithubAuthSession: vi.fn().mockResolvedValue({
       accessToken: '123',
     }),
   }

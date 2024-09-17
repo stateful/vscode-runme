@@ -41,12 +41,9 @@ export default async function saveCellExecution(
 
   log.info('Saving cell execution')
 
-  const escalationButton = kernel.hasExperimentEnabled('escalationButton', false)!
   const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
   const plainSessionOutput = await kernel.getPlainCache(cacheId)
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
-
-  log.info(`escalationButton: ${escalationButton ? 'enabled' : 'disabled'}`)
 
   const vsEnv = {
     appHost: env.appHost,
@@ -75,14 +72,12 @@ export default async function saveCellExecution(
     let data:
       | FetchResult<CreateExtensionCellOutputMutation>
       | FetchResult<CreateCellExecutionMutation>
-    let showEscalationButton: boolean
 
     if (!session) {
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
         data: {
           displayShare: false,
         },
-        escalationButton,
         id: message.output.id,
       })
     }
@@ -154,8 +149,6 @@ export default async function saveCellExecution(
         },
       })
       data = result
-      showEscalationButton = !!(result.data as CreateExtensionCellOutputMutation)
-        ?.createExtensionCellOutput?.isSlackReady
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
     else {
@@ -252,19 +245,14 @@ export default async function saveCellExecution(
       })
 
       data = result
-      showEscalationButton = !!(result.data as CreateCellExecutionMutation)?.createCellExecution
-        ?.isSlackReady
     }
 
     log.info('Cell execution saved')
-
-    log.info(`showEscalationButton: ${showEscalationButton ? 'enabled' : 'disabled'}`)
 
     TelemetryReporter.sendTelemetryEvent('app.save')
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data,
       id: message.output.id,
-      escalationButton: showEscalationButton,
     })
   } catch (error) {
     log.error('Error saving cell execution', (error as Error).message)
@@ -272,7 +260,6 @@ export default async function saveCellExecution(
     return postClientMessage(messaging, ClientMessages.platformApiResponse, {
       data: (error as any).message,
       id: message.output.id,
-      escalationButton,
       hasErrors: true,
     })
   }
