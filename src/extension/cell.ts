@@ -50,7 +50,6 @@ import {
 } from './terminal/terminalState'
 import ContextState from './contextState'
 import { IRunnerEnvironment } from './runner/environment'
-import { GrpcSerializer } from './serializer'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -527,11 +526,16 @@ export class NotebookCellOutputManager {
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
     const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+    const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
+
     const isAutoSaveOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
 
-    if (!isAutoSaveOn && !isSignedIn) {
+    if (!isSignedIn && !isAutoSaveOn) {
+      return Promise.resolve()
+    } else if (!isSignedIn && isForceLogin) {
       return Promise.resolve()
     }
+
     await this.withLock(async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       await this.getExecutionUnsafe(async (exec) => {
@@ -555,7 +559,7 @@ export class NotebookCellOutputManager {
           }
         }
 
-        if (!GrpcSerializer.sessionOutputsEnabled() || !terminalOutput || !terminalOutputItem) {
+        if (!getSessionOutputs() || !terminalOutput || !terminalOutputItem) {
           return
         }
 
