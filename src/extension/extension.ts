@@ -15,7 +15,12 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
 import { NotebookUiEvent, Serializer, SyncSchema, FeatureName } from '../types'
-import { getDocsUrlFor, getForceNewWindowConfig, getRunmeAppUrl } from '../utils/configuration'
+import {
+  getDocsUrlFor,
+  getForceNewWindowConfig,
+  getRunmeAppUrl,
+  getSessionOutputs,
+} from '../utils/configuration'
 import { AuthenticationProviders, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
@@ -197,6 +202,8 @@ export class RunmeExtension {
 
     await resetNotebookSettings()
 
+    const transientOutputs = !getSessionOutputs()
+
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/nameGenerated']: undefined,
@@ -214,7 +221,7 @@ export class RunmeExtension {
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
         transientCellMetadata,
-        transientOutputs: false,
+        transientOutputs,
       }),
 
       notebooks.registerNotebookCellStatusBarItemProvider(

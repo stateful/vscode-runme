@@ -50,6 +50,7 @@ import {
 } from './terminal/terminalState'
 import ContextState from './contextState'
 import { IRunnerEnvironment } from './runner/environment'
+import { GrpcSerializer } from './serializer'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -554,7 +555,7 @@ export class NotebookCellOutputManager {
           }
         }
 
-        if (!terminalOutput || !terminalOutputItem) {
+        if (!GrpcSerializer.sessionOutputsEnabled() || !terminalOutput || !terminalOutputItem) {
           return
         }
 

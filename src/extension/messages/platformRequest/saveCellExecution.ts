@@ -94,7 +94,7 @@ export default async function saveCellExecution(
       const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
 
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
-      const body = {
+      const result = await graphClient.mutate({
         mutation: CreateExtensionCellOutputDocument,
         variables: {
           input: {
@@ -147,8 +147,7 @@ export default async function saveCellExecution(
             },
           },
         },
-      }
-      const result = await graphClient.mutate(body)
+      })
       data = result
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
