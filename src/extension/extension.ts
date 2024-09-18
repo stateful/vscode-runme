@@ -95,14 +95,12 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
-    const aiLogs = kernel.hasExperimentEnabled('aiLogs')
 
     const server = new KernelServer(
       context.extensionUri,
       {
         retryOnFailure: true,
         maxNumberOfIntents: 10,
-        aiLogs: aiLogs,
       },
       !grpcServer,
       grpcRunner,
