@@ -57,7 +57,6 @@ export class RunmeUriHandler implements UriHandler, Disposable {
   async handleUri(uri: Uri) {
     log.info(`triggered RunmeUriHandler with ${uri}`)
     const params = new URLSearchParams(uri.query)
-    const windowId = params.get('windowId')
     const state = params.get('state')
     const code = params.get('code')
     const command = params.get('command')
@@ -66,7 +65,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       window.showErrorMessage('No query parameter "command" provided')
       return
     }
-    if (command === 'auth' && windowId && state && code) {
+    if (command === 'auth' && state && code) {
       TelemetryReporter.sendTelemetryEvent('extension.uriHandler', {
         command,
         type: AuthenticationProviders.Stateful,
@@ -133,7 +132,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       }
     }
 
-    window.showErrorMessage(`Couldn't recognise command "${command}"`)
+    window.showErrorMessage(`Couldn't recognize command "${command}"`)
   }
 
   private async _setupProject(fileToOpen: string, repository?: string | null) {

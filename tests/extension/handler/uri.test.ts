@@ -63,7 +63,7 @@ describe('RunmeUriHandler', () => {
     it('should fail if no command was recognised', async () => {
       vi.mocked(Uri.parse).mockReturnValue({ query: { command: 'foobar' } } as any)
       expect(await handler.handleUri(Uri.parse('vscode://stateful.runme?foo=bar'))).toBe(undefined)
-      expect(window.showErrorMessage).toBeCalledWith('Couldn\'t recognise command "foobar"')
+      expect(window.showErrorMessage).toBeCalledWith('Couldn\'t recognize command "foobar"')
     })
 
     it('runs _setupProject if command was "setup"', async () => {
