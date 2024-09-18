@@ -9,6 +9,7 @@ import vscode, {
   Uri,
   workspace,
   env,
+  UIKind,
   window,
   Disposable,
   NotebookCell,
@@ -826,4 +827,39 @@ export async function getGitContext(path: string) {
       relativePath: null,
     }
   }
+}
+
+export interface EnvProps {
+  extname: string
+  extversion: string
+  remotename: string
+  appname: string
+  product: string
+  platform: string
+  uikind: string
+}
+
+export function getEnvProps(extension: { id: string; version: string }) {
+  const extProps: EnvProps = {
+    extname: extension.id,
+    extversion: extension.version,
+    remotename: env.remoteName ?? 'none',
+    appname: env.appName,
+    product: env.appHost,
+    platform: `${os.platform()}_${os.arch()}`,
+    uikind: 'other',
+  }
+
+  switch (env.uiKind) {
+    case UIKind.Web:
+      extProps['uikind'] = 'web'
+      break
+    case UIKind.Desktop:
+      extProps['uikind'] = 'desktop'
+      break
+    default:
+      extProps['uikind'] = 'other'
+  }
+
+  return extProps
 }

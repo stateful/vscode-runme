@@ -20,7 +20,7 @@ import {
   getTLSDir,
   getTLSEnabled,
 } from '../../utils/configuration'
-import { isPortAvailable } from '../utils'
+import { EnvProps, isPortAvailable } from '../utils'
 import { HealthClient } from '../grpc/client'
 
 import KernelServerError from './kernelServerError'
@@ -78,6 +78,7 @@ class KernelServer implements IServer {
 
   constructor(
     protected readonly extBasePath: Uri,
+    protected envProps: EnvProps,
     options: IServerConfig,
     externalServer: boolean,
     protected readonly enableRunner = false,
@@ -317,7 +318,12 @@ class KernelServer implements IServer {
 
     if (!env.isTelemetryEnabled) {
       penv['DO_NOT_TRACK'] = 'true'
+      return penv
     }
+
+    Object.entries(this.envProps).forEach(([k, v]) => {
+      penv[`TELEMETRY_${k.toUpperCase()}`] = v
+    })
 
     return penv
   }

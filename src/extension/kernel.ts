@@ -73,6 +73,7 @@ import {
   handleNotebookAutosaveSettings,
   getWorkspaceFolder,
   getRunnerSessionEnvs,
+  getEnvProps,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -224,6 +225,14 @@ export class Kernel implements Disposable {
         dispose: () => subscription.unsubscribe(),
       })
     }
+  }
+
+  get envProps() {
+    const ext = {
+      id: this.context!.extension.id,
+      version: this.context!.extension.packageJSON.version,
+    }
+    return getEnvProps(ext)
   }
 
   isFeatureOn(featureName: FeatureName): boolean {
