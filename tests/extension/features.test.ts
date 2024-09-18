@@ -1,17 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
+import features from '../../src/features'
 import {
-  updateFeatureState,
-  getFeatureSnapshot,
-  loadFeaturesState,
-  isFeatureActive,
-  loadFeatureSnapshot,
-  FeatureContext,
-  FeatureState,
-  FeatureObserver,
-  FeatureName,
   ExtensionName,
-} from '../../src/features'
+  FeatureContext,
+  FeatureName,
+  FeatureObserver,
+  FeatureState,
+} from '../../src/types'
 
 const packageJSON = {
   runme: {
@@ -50,11 +46,14 @@ const packageJSON = {
   },
 }
 
+vi.mock('vscode')
+vi.mock('../../src/extension/contextState')
+
 describe('Feature Store', () => {
   let featureState$: FeatureObserver
 
   beforeEach(() => {
-    featureState$ = loadFeaturesState(packageJSON, {
+    featureState$ = features.loadState(packageJSON, {
       os: 'linux',
     })
   })
@@ -70,12 +69,12 @@ describe('Feature Store', () => {
       extensionId: ExtensionName.StatefulRunme,
     }
 
-    updateFeatureState(featureState$, initialContext)
+    features.updateState(featureState$, initialContext)
 
     const currentFeatures = (featureState$.getValue() as FeatureState).features
 
-    expect(currentFeatures.Escalate?.activated).toBe(false)
-    expect(currentFeatures.Gist?.activated).toBe(true)
+    expect(currentFeatures.Escalate?.on).toBe(false)
+    expect(currentFeatures.Gist?.on).toBe(true)
   })
 
   it('should take a snapshot of the current state', () => {
@@ -86,11 +85,11 @@ describe('Feature Store', () => {
       runmeVersion: '1.3.0',
       githubAuth: true,
       statefulAuth: true,
-      extensionId: 'stateful.runme',
+      extensionId: ExtensionName.StatefulRunme,
     }
 
-    updateFeatureState(featureState$, initialContext)
-    const snapshot = getFeatureSnapshot(featureState$)
+    features.updateState(featureState$, initialContext)
+    const snapshot = features.getSnapshot(featureState$)
 
     expect(snapshot).toBe(JSON.stringify(featureState$.getValue()))
   })
@@ -106,15 +105,15 @@ describe('Feature Store', () => {
       extensionId: ExtensionName.StatefulRunme,
     }
 
-    updateFeatureState(featureState$, initialContext)
-    const snapshot = getFeatureSnapshot(featureState$)
+    features.updateState(featureState$, initialContext)
+    const snapshot = features.getSnapshot(featureState$)
 
     featureState$.next({
       context: initialContext,
       features: {
         Escalate: {
           enabled: true,
-          activated: false,
+          on: false,
           conditions: {
             os: 'All',
             vsCodeVersion: '>=1.58.0',
@@ -125,7 +124,7 @@ describe('Feature Store', () => {
         },
         Gist: {
           enabled: true,
-          activated: false,
+          on: false,
           conditions: {
             os: 'win32',
             vsCodeVersion: '>=1.60.0',
@@ -136,7 +135,7 @@ describe('Feature Store', () => {
       },
     })
 
-    const featureStateCopy$ = loadFeatureSnapshot(snapshot)
+    const featureStateCopy$ = features.loadSnapshot(snapshot)
 
     const restoredFeatures = featureStateCopy$.getValue()
     expect(restoredFeatures).toEqual(JSON.parse(snapshot))
@@ -152,11 +151,11 @@ describe('Feature Store', () => {
       statefulAuth: false,
       extensionId: ExtensionName.StatefulRunme,
     }
-    updateFeatureState(featureState$, newContext)
+    features.updateState(featureState$, newContext)
 
     const currentFeatures = (featureState$.getValue() as FeatureState).features
-    expect(currentFeatures.Escalate?.activated).toBe(false)
-    expect(currentFeatures.Gist?.activated).toBe(false)
+    expect(currentFeatures.Escalate?.on).toBe(false)
+    expect(currentFeatures.Gist?.on).toBe(false)
   })
 
   it('should correctly identify if a feature is enabled by name', () => {
@@ -169,10 +168,10 @@ describe('Feature Store', () => {
       statefulAuth: true,
       extensionId: ExtensionName.StatefulPlatform,
     }
-    updateFeatureState(featureState$, ctx)
+    features.updateState(featureState$, ctx)
 
-    expect(isFeatureActive(FeatureName.Escalate, featureState$)).toBe(true)
-    expect(isFeatureActive(FeatureName.Gist, featureState$)).toBe(false)
+    expect(features.isOn(FeatureName.Escalate, featureState$)).toBe(true)
+    expect(features.isOn(FeatureName.Gist, featureState$)).toBe(false)
   })
 
   it('should correctly identify if a feature is enabled by extensionId', () => {
@@ -185,9 +184,9 @@ describe('Feature Store', () => {
       statefulAuth: true,
       extensionId: ExtensionName.StatefulRunme,
     }
-    updateFeatureState(featureState$, ctx)
+    features.updateState(featureState$, ctx)
 
-    expect(isFeatureActive(FeatureName.Escalate, featureState$)).toBe(false)
-    expect(isFeatureActive(FeatureName.Gist, featureState$)).toBe(true)
+    expect(features.isOn(FeatureName.Escalate, featureState$)).toBe(false)
+    expect(features.isOn(FeatureName.Gist, featureState$)).toBe(true)
   })
 })

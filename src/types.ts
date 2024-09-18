@@ -19,6 +19,7 @@ import {
 } from '@aws-sdk/client-ec2'
 import { google } from '@google-cloud/run/build/protos/protos'
 import { protos } from '@google-cloud/compute'
+import { type BehaviorSubject } from 'rxjs'
 
 import { OutputType, ClientMessages, RUNME_FRONTMATTER_PARSED } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
@@ -732,3 +733,53 @@ export type NotebookUiEvent = {
 export type Settings = {
   docsUrl?: string
 }
+
+export type FeatureContext = {
+  os?: string
+  vsCodeVersion?: string
+  runmeVersion?: string
+  extensionVersion?: string
+  githubAuth?: boolean // `true`, `false`, or `undefined`
+  statefulAuth?: boolean // `true`, `false`, or `undefined`
+  extensionId?: ExtensionName
+}
+
+export enum ExtensionName {
+  StatefulRunme = 'stateful.runme',
+  StatefulPlatform = 'stateful.platform',
+}
+
+export type EnabledForExtensions = Partial<Record<ExtensionName, boolean>>
+
+export type FeatureCondition = {
+  os?: string
+  vsCodeVersion?: string
+  runmeVersion?: string
+  extensionVersion?: string
+  githubAuthRequired?: boolean
+  statefulAuthRequired?: boolean
+  enabledForExtensions?: EnabledForExtensions
+}
+
+export enum FeatureName {
+  Gist = 'Gist',
+  Share = 'Share',
+  Escalate = 'Escalate',
+  ForceLogin = 'ForceLogin',
+  SignedIn = 'SignedIn',
+}
+
+export type Feature = {
+  enabled: boolean
+  on: boolean
+  conditions: FeatureCondition
+}
+
+export type Features = Partial<Record<keyof typeof FeatureName, Feature>>
+
+export type FeatureState = {
+  features: Features
+  context?: FeatureContext
+}
+
+export type FeatureObserver = BehaviorSubject<FeatureState>

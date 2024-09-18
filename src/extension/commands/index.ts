@@ -37,7 +37,7 @@ import {
   openFileAsRunmeNotebook,
   promptUserSession,
 } from '../utils'
-import { NotebookToolbarCommand, NotebookUiEvent } from '../../types'
+import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
 import getLogger from '../logger'
 import { RecommendExtensionMessage } from '../messaging'
 import {
@@ -53,6 +53,7 @@ import { createGist } from '../services/github/gist'
 import { InitializeClient } from '../api/client'
 import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
+import features from '../features'
 
 const log = getLogger('Commands')
 
@@ -388,7 +389,9 @@ export async function addToRecommendedExtensions(context: ExtensionContext) {
 }
 
 export async function toggleAutosave(autoSaveIsOn: boolean) {
-  if (autoSaveIsOn) {
+  const createIfNone = features.isOnInContextState(FeatureName.ForceLogin)
+
+  if (autoSaveIsOn && createIfNone) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)

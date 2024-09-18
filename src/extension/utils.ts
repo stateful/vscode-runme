@@ -33,6 +33,7 @@ import {
   NotebookAutoSaveSetting,
   RunmeTerminal,
   Serializer,
+  FeatureName,
 } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
@@ -56,13 +57,8 @@ import {
   getTLSEnabled,
   isPlatformAuthEnabled,
 } from '../utils/configuration'
-import {
-  FeatureName,
-  FEATURES_CONTEXT_STATE_KEY,
-  isFeatureActive,
-  loadFeatureSnapshot,
-} from '../features'
 
+import features from './features'
 import CategoryQuickPickItem from './quickPickItems/category'
 import getLogger from './logger'
 import { Kernel } from './kernel'
@@ -726,17 +722,19 @@ export async function resolveUserSession(
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
-export async function promptUserSession(): Promise<AuthenticationSession | undefined> {
-  let session = await resolveUserSession(false)
+export async function promptUserSession() {
+  const createIfNone = features.isOnInContextState(FeatureName.ForceLogin)
+  const silent = createIfNone ? undefined : true
 
-  const provider = isPlatformAuthEnabled() ? 'Stateful' : 'GitHub'
-  const featureState$ = loadFeatureSnapshot(ContextState.getKey(FEATURES_CONTEXT_STATE_KEY))
-  const displayLoginPrompt = getLoginPrompt() && isFeatureActive(FeatureName.Share, featureState$)
+  const session = await getPlatformAuthSession(false, silent)
+
+  const displayLoginPrompt =
+    getLoginPrompt() && createIfNone && features.isOnInContextState(FeatureName.Share)
 
   if (!session && displayLoginPrompt !== false) {
     const option = await window.showInformationMessage(
       `Securely store your cell outputs.
-      Sign in with ${provider} is required, do you want to proceed?`,
+      Sign in with Stateful is required, do you want to proceed?`,
       'Yes',
       'No',
       'Open Settings',
@@ -749,13 +747,28 @@ export async function promptUserSession(): Promise<AuthenticationSession | undef
       return commands.executeCommand('runme.openSettings', 'runme.app.loginPrompt')
     }
 
-    session = await resolveUserSession(true)
-    if (!session) {
-      throw new Error(`You must authenticate with your ${provider} account`)
-    }
-  }
+    getPlatformAuthSession(createIfNone)
+      .then((session) => {
+        if (!session) {
+          throw new Error('You must authenticate with your Stateful account')
+        }
+      })
+      .catch((error) => {
+        let message
+        if (error instanceof Error) {
+          message = error.message
+        } else {
+          message = String(error)
+        }
 
-  return session
+        // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
+        // throw new Error('User did not consent to login.')
+        // Calling again to ensure User Menu Badge
+        if (createIfNone && message === 'User did not consent to login.') {
+          getPlatformAuthSession(false)
+        }
+      })
+  }
 }
 
 export async function checkSession(context: ExtensionContext) {

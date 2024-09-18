@@ -34,6 +34,9 @@ import {
   type ClientMessage,
   type RunmeTerminal,
   type Serializer,
+  type ExtensionName,
+  type FeatureContext,
+  FeatureName,
 } from '../types'
 import {
   ClientMessages,
@@ -48,16 +51,7 @@ import {
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
 import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
-import {
-  isFeatureActive,
-  FeatureContext,
-  getFeatureSnapshot,
-  loadFeaturesState,
-  updateFeatureContext,
-  FEATURES_CONTEXT_STATE_KEY,
-  FeatureName,
-  ExtensionName,
-} from '../features'
+import features, { FEATURES_CONTEXT_STATE_KEY } from '../features'
 
 import getLogger from './logger'
 import executor, {
@@ -204,21 +198,21 @@ export class Kernel implements Disposable {
       extensionId: context?.extension?.id as ExtensionName,
     }
 
-    this.featuresState$ = loadFeaturesState(packageJSON, featContext, this.#featuresSettings)
+    this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
 
     if (this.featuresState$) {
-      const features = workspace.getConfiguration('runme.features')
+      const runmeFeatures = workspace.getConfiguration('runme.features')
       const featureNames = Object.keys(FeatureName).map((f) => f.toLowerCase())
       if (features) {
         featureNames.forEach((feature) => {
-          if (features.has(feature)) {
-            this.#featuresSettings.set(feature, features.get<boolean>(feature, false))
+          if (runmeFeatures.has(feature)) {
+            this.#featuresSettings.set(feature, runmeFeatures.get<boolean>(feature, false))
           }
         })
       }
 
       const subscription = this.featuresState$
-        .pipe(map((_state) => getFeatureSnapshot(this.featuresState$)))
+        .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
         .subscribe((snapshot) => {
           ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
           postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
@@ -232,16 +226,16 @@ export class Kernel implements Disposable {
     }
   }
 
-  isFeatureActive(featureName: FeatureName): boolean {
+  isFeatureOn(featureName: FeatureName): boolean {
     if (!this.featuresState$) {
       return false
     }
 
-    return isFeatureActive(featureName, this.featuresState$)
+    return features.isOn(featureName, this.featuresState$)
   }
 
-  updateFeatureState<K extends keyof FeatureContext>(key: K, value: FeatureContext[K]) {
-    updateFeatureContext(this.featuresState$, key, value, this.#featuresSettings)
+  updateFeatureContext<K extends keyof FeatureContext>(key: K, value: FeatureContext[K]) {
+    features.updateContext(this.featuresState$, key, value, this.#featuresSettings)
   }
 
   registerNotebookCell(cell: NotebookCell) {
@@ -631,7 +625,7 @@ export class Kernel implements Disposable {
     } else if (message.type.startsWith('terminal:')) {
       return
     } else if (message.type === ClientMessages.featuresRequest) {
-      const snapshot = getFeatureSnapshot(this.featuresState$)
+      const snapshot = features.getSnapshot(this.featuresState$)
       postClientMessage(this.messaging, ClientMessages.featuresResponse, {
         snapshot: snapshot,
       })
