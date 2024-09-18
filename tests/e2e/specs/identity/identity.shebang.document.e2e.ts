@@ -9,8 +9,8 @@ import {
 } from '../../helpers/index.js'
 
 async function reloadWindow() {
-  const workbench = await browser.getWorkbench()
-  await workbench.executeCommand('Developer: Reload Window')
+  // const workbench = await browser.getWorkbench()
+  // await workbench.executeCommand('Developer: Restart Extension Host')
 }
 
 async function removeAllNotifications() {
