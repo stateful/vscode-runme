@@ -5,7 +5,7 @@ import crypto from 'node:crypto'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { Disposable, Uri, EventEmitter, Event } from 'vscode'
+import { Disposable, Uri, EventEmitter, Event, env } from 'vscode'
 
 import getLogger from '../logger'
 import { HealthCheckRequest, HealthCheckResponse_ServingStatus } from '../grpc/healthTypes'
@@ -94,6 +94,10 @@ class KernelServer implements IServer {
     this.#acceptsIntents = options.acceptsConnection?.intents || 50
     this.#acceptsInterval = options.acceptsConnection?.interval || 200
     this.#forceExternalServer = externalServer
+
+    env.onDidChangeTelemetryEnabled(() => {
+      this.kill()
+    })
   }
 
   dispose() {
@@ -130,6 +134,10 @@ class KernelServer implements IServer {
     }
 
     return false
+  }
+
+  protected kill(): boolean {
+    return this.#process?.kill() ?? false
   }
 
   address(): string {
@@ -238,28 +246,29 @@ class KernelServer implements IServer {
       args.push('--insecure')
     }
 
-    const process = spawn(binaryLocation, args)
+    const env = this.getConfiguredEnv()
+    const child = spawn(binaryLocation, args, { env })
 
-    process.on('close', (code) => {
+    child.on('close', (code) => {
       if (this.#loggingEnabled) {
         log.info(`Server process #${this.#process?.pid} closed with code ${code}`)
       }
       this.#onClose.fire({ code })
 
-      this.disposeProcess(process)
+      this.disposeProcess(child)
     })
 
-    process.stderr.once('data', () => {
+    child.stderr.once('data', () => {
       log.info(`Server process #${this.#process?.pid} started at ${address}`)
     })
 
-    process.stderr.on('data', (data) => {
+    child.stderr.on('data', (data) => {
       if (this.#loggingEnabled) {
         log.info(data.toString())
       }
     })
 
-    this.#process = process
+    this.#process = child
 
     return Promise.race([
       new Promise<string>((resolve, reject) => {
@@ -280,7 +289,7 @@ class KernelServer implements IServer {
               }
 
               if (log.addr) {
-                process.stderr.off('data', cb)
+                child.stderr.off('data', cb)
                 return resolve(log.addr)
               }
             }
@@ -289,7 +298,7 @@ class KernelServer implements IServer {
           }
         }
 
-        process.stderr.on('data', cb)
+        child.stderr.on('data', cb)
       }),
       new Promise<never>((_, reject) => {
         const { dispose } = this.#onClose.event(() => {
@@ -301,6 +310,16 @@ class KernelServer implements IServer {
         setTimeout(() => reject(new Error('Timed out listening for server ready message')), 10000),
       ),
     ])
+  }
+
+  protected getConfiguredEnv(): NodeJS.ProcessEnv {
+    const penv: NodeJS.ProcessEnv = Object.assign(process.env)
+
+    if (!env.isTelemetryEnabled) {
+      penv['DO_NOT_TRACK'] = 'true'
+    }
+
+    return penv
   }
 
   protected async acceptsConnection(): Promise<void> {
