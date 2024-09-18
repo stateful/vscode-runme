@@ -411,7 +411,7 @@ jobs:
         # if: env.EXTENSION_NAME == 'runme'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./runme-*"
+          artifacts: "./*.vsix"
           bodyFile: ${{ github.workspace }}-CHANGELOG.txt
           tag: ${{ env.GIT_TAG }}
           prerelease: ${{ github.event.inputs.releaseChannel == 'edge' }}
