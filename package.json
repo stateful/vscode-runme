@@ -62,7 +62,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "statefulAuthRequired": true,
           "enabledForExtensions": {
             "stateful.platform": true,
@@ -74,7 +73,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": true,
             "stateful.runme": false
@@ -85,7 +83,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "statefulAuthRequired": true,
           "enabledForExtensions": {
             "stateful.platform": true,
@@ -97,7 +94,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": true,
             "stateful.runme": false
@@ -108,7 +104,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": false,
             "stateful.runme": true
