@@ -14,8 +14,8 @@ import {
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
 async function reloadWindow() {
-  // const workbench = await browser.getWorkbench()
-  // await workbench.executeCommand('Developer: Restart Extension Host')
+  const workbench = await browser.getWorkbench()
+  await workbench.executeCommand('Developer: Reload Window')
 }
 
 async function removeAllNotifications() {
