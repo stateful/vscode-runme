@@ -408,10 +408,10 @@ jobs:
           echo "GIT_TAG=$GIT_TAG" >> $GITHUB_ENV
 
       - name: GitHub Release
-        if: env.EXTENSION_NAME == 'runme'
+        # if: env.EXTENSION_NAME == 'runme'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./runme-*"
+          artifacts: "./*.vsix"
           bodyFile: ${{ github.workspace }}-CHANGELOG.txt
           tag: ${{ env.GIT_TAG }}
           prerelease: ${{ github.event.inputs.releaseChannel == 'edge' }}

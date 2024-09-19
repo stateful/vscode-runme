@@ -67,6 +67,8 @@ vi.mock('../../src/extension/utils', () => ({
   initWasm: vi.fn(),
 }))
 
+vi.mock('../../src/extension/features')
+
 function newKernel(): Kernel {
   return {} as unknown as Kernel
 }

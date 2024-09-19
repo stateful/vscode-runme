@@ -12,7 +12,7 @@ import { ClientMessages, RENDERERS, OutputType, WebViews } from '../../../consta
 import { closeOutput, getContext } from '../../utils'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
-import { APIMethod } from '../../../types'
+import { APIMethod, FeatureObserver, FeatureName } from '../../../types'
 import type { TerminalConfiguration } from '../../../utils/configuration'
 import '../closeCellButton'
 import '../copyButton'
@@ -25,12 +25,7 @@ import {
   CreateExtensionCellOutputMutation,
   UpdateCellOutputMutation,
 } from '../../../extension/__generated-platform__/graphql'
-import {
-  isFeatureActive,
-  loadFeatureSnapshot,
-  FeatureObserver,
-  FeatureName,
-} from '../../../features'
+import features from '../../../features'
 
 interface IWindowSize {
   width: number
@@ -462,7 +457,7 @@ export class TerminalView extends LitElement {
         switch (e.type) {
           case ClientMessages.featuresResponse:
           case ClientMessages.featuresUpdateAction:
-            this.featureState$ = loadFeatureSnapshot(e.output.snapshot)
+            this.featureState$ = features.loadSnapshot(e.output.snapshot)
             break
           case ClientMessages.activeThemeChanged:
             this.#updateTerminalTheme()
@@ -904,7 +899,7 @@ export class TerminalView extends LitElement {
           }}"
         ></copy-button>
         ${when(
-          this.isSessionOutputsEnabled && isFeatureActive(FeatureName.Gist, this.featureState$),
+          features.isOn(FeatureName.Gist, this.featureState$),
           () => {
             return html`<gist-cell @onGist="${this.#openSessionOutput}"></gist-cell>`
           },
@@ -912,7 +907,7 @@ export class TerminalView extends LitElement {
         )}
         ${when(
           (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
-            isFeatureActive(FeatureName.Share, this.featureState$),
+            features.isOn(FeatureName.Share, this.featureState$),
           () => {
             return html` <action-button
               ?loading=${this.isLoading}
@@ -926,7 +921,10 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          true && this.exitCode !== 0 && !this.escalationUrl && this.platformId,
+          features.isOn(FeatureName.Escalate, this.featureState$) &&
+            this.exitCode !== 0 &&
+            !this.escalationUrl &&
+            this.platformId,
           () => {
             return html` <action-button
               ?loading=${this.isCreatingEscalation}
@@ -940,7 +938,7 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          true && this.escalationUrl,
+          features.isOn(FeatureName.Escalate, this.featureState$) && this.escalationUrl,
           () => {
             return html` <action-button
               ?saveIcon="${true}"

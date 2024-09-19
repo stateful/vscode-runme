@@ -24,7 +24,7 @@ import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { Serializer } from '../types'
+import { FeatureName, Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
@@ -37,7 +37,6 @@ import {
   ServerLifecycleIdentity,
   getServerConfigurationValue,
   getSessionOutputs,
-  isPlatformAuthEnabled,
 } from '../utils/configuration'
 
 import {
@@ -61,6 +60,7 @@ import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
 import * as ghost from './ai/ghost'
+import * as features from './features'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -551,7 +551,6 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
-    // if session outputs are disabled, we don't write anything
     if (!GrpcSerializer.sessionOutputsEnabled()) {
       this.togglePreviewButton(false)
       return -1
@@ -579,18 +578,20 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
+    // Don't write to disk if authenticated and share are disabled
+    if (
+      features.isOnInContextState(FeatureName.SignedIn) &&
+      features.isOnInContextState(FeatureName.Share)
+    ) {
+      this.togglePreviewButton(false)
+      // But still return a valid bytes length so the cache keeps working
+      return bytes.length
+    }
+
     const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
       this.togglePreviewButton(false)
       return -1
-    }
-
-    // Don't write to disk if platform auth is enabled
-    const isPlatform = isPlatformAuthEnabled()
-    if (isPlatform) {
-      this.togglePreviewButton(false)
-      // But still return a valid bytes length so the cache keeps working
-      return bytes.length
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
@@ -719,7 +720,10 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    return getSessionOutputs() && ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isSessionOutputs = getSessionOutputs()
+
+    return isSessionOutputs && isAutoSaveOn
   }
 
   private async cacheNotebookOutputs(

@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.7.6-edge.0",
+  "version": "3.7.6-edge.2",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -58,11 +58,21 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "SignedIn": {
+        "enabled": true,
+        "conditions": {
+          "os": "All",
+          "statefulAuthRequired": true,
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "ForceLogin": {
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": true,
             "stateful.runme": false
@@ -73,7 +83,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "statefulAuthRequired": true,
           "enabledForExtensions": {
             "stateful.platform": true,
@@ -85,10 +94,9 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": true
+            "stateful.runme": false
           }
         }
       },
@@ -96,7 +104,6 @@
         "enabled": true,
         "conditions": {
           "os": "All",
-          "vsCodeVersion": ">=1.58.0",
           "enabledForExtensions": {
             "stateful.platform": false,
             "stateful.runme": true
@@ -598,12 +605,6 @@
             "type": "string",
             "scope": "window",
             "markdownDescription": "Relative path to a file within the workspace to open within a Runme notebook view, when VS Code starts (e.g. `./CONTRIBUTING.md`)."
-          },
-          "runme.experiments.aiLogs": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, enable logging server logs used for training AIs."
           },
           "runme.experiments.aiAutoCell": {
             "type": "boolean",

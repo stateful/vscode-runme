@@ -1,73 +1,35 @@
 import { BehaviorSubject } from 'rxjs'
 import { satisfies } from 'semver'
 
+import {
+  EnabledForExtensions,
+  ExtensionName,
+  Feature,
+  FeatureContext,
+  FeatureName,
+  FeatureObserver,
+  Features,
+  FeatureState,
+} from './types'
+
 export const FEATURES_CONTEXT_STATE_KEY = 'features'
 
-export type FeatureContext = {
-  os?: string
-  vsCodeVersion?: string
-  runmeVersion?: string
-  extensionVersion?: string
-  githubAuth?: boolean // `true`, `false`, or `undefined`
-  statefulAuth?: boolean // `true`, `false`, or `undefined`
-  extensionId?: ExtensionName
-}
-
-export enum ExtensionName {
-  StatefulRunme = 'stateful.runme',
-  StatefulPlatform = 'stateful.platform',
-}
-
-type EnabledForExtensions = Partial<Record<ExtensionName, boolean>>
-
-export type FeatureCondition = {
-  os?: string
-  vsCodeVersion?: string
-  runmeVersion?: string
-  extensionVersion?: string
-  githubAuthRequired?: boolean
-  statefulAuthRequired?: boolean
-  enabledForExtensions?: EnabledForExtensions
-}
-
-export enum FeatureName {
-  Gist = 'Gist',
-  Share = 'Share',
-  Escalate = 'Escalate',
-  ForceLogin = 'ForceLogin',
-}
-
-export type Feature = {
-  enabled: boolean
-  activated: boolean
-  conditions: FeatureCondition
-}
-
-export type Features = Partial<Record<keyof typeof FeatureName, Feature>>
-
-export type FeatureState = {
-  features: Features
-  context?: FeatureContext
-}
-
-export type FeatureObserver = BehaviorSubject<FeatureState>
-
-function loadFeaturesFromPackageJson(packageJSON: any): Features {
+function loadFromPackageJson(packageJSON: any): Features {
   const features = (packageJSON?.runme?.features || {}) as Features
   return features
 }
 
-export function loadFeaturesState(
+function loadState(
   packageJSON: any,
   context?: FeatureContext,
   overrides: Map<string, boolean> = new Map(),
 ): FeatureObserver {
-  const initialFeatures = loadFeaturesFromPackageJson(packageJSON)
+  const initialFeatures = loadFromPackageJson(packageJSON)
   const state = new BehaviorSubject<FeatureState>({
     features: initialFeatures,
     context,
   })
-  updateFeatureState(state, context, overrides)
+  updateState(state, context, overrides)
   return state
 }
 
@@ -187,7 +149,7 @@ function isActive(
 
   if (!checkExtensionId(enabledForExtensions, context?.extensionId)) {
     console.log(
-      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${enabledForExtensions}, actual: ${context?.extensionId}`,
+      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${JSON.stringify(enabledForExtensions)}, actual: ${context?.extensionId}`,
     )
     return false
   }
@@ -196,7 +158,7 @@ function isActive(
   return true
 }
 
-export function updateFeatureState(
+function updateState(
   featureState$: FeatureObserver,
   context?: FeatureContext,
   overrides: Map<string, boolean> = new Map(),
@@ -208,7 +170,7 @@ export function updateFeatureState(
       ...acc,
       [key]: {
         ...value,
-        activated: isActive(key as FeatureName, value, context, overrides),
+        on: isActive(key as FeatureName, value, context, overrides),
       },
     }),
     {} as Features,
@@ -218,7 +180,7 @@ export function updateFeatureState(
   return featureState$
 }
 
-export function updateFeatureContext<K extends keyof FeatureContext>(
+function updateContext<K extends keyof FeatureContext>(
   featureState$: FeatureObserver | undefined,
   key: K,
   value: FeatureContext[K],
@@ -231,11 +193,11 @@ export function updateFeatureContext<K extends keyof FeatureContext>(
   const newContext = { ...(currentState.context || {}), [key]: value }
 
   if (newContext[key] !== currentState?.context?.[key]) {
-    updateFeatureState(featureState$, newContext, overrides)
+    updateState(featureState$, newContext, overrides)
   }
 }
 
-export function getFeatureSnapshot(featureState$: FeatureObserver | undefined): string {
+function getSnapshot(featureState$: FeatureObserver | undefined): string {
   if (!featureState$) {
     return ''
   }
@@ -243,7 +205,7 @@ export function getFeatureSnapshot(featureState$: FeatureObserver | undefined): 
   return JSON.stringify(featureState$.getValue())
 }
 
-export function loadFeatureSnapshot(snapshot: string): FeatureObserver {
+function loadSnapshot(snapshot: string): FeatureObserver {
   const { features, context } = JSON.parse(snapshot)
   const featureState$ = new BehaviorSubject<FeatureState>({
     features,
@@ -254,14 +216,20 @@ export function loadFeatureSnapshot(snapshot: string): FeatureObserver {
   return featureState$
 }
 
-export function isFeatureActive(
-  featureName: FeatureName,
-  featureState$?: FeatureObserver,
-): boolean {
+function isOn(featureName: FeatureName, featureState$?: FeatureObserver): boolean {
   if (!featureState$) {
     return false
   }
 
   const feature = featureState$.getValue().features[featureName]
-  return feature ? feature.activated : false
+  return feature?.on ?? false
+}
+
+export default {
+  loadState,
+  updateState,
+  updateContext,
+  getSnapshot,
+  loadSnapshot,
+  isOn,
 }
