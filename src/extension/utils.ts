@@ -55,7 +55,6 @@ import {
   getPortNumber,
   getTLSDir,
   getTLSEnabled,
-  isPlatformAuthEnabled,
 } from '../utils/configuration'
 
 import features from './features'
@@ -582,11 +581,15 @@ export async function resolveAuthToken(createIfNone: boolean = true) {
 }
 
 export async function resolveAppToken(createIfNone: boolean = true) {
-  const session = await getPlatformAuthSession(createIfNone)
-  if (!session) {
-    return null
+  if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
+    const session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      return null
+    }
+    return { token: session.accessToken }
   }
-  return { token: session.accessToken }
+
+  return null
 }
 
 export function fetchStaticHtml(appUrl: string) {
@@ -706,14 +709,6 @@ export function asWorkspaceRelativePath(documentPath: string): {
     return { relativePath: path.basename(documentPath), outside: true }
   }
   return { relativePath, outside: false }
-}
-
-export async function resolveUserSession(
-  createIfNone: boolean,
-): Promise<AuthenticationSession | undefined> {
-  return isPlatformAuthEnabled()
-    ? await getPlatformAuthSession(createIfNone)
-    : await getGithubAuthSession(createIfNone)
 }
 
 /**

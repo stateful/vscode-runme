@@ -380,54 +380,63 @@ export class RunmeExtension {
         })
     }
 
-    context.subscriptions.push(new GithubAuthProvider(context))
-    context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+    if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
+      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const silent = forceLogin ? undefined : true
 
-    getGithubAuthSession(false).then((session) => {
-      kernel.updateFeatureContext('githubAuth', !!session)
-    })
+      getPlatformAuthSession(forceLogin, silent)
+        .then((session) => {
+          if (session) {
+            const openDashboardStr = 'Open Dashboard'
+            window
+              .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+              .then((answer) => {
+                if (answer === openDashboardStr) {
+                  const dashboardUri = getRunmeAppUrl(['app'])
+                  const uri = Uri.parse(dashboardUri)
+                  env.openExternal(uri)
+                }
+              })
+          }
+        })
+        .catch((error) => {
+          let message
+          if (error instanceof Error) {
+            message = error.message
+          } else {
+            message = String(error)
+          }
 
-    const createIfNone = kernel.isFeatureOn(FeatureName.ForceLogin)
-    const silent = createIfNone ? undefined : true
+          // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
+          // throw new Error('User did not consent to login.')
+          // Calling again to ensure User Menu Badge
+          if (forceLogin && message === 'User did not consent to login.') {
+            getPlatformAuthSession(false)
+          }
+        })
+    }
 
-    getPlatformAuthSession(createIfNone, silent)
-      .then((session) => {
-        if (session) {
-          const openDashboardStr = 'Open Dashboard'
-          window
-            .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-            .then((answer) => {
-              if (answer === openDashboardStr) {
-                const dashboardUri = getRunmeAppUrl(['app'])
-                const uri = Uri.parse(dashboardUri)
-                env.openExternal(uri)
-              }
-            })
-        }
+    if (kernel.isFeatureOn(FeatureName.Gist)) {
+      context.subscriptions.push(new GithubAuthProvider(context))
+      getGithubAuthSession(false).then((session) => {
+        kernel.updateFeatureContext('githubAuth', !!session)
       })
-      .catch((error) => {
-        let message
-        if (error instanceof Error) {
-          message = error.message
-        } else {
-          message = String(error)
-        }
-
-        // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
-        // throw new Error('User did not consent to login.')
-        // Calling again to ensure User Menu Badge
-        if (createIfNone && message === 'User did not consent to login.') {
-          getPlatformAuthSession(false)
-        }
-      })
+    }
 
     authentication.onDidChangeSessions((e) => {
-      if (e.provider.id === AuthenticationProviders.Stateful) {
+      if (
+        kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
+        e.provider.id === AuthenticationProviders.Stateful
+      ) {
         getPlatformAuthSession(false, true).then((session) => {
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }
-      if (e.provider.id === AuthenticationProviders.GitHub) {
+      if (
+        kernel.isFeatureOn(FeatureName.Gist) &&
+        e.provider.id === AuthenticationProviders.GitHub
+      ) {
         getGithubAuthSession(false).then((session) => {
           kernel.updateFeatureContext('githubAuth', !!session)
         })
