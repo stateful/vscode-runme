@@ -1,0 +1,6 @@
+mutation CreateEscalation($input: CreateEscalationInput!) {
+  createEscalation(input: $input) {
+   id
+   escalationUrl
+  }
+}

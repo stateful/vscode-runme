@@ -4,6 +4,5 @@ mutation CreateExtensionCellOutput($input: ReporterInput!) {
    htmlUrl
    exitCode
    isSlackReady
-   escalationUrl
   }
 }

@@ -21,6 +21,7 @@ import './gistCell'
 import './open'
 import {
   CreateCellExecutionMutation,
+  CreateEscalationMutation,
   CreateExtensionCellOutputMutation,
   UpdateCellOutputMutation,
 } from '../../../extension/__generated-platform__/graphql'
@@ -325,7 +326,6 @@ export class TerminalView extends LitElement {
   protected windowSize: IWindowSize
   protected rows: number = 10
 
-  protected platformId?: string
   protected exitCode?: number | void
   protected isSlackReady?: boolean
   protected isShareReady: boolean = false
@@ -335,6 +335,9 @@ export class TerminalView extends LitElement {
 
   @property({ type: String })
   id!: string
+
+  @property({ type: String })
+  platformId?: string
 
   @property({ type: String })
   fontFamily?: TerminalConfiguration['fontFamily']
@@ -368,6 +371,9 @@ export class TerminalView extends LitElement {
 
   @property({ type: Boolean })
   isLoading: boolean = false
+
+  @property({ type: Boolean })
+  isCreatingEscalation: boolean = false
 
   @property()
   shareUrl?: string
@@ -494,7 +500,8 @@ export class TerminalView extends LitElement {
 
               const data = (e.output.data?.data || {}) as CreateExtensionCellOutputMutation &
                 CreateCellExecutionMutation &
-                UpdateCellOutputMutation
+                UpdateCellOutputMutation &
+                CreateEscalationMutation
               // TODO: Remove createCellExecution once the transition is complete and tested enough.
               if (data.createExtensionCellOutput || data.createCellExecution) {
                 const objData = data.createCellExecution || data.createExtensionCellOutput || {}
@@ -520,6 +527,10 @@ export class TerminalView extends LitElement {
                 this.exitCode = exitCode
                 this.isSlackReady = !!isSlackReady
                 this.#displayShareDialog()
+              }
+
+              if (data.createEscalation) {
+                this.escalationUrl = data.createEscalation.escalationUrl!
               }
             }
             break
@@ -771,6 +782,39 @@ export class TerminalView extends LitElement {
     return this.#shareCellOutput(true)
   }
 
+  async #triggerEscalation(): Promise<boolean | void | undefined> {
+    const ctx = getContext()
+    this.isCreatingEscalation = true
+
+    try {
+      await postClientMessage(ctx, ClientMessages.platformApiRequest, {
+        data: {
+          id: this.platformId,
+        },
+        id: this.id!,
+        method: APIMethod.CreateEscalation,
+      })
+    } catch (error) {
+      postClientMessage(
+        ctx,
+        ClientMessages.infoMessage,
+        `Failed to escalate: ${(error as any).message}`,
+      )
+    } finally {
+      this.isCreatingEscalation = false
+    }
+  }
+
+  async #triggerOpenEscalation(): Promise<boolean | void | undefined> {
+    const ctx = getContext()
+
+    if (!this.escalationUrl) {
+      return
+    }
+
+    return postClientMessage(ctx, ClientMessages.openLink, this.escalationUrl)
+  }
+
   #openSessionOutput(): Promise<void | boolean> | undefined {
     const ctx = getContext()
     if (!ctx.postMessage) {
@@ -882,17 +926,26 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          this.exitCode !== 0 &&
-            this.platformId &&
-            isFeatureActive(FeatureName.Escalate, this.featureState$),
+          true && this.exitCode !== 0 && !this.escalationUrl && this.platformId,
           () => {
             return html` <action-button
-              ?disabled=${!this.isSlackReady}
-              ?loading=${this.isLoading}
+              ?loading=${this.isCreatingEscalation}
               ?saveIcon="${true}"
               text="Escalate"
-              @onClick="${this.#triggerShareCellOutput}"
+              @onClick="${this.#triggerEscalation}"
               @onClickDisabled=${this.#onEscalateDisabled}
+            >
+            </action-button>`
+          },
+          () => {},
+        )}
+        ${when(
+          true && this.escalationUrl,
+          () => {
+            return html` <action-button
+              ?saveIcon="${true}"
+              text="Escalation"
+              @onClick="${this.#triggerOpenEscalation}"
             >
             </action-button>`
           },

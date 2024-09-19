@@ -4,6 +4,5 @@ mutation CreateCellExecution($input: CreateCellExecutionInput!) {
    htmlUrl
    exitCode
    isSlackReady
-   escalationUrl
   }
 }
