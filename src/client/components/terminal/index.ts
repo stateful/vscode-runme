@@ -324,15 +324,13 @@ export class TerminalView extends LitElement {
   protected exitCode?: number | void
   protected isSlackReady?: boolean
   protected isShareReady: boolean = false
+  protected platformId?: string
 
   @state()
   protected featureState$?: FeatureObserver
 
   @property({ type: String })
   id!: string
-
-  @property({ type: String })
-  platformId?: string
 
   @property({ type: String })
   fontFamily?: TerminalConfiguration['fontFamily']
