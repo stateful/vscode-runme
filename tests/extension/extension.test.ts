@@ -70,6 +70,15 @@ vi.mock('../../src/extension/utils', async () => ({
   resetNotebookSettings: vi.fn(),
   getGithubAuthSession: vi.fn().mockResolvedValue(undefined),
   getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
+  getEnvProps: vi.fn().mockReturnValue({
+    extname: 'stateful.runme',
+    extversion: '1.2.3-foo.1',
+    remotename: 'none',
+    appname: 'Visual Studio Code',
+    product: 'desktop',
+    platform: 'darwin_arm64',
+    uikind: 'desktop',
+  }),
 }))
 
 vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
@@ -92,6 +101,12 @@ test('initializes all providers', async () => {
   const context: any = {
     subscriptions: [],
     extensionUri: { fsPath: '/foo/bar' },
+    extension: {
+      id: 'foo.bar',
+      packageJSON: {
+        version: '1.2.3-rc.4',
+      },
+    },
     environmentVariableCollection: {
       prepend: vi.fn(),
       append: vi.fn(),

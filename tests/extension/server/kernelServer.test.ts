@@ -98,6 +98,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -114,6 +115,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -130,6 +132,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -146,6 +149,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -242,6 +246,7 @@ function createServer(
 ) {
   return new Server(
     Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+    <any>{},
     config,
     externalServer,
   )
