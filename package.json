@@ -1176,7 +1176,7 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^2.0.5",
-    "@vscode/vsce": "^2.21.0",
+    "@vscode/vsce": "^2.32.0",
     "@wdio/cli": "^8.40.5",
     "@wdio/local-runner": "^8.40.5",
     "@wdio/mocha-framework": "^8.40.3",
