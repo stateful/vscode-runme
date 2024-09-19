@@ -767,6 +767,7 @@ export enum FeatureName {
   Escalate = 'Escalate',
   ForceLogin = 'ForceLogin',
   SignedIn = 'SignedIn',
+  RequireStatefulAuth = 'RequireStatefulAuth',
 }
 
 export type Feature = {
