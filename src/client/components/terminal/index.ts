@@ -321,10 +321,10 @@ export class TerminalView extends LitElement {
   protected windowSize: IWindowSize
   protected rows: number = 10
 
+  protected platformId?: string
   protected exitCode?: number | void
   protected isSlackReady?: boolean
   protected isShareReady: boolean = false
-  protected platformId?: string
 
   @state()
   protected featureState$?: FeatureObserver
