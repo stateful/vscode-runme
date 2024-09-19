@@ -942,7 +942,7 @@ export class TerminalView extends LitElement {
           () => {
             return html` <action-button
               ?saveIcon="${true}"
-              text="Escalation"
+              text="Open Escalation"
               @onClick="${this.#triggerOpenEscalation}"
             >
             </action-button>`
