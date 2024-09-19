@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises'
 
 import { suite, test, expect, vi, beforeEach } from 'vitest'
-import { Uri, workspace } from 'vscode'
+import { Uri, workspace, env } from 'vscode'
 // eslint-disable-next-line max-len
 import { HealthCheckResponse_ServingStatus } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
@@ -98,6 +98,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -114,6 +115,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -130,6 +132,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -146,6 +149,7 @@ suite('Kernel server spawn process', () => {
 
     const server = new Server(
       Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
       {
         retryOnFailure: true,
         maxNumberOfIntents: 2,
@@ -157,7 +161,7 @@ suite('Kernel server spawn process', () => {
     expect(address).toStrictEqual('localhost:7863')
   })
 
-  test('Should try 2 times before failing', async () => {
+  test('Should try twice before failing', async () => {
     configValues.enableTLS = true
 
     const server = createServer({
@@ -188,6 +192,18 @@ suite('Kernel server spawn process', () => {
     await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
 
     expect(server['_port']()).toStrictEqual(port + 1)
+  })
+
+  test('Should respect telemetry choice', async () => {
+    configValues.enableTLS = true
+
+    const server = createServer({
+      retryOnFailure: true,
+      maxNumberOfIntents: 2,
+    })
+
+    vi.mocked(env).isTelemetryEnabled = false
+    expect(server['getConfiguredEnv']()['DO_NOT_TRACK']).toBe('true')
   })
 })
 
@@ -230,6 +246,7 @@ function createServer(
 ) {
   return new Server(
     Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+    <any>{},
     config,
     externalServer,
   )

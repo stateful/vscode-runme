@@ -97,6 +97,7 @@ export class RunmeExtension {
 
     const server = new KernelServer(
       context.extensionUri,
+      kernel.envProps,
       {
         retryOnFailure: true,
         maxNumberOfIntents: 10,

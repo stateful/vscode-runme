@@ -133,7 +133,9 @@ export const env = {
   clipboard: {
     writeText: vi.fn()
   },
-  openExternal: vi.fn()
+  openExternal: vi.fn(),
+  onDidChangeTelemetryEnabled: vi.fn(),
+  isTelemetryEnabled: false,
 }
 
 export const NotebookData = vi.fn()
