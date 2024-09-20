@@ -351,7 +351,10 @@ export class RunmeExtension {
       const showUnsupportedShellMessage = async () => {
         const showMore = 'Show more'
 
-        const answer = await window.showErrorMessage('Unsupported shell', showMore)
+        const answer = await window.showErrorMessage(
+          "Unfortunately, this extension doesn't support your current shell. Please try using BASH or ZSH",
+          showMore,
+        )
         if (answer === showMore) {
           const url = getDocsUrlFor('/r/extension/supported-shells')
           env.openExternal(Uri.parse(url))
