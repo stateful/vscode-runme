@@ -349,11 +349,18 @@ export class RunmeExtension {
 
     if (kernel.hasExperimentEnabled('shellWarning', false)) {
       const showUnsupportedShellMessage = async () => {
-        const showMore = 'Show more'
+        const learnMore = 'Learn more'
 
-        const answer = await window.showErrorMessage('Unsupported shell', showMore)
-        if (answer === showMore) {
-          const url = getDocsUrlFor('/r/extension/supported-shells')
+        TelemetryReporter.sendTelemetryEvent('extension.shellWarning')
+
+        const answer = await window.showWarningMessage(
+          'Your current shell has limited or no support.' +
+            ' Please consider switching to sh, bash, or zsh.' +
+            ' Click "Learn more" for additional resources.',
+          learnMore,
+        )
+        if (answer === learnMore) {
+          const url = getDocsUrlFor('/r/extension/unsupported-shell')
           env.openExternal(Uri.parse(url))
         }
       }
