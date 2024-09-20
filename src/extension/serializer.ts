@@ -24,7 +24,7 @@ import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { FeatureName, Serializer } from '../types'
+import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
@@ -60,7 +60,6 @@ import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
 import * as ghost from './ai/ghost'
-import * as features from './features'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -551,11 +550,6 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      this.togglePreviewButton(false)
-      return -1
-    }
-
     const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
     const cache = mode ? this.maskedCache : this.plainCache
     const bytes = await cache.get(cacheId ?? '')
@@ -578,11 +572,8 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
-    // Don't write to disk if authenticated and share are disabled
-    if (
-      features.isOnInContextState(FeatureName.SignedIn) &&
-      features.isOnInContextState(FeatureName.Share)
-    ) {
+    // Don't write to disk if auto-save is off
+    if (!ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)) {
       this.togglePreviewButton(false)
       // But still return a valid bytes length so the cache keeps working
       return bytes.length
@@ -730,10 +721,6 @@ export class GrpcSerializer extends SerializerBase {
     notebook: Notebook,
     cacheId: string | undefined,
   ): Promise<void> {
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      return Promise.resolve(undefined)
-    }
-
     let session: RunmeSession | undefined
     const docUri = this.cacheDocUriMapping.get(cacheId ?? '')
     const sid = this.kernel.getRunnerEnvironment()?.getSessionId()
@@ -834,11 +821,20 @@ export class GrpcSerializer extends SerializerBase {
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {
-    const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
-    const data = (yamlDocs[0].toJS?.() || {}) as {
+    const rawFrontmatter = metadata['runme.dev/frontmatter']
+    let data: {
       runme: {
         id?: string
         version?: string
+      }
+    } = { runme: {} }
+
+    if (rawFrontmatter) {
+      const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
+      try {
+        data = (yamlDocs[0].toJS?.() || {}) as typeof data
+      } catch (e) {
+        // Do nothing if the frontmatter is not valid
       }
     }
 

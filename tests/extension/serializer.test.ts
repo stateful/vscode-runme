@@ -14,6 +14,7 @@ import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
+import ContextState from '../../src/extension/contextState'
 
 import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 
@@ -68,6 +69,8 @@ vi.mock('../../src/extension/utils', () => ({
 }))
 
 vi.mock('../../src/extension/features')
+
+vi.mock('../../src/extension/contextState')
 
 function newKernel(): Kernel {
   return {} as unknown as Kernel
@@ -510,6 +513,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
+        ContextState.getKey = vi.fn().mockImplementation(() => true)
         GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
         GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
@@ -525,7 +529,7 @@ describe('GrpcSerializer', () => {
         })
 
         expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
-        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(3)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
       })
     })
 

@@ -23,7 +23,7 @@ import {
   CreateNotebookInput,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
-import { Cell, Frontmatter } from '../../grpc/serializerTypes'
+import { Cell, Frontmatter, FrontmatterRunme } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
@@ -91,10 +91,21 @@ export default async function saveCellExecution(
         marshalFrontmatter: true,
       })
 
+      // Fallback to Ephemeral ID if there is no frontmatter
+      if (!notebook?.frontmatter?.runme?.id) {
+        notebook.frontmatter = {
+          ...(notebook?.frontmatter || ({} as Frontmatter)),
+          runme: {
+            ...(notebook?.frontmatter?.runme || {}),
+            id: cacheId,
+          } as FrontmatterRunme,
+        }
+      }
+
       const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
 
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
-      const result = await graphClient.mutate({
+      const mutation = {
         mutation: CreateExtensionCellOutputDocument,
         variables: {
           input: {
@@ -147,7 +158,8 @@ export default async function saveCellExecution(
             },
           },
         },
-      })
+      }
+      const result = await graphClient.mutate(mutation)
       data = result
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
