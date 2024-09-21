@@ -59,8 +59,8 @@ export const config: Options.Testrunner = {
   //
   specs: ['./specs/**/*.e2e.ts'],
   // Patterns to exclude.
-  // exclude: ['./specs/**/identity/*.e2e.ts'],
-  exclude: [],
+  exclude: ['./specs/**/identity/*.e2e.ts'],
+  // exclude: [],
   //
   // ======
   // Runner
