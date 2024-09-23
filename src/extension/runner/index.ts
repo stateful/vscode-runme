@@ -5,6 +5,7 @@ import {
   type TerminalDimensions,
   EventEmitter,
 } from 'vscode'
+import stripAnsi from 'strip-ansi'
 
 import type { DisposableAsync } from '../../types'
 import {
@@ -30,6 +31,7 @@ import { IServer } from '../server/kernelServer'
 import { convertEnvList } from '../utils'
 import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
+import { XTermSerializer } from '../terminal/terminalState'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -93,6 +95,8 @@ export interface IRunner extends Disposable {
   }): Promise<IRunnerEnvironment>
 
   createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession>
+
+  createTerminalSession(opts: RunProgramOptions): Promise<IRunnerTerminalSession>
 
   createMonitorEnvStore(): Promise<GrpcRunnerMonitorEnvStore>
 
@@ -189,6 +193,11 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
   ): void | Promise<void>
 }
 
+export interface IRunnerTerminalSession extends IRunnerProgramSession {
+  readonly raw: Promise<Uint8Array>
+  readonly data: Promise<string>
+}
+
 export default class GrpcRunner implements IRunner {
   protected client: IRunnerClient
 
@@ -211,6 +220,14 @@ export default class GrpcRunner implements IRunner {
 
   async createProgramSession(opts: RunProgramOptions): Promise<IRunnerProgramSession> {
     const session = new GrpcRunnerProgramSession(this.client, opts)
+
+    this.registerChild(session)
+
+    return session
+  }
+
+  async createTerminalSession(opts: RunProgramOptions): Promise<IRunnerTerminalSession> {
+    const session = new GrpcRunnerTerminalSession(this.client, opts)
 
     this.registerChild(session)
 
@@ -795,6 +812,46 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   get numTerminalWindows() {
     return this.terminalWindows.size
+  }
+}
+
+export class GrpcRunnerTerminalSession
+  extends GrpcRunnerProgramSession
+  implements IRunnerTerminalSession
+{
+  public raw: Promise<Uint8Array>
+
+  constructor(client: IRunnerServiceClient, opts: RunProgramOptions) {
+    super(client, opts)
+
+    this.raw = new Promise((resolve) => {
+      let data: Buffer = Buffer.alloc(0)
+      this.onStdoutRaw((chunk) => {
+        data = Buffer.concat([data, chunk])
+      })
+
+      this.onStderrRaw((chunk) => {
+        data = Buffer.concat([data, chunk])
+      })
+
+      this.onDidClose(() => {
+        resolve(data)
+      })
+    })
+  }
+
+  get data(): Promise<string> {
+    const term = new XTermSerializer()
+    return this.raw.then((data) => {
+      return term.write(data).then(() => {
+        const serialized = term.serialize()
+        const stripped = stripAnsi(serialized)
+
+        const intro = ' the session.'
+        const lastCommentIndex = stripped.lastIndexOf(intro)
+        return stripped.substring(lastCommentIndex + intro.length).trimStart()
+      })
+    })
   }
 }
 

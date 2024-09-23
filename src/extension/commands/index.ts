@@ -54,6 +54,7 @@ import { InitializeClient } from '../api/client'
 import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
+import { insertCodeNotebookCell } from '../cell'
 
 const log = getLogger('Commands')
 
@@ -186,12 +187,26 @@ export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunne
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
-    const program = await kernel.createTerminalProgram(cwd)
+    const session = await kernel.createTerminalSession(cwd)
+    session.data.then(async (data) => {
+      if (!data.trim().endsWith('save') && !ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)) {
+        return
+      }
+
+      await insertCodeNotebookCell({
+        cell,
+        input: data,
+        languageId: 'sh',
+        displayConfirmationDialog: false,
+        background: false,
+        run: false,
+      })
+    })
 
     const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
       name: `Fork: ${annotations.name}`,
-      pty: program,
+      pty: session,
       iconPath: {
         dark: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-dark.svg'),
         light: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-light.svg'),
