@@ -1101,6 +1101,7 @@ export enum TELEMETRY_EVENTS {
   RecommendExtension = 'runme.recommendExtension',
   NotebookGist = 'runme.notebookGist',
   CellGist = 'runme.cellGist',
+  ShellWarning = 'extension.shellWarning',
 }
 
 export enum WebViews {

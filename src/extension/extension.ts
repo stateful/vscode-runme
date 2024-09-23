@@ -21,7 +21,7 @@ import {
   getRunmeAppUrl,
   getSessionOutputs,
 } from '../utils/configuration'
-import { AuthenticationProviders, WebViews } from '../constants'
+import { AuthenticationProviders, TELEMETRY_EVENTS, WebViews } from '../constants'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -347,21 +347,28 @@ export class RunmeExtension {
 
     await bootFile(context)
 
-    if (kernel.hasExperimentEnabled('shellWarning', false)) {
+    if (
+      kernel.hasExperimentEnabled('shellWarning', false) &&
+      context.globalState.get<boolean>(TELEMETRY_EVENTS.ShellWarning, true)
+    ) {
       const showUnsupportedShellMessage = async () => {
         const learnMore = 'Learn more'
+        const dontAskAgain = "Don't ask again"
 
-        TelemetryReporter.sendTelemetryEvent('extension.shellWarning')
+        TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.ShellWarning)
 
         const answer = await window.showWarningMessage(
           'Your current shell has limited or no support.' +
             ' Please consider switching to sh, bash, or zsh.' +
             ' Click "Learn more" for additional resources.',
           learnMore,
+          dontAskAgain,
         )
         if (answer === learnMore) {
           const url = getDocsUrlFor('/r/extension/unsupported-shell')
           env.openExternal(Uri.parse(url))
+        } else if (answer === dontAskAgain) {
+          await context.globalState.update(TELEMETRY_EVENTS.ShellWarning, false)
         }
       }
 
