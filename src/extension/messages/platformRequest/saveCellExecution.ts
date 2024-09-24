@@ -193,8 +193,8 @@ export default async function saveCellExecution(
         try {
           const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
           fmParsed = yamlDocs[0].toJS?.() || {}
-        } catch (e) {
-          log.warn('failed to parse frontmatter')
+        } catch (error: any) {
+          log.warn('failed to parse frontmatter, reason: ', error.message)
         }
       }
 

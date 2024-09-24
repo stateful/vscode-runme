@@ -835,8 +835,8 @@ export class GrpcSerializer extends SerializerBase {
       try {
         const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
         data = (yamlDocs[0].toJS?.() || {}) as typeof data
-      } catch (e) {
-        log.warn('failed to parse frontmatter')
+      } catch (error: any) {
+        log.warn('failed to parse frontmatter, reason: ', error.message)
       }
     }
 
