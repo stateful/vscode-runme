@@ -60,9 +60,11 @@ import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
 import * as ghost from './ai/ghost'
+import getLogger from './logger'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
+const log = getLogger('serializer')
 
 type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
   processInfo?: IProcessInfoState
@@ -830,11 +832,11 @@ export class GrpcSerializer extends SerializerBase {
     } = { runme: {} }
 
     if (rawFrontmatter) {
-      const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
       try {
+        const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
         data = (yamlDocs[0].toJS?.() || {}) as typeof data
       } catch (e) {
-        // Do nothing if the frontmatter is not valid
+        log.warn('failed to parse frontmatter')
       }
     }
 
