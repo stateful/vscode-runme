@@ -847,9 +847,9 @@ export class GrpcRunnerTerminalSession
         const serialized = term.serialize()
         const stripped = stripAnsi(serialized)
 
-        const intro = ' the session.'
-        const lastCommentIndex = stripped.lastIndexOf(intro)
-        return stripped.substring(lastCommentIndex + intro.length).trimStart()
+        const outro = ' the notebook.'
+        const lastCommentIndex = stripped.lastIndexOf(outro)
+        return stripped.substring(lastCommentIndex + outro.length).trimStart()
       })
     })
   }
