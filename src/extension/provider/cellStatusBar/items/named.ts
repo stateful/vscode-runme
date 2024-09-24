@@ -14,6 +14,7 @@ export class NamedStatusBarItem extends CellStatusBarItem {
       displayConfirmationDialog: true,
       background: false,
       languageId: 'sh',
+      run: true,
     })
   }
 

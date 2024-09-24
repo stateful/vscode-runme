@@ -129,7 +129,7 @@ test('copyCellToClipboard', () => {
 
 suite('runForkCommand', () => {
   const mockKernel = {
-    createTerminalProgram: vi.fn(),
+    createTerminalSession: vi.fn(),
   } as any
   const fakeExtensionUri = {
     fsPath: '/path/to/extensions',
@@ -155,6 +155,7 @@ suite('runForkCommand', () => {
       isDirty: false,
     }
 
+    vi.mocked(mockKernel.createTerminalSession).mockResolvedValueOnce({ data: { then: vi.fn() } })
     await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
     expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
   })
@@ -188,6 +189,7 @@ suite('runForkCommand', () => {
     vi.mocked(window.createTerminal).mockClear()
 
     // Saved
+    vi.mocked(mockKernel.createTerminalSession).mockResolvedValueOnce({ data: { then: vi.fn() } })
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Save' as any)
     await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
 
