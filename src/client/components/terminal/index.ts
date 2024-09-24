@@ -379,6 +379,9 @@ export class TerminalView extends LitElement {
   @property({ type: Boolean })
   isPlatformAuthEnabled: boolean = false
 
+  @property({ type: Boolean })
+  isDaggerOutput: boolean = false
+
   constructor() {
     super()
     this.windowSize = {
@@ -860,6 +863,7 @@ export class TerminalView extends LitElement {
         )}
         ${when(
           (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
+            !this.isDaggerOutput &&
             features.isOn(FeatureName.Share, this.featureState$),
           () => {
             return html` <action-button
@@ -876,6 +880,7 @@ export class TerminalView extends LitElement {
         ${when(
           this.exitCode !== 0 &&
             this.platformId &&
+            !this.isDaggerOutput &&
             features.isOn(FeatureName.Escalate, this.featureState$),
           () => {
             return html` <action-button
