@@ -7,12 +7,10 @@ import {
 
 import { Kernel } from '../../kernel'
 import { GrpcSerializer } from '../../serializer'
-import { getServerRunnerVersion } from '../../../utils/configuration'
 
 import { AnnotationsStatusBarItem } from './items/annotations'
 import { CopyStatusBarItem } from './items/copy'
 import CellStatusBarItem from './items/cellStatusBarItem'
-import { CLIStatusBarItem } from './items/cli'
 import { ForkStatusBarItem } from './items/fork'
 import { NamedStatusBarItem } from './items/named'
 
@@ -27,15 +25,9 @@ export class NotebookCellStatusBarProvider implements NotebookCellStatusBarItemP
     this.#cellStatusBarItems.add(new AnnotationsStatusBarItem(this.kernel))
     this.#cellStatusBarItems.add(new CopyStatusBarItem(this.kernel))
     this.#cellStatusBarItems.add(new NamedStatusBarItem(this.kernel))
-
-    switch (getServerRunnerVersion()) {
-      case 'v1':
-        this.#cellStatusBarItems.add(new CLIStatusBarItem(this.kernel))
-        break
-      default:
-        this.#cellStatusBarItems.add(new ForkStatusBarItem(this.kernel))
-        break
-    }
+    // todo(sebastian): disable for Fork; retire it?
+    // this.#cellStatusBarItems.add(new CLIStatusBarItem(this.kernel))
+    this.#cellStatusBarItems.add(new ForkStatusBarItem(this.kernel))
 
     this.#registerCommands()
   }

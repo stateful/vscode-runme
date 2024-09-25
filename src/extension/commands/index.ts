@@ -36,6 +36,7 @@ import {
   getTerminalByCell,
   openFileAsRunmeNotebook,
   promptUserSession,
+  warnBetaRequired,
 } from '../utils'
 import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
 import getLogger from '../logger'
@@ -181,6 +182,10 @@ async function runStatusCommand(cell: NotebookCell): Promise<boolean> {
 
 export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
+    if (!warnBetaRequired("Please switch to Runme's runner v2 (beta) to fork into terminals.")) {
+      return
+    }
+
     if (!(await runStatusCommand(cell))) {
       return
     }

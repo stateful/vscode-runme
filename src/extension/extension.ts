@@ -19,6 +19,7 @@ import {
   getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
+  getServerRunnerVersion,
   getSessionOutputs,
 } from '../utils/configuration'
 import { AuthenticationProviders, TELEMETRY_EVENTS, WebViews } from '../constants'
@@ -344,6 +345,8 @@ export class RunmeExtension {
         aiManager.completionGenerator.generateCompletion,
       ),
     )
+
+    TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
 
     await bootFile(context)
 
