@@ -23,7 +23,7 @@ import {
   CreateNotebookInput,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
-import { Cell, Frontmatter, FrontmatterRunme } from '../../grpc/serializerTypes'
+import { Cell, Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
@@ -90,17 +90,6 @@ export default async function saveCellExecution(
         kernel,
         marshalFrontmatter: true,
       })
-
-      // Fallback to Ephemeral ID if there is no frontmatter
-      if (!notebook?.frontmatter?.runme?.id) {
-        notebook.frontmatter = {
-          ...(notebook?.frontmatter || ({} as Frontmatter)),
-          runme: {
-            ...(notebook?.frontmatter?.runme || {}),
-            id: cacheId,
-          } as FrontmatterRunme,
-        }
-      }
 
       const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
 

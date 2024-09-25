@@ -28,16 +28,13 @@ import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
+  NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_OUTPUTS_MASKED,
   OutputType,
   RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
-import {
-  ServerLifecycleIdentity,
-  getServerConfigurationValue,
-  getSessionOutputs,
-} from '../utils/configuration'
+import { ServerLifecycleIdentity, getSessionOutputs } from '../utils/configuration'
 
 import {
   DeserializeRequest,
@@ -74,8 +71,8 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
-  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
-    getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
+  //protected readonly lifecycleIdentity: ServerLifecycleIdentity =
+  //getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
 
   constructor(
     protected context: ExtensionContext,
@@ -92,6 +89,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public dispose() {
     this.disposables.forEach((d) => d.dispose())
+  }
+
+  protected lifecycleIdentity() {
+    return ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
   }
 
   /**
@@ -111,7 +112,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity),
+          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity()),
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -120,6 +121,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     })
   }
 
+  // TODO: Deadcode
   protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
     // update changes in metadata
     const bytes = await workspace.fs.readFile(uri)
@@ -193,6 +195,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
     // Prune any ghost cells when saving.
     const cellsToSave = []
+
     for (let i = 0; i < cells.length; i++) {
       if (SerializerBase.isGhostCell(cells[i])) {
         continue
@@ -325,7 +328,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     notebook.metadata ??= {}
     notebook.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
 
-    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity))
+    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity()))
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     } else {
@@ -640,7 +643,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected applyIdentity(data: Notebook): Notebook {
-    const identity = this.lifecycleIdentity
+    const identity = this.lifecycleIdentity()
     switch (identity) {
       case RunmeIdentity.UNSPECIFIED:
       case RunmeIdentity.DOCUMENT:
@@ -687,8 +690,35 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const notebook = GrpcSerializer.marshalNotebook(data)
+    // if (this.lifecycleIdentity() === RunmeIdentity.ALL) {
+    //   // let cellData: NotebookCellData[] = []
+    //   console.log('Data: ', data)
+    //   const content = new TextEncoder().encode(data?.metadata?.['runme.dev/frontmatter'] ?? '')
+    //   // const _notebook = await this.reviveNotebook(content, token)
+    //   // cellData = GrpcSerializer.deserializeNotebook(_notebook, this.lifecycleIdentity())
+    //   const __notebook = await this.deserializeNotebook(content, token)
+    //   // if (!data?.metadata?.['utilrunme.dev/frontmatter']) {
+    //   //   console.log(cellData)
 
+    //   //   // const fm = _notebook.cells.at(0)
+    //   //   // console.log(_notebook)
+    //   //   // if (_notebook?.metadata?.['runme.dev/frontmatter']) {
+    //   //   //   data.cells.unshift({
+    //   //   //     kind: NotebookCellKind.Markup,
+    //   //   //     languageId: 'yaml',
+    //   //   //     value: _notebook?.metadata?.['runme.dev/frontmatter'] ?? '',
+    //   //   //   })
+    //   //   // }
+    //   // }
+    //   data.metadata = {
+    //     ...data?.metadata,
+    //     ['runme.dev/frontmatter']: __notebook?.metadata?.['runme.dev/frontmatter'],
+    //   }
+
+    //   console.log('__notebook', data.metadata)
+    // }
+
+    const notebook = GrpcSerializer.marshalNotebook(data)
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     this.notebookDataCache.set(cacheId as string, data)
 
@@ -912,7 +942,8 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    const identity = this.lifecycleIdentity
+    const identity = this.lifecycleIdentity()
+    console.log('reviveNotebook LCID: ', identity)
     const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 
