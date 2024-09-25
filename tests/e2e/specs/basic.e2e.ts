@@ -51,17 +51,17 @@ describe('Runme VS Code Extension', async () => {
     await webview.close()
   })
 
-  it('should provide a button to run cmd via CLI', async () => {
+  it('should provide a button to fork notebook into terminal', async () => {
     const rows = await $$('.cell-statusbar-container .cell-status-item')
     let row: WebdriverIO.Element | undefined
     for (const r of rows) {
-      if ((await r.getText()).includes('CLI')) {
+      if ((await r.getText()).includes('Fork')) {
         row = r
       }
     }
 
     if (!row) {
-      throw new Error('Could not find CLI button')
+      throw new Error('Could not find Fork button')
     }
   })
 
