@@ -194,7 +194,7 @@ export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunne
 
     const session = await kernel.createTerminalSession(cwd)
     session.data.then(async (data) => {
-      if (!data.trim().endsWith('save') && !ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)) {
+      if (!data.trim().endsWith('save')) {
         return
       }
 
