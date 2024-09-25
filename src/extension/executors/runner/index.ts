@@ -278,7 +278,7 @@ export const executeRunner: IKernelRunner = async ({
     const cellText = runningCell.getText()
     const RUNME_ID = getCellRunmeId(exec.cell)
     const taskExecution = new Task(
-      { type: 'runme', name: `Runme Task (${RUNME_ID})` },
+      { type: 'shell', name: `Runme Task (${RUNME_ID})` },
       TaskScope.Workspace,
       (cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText) +
         ` (RUNME_ID: ${RUNME_ID})`,
