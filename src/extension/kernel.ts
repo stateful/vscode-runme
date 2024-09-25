@@ -52,11 +52,7 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import {
-  getNotebookExecutionOrder,
-  getServerRunnerVersion,
-  registerExtensionEnvVarsMutation,
-} from '../utils/configuration'
+import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
 import features, { FEATURES_CONTEXT_STATE_KEY } from '../features'
 
 import getLogger from './logger'
@@ -80,6 +76,7 @@ import {
   getWorkspaceFolder,
   getRunnerSessionEnvs,
   getEnvProps,
+  warnBetaRequired,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -1102,21 +1099,7 @@ export class Kernel implements Disposable {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         token: CancellationToken,
       ) {
-        if (getServerRunnerVersion() === 'v1') {
-          const action = 'Configure Runner'
-          window
-            .showWarningMessage(
-              // eslint-disable-next-line max-len
-              "Please switch to Runme's runner v2 (available in beta) to use Runme Terminal. Please restart VS Code after configuration changes.",
-              action,
-            )
-            .then((selected) => {
-              if (selected !== action) {
-                return
-              }
-              return commands.executeCommand('runme.openSettings', 'runme.server.runnerVersion')
-            })
-
+        if (!warnBetaRequired("Please switch to Runme's runner v2 (beta) to use Runme Terminal.")) {
           throw new Error('Runme terminal requires runner v2')
         }
 

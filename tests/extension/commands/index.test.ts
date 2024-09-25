@@ -37,6 +37,7 @@ import {
   getTerminalByCell,
   getAnnotations,
   openFileAsRunmeNotebook,
+  warnBetaRequired,
 } from '../../../src/extension/utils'
 import {
   getActionsOpenViewInEditor,
@@ -51,8 +52,9 @@ vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(() => ({})),
   getTerminalByCell: vi.fn(),
-  replaceOutput: vi.fn(),
   openFileAsRunmeNotebook: vi.fn(),
+  replaceOutput: vi.fn(),
+  warnBetaRequired: vi.fn(),
 }))
 vi.mock('../../../src/utils/configuration', () => ({
   getActionsOpenViewInEditor: vi.fn(),
@@ -155,9 +157,33 @@ suite('runForkCommand', () => {
       isDirty: false,
     }
 
+    // Return that beta APIs are enabled
+    vi.mocked(warnBetaRequired).mockReturnValue(true)
+
     vi.mocked(mockKernel.createTerminalSession).mockResolvedValueOnce({ data: { then: vi.fn() } })
     await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
     expect(vi.mocked(window.createTerminal)).toHaveBeenCalledOnce()
+  })
+
+  test('prompts user to enable beta APIs when disabled', async () => {
+    const cell: any = {
+      metadata: { name: 'foobar' },
+      document: { uri: { fsPath: '/foo/bar/README.md' } },
+      kind: 2,
+    }
+
+    cell.notebook = {
+      getCells: () => [cell],
+      isDirty: false,
+    }
+
+    // Return that beta APIs are disabled
+    vi.mocked(warnBetaRequired).mockReturnValue(false)
+
+    vi.mocked(mockKernel.createTerminalSession).mockResolvedValueOnce({ data: { then: vi.fn() } })
+    await runForkCommand(mockKernel, fakeExtensionUri, false)(cell)
+
+    expect(vi.mocked(window.createTerminal)).not.toHaveBeenCalledOnce()
   })
 
   test('prompts user when dirty and fails if canceled or closed', async () => {
@@ -172,6 +198,9 @@ suite('runForkCommand', () => {
       isDirty: true,
       save: vi.fn(),
     }
+
+    // Return that beta APIs are enabled
+    vi.mocked(warnBetaRequired).mockReturnValue(true)
 
     // Cancelled
     vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Cancel' as any)
