@@ -123,6 +123,7 @@ interface InsertCodeCellOptions {
   displayConfirmationDialog: boolean
   languageId: string
   background: boolean
+  run: boolean
 }
 
 export class NotebookCellOutputManager {
@@ -798,6 +799,7 @@ export async function insertCodeCell(
   input: string,
   languageId: string = 'sh',
   background: boolean = false,
+  run: boolean = true,
 ) {
   const cell = await getCellById({ editor, id: cellId })
   if (!cell) {
@@ -809,6 +811,7 @@ export async function insertCodeCell(
     displayConfirmationDialog: false,
     languageId,
     background,
+    run,
   })
 }
 
@@ -818,6 +821,7 @@ export async function insertCodeNotebookCell({
   displayConfirmationDialog,
   languageId,
   background,
+  run,
 }: InsertCodeCellOptions) {
   if (displayConfirmationDialog) {
     const answer = await window.showInformationMessage(
@@ -840,6 +844,9 @@ export async function insertCodeNotebookCell({
   edit.set(cell.notebook.uri, [notebookEdit])
   workspace.applyEdit(edit)
   await commands.executeCommand('notebook.focusNextEditor')
+  if (!run) {
+    return
+  }
   await commands.executeCommand('notebook.cell.execute')
   await commands.executeCommand('notebook.cell.focusInOutput')
 }

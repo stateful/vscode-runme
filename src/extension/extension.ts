@@ -19,6 +19,7 @@ import {
   getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
+  getServerRunnerVersion,
   getServerConfigurationValue,
   getSessionOutputs,
   ServerLifecycleIdentity,
@@ -353,6 +354,8 @@ export class RunmeExtension {
         aiManager.completionGenerator.generateCompletion,
       ),
     )
+
+    TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
 
     await bootFile(context)
 

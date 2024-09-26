@@ -54,6 +54,7 @@ import {
   getMaskOutputs,
   getNotebookAutoSave,
   getPortNumber,
+  getServerRunnerVersion,
   getTLSDir,
   getTLSEnabled,
 } from '../utils/configuration'
@@ -854,4 +855,26 @@ export function getEnvProps(extension: { id: string; version: string }) {
   }
 
   return extProps
+}
+
+export function warnBetaRequired(message: string): boolean {
+  if (getServerRunnerVersion() !== 'v1') {
+    return true
+  }
+
+  const action = 'Configure Runner'
+  window
+    .showWarningMessage(
+      // eslint-disable-next-line max-len
+      `${message.length ? message + ' ' : ''}Please restart VS Code after configuration changes.`,
+      action,
+    )
+    .then((selected) => {
+      if (selected !== action) {
+        return
+      }
+      return commands.executeCommand('runme.openSettings', 'runme.server.runnerVersion')
+    })
+
+  return false
 }

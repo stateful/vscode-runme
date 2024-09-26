@@ -24,6 +24,7 @@ import {
   CancellationToken,
   NotebookData,
   version,
+  NotebookCellData,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
@@ -74,6 +75,7 @@ import {
   getWorkspaceFolder,
   getRunnerSessionEnvs,
   getEnvProps,
+  warnBetaRequired,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -1096,13 +1098,43 @@ export class Kernel implements Disposable {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         token: CancellationToken,
       ) {
-        const program = await kernel.createTerminalProgram(cwd)
+        if (!warnBetaRequired("Please switch to Runme's runner v2 (beta) to use Runme Terminal.")) {
+          throw new Error('Runme terminal requires runner v2')
+        }
+
+        const session = await kernel.createTerminalSession(cwd)
         const sid = kernel.runnerEnv?.getSessionId()
+
+        session.data.then(async (data) => {
+          if (!data.trimEnd().endsWith('save') && data.indexOf('save\r\n') < 0) {
+            return
+          }
+
+          const sessionNotebook = await workspace.openNotebookDocument(
+            Kernel.type,
+            new NotebookData([
+              new NotebookCellData(
+                NotebookCellKind.Markup,
+                // eslint-disable-next-line max-len
+                '# Terminal Session\n\nThe following cell contains a copy (best-effort) of your recent terminal session.',
+                'markdown',
+              ),
+              new NotebookCellData(NotebookCellKind.Code, data, 'sh'),
+              new NotebookCellData(
+                NotebookCellKind.Markup,
+                '*Read the docs on [runme.dev](https://runme.dev/docs/intro)' +
+                  ' to learn how to get most out of Runme notebooks!*',
+                'markdown',
+              ),
+            ]),
+          )
+          await commands.executeCommand('vscode.openWith', sessionNotebook.uri, Kernel.type)
+        })
 
         return {
           options: {
-            name: `Session${sid ? `: ${sid}` : ''}`,
-            pty: program,
+            name: `Runme Terminal ${sid ? `(${sid})` : ''}`,
+            pty: session,
             iconPath: {
               dark: Uri.joinPath(kernel.context.extensionUri, 'assets', 'logo-open-dark.svg'),
               light: Uri.joinPath(kernel.context.extensionUri, 'assets', 'logo-open-light.svg'),
@@ -1113,12 +1145,12 @@ export class Kernel implements Disposable {
     })
   }
 
-  async createTerminalProgram(cwd: string | undefined) {
+  async createTerminalSession(cwd: string | undefined) {
     const runner = this.runner!
     // todo(sebastian): why are the env collection mutations not doing this?
     const envVars = getRunnerSessionEnvs(this.context, this.runnerEnv, false, this.address)
     const sysShell = getSystemShellPath() || '/bin/bash'
-    const program = await runner.createProgramSession({
+    const session = await runner.createTerminalSession({
       programName: `${sysShell} -l`,
       tty: true,
       cwd,
@@ -1127,9 +1159,10 @@ export class Kernel implements Disposable {
       commandMode: CommandModeEnum().TERMINAL,
     })
 
-    program.registerTerminalWindow('vscode')
-    program.setActiveTerminalWindow('vscode')
-    return program
+    session.registerTerminalWindow('vscode')
+    session.setActiveTerminalWindow('vscode')
+
+    return session
   }
 
   getTerminal(runmeId: string) {
