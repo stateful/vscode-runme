@@ -609,9 +609,11 @@ describe('GrpcSerializer', () => {
 
   describe('apply cell lifecycle identity', () => {
     it('skips cells if identity does not require it', async () => {
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      serializer.lifecycleIdentity = vi.fn().mockReturnValue(2)
+      // make serializer.lifecycleIdentity return 2
+      ContextState.getKey = vi.fn().mockImplementation(() => 2)
       const fixture = deepCopyFixture()
+
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
 
       fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
         cell.metadata['runme.dev/id'] = cell.metadata['id']
@@ -653,6 +655,9 @@ describe('GrpcSerializer', () => {
         delete cell.metadata['id']
         expect(cell.metadata['id']).toBeUndefined()
       })
+
+      // make serializer.lifecycleIdentity return 3
+      ContextState.getKey = vi.fn().mockImplementation(() => 3)
 
       const applied = serializer.applyIdentity(fixture)
 
