@@ -71,8 +71,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
-  //protected readonly lifecycleIdentity: ServerLifecycleIdentity =
-  //getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
 
   constructor(
     protected context: ExtensionContext,
@@ -195,7 +193,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
     // Prune any ghost cells when saving.
     const cellsToSave = []
-
     for (let i = 0; i < cells.length; i++) {
       if (SerializerBase.isGhostCell(cells[i])) {
         continue

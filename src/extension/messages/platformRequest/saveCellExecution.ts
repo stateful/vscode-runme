@@ -52,7 +52,6 @@ export default async function saveCellExecution(
   }
 
   const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
-  console.log('saveCellExecution:CacheId: ', cacheId)
   const plainSessionOutput = await kernel.getPlainCache(cacheId)
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
