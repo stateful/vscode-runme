@@ -198,7 +198,7 @@ export class NotebookCellOutputManager {
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
-          // deno: { deploy: true },
+          daggerCellId: cellId,
         })
       }
 
@@ -240,6 +240,10 @@ export class NotebookCellOutputManager {
         if (type === OutputType.terminal) {
           let terminalOutputItem: NotebookCellOutputItem | undefined
 
+          const daggerOutput = cell.outputs.find(
+            ({ metadata }) => metadata?.daggerCellId === cellId,
+          )
+
           const terminalStateStr = terminalState.serialize()
           if (!terminalOutputItem) {
             const terminalConfigurations = getNotebookTerminalConfigurations(cell.notebook.metadata)
@@ -259,6 +263,7 @@ export class NotebookCellOutputManager {
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
                 isPlatformAuthEnabled: isPlatformAuthEnabled(),
                 isSessionOutputsEnabled,
+                isDaggerOutput: !!daggerOutput,
                 ...terminalConfigurations,
               },
             }

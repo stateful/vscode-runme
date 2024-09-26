@@ -45,6 +45,7 @@ import {
   NOTEBOOK_AUTOSAVE_ON,
   GITHUB_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
 import {
   getBinaryPath,
@@ -54,9 +55,11 @@ import {
   getMaskOutputs,
   getNotebookAutoSave,
   getPortNumber,
+  getServerConfigurationValue,
   getServerRunnerVersion,
   getTLSDir,
   getTLSEnabled,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
 
 import features from './features'
@@ -69,6 +72,7 @@ import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 declare var globalThis: any
 
@@ -686,20 +690,23 @@ export function suggestCategories(categories: string[], title: string, placehold
 
 export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
-  const extensionSettingAutoSaveIsOn =
-    configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  const notebookAutoSaveIsOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
-  await ContextState.addKey(
-    NOTEBOOK_AUTOSAVE_ON,
-    notebookAutoSaveIsOn !== undefined ? notebookAutoSaveIsOn : extensionSettingAutoSaveIsOn,
-  )
+  const defaultSetting = configAutoSaveSetting === NotebookAutoSaveSetting.Yes
+  const contextSetting = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, contextSetting ?? defaultSetting)
 }
 
 export async function resetNotebookSettings() {
   await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, getMaskOutputs())
   const configAutoSaveSetting = getNotebookAutoSave()
-  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+
+  const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+    'lifecycleIdentity',
+    RunmeIdentity.ALL,
+  )
+  await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
 }
 
 export function asWorkspaceRelativePath(documentPath: string): {

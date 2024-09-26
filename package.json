@@ -63,7 +63,7 @@
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": false
+            "stateful.runme": true
           }
         }
       },
@@ -101,7 +101,7 @@
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": false
+            "stateful.runme": true
           }
         }
       },

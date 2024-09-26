@@ -20,9 +20,16 @@ import {
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getServerRunnerVersion,
+  getServerConfigurationValue,
   getSessionOutputs,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
-import { AuthenticationProviders, TELEMETRY_EVENTS, WebViews } from '../constants'
+import {
+  AuthenticationProviders,
+  NOTEBOOK_LIFECYCLE_ID,
+  TELEMETRY_EVENTS,
+  WebViews,
+} from '../constants'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -86,6 +93,8 @@ import { GrpcReporter } from './reporter'
 import * as manager from './ai/manager'
 import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
+import ContextState from './contextState'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -447,7 +456,16 @@ export class RunmeExtension {
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
-        getPlatformAuthSession(false, true).then((session) => {
+        getPlatformAuthSession(false, true).then(async (session) => {
+          if (!!session) {
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL)
+          } else {
+            const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+              'lifecycleIdentity',
+              RunmeIdentity.ALL,
+            )
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
+          }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }

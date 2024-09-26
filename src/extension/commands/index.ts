@@ -48,6 +48,7 @@ import {
   NOTEBOOK_AUTHOR_MODE_ON,
   ClientMessages,
   TELEMETRY_EVENTS,
+  RUNME_FRONTMATTER_PARSED,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -330,7 +331,7 @@ export async function askAlternativeOutputsAction(
   )
 
   const orig =
-    metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['document']?.['relativePath']
+    metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['document']?.['relativePath']
 
   switch (action) {
     case ASK_ALT_OUTPUTS_ACTION.ORIGINAL:
