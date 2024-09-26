@@ -19,7 +19,9 @@ import {
   getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
+  getServerConfigurationValue,
   getSessionOutputs,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
 import {
   AuthenticationProviders,
@@ -452,9 +454,14 @@ export class RunmeExtension {
         e.provider.id === AuthenticationProviders.Stateful
       ) {
         getPlatformAuthSession(false, true).then(async (session) => {
-          const b = !!session
-          if (b) {
+          if (!!session) {
             await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL)
+          } else {
+            const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+              'lifecycleIdentity',
+              RunmeIdentity.ALL,
+            )
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })

@@ -690,35 +690,15 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    // if (this.lifecycleIdentity() === RunmeIdentity.ALL) {
-    //   // let cellData: NotebookCellData[] = []
-    //   console.log('Data: ', data)
-    //   const content = new TextEncoder().encode(data?.metadata?.['runme.dev/frontmatter'] ?? '')
-    //   // const _notebook = await this.reviveNotebook(content, token)
-    //   // cellData = GrpcSerializer.deserializeNotebook(_notebook, this.lifecycleIdentity())
-    //   const __notebook = await this.deserializeNotebook(content, token)
-    //   // if (!data?.metadata?.['utilrunme.dev/frontmatter']) {
-    //   //   console.log(cellData)
+    const marshalFrontmatter = this.lifecycleIdentity() === RunmeIdentity.ALL
 
-    //   //   // const fm = _notebook.cells.at(0)
-    //   //   // console.log(_notebook)
-    //   //   // if (_notebook?.metadata?.['runme.dev/frontmatter']) {
-    //   //   //   data.cells.unshift({
-    //   //   //     kind: NotebookCellKind.Markup,
-    //   //   //     languageId: 'yaml',
-    //   //   //     value: _notebook?.metadata?.['runme.dev/frontmatter'] ?? '',
-    //   //   //   })
-    //   //   // }
-    //   // }
-    //   data.metadata = {
-    //     ...data?.metadata,
-    //     ['runme.dev/frontmatter']: __notebook?.metadata?.['runme.dev/frontmatter'],
-    //   }
+    const notebook = GrpcSerializer.marshalNotebook(data, { marshalFrontmatter })
 
-    //   console.log('__notebook', data.metadata)
-    // }
+    if (marshalFrontmatter) {
+      data.metadata ??= {}
+      data.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
+    }
 
-    const notebook = GrpcSerializer.marshalNotebook(data)
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     this.notebookDataCache.set(cacheId as string, data)
 
@@ -849,7 +829,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  private static marshallFrontmatter(
+  static marshallFrontmatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {
@@ -943,7 +923,6 @@ export class GrpcSerializer extends SerializerBase {
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
     const identity = this.lifecycleIdentity()
-    console.log('reviveNotebook LCID: ', identity)
     const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 

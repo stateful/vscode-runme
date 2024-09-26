@@ -6,7 +6,7 @@ import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
+import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
@@ -41,7 +41,18 @@ export default async function saveCellExecution(
 
   log.info('Saving cell execution')
 
-  const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
+  const frontmatter = GrpcSerializer.marshallFrontmatter(
+    editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
+    kernel,
+  )
+
+  const metadata = {
+    ...editor.notebook.metadata,
+    [RUNME_FRONTMATTER_PARSED]: frontmatter,
+  }
+
+  const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
+  console.log('saveCellExecution:CacheId: ', cacheId)
   const plainSessionOutput = await kernel.getPlainCache(cacheId)
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
@@ -176,7 +187,7 @@ export default async function saveCellExecution(
 
       const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
 
-      let fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
+      let fmParsed = editor.notebook.metadata[RUNME_FRONTMATTER_PARSED] as Frontmatter
 
       if (!fmParsed) {
         try {
