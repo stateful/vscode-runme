@@ -89,7 +89,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     this.disposables.forEach((d) => d.dispose())
   }
 
-  protected lifecycleIdentity() {
+  protected get lifecycleIdentity() {
     return ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
   }
 
@@ -110,7 +110,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity()),
+          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity),
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -325,7 +325,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     notebook.metadata ??= {}
     notebook.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
 
-    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity()))
+    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity))
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     } else {
@@ -640,7 +640,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected applyIdentity(data: Notebook): Notebook {
-    const identity = this.lifecycleIdentity()
+    const identity = this.lifecycleIdentity
     switch (identity) {
       case RunmeIdentity.UNSPECIFIED:
       case RunmeIdentity.DOCUMENT:
@@ -687,7 +687,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const marshalFrontmatter = this.lifecycleIdentity() === RunmeIdentity.ALL
+    const marshalFrontmatter = this.lifecycleIdentity === RunmeIdentity.ALL
 
     const notebook = GrpcSerializer.marshalNotebook(data, { marshalFrontmatter })
 
@@ -919,7 +919,7 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    const identity = this.lifecycleIdentity()
+    const identity = this.lifecycleIdentity
     const deserialRequest = DeserializeRequest.create({ source: content, options: { identity } })
     const request = await this.client!.deserialize(deserialRequest)
 
