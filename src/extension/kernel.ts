@@ -48,7 +48,6 @@ import {
   NOTEBOOK_MODE,
   NotebookMode,
   OutputType,
-  NOTEBOOK_AUTOSAVE_ON,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
@@ -1107,7 +1106,7 @@ export class Kernel implements Disposable {
         const sid = kernel.runnerEnv?.getSessionId()
 
         session.data.then(async (data) => {
-          if (!data.trim().endsWith('save') && !ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)) {
+          if (!data.trimEnd().endsWith('save') && data.indexOf('save\r\n') < 0) {
             return
           }
 
