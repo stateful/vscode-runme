@@ -194,7 +194,7 @@ export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunne
 
     const session = await kernel.createTerminalSession(cwd)
     session.data.then(async (data) => {
-      if (!data.trim().endsWith('save')) {
+      if (data.indexOf('save\r\n') < 0) {
         return
       }
 
