@@ -691,9 +691,9 @@ export function suggestCategories(categories: string[], title: string, placehold
 export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
   const defaultSetting = configAutoSaveSetting === NotebookAutoSaveSetting.Yes
-  const storedSetting = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+  const contextSetting = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
 
-  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, storedSetting ?? defaultSetting)
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, contextSetting ?? defaultSetting)
 }
 
 export async function resetNotebookSettings() {
