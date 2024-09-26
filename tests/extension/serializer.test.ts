@@ -610,7 +610,7 @@ describe('GrpcSerializer', () => {
   describe('apply cell lifecycle identity', () => {
     it('skips cells if identity does not require it', async () => {
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      serializer.lifecycleIdentity = 2 // DOC identity which excludes cells
+      serializer.lifecycleIdentity = vi.fn().mockReturnValue(2)
       const fixture = deepCopyFixture()
 
       fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
