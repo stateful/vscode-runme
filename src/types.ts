@@ -381,6 +381,7 @@ interface Payload {
     isAutoSaveEnabled: boolean
     isSessionOutputsEnabled: boolean
     isPlatformAuthEnabled: boolean
+    isDaggerOutput: boolean
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object

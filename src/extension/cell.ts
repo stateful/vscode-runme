@@ -123,6 +123,7 @@ interface InsertCodeCellOptions {
   displayConfirmationDialog: boolean
   languageId: string
   background: boolean
+  run: boolean
 }
 
 export class NotebookCellOutputManager {
@@ -197,7 +198,7 @@ export class NotebookCellOutputManager {
         }
 
         return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
-          // deno: { deploy: true },
+          daggerCellId: cellId,
         })
       }
 
@@ -239,6 +240,10 @@ export class NotebookCellOutputManager {
         if (type === OutputType.terminal) {
           let terminalOutputItem: NotebookCellOutputItem | undefined
 
+          const daggerOutput = cell.outputs.find(
+            ({ metadata }) => metadata?.daggerCellId === cellId,
+          )
+
           const terminalStateStr = terminalState.serialize()
           if (!terminalOutputItem) {
             const terminalConfigurations = getNotebookTerminalConfigurations(cell.notebook.metadata)
@@ -258,6 +263,7 @@ export class NotebookCellOutputManager {
                 isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
                 isPlatformAuthEnabled: isPlatformAuthEnabled(),
                 isSessionOutputsEnabled,
+                isDaggerOutput: !!daggerOutput,
                 ...terminalConfigurations,
               },
             }
@@ -793,6 +799,7 @@ export async function insertCodeCell(
   input: string,
   languageId: string = 'sh',
   background: boolean = false,
+  run: boolean = true,
 ) {
   const cell = await getCellById({ editor, id: cellId })
   if (!cell) {
@@ -804,6 +811,7 @@ export async function insertCodeCell(
     displayConfirmationDialog: false,
     languageId,
     background,
+    run,
   })
 }
 
@@ -813,6 +821,7 @@ export async function insertCodeNotebookCell({
   displayConfirmationDialog,
   languageId,
   background,
+  run,
 }: InsertCodeCellOptions) {
   if (displayConfirmationDialog) {
     const answer = await window.showInformationMessage(
@@ -835,6 +844,9 @@ export async function insertCodeNotebookCell({
   edit.set(cell.notebook.uri, [notebookEdit])
   workspace.applyEdit(edit)
   await commands.executeCommand('notebook.focusNextEditor')
+  if (!run) {
+    return
+  }
   await commands.executeCommand('notebook.cell.execute')
   await commands.executeCommand('notebook.cell.focusInOutput')
 }

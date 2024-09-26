@@ -150,6 +150,10 @@ export const activate: ActivationFunction<void> = (context) => {
             )
           }
 
+          if (payload.output.isDaggerOutput) {
+            terminalElement.setAttribute('isDaggerOutput', payload.output.isDaggerOutput.toString())
+          }
+
           element.appendChild(terminalElement)
           break
 

@@ -14,6 +14,7 @@ import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
+import ContextState from '../../src/extension/contextState'
 
 import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 
@@ -68,6 +69,8 @@ vi.mock('../../src/extension/utils', () => ({
 }))
 
 vi.mock('../../src/extension/features')
+
+vi.mock('../../src/extension/contextState')
 
 function newKernel(): Kernel {
   return {} as unknown as Kernel
@@ -510,6 +513,7 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeSrcDocUri,
         )
+        ContextState.getKey = vi.fn().mockImplementation(() => true)
         GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
         GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
@@ -525,7 +529,7 @@ describe('GrpcSerializer', () => {
         })
 
         expect(workspace.fs.writeFile).toBeCalledWith(fakeSrcDocUri, fakeCachedBytes)
-        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(3)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(2)
       })
     })
 
@@ -605,9 +609,11 @@ describe('GrpcSerializer', () => {
 
   describe('apply cell lifecycle identity', () => {
     it('skips cells if identity does not require it', async () => {
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-      serializer.lifecycleIdentity = 2 // DOC identity which excludes cells
+      // make serializer.lifecycleIdentity return 2
+      ContextState.getKey = vi.fn().mockImplementation(() => 2)
       const fixture = deepCopyFixture()
+
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
 
       fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
         cell.metadata['runme.dev/id'] = cell.metadata['id']
@@ -649,6 +655,9 @@ describe('GrpcSerializer', () => {
         delete cell.metadata['id']
         expect(cell.metadata['id']).toBeUndefined()
       })
+
+      // make serializer.lifecycleIdentity return 3
+      ContextState.getKey = vi.fn().mockImplementation(() => 3)
 
       const applied = serializer.applyIdentity(fixture)
 

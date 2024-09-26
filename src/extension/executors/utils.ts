@@ -12,7 +12,7 @@ import {
   NotebookDocument,
 } from 'vscode'
 
-import { DEFAULT_PROMPT_ENV, OutputType } from '../../constants'
+import { DEFAULT_PROMPT_ENV, OutputType, RUNME_FRONTMATTER_PARSED } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder } from '../utils'
@@ -137,7 +137,7 @@ export function getNotebookSkipPromptEnvSetting(
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
 ): boolean {
   const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
-  const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
+  const frontmatter = notebookMetadata?.[RUNME_FRONTMATTER_PARSED]
   return frontmatter?.skipPrompts || false
 }
 
@@ -148,7 +148,7 @@ export function getCellShellPath(
 ): string | undefined {
   const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
 
-  const frontmatter = notebookMetadata?.['runme.dev/frontmatterParsed']
+  const frontmatter = notebookMetadata?.[RUNME_FRONTMATTER_PARSED]
 
   if (frontmatter?.shell) {
     return frontmatter.shell
@@ -238,7 +238,7 @@ export async function getCellCwd(
     getWorkspaceFolder(notebookFile)?.uri.fsPath,
     getParent(notebookFile?.fsPath),
     // TODO: support windows here
-    (notebook?.metadata as Serializer.Metadata | undefined)?.['runme.dev/frontmatterParsed']?.cwd,
+    (notebook?.metadata as Serializer.Metadata | undefined)?.[RUNME_FRONTMATTER_PARSED]?.cwd,
     getAnnotations(cell.metadata as Serializer.Metadata | undefined).cwd,
   ]
 

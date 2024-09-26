@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.8.0",
+  "version": "3.8.4-edge.0",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -63,7 +63,7 @@
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": false
+            "stateful.runme": true
           }
         }
       },
@@ -101,7 +101,7 @@
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": false
+            "stateful.runme": true
           }
         }
       },
@@ -644,7 +644,7 @@
           "runme.experiments.shellWarning": {
             "type": "boolean",
             "scope": "window",
-            "default": false,
+            "default": true,
             "markdownDescription": "If set to `true`, the extension will display an error message if an unsupported shell is detected."
           },
           "runme.experiments.reporter": {
@@ -731,8 +731,7 @@
             "default": "v1",
             "enum": [
               "v1",
-              "v2",
-              "v2alpha1"
+              "v2"
             ],
             "markdownDescription": "Runner GRPC version to use"
           },
@@ -1250,6 +1249,7 @@
     "lit": "^3.2.0",
     "octokit": "^4.0.2",
     "simple-git": "^3.26.0",
+    "strip-ansi": "^7.1.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.4.1",
     "uuid": "^10.0.0",

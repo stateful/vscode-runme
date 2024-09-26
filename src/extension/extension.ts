@@ -19,9 +19,17 @@ import {
   getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
+  getServerRunnerVersion,
+  getServerConfigurationValue,
   getSessionOutputs,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
-import { AuthenticationProviders, WebViews } from '../constants'
+import {
+  AuthenticationProviders,
+  NOTEBOOK_LIFECYCLE_ID,
+  TELEMETRY_EVENTS,
+  WebViews,
+} from '../constants'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -85,6 +93,8 @@ import { GrpcReporter } from './reporter'
 import * as manager from './ai/manager'
 import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
+import ContextState from './contextState'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -345,23 +355,32 @@ export class RunmeExtension {
       ),
     )
 
+    TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
+
     await bootFile(context)
 
-    if (kernel.hasExperimentEnabled('shellWarning', false)) {
+    if (
+      kernel.hasExperimentEnabled('shellWarning', false) &&
+      context.globalState.get<boolean>(TELEMETRY_EVENTS.ShellWarning, true)
+    ) {
       const showUnsupportedShellMessage = async () => {
         const learnMore = 'Learn more'
+        const dontAskAgain = "Don't ask again"
 
-        TelemetryReporter.sendTelemetryEvent('extension.shellWarning')
+        TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.ShellWarning)
 
         const answer = await window.showWarningMessage(
           'Your current shell has limited or no support.' +
             ' Please consider switching to sh, bash, or zsh.' +
             ' Click "Learn more" for additional resources.',
           learnMore,
+          dontAskAgain,
         )
         if (answer === learnMore) {
           const url = getDocsUrlFor('/r/extension/unsupported-shell')
           env.openExternal(Uri.parse(url))
+        } else if (answer === dontAskAgain) {
+          await context.globalState.update(TELEMETRY_EVENTS.ShellWarning, false)
         }
       }
 
@@ -437,7 +456,16 @@ export class RunmeExtension {
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
-        getPlatformAuthSession(false, true).then((session) => {
+        getPlatformAuthSession(false, true).then(async (session) => {
+          if (!!session) {
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL)
+          } else {
+            const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+              'lifecycleIdentity',
+              RunmeIdentity.ALL,
+            )
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
+          }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }
