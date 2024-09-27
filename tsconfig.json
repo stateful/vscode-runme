@@ -3,8 +3,11 @@
     "module": "commonjs",
     "outDir": "out",
     "rootDir": "src",
-    "target": "ES2021",
-    "lib": ["ES2021", "DOM"],
+    "target": "es2021",
+    "lib": [
+      "es2021",
+      "DOM"
+    ],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -15,6 +18,8 @@
       "vscode"
     ]
   },
-  "include": ["src/"],
+  "include": [
+    "src/"
+  ],
   "exclude": []
 }
