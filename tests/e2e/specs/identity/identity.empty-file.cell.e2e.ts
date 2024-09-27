@@ -1,16 +1,6 @@
 import { Key } from 'webdriverio'
 
-import {
-  assertDocumentContainsSpinner,
-  revertChanges,
-  saveFile,
-  updateLifecycleIdentitySetting,
-} from '../../helpers/index.js'
-
-async function reloadWindow() {
-  const workbench = await browser.getWorkbench()
-  await workbench.executeCommand('Developer: Reload Window')
-}
+import { assertDocumentContainsSpinner, revertChanges, saveFile } from '../../helpers/index.js'
 
 async function removeAllNotifications() {
   const workbench = await browser.getWorkbench()
@@ -23,6 +13,9 @@ describe('Test suite: Empty file with setting Cell (3)', async () => {
     await removeAllNotifications()
   })
   it('open identity markdown file', async () => {
+    const workbench = await browser.getWorkbench()
+    await workbench.executeCommand('Runme: Lifecycle Identity - Cell')
+
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/empty-file.md`),
@@ -44,8 +37,6 @@ describe('Test suite: Empty file with setting Cell (3)', async () => {
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/tests/fixtures/identity/empty-file.md')
 
-    await updateLifecycleIdentitySetting(3)
-    await reloadWindow()
     await saveFile(browser)
     await assertDocumentContainsSpinner(absDocPath, '')
   })

@@ -59,8 +59,8 @@ export const config: Options.Testrunner = {
   //
   specs: ['./specs/**/*.e2e.ts'],
   // Patterns to exclude.
-  exclude: ['./specs/**/identity/*.e2e.ts'],
-  // exclude: [],
+  // exclude: ['./specs/**/identity/*.e2e.ts'],
+  exclude: [],
   //
   // ======
   // Runner
@@ -163,7 +163,7 @@ export const config: Options.Testrunner = {
   framework: 'mocha',
   //
   // The number of times to retry the entire specfile when it fails as a whole
-  specFileRetries: 2,
+  specFileRetries: 0,
   //
   // Delay in seconds between the spec file retry attempts
   // specFileRetriesDelay: 0,

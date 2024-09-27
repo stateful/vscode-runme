@@ -346,6 +346,36 @@
         "category": "Runme",
         "title": "Click to select your environment",
         "shortTitle": "Environments"
+      },
+      {
+        "command": "runme.lifecycleIdentityAll",
+        "title": "Lifecycle Identity - All",
+        "category": "Runme",
+        "description": "Turns on Lifecycle Identity"
+      },
+      {
+        "command": "runme.lifecycleIdentityNone",
+        "title": "Lifecycle Identity - None",
+        "category": "Runme",
+        "description": "Lifecycle Identity - None"
+      },
+      {
+        "command": "runme.lifecycleIdentityAll",
+        "title": "Lifecycle Identity - All",
+        "category": "Runme",
+        "description": "Lifecycle Identity - All"
+      },
+      {
+        "command": "runme.lifecycleIdentityDoc",
+        "title": "Lifecycle Identity - Document",
+        "category": "Runme",
+        "description": "Lifecycle Identity - Document"
+      },
+      {
+        "command": "runme.lifecycleIdentityCell",
+        "title": "Lifecycle Identity - Cell",
+        "category": "Runme",
+        "description": "Lifecycle Identity - Cell"
       }
     ],
     "menus": {
