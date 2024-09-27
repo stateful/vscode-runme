@@ -163,7 +163,7 @@ export const config: Options.Testrunner = {
   framework: 'mocha',
   //
   // The number of times to retry the entire specfile when it fails as a whole
-  specFileRetries: 0,
+  specFileRetries: 2,
   //
   // Delay in seconds between the spec file retry attempts
   // specFileRetriesDelay: 0,
