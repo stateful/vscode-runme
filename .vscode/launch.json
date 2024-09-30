@@ -21,7 +21,7 @@
       "preLaunchTask": "npm: watch"
     },
     {
-      "name": "Run Extension (no server)",
+      "name": "Run Extension (no webpack)",
       "type": "extensionHost",
       "request": "launch",
       "args": [

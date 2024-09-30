@@ -381,6 +381,7 @@ interface Payload {
     isAutoSaveEnabled: boolean
     isSessionOutputsEnabled: boolean
     isPlatformAuthEnabled: boolean
+    isDaggerOutput: boolean
   }
   [OutputType.github]?: GitHubState
   [OutputType.stdout]: object
@@ -768,6 +769,7 @@ export enum FeatureName {
   Escalate = 'Escalate',
   ForceLogin = 'ForceLogin',
   SignedIn = 'SignedIn',
+  RequireStatefulAuth = 'RequireStatefulAuth',
 }
 
 export type Feature = {

@@ -6,7 +6,7 @@ import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON } from '../../../constants'
+import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
@@ -41,7 +41,17 @@ export default async function saveCellExecution(
 
   log.info('Saving cell execution')
 
-  const cacheId = GrpcSerializer.getDocumentCacheId(editor.notebook.metadata) as string
+  const frontmatter = GrpcSerializer.marshallFrontmatter(
+    editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
+    kernel,
+  )
+
+  const metadata = {
+    ...editor.notebook.metadata,
+    [RUNME_FRONTMATTER_PARSED]: frontmatter,
+  }
+
+  const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
   const plainSessionOutput = await kernel.getPlainCache(cacheId)
   const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
@@ -94,7 +104,7 @@ export default async function saveCellExecution(
       const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
 
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
-      const result = await graphClient.mutate({
+      const mutation = {
         mutation: CreateExtensionCellOutputDocument,
         variables: {
           input: {
@@ -147,7 +157,8 @@ export default async function saveCellExecution(
             },
           },
         },
-      })
+      }
+      const result = await graphClient.mutate(mutation)
       data = result
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
@@ -175,11 +186,15 @@ export default async function saveCellExecution(
 
       const terminalContents = Array.from(new TextEncoder().encode(message.output.data.stdout))
 
-      let fmParsed = editor.notebook.metadata['runme.dev/frontmatterParsed'] as Frontmatter
+      let fmParsed = editor.notebook.metadata[RUNME_FRONTMATTER_PARSED] as Frontmatter
 
       if (!fmParsed) {
-        const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
-        fmParsed = yamlDocs[0].toJS?.()
+        try {
+          const yamlDocs = YAML.parseAllDocuments(editor.notebook.metadata['runme.dev/frontmatter'])
+          fmParsed = yamlDocs[0].toJS?.() || {}
+        } catch (error: any) {
+          log.warn('failed to parse frontmatter, reason: ', error.message)
+        }
       }
 
       let notebookInput: CreateNotebookInput | undefined

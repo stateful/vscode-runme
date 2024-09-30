@@ -9,6 +9,7 @@ import vscode, {
   Uri,
   workspace,
   env,
+  UIKind,
   window,
   Disposable,
   NotebookCell,
@@ -44,6 +45,7 @@ import {
   NOTEBOOK_AUTOSAVE_ON,
   GITHUB_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
 import {
   getBinaryPath,
@@ -53,9 +55,11 @@ import {
   getMaskOutputs,
   getNotebookAutoSave,
   getPortNumber,
+  getServerConfigurationValue,
+  getServerRunnerVersion,
   getTLSDir,
   getTLSEnabled,
-  isPlatformAuthEnabled,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
 
 import features from './features'
@@ -68,6 +72,7 @@ import { setCurrentCellExecutionDemo } from './handler/utils'
 import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 declare var globalThis: any
 
@@ -582,11 +587,15 @@ export async function resolveAuthToken(createIfNone: boolean = true) {
 }
 
 export async function resolveAppToken(createIfNone: boolean = true) {
-  const session = await getPlatformAuthSession(createIfNone)
-  if (!session) {
-    return null
+  if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
+    const session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      return null
+    }
+    return { token: session.accessToken }
   }
-  return { token: session.accessToken }
+
+  return null
 }
 
 export function fetchStaticHtml(appUrl: string) {
@@ -681,20 +690,23 @@ export function suggestCategories(categories: string[], title: string, placehold
 
 export async function handleNotebookAutosaveSettings() {
   const configAutoSaveSetting = getNotebookAutoSave()
-  const extensionSettingAutoSaveIsOn =
-    configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
-  const notebookAutoSaveIsOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
-  await ContextState.addKey(
-    NOTEBOOK_AUTOSAVE_ON,
-    notebookAutoSaveIsOn !== undefined ? notebookAutoSaveIsOn : extensionSettingAutoSaveIsOn,
-  )
+  const defaultSetting = configAutoSaveSetting === NotebookAutoSaveSetting.Yes
+  const contextSetting = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
+
+  await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, contextSetting ?? defaultSetting)
 }
 
 export async function resetNotebookSettings() {
   await ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, getMaskOutputs())
   const configAutoSaveSetting = getNotebookAutoSave()
-  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes ? true : false
+  const autoSaveIsOn = configAutoSaveSetting === NotebookAutoSaveSetting.Yes
   await ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+
+  const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+    'lifecycleIdentity',
+    RunmeIdentity.ALL,
+  )
+  await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
 }
 
 export function asWorkspaceRelativePath(documentPath: string): {
@@ -706,14 +718,6 @@ export function asWorkspaceRelativePath(documentPath: string): {
     return { relativePath: path.basename(documentPath), outside: true }
   }
   return { relativePath, outside: false }
-}
-
-export async function resolveUserSession(
-  createIfNone: boolean,
-): Promise<AuthenticationSession | undefined> {
-  return isPlatformAuthEnabled()
-    ? await getPlatformAuthSession(createIfNone)
-    : await getGithubAuthSession(createIfNone)
 }
 
 /**
@@ -826,4 +830,61 @@ export async function getGitContext(path: string) {
       relativePath: null,
     }
   }
+}
+
+export interface EnvProps {
+  extname: string
+  extversion: string
+  remotename: string
+  appname: string
+  product: string
+  platform: string
+  uikind: string
+}
+
+export function getEnvProps(extension: { id: string; version: string }) {
+  const extProps: EnvProps = {
+    extname: extension.id,
+    extversion: extension.version,
+    remotename: env.remoteName ?? 'none',
+    appname: env.appName,
+    product: env.appHost,
+    platform: `${os.platform()}_${os.arch()}`,
+    uikind: 'other',
+  }
+
+  switch (env.uiKind) {
+    case UIKind.Web:
+      extProps['uikind'] = 'web'
+      break
+    case UIKind.Desktop:
+      extProps['uikind'] = 'desktop'
+      break
+    default:
+      extProps['uikind'] = 'other'
+  }
+
+  return extProps
+}
+
+export function warnBetaRequired(message: string): boolean {
+  if (getServerRunnerVersion() !== 'v1') {
+    return true
+  }
+
+  const action = 'Configure Runner'
+  window
+    .showWarningMessage(
+      // eslint-disable-next-line max-len
+      `${message.length ? message + ' ' : ''}Please restart VS Code after configuration changes.`,
+      action,
+    )
+    .then((selected) => {
+      if (selected !== action) {
+        return
+      }
+      return commands.executeCommand('runme.openSettings', 'runme.server.runnerVersion')
+    })
+
+  return false
 }

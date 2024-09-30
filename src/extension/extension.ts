@@ -19,9 +19,17 @@ import {
   getDocsUrlFor,
   getForceNewWindowConfig,
   getRunmeAppUrl,
+  getServerRunnerVersion,
+  getServerConfigurationValue,
   getSessionOutputs,
+  ServerLifecycleIdentity,
 } from '../utils/configuration'
-import { AuthenticationProviders, WebViews } from '../constants'
+import {
+  AuthenticationProviders,
+  NOTEBOOK_LIFECYCLE_ID,
+  TELEMETRY_EVENTS,
+  WebViews,
+} from '../constants'
 
 import { Kernel } from './kernel'
 import KernelServer from './server/kernelServer'
@@ -85,6 +93,8 @@ import { GrpcReporter } from './reporter'
 import * as manager from './ai/manager'
 import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
+import ContextState from './contextState'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -97,6 +107,7 @@ export class RunmeExtension {
 
     const server = new KernelServer(
       context.extensionUri,
+      kernel.envProps,
       {
         retryOnFailure: true,
         maxNumberOfIntents: 10,
@@ -344,16 +355,32 @@ export class RunmeExtension {
       ),
     )
 
+    TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
+
     await bootFile(context)
 
-    if (kernel.hasExperimentEnabled('shellWarning', false)) {
+    if (
+      kernel.hasExperimentEnabled('shellWarning', false) &&
+      context.globalState.get<boolean>(TELEMETRY_EVENTS.ShellWarning, true)
+    ) {
       const showUnsupportedShellMessage = async () => {
-        const showMore = 'Show more'
+        const learnMore = 'Learn more'
+        const dontAskAgain = "Don't ask again"
 
-        const answer = await window.showErrorMessage('Unsupported shell', showMore)
-        if (answer === showMore) {
-          const url = getDocsUrlFor('/r/extension/supported-shells')
+        TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.ShellWarning)
+
+        const answer = await window.showWarningMessage(
+          'Your current shell has limited or no support.' +
+            ' Please consider switching to sh, bash, or zsh.' +
+            ' Click "Learn more" for additional resources.',
+          learnMore,
+          dontAskAgain,
+        )
+        if (answer === learnMore) {
+          const url = getDocsUrlFor('/r/extension/unsupported-shell')
           env.openExternal(Uri.parse(url))
+        } else if (answer === dontAskAgain) {
+          await context.globalState.update(TELEMETRY_EVENTS.ShellWarning, false)
         }
       }
 
@@ -380,54 +407,72 @@ export class RunmeExtension {
         })
     }
 
-    context.subscriptions.push(new GithubAuthProvider(context))
-    context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+    if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
+      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const silent = forceLogin ? undefined : true
 
-    getGithubAuthSession(false).then((session) => {
-      kernel.updateFeatureContext('githubAuth', !!session)
-    })
+      getPlatformAuthSession(forceLogin, silent)
+        .then((session) => {
+          if (session) {
+            const openDashboardStr = 'Open Dashboard'
+            window
+              .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+              .then((answer) => {
+                if (answer === openDashboardStr) {
+                  const dashboardUri = getRunmeAppUrl(['app'])
+                  const uri = Uri.parse(dashboardUri)
+                  env.openExternal(uri)
+                }
+              })
+          }
+        })
+        .catch((error) => {
+          let message
+          if (error instanceof Error) {
+            message = error.message
+          } else {
+            message = String(error)
+          }
 
-    const createIfNone = kernel.isFeatureOn(FeatureName.ForceLogin)
-    const silent = createIfNone ? undefined : true
+          // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
+          // throw new Error('User did not consent to login.')
+          // Calling again to ensure User Menu Badge
+          if (forceLogin && message === 'User did not consent to login.') {
+            getPlatformAuthSession(false)
+          }
+        })
+    }
 
-    getPlatformAuthSession(createIfNone, silent)
-      .then((session) => {
-        if (session) {
-          const openDashboardStr = 'Open Dashboard'
-          window
-            .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-            .then((answer) => {
-              if (answer === openDashboardStr) {
-                const dashboardUri = getRunmeAppUrl(['app'])
-                const uri = Uri.parse(dashboardUri)
-                env.openExternal(uri)
-              }
-            })
-        }
+    if (kernel.isFeatureOn(FeatureName.Gist)) {
+      context.subscriptions.push(new GithubAuthProvider(context))
+      getGithubAuthSession(false).then((session) => {
+        kernel.updateFeatureContext('githubAuth', !!session)
       })
-      .catch((error) => {
-        let message
-        if (error instanceof Error) {
-          message = error.message
-        } else {
-          message = String(error)
-        }
-
-        // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
-        // throw new Error('User did not consent to login.')
-        // Calling again to ensure User Menu Badge
-        if (createIfNone && message === 'User did not consent to login.') {
-          getPlatformAuthSession(false)
-        }
-      })
+    }
 
     authentication.onDidChangeSessions((e) => {
-      if (e.provider.id === AuthenticationProviders.Stateful) {
-        getPlatformAuthSession(false, true).then((session) => {
+      if (
+        kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
+        e.provider.id === AuthenticationProviders.Stateful
+      ) {
+        getPlatformAuthSession(false, true).then(async (session) => {
+          if (!!session) {
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL)
+          } else {
+            const current = getServerConfigurationValue<ServerLifecycleIdentity>(
+              'lifecycleIdentity',
+              RunmeIdentity.ALL,
+            )
+            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
+          }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }
-      if (e.provider.id === AuthenticationProviders.GitHub) {
+      if (
+        kernel.isFeatureOn(FeatureName.Gist) &&
+        e.provider.id === AuthenticationProviders.GitHub
+      ) {
         getGithubAuthSession(false).then((session) => {
           kernel.updateFeatureContext('githubAuth', !!session)
         })

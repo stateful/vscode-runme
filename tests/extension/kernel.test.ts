@@ -32,6 +32,15 @@ vi.mock('../../src/extension/utils', async () => {
     getGithubAuthSession: vi.fn().mockResolvedValue({
       accessToken: '123',
     }),
+    getEnvProps: vi.fn().mockReturnValue({
+      extname: 'stateful.runme',
+      extversion: '1.2.3-foo.1',
+      remotename: 'none',
+      appname: 'Visual Studio Code',
+      product: 'desktop',
+      platform: 'darwin_arm64',
+      uikind: 'desktop',
+    }),
   }
 })
 vi.mock('../../src/utils/configuration', async (importActual) => {
@@ -413,4 +422,20 @@ test('supportedLanguages', async () => {
   const k = new Kernel({} as any)
 
   expect(k.getSupportedLanguages()![0]).toStrictEqual('shellscript')
+})
+
+test('#envProps', async () => {
+  const k = new Kernel({
+    extension: { id: 'stateful.runme', packageJSON: { version: '1.2.3-rc.0' } },
+  } as any)
+
+  expect(k.envProps).toStrictEqual({
+    appname: 'Visual Studio Code',
+    extname: 'stateful.runme',
+    extversion: '1.2.3-foo.1',
+    platform: 'darwin_arm64',
+    product: 'desktop',
+    remotename: 'none',
+    uikind: 'desktop',
+  })
 })

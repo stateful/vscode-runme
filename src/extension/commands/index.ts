@@ -36,6 +36,7 @@ import {
   getTerminalByCell,
   openFileAsRunmeNotebook,
   promptUserSession,
+  warnBetaRequired,
 } from '../utils'
 import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
 import getLogger from '../logger'
@@ -47,6 +48,7 @@ import {
   NOTEBOOK_AUTHOR_MODE_ON,
   ClientMessages,
   TELEMETRY_EVENTS,
+  RUNME_FRONTMATTER_PARSED,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -54,6 +56,7 @@ import { InitializeClient } from '../api/client'
 import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
+import { insertCodeNotebookCell } from '../cell'
 
 const log = getLogger('Commands')
 
@@ -180,18 +183,36 @@ async function runStatusCommand(cell: NotebookCell): Promise<boolean> {
 
 export function runForkCommand(kernel: Kernel, extensionBaseUri: Uri, _grpcRunner: boolean) {
   return async function (cell: NotebookCell) {
+    if (!warnBetaRequired("Please switch to Runme's runner v2 (beta) to fork into terminals.")) {
+      return
+    }
+
     if (!(await runStatusCommand(cell))) {
       return
     }
 
     const cwd = path.dirname(cell.document.uri.fsPath)
 
-    const program = await kernel.createTerminalProgram(cwd)
+    const session = await kernel.createTerminalSession(cwd)
+    session.data.then(async (data) => {
+      if (!data.trimEnd().endsWith('save') && data.indexOf('save\r\n') < 0) {
+        return
+      }
+
+      await insertCodeNotebookCell({
+        cell,
+        input: data,
+        languageId: 'sh',
+        displayConfirmationDialog: false,
+        background: false,
+        run: false,
+      })
+    })
 
     const annotations = getAnnotations(cell.metadata)
     const term = window.createTerminal({
       name: `Fork: ${annotations.name}`,
-      pty: program,
+      pty: session,
       iconPath: {
         dark: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-dark.svg'),
         light: Uri.joinPath(extensionBaseUri, 'assets', 'logo-open-light.svg'),
@@ -310,7 +331,7 @@ export async function askAlternativeOutputsAction(
   )
 
   const orig =
-    metadata['runme.dev/frontmatterParsed']?.['runme']?.['session']?.['document']?.['relativePath']
+    metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['document']?.['relativePath']
 
   switch (action) {
     case ASK_ALT_OUTPUTS_ACTION.ORIGINAL:

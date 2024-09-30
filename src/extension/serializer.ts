@@ -24,20 +24,17 @@ import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { FeatureName, Serializer } from '../types'
+import { Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_HAS_OUTPUTS,
+  NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_OUTPUTS_MASKED,
   OutputType,
   RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
-import {
-  ServerLifecycleIdentity,
-  getServerConfigurationValue,
-  getSessionOutputs,
-} from '../utils/configuration'
+import { ServerLifecycleIdentity, getSessionOutputs } from '../utils/configuration'
 
 import {
   DeserializeRequest,
@@ -60,10 +57,11 @@ import { getCellById } from './cell'
 import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
 import * as ghost from './ai/ghost'
-import * as features from './features'
+import getLogger from './logger'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
+const log = getLogger('serializer')
 
 type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
   processInfo?: IProcessInfoState
@@ -73,8 +71,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
-  protected readonly lifecycleIdentity: ServerLifecycleIdentity =
-    getServerConfigurationValue<ServerLifecycleIdentity>('lifecycleIdentity', RunmeIdentity.ALL)
 
   constructor(
     protected context: ExtensionContext,
@@ -91,6 +87,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public dispose() {
     this.disposables.forEach((d) => d.dispose())
+  }
+
+  protected get lifecycleIdentity() {
+    return ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
   }
 
   /**
@@ -119,6 +119,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     })
   }
 
+  // TODO: Deadcode
   protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
     // update changes in metadata
     const bytes = await workspace.fs.readFile(uri)
@@ -551,11 +552,6 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      this.togglePreviewButton(false)
-      return -1
-    }
-
     const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
     const cache = mode ? this.maskedCache : this.plainCache
     const bytes = await cache.get(cacheId ?? '')
@@ -578,11 +574,8 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
-    // Don't write to disk if authenticated and share are disabled
-    if (
-      features.isOnInContextState(FeatureName.SignedIn) &&
-      features.isOnInContextState(FeatureName.Share)
-    ) {
+    // Don't write to disk if auto-save is off
+    if (!ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)) {
       this.togglePreviewButton(false)
       // But still return a valid bytes length so the cache keeps working
       return bytes.length
@@ -694,7 +687,14 @@ export class GrpcSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const notebook = GrpcSerializer.marshalNotebook(data)
+    const marshalFrontmatter = this.lifecycleIdentity === RunmeIdentity.ALL
+
+    const notebook = GrpcSerializer.marshalNotebook(data, { marshalFrontmatter })
+
+    if (marshalFrontmatter) {
+      data.metadata ??= {}
+      data.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
+    }
 
     const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
     this.notebookDataCache.set(cacheId as string, data)
@@ -730,10 +730,6 @@ export class GrpcSerializer extends SerializerBase {
     notebook: Notebook,
     cacheId: string | undefined,
   ): Promise<void> {
-    if (!GrpcSerializer.sessionOutputsEnabled()) {
-      return Promise.resolve(undefined)
-    }
-
     let session: RunmeSession | undefined
     const docUri = this.cacheDocUriMapping.get(cacheId ?? '')
     const sid = this.kernel.getRunnerEnvironment()?.getSessionId()
@@ -830,15 +826,24 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  private static marshallFrontmatter(
+  static marshallFrontmatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {
-    const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
-    const data = (yamlDocs[0].toJS?.() || {}) as {
+    const rawFrontmatter = metadata['runme.dev/frontmatter']
+    let data: {
       runme: {
         id?: string
         version?: string
+      }
+    } = { runme: {} }
+
+    if (rawFrontmatter) {
+      try {
+        const yamlDocs = YAML.parseAllDocuments(metadata['runme.dev/frontmatter'])
+        data = (yamlDocs[0].toJS?.() || {}) as typeof data
+      } catch (error: any) {
+        log.warn('failed to parse frontmatter, reason: ', error.message)
       }
     }
 
