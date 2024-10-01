@@ -92,7 +92,7 @@
           "statefulAuthRequired": true,
           "enabledForExtensions": {
             "stateful.platform": true,
-            "stateful.runme": false
+            "stateful.runme": true
           }
         }
       },
