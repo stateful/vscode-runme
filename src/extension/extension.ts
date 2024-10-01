@@ -348,6 +348,22 @@ export class RunmeExtension {
         openFileAsRunmeNotebook(outputFilePath)
       }),
 
+      RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
+        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.UNSPECIFIED),
+      ),
+
+      RunmeExtension.registerCommand('runme.lifecycleIdentityAll', () =>
+        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL),
+      ),
+
+      RunmeExtension.registerCommand('runme.lifecycleIdentityDoc', () =>
+        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.DOCUMENT),
+      ),
+
+      RunmeExtension.registerCommand('runme.lifecycleIdentityCell', () =>
+        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.CELL),
+      ),
+
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(
         'runme.aiGenerate',

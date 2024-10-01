@@ -1,17 +1,7 @@
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
-import {
-  assertDocumentContainsSpinner,
-  revertChanges,
-  saveFile,
-  updateLifecycleIdentitySetting,
-} from '../../helpers/index.js'
-
-async function reloadWindow() {
-  const workbench = await browser.getWorkbench()
-  await workbench.executeCommand('Developer: Reload Window')
-}
+import { assertDocumentContainsSpinner, revertChanges, saveFile } from '../../helpers/index.js'
 
 async function removeAllNotifications() {
   const workbench = await browser.getWorkbench()
@@ -26,6 +16,9 @@ describe('Test suite: Document with existent identity and setting Cell only (3)'
 
   const notebook = new RunmeNotebook()
   it('open identity markdown file', async () => {
+    const workbench = await browser.getWorkbench()
+    await workbench.executeCommand('Runme: Lifecycle Identity - Cell')
+
     await browser.executeWorkbench(async (vscode) => {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(`${vscode.workspace.rootPath}/tests/fixtures/identity/existent-doc-id.md`),
@@ -47,8 +40,6 @@ describe('Test suite: Document with existent identity and setting Cell only (3)'
       return `${vscode.workspace.rootPath}${documentPath}`
     }, '/tests/fixtures/identity/existent-doc-id.md')
 
-    await updateLifecycleIdentitySetting(3)
-    await reloadWindow()
     await notebook.focusDocument()
     const workbench = await browser.getWorkbench()
     await workbench.executeCommand('Notebook: Focus First Cell')

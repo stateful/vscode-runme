@@ -49,6 +49,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
+      DO_NOT_TRACK: 1
       REPOSITORY: runme
     steps:
       - name: Clone Repository

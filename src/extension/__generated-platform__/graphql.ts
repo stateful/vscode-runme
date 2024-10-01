@@ -73,6 +73,19 @@ export type AccessEnvironment = {
   updateTime: Scalars['DateTime']['output'];
 };
 
+export type AccessEscalation = {
+  __typename?: 'AccessEscalation';
+  access: Access;
+  accessId: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  escalation: Escalation;
+  escalationId: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+};
+
 export type AccessNotebookMetadataOutput = {
   __typename?: 'AccessNotebookMetadataOutput';
   access?: Maybe<Access>;
@@ -166,6 +179,19 @@ export type Bookmark = {
   user: User;
   userId: Scalars['String']['output'];
   workflow?: Maybe<Workflow>;
+};
+
+export type BookmarkEscalation = {
+  __typename?: 'BookmarkEscalation';
+  bookmark: Bookmark;
+  bookmarkId: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  escalation: Escalation;
+  escalationId: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
 };
 
 export type BooleanInput = {
@@ -371,6 +397,7 @@ export type Conversation = {
   cellOutput?: Maybe<CellOutput>;
   createTime: Scalars['DateTime']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  escalation?: Maybe<Escalation>;
   id: Scalars['String']['output'];
   isResourceOwner?: Maybe<Scalars['Boolean']['output']>;
   messages?: Maybe<Array<Maybe<Message>>>;
@@ -459,6 +486,15 @@ export type CreateCellOutputInput = {
 export type CreateEnvironmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
+};
+
+export type CreateEscalationInput = {
+  cellOutputId: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  owners?: InputMaybe<Array<Scalars['String']['input']>>;
+  status: EscalationStatus;
+  watchers?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type CreateGithubInstallationInput = {
@@ -623,6 +659,71 @@ export type Environment = {
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
 };
+
+export type Escalation = {
+  __typename?: 'Escalation';
+  bookmarkEscalations?: Maybe<Array<Maybe<BookmarkEscalation>>>;
+  cellName?: Maybe<Scalars['String']['output']>;
+  cellOutput?: Maybe<CellOutput>;
+  cellOutputId: Scalars['String']['output'];
+  conversation?: Maybe<Conversation>;
+  createTime: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  escalationOrganizations?: Maybe<Array<Maybe<EscalationOrganization>>>;
+  escalationUrl?: Maybe<Scalars['String']['output']>;
+  escalationUsers?: Maybe<Array<Maybe<EscalationUser>>>;
+  filePath?: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  organization?: Maybe<Organization>;
+  organizationId?: Maybe<Scalars['String']['output']>;
+  resourceAccess?: Maybe<ResourceAccess>;
+  shareType: ShareType;
+  status?: Maybe<EscalationStatus>;
+  updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
+  userId?: Maybe<Scalars['String']['output']>;
+};
+
+export type EscalationOrganization = {
+  __typename?: 'EscalationOrganization';
+  createTime: Scalars['DateTime']['output'];
+  escalation: Escalation;
+  escalationId: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
+  userId?: Maybe<Scalars['String']['output']>;
+};
+
+export enum EscalationStatus {
+  Blocked = 'BLOCKED',
+  Closed = 'CLOSED',
+  InProgress = 'IN_PROGRESS',
+  Open = 'OPEN'
+}
+
+export type EscalationUser = {
+  __typename?: 'EscalationUser';
+  createTime: Scalars['DateTime']['output'];
+  escalation: Escalation;
+  escalationId: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  isNotificationEnabled?: Maybe<Scalars['Boolean']['output']>;
+  organization: Organization;
+  organizationId: Scalars['String']['output'];
+  type: EscalationUserType;
+  updateTime: Scalars['DateTime']['output'];
+  user: User;
+  userId: Scalars['String']['output'];
+};
+
+export enum EscalationUserType {
+  Owner = 'OWNER',
+  Watcher = 'WATCHER'
+}
 
 export type GithubInstallation = {
   __typename?: 'GithubInstallation';
@@ -854,6 +955,7 @@ export type Mutation = {
   createCellOutputBookmark: Bookmark;
   createConversationBookmark: Bookmark;
   createEnvironment: Environment;
+  createEscalation: Escalation;
   createExtensionCellOutput: CellOutput;
   createGroup: Group;
   createMarkdownBookmark: Bookmark;
@@ -950,6 +1052,11 @@ export type MutationCreateConversationBookmarkArgs = {
 
 export type MutationCreateEnvironmentArgs = {
   input: CreateEnvironmentInput;
+};
+
+
+export type MutationCreateEscalationArgs = {
+  input: CreateEscalationInput;
 };
 
 
@@ -1487,6 +1594,8 @@ export type Query = {
   conversations: Array<Conversation>;
   environment?: Maybe<Environment>;
   environments: Array<Environment>;
+  escalation?: Maybe<Escalation>;
+  escalations?: Maybe<Array<Escalation>>;
   getSlackChannels?: Maybe<Array<Maybe<SlackChannel>>>;
   githubInstallation?: Maybe<GithubInstallation>;
   group?: Maybe<Group>;
@@ -1572,6 +1681,12 @@ export type QueryConversationsArgs = {
 
 /** About the Redwood queries. */
 export type QueryEnvironmentArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+/** About the Redwood queries. */
+export type QueryEscalationArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -1855,8 +1970,8 @@ export type ReporterRunmeSessionInput = {
 };
 
 export type ReporterSessionInput = {
-  maskedOutput: Scalars['Bytes']['input'];
-  plainOutput: Scalars['Bytes']['input'];
+  maskedOutput?: InputMaybe<Scalars['Bytes']['input']>;
+  plainOutput?: InputMaybe<Scalars['Bytes']['input']>;
 };
 
 export type ReporterTextRangeInput = {
@@ -2251,6 +2366,13 @@ export type CreateExtensionCellOutputMutationVariables = Exact<{
 
 export type CreateExtensionCellOutputMutation = { __typename?: 'Mutation', createExtensionCellOutput: { __typename?: 'CellOutput', id: string, htmlUrl?: string | null, exitCode: number, isSlackReady?: boolean | null } };
 
+export type CreateEscalationMutationVariables = Exact<{
+  input: CreateEscalationInput;
+}>;
+
+
+export type CreateEscalationMutation = { __typename?: 'Mutation', createEscalation: { __typename?: 'Escalation', id: string, escalationUrl?: string | null } };
+
 export type GetUserEnvironmentsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2275,6 +2397,7 @@ export type UpdateCellOutputMutation = { __typename?: 'Mutation', updateCellOutp
 export const ArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"archiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<ArchiveCellOutputMutation, ArchiveCellOutputMutationVariables>;
 export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateCellExecution"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateCellExecutionInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCellExecution"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateCellExecutionMutation, CreateCellExecutionMutationVariables>;
 export const CreateExtensionCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateExtensionCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createExtensionCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateExtensionCellOutputMutation, CreateExtensionCellOutputMutationVariables>;
+export const CreateEscalationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateEscalation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateEscalationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createEscalation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"escalationUrl"}}]}}]}}]} as unknown as DocumentNode<CreateEscalationMutation, CreateEscalationMutationVariables>;
 export const GetUserEnvironmentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getUserEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]} as unknown as DocumentNode<GetUserEnvironmentsQuery, GetUserEnvironmentsQueryVariables>;
 export const UnArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellOutputMutation, UnArchiveCellOutputMutationVariables>;
 export const UpdateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellOutputInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellOutputMutation, UpdateCellOutputMutationVariables>;
