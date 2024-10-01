@@ -20,7 +20,8 @@
   },
   "private": true,
   "engines": {
-    "vscode": "^1.78.0"
+    "vscode": "^1.78.0",
+    "node": ">=20.17.0"
   },
   "galleryBanner": {
     "color": "#0D003D",
