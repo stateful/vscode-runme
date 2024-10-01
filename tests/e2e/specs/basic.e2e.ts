@@ -11,8 +11,6 @@ import {
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
 import { OutputType, StatusBarElements } from '../pageobjects/cell.page.js'
 
-// Desregister loader
-
 describe('Runme VS Code Extension', async () => {
   let baseName = 'vscode-runme'
   before(async () => {
