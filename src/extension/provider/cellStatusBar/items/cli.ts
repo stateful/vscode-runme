@@ -15,7 +15,7 @@ export class CLIStatusBarItem extends CellStatusBarItem {
     }
 
     const item = new NotebookCellStatusBarItem(
-      '$(github-action) CLI',
+      '$(play-circle) CLI',
       NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.runCliCommand'
