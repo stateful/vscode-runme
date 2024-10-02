@@ -444,7 +444,7 @@ export class TerminalView extends LitElement {
     this.terminal.loadAddon(new WebLinksAddon(this.#onWebLinkClick.bind(this)))
 
     this.terminal.attachCustomKeyEventHandler((event) => {
-      if (!features.isOn(FeatureName.CopySelectionToClipboard)) {
+      if (!features.isOn(FeatureName.CopySelectionToClipboard, this.featureState$)) {
         return true
       }
 
