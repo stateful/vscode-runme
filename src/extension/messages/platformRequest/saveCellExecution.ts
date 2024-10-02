@@ -6,7 +6,12 @@ import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
+import {
+  ClientMessages,
+  NOTEBOOK_AUTOSAVE_ON,
+  NOTEBOOK_LIFECYCLE_ID,
+  RUNME_FRONTMATTER_PARSED,
+} from '../../../constants'
 import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
@@ -35,39 +40,6 @@ export default async function saveCellExecution(
 ): Promise<void | boolean> {
   const isReporterEnabled = kernel.hasExperimentEnabled('reporter')
   const { messaging, message, editor } = requestMessage
-  // Save the file to ensure the serialization completes before saving the cell execution.
-  // This guarantees we access the latest cache state of the serializer.
-  await editor.notebook.save()
-
-  log.info('Saving cell execution')
-
-  const frontmatter = GrpcSerializer.marshalFrontmatter(
-    editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
-    kernel,
-  )
-
-  const metadata = {
-    ...editor.notebook.metadata,
-    [RUNME_FRONTMATTER_PARSED]: frontmatter,
-  }
-
-  const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
-  const plainSessionOutput = await kernel.getPlainCache(cacheId)
-  const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
-
-  const vsEnv = {
-    appHost: env.appHost,
-    appName: env.appName,
-    appRoot: env.appRoot,
-    isNewAppInstall: env.isNewAppInstall,
-    language: env.language,
-    machineId: env.machineId,
-    remoteName: env.remoteName || '',
-    sessionId: env.sessionId,
-    shell: env.shell,
-    uiKind: env.uiKind,
-    uriScheme: env.uriScheme,
-  }
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
@@ -95,6 +67,50 @@ export default async function saveCellExecution(
     let data:
       | FetchResult<CreateExtensionCellOutputMutation>
       | FetchResult<CreateCellExecutionMutation>
+
+    if (!session) {
+      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+        data: {
+          displayShare: false,
+        },
+        id: message.output.id,
+      })
+    }
+
+    console.log('NOTEBOOK_LIFECYCLE_ID', ContextState.getKey(NOTEBOOK_LIFECYCLE_ID))
+    // Save the file to ensure the serialization completes before saving the cell execution.
+    // This guarantees we access the latest cache state of the serializer.
+    await editor.notebook.save()
+
+    log.info('Saving cell execution')
+
+    const frontmatter = GrpcSerializer.marshalFrontmatter(
+      editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
+      kernel,
+    )
+
+    const metadata = {
+      ...editor.notebook.metadata,
+      [RUNME_FRONTMATTER_PARSED]: frontmatter,
+    }
+
+    const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
+    const plainSessionOutput = await kernel.getPlainCache(cacheId)
+    const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
+
+    const vsEnv = {
+      appHost: env.appHost,
+      appName: env.appName,
+      appRoot: env.appRoot,
+      isNewAppInstall: env.isNewAppInstall,
+      language: env.language,
+      machineId: env.machineId,
+      remoteName: env.remoteName || '',
+      sessionId: env.sessionId,
+      shell: env.shell,
+      uiKind: env.uiKind,
+      uriScheme: env.uriScheme,
+    }
 
     // If the reporter is enabled, we will save the cell execution using the reporter API.
     // This is only temporary, until the reporter is fully tested.

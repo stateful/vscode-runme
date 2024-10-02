@@ -353,13 +353,14 @@ describe('GrpcSerializer', () => {
       expect(applied).toBeFalsy()
     })
 
-    it('should apply identity', async () => {
+    it('should apply lifecycle identity retaining initial ephemeral cell IDs', async () => {
       const fixture = deepCopyFixture()
-      // const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
       const descells = fixture.cells.map((cell, i) => {
         cell.index = i
         const c = { ...cell }
         c.metadata = { ...cell.metadata }
+        // simluate different ephemeral IDs here to make sure they are not used once applied
+        c.metadata['runme.dev/id'] = c.metadata['runme.dev/id'].toString().slice(0, 10)
         c.metadata['id'] = c.metadata['runme.dev/id']
         return c
       })
@@ -370,7 +371,6 @@ describe('GrpcSerializer', () => {
           response: { notebook: { cells: descells, metadata: fixture.metadata } },
         }),
       }
-      // vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
       vi.mocked(workspace.applyEdit).mockResolvedValue(true)
 
       const save = vi.fn()

@@ -718,10 +718,14 @@ export class GrpcSerializer extends SerializerBase {
     const edits = [notebookEdit]
     doc.getCells().forEach((cell) => {
       const descell = notebook.cells[cell.index]
+      // skip if no IDs are present, means no cell identity required
       if (!descell.metadata?.['id']) {
         return
       }
-      edits.push(NotebookEdit.updateCellMetadata(cell.index, descell.metadata))
+      // copy ephemeral IDs instead of using newly deserialized ones
+      const metadata = { ...cell.metadata }
+      metadata['id'] = metadata['runme.dev/id']
+      edits.push(NotebookEdit.updateCellMetadata(cell.index, metadata))
     })
 
     const edit = new WorkspaceEdit()
