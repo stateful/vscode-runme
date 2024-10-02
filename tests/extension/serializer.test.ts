@@ -336,11 +336,8 @@ describe('GrpcSerializer', () => {
     it('should not run for session outputs', async () => {
       const fixture = deepCopyFixture()
       fixture.metadata['runme.dev/frontmatterParsed'].runme.session = { id: 'FAKE-SESSION' }
-      // const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
 
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-
-      // vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
 
       const applied = await serializer.switchLifecycleIdentity(
         {
