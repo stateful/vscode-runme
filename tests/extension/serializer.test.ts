@@ -765,7 +765,6 @@ describe('GrpcSerializer', () => {
       const fixture = deepCopyFixture()
 
       fixture.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
-        cell.metadata['runme.dev/id'] = cell.metadata['id']
         delete cell.metadata['id']
         expect(cell.metadata['id']).toBeUndefined()
       })
@@ -778,7 +777,7 @@ describe('GrpcSerializer', () => {
       const ref = deepCopyFixture()
       applied.cells.forEach((cell: { metadata: { [x: string]: any } }, i: number) => {
         expect(cell.metadata['id']).toBeDefined()
-        expect(cell.metadata['id']).toStrictEqual(ref.cells[i].metadata['id'])
+        expect(cell.metadata['runme.dev/id']).toStrictEqual(ref.cells[i].metadata['runme.dev/id'])
       })
     })
   })
