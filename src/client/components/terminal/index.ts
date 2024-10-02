@@ -445,7 +445,7 @@ export class TerminalView extends LitElement {
 
     if (features.isOn(FeatureName.CopySelectionToClipboard)) {
       this.terminal.attachCustomKeyEventHandler((event) => {
-        if (event.shiftKey && event.ctrlKey && event.key === 'C') {
+        if (event.shiftKey && event.ctrlKey && event.code === 'KeyC') {
           const selection = this?.terminal?.getSelection()
           if (selection) {
             navigator.clipboard.writeText(selection)
