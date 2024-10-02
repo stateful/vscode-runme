@@ -381,7 +381,7 @@ export class RunmeExtension {
 
           await Promise.all(
             workspace.notebookDocuments.map((doc) =>
-              serializer.switchNotebookIdentity(doc, identity),
+              serializer.switchLifecycleIdentity(doc, identity),
             ),
           )
         },

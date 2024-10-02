@@ -5,7 +5,7 @@
       "value": "$ date | tee /dev/stderr",
       "languageId": "sh",
       "metadata": {
-        "id": "01HF7B0KJPF469EG9ZVSTKPEZ6",
+        "runme.dev/id": "01HF7B0KJPF469EG9ZVSTKPEZ6",
         "interactive": "true",
         "name": "stdio-test"
       },
@@ -18,7 +18,7 @@
       "languageId": "sh",
       "metadata": {
         "background": "false",
-        "id": "01HF7B0KJPF469EG9ZVX256S75",
+        "runme.dev/id": "01HF7B0KJPF469EG9ZVX256S75",
         "interactive": "true"
       },
       "outputs": [

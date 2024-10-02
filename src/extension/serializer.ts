@@ -370,7 +370,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     )
   }
 
-  public async switchNotebookIdentity(
+  public async switchLifecycleIdentity(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     doc: NotebookDocument,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -691,12 +691,12 @@ export class GrpcSerializer extends SerializerBase {
     return Boolean(sessionOutputId)
   }
 
-  public async switchNotebookIdentity(
+  public override async switchLifecycleIdentity(
     doc: NotebookDocument,
     identity: RunmeIdentity,
   ): Promise<boolean> {
     // skip session outputs files
-    if (!!doc.metadata['runme.dev/frontmatterParsed']?.runme.session.id) {
+    if (!!doc.metadata['runme.dev/frontmatterParsed']?.runme?.session?.id) {
       return false
     }
 

@@ -50,6 +50,7 @@ vi.mock('vscode', () => ({
   WorkspaceEdit: Map<Uri, NotebookEdit[]>,
   NotebookEdit: {
     updateCellMetadata: (i: number, metadata: any) => ({ i, metadata, type: 'updateCellMetadata' }),
+    updateNotebookMetadata: (metadata: any) => ({ metadata, type: 'updateNotebookMetadata' }),
   },
   CancellationTokenSource: vi.fn(),
   NotebookData: class {
@@ -83,6 +84,16 @@ describe('SerializerBase', () => {
 
   it('serializeNotebook transforms languages', async () => {
     const TestSerializer = class extends SerializerBase {
+      public getMaskedCache(_cacheId: string): Promise<Uint8Array> | undefined {
+        throw new Error('Method not implemented.')
+      }
+      public getPlainCache(_cacheId: string): Promise<Uint8Array> | undefined {
+        throw new Error('Method not implemented.')
+      }
+      public getNotebookDataCache(_cacheId: string): NotebookData | undefined {
+        throw new Error('Method not implemented.')
+      }
+
       protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
         return 0
       }
@@ -316,6 +327,112 @@ describe('GrpcSerializer', () => {
     it('should return undefined for undefined metadata', () => {
       const res = GrpcSerializer.getDocumentCacheId(undefined)
       expect(res).toBeUndefined()
+    })
+  })
+
+  describe.only('#switchLifecycleIdentity', () => {
+    const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
+
+    it('should not run for session outputs', async () => {
+      const fixture = deepCopyFixture()
+      fixture.metadata['runme.dev/frontmatterParsed'].runme.session = { id: 'FAKE-SESSION' }
+      // const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
+
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+
+      // vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
+
+      const applied = await serializer.switchLifecycleIdentity(
+        {
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+        },
+        1, // aka RunmeIdentity.ALL
+      )
+
+      expect(applied).toBeFalsy()
+    })
+
+    it('should apply identity', async () => {
+      const fixture = deepCopyFixture()
+      // const lid = fixture.metadata['runme.dev/frontmatterParsed'].runme.id
+      const descells = fixture.cells.map((cell, i) => {
+        cell.index = i
+        const c = { ...cell }
+        c.metadata = { ...cell.metadata }
+        c.metadata['id'] = c.metadata['runme.dev/id']
+        return c
+      })
+
+      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      serializer.client = {
+        deserialize: vi.fn().mockResolvedValue({
+          response: { notebook: { cells: descells, metadata: fixture.metadata } },
+        }),
+      }
+      // vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
+      vi.mocked(workspace.applyEdit).mockResolvedValue(true)
+
+      const save = vi.fn()
+      const applied = await serializer.switchLifecycleIdentity(
+        {
+          uri: fakeSrcDocUri,
+          metadata: fixture.metadata,
+          save,
+          getCells: vi.fn().mockReturnValue(fixture.cells),
+        },
+        1, // aka RunmeIdentity.ALL
+      )
+
+      const expectedEdits = new Map()
+      expectedEdits.set(
+        {
+          fsPath: '/tmp/fake/source.md',
+        },
+        [
+          {
+            metadata: {
+              'runme.dev/finalLineBreaks': '1',
+              'runme.dev/frontmatter':
+                '---\nrunme:\n  id: 01HF7B0KJPF469EG9ZWDNKKACQ\n  version: v2.0\n---',
+              'runme.dev/frontmatterParsed': {
+                cwd: '',
+                runme: {
+                  id: '01HF7B0KJPF469EG9ZWDNKKACQ',
+                  version: 'v2.0',
+                },
+                shell: '',
+                skipPrompts: false,
+              },
+            },
+            type: 'updateNotebookMetadata',
+          },
+          {
+            i: 0,
+            metadata: {
+              id: '01HF7B0KJPF469EG9ZVSTKPEZ6',
+              interactive: 'true',
+              name: 'stdio-test',
+              'runme.dev/id': '01HF7B0KJPF469EG9ZVSTKPEZ6',
+            },
+            type: 'updateCellMetadata',
+          },
+          {
+            i: 1,
+            metadata: {
+              background: 'false',
+              id: '01HF7B0KJPF469EG9ZVX256S75',
+              interactive: 'true',
+              'runme.dev/id': '01HF7B0KJPF469EG9ZVX256S75',
+            },
+            type: 'updateCellMetadata',
+          },
+        ],
+      )
+
+      expect(save).toBeCalled()
+      expect(workspace.applyEdit).toBeCalledWith(expectedEdits)
+      expect(applied).toBeTruthy()
     })
   })
 
