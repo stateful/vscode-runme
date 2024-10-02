@@ -443,16 +443,19 @@ export class TerminalView extends LitElement {
     this.terminal.loadAddon(new Unicode11Addon())
     this.terminal.loadAddon(new WebLinksAddon(this.#onWebLinkClick.bind(this)))
 
-    this.terminal.attachCustomKeyEventHandler((event) => {
-      if (event.shiftKey && event.ctrlKey && event.key === 'C') {
-        const selection = this?.terminal?.getSelection()
-        if (selection) {
-          navigator.clipboard.writeText(selection)
-          return false
+    if (features.isOn(FeatureName.CopySelectionToClipboard)) {
+      this.terminal.attachCustomKeyEventHandler((event) => {
+        if (event.shiftKey && event.ctrlKey && event.key === 'C') {
+          const selection = this?.terminal?.getSelection()
+          if (selection) {
+            navigator.clipboard.writeText(selection)
+            return false
+          }
         }
-      }
-      return true
-    })
+        return true
+      })
+    }
+
     this.terminal.unicode.activeVersion = '11'
     this.terminal.options.drawBoldTextInBrightColors
 
