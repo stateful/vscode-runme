@@ -678,7 +678,6 @@ export class GrpcSerializer extends SerializerBase {
 
     // cacheId is always present, stays persistent across multiple de/-serialization cycles
     const cacheId = metadata['runme.dev/cacheId'] as string | undefined
-    console.log('ephemeralId', cacheId)
 
     return cacheId
   }
