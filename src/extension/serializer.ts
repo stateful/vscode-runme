@@ -372,7 +372,7 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public async switchLifecycleIdentity(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    doc: NotebookDocument,
+    notebook: NotebookDocument,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     identity: RunmeIdentity,
   ): Promise<boolean> {
@@ -676,10 +676,11 @@ export class GrpcSerializer extends SerializerBase {
       return undefined
     }
 
-    const ephemeralId = metadata['runme.dev/id'] as string | undefined
-    const lid = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['id'] as string | undefined
+    // cacheId is always present, stays persistent across multiple de/-serialization cycles
+    const cacheId = metadata['runme.dev/cacheId'] as string | undefined
+    console.log('ephemeralId', cacheId)
 
-    return lid ?? ephemeralId
+    return cacheId
   }
 
   public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
@@ -692,16 +693,16 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   public override async switchLifecycleIdentity(
-    doc: NotebookDocument,
+    notebook: NotebookDocument,
     identity: RunmeIdentity,
   ): Promise<boolean> {
     // skip session outputs files
-    if (!!doc.metadata['runme.dev/frontmatterParsed']?.runme?.session?.id) {
+    if (!!notebook.metadata['runme.dev/frontmatterParsed']?.runme?.session?.id) {
       return false
     }
 
-    await doc.save()
-    const source = await workspace.fs.readFile(doc.uri)
+    await notebook.save()
+    const source = await workspace.fs.readFile(notebook.uri)
     const des = await this.client!.deserialize(
       DeserializeRequest.create({
         source,
@@ -709,27 +710,27 @@ export class GrpcSerializer extends SerializerBase {
       }),
     )
 
-    const notebook = des.response.notebook
-    if (!notebook) {
+    const deserialized = des.response.notebook
+    if (!deserialized) {
       return false
     }
 
-    const notebookEdit = NotebookEdit.updateNotebookMetadata(notebook.metadata)
+    deserialized.metadata = { ...deserialized.metadata, ...notebook.metadata }
+    const notebookEdit = NotebookEdit.updateNotebookMetadata(deserialized.metadata)
     const edits = [notebookEdit]
-    doc.getCells().forEach((cell) => {
-      const descell = notebook.cells[cell.index]
+    notebook.getCells().forEach((cell) => {
+      const descell = deserialized.cells[cell.index]
       // skip if no IDs are present, means no cell identity required
       if (!descell.metadata?.['id']) {
         return
       }
-      // copy ephemeral IDs instead of using newly deserialized ones
-      const metadata = { ...cell.metadata }
+      const metadata = { ...deserialized.metadata, ...cell.metadata }
       metadata['id'] = metadata['runme.dev/id']
       edits.push(NotebookEdit.updateCellMetadata(cell.index, metadata))
     })
 
     const edit = new WorkspaceEdit()
-    edit.set(doc.uri, edits)
+    edit.set(notebook.uri, edits)
     return await workspace.applyEdit(edit)
   }
 
