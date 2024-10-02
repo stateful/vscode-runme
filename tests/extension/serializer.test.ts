@@ -330,7 +330,7 @@ describe('GrpcSerializer', () => {
     })
   })
 
-  describe.only('#switchLifecycleIdentity', () => {
+  describe('#switchLifecycleIdentity', () => {
     const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
 
     it('should not run for session outputs', async () => {
