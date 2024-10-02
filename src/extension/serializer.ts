@@ -724,7 +724,7 @@ export class GrpcSerializer extends SerializerBase {
       if (!descell.metadata?.['id']) {
         return
       }
-      const metadata = { ...deserialized.metadata, ...cell.metadata }
+      const metadata = { ...descell.metadata, ...cell.metadata }
       metadata['id'] = metadata['runme.dev/id']
       edits.push(NotebookEdit.updateCellMetadata(cell.index, metadata))
     })
