@@ -370,6 +370,15 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     )
   }
 
+  public async switchNotebookIdentity(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    doc: NotebookDocument,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    identity: RunmeIdentity,
+  ): Promise<boolean> {
+    return false
+  }
+
   public static normalize(source: string): string {
     const lines = source.split('\n')
     const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
@@ -682,6 +691,44 @@ export class GrpcSerializer extends SerializerBase {
     return Boolean(sessionOutputId)
   }
 
+  public async switchNotebookIdentity(
+    doc: NotebookDocument,
+    identity: RunmeIdentity,
+  ): Promise<boolean> {
+    // skip session outputs files
+    if (!!doc.metadata['runme.dev/frontmatterParsed']?.runme.session.id) {
+      return false
+    }
+
+    await doc.save()
+    const source = await workspace.fs.readFile(doc.uri)
+    const des = await this.client!.deserialize(
+      DeserializeRequest.create({
+        source,
+        options: { identity },
+      }),
+    )
+
+    const notebook = des.response.notebook
+    if (!notebook) {
+      return false
+    }
+
+    const notebookEdit = NotebookEdit.updateNotebookMetadata(notebook.metadata)
+    const edits = [notebookEdit]
+    doc.getCells().forEach((cell) => {
+      const descell = notebook.cells[cell.index]
+      if (!descell.metadata?.['id']) {
+        return
+      }
+      edits.push(NotebookEdit.updateCellMetadata(cell.index, descell.metadata))
+    })
+
+    const edit = new WorkspaceEdit()
+    edit.set(doc.uri, edits)
+    return await workspace.applyEdit(edit)
+  }
+
   protected async saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -813,7 +860,7 @@ export class GrpcSerializer extends SerializerBase {
       const metadata = notebook.metadata as unknown as {
         ['runme.dev/frontmatter']: string
       }
-      notebook.frontmatter = this.marshallFrontmatter(metadata, config.kernel)
+      notebook.frontmatter = this.marshalFrontmatter(metadata, config.kernel)
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
@@ -826,7 +873,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  static marshallFrontmatter(
+  static marshalFrontmatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {

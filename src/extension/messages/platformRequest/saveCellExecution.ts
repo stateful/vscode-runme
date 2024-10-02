@@ -41,7 +41,7 @@ export default async function saveCellExecution(
 
   log.info('Saving cell execution')
 
-  const frontmatter = GrpcSerializer.marshallFrontmatter(
+  const frontmatter = GrpcSerializer.marshalFrontmatter(
     editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
     kernel,
   )

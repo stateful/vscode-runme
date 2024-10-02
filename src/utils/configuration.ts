@@ -210,6 +210,13 @@ const getPortNumber = (): number => {
   return SERVER_PORT
 }
 
+const getServerLifecycleIdentity = (): ServerLifecycleIdentity => {
+  return getServerConfigurationValue<ServerLifecycleIdentity>(
+    'lifecycleIdentity',
+    RunmeIdentity.ALL,
+  )
+}
+
 const getCustomServerAddress = (): string | undefined => {
   return getServerConfigurationValue<string | undefined>('customAddress', undefined)
 }
@@ -449,6 +456,7 @@ export {
   getCodeLensPasteIntoTerminalNewline,
   getNotebookExecutionOrder,
   getCustomServerAddress,
+  getServerLifecycleIdentity,
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getForceNewWindowConfig,

@@ -389,6 +389,12 @@
         "description": "Lifecycle Identity - Cell"
       },
       {
+        "command": "runme.lifecycleIdentitySelection",
+        "title": "Lifecycle Identity by Selection",
+        "category": "Runme",
+        "description": "Lifecycle Identity by Selection"
+      },
+      {
         "command": "runme.openCloudPanel",
         "title": "Open Cloud Panel",
         "category": "Runme",
@@ -397,6 +403,10 @@
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "runme.lifecycleIdentitySelection",
+          "when": "false"
+        },
         {
           "command": "runme.toggleTerminal",
           "when": "false"
