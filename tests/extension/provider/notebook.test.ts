@@ -73,7 +73,7 @@ describe('Notebook Cell Status Bar provider', () => {
       }
 
       const statusBarItems = await notebookProvider.provideCellStatusBarItems(cell as any)
-      expect(statusBarItems?.length).toEqual(4)
+      expect(statusBarItems?.length).toEqual(5)
     })
   })
 })
