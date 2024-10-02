@@ -213,7 +213,7 @@ const getPortNumber = (): number => {
 const getServerLifecycleIdentity = (): ServerLifecycleIdentity => {
   return getServerConfigurationValue<ServerLifecycleIdentity>(
     'lifecycleIdentity',
-    RunmeIdentity.ALL,
+    RunmeIdentity.UNSPECIFIED,
   )
 }
 

@@ -503,8 +503,8 @@ export class RunmeExtension {
           if (!!session) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
           } else {
-            const current = getServerLifecycleIdentity()
-            await commands.executeCommand('runme.lifecycleIdentitySelection', current)
+            const settingsDefault = getServerLifecycleIdentity()
+            await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
