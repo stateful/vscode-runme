@@ -47,6 +47,7 @@ export class CompletionGenerator {
 
     const req = new GenerateCellsRequest()
     req.notebook = protos.notebookTSToES(notebookProto)
+    req.selectedIndex = lastSelectedCell
 
     this.client
       .generateCells(req)
