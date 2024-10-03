@@ -350,7 +350,7 @@ describe('GrpcSerializer', () => {
       expect(applied).toBeFalsy()
     })
 
-    it('should apply lifecycle identity retaining initial ephemeral cell IDs', async () => {
+    it('should apply lifecycle identity retaining initial IDs', async () => {
       const fixture = deepCopyFixture()
       const descells = fixture.cells.map((cell, i) => {
         cell.index = i
@@ -361,11 +361,13 @@ describe('GrpcSerializer', () => {
         c.metadata['id'] = c.metadata['runme.dev/id']
         return c
       })
+      const metadata = { ...fixture.metadata }
+      metadata['runme.dev/cacheId'] = metadata['runme.dev/cacheId'].toString().slice(0, 10)
 
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       serializer.client = {
         deserialize: vi.fn().mockResolvedValue({
-          response: { notebook: { cells: descells, metadata: fixture.metadata } },
+          response: { notebook: { cells: descells, metadata } },
         }),
       }
       vi.mocked(workspace.applyEdit).mockResolvedValue(true)
