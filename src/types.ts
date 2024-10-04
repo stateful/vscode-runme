@@ -770,6 +770,7 @@ export enum FeatureName {
   ForceLogin = 'ForceLogin',
   SignedIn = 'SignedIn',
   RequireStatefulAuth = 'RequireStatefulAuth',
+  CopySelectionToClipboard = 'CopySelectionToClipboard',
 }
 
 export type Feature = {

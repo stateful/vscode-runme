@@ -59,6 +59,16 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "CopySelectionToClipboard": {
+        "enabled": true,
+        "conditions": {
+          "os": "linux",
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "RequireStatefulAuth": {
         "enabled": true,
         "conditions": {
