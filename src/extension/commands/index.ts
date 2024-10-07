@@ -94,9 +94,9 @@ export async function displayCategoriesSelector({
     return
   }
   const category = await window.showQuickPick(categories.sort(), {
-    title: 'Select a category to run.',
+    title: 'Select a tag to run.',
     ignoreFocusOut: true,
-    placeHolder: 'Select a category',
+    placeHolder: 'Select a tag',
   })
   if (!category) {
     return
@@ -111,7 +111,7 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
   const category = annotations.category
   if (!category) {
     const answer = await window.showInformationMessage(
-      'No category assigned to this cell. Add one in the configuration.',
+      'No tag assigned to this cell. Add one in the configuration.',
       'Configure',
       'Dismiss',
     )

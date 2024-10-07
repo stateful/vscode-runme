@@ -75,7 +75,7 @@ export class Annotations extends LitElement {
       description: 'Inserted into shebang (aka #!) line.',
     },
     category: {
-      description: 'Execute this code cell within a category (no comma or spaces allowed).',
+      description: 'Execute this code cell within a tag (no comma or spaces allowed).',
     },
     excludeFromRunAll: {
       description: 'Prevent executing this cell during the "Run All" operation.',
@@ -299,8 +299,8 @@ export class Annotations extends LitElement {
       <div>
         <category-selector
           categories="${this.categories}"
-          createNewCategoryText="Add ${id}"
-          selectCategoryText="Select ${id}"
+          createNewCategoryText="Add tag"
+          selectCategoryText="Select tag"
           selectedCategory="${value!}"
           description="${details.description}"
           identifier="${id}"
@@ -325,9 +325,9 @@ export class Annotations extends LitElement {
     const ctx = getContext()
     ctx.postMessage &&
       postClientMessage(ctx, ClientMessages.displayPrompt, {
-        placeholder: 'Category name',
+        placeholder: 'Tag name',
         isSecret: false,
-        title: 'New cell execution category',
+        title: 'New cell execution tag',
         id: this.getCellId(),
       })
   }
