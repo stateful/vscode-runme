@@ -17,6 +17,7 @@ const log = getLogger()
 // be persisted to the markdown file. This ensures that if a ghost cell is accepted
 // the ghost metadata is not persisted to the markdown file.
 export const ghostKey = '_ghostCell'
+export const ghostCellKindKey = '_ghostCellKind'
 
 const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
@@ -186,12 +187,31 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       }
     })
 
+    // DO NOT COMMIT hardcode a markup cell as the response
+    newCellData = [
+      new vscode.NotebookCellData(
+        vscode.NotebookCellKind.Markup,
+        'This is a generated cell',
+        'markdown',
+      ),
+    ]
+
     // Mark all newCells as ghost cells
     newCellData.forEach((cell) => {
       if (cell.metadata === undefined) {
         cell.metadata = {}
       }
       cell.metadata[ghostKey] = true
+
+      if (cell.kind === vscode.NotebookCellKind.Markup) {
+        // In order to render markup cells as ghost cells we need to convert them to code cells.
+        // Otherwise they don't get inserted in edit mode and we can't apply the decoration.
+        cell.metadata[ghostCellKindKey] = GhostCellKind.Markdown
+        cell.languageId = 'markdown'
+        cell.kind = vscode.NotebookCellKind.Code
+      } else {
+        cell.metadata[ghostCellKindKey] = GhostCellKind.Code
+      }
     })
 
     const insertCells = vscode.NotebookEdit.insertCells(startIndex, newCellData)
@@ -238,21 +258,29 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     if (!isGhostCell(cell)) {
       return
     }
-    // ...cell.metadata creates a shallow copy of the metadata object
-    const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
-    const update = vscode.NotebookEdit.updateCellMetadata(cell.index, updatedMetadata)
-    const edit = new vscode.WorkspaceEdit()
-    edit.set(editor.document.uri, [update])
-    vscode.workspace.applyEdit(edit).then((result: boolean) => {
-      log.trace(`updateCellMetadata to deactivate ghostcell resolved with ${result}`)
-      if (!result) {
-        log.error('applyEdit failed')
-        return
-      }
-    })
-    // If the cell is a ghost cell we want to remove the decoration
-    // and replace it with a non-ghost cell.
-    editorAsNonGhost(editor)
+
+    const ghostKind = getGhostCellKind(cell)
+    if (ghostKind === GhostCellKind.Markdown) {
+      // Since this is actually a markdown cell we need to replace the cell in order to convert it
+      // to a markdown cell.
+      markupCellAsNonGhost(cell)
+    } else if (cell.kind === vscode.NotebookCellKind.Code) {
+      // ...cell.metadata creates a shallow copy of the metadata object
+      const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
+      const update = vscode.NotebookEdit.updateCellMetadata(cell.index, updatedMetadata)
+      const edit = new vscode.WorkspaceEdit()
+      edit.set(editor.document.uri, [update])
+      vscode.workspace.applyEdit(edit).then((result: boolean) => {
+        log.trace(`updateCellMetadata to deactivate ghostcell resolved with ${result}`)
+        if (!result) {
+          log.error('applyEdit failed')
+          return
+        }
+      })
+      // If the cell is a ghost cell we want to remove the decoration
+      // and replace it with a non-ghost cell.
+      editorAsNonGhost(editor)
+    }
 
     const event = new agent_pb.LogEvent()
     event.type = agent_pb.LogEventType.ACCEPTED
@@ -368,6 +396,24 @@ function isGhostCell(cell: vscode.NotebookCell): boolean {
   return metadata?.[ghostKey] === true
 }
 
+enum GhostCellKind {
+  Code = 'CODE',
+  Markdown = 'MARKDOWN',
+  None = 'NONE',
+}
+
+// getGhostCellKind returns the kind of cell that should be used for a ghost cell.
+function getGhostCellKind(cell: vscode.NotebookCell): GhostCellKind {
+  const metadata = cell.metadata
+  if (metadata === undefined) {
+    return GhostCellKind.None
+  }
+  if (metadata[ghostCellKindKey] === undefined) {
+    return GhostCellKind.None
+  }
+  return metadata[ghostCellKindKey]
+}
+
 // getCellFromCellDocument returns the notebook cell that corresponds to a given text document.
 // We do this by iterating over all notebook documents and cells to find the cell that has the same URI as the
 // text document.
@@ -383,4 +429,29 @@ function getCellFromCellDocument(textDoc: vscode.TextDocument): vscode.NotebookC
     return result
   })
   return matchedCell
+}
+
+// markupCellAsNonGhost replaces a ghost markup cell with a non-ghost cell.
+// Since we render the markup cell as a code cell in order to make the ghost rendering apply
+// to the markup cell we need to replace the cell in order to change the cell type back to markdown.
+function markupCellAsNonGhost(cell: vscode.NotebookCell) {
+  const edit = new vscode.WorkspaceEdit()
+  // ...cell.metadata creates a shallow copy of the metadata object
+  const updatedMetadata = { ...cell.metadata, [ghostKey]: false }
+  const newCell = new vscode.NotebookCellData(
+    vscode.NotebookCellKind.Markup, // New cell type (code or markdown)
+    cell.document.getText(), // Cell content
+    cell.document.languageId, // Language of the cell content
+  )
+
+  newCell.metadata = updatedMetadata
+  const notebook = cell.notebook
+  const index = notebook.getCells().indexOf(cell)
+
+  const editReplace = vscode.NotebookEdit.replaceCells(new vscode.NotebookRange(index, index + 1), [
+    newCell,
+  ])
+
+  edit.set(notebook.uri, [editReplace])
+  vscode.workspace.applyEdit(edit)
 }
