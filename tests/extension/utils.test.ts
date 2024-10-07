@@ -61,7 +61,7 @@ vi.mock('vscode', async () => {
       workspace: {
         getConfiguration: vi.fn(),
         workspaceFolders: [],
-        fs: mocked.workspace.fs,
+        fs: { readFile: vi.fn().mockResolvedValue({}), writeFile: vi.fn() },
       },
       env: {
         machineId: 'test-machine-id',
