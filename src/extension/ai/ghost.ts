@@ -187,15 +187,6 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       }
     })
 
-    // DO NOT COMMIT hardcode a markup cell as the response
-    newCellData = [
-      new vscode.NotebookCellData(
-        vscode.NotebookCellKind.Markup,
-        'This is a generated cell',
-        'markdown',
-      ),
-    ]
-
     // Mark all newCells as ghost cells
     newCellData.forEach((cell) => {
       if (cell.metadata === undefined) {
