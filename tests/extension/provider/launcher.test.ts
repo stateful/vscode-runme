@@ -1,7 +1,11 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { commands, Uri, workspace } from 'vscode'
 
-import { RunmeFile, RunmeLauncherProvider } from '../../../src/extension/provider/launcher'
+import {
+  GLOB_PATTERN,
+  RunmeFile,
+  RunmeLauncherProvider,
+} from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
 
 vi.mock('../../../src/extension/grpc/client', () => ({}))
@@ -107,7 +111,7 @@ describe('Runme Notebooks', () => {
     const launchProvider = new RunmeLauncherProvider()
     launchProvider.refresh = vi.fn()
     launchProvider['_onDidChangeTreeData'] = { fire: vi.fn() } as any
-    expect(workspace.createFileSystemWatcher).toBeCalledWith('**/*.md', false, true, false)
+    expect(workspace.createFileSystemWatcher).toBeCalledWith(GLOB_PATTERN, false, true, false)
     handler.mock.calls[0][0]({ path: '/foo/bar' }, true)
     expect([...launchProvider['filesTree'].entries()]).toEqual([
       ['foo ', { files: ['bar'], folderPath: '/foo' }],

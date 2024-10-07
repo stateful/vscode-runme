@@ -37,7 +37,7 @@ interface TreeFile {
  */
 let i = 0
 
-const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
+export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
 
 export class RunmeFile extends TreeItem {
   constructor(
