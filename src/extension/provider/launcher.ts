@@ -37,6 +37,8 @@ interface TreeFile {
  */
 let i = 0
 
+const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
+
 export class RunmeFile extends TreeItem {
   constructor(
     public label: string,
@@ -64,7 +66,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
   private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
 
   constructor(private workspaceRoot?: string | undefined) {
-    const watcher = workspace.createFileSystemWatcher('**/*.md', false, true, false)
+    const watcher = workspace.createFileSystemWatcher(GLOB_PATTERN, false, true, false)
     this.#disposables.push(
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
       watcher.onDidDelete((file) => this.#onFileChange(file)),
@@ -203,7 +205,7 @@ export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Dispo
      */
     ++i
 
-    const files = await workspace.findFiles('**/*.md', `{${excludePatterns}}`)
+    const files = await workspace.findFiles(GLOB_PATTERN, `{${excludePatterns}}`)
     for (const file of files) {
       this.#addFileToTree(file)
     }
