@@ -24,6 +24,7 @@ interface IRunmeFileProps {
   collapsibleState: TreeItemCollapsibleState
   onSelectedCommand?: Command
   contextValue: string
+  relativePath?: string
 }
 
 interface TreeFile {
@@ -50,6 +51,7 @@ export class RunmeFile extends TreeItem {
     this.tooltip = options.tooltip
     this.command = options.onSelectedCommand
     this.contextValue = options.contextValue
+    this.description = options.relativePath
     this.iconPath = {
       light: join(assetsPath, options.lightIcon),
       dark: join(assetsPath, options.darkIcon),
@@ -57,7 +59,15 @@ export class RunmeFile extends TreeItem {
   }
 }
 
-export class RunmeLauncherProvider implements TreeDataProvider<RunmeFile>, Disposable {
+export interface RunmeTreeProvider extends TreeDataProvider<RunmeFile>, Disposable {
+  includeAllTasks: boolean
+  excludeUnnamed(): Promise<void>
+  includeUnnamed(): Promise<void>
+  collapseAll(): Promise<void>
+  expandAll(): Promise<void>
+}
+
+export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
 
   private _includeAllTasks = false

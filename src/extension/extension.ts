@@ -75,7 +75,8 @@ import {
   selectEnvironment,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
-import { RunmeLauncherProvider } from './provider/launcher'
+import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
+import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
 import GrpcRunner, { IRunner } from './runner'
 import * as survey from './survey'
@@ -134,7 +135,20 @@ export class RunmeExtension {
     kernel.setSerializer(serializer as GrpcSerializer)
     kernel.setReporter(reporter)
 
-    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    let treeViewer: RunmeTreeProvider
+
+    if (kernel.isFeatureOn(FeatureName.NewLauncher)) {
+      treeViewer = new RunmeLauncherProviderBeta(
+        kernel,
+        server,
+        serializer,
+        getDefaultWorkspace(),
+        runner,
+      )
+    } else {
+      treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    }
+
     const runmeTaskProvider = tasks.registerTaskProvider(
       RunmeTaskProvider.id,
       new RunmeTaskProvider(context, treeViewer, serializer, kernel, server, runner),

@@ -771,6 +771,7 @@ export enum FeatureName {
   SignedIn = 'SignedIn',
   RequireStatefulAuth = 'RequireStatefulAuth',
   CopySelectionToClipboard = 'CopySelectionToClipboard',
+  NewLauncher = 'NewLauncher',
 }
 
 export type Feature = {
