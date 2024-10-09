@@ -1,13 +1,13 @@
 import os from 'node:os'
 
-import { NotebookData, Uri, env, workspace } from 'vscode'
+import { NotebookData, Uri, env, workspace, commands } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
-import { ClientMessage, IApiMessage } from '../../../types'
+import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
@@ -71,8 +71,21 @@ export default async function saveCellExecution(
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
+    const silent = forceLogin ? undefined : true
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
-    const session = await getPlatformAuthSession(createIfNone)
+
+    const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
+    if (!session) {
+      await commands.executeCommand('runme.openCloudPanel')
+      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+        data: {
+          displayShare: false,
+        },
+        id: message.output.id,
+      })
+    }
+
     const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
 
     const path = editor.notebook.uri.fsPath
@@ -82,15 +95,6 @@ export default async function saveCellExecution(
     let data:
       | FetchResult<CreateExtensionCellOutputMutation>
       | FetchResult<CreateCellExecutionMutation>
-
-    if (!session) {
-      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
-        id: message.output.id,
-      })
-    }
 
     // If the reporter is enabled, we will save the cell execution using the reporter API.
     // This is only temporary, until the reporter is fully tested.

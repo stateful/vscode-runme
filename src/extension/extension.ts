@@ -364,6 +364,10 @@ export class RunmeExtension {
         ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.CELL),
       ),
 
+      RunmeExtension.registerCommand('runme.openCloudPanel', () =>
+        commands.executeCommand('workbench.view.extension.runme'),
+      ),
+
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(
         'runme.aiGenerate',

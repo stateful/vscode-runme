@@ -94,9 +94,9 @@ export async function displayCategoriesSelector({
     return
   }
   const category = await window.showQuickPick(categories.sort(), {
-    title: 'Select a category to run.',
+    title: 'Select a tag to run.',
     ignoreFocusOut: true,
-    placeHolder: 'Select a category',
+    placeHolder: 'Select a tag',
   })
   if (!category) {
     return
@@ -111,7 +111,7 @@ export async function runCellsByCategory(cell: NotebookCell, kernel: Kernel) {
   const category = annotations.category
   if (!category) {
     const answer = await window.showInformationMessage(
-      'No category assigned to this cell. Add one in the configuration.',
+      'No tag assigned to this cell. Add one in the configuration.',
       'Configure',
       'Dismiss',
     )
@@ -440,7 +440,9 @@ export async function createGistCommand(e: NotebookUiEvent, context: ExtensionCo
     const bytes = await workspace.fs.readFile(uri)
     const templatePath = Uri.joinPath(context.extensionUri, 'templates', 'gist.md')
     const byRunmeFile = await workspace.fs.readFile(templatePath)
-    const [originalFileName, sessionId] = fileName.split('-')
+    const fileNameParts = fileName.split('-')
+    const sessionId = fileNameParts.pop() as string
+    const originalFileName = fileNameParts.join('-')
 
     const createGistProgress = await window.withProgress(
       {
@@ -507,7 +509,9 @@ export async function createCellGistCommand(cell: NotebookCell, context: Extensi
     const cellGistTemplate = await workspace.fs.readFile(
       Uri.joinPath(context.extensionUri, 'templates', 'cellGist.md'),
     )
-    const [originalFileName, sessionId] = fileName.split('-')
+    const fileNameParts = fileName.split('-')
+    const sessionId = fileNameParts.pop() as string
+    const originalFileName = fileNameParts.join('-')
     const cellId = cell.notebook.metadata['runme.dev/id']
     const markdownId = cellId ? `${cellId}.md` : sessionId
 

@@ -11,10 +11,10 @@ export default class CategoryQuickPickItem implements QuickPickItem {
     isNew = false,
   ) {
     if (isNew) {
-      this.description = 'Add as new category'
+      this.description = 'Add as new tag'
       this.detail = CategoryQuickPickItem.isValid(label)
         ? '(Select, press save and enter)'
-        : 'Error: category name can not contain a comma or space'
+        : 'Error: tag name can not contain a comma or space'
     }
   }
 

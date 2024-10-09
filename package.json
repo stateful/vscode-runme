@@ -261,13 +261,13 @@
       {
         "command": "runme.runCategory",
         "category": "Runme",
-        "title": "Execute by Category",
+        "title": "Execute by Tag",
         "icon": "$(group-by-ref-type)"
       },
       {
         "command": "runme.runCellCategory",
         "category": "Runme",
-        "title": "Execute cells with the same Category",
+        "title": "Execute cells with the same Tag",
         "icon": "$(group-by-ref-type)"
       },
       {
@@ -387,6 +387,12 @@
         "title": "Lifecycle Identity - Cell",
         "category": "Runme",
         "description": "Lifecycle Identity - Cell"
+      },
+      {
+        "command": "runme.openCloudPanel",
+        "title": "Open Cloud Panel",
+        "category": "Runme",
+        "description": "Open Cloud Panel"
       }
     ],
     "menus": {
