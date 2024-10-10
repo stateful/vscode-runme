@@ -201,19 +201,19 @@ export class Kernel implements Disposable {
       extensionId: context?.extension?.id as ExtensionName,
     }
 
+    const runmeFeatureSettings = workspace.getConfiguration('runme.features')
+    const featureNames = Object.keys(FeatureName)
+
+    featureNames.forEach((feature) => {
+      if (runmeFeatureSettings.has(feature)) {
+        const result = runmeFeatureSettings.get<boolean>(feature, false)
+        this.#featuresSettings.set(feature, result)
+      }
+    })
+
     this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
 
     if (this.featuresState$) {
-      const runmeFeatures = workspace.getConfiguration('runme.features')
-      const featureNames = Object.keys(FeatureName).map((f) => f.toLowerCase())
-      if (features) {
-        featureNames.forEach((feature) => {
-          if (runmeFeatures.has(feature)) {
-            this.#featuresSettings.set(feature, runmeFeatures.get<boolean>(feature, false))
-          }
-        })
-      }
-
       const subscription = this.featuresState$
         .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
         .subscribe((snapshot) => {
