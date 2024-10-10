@@ -370,6 +370,15 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
     )
   }
 
+  public async switchLifecycleIdentity(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    notebook: NotebookDocument,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    identity: RunmeIdentity,
+  ): Promise<boolean> {
+    return false
+  }
+
   public static normalize(source: string): string {
     const lines = source.split('\n')
     const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
@@ -667,10 +676,10 @@ export class GrpcSerializer extends SerializerBase {
       return undefined
     }
 
-    const ephemeralId = metadata['runme.dev/id'] as string | undefined
-    const lid = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['id'] as string | undefined
+    // cacheId is always present, stays persistent across multiple de/-serialization cycles
+    const cacheId = metadata['runme.dev/cacheId'] as string | undefined
 
-    return lid ?? ephemeralId
+    return cacheId
   }
 
   public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
@@ -680,6 +689,48 @@ export class GrpcSerializer extends SerializerBase {
     }
     const sessionOutputId = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['id']
     return Boolean(sessionOutputId)
+  }
+
+  public override async switchLifecycleIdentity(
+    notebook: NotebookDocument,
+    identity: RunmeIdentity,
+  ): Promise<boolean> {
+    // skip session outputs files
+    if (!!notebook.metadata['runme.dev/frontmatterParsed']?.runme?.session?.id) {
+      return false
+    }
+
+    await notebook.save()
+    const source = await workspace.fs.readFile(notebook.uri)
+    const des = await this.client!.deserialize(
+      DeserializeRequest.create({
+        source,
+        options: { identity },
+      }),
+    )
+
+    const deserialized = des.response.notebook
+    if (!deserialized) {
+      return false
+    }
+
+    deserialized.metadata = { ...deserialized.metadata, ...notebook.metadata }
+    const notebookEdit = NotebookEdit.updateNotebookMetadata(deserialized.metadata)
+    const edits = [notebookEdit]
+    notebook.getCells().forEach((cell) => {
+      const descell = deserialized.cells[cell.index]
+      // skip if no IDs are present, means no cell identity required
+      if (!descell.metadata?.['id']) {
+        return
+      }
+      const metadata = { ...descell.metadata, ...cell.metadata }
+      metadata['id'] = metadata['runme.dev/id']
+      edits.push(NotebookEdit.updateCellMetadata(cell.index, metadata))
+    })
+
+    const edit = new WorkspaceEdit()
+    edit.set(notebook.uri, edits)
+    return await workspace.applyEdit(edit)
   }
 
   protected async saveNotebook(
@@ -813,7 +864,7 @@ export class GrpcSerializer extends SerializerBase {
       const metadata = notebook.metadata as unknown as {
         ['runme.dev/frontmatter']: string
       }
-      notebook.frontmatter = this.marshallFrontmatter(metadata, config.kernel)
+      notebook.frontmatter = this.marshalFrontmatter(metadata, config.kernel)
     }
 
     notebook.cells.forEach(async (cell, cellIdx) => {
@@ -826,7 +877,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  static marshallFrontmatter(
+  static marshalFrontmatter(
     metadata: { ['runme.dev/frontmatter']: string },
     kernel?: Kernel,
   ): Frontmatter {

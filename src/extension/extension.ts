@@ -20,9 +20,8 @@ import {
   getForceNewWindowConfig,
   getRunmeAppUrl,
   getServerRunnerVersion,
-  getServerConfigurationValue,
   getSessionOutputs,
-  ServerLifecycleIdentity,
+  getServerLifecycleIdentity,
 } from '../utils/configuration'
 import {
   AuthenticationProviders,
@@ -349,19 +348,43 @@ export class RunmeExtension {
       }),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
-        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.UNSPECIFIED),
+        commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.UNSPECIFIED),
       ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityAll', () =>
-        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL),
+        commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL),
       ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityDoc', () =>
-        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.DOCUMENT),
+        commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.DOCUMENT),
       ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityCell', () =>
-        ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.CELL),
+        commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.CELL),
+      ),
+
+      RunmeExtension.registerCommand(
+        'runme.lifecycleIdentitySelection',
+        async (identity?: RunmeIdentity) => {
+          if (identity === undefined) {
+            window.showErrorMessage('Cannot run command without identity selection')
+            return
+          }
+
+          // skip if lifecycle identity selection didn't change
+          const current = ContextState.getKey(NOTEBOOK_LIFECYCLE_ID)
+          if (current === identity) {
+            return
+          }
+
+          await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
+
+          await Promise.all(
+            workspace.notebookDocuments.map((doc) =>
+              serializer.switchLifecycleIdentity(doc, identity),
+            ),
+          )
+        },
       ),
 
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
@@ -478,13 +501,10 @@ export class RunmeExtension {
       ) {
         getPlatformAuthSession(false, true).then(async (session) => {
           if (!!session) {
-            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, RunmeIdentity.ALL)
+            await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
           } else {
-            const current = getServerConfigurationValue<ServerLifecycleIdentity>(
-              'lifecycleIdentity',
-              RunmeIdentity.ALL,
-            )
-            await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, current)
+            const settingsDefault = getServerLifecycleIdentity()
+            await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
