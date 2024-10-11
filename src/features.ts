@@ -100,7 +100,7 @@ function isActive(
     enabledForExtensions,
   } = feature.conditions
 
-  if (!checkEnabled(feature.enabled, overrides.get(featureName.toLowerCase()))) {
+  if (!checkEnabled(feature.enabled, overrides.get(featureName))) {
     console.log(`Feature "${featureName}" is inactive due to checkEnabled.`)
     return false
   }
