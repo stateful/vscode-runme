@@ -1,5 +1,5 @@
 import { AuthenticationSession, authentication, notebooks } from 'vscode'
-import { suite, vi, it, beforeAll, afterAll, afterEach, expect, vitest } from 'vitest'
+import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
 
@@ -74,7 +74,7 @@ afterEach(() => {
 })
 
 const mockCellInCache = (kernel, cellId) => {
-  vitest.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
+  vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
     cells: [],
   }))
   vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValueOnce({
@@ -291,9 +291,9 @@ suite('Save cell execution', () => {
         label: '',
       },
     }
-    vitest.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
+    vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-    vitest.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => undefined)
+    vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => undefined)
 
     const messaging = notebooks.createRendererMessaging('runme-renderer')
     const message = {
@@ -345,9 +345,9 @@ suite('Save cell execution', () => {
         label: '',
       },
     }
-    vitest.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
+    vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
     vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-    vitest.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
+    vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
       cells: [],
     }))
     vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValueOnce({
