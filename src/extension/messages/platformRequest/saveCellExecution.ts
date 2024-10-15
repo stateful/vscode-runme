@@ -1,6 +1,6 @@
 import os from 'node:os'
 
-import { NotebookData, Uri, env, workspace, commands } from 'vscode'
+import { Uri, env, workspace, commands } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
@@ -23,7 +23,7 @@ import {
   CreateNotebookInput,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
-import { Cell, Frontmatter } from '../../grpc/serializerTypes'
+import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
@@ -109,13 +109,22 @@ export default async function saveCellExecution(
     // If the reporter is enabled, we will save the cell execution using the reporter API.
     // This is only temporary, until the reporter is fully tested.
     if (isReporterEnabled) {
-      const notebookData = kernel.getNotebookDataCache(cacheId) as NotebookData
+      const notebookData = kernel.getNotebookDataCache(cacheId)
+
+      if (!notebookData) {
+        throw new Error(`Notebook data cache not found for cache ID: ${cacheId}`)
+      }
+
       const notebook = GrpcSerializer.marshalNotebook(notebookData, {
         kernel,
         marshalFrontmatter: true,
       })
 
-      const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id) as Cell
+      const cell = notebook?.cells.find((c) => c.metadata.id === message.output.id)
+
+      if (!cell) {
+        throw new Error(`Cell not found in notebook ${notebook.frontmatter?.runme?.id}`)
+      }
 
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
       const mutation = {
