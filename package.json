@@ -59,7 +59,7 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
-      "NewLauncher": {
+      "NewTreeProvider": {
         "enabled": false,
         "conditions": {
           "enabledForExtensions": {

@@ -137,7 +137,7 @@ export class RunmeExtension {
 
     let treeViewer: RunmeTreeProvider
 
-    if (kernel.isFeatureOn(FeatureName.NewLauncher)) {
+    if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
       treeViewer = new RunmeLauncherProviderBeta(
         kernel,
         server,
