@@ -17,3 +17,14 @@ export function isOnInContextState(featureName: FeatureName): boolean {
 export default {
   isOnInContextState,
 }
+
+export function getFeaturesContext() {
+  const snapshot = ContextState.getKey<string>(FEATURES_CONTEXT_STATE_KEY)
+  if (!snapshot) {
+    return
+  }
+
+  const featureState$ = features.loadSnapshot(snapshot)
+
+  return featureState$.getValue().context
+}

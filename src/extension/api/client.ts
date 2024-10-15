@@ -4,6 +4,7 @@ import fetch from 'cross-fetch'
 import { Uri } from 'vscode'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
+import { getFeaturesContext } from '../features'
 
 export function InitializeClient({
   uri,
@@ -13,11 +14,16 @@ export function InitializeClient({
   runmeToken: string
 }) {
   const authLink = setContext((_, { headers }) => {
+    const context = getFeaturesContext()
     return {
       headers: {
         ...headers,
         'Auth-Provider': 'platform',
         authorization: runmeToken ? `Bearer ${runmeToken}` : '',
+        'X-Extension-Id': context?.extensionId,
+        'X-Extension-Os': context?.os,
+        'X-Extension-Version': context?.extensionVersion,
+        'X-Code-Version': context?.vsCodeVersion,
       },
     }
   })
