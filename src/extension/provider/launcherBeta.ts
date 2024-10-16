@@ -239,7 +239,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         new RunmeFile(`${name}${!excludeFromRunAll ? '*' : ''}`, {
           description: `${lines.at(0)}`,
           tooltip: tooltip,
-          resourceUri: Uri.parse(`${name}.${languageId}`),
+          resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
           collapsibleState: TreeItemCollapsibleState.None,
           onSelectedCommand: {
             arguments: [
@@ -327,5 +327,23 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       toArray(),
       map((tasks) => tasks.sort((a, b) => dirProx(a) - dirProx(b))),
     )
+  }
+
+  resolveExtension(languageId: string): string {
+    const key = languageId.toLowerCase()
+
+    const languages: Record<string, string> = {
+      ruby: 'rb',
+      python: 'py',
+      python3: 'py',
+      javascript: 'js',
+      node: 'js',
+      typescript: 'ts',
+      deno: 'ts',
+      bash: 'sh',
+      shell: 'sh',
+    }
+
+    return languages[key] || languageId
   }
 }
