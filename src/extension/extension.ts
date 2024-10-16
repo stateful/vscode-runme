@@ -138,6 +138,8 @@ export class RunmeExtension {
     let treeViewer: RunmeTreeProvider
 
     if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
+      await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
+
       treeViewer = new RunmeLauncherProviderBeta(
         kernel,
         server,

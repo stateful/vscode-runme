@@ -7,7 +7,6 @@ import {
   TreeItemCollapsibleState,
   Command,
   TreeDataProvider,
-  Event,
   Uri,
   commands,
   FileType,
@@ -98,10 +97,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     return this._includeAllTasks
   }
 
-  private _onDidChangeTreeData: EventEmitter<RunmeFile | undefined> = new EventEmitter<
-    RunmeFile | undefined
-  >()
-  readonly onDidChangeTreeData: Event<RunmeFile | undefined> = this._onDidChangeTreeData.event
+  private _onDidChangeTreeData = new EventEmitter<RunmeFile | undefined>()
 
   getTreeItem(element: RunmeFile): TreeItem {
     return element
@@ -171,6 +167,10 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   async openFile({ file, folderPath }: OpenFileOptions) {
     const doc = Uri.file(`${folderPath}/${file}`)
     await commands.executeCommand('vscode.openWith', doc, Kernel.type)
+  }
+
+  get onDidChangeTreeData() {
+    return this._onDidChangeTreeData.event
   }
 
   async collapseAll() {

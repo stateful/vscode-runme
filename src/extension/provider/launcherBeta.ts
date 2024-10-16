@@ -12,6 +12,7 @@ import {
   NotebookCellData,
   commands,
   window,
+  EventEmitter,
 } from 'vscode'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
@@ -51,13 +52,22 @@ type TaskNotebook = NotebookData | Serializer.Notebook
 
 type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
 
+/**
+ * used to force VS Code update the tree view when user expands/collapses all
+ * see https://github.com/microsoft/vscode/issues/172479
+ */
+/* eslint-disable-next-line */
+let sauceCount = 0
+
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
   private _includeAllTasks = false
   private tasks: Promise<ProjectTask[]>
   private ready: ReadyPromise
   private client: ProjectServiceClient | undefined
+  private defaultItemState = TreeItemCollapsibleState.Expanded
   private serverReadyListener: Disposable | undefined
+  private _onDidChangeTreeData = new EventEmitter<RunmeFile | undefined>()
 
   constructor(
     private kernel: Kernel,
@@ -127,9 +137,21 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     )
   }
 
-  async collapseAll() {}
+  get onDidChangeTreeData() {
+    return this._onDidChangeTreeData.event
+  }
 
-  async expandAll() {}
+  async collapseAll() {
+    this.defaultItemState = TreeItemCollapsibleState.Collapsed
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
+    this._onDidChangeTreeData.fire(undefined)
+  }
+
+  async expandAll() {
+    this.defaultItemState = TreeItemCollapsibleState.Expanded
+    await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
+    this._onDidChangeTreeData.fire(undefined)
+  }
 
   getTreeItem(element: RunmeFile): TreeItem {
     return element
@@ -139,13 +161,18 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     const allTasks = await this.tasks
 
     if (!element) {
-      return Promise.resolve(await this.getParentElement(allTasks))
+      /**
+       * we need to tweak the folder name to force VS Code re-render the tree view
+       * see https://github.com/microsoft/vscode/issues/172479
+       */
+      ++sauceCount
+      return Promise.resolve(await this.getNotebooks(allTasks))
     }
 
-    return Promise.resolve(await this.getChildrenNew(allTasks, element))
+    return Promise.resolve(await this.getCells(allTasks, element))
   }
 
-  async getParentElement(tasks: LoadEventFoundTask[]): Promise<RunmeFile[]> {
+  async getNotebooks(tasks: LoadEventFoundTask[]): Promise<RunmeFile[]> {
     const foundTasks: RunmeFile[] = []
     let prevDir: string | undefined
 
@@ -162,8 +189,8 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
       prevDir = relativePath
       foundTasks.push(
-        new RunmeFile(relativePath, {
-          collapsibleState: TreeItemCollapsibleState.Expanded,
+        new RunmeFile(`${relativePath}${sauceCount % 2 ? ' ' : ''}`, {
+          collapsibleState: this.defaultItemState,
           lightIcon: 'icon.gif',
           darkIcon: 'icon.gif',
           contextValue: 'folder',
@@ -174,7 +201,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     return foundTasks
   }
 
-  async getChildrenNew(tasks: LoadEventFoundTask[], element: RunmeFile): Promise<RunmeFile[]> {
+  async getCells(tasks: LoadEventFoundTask[], element: RunmeFile): Promise<RunmeFile[]> {
     const foundTasks: RunmeFile[] = []
 
     let mdBuffer: Uint8Array
@@ -188,7 +215,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         continue
       }
 
-      if (element.label !== relativePath) {
+      if (element.label.trimEnd() !== relativePath) {
         continue
       }
 
@@ -291,8 +318,6 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         identity: RunmeIdentity.ALL,
       }
     })
-
-    logger.info(`Walking ${requests.length} directories/repos...`)
 
     const task$ = new Observable<ProjectTask>((observer) => {
       this.ready.then(() =>
