@@ -905,6 +905,7 @@ export class GrpcSerializer extends SerializerBase {
         session: { id: kernel?.getRunnerEnvironment()?.getSessionId() || '' },
       },
       category: '',
+      tag: '',
       cwd: '',
       shell: '',
       skipPrompts: false,
