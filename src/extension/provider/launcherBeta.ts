@@ -11,6 +11,7 @@ import {
   NotebookCell,
   NotebookCellData,
   commands,
+  window,
 } from 'vscode'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
@@ -35,8 +36,9 @@ import { Kernel } from '../kernel'
 import type { IRunner } from '../runner'
 import getLogger from '../logger'
 import { SerializerBase } from '../serializer'
+import { runCellWithPrompts } from '../commands'
 
-import { RunmeFile, RunmeTreeProvider } from './launcher'
+import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 
 export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
 const logger = getLogger('LauncherBeta')
@@ -45,7 +47,7 @@ type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
 
 type ProjectTask = LoadEventFoundTask
 
-type _TaskNotebook = NotebookData | Serializer.Notebook
+type TaskNotebook = NotebookData | Serializer.Notebook
 
 type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
 
@@ -86,17 +88,21 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   // RunmeTreeProvider
-  getTreeItem(element: RunmeFile): TreeItem {
-    return element
-  }
+  async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
+    const doc = Uri.file(`${folderPath}/${file}`)
+    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
 
-  async getChildren(element?: RunmeFile | undefined): Promise<RunmeFile[]> {
-    const allTasks = await this.tasks
-    let foundTasks: RunmeFile[] = []
+    if (cellIndex === undefined) {
+      return
+    }
 
-    foundTasks = await this.getChildrenNew(allTasks, element)
+    const notebookEditor = window.visibleNotebookEditors.find((editor) => {
+      return editor.notebook.uri.path === doc.path
+    })
 
-    return Promise.resolve(foundTasks)
+    if (notebookEditor && this.kernel) {
+      await runCellWithPrompts(notebookEditor.notebook.cellAt(cellIndex), this.kernel)
+    }
   }
 
   public get includeAllTasks(): boolean {
@@ -125,10 +131,50 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   async expandAll() {}
 
-  async getChildrenNew(
-    tasks: LoadEventFoundTask[],
-    _element?: RunmeFile | undefined,
-  ): Promise<RunmeFile[]> {
+  getTreeItem(element: RunmeFile): TreeItem {
+    return element
+  }
+
+  async getChildren(element?: RunmeFile | undefined): Promise<RunmeFile[]> {
+    const allTasks = await this.tasks
+
+    if (!element) {
+      return Promise.resolve(await this.getParentElement(allTasks))
+    }
+
+    return Promise.resolve(await this.getChildrenNew(allTasks, element))
+  }
+
+  async getParentElement(tasks: LoadEventFoundTask[]): Promise<RunmeFile[]> {
+    const foundTasks: RunmeFile[] = []
+    let prevDir: string | undefined
+
+    for (const task of tasks) {
+      const { documentPath } = task
+      const { outside, relativePath } = asWorkspaceRelativePath(documentPath)
+      if (outside) {
+        continue
+      }
+
+      if (prevDir === relativePath) {
+        continue
+      }
+
+      prevDir = relativePath
+      foundTasks.push(
+        new RunmeFile(relativePath, {
+          collapsibleState: TreeItemCollapsibleState.Expanded,
+          lightIcon: 'icon.gif',
+          darkIcon: 'icon.gif',
+          contextValue: 'folder',
+        }),
+      )
+    }
+
+    return foundTasks
+  }
+
+  async getChildrenNew(tasks: LoadEventFoundTask[], element: RunmeFile): Promise<RunmeFile[]> {
     const foundTasks: RunmeFile[] = []
 
     let mdBuffer: Uint8Array
@@ -139,6 +185,10 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       const { documentPath, name, id } = task
       const { outside, relativePath } = asWorkspaceRelativePath(documentPath)
       if (outside) {
+        continue
+      }
+
+      if (element.label !== relativePath) {
         continue
       }
 
@@ -170,21 +220,35 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         }),
       )
 
-      // const notebookish = !isObservable(notebook) ? of(notebook) : notebook
+      const notebookish = !isObservable(notebook) ? of(notebook) : notebook
+      const taskNotebook = await firstValueFrom<TaskNotebook>(notebookish as any)
       const cellish = !isObservable(cell) ? of(cell) : cell
-      // const taskNotebook = await firstValueFrom<TaskNotebook>(notebookish as any)
       const taskCell = await firstValueFrom<TaskCell>(cellish as any)
+
       const { excludeFromRunAll } = getAnnotations(taskCell.metadata)
+      const cellText = 'value' in taskCell ? taskCell.value : taskCell.document.getText()
+      const languageId = ('languageId' in taskCell && taskCell.languageId) || 'sh'
+      const cellIndex = taskNotebook.cells.findIndex(
+        (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
+      )
+
+      const lines = cellText.split('\n')
+      const tooltip = lines.length > 3 ? [...lines.slice(0, 3), '...'].join('\n') : lines.join('\n')
 
       foundTasks.push(
         new RunmeFile(`${name}${!excludeFromRunAll ? '*' : ''}`, {
-          relativePath: relativePath,
-          tooltip: 'Click to open runme file',
-          lightIcon: 'icon.gif',
-          darkIcon: 'icon.gif',
+          description: `${lines.at(0)}`,
+          tooltip: tooltip,
+          resourceUri: Uri.parse(`${name}.${languageId}`),
           collapsibleState: TreeItemCollapsibleState.None,
           onSelectedCommand: {
-            arguments: [{ file: basename(documentPath), folderPath: dirname(documentPath) }],
+            arguments: [
+              {
+                file: basename(documentPath),
+                folderPath: dirname(documentPath),
+                cellIndex: cellIndex,
+              },
+            ],
             command: 'runme.openRunmeFile',
             title: name,
           },

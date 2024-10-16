@@ -12,19 +12,22 @@ import {
   commands,
   FileType,
   Disposable,
+  ThemeIcon,
 } from 'vscode'
 
 import { Kernel } from '../kernel'
 import { mapGitIgnoreToGlobFolders, getPathType } from '../utils'
 
 interface IRunmeFileProps {
-  tooltip: string
-  lightIcon: string
-  darkIcon: string
+  tooltip?: string
+  lightIcon?: string
+  darkIcon?: string
   collapsibleState: TreeItemCollapsibleState
   onSelectedCommand?: Command
   contextValue: string
-  relativePath?: string
+  description?: string
+  iconPath?: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon
+  resourceUri?: Uri
 }
 
 interface TreeFile {
@@ -46,25 +49,33 @@ export class RunmeFile extends TreeItem {
     options: IRunmeFileProps,
   ) {
     super(label, options.collapsibleState)
-    const assetsPath = join(__filename, '..', '..', 'assets')
 
     this.tooltip = options.tooltip
     this.command = options.onSelectedCommand
     this.contextValue = options.contextValue
-    this.description = options.relativePath
-    this.iconPath = {
-      light: join(assetsPath, options.lightIcon),
-      dark: join(assetsPath, options.darkIcon),
+    this.description = options.description
+    this.resourceUri = options.resourceUri
+
+    if (options.iconPath) {
+      this.iconPath = options.iconPath
+    } else if (options.lightIcon && options.darkIcon) {
+      const assetsPath = join(__filename, '..', '..', 'assets')
+      this.iconPath = {
+        light: join(assetsPath, options.lightIcon),
+        dark: join(assetsPath, options.darkIcon),
+      }
     }
   }
 }
 
+export type OpenFileOptions = { file: string; folderPath: string; cellIndex?: number }
 export interface RunmeTreeProvider extends TreeDataProvider<RunmeFile>, Disposable {
   includeAllTasks: boolean
   excludeUnnamed(): Promise<void>
   includeUnnamed(): Promise<void>
   collapseAll(): Promise<void>
   expandAll(): Promise<void>
+  openFile(options: OpenFileOptions): Promise<void>
 }
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
@@ -157,7 +168,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     this._onDidChangeTreeData.fire(undefined)
   }
 
-  public static async openFile({ file, folderPath }: { file: string; folderPath: string }) {
+  async openFile({ file, folderPath }: OpenFileOptions) {
     const doc = Uri.file(`${folderPath}/${file}`)
     await commands.executeCommand('vscode.openWith', doc, Kernel.type)
   }
