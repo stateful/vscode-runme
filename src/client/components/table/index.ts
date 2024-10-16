@@ -140,6 +140,7 @@ export class Table extends LitElement {
       max-width: 100px;
       text-overflow: ellipsis;
       overflow: hidden;
+      text-wrap: nowrap;
     }
 
     .row-error {

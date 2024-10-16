@@ -21,6 +21,9 @@ const COLUMNS = [
     text: 'Value',
   },
   {
+    text: 'Description',
+  },
+  {
     text: 'Spec',
   },
   {
@@ -29,9 +32,9 @@ const COLUMNS = [
   {
     text: 'Updated',
   },
-  {
-    text: 'Created',
-  },
+  // {
+  //   text: 'Created',
+  // },
 ]
 
 const HIDDEN_COLUMNS = ['resolvedValue', 'errors', 'status', 'specClass']
@@ -74,11 +77,12 @@ export default class Table extends LitElement {
             name: v.name,
             status: v.status,
             originalValue: v.originalValue,
+            description: v.description,
             spec: v.spec,
             specClass: v.isRequired ? 'required' : 'optional',
             origin: v.origin,
             updatedAt: formatDate(new Date(v.updateTime)),
-            createdAt: formatDate(new Date(v.createTime)),
+            // createdAt: formatDate(new Date(v.createTime)),
             resolvedValue: v.resolvedValue,
             errors: v.errors,
           }
@@ -119,13 +123,13 @@ export default class Table extends LitElement {
                   return this.#copy(row.originalValue)
                 }}"
               ></env-viewer>`
-            case 'createdAt':
-              return this.#renderValue(row, field, () =>
-                row[field] ? formatDateWithTimeAgo(new Date(row[field])) : '',
-              )
+            // case 'createdAt':
+            //   return this.#renderValue(row, field, () =>
+            //     row[field] ? formatDateWithTimeAgo(new Date(row[field])) : '',
+            //   )
             case 'updatedAt':
               return this.#renderValue(row, field, () =>
-                row[field] ? formatDate(new Date(row[field])) : '',
+                row[field] ? formatDateWithTimeAgo(new Date(row[field])) : '',
               )
             case 'spec':
               return this.#renderValue(row, field, () => {
