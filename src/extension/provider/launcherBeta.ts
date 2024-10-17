@@ -60,7 +60,7 @@ let sauceCount = 0
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
-  private _includeAllTasks = false
+  private allowUnnamed = true
   private tasks: Promise<ProjectTask[]>
   private ready: ReadyPromise
   private client: ProjectServiceClient | undefined
@@ -115,25 +115,19 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   public get includeAllTasks(): boolean {
-    return this._includeAllTasks
+    return this.allowUnnamed
   }
 
   async includeUnnamed() {
-    this._includeAllTasks = true
-    await commands.executeCommand(
-      'setContext',
-      'runme.launcher.includeUnnamed',
-      this._includeAllTasks,
-    )
+    this.allowUnnamed = true
+    await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   async excludeUnnamed() {
-    this._includeAllTasks = false
-    await commands.executeCommand(
-      'setContext',
-      'runme.launcher.includeUnnamed',
-      this._includeAllTasks,
-    )
+    this.allowUnnamed = false
+    await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
+    this._onDidChangeTreeData.fire(undefined)
   }
 
   get onDidChangeTreeData() {
@@ -208,9 +202,9 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     let notebook: Observable<NotebookData> | undefined
 
     for (const task of tasks) {
-      const { documentPath, name, id } = task
+      const { documentPath, name, id, isNameGenerated } = task
       const { outside, relativePath } = asWorkspaceRelativePath(documentPath)
-      if (outside) {
+      if (outside || (!this.allowUnnamed && isNameGenerated)) {
         continue
       }
 
