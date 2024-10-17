@@ -37,7 +37,6 @@ import { Kernel } from '../kernel'
 import type { IRunner } from '../runner'
 import getLogger from '../logger'
 import { SerializerBase } from '../serializer'
-import { runCellWithPrompts } from '../commands'
 
 import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 
@@ -111,7 +110,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     })
 
     if (notebookEditor && this.kernel) {
-      await runCellWithPrompts(notebookEditor.notebook.cellAt(cellIndex), this.kernel)
+      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(cellIndex))
     }
   }
 
