@@ -13,6 +13,7 @@ import getLogger from '../logger'
 
 import { SessionManager } from './sessions'
 import * as converters from './converters'
+import * as stream from './stream'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
@@ -25,10 +26,12 @@ export interface IEventReporter {
 export class EventReporter implements IEventReporter {
   client: PromiseClient<typeof AIService>
   log: ReturnType<typeof getLogger>
+  streamCreator: stream.StreamCreator
 
-  constructor(client: PromiseClient<typeof AIService>) {
+  constructor(client: PromiseClient<typeof AIService>, streamCreator: stream.StreamCreator) {
     this.client = client
     this.log = getLogger('AIEventReporter')
+    this.streamCreator = streamCreator
   }
 
   async reportExecution(cell: vscode.NotebookCell) {
@@ -58,6 +61,10 @@ export class EventReporter implements IEventReporter {
     event.type = LogEventType.EXECUTE
     event.cells = cells
     event.contextId = SessionManager.getManager().getID()
+
+    // Fire an event to trigger the AI service
+    const cellChangeEvent = new stream.CellChangeEvent(cell.notebook.uri.toString(), cell.index)
+    this.streamCreator.handleEvent(cellChangeEvent)
     return this.reportEvents([event])
   }
 

@@ -88,6 +88,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
     // Has the cell changed since the last time we processed an event?
+    // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
+    // correctly detect that the cell has changed and a new stream needs to be initiated.
     let newCell = true
     if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
       newCell = false
@@ -236,6 +238,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       return
     }
 
+    // Are schemes defined here:
+    // https://github.com/microsoft/vscode/blob/a56879c50db91715377005d6182d12742d1ba5c7/src/vs/base/common/network.ts#L64
     if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
       // Doesn't correspond to a notebook cell so do nothing
       return
