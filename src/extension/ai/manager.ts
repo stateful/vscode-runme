@@ -16,6 +16,7 @@ export class AIManager {
   subscriptions: vscode.Disposable[] = []
   client: PromiseClient<typeof AIService>
   completionGenerator: generate.CompletionGenerator
+
   constructor() {
     this.log = getLogger('AIManager')
     this.log.info('AI: Initializing AI Manager')
@@ -25,9 +26,6 @@ export class AIManager {
     this.completionGenerator = new generate.CompletionGenerator(this.client)
     if (autoComplete) {
       this.registerGhostCellEvents()
-
-      // Update the global event reporter to use the AI service
-      events.setEventReporter(new events.EventReporter(this.client))
     }
   }
 
@@ -49,6 +47,9 @@ export class AIManager {
     // Create a stream creator. The StreamCreator is a class that effectively windows events
     // and turns each window into an AsyncIterable of streaming requests.
     let creator = new stream.StreamCreator(cellGenerator, this.client)
+
+    // Update the global event reporter to use the AI service
+    events.setEventReporter(new events.EventReporter(this.client, creator))
 
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.

@@ -256,3 +256,21 @@ class PromiseIterator<T> {
     return Promise.reject(err)
   }
 }
+
+// let _globalStreamCreator = new NullOpEventReporter()
+
+// // Interface for the event reporter
+// // This allows us to swap in a null op logger when AI isn't enabled
+// export interface IStream {
+//   reportExecution(cell: vscode.NotebookCell): Promise<void>
+//   reportEvents(events: LogEvent[]): Promise<void>
+// }
+
+// // getEventReporter returns the global event reporter
+// export function getEventReporter(): IEventReporter {
+//   return _globalReporter
+// }
+
+// export function setEventReporter(reporter: IEventReporter) {
+//   _globalReporter = reporter
+// }

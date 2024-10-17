@@ -88,6 +88,14 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
     // Has the cell changed since the last time we processed an event?
+    // TODO(jeremy): I think there's an edge case here. Imagine you activate a cell and then close the notebook.
+    // You then reopen the notebook and execute the same cell that was previously active. In this case,
+    // the nbState.activeCell is the one that was active before the notebook was closed because we currently don't
+    // clear it on notebook close. So if the cell is the same cell that was active before then we end up setting
+    // newCell = false. In this case we don't trigger a new request. This should be ok because the server
+    // uses the sessionId and detects that the sessionId isn't correct and ends up rejecting the request.
+    // I think this is really only an issue when you reopen a notebook and just execute a code cell without
+    // activating and editing that code cell.
     let newCell = true
     if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
       newCell = false
@@ -236,6 +244,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       return
     }
 
+    // Are schemes defined here:
+    // https://github.com/microsoft/vscode/blob/a56879c50db91715377005d6182d12742d1ba5c7/src/vs/base/common/network.ts#L64
     if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
       // Doesn't correspond to a notebook cell so do nothing
       return
