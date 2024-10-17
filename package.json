@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "NewTreeProvider": {
+        "enabled": false,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "CopySelectionToClipboard": {
         "enabled": true,
         "conditions": {
