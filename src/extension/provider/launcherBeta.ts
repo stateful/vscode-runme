@@ -185,8 +185,8 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       foundTasks.push(
         new RunmeFile(`${relativePath}${sauceCount % 2 ? ' ' : ''}`, {
           collapsibleState: this.defaultItemState,
-          lightIcon: 'icon.gif',
-          darkIcon: 'icon.gif',
+          lightIcon: 'tree-notebook.gif',
+          darkIcon: 'tree-notebook.gif',
           contextValue: 'folder',
         }),
       )
