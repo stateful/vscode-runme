@@ -37,6 +37,7 @@ import { Kernel } from '../kernel'
 import type { IRunner } from '../runner'
 import getLogger from '../logger'
 import { SerializerBase } from '../serializer'
+import { LANGID_AND_EXTENSIONS } from '../../constants'
 
 import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 
@@ -349,19 +350,6 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   resolveExtension(languageId: string): string {
     const key = languageId.toLowerCase()
-
-    const languages: Record<string, string> = {
-      ruby: 'rb',
-      python: 'py',
-      python3: 'py',
-      javascript: 'js',
-      node: 'js',
-      typescript: 'ts',
-      deno: 'ts',
-      bash: 'sh',
-      shell: 'sh',
-    }
-
-    return languages[key] || languageId
+    return LANGID_AND_EXTENSIONS.get(key) || languageId
   }
 }
