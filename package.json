@@ -1210,7 +1210,7 @@
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "run-s postinstall:*",
     "postinstall:wasm": "npm run download:wasm && npm run download:binary",
-    "postinstall:husky": "husky install",
+    "postinstall:husky": "husky",
     "test": "runme run test",
     "watch": "npm run build:dev -- --watch",
     "vscode:prepublish": "npm run prepare-binary",
