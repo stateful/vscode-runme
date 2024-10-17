@@ -100,7 +100,7 @@ $ cp -f "assets/$EXTENSION_BASENAME-icon.gif" "assets/icon.gif"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-open-light.svg" "assets/logo-open-light.svg"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
-$ npm install --include=dev
+$ NODE_OPTIONS='' npm install --include=dev
 ```
 
 Similarly a Runme WASM binary needs to be downloaded. If an error happened follow the error instructions and re-run the download, via:
