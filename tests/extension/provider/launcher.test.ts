@@ -75,8 +75,8 @@ describe('Runme Notebooks', () => {
 
     it('should open a file using runme renderer', () => {
       vi.mocked(Uri.file).mockImplementation((p) => p as any)
-
-      RunmeLauncherProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
+      const launchProvider = new RunmeLauncherProvider()
+      launchProvider.openFile({ file: 'README.md', folderPath: 'runme/workspace/src' })
       expect(commands.executeCommand).toBeCalledTimes(1)
       expect(commands.executeCommand).toBeCalledWith(
         'vscode.openWith',
