@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import { StreamGenerateRequest_Trigger } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
 import * as serializer from '../serializer'
@@ -103,7 +104,9 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       newCell = false
     }
 
-    log.info(`buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}`)
+    log.info(
+      `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
+    )
 
     // Update notebook state
     nbState.activeCell = matchedCell
@@ -129,6 +132,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
             notebookUri: notebook.uri.toString(),
           }),
         },
+        trigger: cellChangeEvent.trigger,
       })
 
       return request
@@ -147,6 +151,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
             cell: notebook.cells[0],
           }),
         },
+        trigger: cellChangeEvent.trigger,
       })
 
       return request
@@ -349,7 +354,11 @@ export class CellChangeEventGenerator {
 
     log.info(`onDidChangeTextDocument Fired cell index ${matchedCell.index}`)
     this.streamCreator.handleEvent(
-      new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
+      new stream.CellChangeEvent(
+        notebook.uri.toString(),
+        matchedCell.index,
+        StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+      ),
     )
   }
 
@@ -394,7 +403,11 @@ export class CellChangeEventGenerator {
         // running. So in principle the active cell could be different from the cell that changed.
         this.streamCreator.handleEvent(
           // TODO(jeremy): We should add a trigger field for the cell change event.
-          new stream.CellChangeEvent(change.cell.document.uri.toString(), change.cell.index),
+          new stream.CellChangeEvent(
+            change.cell.notebook.uri.toString(),
+            change.cell.index,
+            StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
+          ),
         )
       }
     })

@@ -4,6 +4,7 @@ import {
   LogEventsRequest,
   LogEventType,
   LogEvent,
+  StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
 import { ulid } from 'ulidx'
@@ -63,7 +64,11 @@ export class EventReporter implements IEventReporter {
     event.contextId = SessionManager.getManager().getID()
 
     // Fire an event to trigger the AI service
-    const cellChangeEvent = new stream.CellChangeEvent(cell.notebook.uri.toString(), cell.index)
+    const cellChangeEvent = new stream.CellChangeEvent(
+      cell.notebook.uri.toString(),
+      cell.index,
+      StreamGenerateRequest_Trigger.CELL_EXECUTE,
+    )
     this.streamCreator.handleEvent(cellChangeEvent)
     return this.reportEvents([event])
   }
