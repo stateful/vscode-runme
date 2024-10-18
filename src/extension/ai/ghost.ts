@@ -383,6 +383,22 @@ export class CellChangeEventGenerator {
       editorAsGhost(editor)
     }
   }
+
+  handleOnDidChangeNotebookDocument = (event: vscode.NotebookDocumentChangeEvent) => {
+    log.info('onDidChangeNotebookDocument Fired')
+    event.cellChanges.forEach((change) => {
+      if (change.outputs !== undefined) {
+        // It is the responsibility of the StreamCreator to decide whether the change should be processed..
+        // In particular its possible that the cell that changed is not the active cell. Therefore
+        // we may not want to generate completions for it. For example, you can have multiple cells
+        // running. So in principle the active cell could be different from the cell that changed.
+        this.streamCreator.handleEvent(
+          // TODO(jeremy): We should add a trigger field for the cell change event.
+          new stream.CellChangeEvent(change.cell.document.uri.toString(), change.cell.index),
+        )
+      }
+    })
+  }
 }
 
 // editorAsGhost decorates an editor as a ghost cell.
