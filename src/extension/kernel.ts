@@ -1013,7 +1013,7 @@ export class Kernel implements Disposable {
         workspaceRoot,
         envStoreType,
         // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this server-side
+        // does this really make sense if kernel/client aren't on the same host?
         envs: processEnviron(),
       })
 
