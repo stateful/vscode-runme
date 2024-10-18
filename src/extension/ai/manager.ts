@@ -54,6 +54,9 @@ export class AIManager {
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.
     // We use this to generate completions.
+    // In my testing, onDidChangeTextDocument fires for the cell (scheme vscode-notebook-cell)
+    // as well as for the output (scheme output). For output though it seemed to be firing continuously
+    // so I didn't understand what was triggering it.
     this.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
     )
@@ -62,13 +65,14 @@ export class AIManager {
     // This can happen due to scrolling.
     // We need to trap this event to apply decorations to turn cells into ghost cells.
     this.subscriptions.push(
-      vscode.window.onDidChangeVisibleTextEditors(ghost.handleOnDidChangeVisibleTextEditors),
+      vscode.window.onDidChangeVisibleTextEditors(
+        eventGenerator.handleOnDidChangeVisibleTextEditors,
+      ),
     )
 
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
-      // vscode.window.onDidChangeActiveTextEditor(localOnDidChangeActiveTextEditor),
     )
   }
 

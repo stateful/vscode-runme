@@ -19,6 +19,14 @@ const log = getLogger()
 export const ghostKey = '_ghostCell'
 export const ghostCellKindKey = '_ghostCellKind'
 
+// Schemes are defined at
+// https://github.com/microsoft/vscode/blob/a56879c50db91715377005d6182d12742d1ba5c7/src/vs/base/common/network.ts#L64
+export const vsCodeCellScheme = 'vscode-notebook-cell'
+
+// vsCodeOutputScheme is the scheme for the output window (not cell outputs).
+// The output window is where the logs for Runme are displayed.
+export const vsCodeOutputScheme = 'output'
+
 const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
 })
@@ -309,8 +317,12 @@ export class CellChangeEventGenerator {
   }
 
   handleOnDidChangeNotebookCell = (event: vscode.TextDocumentChangeEvent) => {
-    if (event.document.uri.scheme !== 'vscode-notebook-cell') {
-      // ignore other open events
+    if (![vsCodeCellScheme].includes(event.document.uri.scheme)) {
+      // TODO(DONOTCOMMIT): This is just for debugging during development to see if we are missing
+      // changes to the output events.
+      // log.info(
+      //   `**IGNORING DOCUMENT CHANGE EVENT** scheme:${event.document.uri.scheme} uri:${event.document.uri}`,
+      // )
       return
     }
     var matchedCell: vscode.NotebookCell | undefined
@@ -335,32 +347,41 @@ export class CellChangeEventGenerator {
       return
     }
 
+    log.info(`onDidChangeTextDocument Fired cell index ${matchedCell.index}`)
     this.streamCreator.handleEvent(
       new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
     )
   }
-}
 
-// handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
-// This includes when a TextEditor is created. I also think it can be the result of scrolling.
-export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
-  for (const editor of editors) {
-    log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
-    if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
-      log.info(`onDidChangeVisibleTextEditors Fired fo ${editor.document.uri}`)
-      // Doesn't correspond to a notebook cell so do nothing
-      continue
-    }
-    const cell = getCellFromCellDocument(editor.document)
-    if (cell === undefined) {
-      continue
-    }
+  // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
+  // This includes when a TextEditor is created. I also think it can be the result of scrolling.
+  // When cells become visible we need to apply ghost decorations.
+  //
+  // This event is also fired when a code cell is executed and its output becomes visible.
+  // We use that to trigger completion generation because we want the newly rendered code
+  // cell output to affect the suggestions.
+  handleOnDidChangeVisibleTextEditors = (editors: readonly vscode.TextEditor[]) => {
+    for (const editor of editors) {
+      log.info(
+        `onDidChangeVisibleTextEditors Fired for editor scheme:${editor.document.uri.scheme} uri:${editor.document.uri}`,
+      )
+      if (![vsCodeCellScheme].includes(editor.document.uri.scheme)) {
+        log.info(`onDidChangeVisibleTextEditors Fired for ${editor.document.uri}`)
+        // Doesn't correspond to a notebook or output cell so do nothing
+        continue
+      }
 
-    if (!isGhostCell(cell)) {
-      continue
-    }
+      const cell = getCellFromCellDocument(editor.document)
+      if (cell === undefined) {
+        continue
+      }
 
-    editorAsGhost(editor)
+      if (!isGhostCell(cell)) {
+        continue
+      }
+
+      editorAsGhost(editor)
+    }
   }
 }
 
