@@ -323,11 +323,6 @@ export class CellChangeEventGenerator {
 
   handleOnDidChangeNotebookCell = (event: vscode.TextDocumentChangeEvent) => {
     if (![vsCodeCellScheme].includes(event.document.uri.scheme)) {
-      // TODO(DONOTCOMMIT): This is just for debugging during development to see if we are missing
-      // changes to the output events.
-      // log.info(
-      //   `**IGNORING DOCUMENT CHANGE EVENT** scheme:${event.document.uri.scheme} uri:${event.document.uri}`,
-      // )
       return
     }
     var matchedCell: vscode.NotebookCell | undefined
@@ -352,7 +347,6 @@ export class CellChangeEventGenerator {
       return
     }
 
-    log.info(`onDidChangeTextDocument Fired cell index ${matchedCell.index}`)
     this.streamCreator.handleEvent(
       new stream.CellChangeEvent(
         notebook.uri.toString(),
@@ -371,11 +365,7 @@ export class CellChangeEventGenerator {
   // cell output to affect the suggestions.
   handleOnDidChangeVisibleTextEditors = (editors: readonly vscode.TextEditor[]) => {
     for (const editor of editors) {
-      log.info(
-        `onDidChangeVisibleTextEditors Fired for editor scheme:${editor.document.uri.scheme} uri:${editor.document.uri}`,
-      )
       if (![vsCodeCellScheme].includes(editor.document.uri.scheme)) {
-        log.info(`onDidChangeVisibleTextEditors Fired for ${editor.document.uri}`)
         // Doesn't correspond to a notebook or output cell so do nothing
         continue
       }
