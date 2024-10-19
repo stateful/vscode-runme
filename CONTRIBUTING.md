@@ -191,11 +191,6 @@ You can fix any formatting errors via:
 npx prettier --write .
 ```
 
-```bash {"id":"01JAGX6Y1Y6G9K5T3T685X39XP","interactive":"false"}
-# Check the code style consistency
-npx prettier --check .
-```
-
 #### Linting
 
 We use [Eslint](https://eslint.org/) for static code analysis:
