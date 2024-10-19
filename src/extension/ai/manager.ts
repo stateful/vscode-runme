@@ -75,11 +75,11 @@ export class AIManager {
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
     )
 
-    this.subscriptions.push(
-      vscode.workspace.onDidChangeNotebookDocument(
-        eventGenerator.handleOnDidChangeNotebookDocument,
-      ),
-    )
+    // this.subscriptions.push(
+    //   vscode.workspace.onDidChangeNotebookDocument(
+    //     eventGenerator.handleOnDidChangeNotebookDocument,
+    //   ),
+    // )
   }
 
   // Cleanup method. We will use this to clean up any resources when extension is closed.
