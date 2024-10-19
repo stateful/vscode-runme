@@ -26,6 +26,9 @@ export class AIManager {
     this.completionGenerator = new generate.CompletionGenerator(this.client)
     if (autoComplete) {
       this.registerGhostCellEvents()
+
+      // Update the global event reporter to use the AI service
+      events.setEventReporter(new events.EventReporter(this.client))
     }
   }
 
@@ -48,15 +51,9 @@ export class AIManager {
     // and turns each window into an AsyncIterable of streaming requests.
     let creator = new stream.StreamCreator(cellGenerator, this.client)
 
-    // Update the global event reporter to use the AI service
-    events.setEventReporter(new events.EventReporter(this.client, creator))
-
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.
-    // We use this to generate completions.
-    // In my testing, onDidChangeTextDocument fires for the cell (scheme vscode-notebook-cell)
-    // as well as for the output (scheme output). For output though it seemed to be firing continuously
-    // so I didn't understand what was triggering it.
+    // We use this to generate completions when the contents of a cell changes.
     this.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
     )
