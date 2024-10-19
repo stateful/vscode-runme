@@ -4,7 +4,7 @@ import {
   LogEventsRequest,
   LogEventType,
   LogEvent,
-  //StreamGenerateRequest_Trigger,
+  StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
 import { ulid } from 'ulidx'
@@ -63,15 +63,13 @@ export class EventReporter implements IEventReporter {
     event.cells = cells
     event.contextId = SessionManager.getManager().getID()
 
-    // TODO(jeremy): Do we need this? Is it causing problems with trying
-    // to modify resolve?
     // Fire an event to trigger the AI service
-    // const cellChangeEvent = new stream.CellChangeEvent(
-    //   cell.notebook.uri.toString(),
-    //   cell.index,
-    //   StreamGenerateRequest_Trigger.CELL_EXECUTE,
-    // )
-    // this.streamCreator.handleEvent(cellChangeEvent)
+    const cellChangeEvent = new stream.CellChangeEvent(
+      cell.notebook.uri.toString(),
+      cell.index,
+      StreamGenerateRequest_Trigger.CELL_EXECUTE,
+    )
+    this.streamCreator.handleEvent(cellChangeEvent)
     return this.reportEvents([event])
   }
 
