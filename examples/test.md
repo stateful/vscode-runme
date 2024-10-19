@@ -28,7 +28,3 @@ export FOO="don't prompt me"
 ```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
 https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
 ```
-
-```yaml
-echo "hello world"
-```
