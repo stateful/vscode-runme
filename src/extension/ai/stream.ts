@@ -3,6 +3,7 @@ import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_c
 import {
   StreamGenerateRequest,
   StreamGenerateResponse,
+  StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
@@ -167,10 +168,11 @@ export class StreamCreator {
 export class CellChangeEvent {
   public notebookUri: string
   public cellIndex: number
-
-  constructor(notebookUri: string, cellIndex: number) {
+  public trigger: StreamGenerateRequest_Trigger
+  constructor(notebookUri: string, cellIndex: number, trigger: StreamGenerateRequest_Trigger) {
     this.notebookUri = notebookUri
     this.cellIndex = cellIndex
+    this.trigger = trigger
   }
 }
 
