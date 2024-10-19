@@ -394,15 +394,22 @@ export class CellChangeEventGenerator {
   }
 
   handleOnDidChangeNotebookDocument = (event: vscode.NotebookDocumentChangeEvent) => {
-    log.info('onDidChangeNotebookDocument Fired')
     event.cellChanges.forEach((change) => {
       if (change.outputs !== undefined) {
+        // If outputs change then we want to trigger completions.
+
+        // N.B. It looks like if you click the "configure" button associated with a cell then it will trigger
+        // an output change event. I don't think there's any easy way to filter those events out. To filter
+        // those events out we'd need to keep track of the output item with mime type
+        // application/vnd.code.notebook.stdout and then detect when the stdout changes. That would require
+        // keeping track of that state. If we trigger on the "configure" then we send a request to the Foyle
+        // server and we can rely on the Foyle server to do the debouncing.
+
         // It is the responsibility of the StreamCreator to decide whether the change should be processed..
         // In particular its possible that the cell that changed is not the active cell. Therefore
         // we may not want to generate completions for it. For example, you can have multiple cells
         // running. So in principle the active cell could be different from the cell that changed.
         this.streamCreator.handleEvent(
-          // TODO(jeremy): We should add a trigger field for the cell change event.
           new stream.CellChangeEvent(
             change.cell.notebook.uri.toString(),
             change.cell.index,
