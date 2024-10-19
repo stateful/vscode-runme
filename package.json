@@ -371,12 +371,6 @@
         "description": "Lifecycle Identity - None"
       },
       {
-        "command": "runme.lifecycleIdentityAll",
-        "title": "Lifecycle Identity - All",
-        "category": "Runme",
-        "description": "Lifecycle Identity - All"
-      },
-      {
         "command": "runme.lifecycleIdentityDoc",
         "title": "Lifecycle Identity - Document",
         "category": "Runme",
