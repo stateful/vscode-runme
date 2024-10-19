@@ -4,6 +4,7 @@ import {
   LogEventsRequest,
   LogEventType,
   LogEvent,
+  LogEvent_ExecuteStatus,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
 import { ulid } from 'ulidx'
@@ -17,7 +18,7 @@ import * as converters from './converters'
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
 export interface IEventReporter {
-  reportExecution(cell: vscode.NotebookCell): Promise<void>
+  reportExecution(cell: vscode.NotebookCell, status: boolean): Promise<void>
   reportEvents(events: LogEvent[]): Promise<void>
 }
 
@@ -31,7 +32,7 @@ export class EventReporter implements IEventReporter {
     this.log = getLogger('AIEventReporter')
   }
 
-  async reportExecution(cell: vscode.NotebookCell) {
+  async reportExecution(cell: vscode.NotebookCell, executionSuccess: boolean) {
     const contextCells: vscode.NotebookCell[] = []
 
     // Include some previous cells as context.
@@ -58,6 +59,12 @@ export class EventReporter implements IEventReporter {
     event.type = LogEventType.EXECUTE
     event.cells = cells
     event.contextId = SessionManager.getManager().getID()
+
+    if (executionSuccess) {
+      event.executeStatus = LogEvent_ExecuteStatus.SUCCEEDED
+    } else {
+      event.executeStatus = LogEvent_ExecuteStatus.FAILED
+    }
     return this.reportEvents([event])
   }
 
@@ -77,7 +84,7 @@ export class EventReporter implements IEventReporter {
 
 // NullOpEventReporter is a null op implementation of the event reporter
 export class NullOpEventReporter implements IEventReporter {
-  async reportExecution(_cell: vscode.NotebookCell) {
+  async reportExecution(_cell: vscode.NotebookCell, _status: boolean) {
     // Do nothing
   }
 
