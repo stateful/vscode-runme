@@ -11,6 +11,7 @@ import type { DisposableAsync } from '../../types'
 import {
   CreateSessionRequest,
   CreateSessionRequestImpl,
+  SessionEnvStoreSeedingEnum,
   ExecuteRequestImpl,
   ExecuteStopEnum,
   GetSessionRequestImpl,
@@ -257,15 +258,22 @@ export default class GrpcRunner implements IRunner {
     metadata?: { [index: string]: string }
   }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
-    const request = CreateSessionRequestImpl().create({
+    // v1 calls it envs, whereas v2 calls it env - send both
+    const req = <any>{
       metadata,
+      env: envs,
       envs,
       project: {
         root: workspaceRoot,
         envLoadOrder,
       },
       envStoreType,
-    })
+      config: {
+        envStoreType,
+        envStoreSeeding: SessionEnvStoreSeedingEnum().SYSTEM,
+      },
+    }
+    const request = CreateSessionRequestImpl().create(req)
 
     try {
       const client = this.client
