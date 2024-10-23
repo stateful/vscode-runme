@@ -1021,13 +1021,10 @@ export class ConnectSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const { Runme } = globalThis as Serializer.Wasm
-
-    const notebook = JSON.stringify(data)
-    const markdown = await Runme.serialize(notebook)
-
     const encoder = new TextEncoder()
-    return encoder.encode(markdown)
+    // eslint-disable-next-line quotes
+    const val = `The notebook has ${data.cells.length} cell(s)`
+    return encoder.encode(val)
   }
 
   protected async reviveNotebook(
@@ -1036,14 +1033,29 @@ export class ConnectSerializer extends SerializerBase {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Serializer.Notebook> {
-    // const { Runme } = globalThis as Serializer.Wasm
-
     const markdown = Buffer.from(content).toString('utf8')
     log.info('reviveNotebook', markdown)
+    // eslint-disable-next-line quotes
     const notebook: Serializer.Notebook = {
-      cells: [],
+      cells: [
+        {
+          kind: NotebookCellKind.Markup,
+          value: `The length of the input byte
+array is ${content.length} bytes.`,
+          languageId: '',
+          metadata: {},
+          // outputs: [],
+        },
+      ],
       metadata: {},
-      // frontmatter: '',
+      frontmatter: {
+        shell: '',
+        cwd: '',
+        skipPrompts: false,
+        category: '',
+        terminalRows: '',
+        runme: { id: 'STUB_VALUE', version: 'v3' },
+      },
     }
 
     if (!notebook) {
