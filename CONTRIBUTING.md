@@ -58,6 +58,7 @@ To build and work on this project you need to install:
 
 - [Node.js](https://nodejs.org/en/) (v18 or later)
 - [NPM](https://www.npmjs.com/package/npm) (latest)
+- [NVM](https://github.com/nvm-sh/nvm) (latest)
 
 ### Check out code
 
@@ -73,51 +74,58 @@ optionally install jq and the GitHub CLI to streamline downloading binaries:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4NTQPB38T"}
 # macOS
-$ brew install gh jq
+brew install gh jq
 # other platforms: https://github.com/cli/cli#installation
 ```
 
-the recommended extensions are actually strongly encouraged (otherwise your watcher will hang) - easily install them:
+`npm run watch` will hang without the reccommended extensions.
 
-```sh {"id":"01HF7VQMH8ESX1EFV4NXY8HSFJ"}
-$ jq -r ".recommendations[]" .vscode/extensions.json \
-    | xargs -n 1 code --force --install-extension
+Ensure they are installed:
+
+```sh {"id":"01HF7VQMH8ESX1EFV4NXY8HSFJ","name":"INSTALL_PLUGINS"}
+export INSTALLED_EXTENSIONS=$(code --list-extensions)
+export RECOMMENDED_EXTENSIONS=$(jq -r ".recommendations[]" .vscode/extensions.json)
+
+for ext in $RECOMMENDED_EXTENSIONS; do
+    if ! echo "$INSTALLED_EXTENSIONS" | grep -q "^$ext\$"; then
+      echo "Missing:  $ext"
+      code --force --install-extension "$ext"
+    else
+        echo "Already installed:  $ext"
+    fi
+done
 ```
 
 make sure to configure your local npm to pull from Buf's registry (for GRPC dependencies)
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4P0ZCRR37","name":"configureNPM"}
-$ npm config set @buf:registry https://buf.build/gen/npm/v1
+npm config set @buf:registry https://buf.build/gen/npm/v1
 ```
 
 then ensure to install all project dependencies. Note GitHub token is required to auto-dowload the latest `runme` binary. The branch ref name is optional, if it's not `main` pre-release binaries are being considered.
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4P491H696","name":"setup","promptEnv":"false"}
-$ export GITHUB_REF_NAME=$(git branch --show-current)
-$ export GITHUB_TOKEN=$(gh auth token)
-$ export EXTENSION_BASENAME=$(node -p 'process.cwd().split("/").pop().split("-")[1]')
-$ cp -f "assets/$EXTENSION_BASENAME-icon.gif" "assets/icon.gif"
-$ cp -f "assets/$EXTENSION_BASENAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
-$ cp -f "assets/$EXTENSION_BASENAME-logo-open-light.svg" "assets/logo-open-light.svg"
-$ cp -f "assets/$EXTENSION_BASENAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
-$ npm install --include=dev
+export GITHUB_REF_NAME=$(git branch --show-current)
+export GITHUB_TOKEN=$(gh auth token)
+export EXTENSION_BASENAME=$(node -p 'process.cwd().split("/").pop().split("-")[1]')
+cp -f "assets/$EXTENSION_BASENAME-icon.gif" "assets/icon.gif"
+cp -f "assets/$EXTENSION_BASENAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
+cp -f "assets/$EXTENSION_BASENAME-logo-open-light.svg" "assets/logo-open-light.svg"
+cp -f "assets/$EXTENSION_BASENAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
+npm install --include=dev
 ```
 
 Similarly a Runme WASM binary needs to be downloaded. If an error happened follow the error instructions and re-run the download, via:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4P77NKA3N","interactive":"true","promptEnv":"false"}
-$ export GITHUB_REF_NAME=$(git branch --show-current)
-$ GITHUB_TOKEN=$(gh auth token) npm run download:wasm
-$ npm run prepare-binary -- -f tar
+export GITHUB_REF_NAME=$(git branch --show-current)
+GITHUB_TOKEN=$(gh auth token) npm run download:wasm
+npm run prepare-binary -- -f tar
 ```
 
 ### Dev against Project
 
-Make sure to install all recommended extensions please:
-
-```sh {"id":"01HF7VQMH8ESX1EFV4PAM5E73C","interactive":"false","mimeType":"text/plain"}
-cat .vscode/extensions.json | grep -v '\/\/' | jq -r ".recommendations[]" | xargs code --install-extension
-```
+*Ensure the above section where vs code extensions were installed has been run.*
 
 Then just run the watcher and you're off to the races.
 
