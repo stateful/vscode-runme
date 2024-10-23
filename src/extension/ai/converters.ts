@@ -9,6 +9,31 @@ import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../util
 import { Serializer } from '../../types'
 import * as serializerTypes from '../grpc/serializerTypes'
 import * as serializer from '../serializer'
+import { Kernel } from '../kernel'
+
+import * as protos from './protos'
+
+// Converter provides converstion routines from vscode data types to protocol buffer types.
+// It is a class because in order to handle the conversion we need to keep track of the kernel
+// because we need to add execution information to the cells before serializing.
+export class Converter {
+  kernel: Kernel
+  constructor(kernel: Kernel) {
+    this.kernel = kernel
+  }
+
+  // notebokDataToProto converts a VSCode NotebookData to a RunMe Notebook proto.
+  // It adds execution information to the cells before converting.
+  public async notebookDataToProto(notebookData: vscode.NotebookData): Promise<parser_pb.Notebook> {
+    // We need to add the execution info to the cells so that the AI model can use that information.
+    const cellDataWithExec = await serializer.SerializerBase.addExecInfo(notebookData, this.kernel)
+    let notebookDataWithExec = new vscode.NotebookData(cellDataWithExec)
+    // marshalNotebook returns a protocol buffer using the ts client library from buf we need to
+    // convert it to es
+    let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookDataWithExec)
+    return protos.notebookTSToES(notebookProto)
+  }
+}
 
 // cellToCellData converts a NotebookCell to a NotebookCellData.
 // NotebookCell is an interface used by the editor.

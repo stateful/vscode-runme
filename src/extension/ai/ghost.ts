@@ -2,7 +2,6 @@ import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
-import * as serializer from '../serializer'
 import { RUNME_CELL_ID } from '../constants'
 
 import * as converters from './converters'
@@ -38,15 +37,16 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
 // the cell contents have changed.
 export class GhostCellGenerator implements stream.CompletionHandlers {
   private notebookState: Map<vscode.Uri, NotebookState>
-
+  private converter: converters.Converter
   // contextID is the ID of the context we are generating completions for.
   // It is used to detect whether a completion response is stale and should be
   // discarded because the context has changed.
 
-  constructor() {
+  constructor(converter: converters.Converter) {
     this.notebookState = new Map<vscode.Uri, NotebookState>()
     // Generate a random context ID. This should be unnecessary because presumable the event to change
     // the active cell will be sent before any requests are sent but it doesn't hurt to be safe.
+    this.converter = converter
   }
 
   // Updated method to check and initialize notebook state
@@ -64,7 +64,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
     firstRequest: boolean,
-  ): agent_pb.StreamGenerateRequest | null {
+  ): Promise<agent_pb.StreamGenerateRequest | null> {
     // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
     // Can we cache it in the class? Since we keep track of notebooks in NotebookState
     // Is there a way we can go from the URI of the cell to the URI of the notebook directly
@@ -77,7 +77,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     if (notebook === undefined) {
       log.error(`notebook for cell ${cellChangeEvent.notebookUri} NOT found`)
       // TODO(jermey): Should we change the return type to be nullable?
-      return null
+      return Promise.resolve(null)
     }
 
     // Get the notebook state; this will initialize it if this is the first time we
@@ -108,38 +108,37 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let cellData = notebook.getCells().map((cell) => converters.cellToCellData(cell))
       let notebookData = new vscode.NotebookData(cellData)
 
-      let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
-      let request = new agent_pb.StreamGenerateRequest({
-        contextId: SessionManager.getManager().getID(),
-        request: {
-          case: 'fullContext',
-          value: new agent_pb.FullContext({
-            notebook: protos.notebookTSToES(notebookProto),
-            selected: matchedCell.index,
-            notebookUri: notebook.uri.toString(),
-          }),
-        },
+      return this.converter.notebookDataToProto(notebookData).then((notebookProto) => {
+        let request = new agent_pb.StreamGenerateRequest({
+          contextId: SessionManager.getManager().getID(),
+          request: {
+            case: 'fullContext',
+            value: new agent_pb.FullContext({
+              notebook: notebookProto,
+              selected: matchedCell.index,
+              notebookUri: notebook.uri.toString(),
+            }),
+          },
+        })
+        return request
       })
-
-      return request
     } else {
       let cellData = converters.cellToCellData(matchedCell)
       let notebookData = new vscode.NotebookData([cellData])
 
-      let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
-      let notebook = protos.notebookTSToES(notebookProto)
       // Generate an update request
-      let request = new agent_pb.StreamGenerateRequest({
-        contextId: SessionManager.getManager().getID(),
-        request: {
-          case: 'update',
-          value: new agent_pb.UpdateContext({
-            cell: notebook.cells[0],
-          }),
-        },
+      return this.converter.notebookDataToProto(notebookData).then((notebookProto) => {
+        let request = new agent_pb.StreamGenerateRequest({
+          contextId: SessionManager.getManager().getID(),
+          request: {
+            case: 'update',
+            value: new agent_pb.UpdateContext({
+              cell: notebookProto.cells[0],
+            }),
+          },
+        })
+        return request
       })
-
-      return request
     }
   }
 

@@ -20,7 +20,7 @@ export interface CompletionHandlers {
   buildRequest: (
     cellChangeEvent: CellChangeEvent,
     firstRequest: boolean,
-  ) => StreamGenerateRequest | null
+  ) => Promise<StreamGenerateRequest | null>
 
   // processResponse is a function that processes a StreamGenerateResponse
   processResponse: (response: StreamGenerateResponse) => void
@@ -82,45 +82,45 @@ export class StreamCreator {
     }
 
     log.info('handleEvent: building request')
-    let req = this.handlers.buildRequest(event, firstRequest)
-
-    if (req === null) {
-      log.info(`Notebook: ${event.notebookUri}; no request generated`)
-      return
-    }
-
-    // If the request is a fullContext request we need to start a new stream
-    if (req.request.case === 'fullContext') {
-      firstRequest = true
-    }
-
-    if (this.lastIterator !== undefined && this.lastIterator !== null && firstRequest === true) {
-      console.log('Stopping the current stream')
-      this.lastIterator.close()
-      this.lastIterator = null
-    }
-
-    if (this.lastIterator === null) {
-      // n.b. we need to define newIterator and then refer to newIterator in the closure
-      let newIterator = new PromiseIterator<StreamGenerateRequest>()
-      this.lastIterator = newIterator
-      // start the bidirectional stream
-      let iterable = {
-        [Symbol.asyncIterator]: () => {
-          // n.b. We don't want to refer to this.lastIterator because we need to create a closure
-          // this.lastIterator is a reference that will get be updated over time. We don't want the iterator though
-          // to change.
-          return newIterator
-        },
+    this.handlers.buildRequest(event, firstRequest).then((req) => {
+      if (req === null) {
+        log.info(`Notebook: ${event.notebookUri}; no request generated`)
+        return
       }
 
-      const responseIterable = this.client.streamGenerate(iterable)
-      // Start a coroutine to process responses from the completion service
-      this.processResponses(responseIterable)
-    }
+      // If the request is a fullContext request we need to start a new stream
+      if (req.request.case === 'fullContext') {
+        firstRequest = true
+      }
 
-    // Enqueue the request
-    this.lastIterator.enQueue(req)
+      if (this.lastIterator !== undefined && this.lastIterator !== null && firstRequest === true) {
+        console.log('Stopping the current stream')
+        this.lastIterator.close()
+        this.lastIterator = null
+      }
+
+      if (this.lastIterator === null) {
+        // n.b. we need to define newIterator and then refer to newIterator in the closure
+        let newIterator = new PromiseIterator<StreamGenerateRequest>()
+        this.lastIterator = newIterator
+        // start the bidirectional stream
+        let iterable = {
+          [Symbol.asyncIterator]: () => {
+            // n.b. We don't want to refer to this.lastIterator because we need to create a closure
+            // this.lastIterator is a reference that will get be updated over time. We don't want the iterator though
+            // to change.
+            return newIterator
+          },
+        }
+
+        const responseIterable = this.client.streamGenerate(iterable)
+        // Start a coroutine to process responses from the completion service
+        this.processResponses(responseIterable)
+      }
+
+      // Enqueue the request
+      this.lastIterator.enQueue(req)
+    })
   }
 
   processResponses = async (responses: AsyncIterable<StreamGenerateResponse>) => {

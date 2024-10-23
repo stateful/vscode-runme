@@ -6,9 +6,9 @@ import {
   GenerateCellsResponse,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
-import * as serializer from '../serializer'
 import getLogger from '../logger'
 
+import { Converter } from './converters'
 import * as protos from './protos'
 import * as converters from './converters'
 const log = getLogger('AIGenerate')
@@ -17,9 +17,11 @@ const log = getLogger('AIGenerate')
 // It generates a single completion
 export class CompletionGenerator {
   client: PromiseClient<typeof AIService>
+  converter: Converter
 
-  constructor(client: PromiseClient<typeof AIService>) {
+  constructor(client: PromiseClient<typeof AIService>, converter: Converter) {
     this.client = client
+    this.converter = converter
   }
 
   public generateCompletion = async () => {
@@ -43,10 +45,10 @@ export class CompletionGenerator {
     let cellData = editor?.notebook.getCells().map((cell) => converters.cellToCellData(cell))
     let notebookData = new vscode.NotebookData(cellData)
 
-    let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookData)
+    let notebookProto = await this.converter.notebookDataToProto(notebookData)
 
     const req = new GenerateCellsRequest()
-    req.notebook = protos.notebookTSToES(notebookProto)
+    req.notebook = notebookProto
     req.selectedIndex = lastSelectedCell
 
     this.client
