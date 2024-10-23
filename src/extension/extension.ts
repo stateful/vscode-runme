@@ -74,7 +74,7 @@ import {
   runForkCommand,
   selectEnvironment,
 } from './commands'
-import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
+import { SerializerBase, GrpcSerializer, WasmSerializer, ConnectSerializer } from './serializer'
 import { RunmeLauncherProvider } from './provider/launcher'
 import { RunmeUriHandler } from './handler/uri'
 import GrpcRunner, { IRunner } from './runner'
@@ -100,7 +100,8 @@ export class RunmeExtension {
 
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
-    const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
+    const useGrpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
+    const useConnectSerializer = kernel.hasExperimentEnabled('connectSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
 
@@ -127,11 +128,13 @@ export class RunmeExtension {
     )
 
     const reporter = new GrpcReporter(context, server)
-    const serializer = grpcSerializer
-      ? new GrpcSerializer(context, server, kernel)
-      : new WasmSerializer(context, kernel)
+    const serializer = useConnectSerializer
+      ? new ConnectSerializer(context, kernel)
+      : useGrpcSerializer
+        ? new GrpcSerializer(context, server, kernel)
+        : new WasmSerializer(context, kernel)
     this.serializer = serializer
-    kernel.setSerializer(serializer as GrpcSerializer)
+    kernel.setSerializer(serializer)
     kernel.setReporter(reporter)
 
     const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())

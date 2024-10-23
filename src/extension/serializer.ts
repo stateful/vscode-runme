@@ -1002,3 +1002,78 @@ export class GrpcSerializer extends SerializerBase {
     return this.notebookDataCache.get(cacheId)
   }
 }
+// there is w/ grpc the : serializer, server, runner,
+export class ConnectSerializer extends SerializerBase {
+  protected readonly ready: ReadyPromise
+
+  constructor(
+    protected context: ExtensionContext,
+    kernel: Kernel,
+  ) {
+    super(context, kernel)
+    this.ready = new Promise((resolve) => {
+      resolve()
+    })
+  }
+
+  protected async saveNotebook(
+    data: NotebookData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken,
+  ): Promise<Uint8Array> {
+    const { Runme } = globalThis as Serializer.Wasm
+
+    const notebook = JSON.stringify(data)
+    const markdown = await Runme.serialize(notebook)
+
+    const encoder = new TextEncoder()
+    return encoder.encode(markdown)
+  }
+
+  protected async reviveNotebook(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    content: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken,
+  ): Promise<Serializer.Notebook> {
+    // const { Runme } = globalThis as Serializer.Wasm
+
+    const markdown = Buffer.from(content).toString('utf8')
+    log.info('reviveNotebook', markdown)
+    const notebook: Serializer.Notebook = {
+      cells: [],
+      metadata: {},
+      // frontmatter: '',
+    }
+
+    if (!notebook) {
+      return this.printCell('⚠️ __Error__: no cells found!')
+    }
+    return notebook
+  }
+
+  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
+    console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
+    return -1
+  }
+
+  public async saveNotebookOutputs(_uri: Uri): Promise<number> {
+    console.error('saveNotebookOutputs not implemented for WasmSerializer')
+    return -1
+  }
+
+  public getMaskedCache(): Promise<Uint8Array> | undefined {
+    console.error('getMaskedCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
+  }
+
+  public getPlainCache(): Promise<Uint8Array> | undefined {
+    console.error('getPlainCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
+  }
+
+  public getNotebookDataCache(): NotebookData | undefined {
+    console.error('getNotebookDataCache not implemented for WasmSerializer')
+    return {} as NotebookData
+  }
+}

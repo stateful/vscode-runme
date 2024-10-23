@@ -683,8 +683,14 @@
           "runme.experiments.grpcSerializer": {
             "type": "boolean",
             "scope": "window",
-            "default": true,
+            "default": false,
             "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
+          },
+          "runme.experiments.connectSerializer": {
+            "type": "boolean",
+            "scope": "window",
+            "default": true,
+            "markdownDescription": "If set to `true`, the notebook serialization will use the the Connect protocol instead of the WebAssembly or GRPC."
           },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
