@@ -9,6 +9,8 @@ import * as ghost from './ghost'
 import * as stream from './stream'
 import * as generate from './generate'
 import * as events from './events'
+import { SessionManager } from './sessions'
+
 // AIManager is a class that manages the AI services.
 export class AIManager {
   log: ReturnType<typeof getLogger>
@@ -69,6 +71,29 @@ export class AIManager {
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
       // vscode.window.onDidChangeActiveTextEditor(localOnDidChangeActiveTextEditor),
     )
+
+    // Create a new status bar item aligned to the right
+    let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+    statusBarItem.text = 'Session: <None>'
+    statusBarItem.tooltip = 'Foyle Session ID; click to copy to clipboard.'
+
+    // Attach a command to the status bar item
+    statusBarItem.command = 'extension.copyStatusBarText'
+    // Command to copy the status bar text to the clipboard
+    const copyTextCommand = vscode.commands.registerCommand('extension.copyStatusBarText', () => {
+      // Copy the status bar text to the clipboard
+      const pieces = statusBarItem.text.split(' ')
+      let id = '<no session>'
+      if (pieces.length >= 1) {
+        id = pieces[pieces.length - 1]
+      }
+      vscode.env.clipboard.writeText(id)
+    })
+    statusBarItem.show()
+    this.subscriptions.push(copyTextCommand)
+    this.subscriptions.push(statusBarItem)
+
+    SessionManager.resetManager(statusBarItem)
   }
 
   // Cleanup method. We will use this to clean up any resources when extension is closed.

@@ -1,5 +1,6 @@
 import { LogEvent, LogEventType } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import { ulid } from 'ulidx'
+import * as vscode from 'vscode'
 
 import { getEventReporter } from './events'
 
@@ -25,17 +26,25 @@ export class SessionManager {
   static instance: SessionManager
 
   sessionID: string
+  statusBar: vscode.StatusBarItem | null
 
-  constructor() {
+  constructor(statusBar: vscode.StatusBarItem | null) {
     this.sessionID = ulid()
+    this.statusBar = statusBar
   }
 
   public static getManager(): SessionManager {
     if (!SessionManager.instance) {
-      SessionManager.instance = new SessionManager()
+      // N.B. This shouldn't be triggered because we should initialize the manager
+      // in the AIManager
+      SessionManager.instance = new SessionManager(null)
     }
 
     return SessionManager.instance
+  }
+
+  public static resetManager(statusBar: vscode.StatusBarItem) {
+    SessionManager.instance = new SessionManager(statusBar)
   }
 
   // getID returns the current session id
@@ -56,6 +65,10 @@ export class SessionManager {
     const openEvent = new LogEvent()
     openEvent.type = LogEventType.SESSION_START
     openEvent.contextId = this.sessionID
+
+    if (this.statusBar !== null) {
+      this.statusBar.text = `Session: ${this.sessionID}`
+    }
 
     getEventReporter().reportEvents([closeEvent, openEvent])
     return this.sessionID
