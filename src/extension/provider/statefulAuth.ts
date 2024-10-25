@@ -239,11 +239,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
   public async loadFromSecrets() {
     const secretsFile = '/etc/secrets/playground-dev'
-    if (!secretsFile) {
-      logger.info('Skip authentication from secrets file')
-      return
-    }
-
     const secretsUri = Uri.parse(secretsFile)
     const hasSecretsFile = await workspace.fs.stat(secretsUri).then(
       () => true,
@@ -251,12 +246,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     )
 
     if (!hasSecretsFile) {
-      logger.info('No secrets file found')
+      logger.info('No secrets file found, skipping load from secrets')
       return
     }
 
     const rawToken = await workspace.fs.readFile(secretsUri)
-    if (!rawToken || !rawToken.length) {
+    if (!rawToken?.length) {
       logger.error('Failed to read secrets file')
       return
     }
@@ -276,6 +271,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     try {
       const { name, email } = await this.getUserInfo(token)
+
+      if (!name || !email) {
+        logger.error('Failed to get user info from JWT token')
+        return
+      }
+
       const session: StatefulAuthSession = {
         accessToken: token,
         expiresIn: secsToUnixTime(exp),
