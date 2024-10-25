@@ -100,7 +100,7 @@ $ cp -f "assets/$EXTENSION_BASENAME-icon.gif" "assets/icon.gif"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-open-dark.svg" "assets/logo-open-dark.svg"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-open-light.svg" "assets/logo-open-light.svg"
 $ cp -f "assets/$EXTENSION_BASENAME-logo-sidebar.svg" "assets/logo-sidebar.svg"
-$ npm install --include=dev
+$ NODE_OPTIONS='' npm install --include=dev
 ```
 
 Similarly a Runme WASM binary needs to be downloaded. If an error happened follow the error instructions and re-run the download, via:
@@ -134,6 +134,14 @@ If you want to run the extension against a specific runme kernel binary, you can
 {
   "runme.server.binaryPath": "path/to/bin",
 }
+```
+
+### Upgrade kernel dependencies
+
+To upgrade the kernel gRPC dependencies, you can run the following command. Be sure to release the `runme` kernel binary before a stable merge/release.
+
+```sh {"background":"false","id":"01JAQYD2R3KN63QZ7EC2T2AB58"}
+npm install -s "@buf/stateful_runme.community_timostamm-protobuf-ts@latest"
 ```
 
 ### Debug Project
@@ -279,14 +287,6 @@ echo "Running test:e2e:reconcile ✅"
 
 If you cancel the running test at any time, make sure to run this command before continuing development.
 
-### Release
-
-You can use following Github Actions workflow to release both edge (pre-release) and stable versions of the Runme's VS Code extension. This will package, test, and upon success push a new build of the extension to Microsoft's VS Code marketplace as well as OpenVSX.
-
-```sh {"id":"01HF7VQMH8ESX1EFV4Q8N8Z85Z"}
-https://github.com/stateful/vscode-runme/actions/workflows/release.yml
-```
-
 ### Commit messages
 
 Your commit messages ideally can answer two questions: what changed and why. The subject line should feature the “what” and the body of the commit should describe the “why”.
@@ -295,7 +295,13 @@ When creating a pull request, its description should reference the corresponding
 
 ## Release Project
 
-Contributor with push access to this repo can at any time make a release. To do so, just trigger the [GitHub Action](https://github.com/stateful/vscode-runme/actions?query=workflow%3A%22Manual+NPM+Publish%22) that releases the package. Ensure you pick the correct release type by following the [semantic versioning](https://semver.org/) principle.
+You can use following Github Actions workflow to release both edge (pre-release) and stable versions of the Runme's VS Code extension. This will package, test, and upon success push a new build of the extension to Microsoft's VS Code marketplace as well as OpenVSX.
+
+```sh {"id":"01HF7VQMH8ESX1EFV4Q8N8Z85Z"}
+https://github.com/stateful/vscode-runme/actions/workflows/release.yml
+```
+
+Ensure you pick the correct release type by following the [semantic versioning](https://semver.org/) principle.
 
 ---
 
