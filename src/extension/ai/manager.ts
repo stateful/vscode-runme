@@ -12,7 +12,7 @@ import * as events from './events'
 import { SessionManager } from './sessions'
 
 // AIManager is a class that manages the AI services.
-export class AIManager {
+export class AIManager implements vscode.Disposable {
   log: ReturnType<typeof getLogger>
 
   subscriptions: vscode.Disposable[] = []
@@ -29,8 +29,11 @@ export class AIManager {
     if (autoComplete) {
       this.registerGhostCellEvents()
 
+      const reporter = new events.EventReporter(this.client)
+      this.subscriptions.push(reporter)
+
       // Update the global event reporter to use the AI service
-      events.setEventReporter(new events.EventReporter(this.client))
+      events.setEventReporter(reporter)
     }
   }
 
