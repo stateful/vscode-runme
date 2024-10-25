@@ -1,39 +1,55 @@
-import { Subscription, Observable, combineLatest } from 'rxjs'
-import { Disposable, EventEmitter, ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
+import { Subscription, Observable, combineLatest, switchMap, map, filter, shareReplay } from 'rxjs'
+import { Disposable, ExtensionContext, Uri, Webview, WebviewView } from 'vscode'
 
 import { SnapshotEnv, SyncSchemaBus } from '../../types'
 import getLogger from '../logger'
-import EnvVarsChangedEvent from '../events/envVarsChanged'
+import { GrpcRunnerMonitorEnvStore } from '../runner/monitorEnv'
+import {
+  MonitorEnvStoreResponse,
+  MonitorEnvStoreResponseSnapshot_SnapshotEnv,
+} from '../grpc/runner/v1'
 
 import { TanglePanel } from './base'
 
+export type EnvStoreMonitorWithSession = {
+  monitor: GrpcRunnerMonitorEnvStore
+  sessionId: string
+}
+
+type SnapshotEnvs = MonitorEnvStoreResponseSnapshot_SnapshotEnv[]
+
 const log = getLogger('NotebookPanel')
-export class NotebookPanel extends TanglePanel {
-  #variables: SnapshotEnv[] | undefined
+export class EnvStorePanel extends TanglePanel {
   #webviewView: WebviewView | undefined
   #disposables: Disposable[] = []
-  #webviewObservable$: Observable<WebviewView>
-  #webviewReadyEvent: EventEmitter<WebviewView>
-  #subscriptions$: Subscription
+
   constructor(
     protected readonly context: ExtensionContext,
     identifier: string,
-    protected onEnvVarsChangedEvent: EnvVarsChangedEvent,
+    protected envStoreMonitor: Observable<EnvStoreMonitorWithSession>,
   ) {
     super(context, identifier)
-    this.#variables = []
-    this.#disposables.push(this.onEnvVarsChangedEvent)
-    this.#webviewReadyEvent = new EventEmitter()
-    this.#webviewObservable$ = new Observable((subscription) => {
-      const listener = (value: WebviewView) => subscription.next(value)
-      this.#webviewReadyEvent.event(listener)
-    })
 
-    this.#subscriptions$ = combineLatest([
-      this.#webviewObservable$,
-      this.onEnvVarsChangedEvent.getObservable(),
-    ]).subscribe(([, envVars]) => {
-      this.updateWebview(envVars)
+    const snapshotEnvs: Observable<SnapshotEnvs> = envStoreMonitor.pipe(
+      switchMap((monWithSess) => {
+        const stream = monWithSess.monitor.monitorEnvStore(monWithSess.sessionId)
+        return new Observable<MonitorEnvStoreResponse['data']>((observer) => {
+          stream.responses.onMessage(({ data }) => observer.next(data))
+          // only log to not complete observable, the error is recoverable
+          stream.responses.onError((err) => log.error('error in monitor', err.toString()))
+          stream.responses.onComplete(() => observer.complete())
+        })
+      }),
+      filter((data) => data.oneofKind === 'snapshot'),
+      map((data) => data.snapshot.envs),
+      shareReplay(1), // cache last value for new subscribers between updates
+    )
+
+    const sub = combineLatest([this.webview, snapshotEnvs]).subscribe({
+      next: ([, envVars]) => this.updateWebview(envVars),
+    })
+    this.#disposables.push({
+      dispose: () => sub.unsubscribe(),
     })
   }
 
@@ -49,7 +65,7 @@ export class NotebookPanel extends TanglePanel {
 
     const extensionUri = this.context.extensionUri
 
-    webviewView.webview.html = this.getHtml(webview, extensionUri, this.#variables!)
+    webviewView.webview.html = this.getHtml(webview, extensionUri, [])
     webviewView.webview.options = {
       ...webviewOptions,
       localResourceRoots: [extensionUri],
@@ -58,23 +74,22 @@ export class NotebookPanel extends TanglePanel {
     webviewView.onDidDispose(this.onDidDispose)
 
     this.webview.next(webviewView.webview)
-    this.#webviewReadyEvent.fire(webviewView)
     log.trace(`${this.identifier} webview resolved`)
 
     return Promise.resolve()
   }
 
-  private sanitizeVariables(variables: SnapshotEnv[]) {
+  private sanitizeVariables(variables: SnapshotEnvs) {
     variables.forEach((variable: SnapshotEnv) => {
       variable.originalValue = variable.originalValue.replace(/'/g, '&#39;')
     })
     return variables
   }
 
-  private getHtml(webview: Webview, extensionUri: Uri, variables: SnapshotEnv[]) {
+  private getHtml(webview: Webview, extensionUri: Uri, variables: SnapshotEnvs) {
     const scripts = [
       {
-        src: NotebookPanel.getUri(webview, extensionUri, ['out', 'client.js']),
+        src: EnvStorePanel.getUri(webview, extensionUri, ['out', 'client.js']),
         defer: true,
       },
     ]
@@ -98,7 +113,7 @@ export class NotebookPanel extends TanglePanel {
   </html>`
   }
 
-  private updateWebview(vars: SnapshotEnv[]) {
+  private updateWebview(vars: SnapshotEnvs) {
     this.#webviewView!.webview.html = this.getHtml(
       this.#webviewView!.webview,
       this.context.extensionUri,
@@ -112,7 +127,6 @@ export class NotebookPanel extends TanglePanel {
 
   private onDidDispose() {
     this.#disposables.forEach((disposable) => disposable.dispose())
-    this.#subscriptions$.unsubscribe()
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

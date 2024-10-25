@@ -86,7 +86,7 @@ import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } fr
 import { GithubAuthProvider } from './provider/githubAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { IPanel } from './panels/base'
-import { NotebookPanel as EnvStorePanel } from './panels/notebook'
+import { EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import { GrpcReporter } from './reporter'
@@ -594,7 +594,7 @@ export class RunmeExtension {
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
       ...notebookPanelIds.map(
-        register(notebookChannel, (id) => new EnvStorePanel(context, id, kernel.onVarsChangeEvent)),
+        register(notebookChannel, (id) => new EnvStorePanel(context, id, kernel.useMonitor())),
       ),
     ].flat()
   }
