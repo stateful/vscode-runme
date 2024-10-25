@@ -777,8 +777,6 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    // todo(sebastian): rewrite to use non-blocking impl
-    const execCellReport = getEventReporter().reportExecution(cell)
     runmeExec.start(Date.now())
 
     const annotations = getAnnotations(cell)
@@ -825,9 +823,11 @@ export class Kernel implements Disposable {
       successfulCellExecution = false
       log.error('Error executing cell', e.message)
       window.showErrorMessage(e.message)
-    } finally {
-      await execCellReport
     }
+
+    // todo(sebastian): rewrite to use non-blocking impl
+    const execCellReport = getEventReporter().reportExecution(cell, successfulCellExecution)
+    await execCellReport
 
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
