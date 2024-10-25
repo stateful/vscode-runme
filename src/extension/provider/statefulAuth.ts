@@ -13,28 +13,36 @@ import {
   AuthenticationSession,
   AuthenticationProviderAuthenticationSessionsChangeEvent,
   Event,
+  workspace,
 } from 'vscode'
-import { v4 as uuid } from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
+import getLogger from '../logger'
+
+const logger = getLogger('StatefulAuthProvider')
 
 const AUTH_NAME = 'Stateful'
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
 interface TokenInformation {
   accessToken: string
-  refreshToken: string
   expiresIn: number
 }
 
 interface StatefulAuthSession extends AuthenticationSession {
-  refreshToken: string
   expiresIn: number
   isExpired: boolean
+}
+
+interface DecodedToken extends JwtPayload {
+  exp?: number
+  scope?: string
 }
 
 // Interface declaration for a PromiseAdapter
@@ -137,25 +145,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           return [session]
         }
 
-        const token = await this.getAccessToken(session.refreshToken)
-        const { accessToken, refreshToken, expiresIn } = token
-
-        if (accessToken) {
-          const updatedSession = {
-            ...session,
-            accessToken,
-            refreshToken,
-            expiresIn: secsToUnixTime(expiresIn),
-            scopes: scopes,
-          }
-
-          await this.updateSession(updatedSession)
-          ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
-          return [updatedSession]
-        } else {
-          ContextState.addKey(PLATFORM_USER_SIGNED_IN, false)
-          this.removeSession(session.id)
-        }
+        await ContextState.addKey(PLATFORM_USER_SIGNED_IN, false)
+        await this.removeSession(session.id)
       }
     } catch (e) {
       // Nothing to do
@@ -171,7 +162,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    */
   public async createSession(scopes: string[]): Promise<StatefulAuthSession> {
     try {
-      const { accessToken, refreshToken, expiresIn } = await this.login(scopes)
+      const { accessToken, expiresIn } = await this.login(scopes)
 
       if (!accessToken) {
         throw new Error('Stateful login failure')
@@ -179,10 +170,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
       const userinfo: { name: string; email: string } = await this.getUserInfo(accessToken)
       const session: StatefulAuthSession = {
-        id: uuid(),
+        id: uuidv4(),
         expiresIn: secsToUnixTime(expiresIn),
         accessToken,
-        refreshToken,
         account: {
           label: userinfo.name,
           id: userinfo.email,
@@ -191,8 +181,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         isExpired: false,
       }
 
-      ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
-
+      await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
       await this.persistSessions([session], { added: [session], removed: [], changed: [] })
       return session
     } catch (e) {
@@ -248,6 +237,70 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#disposables.forEach((d) => d.dispose())
   }
 
+  public async loadFromSecrets() {
+    const secretsFile = '/etc/secrets/playground-dev'
+    if (!secretsFile) {
+      logger.info('Skip authentication from secrets file')
+      return
+    }
+
+    const secretsUri = Uri.parse(secretsFile)
+    const hasSecretsFile = await workspace.fs.stat(secretsUri).then(
+      () => true,
+      () => false,
+    )
+
+    if (!hasSecretsFile) {
+      logger.info('No secrets file found')
+      return
+    }
+
+    const rawToken = await workspace.fs.readFile(secretsUri)
+    if (!rawToken || !rawToken.length) {
+      logger.error('Failed to read secrets file')
+      return
+    }
+
+    const token = new TextDecoder().decode(rawToken).trim()
+    const jwtDecoded = jwt.decode(token) as DecodedToken
+    if (!jwtDecoded) {
+      logger.error('Failed to decode JWT token')
+      return
+    }
+
+    const { exp, scope } = jwtDecoded
+    if (!exp || !scope) {
+      logger.error('Invalid JWT token')
+      return
+    }
+
+    try {
+      const { name, email } = await this.getUserInfo(token)
+      const session: StatefulAuthSession = {
+        accessToken: token,
+        expiresIn: secsToUnixTime(exp),
+        id: uuidv4(),
+        account: {
+          label: name,
+          id: email,
+        },
+        scopes: scope.split(' '),
+        isExpired: false,
+      }
+
+      await this.context.secrets.store(this.sessionSecretKey, JSON.stringify([session]))
+      return true
+    } catch (error) {
+      let message
+      if (error instanceof Error) {
+        message = error.message
+      } else {
+        message = String(error)
+      }
+      logger.error(message)
+    }
+  }
+
   /**
    * Log in to Stateful
    */
@@ -259,7 +312,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         cancellable: true,
       },
       async (_, token) => {
-        const nonceId = uuid()
+        const nonceId = uuidv4()
 
         const scopeString = scopes.join(' ')
         scopes = this.getScopes(scopes)
@@ -345,6 +398,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       const code = query.get('code')
       const stateId = query.get('state')
 
+      const accessToken = query.get('accessToken')
+      const expiresIn = query.get('expiresIn')
+
       if (!code) {
         reject(new Error('No code'))
         return
@@ -366,6 +422,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         return
       }
 
+      if (accessToken && expiresIn) {
+        resolve({ accessToken, expiresIn: Number.parseInt(expiresIn) })
+        return
+      }
+
       const postData = {
         code,
         codeVerifier,
@@ -379,9 +440,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         body: JSON.stringify(postData),
       })
 
-      const { accessToken, refreshToken, expiresIn } = await response.json()
+      const json = await response.json()
 
-      resolve({ accessToken, refreshToken, expiresIn })
+      resolve({
+        accessToken: json.accessToken,
+        expiresIn: json.expiresIn,
+      })
     }
 
   /**
@@ -405,9 +469,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   private getScopes(scopes: string[] = []): string[] {
     const modifiedScopes = [...scopes]
 
-    if (!modifiedScopes.includes('offline_access')) {
-      modifiedScopes.push('offline_access')
-    }
     if (!modifiedScopes.includes('openid')) {
       modifiedScopes.push('openid')
     }
@@ -419,30 +480,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
 
     return modifiedScopes.sort()
-  }
-
-  /**
-   * Retrieve a new access token by the refresh token
-   * @param refreshToken
-   * @param clientId
-   * @returns
-   */
-  private async getAccessToken(currentRefreshToken: string): Promise<TokenInformation> {
-    const postData = {
-      refreshToken: currentRefreshToken,
-    }
-
-    const response = await fetch(`${getRunmeAppUrl(['api'])}idp-refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(postData),
-    })
-
-    const { accessToken, refreshToken, expiresIn } = await response.json()
-
-    return { accessToken, refreshToken, expiresIn }
   }
 
   /**

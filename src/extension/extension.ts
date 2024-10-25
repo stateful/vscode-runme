@@ -451,8 +451,11 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
-      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
+      context.subscriptions.push(statefulAuthProvider)
+
+      const secrestAuthed = statefulAuthProvider.loadFromSecrets()
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || (await secrestAuthed)
       const silent = forceLogin ? undefined : true
 
       getPlatformAuthSession(forceLogin, silent)

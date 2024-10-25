@@ -564,7 +564,7 @@ export function getGithubAuthSession(createIfNone: boolean = true) {
 }
 
 export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
-  const scopes = ['profile', 'offline_access']
+  const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
 
   if (silent !== undefined) {
