@@ -35,7 +35,7 @@ export class EnvStorePanel extends TanglePanel {
         const stream = monWithSess.monitor.monitorEnvStore(monWithSess.sessionId)
         return new Observable<MonitorEnvStoreResponse['data']>((observer) => {
           stream.responses.onMessage(({ data }) => observer.next(data))
-          // only log to not complete observable, the error is recoverable
+          // only log to not complete observable, these errors are recoverable
           stream.responses.onError((err) => log.error('error in monitor', err.toString()))
           stream.responses.onComplete(() => observer.complete())
         })
