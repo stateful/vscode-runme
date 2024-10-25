@@ -89,6 +89,10 @@ export const CreateSessionRequestImpl = () => {
   return v1.CreateSessionRequest
 }
 
+export const SessionEnvStoreSeedingEnum = () => {
+  return v2.CreateSessionRequest_Config_SessionEnvStoreSeeding
+}
+
 export const GetSessionRequestImpl = () => {
   if (v2.matches(getServerRunnerVersion())) {
     return v2.GetSessionRequest

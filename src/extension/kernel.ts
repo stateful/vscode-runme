@@ -29,6 +29,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import { UnaryCall } from '@protobuf-ts/runtime-rpc'
 import { map } from 'rxjs/operators'
+import { Subject } from 'rxjs'
 
 import {
   type ActiveTerminal,
@@ -102,12 +103,12 @@ import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
 import { IPanel } from './panels/base'
 import { handleAWSMessage } from './messages/aws'
-import EnvVarsChangedEvent from './events/envVarsChanged'
 import { SessionEnvStoreType } from './grpc/runner/v1'
 import ContextState from './contextState'
 import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
+import { EnvStoreMonitorWithSession } from './panels/notebook'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -145,12 +146,11 @@ export class Kernel implements Disposable {
   protected reporter?: GrpcReporter
   protected featuresState$?
 
-  readonly onVarsChangeEvent: EnvVarsChangedEvent
+  protected readonly monitor$ = new Subject<EnvStoreMonitorWithSession>()
 
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
 
-    this.onVarsChangeEvent = new EnvVarsChangedEvent()
     this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
@@ -187,7 +187,7 @@ export class Kernel implements Disposable {
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
       window.onDidChangeActiveNotebookEditor(this.#handleActiveNotebook.bind(this)),
       this.panelManager,
-      this.onVarsChangeEvent,
+      { dispose: () => this.monitor$.complete() },
       this.registerTerminalProfile(),
     )
 
@@ -235,6 +235,10 @@ export class Kernel implements Disposable {
       version: this.context!.extension.packageJSON.version,
     }
     return getEnvProps(ext)
+  }
+
+  useMonitor() {
+    return this.monitor$.asObservable()
   }
 
   isFeatureOn(featureName: FeatureName): boolean {
@@ -1013,7 +1017,7 @@ export class Kernel implements Disposable {
         workspaceRoot,
         envStoreType,
         // copy env from process naively for now
-        // later we might want a more sophisticated approach/to bring this server-side
+        // does this really make sense if kernel/client aren't on the same host?
         envs: processEnviron(),
       })
 
@@ -1026,15 +1030,9 @@ export class Kernel implements Disposable {
         getRunnerSessionEnvs(this.context, runnerEnv, true, address),
       )
 
-      const monitor = await this.runner.createMonitorEnvStore()
-      const streaming = monitor.monitorEnvStore(runnerEnv?.getSessionId())
-      streaming.responses.onMessage(({ data }) => {
-        if (data.oneofKind === 'snapshot') {
-          this.onVarsChangeEvent.dispatch(data.snapshot.envs)
-        }
-      })
-      streaming.responses.onError((err) => {
-        log.error('Error monitoring env store', err.message)
+      this.monitor$.next({
+        monitor: await this.runner.createMonitorEnvStore(),
+        sessionId: this.runnerEnv.getSessionId(),
       })
 
       // runs this last to not overwrite previous outputs
@@ -1197,9 +1195,30 @@ export class Kernel implements Disposable {
   }
 
   async doExecuteAndFocusNotebookCell(cell: NotebookCell) {
+    await this.doFocusNotebookCell(cell)
+    await commands.executeCommand('notebook.cell.execute')
+    await commands.executeCommand('notebook.cell.focusInOutput')
+  }
+
+  async focusNotebookCell(cell: NotebookCell) {
+    if (!window.activeNotebookEditor?.selection) {
+      let disposable: Disposable
+      const onChangeSelection = async (_e: NotebookEditorSelectionChangeEvent) => {
+        disposable.dispose()
+        await this.doFocusNotebookCell(cell)
+      }
+
+      disposable = window.onDidChangeNotebookEditorSelection(onChangeSelection)
+      return
+    }
+
+    await this.doFocusNotebookCell(cell)
+  }
+
+  async doFocusNotebookCell(cell: NotebookCell) {
     await commands.executeCommand('notebook.focusTop')
 
-    await Promise.allSettled(
+    const promises = Promise.allSettled(
       Array.from({ length: cell.index }, async (_v, index) => {
         window.activeNotebookEditor?.revealRange(
           new NotebookRange(index, index),
@@ -1209,8 +1228,7 @@ export class Kernel implements Disposable {
       }),
     )
 
-    await commands.executeCommand('notebook.cell.execute')
-    await commands.executeCommand('notebook.cell.focusInOutput')
+    await promises
   }
 
   public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
