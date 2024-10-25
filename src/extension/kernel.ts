@@ -1197,9 +1197,30 @@ export class Kernel implements Disposable {
   }
 
   async doExecuteAndFocusNotebookCell(cell: NotebookCell) {
+    await this.doFocusNotebookCell(cell)
+    await commands.executeCommand('notebook.cell.execute')
+    await commands.executeCommand('notebook.cell.focusInOutput')
+  }
+
+  async focusNotebookCell(cell: NotebookCell) {
+    if (!window.activeNotebookEditor?.selection) {
+      let disposable: Disposable
+      const onChangeSelection = async (_e: NotebookEditorSelectionChangeEvent) => {
+        disposable.dispose()
+        await this.doFocusNotebookCell(cell)
+      }
+
+      disposable = window.onDidChangeNotebookEditorSelection(onChangeSelection)
+      return
+    }
+
+    await this.doFocusNotebookCell(cell)
+  }
+
+  async doFocusNotebookCell(cell: NotebookCell) {
     await commands.executeCommand('notebook.focusTop')
 
-    await Promise.allSettled(
+    const promises = Promise.allSettled(
       Array.from({ length: cell.index }, async (_v, index) => {
         window.activeNotebookEditor?.revealRange(
           new NotebookRange(index, index),
@@ -1209,8 +1230,7 @@ export class Kernel implements Disposable {
       }),
     )
 
-    await commands.executeCommand('notebook.cell.execute')
-    await commands.executeCommand('notebook.cell.focusInOutput')
+    await promises
   }
 
   public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
