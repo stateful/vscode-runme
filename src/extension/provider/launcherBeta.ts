@@ -61,7 +61,7 @@ let sauceCount = 0
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
-  private allowUnnamed = true
+  private allowUnnamed = false
   private tasks: Promise<ProjectTask[]>
   private ready: ReadyPromise
   private client: ProjectServiceClient | undefined
