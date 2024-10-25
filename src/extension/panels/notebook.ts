@@ -35,7 +35,8 @@ export class EnvStorePanel extends TanglePanel {
         const stream = monWithSess.monitor.monitorEnvStore(monWithSess.sessionId)
         return new Observable<MonitorEnvStoreResponse['data']>((observer) => {
           stream.responses.onMessage(({ data }) => observer.next(data))
-          stream.responses.onError((err) => observer.error(err))
+          // only log to not complete observable, the error is recoverable
+          stream.responses.onError((err) => log.error('error in monitor', err.toString()))
           stream.responses.onComplete(() => observer.complete())
         })
       }),
@@ -44,9 +45,9 @@ export class EnvStorePanel extends TanglePanel {
       shareReplay(1), // cache last value for new subscribers between updates
     )
 
-    const sub = combineLatest([this.webview, snapshotEnvs]).subscribe(([, envVars]) =>
-      this.updateWebview(envVars),
-    )
+    const sub = combineLatest([this.webview, snapshotEnvs]).subscribe({
+      next: ([, envVars]) => this.updateWebview(envVars),
+    })
     this.#disposables.push({
       dispose: () => sub.unsubscribe(),
     })
