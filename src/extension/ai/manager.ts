@@ -79,6 +79,8 @@ export class AIManager {
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
     )
 
+    // We use onDidChangeNotebookDocument to listen for changes to outputs.
+    // We use this to trigger updates in response to a cell's output being updated.
     this.subscriptions.push(
       vscode.workspace.onDidChangeNotebookDocument(
         eventGenerator.handleOnDidChangeNotebookDocument,

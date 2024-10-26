@@ -70,7 +70,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   // This is a stateful transformation because we need to decide whether to send the full document or
   // the incremental changes.  It will return a null request if the event should be ignored or if there
   // is an error preventing it from computing a proper request.
-  buildRequest(
+  async buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
     firstRequest: boolean,
   ): Promise<agent_pb.StreamGenerateRequest | null> {
@@ -121,37 +121,35 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let cellData = notebook.getCells().map((cell) => converters.cellToCellData(cell))
       let notebookData = new vscode.NotebookData(cellData)
 
-      return this.converter.notebookDataToProto(notebookData).then((notebookProto) => {
-        let request = new agent_pb.StreamGenerateRequest({
-          contextId: SessionManager.getManager().getID(),
-          request: {
-            case: 'fullContext',
-            value: new agent_pb.FullContext({
-              notebook: notebookProto,
-              selected: matchedCell.index,
-              notebookUri: notebook.uri.toString(),
-            }),
-          },
-        })
-        return request
+      let notebookProto = await this.converter.notebookDataToProto(notebookData)
+      let request = new agent_pb.StreamGenerateRequest({
+        contextId: SessionManager.getManager().getID(),
+        request: {
+          case: 'fullContext',
+          value: new agent_pb.FullContext({
+            notebook: notebookProto,
+            selected: matchedCell.index,
+            notebookUri: notebook.uri.toString(),
+          }),
+        },
       })
+      return request
     } else {
       let cellData = converters.cellToCellData(matchedCell)
       let notebookData = new vscode.NotebookData([cellData])
 
       // Generate an update request
-      return this.converter.notebookDataToProto(notebookData).then((notebookProto) => {
-        let request = new agent_pb.StreamGenerateRequest({
-          contextId: SessionManager.getManager().getID(),
-          request: {
-            case: 'update',
-            value: new agent_pb.UpdateContext({
-              cell: notebookProto.cells[0],
-            }),
-          },
-        })
-        return request
+      let notebookProto = await this.converter.notebookDataToProto(notebookData)
+      let request = new agent_pb.StreamGenerateRequest({
+        contextId: SessionManager.getManager().getID(),
+        request: {
+          case: 'update',
+          value: new agent_pb.UpdateContext({
+            cell: notebookProto.cells[0],
+          }),
+        },
       })
+      return request
     }
   }
 
@@ -344,13 +342,16 @@ export class CellChangeEventGenerator {
       return
     }
 
-    this.streamCreator.handleEvent(
-      new stream.CellChangeEvent(
-        notebook.uri.toString(),
-        matchedCell.index,
-        StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
-      ),
-    )
+    // N.B. handlEvent is aysnc. So we need to use "then" to make sure the event gets processed
+    this.streamCreator
+      .handleEvent(
+        new stream.CellChangeEvent(
+          notebook.uri.toString(),
+          matchedCell.index,
+          StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+        ),
+      )
+      .then(() => {})
   }
 
   // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
@@ -381,7 +382,13 @@ export class CellChangeEventGenerator {
   }
 
   handleOnDidChangeNotebookDocument = (event: vscode.NotebookDocumentChangeEvent) => {
+    // N.B. For non-interactive cells this will trigger each time the output is updated.
+    // For interactive cells this doesn't appear to trigger each time the cell output is updated.
+    // For example, if you have a long running command (e.g. a bash for loop with a sleep that
+    // echos a message on each iteration) then this won't trigger on each iteration for
+    // an interactive cell but will for non-interactive.
     event.cellChanges.forEach((change) => {
+      log.info(`handleOnDidChangeNotebookDocument: change: ${change}`)
       if (change.outputs !== undefined) {
         // If outputs change then we want to trigger completions.
 
@@ -396,13 +403,15 @@ export class CellChangeEventGenerator {
         // In particular its possible that the cell that changed is not the active cell. Therefore
         // we may not want to generate completions for it. For example, you can have multiple cells
         // running. So in principle the active cell could be different from the cell that changed.
-        this.streamCreator.handleEvent(
-          new stream.CellChangeEvent(
-            change.cell.notebook.uri.toString(),
-            change.cell.index,
-            StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
-          ),
-        )
+        this.streamCreator
+          .handleEvent(
+            new stream.CellChangeEvent(
+              change.cell.notebook.uri.toString(),
+              change.cell.index,
+              StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
+            ),
+          )
+          .then(() => {})
       }
     })
   }
