@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import { StreamGenerateRequest_Trigger } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
 import { RUNME_CELL_ID } from '../constants'
@@ -17,6 +18,14 @@ const log = getLogger()
 // the ghost metadata is not persisted to the markdown file.
 export const ghostKey = '_ghostCell'
 export const ghostCellKindKey = '_ghostCellKind'
+
+// Schemes are defined at
+// https://github.com/microsoft/vscode/blob/a56879c50db91715377005d6182d12742d1ba5c7/src/vs/base/common/network.ts#L64
+export const vsCodeCellScheme = 'vscode-notebook-cell'
+
+// vsCodeOutputScheme is the scheme for the output window (not cell outputs).
+// The output window is where the logs for Runme are displayed.
+export const vsCodeOutputScheme = 'output'
 
 const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
@@ -88,12 +97,16 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
     // Has the cell changed since the last time we processed an event?
+    // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
+    // correctly detect that the cell has changed and a new stream needs to be initiated.
     let newCell = true
     if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
       newCell = false
     }
 
-    log.info(`buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}`)
+    log.info(
+      `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
+    )
 
     // Update notebook state
     nbState.activeCell = matchedCell
@@ -235,6 +248,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       return
     }
 
+    // Are schemes defined here:
+    // https://github.com/microsoft/vscode/blob/a56879c50db91715377005d6182d12742d1ba5c7/src/vs/base/common/network.ts#L64
     if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
       // Doesn't correspond to a notebook cell so do nothing
       return
@@ -304,8 +319,7 @@ export class CellChangeEventGenerator {
   }
 
   handleOnDidChangeNotebookCell = (event: vscode.TextDocumentChangeEvent) => {
-    if (event.document.uri.scheme !== 'vscode-notebook-cell') {
-      // ignore other open events
+    if (![vsCodeCellScheme].includes(event.document.uri.scheme)) {
       return
     }
     var matchedCell: vscode.NotebookCell | undefined
@@ -331,31 +345,66 @@ export class CellChangeEventGenerator {
     }
 
     this.streamCreator.handleEvent(
-      new stream.CellChangeEvent(notebook.uri.toString(), matchedCell.index),
+      new stream.CellChangeEvent(
+        notebook.uri.toString(),
+        matchedCell.index,
+        StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+      ),
     )
   }
-}
 
-// handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
-// This includes when a TextEditor is created. I also think it can be the result of scrolling.
-export function handleOnDidChangeVisibleTextEditors(editors: readonly vscode.TextEditor[]) {
-  for (const editor of editors) {
-    log.info(`onDidChangeVisibleTextEditors Fired for editor ${editor.document.uri}`)
-    if (editor.document.uri.scheme !== 'vscode-notebook-cell') {
-      log.info(`onDidChangeVisibleTextEditors Fired fo ${editor.document.uri}`)
-      // Doesn't correspond to a notebook cell so do nothing
-      continue
-    }
-    const cell = getCellFromCellDocument(editor.document)
-    if (cell === undefined) {
-      continue
-    }
+  // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
+  // This includes when a TextEditor is created. I also think it can be the result of scrolling.
+  // When cells become visible we need to apply ghost decorations.
+  //
+  // This event is also fired when a code cell is executed and its output becomes visible.
+  // We use that to trigger completion generation because we want the newly rendered code
+  // cell output to affect the suggestions.
+  handleOnDidChangeVisibleTextEditors = (editors: readonly vscode.TextEditor[]) => {
+    for (const editor of editors) {
+      if (![vsCodeCellScheme].includes(editor.document.uri.scheme)) {
+        // Doesn't correspond to a notebook or output cell so do nothing
+        continue
+      }
 
-    if (!isGhostCell(cell)) {
-      continue
-    }
+      const cell = getCellFromCellDocument(editor.document)
+      if (cell === undefined) {
+        continue
+      }
 
-    editorAsGhost(editor)
+      if (!isGhostCell(cell)) {
+        continue
+      }
+
+      editorAsGhost(editor)
+    }
+  }
+
+  handleOnDidChangeNotebookDocument = (event: vscode.NotebookDocumentChangeEvent) => {
+    event.cellChanges.forEach((change) => {
+      if (change.outputs !== undefined) {
+        // If outputs change then we want to trigger completions.
+
+        // N.B. It looks like if you click the "configure" button associated with a cell then it will trigger
+        // an output change event. I don't think there's any easy way to filter those events out. To filter
+        // those events out we'd need to keep track of the output item with mime type
+        // application/vnd.code.notebook.stdout and then detect when the stdout changes. That would require
+        // keeping track of that state. If we trigger on the "configure" then we send a request to the Foyle
+        // server and we can rely on the Foyle server to do the debouncing.
+
+        // It is the responsibility of the StreamCreator to decide whether the change should be processed..
+        // In particular its possible that the cell that changed is not the active cell. Therefore
+        // we may not want to generate completions for it. For example, you can have multiple cells
+        // running. So in principle the active cell could be different from the cell that changed.
+        this.streamCreator.handleEvent(
+          new stream.CellChangeEvent(
+            change.cell.notebook.uri.toString(),
+            change.cell.index,
+            StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
+          ),
+        )
+      }
+    })
   }
 }
 

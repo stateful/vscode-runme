@@ -75,7 +75,8 @@ import {
   selectEnvironment,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
-import { RunmeLauncherProvider } from './provider/launcher'
+import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
+import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
 import GrpcRunner, { IRunner } from './runner'
 import * as survey from './survey'
@@ -85,7 +86,7 @@ import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } fr
 import { GithubAuthProvider } from './provider/githubAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { IPanel } from './panels/base'
-import { NotebookPanel as EnvStorePanel } from './panels/notebook'
+import { EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
 import { SessionOutputCellStatusBarProvider } from './provider/cellStatusBar/sessionOutput'
 import { GrpcReporter } from './reporter'
@@ -134,7 +135,22 @@ export class RunmeExtension {
     kernel.setSerializer(serializer as GrpcSerializer)
     kernel.setReporter(reporter)
 
-    const treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    let treeViewer: RunmeTreeProvider
+
+    if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
+      await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
+      await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', true)
+      treeViewer = new RunmeLauncherProviderBeta(
+        kernel,
+        server,
+        serializer,
+        getDefaultWorkspace(),
+        runner,
+      )
+    } else {
+      treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
+    }
+
     const runmeTaskProvider = tasks.registerTaskProvider(
       RunmeTaskProvider.id,
       new RunmeTaskProvider(context, treeViewer, serializer, kernel, server, runner),
@@ -274,7 +290,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.new', createNewRunmeNotebook),
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
-      RunmeExtension.registerCommand('runme.openRunmeFile', RunmeLauncherProvider.openFile),
+      RunmeExtension.registerCommand('runme.openRunmeFile', treeViewer.openFile.bind(treeViewer)),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       RunmeExtension.registerCommand('runme.runWithPrompts', (cell) =>
@@ -578,7 +594,7 @@ export class RunmeExtension {
     return [
       ...runmePanelIds.map(register(appChannel, (id) => new CloudPanel(context, id))),
       ...notebookPanelIds.map(
-        register(notebookChannel, (id) => new EnvStorePanel(context, id, kernel.onVarsChangeEvent)),
+        register(notebookChannel, (id) => new EnvStorePanel(context, id, kernel.useMonitor())),
       ),
     ].flat()
   }
