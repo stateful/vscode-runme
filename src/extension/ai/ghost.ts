@@ -403,6 +403,8 @@ export class CellChangeEventGenerator {
         // In particular its possible that the cell that changed is not the active cell. Therefore
         // we may not want to generate completions for it. For example, you can have multiple cells
         // running. So in principle the active cell could be different from the cell that changed.
+        //
+        // n.b. Do we need a .then to make sure the event gets processed?
         this.streamCreator
           .handleEvent(
             new stream.CellChangeEvent(
