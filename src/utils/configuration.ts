@@ -91,6 +91,7 @@ const configurationSchema = {
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
     docsUrl: z.string().default(DEFAULT_DOCS_URL),
+    deleteAuthenticationToken: z.boolean().default(true),
   },
 }
 
@@ -445,6 +446,10 @@ const getDocsUrlFor = (path: string): string => {
   return `${baseUrl}${path}`
 }
 
+const getDeleteAuthenticationToken = () => {
+  return getCloudConfigurationValue<boolean>('deleteAuthenticationToken', true)
+}
+
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
@@ -477,4 +482,5 @@ export {
   getLoginPrompt,
   getDocsUrlFor,
   getDocsUrl,
+  getDeleteAuthenticationToken,
 }

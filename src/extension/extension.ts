@@ -454,7 +454,7 @@ export class RunmeExtension {
       const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
       context.subscriptions.push(statefulAuthProvider)
 
-      const secretsAuthed = await statefulAuthProvider.loadFromSecrets()
+      const secretsAuthed = await statefulAuthProvider.bootstrapFromToken()
       const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || secretsAuthed
       const silent = forceLogin ? undefined : true
 

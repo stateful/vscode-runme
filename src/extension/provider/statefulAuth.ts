@@ -19,7 +19,7 @@ import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
-import { getRunmeAppUrl } from '../../utils/configuration'
+import { getDeleteAuthenticationToken, getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
@@ -237,69 +237,80 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  public async loadFromSecrets() {
-    const secretsFile = '/etc/secrets/playground-dev'
-    const secretsUri = Uri.parse(secretsFile)
-    const hasSecretsFile = await workspace.fs.stat(secretsUri).then(
+  public async bootstrapFromToken() {
+    const authTokenUri = Uri.joinPath(this.context.extensionUri, 'secrets', 'authToken')
+
+    const hasTokenFile = await workspace.fs.stat(authTokenUri).then(
       () => true,
       () => false,
     )
 
-    if (!hasSecretsFile) {
-      logger.info('No secrets file found, skipping load from secrets')
-      return
-    }
-
-    const rawToken = await workspace.fs.readFile(secretsUri)
-    if (!rawToken?.length) {
-      logger.error('Failed to read secrets file')
-      return
-    }
-
-    const token = new TextDecoder().decode(rawToken).trim()
-    const jwtDecoded = jwt.decode(token) as DecodedToken
-    if (!jwtDecoded) {
-      logger.error('Failed to decode JWT token')
-      return
-    }
-
-    const { exp, scope } = jwtDecoded
-    if (!exp || !scope) {
-      logger.error('Invalid JWT token')
+    if (!hasTokenFile) {
+      logger.info('No auth token file found, halting bootstrap from token.')
       return
     }
 
     try {
-      const { name, email } = await this.getUserInfo(token)
-
-      if (!name || !email) {
-        logger.error('Failed to get user info from JWT token')
-        return
-      }
-
-      const session: StatefulAuthSession = {
-        accessToken: token,
-        expiresIn: secsToUnixTime(exp),
-        id: uuidv4(),
-        account: {
-          label: name,
-          id: email,
-        },
-        scopes: scope.split(' '),
-        isExpired: false,
-      }
-
+      const { token, payload } = await this.insecureDecode(authTokenUri)
+      const session = await this.buildSession(token, payload)
       await this.context.secrets.store(this.sessionSecretKey, JSON.stringify([session]))
+      if (getDeleteAuthenticationToken()) {
+        logger.info(`Deleting authToken file ${authTokenUri}`)
+        await workspace.fs.delete(authTokenUri)
+      }
       return true
     } catch (error) {
       let message
       if (error instanceof Error) {
         message = error.message
       } else {
-        message = String(error)
+        message = JSON.stringify(error)
       }
       logger.error(message)
     }
+  }
+
+  /**
+   * Decode a JWT token without verifying its signature.
+   */
+  private async insecureDecode(authTokenUri: Uri) {
+    const bytes = await workspace.fs.readFile(authTokenUri)
+    if (!bytes?.length) {
+      throw new Error('Failed to read token file')
+    }
+
+    const token = new TextDecoder().decode(bytes).trim()
+    const payload = jwt.decode(token) as DecodedToken
+    if (!payload) {
+      throw new Error('Failed to decode JWT token')
+    }
+
+    return { payload, token }
+  }
+
+  private async buildSession(token: string, payload: DecodedToken) {
+    if (!payload.exp || !payload.scope) {
+      throw new Error('Invalid token format, missing exp or scope')
+    }
+
+    const { name, email } = await this.getUserInfo(token)
+    if (!name || !email) {
+      throw new Error('Failed to get user info from JWT token')
+    }
+
+    const session: StatefulAuthSession = {
+      accessToken: token,
+      expiresIn: secsToUnixTime(payload.exp),
+      id: uuidv4(),
+      account: {
+        label: name,
+        id: email,
+      },
+      scopes: payload.scope!.split(' '),
+      isExpired: false,
+    }
+
+    return session
   }
 
   /**
@@ -460,7 +471,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         Authorization: `Bearer ${token}`,
       },
     })
-    return await response.json()
+
+    const json = await response.json()
+    if (!response.ok) {
+      return Promise.reject(json)
+    }
+
+    return Promise.resolve(json)
   }
 
   /**

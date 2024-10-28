@@ -957,16 +957,21 @@
             "default": true,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
-          "runme.aiBaseURL": {
-            "type": "string",
-            "default": "http://localhost:8877/api",
-            "description": "The base URL of the AI service."
-          },
           "runme.app.docsUrl": {
             "type": "string",
             "scope": "window",
             "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
+          },
+          "runme.app.deleteAuthenticationToken": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Deletes the authentication token after use"
+          },
+          "runme.aiBaseURL": {
+            "type": "string",
+            "default": "http://localhost:8877/api",
+            "description": "The base URL of the AI service."
           }
         }
       }
