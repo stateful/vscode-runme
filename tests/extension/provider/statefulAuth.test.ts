@@ -85,8 +85,8 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
 
   it('returns undefined if no token is provided', async () => {
     vi.mocked(workspace.fs.stat).mockRejectedValueOnce({} as any)
-    const session = await provider.bootstrapFromToken()
-    expect(session).toBeUndefined()
+    const sessionCreated = await provider.bootstrapFromToken()
+    expect(sessionCreated).toBeUndefined()
   })
 
   it('returns true if token provided is valid', async () => {
@@ -118,9 +118,9 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
     )
     const spyStore = vi.spyOn(contextFake.secrets, 'store')
     const spyDelete = vi.spyOn(workspace.fs, 'delete')
-    const session = await provider.bootstrapFromToken()
+    const sessionCreated = await provider.bootstrapFromToken()
 
-    expect(session).toBeTruthy()
+    expect(sessionCreated).toBeTruthy()
     expect(spyStore).toHaveBeenCalledOnce()
     expect(spyDelete).toHaveBeenCalledOnce()
   })
@@ -149,9 +149,9 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
     )
     const spyStore = vi.spyOn(contextFake.secrets, 'store')
     const spyDelete = vi.spyOn(workspace.fs, 'delete')
-    const session = await provider.bootstrapFromToken()
+    const sessionCreated = await provider.bootstrapFromToken()
 
-    expect(session).toBeUndefined()
+    expect(sessionCreated).toBeUndefined()
     expect(spyStore).not.toHaveBeenCalledOnce()
     expect(spyDelete).not.toHaveBeenCalledOnce()
   })
