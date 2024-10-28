@@ -20,7 +20,14 @@ updates:
       - dependency-name: "vscode-uri"
       # Deprecated
       - dependency-name: "@vercel/client"
+
     groups:
+      types-node:
+        patterns:
+          - "@types/node"
+        update-types:
+          - minor
+          - patch
       aws-sdk:
         patterns:
           - "@aws-sdk/client-ec2"
