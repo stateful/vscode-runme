@@ -240,12 +240,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   public async bootstrapFromToken() {
     const authTokenUri = Uri.joinPath(this.context.extensionUri, 'secrets', 'authToken')
 
-    const hasTokenFile = await workspace.fs.stat(authTokenUri).then(
-      () => true,
-      () => false,
-    )
-
-    if (!hasTokenFile) {
+    if (!this.hasAuthTokenFile(authTokenUri)) {
       logger.info('No auth token file found, halting bootstrap from token.')
       return
     }
@@ -253,11 +248,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     try {
       const { token, payload } = await this.insecureDecode(authTokenUri)
       const session = await this.buildSession(token, payload)
-      await this.context.secrets.store(this.sessionSecretKey, JSON.stringify([session]))
-      if (getDeleteAuthenticationToken()) {
-        logger.info(`Deleting authToken file ${authTokenUri}`)
-        await workspace.fs.delete(authTokenUri)
-      }
+      await this.persistSessions([session], { added: [session], removed: [], changed: [] })
+      await this.deleteAuthTokenFile(authTokenUri)
       return true
     } catch (error) {
       let message
@@ -268,6 +260,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       }
       logger.error(message)
     }
+  }
+
+  private async hasAuthTokenFile(authTokenUri: Uri) {
+    const hasTokenFile = await workspace.fs.stat(authTokenUri).then(
+      () => true,
+      () => false,
+    )
+
+    return hasTokenFile
   }
 
   /**
@@ -311,6 +312,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
 
     return session
+  }
+
+  private async deleteAuthTokenFile(authTokenUri: Uri) {
+    if (getDeleteAuthenticationToken()) {
+      logger.info(`Deleting authToken file ${authTokenUri}`)
+      await workspace.fs.delete(authTokenUri)
+    }
   }
 
   /**
