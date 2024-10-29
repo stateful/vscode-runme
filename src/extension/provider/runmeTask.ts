@@ -47,7 +47,7 @@ import {
   ResolveProgramRequest_ModeEnum,
 } from '../grpc/runner/types'
 
-import { RunmeLauncherProvider } from './launcher'
+import { RunmeTreeProvider } from './launcher'
 
 type TaskOptions = Pick<RunmeTaskDefinition, 'closeTerminalOnSuccess' | 'isBackground' | 'cwd'>
 const log = getLogger('RunmeTaskProvider')
@@ -75,7 +75,7 @@ export class RunmeTaskProvider implements TaskProvider {
 
   constructor(
     private context: ExtensionContext,
-    private treeView: RunmeLauncherProvider,
+    private treeView: RunmeTreeProvider,
     private serializer: SerializerBase,
     private kernel: Kernel,
     private server: KernelServer,

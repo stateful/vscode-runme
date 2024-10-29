@@ -9,6 +9,8 @@ import * as ghost from './ghost'
 import * as stream from './stream'
 import * as generate from './generate'
 import * as events from './events'
+import { SessionManager } from './sessions'
+
 // AIManager is a class that manages the AI services.
 export class AIManager {
   log: ReturnType<typeof getLogger>
@@ -16,6 +18,7 @@ export class AIManager {
   subscriptions: vscode.Disposable[] = []
   client: PromiseClient<typeof AIService>
   completionGenerator: generate.CompletionGenerator
+
   constructor() {
     this.log = getLogger('AIManager')
     this.log.info('AI: Initializing AI Manager')
@@ -52,7 +55,7 @@ export class AIManager {
 
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.
-    // We use this to generate completions.
+    // We use this to generate completions when the contents of a cell changes.
     this.subscriptions.push(
       vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
     )
@@ -61,14 +64,44 @@ export class AIManager {
     // This can happen due to scrolling.
     // We need to trap this event to apply decorations to turn cells into ghost cells.
     this.subscriptions.push(
-      vscode.window.onDidChangeVisibleTextEditors(ghost.handleOnDidChangeVisibleTextEditors),
+      vscode.window.onDidChangeVisibleTextEditors(
+        eventGenerator.handleOnDidChangeVisibleTextEditors,
+      ),
     )
 
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
-      // vscode.window.onDidChangeActiveTextEditor(localOnDidChangeActiveTextEditor),
     )
+
+    this.subscriptions.push(
+      vscode.workspace.onDidChangeNotebookDocument(
+        eventGenerator.handleOnDidChangeNotebookDocument,
+      ),
+    )
+
+    // Create a new status bar item aligned to the right
+    let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+    statusBarItem.text = 'Session: <None>'
+    statusBarItem.tooltip = 'Foyle Session ID; click to copy to clipboard.'
+
+    // Attach a command to the status bar item
+    statusBarItem.command = 'extension.copyStatusBarText'
+    // Command to copy the status bar text to the clipboard
+    const copyTextCommand = vscode.commands.registerCommand('extension.copyStatusBarText', () => {
+      // Copy the status bar text to the clipboard
+      const pieces = statusBarItem.text.split(' ')
+      let id = '<no session>'
+      if (pieces.length >= 1) {
+        id = pieces[pieces.length - 1]
+      }
+      vscode.env.clipboard.writeText(id)
+    })
+    statusBarItem.show()
+    this.subscriptions.push(copyTextCommand)
+    this.subscriptions.push(statusBarItem)
+
+    SessionManager.resetManager(statusBarItem)
   }
 
   // Cleanup method. We will use this to clean up any resources when extension is closed.
