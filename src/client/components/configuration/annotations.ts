@@ -57,7 +57,10 @@ export class Annotations extends LitElement {
       description: 'Run cell inside terminal to allow for interactive input.',
     },
     closeTerminalOnSuccess: {
-      description: 'Hide terminal after cell successful execution.',
+      description: 'Hide terminal panel after cell successful execution.',
+    },
+    openTerminalOnError: {
+      description: 'open terminal panel after cell execution error.',
     },
     promptEnv: {
       description: 'Prompt user input for exported environment variables.',

@@ -96,6 +96,7 @@ export namespace Serializer {
     background?: string
     interactive?: string
     closeTerminalOnSuccess?: string
+    openTerminalOnError?: string
     mimeType?: string
     promptEnv?: string
     category?: string

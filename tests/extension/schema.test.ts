@@ -98,11 +98,13 @@ suite('AnnotationSchema', () => {
         background: false,
         interactive: true,
         closeTerminalOnSuccess: true,
+        openTerminalOnError: true,
       }
       const parseResult = SafeCellAnnotationsSchema.safeParse({
         background: 'invalid',
         interactive: 'invalid',
         closeTerminalOnSuccess: 'invalid',
+        openTerminalOnError: 'invalid',
       })
 
       expect(parseResult.success).toBeTruthy()
@@ -117,9 +119,17 @@ suite('AnnotationSchema', () => {
       const parseResult = SafeCellAnnotationsSchema.safeParse({})
       expect(parseResult.success).toBeTruthy()
       if (parseResult.success) {
-        const { background, closeTerminalOnSuccess, interactive, mimeType, name } = parseResult.data
+        const {
+          background,
+          closeTerminalOnSuccess,
+          openTerminalOnError,
+          interactive,
+          mimeType,
+          name,
+        } = parseResult.data
         expect(background).toBeFalsy()
         expect(closeTerminalOnSuccess).toBeTruthy()
+        expect(openTerminalOnError).toBeTruthy()
         expect(interactive).toBeTruthy()
         expect(mimeType).toBeUndefined()
         expect(name).toBe('')
@@ -133,6 +143,7 @@ suite('AnnotationSchema', () => {
         background: 'invalid',
         interactive: 'invalid',
         closeTerminalOnSuccess: 'invalid',
+        openTerminalOnError: 'invalid',
       }
       const parseResult = CellAnnotationsSchema.safeParse(input) as SafeParseError<any>
       expect(parseResult.success).toBeFalsy()
@@ -141,6 +152,7 @@ suite('AnnotationSchema', () => {
         background: ['expected a boolean value'],
         interactive: ['expected a boolean value'],
         closeTerminalOnSuccess: ['expected a boolean value'],
+        openTerminalOnError: ['expected a boolean value'],
       })
     })
 
@@ -148,9 +160,17 @@ suite('AnnotationSchema', () => {
       const parseResult = SafeCellAnnotationsSchema.safeParse({})
       expect(parseResult.success).toBeTruthy()
       if (parseResult.success) {
-        const { background, closeTerminalOnSuccess, interactive, mimeType, name } = parseResult.data
+        const {
+          background,
+          closeTerminalOnSuccess,
+          openTerminalOnError,
+          interactive,
+          mimeType,
+          name,
+        } = parseResult.data
         expect(background).toBeFalsy()
         expect(closeTerminalOnSuccess).toBeTruthy()
+        expect(openTerminalOnError).toBeTruthy()
         expect(interactive).toBeTruthy()
         expect(mimeType).toBeUndefined()
         expect(name).toBe('')

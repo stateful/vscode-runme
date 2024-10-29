@@ -299,11 +299,13 @@ const getNotebookTerminalConfigurations = (metadata: Serializer.Metadata) => {
 const isNotebookTerminalEnabledForCell = (cell: NotebookCell): boolean => {
   const { interactive, background } = getAnnotations(cell)
 
-  return interactive
-    ? background
+  if (interactive) {
+    return background
       ? isNotebookTerminalFeatureEnabled('backgroundTask')
       : isNotebookTerminalFeatureEnabled('interactive')
-    : isNotebookTerminalFeatureEnabled('nonInteractive')
+  }
+
+  return false
 }
 
 const getCloseTerminalOnSuccess = () => {

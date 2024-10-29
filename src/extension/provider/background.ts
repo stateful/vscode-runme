@@ -29,6 +29,7 @@ export class ToggleTerminalProvider
   async provideCellStatusBarItems(
     cell: vscode.NotebookCell,
   ): Promise<vscode.NotebookCellStatusBarItem | undefined> {
+    const { interactive } = getAnnotations(cell)
     const terminalState = await this.kernel.getTerminalState(cell)
 
     if (!terminalState) {
@@ -42,6 +43,14 @@ export class ToggleTerminalProvider
       NotebookCellStatusBarAlignment.Right,
     )
     item.command = 'runme.toggleTerminal'
+
+    if (!interactive) {
+      const terminal = getTerminalByCell(cell)
+      if (!terminal) {
+        return undefined
+      }
+      item.command = 'runme.openIntegratedTerminal'
+    }
 
     return item
   }
