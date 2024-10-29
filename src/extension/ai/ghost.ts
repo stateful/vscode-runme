@@ -316,7 +316,7 @@ export class CellChangeEventGenerator {
     this.streamCreator = streamCreator
   }
 
-  handleOnDidChangeNotebookCell = (event: vscode.TextDocumentChangeEvent) => {
+  handleOnDidChangeNotebookCell = async (event: vscode.TextDocumentChangeEvent) => {
     if (![vsCodeCellScheme].includes(event.document.uri.scheme)) {
       return
     }
@@ -342,16 +342,13 @@ export class CellChangeEventGenerator {
       return
     }
 
-    // N.B. handlEvent is aysnc. So we need to use "then" to make sure the event gets processed
-    this.streamCreator
-      .handleEvent(
-        new stream.CellChangeEvent(
-          notebook.uri.toString(),
-          matchedCell.index,
-          StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
-        ),
-      )
-      .then(() => {})
+    await this.streamCreator.handleEvent(
+      new stream.CellChangeEvent(
+        notebook.uri.toString(),
+        matchedCell.index,
+        StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+      ),
+    )
   }
 
   // handleOnDidChangeVisibleTextEditors is called when the visible text editors change.
@@ -387,7 +384,7 @@ export class CellChangeEventGenerator {
     // For example, if you have a long running command (e.g. a bash for loop with a sleep that
     // echos a message on each iteration) then this won't trigger on each iteration for
     // an interactive cell but will for non-interactive.
-    event.cellChanges.forEach((change) => {
+    event.cellChanges.forEach(async (change) => {
       log.info(`handleOnDidChangeNotebookDocument: change: ${change}`)
       if (change.outputs !== undefined) {
         // If outputs change then we want to trigger completions.
@@ -404,16 +401,13 @@ export class CellChangeEventGenerator {
         // we may not want to generate completions for it. For example, you can have multiple cells
         // running. So in principle the active cell could be different from the cell that changed.
         //
-        // n.b. Do we need a .then to make sure the event gets processed?
-        this.streamCreator
-          .handleEvent(
-            new stream.CellChangeEvent(
-              change.cell.notebook.uri.toString(),
-              change.cell.index,
-              StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
-            ),
-          )
-          .then(() => {})
+        await this.streamCreator.handleEvent(
+          new stream.CellChangeEvent(
+            change.cell.notebook.uri.toString(),
+            change.cell.index,
+            StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
+          ),
+        )
       }
     })
   }
