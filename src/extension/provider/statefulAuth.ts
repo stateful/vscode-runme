@@ -195,25 +195,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   /**
-   * Update an existing session
-   * @param session
-   */
-  private async updateSession(session: StatefulAuthSession): Promise<void> {
-    const sessions = await this.getAllSessions()
-    if (!sessions.length) {
-      return
-    }
-
-    const sessionIdx = await this.findSessionIndex(sessions, session)
-    if (sessionIdx < 0) {
-      return
-    }
-
-    sessions[sessionIdx] = session
-    await this.persistSessions(sessions, { added: [], removed: [], changed: [session] })
-  }
-
-  /**
    * Remove an existing session
    * @param sessionId
    */
