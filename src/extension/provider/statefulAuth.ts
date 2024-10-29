@@ -19,7 +19,11 @@ import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
-import { getDeleteAuthenticationToken, getRunmeAppUrl } from '../../utils/configuration'
+import {
+  getAuthenticationTokenPath,
+  getDeleteAuthenticationToken,
+  getRunmeAppUrl,
+} from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
@@ -237,15 +241,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  public async bootstrapFromToken() {
-    const authTokenUri = Uri.joinPath(this.context.extensionUri, 'secrets', 'authToken')
-
-    if (!this.hasAuthTokenFile(authTokenUri)) {
-      logger.info('No auth token file found, halting bootstrap from token.')
-      return
-    }
-
+  public async bootstrapFromToken(): Promise<boolean> {
     try {
+      const authTokenUri = await this.getAuthTokenUri()
+      if (!authTokenUri) {
+        logger.info('No auth token file found, halting bootstrap from token.')
+        return false
+      }
       const { token, payload } = await this.insecureDecode(authTokenUri)
       const session = await this.buildSession(token, payload)
       await this.persistSessions([session], { added: [session], removed: [], changed: [] })
@@ -260,15 +262,26 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       }
       logger.error(message)
     }
+    return false
   }
 
-  private async hasAuthTokenFile(authTokenUri: Uri) {
+  private async getAuthTokenUri(): Promise<Uri | undefined> {
+    const authTokenPath = getAuthenticationTokenPath()
+    if (!authTokenPath) {
+      return
+    }
+
+    const authTokenUri = Uri.joinPath(this.context.extensionUri, authTokenPath)
     const hasTokenFile = await workspace.fs.stat(authTokenUri).then(
       () => true,
       () => false,
     )
 
-    return hasTokenFile
+    if (!hasTokenFile) {
+      return
+    }
+
+    return authTokenUri
   }
 
   /**
@@ -584,6 +597,19 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
 
     return { ...session, isExpired: true }
+  }
+
+  showLoginNotification() {
+    const openDashboardStr = 'Open Dashboard'
+    window
+      .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+      .then((answer) => {
+        if (answer === openDashboardStr) {
+          const dashboardUri = getRunmeAppUrl(['app'])
+          const uri = Uri.parse(dashboardUri)
+          env.openExternal(uri)
+        }
+      })
   }
 }
 

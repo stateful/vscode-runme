@@ -972,6 +972,11 @@
             "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
           },
+          "runme.app.authenticationTokenPath": {
+            "type": "string",
+            "default": "",
+            "markdownDescription": "Authentication token path"
+          },
           "runme.app.deleteAuthenticationToken": {
             "type": "boolean",
             "default": true,

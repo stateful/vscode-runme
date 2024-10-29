@@ -18,3 +18,4 @@ tests
 coverage
 dagger
 dagger.json
+secrets

@@ -17,6 +17,7 @@ vi.mock('../../../src/utils/configuration', () => {
   return {
     getRunmeAppUrl: vi.fn(),
     getDeleteAuthenticationToken: vi.fn(() => true),
+    getAuthenticationTokenPath: vi.fn(() => '/path/to/auth/token'),
   }
 })
 
@@ -86,7 +87,7 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
   it('returns undefined if no token is provided', async () => {
     vi.mocked(workspace.fs.stat).mockRejectedValueOnce({} as any)
     const sessionCreated = await provider.bootstrapFromToken()
-    expect(sessionCreated).toBeUndefined()
+    expect(sessionCreated).toBeFalsy()
   })
 
   it('returns true if token provided is valid', async () => {
@@ -151,7 +152,7 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
     const spyDelete = vi.spyOn(workspace.fs, 'delete')
     const sessionCreated = await provider.bootstrapFromToken()
 
-    expect(sessionCreated).toBeUndefined()
+    expect(sessionCreated).toBeFalsy()
     expect(spyStore).not.toHaveBeenCalledOnce()
     expect(spyDelete).not.toHaveBeenCalledOnce()
   })
