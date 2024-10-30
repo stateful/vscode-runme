@@ -39,11 +39,6 @@ interface TokenInformation {
   expiresIn: number
 }
 
-interface StatefulAuthSession extends AuthenticationSession {
-  expiresIn: number
-  isExpired: boolean
-}
-
 interface DecodedToken extends JwtPayload {
   exp?: number
   scope?: string
@@ -120,7 +115,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param scopes
    * @returns
    */
-  public async getSessions(scopes?: string[]): Promise<readonly StatefulAuthSession[]> {
+  public async getSessions(scopes?: readonly string[]): Promise<readonly AuthenticationSession[]> {
     try {
       const sessions = await this.getAllSessions()
       if (!sessions.length) {
@@ -133,7 +128,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       if (allScopes.length) {
         if (!scopes?.length) {
           const session = await this.getSession(sessions, allScopes)
-          if (session && !session.isExpired) {
+          if (session && !this.isSessionExpired(session)) {
             return [session]
           }
 
@@ -145,7 +140,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           return []
         }
 
-        if (session && !session.isExpired) {
+        if (session && !this.isSessionExpired(session)) {
           return [session]
         }
 
@@ -164,25 +159,23 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param scopes
    * @returns
    */
-  public async createSession(scopes: string[]): Promise<StatefulAuthSession> {
+  public async createSession(scopes: string[]): Promise<AuthenticationSession> {
     try {
-      const { accessToken, expiresIn } = await this.login(scopes)
+      const { accessToken } = await this.login(scopes)
 
       if (!accessToken) {
         throw new Error('Stateful login failure')
       }
 
       const userinfo: { name: string; email: string } = await this.getUserInfo(accessToken)
-      const session: StatefulAuthSession = {
+      const session: AuthenticationSession = {
         id: uuidv4(),
-        expiresIn: secsToUnixTime(expiresIn),
         accessToken,
         account: {
           label: userinfo.name,
           id: userinfo.email,
         },
         scopes: this.getScopes(scopes),
-        isExpired: false,
       }
 
       await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
@@ -283,6 +276,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return { payload, token }
   }
 
+  private decodeSessionToken(session: AuthenticationSession) {
+    const payload = jwt.decode(session.accessToken) as DecodedToken
+    return payload
+  }
+
   private async buildSession(token: string, payload: DecodedToken) {
     if (!payload.exp || !payload.scope) {
       throw new Error('Invalid token format, missing exp or scope')
@@ -293,16 +291,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       throw new Error('Failed to get user info from JWT token')
     }
 
-    const session: StatefulAuthSession = {
+    const session: AuthenticationSession = {
       accessToken: token,
-      expiresIn: secsToUnixTime(payload.exp),
       id: uuidv4(),
       account: {
         label: name,
         id: email,
       },
       scopes: payload.scope!.split(' '),
-      isExpired: false,
     }
 
     return session
@@ -487,7 +483,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * Get all required scopes
    * @param scopes
    */
-  private getScopes(scopes: string[] = []): string[] {
+  private getScopes(scopes: readonly string[] = []): string[] {
     const modifiedScopes = [...scopes]
 
     if (!modifiedScopes.includes('openid')) {
@@ -509,9 +505,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param expirationTime The expiration time of the token in milliseconds since Unix epoch.
    * @returns True if the token is not expired, false otherwise.
    */
-  private isTokenNotExpired(expirationTime: number) {
+  private isTokenNotExpired(decodedToken: DecodedToken) {
     // Get the current time in milliseconds since Unix epoch
     const currentTime = new Date().getTime()
+
+    if (!decodedToken.exp) {
+      return false
+    }
+
+    const expirationTime = secsToUnixTime(decodedToken.exp)
 
     // Calculate the time one hour before the token expiration time
     const oneHourBeforeExpiration = expirationTime - 60 * 60 * 1000 // Subtract one hour in milliseconds
@@ -520,34 +522,39 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return currentTime < oneHourBeforeExpiration
   }
 
+  private isSessionExpired(session: AuthenticationSession) {
+    const decodedToken = this.decodeSessionToken(session)
+    return !this.isTokenNotExpired(decodedToken)
+  }
+
   private get sessionSecretKey() {
     return `${SESSIONS_SECRET_KEY}.${this.#insensitiveHashedApiUrl}`
   }
 
-  private async getAllSessions(): Promise<StatefulAuthSession[]> {
+  private async getAllSessions(): Promise<AuthenticationSession[]> {
     const allSessions = await this.context.secrets.get(this.sessionSecretKey)
     if (!allSessions) {
       return []
     }
 
     try {
-      const sessions = JSON.parse(allSessions) as StatefulAuthSession[]
+      const sessions = JSON.parse(allSessions) as AuthenticationSession[]
       return sessions
     } catch (e) {
       return []
     }
   }
 
-  private async findSessionIndexById(sessions: StatefulAuthSession[], id: string) {
+  private async findSessionIndexById(sessions: AuthenticationSession[], id: string) {
     return sessions.findIndex((s) => s.id === id)
   }
 
   private async persistSessions(
-    sessions: StatefulAuthSession[],
+    sessions: AuthenticationSession[],
     changes: {
-      added: StatefulAuthSession[]
-      removed: StatefulAuthSession[]
-      changed: StatefulAuthSession[]
+      added: AuthenticationSession[]
+      removed: AuthenticationSession[]
+      changed: AuthenticationSession[]
     },
   ) {
     await this.context.secrets.store(this.sessionSecretKey, JSON.stringify(sessions))
@@ -559,22 +566,21 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return disposable
   }
 
-  async getSession(sessions: StatefulAuthSession[], scopes?: string[]) {
+  async getSession(sessions: AuthenticationSession[], scopes?: readonly string[]) {
     const session = sessions.find((s) => scopes?.every((scope) => s.scopes.includes(scope)))
-
     if (!session) {
-      return null
+      return
     }
 
-    if (this.isTokenNotExpired(session.expiresIn)) {
-      // Emit a 'session changed' event to notify that the token has been accessed.
-      // This ensures that any components listening for session changes are notified appropriately.
-      this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
-      ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
-      return session
+    if (this.isSessionExpired(session)) {
+      return
     }
 
-    return { ...session, isExpired: true }
+    // Emit a 'session changed' event to notify that the token has been accessed.
+    // This ensures that any components listening for session changes are notified appropriately.
+    this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
+    ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
+    return session
   }
 
   showLoginNotification() {
