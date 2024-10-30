@@ -247,12 +247,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private async getAuthTokenUri(): Promise<Uri | undefined> {
-    const authTokenPath = getAuthenticationTokenPath()
+    const authTokenPath = getAuthenticationTokenPath(this.context.extensionPath)
     if (!authTokenPath) {
       return
     }
 
-    const authTokenUri = Uri.joinPath(this.context.extensionUri, authTokenPath)
+    const authTokenUri = Uri.parse(authTokenPath)
     const hasTokenFile = await workspace.fs.stat(authTokenUri).then(
       () => true,
       () => false,

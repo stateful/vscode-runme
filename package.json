@@ -974,8 +974,8 @@
           },
           "runme.app.authenticationTokenPath": {
             "type": "string",
-            "default": "",
-            "markdownDescription": "Authentication token path"
+            "default": "secrets/authToken",
+            "markdownDescription": "Specifies the file path for the authentication token. If a relative path is provided, it will automatically be resolved relative to the extension's base directory. For example, a relative path would be resolved as follows: ~/.vscode/extensions/stateful.runme-3.9.0-darwin-arm64."
           },
           "runme.app.deleteAuthenticationToken": {
             "type": "boolean",
