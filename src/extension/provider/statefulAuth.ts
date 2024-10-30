@@ -538,10 +538,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
   }
 
-  private async findSessionIndex(sessions: StatefulAuthSession[], session: StatefulAuthSession) {
-    return sessions.findIndex((s) => s.id === session.id)
-  }
-
   private async findSessionIndexById(sessions: StatefulAuthSession[], id: string) {
     return sessions.findIndex((s) => s.id === id)
   }
