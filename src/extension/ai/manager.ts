@@ -64,9 +64,9 @@ export class AIManager implements vscode.Disposable {
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.
     // We use this to generate completions when the contents of a cell changes.
-    // this.subscriptions.push(
-    //   vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
-    // )
+    this.subscriptions.push(
+      vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
+    )
 
     // onDidChangeVisibleTextEditors fires when the visible text editors change.
     // This can happen due to scrolling.
@@ -80,14 +80,6 @@ export class AIManager implements vscode.Disposable {
     // When a cell is selected we want to check if its a ghost cell and if so render it a non-ghost cell.
     this.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
-    )
-
-    // We use onDidChangeNotebookDocument to listen for changes to outputs.
-    // We use this to trigger updates in response to a cell's output being updated.
-    this.subscriptions.push(
-      vscode.workspace.onDidChangeNotebookDocument(
-        eventGenerator.handleOnDidChangeNotebookDocument,
-      ),
     )
 
     // Create a new status bar item aligned to the right
