@@ -338,6 +338,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         const callbackQuery = new URLSearchParams(callbackUri.query)
         const stateId = callbackQuery.get('state') || nonceId
 
+        callbackQuery.set('checkSession', 'true')
         callbackQuery.set('state', encodeURIComponent(stateId))
         callbackQuery.set('nonce', encodeURIComponent(nonceId))
         callbackUri = callbackUri.with({
