@@ -195,7 +195,7 @@ export class RunmeExtension {
     }
 
     // Start the AIManager. This will enable the AI services if the user has enabled them.
-    const aiManager = new manager.AIManager()
+    const aiManager = new manager.AIManager(kernel)
     // We need to hang onto a reference to the AIManager so it doesn't get garbage collected until the
     // extension is deactivated.
     context.subscriptions.push(aiManager)
