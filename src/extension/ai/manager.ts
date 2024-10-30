@@ -33,12 +33,6 @@ export class AIManager implements vscode.Disposable {
     this.completionGenerator = new generate.CompletionGenerator(this.client, this.converter)
     if (autoComplete) {
       this.registerGhostCellEvents()
-
-      const reporter = new events.EventReporter(this.client)
-      this.subscriptions.push(reporter)
-
-      // Update the global event reporter to use the AI service
-      events.setEventReporter(reporter)
     }
   }
 
@@ -61,12 +55,18 @@ export class AIManager implements vscode.Disposable {
     // and turns each window into an AsyncIterable of streaming requests.
     let creator = new stream.StreamCreator(cellGenerator, this.client)
 
+    const reporter = new events.EventReporter(this.client, creator)
+    this.subscriptions.push(reporter)
+
+    // Update the global event reporter to use the AI service
+    events.setEventReporter(reporter)
+
     let eventGenerator = new ghost.CellChangeEventGenerator(creator)
     // onDidChangeTextDocument fires when the contents of a cell changes.
     // We use this to generate completions when the contents of a cell changes.
-    this.subscriptions.push(
-      vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
-    )
+    // this.subscriptions.push(
+    //   vscode.workspace.onDidChangeTextDocument(eventGenerator.handleOnDidChangeNotebookCell),
+    // )
 
     // onDidChangeVisibleTextEditors fires when the visible text editors change.
     // This can happen due to scrolling.
