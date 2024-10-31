@@ -338,7 +338,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         const callbackQuery = new URLSearchParams(callbackUri.query)
         const stateId = callbackQuery.get('state') || nonceId
 
-        callbackQuery.set('checkSession', 'true')
         callbackQuery.set('state', encodeURIComponent(stateId))
         callbackQuery.set('nonce', encodeURIComponent(nonceId))
         callbackUri = callbackUri.with({
@@ -351,6 +350,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
         const searchParams = new URLSearchParams({
           state: encodeURIComponent(callbackUri.toString(true)),
+          checkSession: 'true',
           scope: scopes.join(' '),
           codeChallengeMethod: 'S256',
           codeChallenge: codeChallenge,
