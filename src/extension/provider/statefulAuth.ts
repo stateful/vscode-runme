@@ -19,11 +19,7 @@ import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
-import {
-  getAuthenticationTokenPath,
-  getDeleteAuthenticationToken,
-  getRunmeAppUrl,
-} from '../../utils/configuration'
+import { getAuthTokenPath, getDeleteAuthToken, getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
@@ -247,7 +243,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private async getAuthTokenUri(): Promise<Uri | undefined> {
-    const authTokenPath = getAuthenticationTokenPath(this.context.extensionPath)
+    const authTokenPath = getAuthTokenPath()
     if (!authTokenPath) {
       return
     }
@@ -309,7 +305,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private async deleteAuthTokenFile(authTokenUri: Uri) {
-    if (getDeleteAuthenticationToken()) {
+    if (getDeleteAuthToken()) {
       logger.info(`Deleting authToken file ${authTokenUri}`)
       await workspace.fs.delete(authTokenUri)
     }

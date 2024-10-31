@@ -25,7 +25,6 @@ const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
 const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
 const DEFAULT_DOCS_URL = 'https://docs.runme.dev'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
-const DEFAULT_AUTH_TOKEN_PATH = path.join('secrets', 'authToken')
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
   ['api.', ':4000'],
   ['app.', ':4001'],
@@ -92,8 +91,8 @@ const configurationSchema = {
     loginPrompt: z.boolean().default(true),
     platformAuth: z.boolean().default(false),
     docsUrl: z.string().default(DEFAULT_DOCS_URL),
-    authenticationTokenPath: z.string().default(DEFAULT_AUTH_TOKEN_PATH),
-    deleteAuthenticationToken: z.boolean().default(true),
+    authTokenPath: z.string().optional(),
+    deleteAuthToken: z.boolean().default(true),
   },
 }
 
@@ -448,31 +447,12 @@ const getDocsUrlFor = (path: string): string => {
   return `${baseUrl}${path}`
 }
 
-const getAuthenticationTokenPath = (extensionPath: string) => {
-  const value = getCloudConfigurationValue<string>(
-    'authenticationTokenPath',
-    DEFAULT_AUTH_TOKEN_PATH,
-  )
-
-  if (path.isAbsolute(value)) {
-    return value
-  }
-
-  // If the provided path is not absolute, it will be resolved relative to the extension's base path.
-  // The extension path includes its name, version, and platform, e.g.:
-  // ~/.vscode/extensions/stateful.runme-3.9.0-darwin-arm64
-  //
-  // Note: If the extension is updated to a new version, the resolved path will change accordingly.
-  //
-  // Sample paths based on the VS Code variant:
-  // - Code Server: ~/.local/share/code-server
-  // - VS Code: ~/.vscode
-  // - VS Code Insiders: ~/.vscode-insiders
-  return path.join(extensionPath, value)
+const getAuthTokenPath = () => {
+  return getCloudConfigurationValue<string | undefined>('authTokenPath', undefined)
 }
 
-const getDeleteAuthenticationToken = () => {
-  return getCloudConfigurationValue<boolean>('deleteAuthenticationToken', true)
+const getDeleteAuthToken = () => {
+  return getCloudConfigurationValue<boolean>('deleteAuthToken', true)
 }
 
 export {
@@ -507,6 +487,6 @@ export {
   getLoginPrompt,
   getDocsUrlFor,
   getDocsUrl,
-  getAuthenticationTokenPath,
-  getDeleteAuthenticationToken,
+  getAuthTokenPath,
+  getDeleteAuthToken,
 }

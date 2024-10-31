@@ -16,8 +16,8 @@ vi.mock('node-fetch')
 vi.mock('../../../src/utils/configuration', () => {
   return {
     getRunmeAppUrl: vi.fn(),
-    getDeleteAuthenticationToken: vi.fn(() => true),
-    getAuthenticationTokenPath: vi.fn(() => '/path/to/auth/token'),
+    getDeleteAuthToken: vi.fn(() => true),
+    getAuthTokenPath: vi.fn(() => '/path/to/auth/token'),
   }
 })
 
