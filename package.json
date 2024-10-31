@@ -974,12 +974,12 @@
           },
           "runme.app.authTokenPath": {
             "type": "string",
-            "markdownDescription": "Specifies the token file to bootstrap authentication"
+            "markdownDescription": "Specifies the path to an auth token file to bootstrap a Stateful auth session"
           },
           "runme.app.deleteAuthToken": {
             "type": "boolean",
             "default": true,
-            "markdownDescription": "Deletes the authentication token after use"
+            "markdownDescription": "If set to `true`, the auth token file will be deleted after the session ends"
           },
           "runme.aiBaseURL": {
             "type": "string",
