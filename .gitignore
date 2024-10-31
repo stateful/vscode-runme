@@ -18,3 +18,4 @@ examples/.vscode
 assets
 .venv
 **/*-01*.md
+secrets

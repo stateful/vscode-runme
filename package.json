@@ -966,16 +966,25 @@
             "default": true,
             "markdownDescription": "If set to `true` enables Stateful Authentication Provider"
           },
-          "runme.aiBaseURL": {
-            "type": "string",
-            "default": "http://localhost:8877/api",
-            "description": "The base URL of the AI service."
-          },
           "runme.app.docsUrl": {
             "type": "string",
             "scope": "window",
             "default": "https://docs.runme.dev",
             "markdownDescription": "Documentation Base URL"
+          },
+          "runme.app.authTokenPath": {
+            "type": "string",
+            "markdownDescription": "Specifies the path to an auth token file to bootstrap a Stateful auth session"
+          },
+          "runme.app.deleteAuthToken": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to `true`, the auth token file will be deleted after the session ends"
+          },
+          "runme.aiBaseURL": {
+            "type": "string",
+            "default": "http://localhost:8877/api",
+            "description": "The base URL of the AI service."
           }
         }
       }
@@ -1226,6 +1235,7 @@
     "@graphql-codegen/client-preset": "^4.4.0",
     "@graphql-codegen/typescript": "4.1.0",
     "@octokit/rest": "^19.0.13",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.17.2",
     "@types/node-fetch": "^2.6.11",
     "@types/semver": "^7.5.8",
@@ -1307,6 +1317,7 @@
     "got": "^11.8.2",
     "graphql": "^16.8.0",
     "jsonc-parser": "^3.2.1",
+    "jsonwebtoken": "^9.0.2",
     "lit": "^3.2.1",
     "octokit": "^4.0.2",
     "simple-git": "^3.27.0",

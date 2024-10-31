@@ -18,7 +18,6 @@ import { NotebookUiEvent, Serializer, SyncSchema, FeatureName } from '../types'
 import {
   getDocsUrlFor,
   getForceNewWindowConfig,
-  getRunmeAppUrl,
   getServerRunnerVersion,
   getSessionOutputs,
   getServerLifecycleIdentity,
@@ -467,23 +466,22 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
-      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
+      context.subscriptions.push(statefulAuthProvider)
+
+      const session = await getPlatformAuthSession(false, true)
+      let sessionFromToken = false
+      if (!session) {
+        sessionFromToken = await statefulAuthProvider.bootstrapFromToken()
+      }
+
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || sessionFromToken
       const silent = forceLogin ? undefined : true
 
       getPlatformAuthSession(forceLogin, silent)
         .then((session) => {
           if (session) {
-            const openDashboardStr = 'Open Dashboard'
-            window
-              .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-              .then((answer) => {
-                if (answer === openDashboardStr) {
-                  const dashboardUri = getRunmeAppUrl(['app'])
-                  const uri = Uri.parse(dashboardUri)
-                  env.openExternal(uri)
-                }
-              })
+            statefulAuthProvider.showLoginNotification()
           }
         })
         .catch((error) => {
@@ -491,7 +489,7 @@ export class RunmeExtension {
           if (error instanceof Error) {
             message = error.message
           } else {
-            message = String(error)
+            message = JSON.stringify(error)
           }
 
           // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
