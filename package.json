@@ -1281,7 +1281,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.6",
-    "@aws-sdk/client-ec2": "^3.682.0",
+    "@aws-sdk/client-ec2": "^3.683.0",
     "@aws-sdk/client-eks": "^3.682.0",
     "@aws-sdk/credential-providers": "^3.682.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240904201038-e0425cfebb28.4",
