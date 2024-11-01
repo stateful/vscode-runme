@@ -21,7 +21,7 @@ export interface CompletionHandlers {
   buildRequest: (
     cellChangeEvent: CellChangeEvent,
     firstRequest: boolean,
-  ) => StreamGenerateRequest | null
+  ) => Promise<StreamGenerateRequest | null>
 
   // processResponse is a function that processes a StreamGenerateResponse
   processResponse: (response: StreamGenerateResponse) => void
@@ -75,7 +75,7 @@ export class StreamCreator {
   // handleEvent processes a request
   // n.b we use arror function definition to ensure this gets properly bound
   // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
-  handleEvent = (event: CellChangeEvent): void => {
+  handleEvent = async (event: CellChangeEvent): Promise<void> => {
     // We need to generate a new request
     let firstRequest = false
     if (this.lastIterator === undefined || this.lastIterator === null) {
@@ -83,7 +83,7 @@ export class StreamCreator {
     }
 
     log.info('handleEvent: building request')
-    let req = this.handlers.buildRequest(event, firstRequest)
+    let req = await this.handlers.buildRequest(event, firstRequest)
 
     if (req === null) {
       log.info(`Notebook: ${event.notebookUri}; no request generated`)

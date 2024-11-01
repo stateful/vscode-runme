@@ -18,7 +18,6 @@ import { NotebookUiEvent, Serializer, SyncSchema, FeatureName } from '../types'
 import {
   getDocsUrlFor,
   getForceNewWindowConfig,
-  getRunmeAppUrl,
   getServerRunnerVersion,
   getSessionOutputs,
   getServerLifecycleIdentity,
@@ -195,7 +194,7 @@ export class RunmeExtension {
     }
 
     // Start the AIManager. This will enable the AI services if the user has enabled them.
-    const aiManager = new manager.AIManager()
+    const aiManager = new manager.AIManager(kernel)
     // We need to hang onto a reference to the AIManager so it doesn't get garbage collected until the
     // extension is deactivated.
     context.subscriptions.push(aiManager)
@@ -467,23 +466,22 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
-      context.subscriptions.push(new StatefulAuthProvider(context, uriHandler))
+      const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
+      context.subscriptions.push(statefulAuthProvider)
+
+      const session = await getPlatformAuthSession(false, true)
+      let sessionFromToken = false
+      if (!session) {
+        sessionFromToken = await statefulAuthProvider.bootstrapFromToken()
+      }
+
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || sessionFromToken
       const silent = forceLogin ? undefined : true
 
       getPlatformAuthSession(forceLogin, silent)
         .then((session) => {
           if (session) {
-            const openDashboardStr = 'Open Dashboard'
-            window
-              .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
-              .then((answer) => {
-                if (answer === openDashboardStr) {
-                  const dashboardUri = getRunmeAppUrl(['app'])
-                  const uri = Uri.parse(dashboardUri)
-                  env.openExternal(uri)
-                }
-              })
+            statefulAuthProvider.showLoginNotification()
           }
         })
         .catch((error) => {
@@ -491,7 +489,7 @@ export class RunmeExtension {
           if (error instanceof Error) {
             message = error.message
           } else {
-            message = String(error)
+            message = JSON.stringify(error)
           }
 
           // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238

@@ -3,8 +3,10 @@ import { createPromiseClient, PromiseClient, Transport } from '@connectrpc/conne
 import { createConnectTransport } from '@connectrpc/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 
+import { Kernel } from '../kernel'
 import getLogger from '../logger'
 
+import { Converter } from './converters'
 import * as ghost from './ghost'
 import * as stream from './stream'
 import * as generate from './generate'
@@ -12,25 +14,31 @@ import * as events from './events'
 import { SessionManager } from './sessions'
 
 // AIManager is a class that manages the AI services.
-export class AIManager {
+export class AIManager implements vscode.Disposable {
   log: ReturnType<typeof getLogger>
 
   subscriptions: vscode.Disposable[] = []
   client: PromiseClient<typeof AIService>
   completionGenerator: generate.CompletionGenerator
+  converter: Converter
 
-  constructor() {
+  constructor(kernel: Kernel) {
     this.log = getLogger('AIManager')
     this.log.info('AI: Initializing AI Manager')
     const config = vscode.workspace.getConfiguration('runme.experiments')
     const autoComplete = config.get<boolean>('aiAutoCell', false)
     this.client = this.createAIClient()
-    this.completionGenerator = new generate.CompletionGenerator(this.client)
+
+    this.converter = new Converter(kernel)
+    this.completionGenerator = new generate.CompletionGenerator(this.client, this.converter)
     if (autoComplete) {
       this.registerGhostCellEvents()
 
+      const reporter = new events.EventReporter(this.client)
+      this.subscriptions.push(reporter)
+
       // Update the global event reporter to use the AI service
-      events.setEventReporter(new events.EventReporter(this.client))
+      events.setEventReporter(reporter)
     }
   }
 
@@ -47,7 +55,7 @@ export class AIManager {
   // as well as when cells change. This is used to create ghost cells.
   registerGhostCellEvents() {
     this.log.info('AI: Enabling AutoCell Generation')
-    let cellGenerator = new ghost.GhostCellGenerator()
+    let cellGenerator = new ghost.GhostCellGenerator(this.converter)
 
     // Create a stream creator. The StreamCreator is a class that effectively windows events
     // and turns each window into an AsyncIterable of streaming requests.
@@ -74,6 +82,8 @@ export class AIManager {
       vscode.window.onDidChangeActiveTextEditor(cellGenerator.handleOnDidChangeActiveTextEditor),
     )
 
+    // We use onDidChangeNotebookDocument to listen for changes to outputs.
+    // We use this to trigger updates in response to a cell's output being updated.
     this.subscriptions.push(
       vscode.workspace.onDidChangeNotebookDocument(
         eventGenerator.handleOnDidChangeNotebookDocument,

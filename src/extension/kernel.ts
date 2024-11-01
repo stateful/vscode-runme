@@ -826,8 +826,7 @@ export class Kernel implements Disposable {
     }
 
     // todo(sebastian): rewrite to use non-blocking impl
-    const execCellReport = getEventReporter().reportExecution(cell, successfulCellExecution)
-    await execCellReport
+    getEventReporter().reportExecution(cell, successfulCellExecution)
 
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),

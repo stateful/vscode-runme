@@ -8,6 +8,7 @@ import {
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
 import { ulid } from 'ulidx'
+import { Subject, Subscription, from, map, mergeMap } from 'rxjs'
 
 import { RUNME_CELL_ID } from '../constants'
 import getLogger from '../logger'
@@ -18,21 +19,48 @@ import * as converters from './converters'
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
 export interface IEventReporter {
-  reportExecution(cell: vscode.NotebookCell, status: boolean): Promise<void>
-  reportEvents(events: LogEvent[]): Promise<void>
+  reportExecution(cell: vscode.NotebookCell, status: boolean): void
+  reportEvents(events: LogEvent[]): void
 }
 
 // EventReporter handles reporting events to the AI service
-export class EventReporter implements IEventReporter {
+export class EventReporter implements vscode.Disposable, IEventReporter {
   client: PromiseClient<typeof AIService>
   log: ReturnType<typeof getLogger>
+  queue: Subject<LogEvent[]> = new Subject()
+  subscription: Subscription
 
   constructor(client: PromiseClient<typeof AIService>) {
     this.client = client
     this.log = getLogger('AIEventReporter')
+
+    this.subscription = this.queue
+      .pipe(
+        map((events) => {
+          for (const event of events) {
+            if (event.eventId === '') {
+              event.eventId = ulid()
+            }
+          }
+          return new LogEventsRequest({ events })
+        }),
+        mergeMap((req) => {
+          return from(
+            this.client.logEvents(req).catch((e) => {
+              // handle error local to the promise, to avoid stream termination
+              this.log.error(`Failed to log event; error: ${e}`)
+            }),
+          )
+        }),
+      )
+      .subscribe() // just subscribe, ignore responses
   }
 
-  async reportExecution(cell: vscode.NotebookCell, executionSuccess: boolean) {
+  dispose(): void {
+    this.subscription.unsubscribe()
+  }
+
+  reportExecution(cell: vscode.NotebookCell, executionSuccess: boolean) {
     const contextCells: vscode.NotebookCell[] = []
 
     // Include some previous cells as context.
@@ -68,27 +96,18 @@ export class EventReporter implements IEventReporter {
     return this.reportEvents([event])
   }
 
-  async reportEvents(events: LogEvent[]) {
-    const req = new LogEventsRequest()
-    req.events = events
-    for (const event of events) {
-      if (event.eventId === '') {
-        event.eventId = ulid()
-      }
-    }
-    await this.client.logEvents(req).catch((e) => {
-      this.log.error(`Failed to log event; error: ${e}`)
-    })
+  reportEvents(events: LogEvent[]) {
+    this.queue.next(events)
   }
 }
 
 // NullOpEventReporter is a null op implementation of the event reporter
 export class NullOpEventReporter implements IEventReporter {
-  async reportExecution(_cell: vscode.NotebookCell, _status: boolean) {
+  reportExecution(_cell: vscode.NotebookCell, _status: boolean) {
     // Do nothing
   }
 
-  async reportEvents(_events: LogEvent[]) {
+  reportEvents(_events: LogEvent[]) {
     // Do nothing
   }
 }
