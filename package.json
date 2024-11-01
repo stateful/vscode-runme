@@ -1236,7 +1236,7 @@
     "@graphql-codegen/typescript": "4.1.1",
     "@octokit/rest": "^19.0.13",
     "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^20.17.3",
+    "@types/node": "^20.17.5",
     "@types/node-fetch": "^2.6.11",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^10.0.0",
