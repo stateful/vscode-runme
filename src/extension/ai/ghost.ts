@@ -124,6 +124,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let notebookProto = await this.converter.notebookDataToProto(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
         contextId: SessionManager.getManager().getID(),
+        trigger: cellChangeEvent.trigger,
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
@@ -142,6 +143,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       let notebookProto = await this.converter.notebookDataToProto(notebookData)
       let request = new agent_pb.StreamGenerateRequest({
         contextId: SessionManager.getManager().getID(),
+        trigger: cellChangeEvent.trigger,
         request: {
           case: 'update',
           value: new agent_pb.UpdateContext({
@@ -376,40 +378,6 @@ export class CellChangeEventGenerator {
 
       editorAsGhost(editor)
     }
-  }
-
-  handleOnDidChangeNotebookDocument = (event: vscode.NotebookDocumentChangeEvent) => {
-    // N.B. For non-interactive cells this will trigger each time the output is updated.
-    // For interactive cells this doesn't appear to trigger each time the cell output is updated.
-    // For example, if you have a long running command (e.g. a bash for loop with a sleep that
-    // echos a message on each iteration) then this won't trigger on each iteration for
-    // an interactive cell but will for non-interactive.
-    event.cellChanges.forEach(async (change) => {
-      log.info(`handleOnDidChangeNotebookDocument: change: ${change}`)
-      if (change.outputs !== undefined) {
-        // If outputs change then we want to trigger completions.
-
-        // N.B. It looks like if you click the "configure" button associated with a cell then it will trigger
-        // an output change event. I don't think there's any easy way to filter those events out. To filter
-        // those events out we'd need to keep track of the output item with mime type
-        // application/vnd.code.notebook.stdout and then detect when the stdout changes. That would require
-        // keeping track of that state. If we trigger on the "configure" then we send a request to the Foyle
-        // server and we can rely on the Foyle server to do the debouncing.
-
-        // It is the responsibility of the StreamCreator to decide whether the change should be processed..
-        // In particular its possible that the cell that changed is not the active cell. Therefore
-        // we may not want to generate completions for it. For example, you can have multiple cells
-        // running. So in principle the active cell could be different from the cell that changed.
-        //
-        await this.streamCreator.handleEvent(
-          new stream.CellChangeEvent(
-            change.cell.notebook.uri.toString(),
-            change.cell.index,
-            StreamGenerateRequest_Trigger.CELL_OUTPUT_CHANGE,
-          ),
-        )
-      }
-    })
   }
 }
 

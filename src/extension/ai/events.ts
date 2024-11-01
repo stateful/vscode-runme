@@ -5,6 +5,7 @@ import {
   LogEventType,
   LogEvent,
   LogEvent_ExecuteStatus,
+  StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import * as vscode from 'vscode'
 import { ulid } from 'ulidx'
@@ -15,6 +16,7 @@ import getLogger from '../logger'
 
 import { SessionManager } from './sessions'
 import * as converters from './converters'
+import * as stream from './stream'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
@@ -29,10 +31,12 @@ export class EventReporter implements vscode.Disposable, IEventReporter {
   log: ReturnType<typeof getLogger>
   queue: Subject<LogEvent[]> = new Subject()
   subscription: Subscription
+  streamCreator: stream.StreamCreator
 
-  constructor(client: PromiseClient<typeof AIService>) {
+  constructor(client: PromiseClient<typeof AIService>, streamCreator: stream.StreamCreator) {
     this.client = client
     this.log = getLogger('AIEventReporter')
+    this.streamCreator = streamCreator
 
     this.subscription = this.queue
       .pipe(
@@ -93,6 +97,13 @@ export class EventReporter implements vscode.Disposable, IEventReporter {
     } else {
       event.executeStatus = LogEvent_ExecuteStatus.FAILED
     }
+    // Fire an event to trigger the AI service
+    const cellChangeEvent = new stream.CellChangeEvent(
+      cell.notebook.uri.toString(),
+      cell.index,
+      StreamGenerateRequest_Trigger.CELL_EXECUTE,
+    )
+    this.streamCreator.handleEvent(cellChangeEvent)
     return this.reportEvents([event])
   }
 
