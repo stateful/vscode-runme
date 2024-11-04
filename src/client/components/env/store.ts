@@ -27,7 +27,7 @@ const COLUMNS = [
     text: 'Spec',
   },
   {
-    text: 'Origin',
+    text: 'Source',
   },
   {
     text: 'Updated',
@@ -80,7 +80,7 @@ export default class Table extends LitElement {
             description: v.description,
             spec: v.spec,
             specClass: v.isRequired ? 'required' : 'optional',
-            origin: v.origin,
+            source: v.origin,
             updatedAt: formatDate(new Date(v.updateTime)),
             // createdAt: formatDate(new Date(v.createTime)),
             resolvedValue: v.resolvedValue,
