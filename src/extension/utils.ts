@@ -189,7 +189,7 @@ export function isDaggerCli(text: string): boolean {
   return simplified.includes('dagger call')
 }
 
-export type ExecResourceType = 'None' | 'URI' | 'Dagger'
+export type ExecResourceType = 'None' | 'URI' | 'Dagger' | 'DaggerPlain'
 export interface IExecKeyInfo {
   key: string
   resource: ExecResourceType
