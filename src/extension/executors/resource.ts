@@ -52,7 +52,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
   if (resource === 'DaggerPlain') {
     const varDaggerCellId = `$DAGGER_${cellId}`
 
-    const printDaggerCellId = `echo ${varDaggerCellId}`
+    const printDaggerCellId = `echo -n ${varDaggerCellId}`
     programOptions.exec = {
       type: 'script',
       script: printDaggerCellId,
