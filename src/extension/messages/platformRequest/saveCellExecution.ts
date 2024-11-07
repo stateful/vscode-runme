@@ -45,12 +45,8 @@ export default async function saveCellExecution(
     const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
     if (!session) {
       await commands.executeCommand('runme.openCloudPanel')
-      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
-        id: message.output.id,
-      })
+      kernel.pushDelayedMessage(message)
+      return
     }
 
     const graphClient = InitializeClient({ runmeToken: session?.accessToken! })

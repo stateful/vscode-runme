@@ -872,6 +872,15 @@ export class TerminalView extends LitElement {
         id: this.id!,
         method: APIMethod.CreateCellExecution,
       })
+
+      // promise race here
+
+      new Promise((resolve) =>
+        setTimeout(() => {
+          // check state
+          resolve(undefined)
+        }, 5000),
+      )
     } catch (error) {
       this.isLoading = false
       postClientMessage(
