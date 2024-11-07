@@ -64,6 +64,17 @@ type TaskNotebook = NotebookData | Serializer.Notebook
 
 type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
 
+type RunmeTaskOptions = {
+  isNameGenerated?: boolean
+  filePath: string
+  command: string
+  notebook: TaskNotebook | Observable<TaskNotebook>
+  cell: TaskCell | Observable<TaskCell>
+  options: TaskOptions
+  runner: IRunner
+  runnerEnv: IRunnerEnvironment | undefined
+}
+
 export class RunmeTaskProvider implements TaskProvider {
   static execCount = 0
   static id = 'runme'
@@ -207,14 +218,14 @@ export class RunmeTaskProvider implements TaskProvider {
   }
 
   static async newRunmeProjectTask(
-    knownTask: Pick<ProjectTask, 'id' | 'name' | 'documentPath'>,
+    knownTask: Pick<ProjectTask, 'id' | 'name' | 'documentPath' | 'isNameGenerated'>,
     options: TaskOptions = {},
     token: CancellationToken,
     serializer: SerializerBase,
     runner: IRunner,
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {
-    const { id, name, documentPath } = knownTask
+    const { id, name, documentPath, isNameGenerated } = knownTask
     let mdBuffer: Uint8Array
     try {
       mdBuffer = await workspace.fs.readFile(Uri.parse(documentPath))
@@ -235,26 +246,42 @@ export class RunmeTaskProvider implements TaskProvider {
       }),
     )
 
-    return this.newRunmeTask(documentPath, name, notebook, cell, options, runner, runnerEnv)
+    return this.newRunmeTask({
+      isNameGenerated: isNameGenerated,
+      filePath: documentPath,
+      command: name,
+      notebook: notebook,
+      cell: cell,
+      options,
+      runner,
+      runnerEnv,
+    })
   }
 
-  static async newRunmeTask(
-    filePath: string,
-    command: string,
-    notebookish: TaskNotebook | Observable<TaskNotebook>,
-    cellish: TaskCell | Observable<TaskCell>,
-    options: TaskOptions = {},
-    runner: IRunner,
-    runnerEnv: IRunnerEnvironment | undefined,
-  ): Promise<Task> {
+  static async newRunmeTask({
+    isNameGenerated,
+    filePath,
+    command,
+    notebook,
+    cell,
+    options = {},
+    runner,
+    runnerEnv,
+  }: RunmeTaskOptions): Promise<Task> {
     const source = asWorkspaceRelativePath(filePath).relativePath
     const name = `${command}`
 
-    notebookish = !isObservable(notebookish) ? of(notebookish) : notebookish
-    cellish = !isObservable(cellish) ? of(cellish) : cellish
+    const notebookish = !isObservable(notebook) ? of(notebook) : notebook
+    const cellish = !isObservable(cell) ? of(cell) : cell
 
     const task = new Task(
-      { type: 'runme', name, command: name },
+      {
+        type: 'runme',
+        name,
+        command: name,
+        fileUri: Uri.file(filePath),
+        isNameGenerated: isNameGenerated,
+      },
       TaskScope.Workspace,
       name,
       source,
