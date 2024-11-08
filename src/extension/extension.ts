@@ -94,6 +94,7 @@ import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
 import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
+import * as features from './features'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -507,6 +508,8 @@ export class RunmeExtension {
         kernel.updateFeatureContext('githubAuth', !!session)
       })
     }
+
+    await features.addTrustedDomains()
 
     authentication.onDidChangeSessions((e) => {
       if (
