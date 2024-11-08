@@ -1,4 +1,4 @@
-import { Uri, workspace, window } from 'vscode'
+import { Uri, workspace } from 'vscode'
 import { parse as jsoncParse } from 'jsonc-parser'
 
 import { FeatureName } from '../../types'
@@ -23,11 +23,6 @@ export async function addTrustedDomains() {
     if (!isTrusted) {
       json.push(trustedDomain)
       await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(json)))
-
-      window.showInformationMessage(
-        'Stateful Cloud domains have been added as trusted domains. ' +
-          'This configuration is enabled by default in our playground environments only.',
-      )
     }
   } catch (error) {
     let message
