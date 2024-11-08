@@ -509,8 +509,6 @@ export class RunmeExtension {
       })
     }
 
-    await features.addTrustedDomains()
-
     authentication.onDidChangeSessions((e) => {
       if (
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
@@ -535,6 +533,9 @@ export class RunmeExtension {
         })
       }
     })
+
+    await features.addTrustedDomains()
+    await features.autoOpenTerminal()
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {

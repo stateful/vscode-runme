@@ -773,6 +773,7 @@ export enum FeatureName {
   CopySelectionToClipboard = 'CopySelectionToClipboard',
   NewTreeProvider = 'NewTreeProvider',
   AddTrustedDomains = 'AddTrustedDomains',
+  AutoOpenTerminal = 'AutoOpenTerminal',
 }
 
 export type Feature = {

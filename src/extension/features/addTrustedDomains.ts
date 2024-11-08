@@ -2,8 +2,9 @@ import { Uri, workspace, window } from 'vscode'
 import { parse as jsoncParse } from 'jsonc-parser'
 
 import { FeatureName } from '../../types'
-import { isOnInContextState } from '../features'
 import getLogger from '../logger'
+
+import { isOnInContextState } from '.'
 
 const logger = getLogger('AddTrustedDomains')
 const trustedDomain = 'https://*.stateful.com'

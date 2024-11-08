@@ -1,4 +1,5 @@
-export { addTrustedDomains } from './addTrustedDomains'
+export * from './addTrustedDomains'
+export * from './autoOpenTerminal'
 
 import features, { FEATURES_CONTEXT_STATE_KEY } from '../../features'
 import { FeatureName } from '../../types'
