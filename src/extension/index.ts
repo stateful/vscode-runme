@@ -1,6 +1,8 @@
 import { window, extensions, type ExtensionContext, env, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
+import { isTelemetryEnabled } from '../utils/configuration'
+
 import { RunmeExtension } from './extension'
 import getLogger from './logger'
 
@@ -10,7 +12,14 @@ const ext = new RunmeExtension()
 const log = getLogger()
 
 export async function activate(context: ExtensionContext) {
-  configureTelemetryReporter()
+  const noTelemetry = !isTelemetryEnabled()
+  let key = INSTRUMENTATION_KEY
+  if (noTelemetry) {
+    key = 'invalid'
+  }
+  // underyling telemetry reporter honor vscode's global setting
+  TelemetryReporter.configure(key)
+
   const extensionIdentifier = RunmeExtension.getExtensionIdentifier(context)
   const pfound = extensions.all.find((extension) => extension.id === 'stateful.platform')
 
@@ -43,14 +52,4 @@ export async function activate(context: ExtensionContext) {
 export function deactivate() {
   log.info('Deactivating Extension')
   TelemetryReporter.sendTelemetryEvent('deactivate')
-}
-
-export function configureTelemetryReporter() {
-  // const noTelemetry = !isTelemetryEnabled()
-  const key = INSTRUMENTATION_KEY
-  // if (noTelemetry) {
-  //   key = 'invalid'
-  // }
-  // underyling telemetry reporter honor vscode's global setting
-  TelemetryReporter.configure(key)
 }
