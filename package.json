@@ -730,6 +730,12 @@
             "default": 60000,
             "markdownDescription": "Timeout until Runme will cancel the clone process."
           },
+          "runme.telemetry.enabled": {
+            "type": "boolean",
+            "scope": "window",
+            "default": true,
+            "markdownDescription": "Allow telemetry tracking for Runme. This setting will not affect other telemetry settings."
+          },
           "runme.server.customAddress": {
             "type": "string",
             "scope": "window",
