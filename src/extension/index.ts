@@ -1,8 +1,6 @@
 import { window, extensions, type ExtensionContext, env, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { isTelemetryEnabled } from '../utils/configuration'
-
 import { RunmeExtension } from './extension'
 import getLogger from './logger'
 
@@ -48,11 +46,11 @@ export function deactivate() {
 }
 
 export function configureTelemetryReporter() {
-  const noTelemetry = !isTelemetryEnabled()
-  let key = INSTRUMENTATION_KEY
-  if (noTelemetry) {
-    key = 'invalid'
-  }
+  // const noTelemetry = !isTelemetryEnabled()
+  const key = INSTRUMENTATION_KEY
+  // if (noTelemetry) {
+  //   key = 'invalid'
+  // }
   // underyling telemetry reporter honor vscode's global setting
   TelemetryReporter.configure(key)
 }
