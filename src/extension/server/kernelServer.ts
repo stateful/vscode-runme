@@ -19,9 +19,8 @@ import {
   getServerConfigurationValue,
   getTLSDir,
   getTLSEnabled,
-  isTelemetryEnabled,
 } from '../../utils/configuration'
-import { EnvProps, isPortAvailable } from '../utils'
+import { EnvProps, isPortAvailable, isTelemetryEnabled } from '../utils'
 import { HealthClient } from '../grpc/client'
 
 import KernelServerError from './kernelServerError'

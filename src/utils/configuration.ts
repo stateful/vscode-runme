@@ -264,11 +264,6 @@ const getServerRunnerVersion = (): ServerRunnerVersion => {
   return getServerConfigurationValue<ServerRunnerVersion>('runnerVersion', 'v1')
 }
 
-const isTelemetryEnabled = (): boolean => {
-  const configurationSection = workspace.getConfiguration('runme.telemetry')
-  return configurationSection.get<boolean>('enabled', true)
-}
-
 const isNotebookTerminalFeatureEnabled = (
   featureName: keyof typeof notebookTerminalSchema,
 ): boolean => {
@@ -486,7 +481,6 @@ export {
   isNotebookTerminalEnabledForCell,
   isNotebookTerminalFeatureEnabled,
   isPlatformAuthEnabled,
-  isTelemetryEnabled,
   registerExtensionEnvVarsMutation,
   getSessionOutputs,
   getMaskOutputs,

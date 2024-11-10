@@ -1,10 +1,9 @@
 import { window, extensions, type ExtensionContext, env, Uri } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { isTelemetryEnabled } from '../utils/configuration'
-
 import { RunmeExtension } from './extension'
 import getLogger from './logger'
+import { isTelemetryEnabled } from './utils'
 
 declare const INSTRUMENTATION_KEY: string
 
