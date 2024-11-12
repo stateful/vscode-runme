@@ -10,7 +10,7 @@ const logger = getLogger('AddTrustedDomains')
 const trustedDomain = 'https://*.stateful.com'
 
 export async function addTrustedDomains() {
-  if (!isOnInContextState(FeatureName.AddTrustedDomains)) {
+  if (!isOnInContextState(FeatureName.HostedPlayground)) {
     return
   }
 

@@ -6,12 +6,12 @@ import ContextState from '../contextState'
 import { isOnInContextState } from '.'
 
 export async function autoOpenTerminal() {
-  if (!isOnInContextState(FeatureName.AutoOpenTerminal)) {
+  if (!isOnInContextState(FeatureName.HostedPlayground)) {
     return
   }
 
-  if (!ContextState.getKey<boolean>(FeatureName.AutoOpenTerminal)) {
+  if (!ContextState.getKey<boolean>(`${FeatureName.HostedPlayground}.autoOpenTerminal`)) {
     await commands.executeCommand('workbench.action.terminal.new')
-    await ContextState.addKey(FeatureName.AutoOpenTerminal, true)
+    await ContextState.addKey(`${FeatureName.HostedPlayground}.autoOpenTerminal`, true)
   }
 }

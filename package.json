@@ -59,16 +59,7 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
-      "AutoOpenTerminal": {
-        "enabled": false,
-        "conditions": {
-          "enabledForExtensions": {
-            "stateful.platform": false,
-            "stateful.runme": true
-          }
-        }
-      },
-      "AddTrustedDomains": {
+      "HostedPlayground": {
         "enabled": false,
         "conditions": {
           "enabledForExtensions": {
@@ -1005,10 +996,10 @@
             "default": true,
             "markdownDescription": "If set to `true`, the auth token file will be deleted after the session ends"
           },
-          "runme.features.AddTrustedDomains": {
+          "runme.features.HostedPlayground": {
             "type": "boolean",
             "default": false,
-            "markdownDescription": "If set to `true`, appends the stateful.com as trusted domain. This option is only useful for Stateful's Cloud Playgrounds"
+            "markdownDescription": "If set to `true`, enables features specific to Hosted Playgrounds in the Stateful Cloud."
           },
           "runme.aiBaseURL": {
             "type": "string",
