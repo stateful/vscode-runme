@@ -744,7 +744,9 @@ export class Kernel implements Disposable {
     startTime: number,
     endTime: number,
   ): Promise<void> {
-    if (!this.serializer?.isLifecycleIdentity(RunmeIdentity.ALL)) {
+    const session = await getPlatformAuthSession(false)
+
+    if (!this.serializer?.isLifecycleIdentity(RunmeIdentity.ALL || !session)) {
       return
     }
 
@@ -760,11 +762,6 @@ export class Kernel implements Disposable {
 
     if (!window.activeNotebookEditor) {
       log.warn('no active notebook editor')
-      return
-    }
-
-    const session = await getPlatformAuthSession(false)
-    if (!session) {
       return
     }
 
