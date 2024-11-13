@@ -24,6 +24,7 @@ vi.mock('../../../src/extension/grpc/client', () => ({
 }))
 
 vi.mock('../../../src/extension/utils', () => ({
+  isTelemetryEnabled: vi.fn().mockReturnValue(true),
   isPortAvailable: vi.fn(async () => true),
   isWindows: vi.fn().mockReturnValue(false),
 }))

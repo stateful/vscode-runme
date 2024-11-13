@@ -94,6 +94,7 @@ import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
 import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
+import * as features from './features'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -526,6 +527,12 @@ export class RunmeExtension {
         })
       }
     })
+
+    // only ever enabled in hosted playground
+    if (features.isOnInContextState(FeatureName.HostedPlayground)) {
+      await features.addTrustedDomains()
+      await features.autoOpenTerminal()
+    }
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {

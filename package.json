@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.9.3-edge.1",
+  "version": "3.9.4",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "HostedPlayground": {
+        "enabled": false,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
+        }
+      },
       "NewTreeProvider": {
         "enabled": false,
         "conditions": {
@@ -729,6 +738,12 @@
             "scope": "machine",
             "default": 60000,
             "markdownDescription": "Timeout until Runme will cancel the clone process."
+          },
+          "runme.telemetry.enabled": {
+            "type": "boolean",
+            "scope": "window",
+            "default": true,
+            "markdownDescription": "Allow telemetry tracking for Runme. This setting will not affect other telemetry settings."
           },
           "runme.server.customAddress": {
             "type": "string",

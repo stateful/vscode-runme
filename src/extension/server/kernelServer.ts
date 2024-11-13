@@ -20,7 +20,7 @@ import {
   getTLSDir,
   getTLSEnabled,
 } from '../../utils/configuration'
-import { EnvProps, isPortAvailable } from '../utils'
+import { EnvProps, isPortAvailable, isTelemetryEnabled } from '../utils'
 import { HealthClient } from '../grpc/client'
 
 import KernelServerError from './kernelServerError'
@@ -316,7 +316,8 @@ class KernelServer implements IServer {
   protected getConfiguredEnv(): NodeJS.ProcessEnv {
     const penv: NodeJS.ProcessEnv = Object.assign(process.env)
 
-    if (!env.isTelemetryEnabled) {
+    const noTelemetry = !isTelemetryEnabled()
+    if (!env.isTelemetryEnabled || noTelemetry) {
       penv['DO_NOT_TRACK'] = 'true'
       return penv
     }

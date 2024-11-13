@@ -888,3 +888,8 @@ export function warnBetaRequired(message: string): boolean {
 
   return false
 }
+
+export const isTelemetryEnabled = (): boolean => {
+  const configurationSection = workspace.getConfiguration('runme.telemetry')
+  return configurationSection.get<boolean>('enabled', true)
+}
