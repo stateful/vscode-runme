@@ -69,9 +69,9 @@ export default async function trackRunmeEvent(
     })
     log.info('Runme event sent')
 
-    TelemetryReporter.sendTelemetryEvent('app.runmeEvent')
+    TelemetryReporter.sendTelemetryEvent('app.trackRunmeEvent')
   } catch (error) {
     log.error('Error tracking runme event', (error as Error).message)
-    TelemetryReporter.sendTelemetryEvent('app.runmeEvent.error')
+    TelemetryReporter.sendTelemetryEvent('app.trackRunmeEvent.error')
   }
 }
