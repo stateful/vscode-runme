@@ -996,11 +996,6 @@
             "default": true,
             "markdownDescription": "If set to `true`, the auth token file will be deleted after the session ends"
           },
-          "runme.features.HostedPlayground": {
-            "type": "boolean",
-            "default": false,
-            "markdownDescription": "If set to `true`, enables features specific to Hosted Playgrounds in the Stateful Cloud."
-          },
           "runme.aiBaseURL": {
             "type": "string",
             "default": "http://localhost:8877/api",
