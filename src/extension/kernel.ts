@@ -771,6 +771,7 @@ export class Kernel implements Disposable {
       },
       notebook: {
         id: notebookRunmeId,
+        path: cell.notebook.uri.path,
       },
       executionSummary: {
         success: successfulCellExecution,

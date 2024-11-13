@@ -44,6 +44,7 @@ export default async function trackRunmeEvent(
               },
               notebook: {
                 id: message.output.data.notebook.id,
+                path: message.output.data.notebook.path,
               },
               executionSummary: {
                 success: message.output.data.executionSummary.success,

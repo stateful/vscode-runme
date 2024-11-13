@@ -2214,6 +2214,7 @@ export enum RunmeEventInputType {
 
 export type RunmeEventNotebook = {
   id: Scalars['String']['input'];
+  path: Scalars['String']['input'];
 };
 
 export type Search = {
