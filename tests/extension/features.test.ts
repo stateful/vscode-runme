@@ -190,3 +190,33 @@ describe('Feature Store', () => {
     expect(features.isOn(FeatureName.Gist, featureState$)).toBe(true)
   })
 })
+
+describe('Hosted Playground', () => {
+  let featureState$: FeatureObserver
+
+  beforeEach(() => {
+    featureState$ = features.loadState(packageJSON, {
+      os: 'linux',
+    })
+  })
+
+  it('should always be default disabled in Runme', () => {
+    const initialContext: FeatureContext = {
+      extensionId: ExtensionName.StatefulRunme,
+    }
+
+    features.updateState(featureState$, initialContext)
+
+    expect(features.isOn(FeatureName.HostedPlayground, featureState$)).toBe(false)
+  })
+
+  it('should always be default disabled in Stateful', () => {
+    const initialContext: FeatureContext = {
+      extensionId: ExtensionName.StatefulPlatform,
+    }
+
+    features.updateState(featureState$, initialContext)
+
+    expect(features.isOn(FeatureName.HostedPlayground, featureState$)).toBe(false)
+  })
+})
