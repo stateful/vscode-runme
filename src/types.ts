@@ -706,6 +706,7 @@ export enum APIMethod {
   CreateCellExecution = 'createCellExecution',
   UpdateCellExecution = 'updateCellExecution',
   CreateEscalation = 'createEscalation',
+  SendRunmeEvent = 'sendRunmeEvent',
 }
 
 export interface IApiMessage<T extends ClientMessage<ClientMessages>> {

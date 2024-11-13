@@ -7,6 +7,7 @@ import { Kernel } from '../../kernel'
 import saveCellExecution from './saveCellExecution'
 import updateCellExecution from './updateCellExecution'
 import createEscalation from './createEscalation'
+import sendRunmeEvent from './trackRunmeEvent'
 
 export interface IApiMessage {
   messaging: NotebookRendererMessaging
@@ -31,6 +32,8 @@ export async function handlePlatformApiMessage({
       return updateCellExecution({ messaging, message, editor }, kernel)
     case APIMethod.CreateEscalation:
       return createEscalation({ messaging, message, editor }, kernel)
+    case APIMethod.SendRunmeEvent:
+      return sendRunmeEvent({ messaging, message, editor }, kernel)
     default:
       throw new Error('Method not implemented')
   }

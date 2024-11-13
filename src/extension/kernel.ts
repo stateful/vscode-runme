@@ -39,6 +39,7 @@ import {
   type ExtensionName,
   type FeatureContext,
   FeatureName,
+  APIMethod,
 } from '../types'
 import {
   ClientMessages,
@@ -77,6 +78,7 @@ import {
   getRunnerSessionEnvs,
   getEnvProps,
   warnBetaRequired,
+  getPlatformAuthSession,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -109,6 +111,7 @@ import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
+import { RunmeEventInputType } from './__generated-platform__/graphql'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -734,6 +737,41 @@ export class Kernel implements Disposable {
     })
   }
 
+  async #handleTrackCellRun(payload: {
+    cell: { id: string }
+    notebook: { id: string }
+    executionSummary: {
+      success: boolean
+      timing: { startTime: string; endTime: string; elapsedTime: string }
+    }
+  }): Promise<void> {
+    if (!window.activeNotebookEditor) {
+      return
+    }
+
+    const session = await getPlatformAuthSession(false)
+    if (!session) {
+      return
+    }
+
+    this.#handleRendererMessage({
+      editor: window.activeNotebookEditor,
+      message: {
+        output: {
+          data: {
+            type: RunmeEventInputType.RunCell,
+            cell: payload.cell,
+            notebook: payload.notebook,
+            executionSummary: payload.executionSummary,
+          },
+          id: '',
+          method: APIMethod.SendRunmeEvent,
+        },
+        type: ClientMessages.platformApiRequest,
+      },
+    })
+  }
+
   public async createCellExecution(
     cell: NotebookCell,
   ): Promise<RunmeNotebookCellExecution | undefined> {
@@ -777,7 +815,8 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    runmeExec.start(Date.now())
+    const startTime = Date.now()
+    runmeExec.start(startTime)
 
     const annotations = getAnnotations(cell)
     const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
@@ -832,6 +871,28 @@ export class Kernel implements Disposable {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
     })
+    const notebookRunmeId = cell.notebook.metadata['runme.dev/frontmatterParsed'].runme?.id
+    const cellRunmeId = cell.metadata['runme.dev/id']
+    const endTime = Date.now()
+
+    this.#handleTrackCellRun({
+      cell: {
+        id: cellRunmeId,
+      },
+      notebook: {
+        id: notebookRunmeId,
+      },
+      executionSummary: {
+        success: successfulCellExecution,
+        timing: {
+          // Convert to string to handle integers larger than 32 bits
+          startTime: `${startTime}`,
+          endTime: `${endTime}`,
+          elapsedTime: `${endTime - startTime}`,
+        },
+      },
+    })
+
     runmeExec.end(successfulCellExecution, Date.now())
   }
 
