@@ -797,7 +797,7 @@ export class Kernel implements Disposable {
             executionSummary: payload.executionSummary,
           },
           id: '',
-          method: APIMethod.SendRunmeEvent,
+          method: APIMethod.TrackRunmeEvent,
         },
         type: ClientMessages.platformApiRequest,
       },
