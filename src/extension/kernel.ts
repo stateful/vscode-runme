@@ -112,6 +112,7 @@ import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
+import { RunmeIdentity } from './grpc/serializerTypes'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -737,21 +738,52 @@ export class Kernel implements Disposable {
     })
   }
 
-  async #handleTrackCellRun(payload: {
-    cell: { id: string }
-    notebook: { id: string }
-    executionSummary: {
-      success: boolean
-      timing: { startTime: string; endTime: string; elapsedTime: string }
+  async #handleTrackCellRun(
+    cell: NotebookCell,
+    successfulCellExecution: boolean,
+    startTime: number,
+    endTime: number,
+  ): Promise<void> {
+    if (!this.serializer?.isLifecycleIdentity(RunmeIdentity.ALL)) {
+      return
     }
-  }): Promise<void> {
+
+    const frontmatter = GrpcSerializer.marshalFrontmatter(cell.notebook.metadata, this)
+
+    const notebookRunmeId = frontmatter.runme?.id
+    const cellRunmeId = cell.metadata['runme.dev/id']
+
+    if (!notebookRunmeId) {
+      log.warn('notebook runme ID not found')
+      return
+    }
+
     if (!window.activeNotebookEditor) {
+      log.warn('no active notebook editor')
       return
     }
 
     const session = await getPlatformAuthSession(false)
     if (!session) {
       return
+    }
+
+    const payload = {
+      cell: {
+        id: cellRunmeId,
+      },
+      notebook: {
+        id: notebookRunmeId,
+      },
+      executionSummary: {
+        success: successfulCellExecution,
+        timing: {
+          elapsedTime: endTime - startTime,
+          // Convert to string to handle integers larger than 32 bits
+          startTime: `${startTime}`,
+          endTime: `${endTime}`,
+        },
+      },
     }
 
     this.#handleRendererMessage({
@@ -871,29 +903,11 @@ export class Kernel implements Disposable {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
     })
-    const notebookRunmeId = cell.notebook.metadata['runme.dev/frontmatterParsed'].runme?.id
-    const cellRunmeId = cell.metadata['runme.dev/id']
     const endTime = Date.now()
 
-    this.#handleTrackCellRun({
-      cell: {
-        id: cellRunmeId,
-      },
-      notebook: {
-        id: notebookRunmeId,
-      },
-      executionSummary: {
-        success: successfulCellExecution,
-        timing: {
-          // Convert to string to handle integers larger than 32 bits
-          startTime: `${startTime}`,
-          endTime: `${endTime}`,
-          elapsedTime: `${endTime - startTime}`,
-        },
-      },
-    })
+    this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
 
-    runmeExec.end(successfulCellExecution, Date.now())
+    runmeExec.end(successfulCellExecution, endTime)
   }
 
   private async executeCell(

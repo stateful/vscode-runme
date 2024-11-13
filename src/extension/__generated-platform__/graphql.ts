@@ -2198,7 +2198,7 @@ export type RunmeEventExecutionSummaryInput = {
 };
 
 export type RunmeEventExecutionSummaryTimingInput = {
-  elapsedTime: Scalars['String']['input'];
+  elapsedTime: Scalars['Int']['input'];
   endTime: Scalars['String']['input'];
   startTime: Scalars['String']['input'];
 };

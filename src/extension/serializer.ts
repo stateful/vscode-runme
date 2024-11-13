@@ -399,6 +399,10 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
 
+  public isLifecycleIdentity(identity: RunmeIdentity) {
+    return this.lifecycleIdentity === identity
+  }
+
   static isGhostCell(cell: NotebookCellData): boolean {
     const metadata = cell.metadata
     return metadata?.[ghost.ghostKey] === true
@@ -878,9 +882,28 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static marshalFrontmatter(
-    metadata: { ['runme.dev/frontmatter']: string },
+    metadata: { ['runme.dev/frontmatter']?: string },
     kernel?: Kernel,
   ): Frontmatter {
+    if (
+      !metadata.hasOwnProperty('runme.dev/frontmatter') ||
+      typeof metadata['runme.dev/frontmatter'] !== 'string'
+    ) {
+      log.warn('no frontmatter found in metadata')
+      return {
+        category: '',
+        tag: '',
+        cwd: '',
+        runme: {
+          id: '',
+          version: '',
+        },
+        shell: '',
+        skipPrompts: false,
+        terminalRows: '',
+      }
+    }
+
     const rawFrontmatter = metadata['runme.dev/frontmatter']
     let data: {
       runme: {
