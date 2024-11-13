@@ -534,8 +534,11 @@ export class RunmeExtension {
       }
     })
 
-    await features.addTrustedDomains()
-    await features.autoOpenTerminal()
+    // only ever enabled in hosted playground
+    if (features.isOnInContextState(FeatureName.HostedPlayground)) {
+      await features.addTrustedDomains()
+      await features.autoOpenTerminal()
+    }
   }
 
   protected handleMasking(kernel: Kernel, maskingIsOn: boolean): (e: NotebookUiEvent) => void {
