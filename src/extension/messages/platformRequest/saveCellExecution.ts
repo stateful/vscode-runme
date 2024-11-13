@@ -92,6 +92,11 @@ export default async function saveCellExecution(
     const plainSessionOutput = await kernel.getPlainCache(cacheId)
     const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
+    let hostname = os.hostname()
+    if (['localhost', '127.0.0.1'].includes(hostname) && process.env.K_SERVICE) {
+      hostname = process.env.K_SERVICE
+    }
+
     const vsEnv = {
       appHost: env.appHost,
       appName: env.appName,
@@ -135,7 +140,7 @@ export default async function saveCellExecution(
               autoSave: autoSaveIsOn,
               device: {
                 arch: os.arch(),
-                hostname: os.hostname(),
+                hostname: hostname,
                 platform: os.platform(),
                 macAddress: getMAC(),
                 release: os.release(),
@@ -262,7 +267,7 @@ export default async function saveCellExecution(
             maskedSessionOutput,
             device: {
               macAddress: getMAC(),
-              hostname: os.hostname(),
+              hostname: hostname,
               platform: os.platform(),
               release: os.release(),
               arch: os.arch(),
