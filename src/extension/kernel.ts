@@ -751,10 +751,9 @@ export class Kernel implements Disposable {
     endTime: number,
   ): Promise<void> {
     const session = await getPlatformAuthSession(false)
-    const noTelemetry = !isTelemetryEnabled()
     const current = ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
 
-    if (current !== RunmeIdentity.ALL || !session || noTelemetry) {
+    if (current !== RunmeIdentity.ALL || !session) {
       return
     }
 
@@ -911,7 +910,9 @@ export class Kernel implements Disposable {
     })
     const endTime = Date.now()
 
-    this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
+    if (isTelemetryEnabled()) {
+      this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
+    }
 
     runmeExec.end(successfulCellExecution, endTime)
   }
