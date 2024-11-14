@@ -84,7 +84,6 @@ import {
   getEnvProps,
   warnBetaRequired,
   getPlatformAuthSession,
-  isTelemetryEnabled,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -910,9 +909,7 @@ export class Kernel implements Disposable {
     })
     const endTime = Date.now()
 
-    if (isTelemetryEnabled()) {
-      this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
-    }
+    this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
 
     runmeExec.end(successfulCellExecution, endTime)
   }
