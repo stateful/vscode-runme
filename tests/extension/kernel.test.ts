@@ -42,6 +42,7 @@ vi.mock('../../src/extension/utils', async () => {
       uikind: 'desktop',
     }),
     getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
+    isTelemetryEnabled: vi.fn().mockReturnValue(undefined),
   }
 })
 vi.mock('../../src/utils/configuration', async (importActual) => {
