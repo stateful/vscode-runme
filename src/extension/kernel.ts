@@ -50,10 +50,15 @@ import {
   NOTEBOOK_MODE,
   NotebookMode,
   OutputType,
+  NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
+import {
+  getNotebookExecutionOrder,
+  registerExtensionEnvVarsMutation,
+  ServerLifecycleIdentity,
+} from '../utils/configuration'
 import features, { FEATURES_CONTEXT_STATE_KEY } from '../features'
 
 import getLogger from './logger'
@@ -79,6 +84,7 @@ import {
   getEnvProps,
   warnBetaRequired,
   getPlatformAuthSession,
+  isTelemetryEnabled,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -745,8 +751,10 @@ export class Kernel implements Disposable {
     endTime: number,
   ): Promise<void> {
     const session = await getPlatformAuthSession(false)
+    const noTelemetry = !isTelemetryEnabled()
+    const current = ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
 
-    if (!this.serializer?.isLifecycleIdentity(RunmeIdentity.ALL || !session)) {
+    if (current !== RunmeIdentity.ALL || !session || noTelemetry) {
       return
     }
 

@@ -399,10 +399,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
 
   public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
 
-  public isLifecycleIdentity(identity: RunmeIdentity) {
-    return this.lifecycleIdentity === identity
-  }
-
   static isGhostCell(cell: NotebookCellData): boolean {
     const metadata = cell.metadata
     return metadata?.[ghost.ghostKey] === true
