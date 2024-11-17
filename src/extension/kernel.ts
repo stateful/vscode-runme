@@ -743,7 +743,7 @@ export class Kernel implements Disposable {
     })
   }
 
-  async #handleTrackCellRun(
+  async #handleLoggedInTrackCellRun(
     cell: NotebookCell,
     successfulCellExecution: boolean,
     startTime: number,
@@ -900,7 +900,6 @@ export class Kernel implements Disposable {
       window.showErrorMessage(e.message)
     }
 
-    // todo(sebastian): rewrite to use non-blocking impl
     getEventReporter().reportExecution(cell, successfulCellExecution)
 
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
@@ -909,7 +908,9 @@ export class Kernel implements Disposable {
     })
     const endTime = Date.now()
 
-    this.#handleTrackCellRun(cell, successfulCellExecution, startTime, endTime)
+    // todo(sebastian): rewrite to use non-blocking impl
+    // only runs when logged in (e.g. Stateful)
+    this.#handleLoggedInTrackCellRun(cell, successfulCellExecution, startTime, endTime)
 
     runmeExec.end(successfulCellExecution, endTime)
   }
