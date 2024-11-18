@@ -40,7 +40,6 @@ import {
   type FeatureContext,
   FeatureName,
   SyncSchema,
-  APIMethod,
 } from '../types'
 import {
   ClientMessages,
@@ -51,15 +50,10 @@ import {
   NOTEBOOK_MODE,
   NotebookMode,
   OutputType,
-  NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import {
-  getNotebookExecutionOrder,
-  registerExtensionEnvVarsMutation,
-  ServerLifecycleIdentity,
-} from '../utils/configuration'
+import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
 import features, { FEATURES_CONTEXT_STATE_KEY } from '../features'
 
 import getLogger from './logger'
@@ -84,7 +78,6 @@ import {
   getRunnerSessionEnvs,
   getEnvProps,
   warnBetaRequired,
-  getPlatformAuthSession,
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
@@ -117,8 +110,7 @@ import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
-import { RunmeEventInputType } from './__generated-platform__/graphql'
-import { RunmeIdentity } from './grpc/serializerTypes'
+import { SignedIn } from './signedIn'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -134,6 +126,7 @@ export class Kernel implements Disposable {
 
   readonly #experiments = new Map<string, boolean>()
   readonly #featuresSettings = new Map<string, boolean>()
+  readonly #onlySignedIn: SignedIn
 
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -191,7 +184,7 @@ export class Kernel implements Disposable {
     this.panelManager = new PanelManager(context)
 
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      this.messaging.onDidReceiveMessage(this.handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
@@ -200,6 +193,10 @@ export class Kernel implements Disposable {
       { dispose: () => this.monitor$.complete() },
       this.registerTerminalProfile(),
     )
+
+    // group operations for signed in only users, all noops for unsigned in users
+    this.#onlySignedIn = new SignedIn(this)
+    this.#disposables.push(this.#onlySignedIn)
 
     const packageJSON = context?.extension?.packageJSON || {}
     const featContext: FeatureContext = {
@@ -409,7 +406,7 @@ export class Kernel implements Disposable {
   }
 
   // eslint-disable-next-line max-len
-  async #handleRendererMessage({
+  async handleRendererMessage({
     editor,
     message,
   }: {
@@ -759,71 +756,6 @@ export class Kernel implements Disposable {
     })
   }
 
-  async #handleLoggedInTrackCellRun(
-    cell: NotebookCell,
-    successfulCellExecution: boolean,
-    startTime: number,
-    endTime: number,
-  ): Promise<void> {
-    const session = await getPlatformAuthSession(false)
-    const current = ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
-
-    if (current !== RunmeIdentity.ALL || !session) {
-      return
-    }
-
-    const frontmatter = GrpcSerializer.marshalFrontmatter(cell.notebook.metadata, this)
-
-    const notebookRunmeId = frontmatter.runme?.id
-    const cellRunmeId = cell.metadata['runme.dev/id']
-
-    if (!notebookRunmeId) {
-      log.warn('notebook runme ID not found')
-      return
-    }
-
-    if (!window.activeNotebookEditor) {
-      log.warn('no active notebook editor')
-      return
-    }
-
-    const payload = {
-      cell: {
-        id: cellRunmeId,
-      },
-      notebook: {
-        id: notebookRunmeId,
-        path: cell.notebook.uri.path,
-      },
-      executionSummary: {
-        success: successfulCellExecution,
-        timing: {
-          elapsedTime: endTime - startTime,
-          // Convert to string to handle integers larger than 32 bits
-          startTime: `${startTime}`,
-          endTime: `${endTime}`,
-        },
-      },
-    }
-
-    this.#handleRendererMessage({
-      editor: window.activeNotebookEditor,
-      message: {
-        output: {
-          data: {
-            type: RunmeEventInputType.RunCell,
-            cell: payload.cell,
-            notebook: payload.notebook,
-            executionSummary: payload.executionSummary,
-          },
-          id: '',
-          method: APIMethod.TrackRunmeEvent,
-        },
-        type: ClientMessages.platformApiRequest,
-      },
-    })
-  }
-
   public async createCellExecution(
     cell: NotebookCell,
   ): Promise<RunmeNotebookCellExecution | undefined> {
@@ -922,11 +854,16 @@ export class Kernel implements Disposable {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
     })
-    const endTime = Date.now()
 
-    // todo(sebastian): rewrite to use non-blocking impl
-    // only runs when logged in (e.g. Stateful)
-    this.#handleLoggedInTrackCellRun(cell, successfulCellExecution, startTime, endTime)
+    const endTime = Date.now()
+    // noop unless signed into Stateful Cloud
+    this.#onlySignedIn.enqueueCellRun(
+      cell,
+      window.activeNotebookEditor,
+      successfulCellExecution,
+      startTime,
+      endTime,
+    )
 
     runmeExec.end(successfulCellExecution, endTime)
   }

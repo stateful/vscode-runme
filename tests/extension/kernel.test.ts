@@ -22,6 +22,14 @@ vi.mock('../../src/extension/ai/events', async () => {
     }),
   }
 })
+vi.mock('../../src/extension/signedIn', async () => {
+  return {
+    SignedIn: class {
+      enqueueCellRun = vi.fn()
+      dispose = vi.fn()
+    },
+  }
+})
 vi.mock('../../src/extension/utils', async () => {
   return {
     getKeyInfo: vi.fn((cell) => ({ key: cell.languageId, uriResource: false })),
