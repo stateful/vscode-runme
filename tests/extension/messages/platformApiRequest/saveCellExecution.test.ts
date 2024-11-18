@@ -1,4 +1,4 @@
-import { AuthenticationSession, authentication, notebooks } from 'vscode'
+import { AuthenticationSession, authentication, commands, notebooks } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -211,7 +211,13 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
+
     vi.mocked(authentication.getSession).mockResolvedValue(undefined)
+    vi.spyOn(commands, 'executeCommand').mockResolvedValue(undefined)
+    vi.spyOn(authentication, 'onDidChangeSessions').mockImplementation((callback) => {
+      callback({ provider: { id: 'stateful', label: 'stateful' } })
+      return { dispose: vi.fn() }
+    })
     await saveCellExecution(requestMessage, kernel)
 
     expect(messaging.postMessage).toMatchInlineSnapshot(`

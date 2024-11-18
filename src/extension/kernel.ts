@@ -148,7 +148,6 @@ export class Kernel implements Disposable {
   protected reporter?: GrpcReporter
   protected featuresState$?
 
-  protected delayedMessages: Array<ClientMessage<ClientMessages>> = []
   protected readonly monitor$ = new Subject<EnvStoreMonitorWithSession>()
 
   constructor(protected context: ExtensionContext) {
@@ -234,29 +233,6 @@ export class Kernel implements Disposable {
         dispose: () => subscription.unsubscribe(),
       })
     }
-  }
-
-  pushDelayedMessage(message: ClientMessage<ClientMessages>) {
-    this.delayedMessages.push(message)
-  }
-
-  async processDelayedMessage() {
-    if (!window.activeNotebookEditor) {
-      // remove all delayed messages
-      this.delayedMessages = []
-      return
-    }
-
-    while (this.hasDelayedMessages()) {
-      const message = this.delayedMessages.shift()
-      if (message) {
-        await this.#handleRendererMessage({ editor: window.activeNotebookEditor, message: message })
-      }
-    }
-  }
-
-  hasDelayedMessages() {
-    return this.delayedMessages.length > 0
   }
 
   get envProps() {

@@ -517,7 +517,6 @@ export class RunmeExtension {
         getPlatformAuthSession(false, true).then(async (session) => {
           if (!!session) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
-            await kernel.processDelayedMessage()
           } else {
             const settingsDefault = getServerLifecycleIdentity()
             await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)

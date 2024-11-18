@@ -12,7 +12,6 @@ import {
   window,
   AuthenticationSession,
   AuthenticationProviderAuthenticationSessionsChangeEvent,
-  Event,
   workspace,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
@@ -24,12 +23,14 @@ import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constant
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
 import getLogger from '../logger'
+import { PromiseAdapter, promiseFromEvent } from '../../utils/promiseFromEvent'
 
 const logger = getLogger('StatefulAuthProvider')
 
 const AUTH_NAME = 'Stateful'
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
 
+export const AUTH_TIMEOUT = 60000
 interface TokenInformation {
   accessToken: string
   expiresIn: number
@@ -44,21 +45,6 @@ interface DecodedToken extends JwtPayload {
   exp?: number
   scope?: string
 }
-
-// Interface declaration for a PromiseAdapter
-interface PromiseAdapter<T, U> {
-  // Function signature of the PromiseAdapter
-  (
-    // Input value of type T that the adapter function will process
-    value: T,
-    // Function to resolve the promise with a value of type U or a promise that resolves to type U
-    resolve: (value: U | PromiseLike<U>) => void,
-    // Function to reject the promise with a reason of any type
-    reject: (reason: any) => void,
-  ): any // The function can return a value of any type
-}
-
-const passthrough = (value: any, resolve: (value?: any) => void) => resolve(value)
 
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
   #disposables: Disposable[] = []
@@ -374,8 +360,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           return await Promise.race([
             // Waiting for the codeExchangePromise to resolve
             codeExchangePromise.promise,
-            // Creating a new promise that rejects after 60000 milliseconds
-            new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), 60000)),
+            // Creating a new promise that rejects on timeout
+            new Promise<string>((_, reject) => setTimeout(() => reject('Cancelled'), AUTH_TIMEOUT)),
             // Creating a promise based on an event, rejecting with 'User Cancelled' when
             // token.onCancellationRequested event occurs
             promiseFromEvent<any, any>(token.onCancellationRequested, (_, __, reject) => {
@@ -584,60 +570,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           env.openExternal(uri)
         }
       })
-  }
-}
-
-/**
- * Return a promise that resolves with the next emitted event, or with some future
- * event as decided by an adapter.
- *
- * If specified, the adapter is a function that will be called with
- * `(event, resolve, reject)`. It will be called once per event until it resolves or
- * rejects.
- *
- * The default adapter is the passthrough function `(value, resolve) => resolve(value)`.
- *
- * @param event the event
- * @param adapter controls resolution of the returned promise
- * @returns a promise that resolves or rejects as specified by the adapter
- */
-function promiseFromEvent<T, U>(
-  event: Event<T>,
-  adapter: PromiseAdapter<T, U> = passthrough,
-): { promise: Promise<U>; cancel: EventEmitter<void> } {
-  let subscription: Disposable
-  let cancel = new EventEmitter<void>()
-
-  // Return an object containing a promise and a cancel EventEmitter
-  return {
-    // Creating a new Promise
-    promise: new Promise<U>((resolve, reject) => {
-      // Listening for the cancel event and rejecting the promise with 'Cancelled' when it occurs
-      cancel.event((_) => reject('Cancelled'))
-      // Subscribing to the event
-      subscription = event((value: T) => {
-        try {
-          // Resolving the promise with the result of the adapter function
-          Promise.resolve(adapter(value, resolve, reject)).catch(reject)
-        } catch (error) {
-          // Rejecting the promise if an error occurs during execution
-          reject(error)
-        }
-      })
-    }).then(
-      // Disposing the subscription and returning the result when the promise resolves
-      (result: U) => {
-        subscription.dispose()
-        return result
-      },
-      // Disposing the subscription and re-throwing the error when the promise rejects
-      (error) => {
-        subscription.dispose()
-        throw error
-      },
-    ),
-    // Returning the cancel EventEmitter
-    cancel,
   }
 }
 
