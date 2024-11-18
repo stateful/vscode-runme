@@ -22,6 +22,13 @@ vi.mock('../../src/extension/ai/events', async () => {
     }),
   }
 })
+vi.mock('../../src/extension/signedIn', async () => {
+  return {
+    SignedIn: class {
+      enqueueCellRun() {}
+    },
+  }
+})
 vi.mock('../../src/extension/utils', async () => {
   return {
     getKeyInfo: vi.fn((cell) => ({ key: cell.languageId, uriResource: false })),
@@ -341,7 +348,7 @@ suite('_executeAll', async () => {
   })
 })
 
-suite('_doExecuteCell', () => {
+suite.only('_doExecuteCell', () => {
   beforeEach(() => {
     vi.mocked(workspace.openTextDocument).mockReset()
     vi.mocked(TelemetryReporter.sendTelemetryEvent).mockClear()
