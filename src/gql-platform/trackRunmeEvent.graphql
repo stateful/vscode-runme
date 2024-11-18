@@ -1,0 +1,7 @@
+mutation TrackRunmeEvent(
+    $input: RunmeEventInput!
+) {
+    trackRunmeEvent(input: $input) {
+        status
+    }
+}
