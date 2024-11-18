@@ -25,7 +25,8 @@ vi.mock('../../src/extension/ai/events', async () => {
 vi.mock('../../src/extension/signedIn', async () => {
   return {
     SignedIn: class {
-      enqueueCellRun() {}
+      enqueueCellRun = vi.fn()
+      dispose = vi.fn()
     },
   }
 })
@@ -348,7 +349,7 @@ suite('_executeAll', async () => {
   })
 })
 
-suite.only('_doExecuteCell', () => {
+suite('_doExecuteCell', () => {
   beforeEach(() => {
     vi.mocked(workspace.openTextDocument).mockReset()
     vi.mocked(TelemetryReporter.sendTelemetryEvent).mockClear()
