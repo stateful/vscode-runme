@@ -43,7 +43,7 @@ export default async function saveCellExecution(
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
     const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
-    if (!session) {
+    if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
         data: {
