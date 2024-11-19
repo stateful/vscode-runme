@@ -774,6 +774,7 @@ export enum FeatureName {
   CopySelectionToClipboard = 'CopySelectionToClipboard',
   NewTreeProvider = 'NewTreeProvider',
   HostedPlayground = 'HostedPlayground',
+  RecommendExtension = 'RecommendExtension',
 }
 
 export type Feature = {

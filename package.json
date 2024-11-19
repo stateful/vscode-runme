@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "RecommendExtension": {
+        "enabled": true,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
+        }
+      },
       "HostedPlayground": {
         "enabled": false,
         "conditions": {
@@ -193,6 +202,11 @@
         "command": "runme.surveyActiveUserFeedback",
         "category": "Runme",
         "title": "Prompt to participate in Feedback survey"
+      },
+      {
+        "command": "runme.surveyAddExtensionToRepo",
+        "category": "Runme",
+        "title": "Prompt to participate in adding extension to repo"
       },
       {
         "command": "runme.surveyFeedbackButton",
