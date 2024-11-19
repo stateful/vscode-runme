@@ -22,7 +22,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { Kernel } from './kernel'
 import { getNamespacedMid, isWindows } from './utils'
 import getLogger from './logger'
-import { RecommendedExtension } from './messaging'
+import { RecommendedExtension } from './recommendation'
 
 const log = getLogger('WinDefaultShell')
 

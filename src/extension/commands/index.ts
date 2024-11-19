@@ -40,7 +40,7 @@ import {
 } from '../utils'
 import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
 import getLogger from '../logger'
-import { RecommendedExtension } from '../messaging'
+import { RecommendedExtension } from '../recommendation'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_OUTPUTS_MASKED,

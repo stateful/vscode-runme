@@ -45,7 +45,7 @@ import {
   getCLIUseIntegratedRunme,
   isNotebookTerminalEnabledForCell,
 } from '../../../src/utils/configuration'
-import { RecommendedExtension } from '../../../src/extension/messaging'
+import { RecommendedExtension } from '../../../src/extension/recommendation'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('vscode-telemetry')

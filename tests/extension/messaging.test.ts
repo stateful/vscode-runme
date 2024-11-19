@@ -2,7 +2,7 @@ import { expect, vi, test, suite, beforeEach } from 'vitest'
 import { FileType, workspace, window, Uri, ExtensionContext } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { RecommendedExtension } from '../../src/extension/messaging'
+import { RecommendedExtension } from '../../src/extension/recommendation'
 
 vi.mock('vscode', async () => {
   const vscode = await import('../../__mocks__/vscode')
