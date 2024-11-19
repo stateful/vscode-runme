@@ -1,12 +1,28 @@
 import os from 'node:os'
 
-import { Uri, env, workspace, commands } from 'vscode'
+import {
+  Uri,
+  env,
+  workspace,
+  commands,
+  EventEmitter,
+  authentication,
+  AuthenticationSessionsChangeEvent,
+  Disposable,
+  window,
+  AuthenticationSession,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
+import {
+  AuthenticationProviders,
+  ClientMessages,
+  NOTEBOOK_AUTOSAVE_ON,
+  RUNME_FRONTMATTER_PARSED,
+} from '../../../constants'
 import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
@@ -25,9 +41,13 @@ import {
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
+import { promiseFromEvent } from '../../../utils/promiseFromEvent'
+import { AUTH_TIMEOUT } from '../../provider/statefulAuth'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
+
+type SessionType = AuthenticationSession | undefined
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
@@ -42,15 +62,53 @@ export default async function saveCellExecution(
     const silent = forceLogin ? undefined : true
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
-    const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
+    let session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
     if (!session) {
       await commands.executeCommand('runme.openCloudPanel')
-      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
-        id: message.output.id,
-      })
+      const authenticationEvent = new EventEmitter<SessionType>()
+      let callbackDisposable: Disposable
+
+      const callback = (e: AuthenticationSessionsChangeEvent) => {
+        callbackDisposable?.dispose?.()
+
+        try {
+          if (e.provider.id === AuthenticationProviders.Stateful) {
+            getPlatformAuthSession(false, true).then((session) => {
+              authenticationEvent.fire(session)
+            })
+          }
+        } catch (error: any) {
+          log.info(error?.message || error)
+        }
+      }
+
+      callbackDisposable = authentication.onDidChangeSessions(callback)
+
+      try {
+        session = await Promise.race([
+          promiseFromEvent<SessionType, SessionType>(authenticationEvent.event).promise,
+          new Promise<undefined>((resolve, reject) =>
+            setTimeout(() => {
+              reject(undefined)
+            }, AUTH_TIMEOUT + 5000),
+          ),
+        ])
+      } finally {
+        authenticationEvent.dispose()
+        if (!session) {
+          await postClientMessage(messaging, ClientMessages.platformApiResponse, {
+            data: {
+              displayShare: false,
+            },
+            id: message.output.id,
+          })
+
+          window.showErrorMessage(
+            'Login is required to save your cells. Please log in to continue.',
+          )
+          return
+        }
+      }
     }
 
     const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
