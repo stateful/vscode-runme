@@ -19,6 +19,9 @@ import {
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
+import { FeatureName } from '../types'
+
+import * as features from './features'
 import { Kernel } from './kernel'
 import { getNamespacedMid, isWindows } from './utils'
 import getLogger from './logger'
@@ -461,9 +464,11 @@ export class SurveyAddExtensionToRepo extends Survey {
   }
 
   async #handleOpenNotebook({ notebookType }: NotebookDocument) {
+    const featureOn = features.isOnInContextState(FeatureName.RecommendExtension)
     const seenRepoBefore = await this.#seenRepoBefore()
     if (
       notebookType !== Kernel.type ||
+      !featureOn ||
       seenRepoBefore ||
       this.context.globalState.get<boolean>(SurveyAddExtensionToRepo.#id, false) ||
       // display only once per session
