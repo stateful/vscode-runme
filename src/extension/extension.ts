@@ -399,10 +399,7 @@ export class RunmeExtension {
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.CELL),
       ),
 
-      RunmeExtension.registerCommand(
-        'runme.lifecycleIdentitySelection',
-        lifecycleIdentitySelection,
-      ),
+      commands.registerCommand('runme.lifecycleIdentitySelection', lifecycleIdentitySelection),
 
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
