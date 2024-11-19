@@ -1,4 +1,6 @@
-import { ExtensionContext, WebviewView, Webview, window, ColorThemeKind, Uri, env } from 'vscode'
+import { ExtensionContext, WebviewView, window, ColorThemeKind, Uri, env } from 'vscode'
+import { from } from 'rxjs'
+import { take, withLatestFrom } from 'rxjs/operators'
 
 import { fetchStaticHtml, resolveAppToken } from '../utils'
 import { IAppToken } from '../services/runme'
@@ -24,7 +26,6 @@ const log = getLogger('CloudPanel')
 export default class CloudPanel extends TanglePanel {
   protected readonly appUrl: string = getRunmeAppUrl(['app'])
   protected readonly defaultUx: DefaultUx = 'panels'
-  protected currentWebview?: Webview
 
   constructor(
     protected readonly context: ExtensionContext,
@@ -63,9 +64,6 @@ export default class CloudPanel extends TanglePanel {
       localResourceRoots: [this.context.extensionUri],
     }
 
-    this.webview.subscribe((webview) => {
-      this.currentWebview = webview
-    })
     this.webview.next(webviewView.webview)
     log.trace(`${this.identifier} webview resolved`)
     return Promise.resolve()
@@ -156,9 +154,11 @@ export default class CloudPanel extends TanglePanel {
     try {
       const appToken = await this.getAppToken(true)
       bus.emit('onAppToken', appToken!)
-      if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml()
-      }
+      from(this.getHydratedHtml())
+        .pipe(withLatestFrom(this.webview), take(1))
+        .subscribe(([html, recentWebview]) => {
+          recentWebview.html = html
+        })
     } catch (err: any) {
       log.error(err?.message || err)
     }
@@ -167,9 +167,11 @@ export default class CloudPanel extends TanglePanel {
   private async onSignOut(bus: SyncSchemaBus) {
     try {
       bus.emit('onAppToken', { token: 'EMPTY' })
-      if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml()
-      }
+      from(this.getHydratedHtml())
+        .pipe(withLatestFrom(this.webview), take(1))
+        .subscribe(([html, recentWebview]) => {
+          recentWebview.html = html
+        })
     } catch (err: any) {
       log.error(err?.message || err)
     }
