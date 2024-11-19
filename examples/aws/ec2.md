@@ -35,12 +35,12 @@ https://us-east-1.console.aws.amazon.com/ec2/home?region=us-east-1#Instances
 
 ```sh {"background":"true","id":"01J1B86EN48NRRJHPNVVGJAMXY"}
 echo "Connecting to instance via SSH..."
-aws ec2-instance-connect ssh --instance-id i-0656ca72923a992b7 --os-user=ec2-user
+aws ec2-instance-connect ssh --instance-id i-0656ca72923a992b7 --region=us-east-1 --os-user=ec2-user
 ```
 
 ```sh {"background":"true","id":"01J1B85H6ZJ6P0VA9PW3D3Q3H7"}
 echo "Connecting to instance via SSH..."
-aws ec2-instance-connect ssh --instance-id i-015097a0646c45ea8 --os-user=ubuntu
+aws ec2-instance-connect ssh --instance-id i-015097a0646c45ea8 --region=us-east-1 --os-user=ubuntu
 ```
 
 Isn't that cool? that's a **Runme cloud renderer** in Action!
