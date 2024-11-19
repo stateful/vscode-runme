@@ -123,28 +123,6 @@ suite('RecommendedExtension', () => {
     })
   })
 
-  // test('It should not add the extension when selecting "No" option', async () => {
-  //   const recommendExtension = new RecommendedExtension(contextMock)
-  //   vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
-  //   vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
-  //     getText: vi.fn().mockReturnValue(
-  //       JSON.stringify(
-  //         {
-  //           recommendations: ['microsoft.docker'],
-  //         },
-  //         null,
-  //         2,
-  //       ),
-  //     ),
-  //   })
-  //   await recommendExtension.add()
-  //   expect(workspace.fs.writeFile).toBeCalledTimes(1)
-  //   expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
-  //     added: 'true',
-  //     error: 'false',
-  //   })
-  // })
-
   test('It should report on failure and add a message', async () => {
     const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
