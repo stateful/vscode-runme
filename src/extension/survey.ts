@@ -22,6 +22,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { Kernel } from './kernel'
 import { getNamespacedMid, isWindows } from './utils'
 import getLogger from './logger'
+import { RecommendedExtension } from './messaging'
 
 const log = getLogger('WinDefaultShell')
 
@@ -404,4 +405,122 @@ export class SurveyNotifyV2 extends Survey {
   }
 
   dispose() {}
+}
+
+export class SurveyAddExtensionToRepo extends Survey {
+  static readonly #id: string = 'runme.surveyAddExtensionToRepo'
+  readonly #recommender: RecommendedExtension
+
+  #displayed: boolean = false
+  #repoKey: string | undefined
+
+  constructor(protected context: ExtensionContext) {
+    super(context, SurveyAddExtensionToRepo.#id)
+    this.#recommender = new RecommendedExtension(context)
+
+    const folders = workspace.workspaceFolders?.length ?? 0
+    if (folders === 0 || folders > 1) {
+      this.#displayed = true
+    }
+
+    if (workspace.workspaceFolders?.[0]) {
+      const folderUri = workspace.workspaceFolders[0].uri
+      this.#repoKey = `${SurveyAddExtensionToRepo.#id}-${folderUri.toString()}`
+    }
+
+    commands.registerCommand(SurveyAddExtensionToRepo.#id, this.prompt.bind(this))
+
+    this.disposables.push(workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)))
+  }
+
+  async #seenRepoBefore(): Promise<boolean> {
+    const recommended = await this.#recommender.isRecommended()
+    if (!this.#repoKey || recommended) {
+      return true
+    }
+
+    return this.context.globalState.get<boolean>(this.#repoKey, false)
+  }
+
+  async #markRepoSeen(): Promise<boolean> {
+    if (!this.#repoKey) {
+      return false
+    }
+
+    await this.context.globalState.update(this.#repoKey, true)
+    return true
+  }
+
+  async #markRepoUnseen(): Promise<boolean> {
+    if (!this.#repoKey) {
+      return false
+    }
+
+    await this.context.globalState.update(this.#repoKey, false)
+    return true
+  }
+
+  async #handleOpenNotebook({ notebookType }: NotebookDocument) {
+    const seenRepoBefore = await this.#seenRepoBefore()
+    if (
+      notebookType !== Kernel.type ||
+      seenRepoBefore ||
+      this.context.globalState.get<boolean>(SurveyAddExtensionToRepo.#id, false) ||
+      // display only once per session
+      this.#displayed
+    ) {
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `https://runme.dev/api/survey?name=recommend&mid=${vscode.env.machineId}`,
+      )
+      if (response.status === 404) {
+        // no match, try again next session
+        this.#displayed = true
+        return
+      } else if (response.status !== 200) {
+        throw new Error(`http status ${response.status}: ${response.statusText}`)
+      }
+    } catch (err) {
+      this.#displayed = true // try again next session
+      if (err instanceof Error) {
+        log.error(`Failed to fetch survey route: ${err.message}`)
+      }
+      return
+    }
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 2000))
+    await commands.executeCommand(SurveyAddExtensionToRepo.#id, false)
+  }
+
+  async prompt(runDirect = true) {
+    // reset done when run from command palette
+    if (runDirect) {
+      this.#displayed = false
+      await this.#markRepoUnseen()
+      await this.undo()
+    }
+
+    const option = await window.showInformationMessage(
+      "Would you like to add Runme to your repository's recommended extensions?",
+      'Yes',
+      'No',
+      "Don't ask again",
+    )
+    this.#displayed = true
+    if (option === 'No') {
+      await this.#markRepoSeen()
+      return
+    } else if (option === undefined) {
+      return
+    } else if (option === "Don't ask again") {
+      await this.done()
+      return
+    }
+
+    await commands.executeCommand('runme.addToRecommendedExtensions')
+    await this.#markRepoSeen()
+  }
 }

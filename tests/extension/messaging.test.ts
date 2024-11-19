@@ -1,12 +1,8 @@
 import { expect, vi, test, suite, beforeEach } from 'vitest'
-import { Disposable, FileType, workspace, window, Uri, ExtensionContext } from 'vscode'
+import { FileType, workspace, window, Uri, ExtensionContext } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import {
-  DisplayableMessage,
-  MessagingBuilder,
-  RecommendExtensionMessage,
-} from '../../src/extension/messaging'
+import { RecommendedExtension } from '../../src/extension/messaging'
 
 vi.mock('vscode', async () => {
   const vscode = await import('../../__mocks__/vscode')
@@ -35,11 +31,6 @@ vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
 
-class MockMessage extends DisplayableMessage implements Disposable {
-  dispose(): void {}
-  display(): void {}
-}
-
 const contextMock: ExtensionContext = {
   globalState: {
     get: vi.fn().mockReturnValue(true),
@@ -47,40 +38,22 @@ const contextMock: ExtensionContext = {
   },
 } as any
 
-suite('MessageBuilder', () => {
-  test('On Activate should display all displayable messages', () => {
-    const mockMessage = new MockMessage(contextMock)
-    const messageBuilder = new MessagingBuilder([mockMessage, mockMessage])
-    const mockMessageSpy = vi.spyOn(mockMessage, 'display')
-    messageBuilder.activate()
-    expect(mockMessageSpy).toHaveBeenCalledTimes(2)
-  })
-
-  test('On Dispose should dispose all displayable messages', () => {
-    const mockMessage = new MockMessage(contextMock)
-    const messageBuilder = new MessagingBuilder([mockMessage, mockMessage])
-    const mockMessageSpy = vi.spyOn(mockMessage, 'dispose')
-    messageBuilder.dispose()
-    expect(mockMessageSpy).toHaveBeenCalledTimes(2)
-  })
-})
-
-suite('RecommendExtensionMessage', () => {
+suite('RecommendedExtension', () => {
   beforeEach(() => {
     vi.mocked(window.showInformationMessage).mockClear()
     vi.mocked(workspace.fs.writeFile).mockClear()
   })
 
   test('It should not prompt the user to install the extension when already added', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+    const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
-    await recommendExtension.display()
+    await recommendExtension.add()
     expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
     expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
   })
 
-  test('It should add the extension when selecting "Yes" option', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+  test('It should add the extension', async () => {
+    const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
     vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
       getText: vi.fn().mockReturnValue(
@@ -89,20 +62,16 @@ suite('RecommendExtensionMessage', () => {
         }),
       ),
     })
-    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Yes' as any)
-    await recommendExtension.display()
+    await recommendExtension.add()
     expect(workspace.fs.writeFile).toBeCalledTimes(1)
     expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
       added: 'true',
       error: 'false',
     })
-    expect(window.showInformationMessage).toHaveBeenCalledWith(
-      'Runme added successfully to the recommended extensions',
-    )
   })
 
   test('It should create a .vscode folder when needed', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+    const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.fs.stat).mockResolvedValue(false as any)
     vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
       getText: vi.fn().mockReturnValue(
@@ -111,14 +80,10 @@ suite('RecommendExtensionMessage', () => {
         }),
       ),
     })
-    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Yes' as any)
-    await recommendExtension.display()
+    await recommendExtension.add()
     expect(workspace.fs.createDirectory).toBeCalledTimes(1)
     expect(workspace.fs.createDirectory).toHaveBeenCalledWith(Uri.parse('/runme/workspace/.vscode'))
     expect(workspace.fs.writeFile).toBeCalledTimes(1)
-    expect(window.showInformationMessage).toHaveBeenCalledWith(
-      'Runme added successfully to the recommended extensions',
-    )
     expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
       added: 'true',
       error: 'false',
@@ -126,7 +91,7 @@ suite('RecommendExtensionMessage', () => {
   })
 
   test('It should create a .vscode/extensions.json file when needed', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+    const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.fs.stat).mockImplementation(async (param: Uri) => {
       return param.path === '/runme/workspace/.vscode/extensions.json'
         ? { type: FileType.Unknown }
@@ -143,8 +108,7 @@ suite('RecommendExtensionMessage', () => {
         ),
       ),
     })
-    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('Yes' as any)
-    await recommendExtension.display()
+    await recommendExtension.add()
     const writeFileCalls = vi.mocked(workspace.fs.writeFile).mock.calls[0]
     expect(workspace.fs.writeFile).toHaveBeenCalledOnce()
     expect((writeFileCalls[0] as Uri).path).toStrictEqual(
@@ -153,81 +117,48 @@ suite('RecommendExtensionMessage', () => {
     expect((writeFileCalls[1] as Buffer).toString('utf-8')).toStrictEqual(
       '{\n\t"recommendations": [\n\t\t"stateful.runme"\n\t]\n}',
     )
-    expect(window.showInformationMessage).toHaveBeenCalledWith(
-      'Runme added successfully to the recommended extensions',
-    )
     expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
       added: 'true',
       error: 'false',
     })
   })
 
-  test('It should not add the extension when selecting "No" option', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
-    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
-    vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
-      getText: vi.fn().mockReturnValue(
-        JSON.stringify(
-          {
-            recommendations: ['microsoft.docker'],
-          },
-          null,
-          2,
-        ),
-      ),
-    })
-    vi.mocked(window.showInformationMessage).mockResolvedValueOnce('No' as any)
-    await recommendExtension.display()
-    expect(workspace.fs.writeFile).toBeCalledTimes(0)
-    expect(window.showInformationMessage).toBeCalledTimes(1)
-    expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
-      added: 'false',
-      error: 'false',
-    })
-  })
+  // test('It should not add the extension when selecting "No" option', async () => {
+  //   const recommendExtension = new RecommendedExtension(contextMock)
+  //   vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
+  //   vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
+  //     getText: vi.fn().mockReturnValue(
+  //       JSON.stringify(
+  //         {
+  //           recommendations: ['microsoft.docker'],
+  //         },
+  //         null,
+  //         2,
+  //       ),
+  //     ),
+  //   })
+  //   await recommendExtension.add()
+  //   expect(workspace.fs.writeFile).toBeCalledTimes(1)
+  //   expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
+  //     added: 'true',
+  //     error: 'false',
+  //   })
+  // })
 
-  test('It should report on failure and display a message', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+  test('It should report on failure and add a message', async () => {
+    const recommendExtension = new RecommendedExtension(contextMock)
     vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
       getText: vi.fn().mockImplementation(new Error('Failure') as any),
     })
-    await recommendExtension.display()
-    expect(window.showErrorMessage).toHaveBeenCalledWith(
-      'Failed to add Runme to the recommended extensions',
-    )
+    await recommendExtension.add()
     expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
       added: 'false',
       error: 'true',
     })
   })
 
-  test("It should not prompt when selecting don't ask again", async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
-    vi.mocked(workspace.fs.stat).mockResolvedValue({ type: FileType.File } as any)
-    vi.mocked(workspace.openTextDocument as any).mockResolvedValue({
-      getText: vi.fn().mockReturnValue(
-        JSON.stringify(
-          {
-            recommendations: ['microsoft.docker'],
-          },
-          null,
-          2,
-        ),
-      ),
-    })
-    vi.mocked(window.showInformationMessage).mockResolvedValueOnce("Don't ask again" as any)
-    const spy = vi.spyOn(contextMock.globalState, 'update')
-    await recommendExtension.display()
-    expect(workspace.fs.writeFile).toBeCalledTimes(0)
-    expect(TelemetryReporter.sendTelemetryEvent).toBeCalledWith('runme.recommendExtension', {
-      added: 'false',
-      error: 'false',
-    })
-    expect(spy).toHaveBeenCalledWith('runme.recommendExtension', false)
-  })
-
   test('Should not prompt for multi-root workspaces when using the command palette', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock, {
+    const recommendExtension = new RecommendedExtension(contextMock, {
       'runme.recommendExtension': true,
     })
     // @ts-expect-error
@@ -235,21 +166,20 @@ suite('RecommendExtensionMessage', () => {
       { uri: Uri.file('/Users/user/Projects/project1') },
       { uri: Uri.file('/Users/user/Projects/project2') },
     ]
-    await recommendExtension.display()
+    await recommendExtension.add()
     expect(window.showInformationMessage).toHaveBeenCalledWith(
       'Multi-root workspace are not supported',
     )
   })
 
-  test('Should not prompt for multi-root workspaces', async () => {
-    const recommendExtension = new RecommendExtensionMessage(contextMock)
+  test('Should not proceed for multi-root workspaces', async () => {
+    const recommendExtension = new RecommendedExtension(contextMock)
     // @ts-expect-error
     workspace.workspaceFolders = [
       { uri: Uri.file('/Users/user/Projects/project1') },
       { uri: Uri.file('/Users/user/Projects/project2') },
     ]
-    await recommendExtension.display()
-    expect(window.showInformationMessage).toHaveBeenCalledTimes(0)
+    await recommendExtension.add()
     expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
   })
 })

@@ -40,7 +40,7 @@ import {
 } from '../utils'
 import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
 import getLogger from '../logger'
-import { RecommendExtensionMessage } from '../messaging'
+import { RecommendedExtension } from '../messaging'
 import {
   NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_OUTPUTS_MASKED,
@@ -403,10 +403,8 @@ export async function authenticateWithGitHub() {
   }
 }
 
-export async function addToRecommendedExtensions(context: ExtensionContext) {
-  return new RecommendExtensionMessage(context, {
-    'runme.recommendExtension': true,
-  }).display()
+export async function addToRecommendedExtension(context: ExtensionContext) {
+  return new RecommendedExtension(context).add()
 }
 
 export async function toggleAutosave(autoSaveIsOn: boolean) {

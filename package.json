@@ -195,6 +195,11 @@
         "title": "Prompt to participate in Feedback survey"
       },
       {
+        "command": "runme.surveyAddExtensionToRepo",
+        "category": "Runme",
+        "title": "Prompt to participate in adding extension to repo"
+      },
+      {
         "command": "runme.surveyFeedbackButton",
         "category": "Runme",
         "title": "Let the Runme team know what you think",

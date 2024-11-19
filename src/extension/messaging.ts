@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 
-import { Disposable, ExtensionContext, Uri, window, workspace } from 'vscode'
+import { ExtensionContext, Uri, window, workspace } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import { parse } from 'jsonc-parser'
 
@@ -13,9 +13,7 @@ import {
   isMultiRootWorkspace,
 } from './utils'
 
-export abstract class DisplayableMessage {
-  abstract dispose(): void
-  abstract display(): void
+export class RecommendedExtension {
   constructor(
     protected readonly context: ExtensionContext,
     readonly stateSettings?: Partial<Record<TELEMETRY_EVENTS, any>>,
@@ -23,84 +21,56 @@ export abstract class DisplayableMessage {
     this.context = context
     this.stateSettings = stateSettings
   }
-}
 
-export class MessagingBuilder implements Disposable {
-  /**
-   * Represents a collection of DisplayableMessages, useful to display window messages.
-   * @param messages Specify the displayable messages to show
-   */
-  constructor(private messages: DisplayableMessage[]) {
-    this.messages = messages
-  }
-
-  dispose() {
-    this.messages.forEach((d) => d.dispose())
-  }
-
-  /**
-   * Display registered DisplayableMessages
-   */
-  activate() {
-    for (const message of this.messages) {
-      message.display()
+  async isRecommended(): Promise<boolean> {
+    // Multi-root workspace not supported atm
+    const isMultiRoot = isMultiRootWorkspace()
+    if (isMultiRoot) {
+      window.showInformationMessage('Multi-root workspace are not supported')
+      return true
     }
-  }
-}
+    const workspaceRoot = getDefaultWorkspace()
+    if (!workspaceRoot || isMultiRoot) {
+      return true
+    }
+    const extensionsJson = Uri.parse(join(workspaceRoot, '.vscode/extensions.json'))
+    const extensionfileOrDirectoryExists = await fileOrDirectoryExists(extensionsJson)
+    let documentText = ''
 
-export class RecommendExtensionMessage extends DisplayableMessage implements Disposable {
-  async display(): Promise<void> {
+    if (extensionfileOrDirectoryExists) {
+      const extensionDocument = await workspace.openTextDocument(extensionsJson)
+      documentText = extensionDocument.getText()
+      const { recommendations }: Record<string, string[]> = parse(documentText)
+
+      if (recommendations.includes(EXTENSION_NAME)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  async add(): Promise<void> {
     try {
-      const skipPrompSettings =
-        this.stateSettings && this.stateSettings[TELEMETRY_EVENTS.RecommendExtension]
-      let promptUser =
-        skipPrompSettings || this.context.globalState.get(TELEMETRY_EVENTS.RecommendExtension, true)
-      // Multi-root workspace not supported atm
-      const isMultiRoot = isMultiRootWorkspace()
-      if (isMultiRoot && skipPrompSettings) {
-        window.showInformationMessage('Multi-root workspace are not supported')
+      if (await this.isRecommended()) {
         return
       }
+
       const workspaceRoot = getDefaultWorkspace()
-      if (!workspaceRoot || isMultiRoot) {
+      if (!workspaceRoot) {
         return
       }
-      const extensionsFile = Uri.parse(join(workspaceRoot, '.vscode/extensions.json'))
-      const extensionfileOrDirectoryExists = await fileOrDirectoryExists(extensionsFile)
+
+      const extensionsJson = Uri.parse(join(workspaceRoot, '.vscode/extensions.json'))
+      const extensionfileOrDirectoryExists = await fileOrDirectoryExists(extensionsJson)
       let extensionRecommendations: string[] = []
       let documentText = ''
+
       if (extensionfileOrDirectoryExists) {
-        const extensionDocument = await workspace.openTextDocument(extensionsFile)
+        const extensionDocument = await workspace.openTextDocument(extensionsJson)
         documentText = extensionDocument.getText()
         const { recommendations }: Record<string, string[]> = parse(documentText)
         extensionRecommendations = recommendations
-
-        if (recommendations.includes(EXTENSION_NAME)) {
-          promptUser = false
-        }
-      }
-
-      if (!promptUser) {
-        window.showInformationMessage('Runme is already added to the recommended extensions')
-        return
-      }
-
-      // eslint-disable-next-line max-len
-      const answer = await window.showInformationMessage(
-        'Would you like to add Runme to the recommended extensions?',
-        'Yes',
-        'No',
-        "Don't ask again",
-      )
-      if (answer !== 'Yes') {
-        TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, {
-          added: 'false',
-          error: 'false',
-        })
-        if (answer === "Don't ask again") {
-          await this.context.globalState.update(TELEMETRY_EVENTS.RecommendExtension, false)
-        }
-        return
       }
 
       const folderUri = Uri.parse(join(workspaceRoot, '.vscode'))
@@ -110,7 +80,7 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
       }
 
       await workspace.fs.writeFile(
-        extensionsFile,
+        extensionsJson,
         Buffer.from(
           editJsonc(
             documentText,
@@ -122,19 +92,15 @@ export class RecommendExtensionMessage extends DisplayableMessage implements Dis
         ),
       )
 
-      window.showInformationMessage('Runme added successfully to the recommended extensions')
       TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, {
         added: 'true',
         error: 'false',
       })
     } catch (error) {
-      window.showErrorMessage('Failed to add Runme to the recommended extensions')
       TelemetryReporter.sendTelemetryEvent(TELEMETRY_EVENTS.RecommendExtension, {
         added: 'false',
         error: 'true',
       })
     }
   }
-
-  dispose() {}
 }
