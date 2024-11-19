@@ -237,25 +237,6 @@ export class RunmeExtension {
     }
     const transientCellMetadata = Object.fromEntries(Object.keys(omitKeys).map((k) => [k, true]))
 
-    const lifecycleIdentitySelection = async (identity?: RunmeIdentity) => {
-      if (identity === undefined) {
-        window.showErrorMessage('Cannot run command without identity selection')
-        return
-      }
-
-      // skip if lifecycle identity selection didn't change
-      const current = ContextState.getKey(NOTEBOOK_LIFECYCLE_ID)
-      if (current === identity) {
-        return
-      }
-
-      await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
-
-      await Promise.all(
-        workspace.notebookDocuments.map((doc) => serializer.switchLifecycleIdentity(doc, identity)),
-      )
-    }
-
     context.subscriptions.push(
       kernel,
       serializer,
@@ -399,7 +380,29 @@ export class RunmeExtension {
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.CELL),
       ),
 
-      commands.registerCommand('runme.lifecycleIdentitySelection', lifecycleIdentitySelection),
+      commands.registerCommand(
+        'runme.lifecycleIdentitySelection',
+        async (identity?: RunmeIdentity) => {
+          if (identity === undefined) {
+            window.showErrorMessage('Cannot run command without identity selection')
+            return
+          }
+
+          // skip if lifecycle identity selection didn't change
+          const current = ContextState.getKey(NOTEBOOK_LIFECYCLE_ID)
+          if (current === identity) {
+            return
+          }
+
+          await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
+
+          await Promise.all(
+            workspace.notebookDocuments.map((doc) =>
+              serializer.switchLifecycleIdentity(doc, identity),
+            ),
+          )
+        },
+      ),
 
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
@@ -514,10 +517,10 @@ export class RunmeExtension {
       ) {
         getPlatformAuthSession(false, true).then(async (session) => {
           if (!!session) {
-            await lifecycleIdentitySelection(RunmeIdentity.ALL)
+            await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
           } else {
             const settingsDefault = getServerLifecycleIdentity()
-            await lifecycleIdentitySelection(settingsDefault)
+            await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
             kernel.emitPanelEvent('runme.cloud', 'onCommand', {
               name: 'signOut',
               panelId: 'runme.cloud',
