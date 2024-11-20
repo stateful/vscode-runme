@@ -1319,7 +1319,7 @@
     "@buf/stateful_runme.community_timostamm-protobuf-ts": "^2.9.4-20241021161352-11c142f88aee.4",
     "@connectrpc/connect": "^1.4.0",
     "@connectrpc/connect-node": "^1.6.1",
-    "@google-cloud/compute": "^4.1.0",
+    "@google-cloud/compute": "^4.8.0",
     "@google-cloud/container": "^5.18.0",
     "@google-cloud/run": "^1.4.0",
     "@kubernetes/client-node": "^0.22.2",
