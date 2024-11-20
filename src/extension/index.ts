@@ -6,6 +6,7 @@ import getLogger from './logger'
 import { isTelemetryEnabled } from './utils'
 
 declare const INSTRUMENTATION_KEY: string
+// declare const CONNECTION_STR: string
 
 const ext = new RunmeExtension()
 const log = getLogger()
