@@ -83,7 +83,7 @@ import { RunmeCodeLensProvider } from './provider/codelens'
 import CloudPanel from './panels/cloud'
 import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
 import { GithubAuthProvider } from './provider/githubAuth'
-import { StatefulAuthProvider } from './provider/statefulAuth'
+import { StatefulAuthProvider, StatefulAuthSession } from './provider/statefulAuth'
 import { IPanel } from './panels/base'
 import { EnvStorePanel } from './panels/notebook'
 import { NotebookCellStatusBarProvider } from './provider/cellStatusBar/notebook'
@@ -467,19 +467,25 @@ export class RunmeExtension {
         })
     }
 
+    let statefulAuthProvider: StatefulAuthProvider
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
+      statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
       context.subscriptions.push(statefulAuthProvider)
 
-      const session = await getPlatformAuthSession(false, true)
-      let sessionFromToken = false
-      if (!session) {
-        sessionFromToken = await statefulAuthProvider.bootstrapFromToken()
+      let sessions = await statefulAuthProvider.getSessions(['profile'])
+      let session: StatefulAuthSession | undefined
+
+      if (sessions.length) {
+        session = sessions[0]
+        kernel.updateFeatureContext('statefulAuth', true)
+        statefulAuthProvider.showLoginNotification()
+        return
+      } else {
+        session = await statefulAuthProvider.bootstrapFromToken()
       }
 
-      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || sessionFromToken
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || !!session
       const silent = forceLogin ? undefined : true
-
       getPlatformAuthSession(forceLogin, silent)
         .then((session) => {
           if (session) {
@@ -511,18 +517,20 @@ export class RunmeExtension {
     }
 
     authentication.onDidChangeSessions((e) => {
+      console.log('onDidChangeSessions ' + e.provider.id)
       if (
+        statefulAuthProvider &&
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
-        getPlatformAuthSession(false, true).then(async (session) => {
-          if (!!session) {
+        statefulAuthProvider.getSessions(['profile']).then(async (sessions) => {
+          if (sessions.length) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
           } else {
             const settingsDefault = getServerLifecycleIdentity()
             await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
           }
-          kernel.updateFeatureContext('statefulAuth', !!session)
+          kernel.updateFeatureContext('statefulAuth', sessions.length > 1)
         })
       }
       if (

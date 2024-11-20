@@ -35,7 +35,7 @@ interface TokenInformation {
   expiresIn: number
 }
 
-interface StatefulAuthSession extends AuthenticationSession {
+export interface StatefulAuthSession extends AuthenticationSession {
   expiresIn: number
   isExpired: boolean
 }
@@ -218,18 +218,18 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  public async bootstrapFromToken(): Promise<boolean> {
+  public async bootstrapFromToken(): Promise<StatefulAuthSession | undefined> {
     try {
       const authTokenUri = await this.getAuthTokenUri()
       if (!authTokenUri) {
         logger.info('No auth token file found, halting bootstrap from token.')
-        return false
+        return
       }
       const { token, payload } = await this.insecureDecode(authTokenUri)
       const session = await this.buildSession(token, payload)
       await this.persistSessions([session], { added: [session], removed: [], changed: [] })
       await this.deleteAuthTokenFile(authTokenUri)
-      return true
+      return session
     } catch (error) {
       let message
       if (error instanceof Error) {
@@ -239,7 +239,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       }
       logger.error(message)
     }
-    return false
   }
 
   private async getAuthTokenUri(): Promise<Uri | undefined> {
@@ -565,8 +564,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     if (this.isTokenNotExpired(session.expiresIn)) {
       // Emit a 'session changed' event to notify that the token has been accessed.
       // This ensures that any components listening for session changes are notified appropriately.
-      this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
-      ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
+      // this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
+      await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
       return session
     }
 
