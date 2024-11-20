@@ -1354,7 +1354,7 @@
     "tangle": "^4.0.0",
     "ulidx": "^2.4.1",
     "uuid": "^11.0.3",
-    "vscode-telemetry": "^1.0.2",
+    "vscode-telemetry": "^2.0.0",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"
   }
