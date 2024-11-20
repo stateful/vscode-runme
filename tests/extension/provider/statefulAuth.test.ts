@@ -26,6 +26,7 @@ const contextFake: ExtensionContext = {
   secrets: {
     store: vi.fn(),
   },
+  subscriptions: [],
 } as any
 
 const uriHandlerFake: RunmeUriHandler = {} as any
@@ -35,7 +36,7 @@ describe('StatefulAuthProvider', () => {
 
   beforeEach(() => {
     vi.mocked(getRunmeAppUrl).mockReturnValue('https://api.for.platform')
-    provider = new StatefulAuthProvider(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
   })
 
   it('gets sessions', async () => {
@@ -53,7 +54,7 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
   let provider: StatefulAuthProvider
 
   it('returns a secret key for production', () => {
-    provider = new StatefulAuthProvider(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
 
     // access private prop
     expect((provider as any).sessionSecretKey).toEqual(
@@ -65,7 +66,7 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
     const fakeStagingUrl = 'https://api.staging.for.platform'
     vi.mocked(getRunmeAppUrl).mockReturnValue(fakeStagingUrl)
 
-    provider = new StatefulAuthProvider(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
     const hashed = crypto.createHash('sha1').update(fakeStagingUrl).digest('hex')
 
     // access private prop
@@ -77,16 +78,14 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
 })
 
 describe('StatefulAuthProvider#bootstrapFromToken', () => {
-  let provider: StatefulAuthProvider
-
   beforeEach(() => {
     vi.mocked(getRunmeAppUrl).mockReturnValue('https://api.stateful.dev/')
-    provider = new StatefulAuthProvider(contextFake, uriHandlerFake)
+    StatefulAuthProvider.new(contextFake, uriHandlerFake)
   })
 
   it('returns undefined if no token is provided', async () => {
     vi.mocked(workspace.fs.stat).mockRejectedValueOnce({} as any)
-    const sessionCreated = await provider.bootstrapFromToken()
+    const sessionCreated = await StatefulAuthProvider.bootstrapFromToken()
     expect(sessionCreated).toBeFalsy()
   })
 
@@ -119,7 +118,7 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
     )
     const spyStore = vi.spyOn(contextFake.secrets, 'store')
     const spyDelete = vi.spyOn(workspace.fs, 'delete')
-    const sessionCreated = await provider.bootstrapFromToken()
+    const sessionCreated = await StatefulAuthProvider.bootstrapFromToken()
 
     expect(sessionCreated).toBeTruthy()
     expect(spyStore).toHaveBeenCalledOnce()
@@ -150,7 +149,7 @@ describe('StatefulAuthProvider#bootstrapFromToken', () => {
     )
     const spyStore = vi.spyOn(contextFake.secrets, 'store')
     const spyDelete = vi.spyOn(workspace.fs, 'delete')
-    const sessionCreated = await provider.bootstrapFromToken()
+    const sessionCreated = await StatefulAuthProvider.bootstrapFromToken()
 
     expect(sessionCreated).toBeFalsy()
     expect(spyStore).not.toHaveBeenCalledOnce()

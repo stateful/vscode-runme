@@ -7,10 +7,10 @@ import { ClientMessages } from '../constants'
 
 import { GrpcSerializer } from './serializer'
 import { Kernel } from './kernel'
-import { getPlatformAuthSession } from './utils'
 import './wasm/wasm_exec.js'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
 import getLogger from './logger'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 export interface CellRun {
   cell: { id: any }
@@ -31,7 +31,7 @@ export class SignedIn implements Disposable {
   constructor(protected readonly kernel: Kernel) {
     const signedIn$ = new Observable<boolean>((observer) => {
       authentication.onDidChangeSessions(() => {
-        getPlatformAuthSession(false)
+        StatefulAuthProvider.getSession()
           .then((session) => observer.next(!!session))
           .catch(() => observer.next(false))
       })

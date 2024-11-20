@@ -76,11 +76,36 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     { promise: Promise<TokenInformation>; cancel: EventEmitter<void> }
   >()
 
+  static #provider: StatefulAuthProvider
+
   readonly #onSessionChange = this.register(
     new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>(),
   )
 
-  constructor(
+  public static new(context: ExtensionContext, uriHandler: RunmeUriHandler) {
+    StatefulAuthProvider.#provider = new StatefulAuthProvider(context, uriHandler)
+    context.subscriptions.push(StatefulAuthProvider.#provider)
+    return StatefulAuthProvider.#provider
+  }
+
+  public static get provider() {
+    return StatefulAuthProvider.#provider
+  }
+
+  static async getSession() {
+    if (!StatefulAuthProvider.provider) {
+      return
+    }
+
+    const sessions = await StatefulAuthProvider.provider.getSessions(['profile'])
+    if (!sessions.length) {
+      return
+    }
+
+    return sessions[0]
+  }
+
+  protected constructor(
     private readonly context: ExtensionContext,
     uriHandler: RunmeUriHandler,
   ) {
@@ -116,7 +141,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param scopes
    * @returns
    */
-  public async getSessions(scopes?: string[]): Promise<readonly StatefulAuthSession[]> {
+  public async getSessions(scopes?: string[]): Promise<StatefulAuthSession[]> {
     try {
       const sessions = await this.getAllSessions()
       if (!sessions.length) {
@@ -218,17 +243,21 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#disposables.forEach((d) => d.dispose())
   }
 
-  public async bootstrapFromToken(): Promise<StatefulAuthSession | undefined> {
+  public static async bootstrapFromToken(): Promise<StatefulAuthSession | undefined> {
     try {
-      const authTokenUri = await this.getAuthTokenUri()
+      const authTokenUri = await StatefulAuthProvider.provider.getAuthTokenUri()
       if (!authTokenUri) {
         logger.info('No auth token file found, halting bootstrap from token.')
         return
       }
-      const { token, payload } = await this.insecureDecode(authTokenUri)
-      const session = await this.buildSession(token, payload)
-      await this.persistSessions([session], { added: [session], removed: [], changed: [] })
-      await this.deleteAuthTokenFile(authTokenUri)
+      const { token, payload } = await StatefulAuthProvider.provider.insecureDecode(authTokenUri)
+      const session = await StatefulAuthProvider.provider.buildSession(token, payload)
+      await StatefulAuthProvider.provider.persistSessions([session], {
+        added: [session],
+        removed: [],
+        changed: [],
+      })
+      await StatefulAuthProvider.provider.deleteAuthTokenFile(authTokenUri)
       return session
     } catch (error) {
       let message
@@ -562,9 +591,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
 
     if (this.isTokenNotExpired(session.expiresIn)) {
-      // Emit a 'session changed' event to notify that the token has been accessed.
-      // This ensures that any components listening for session changes are notified appropriately.
-      // this.#onSessionChange.fire({ added: [], removed: [], changed: [session] })
       await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
       return session
     }
@@ -572,7 +598,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return { ...session, isExpired: true }
   }
 
-  showLoginNotification() {
+  static showLoginNotification() {
     const openDashboardStr = 'Open Dashboard'
     window
       .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
