@@ -1,6 +1,4 @@
 import { ExtensionContext, WebviewView, window, ColorThemeKind, Uri, env } from 'vscode'
-import { from } from 'rxjs'
-import { take, withLatestFrom } from 'rxjs/operators'
 
 import { fetchStaticHtml, resolveAppToken } from '../utils'
 import { IAppToken } from '../services/runme'
@@ -96,11 +94,10 @@ export default class CloudPanel extends TanglePanel {
   protected registerSubscribers(bus: SyncSchemaBus) {
     return [
       bus.on('onCommand', (cmdEvent) => {
-        if (cmdEvent?.name === 'signIn') {
-          this.onSignIn(bus)
-        } else if (cmdEvent?.name === 'signOut') {
-          this.onSignOut(bus)
+        if (cmdEvent?.name !== 'signIn') {
+          return
         }
+        this.onSignIn(bus)
       }),
       bus.on('onArchiveCell', async (cmdEvent) => {
         const answer = await window.showInformationMessage(
@@ -154,24 +151,6 @@ export default class CloudPanel extends TanglePanel {
     try {
       const appToken = await this.getAppToken(true)
       bus.emit('onAppToken', appToken!)
-      from(this.getHydratedHtml())
-        .pipe(withLatestFrom(this.webview), take(1))
-        .subscribe(([html, recentWebview]) => {
-          recentWebview.html = html
-        })
-    } catch (err: any) {
-      log.error(err?.message || err)
-    }
-  }
-
-  private async onSignOut(bus: SyncSchemaBus) {
-    try {
-      bus.emit('onAppToken', { token: 'EMPTY' })
-      from(this.getHydratedHtml())
-        .pipe(withLatestFrom(this.webview), take(1))
-        .subscribe(([html, recentWebview]) => {
-          recentWebview.html = html
-        })
     } catch (err: any) {
       log.error(err?.message || err)
     }

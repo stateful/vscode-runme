@@ -521,10 +521,6 @@ export class RunmeExtension {
           } else {
             const settingsDefault = getServerLifecycleIdentity()
             await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
-            kernel.emitPanelEvent('runme.cloud', 'onCommand', {
-              name: 'signOut',
-              panelId: 'runme.cloud',
-            })
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
         })

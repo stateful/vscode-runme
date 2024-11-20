@@ -39,7 +39,6 @@ import {
   type ExtensionName,
   type FeatureContext,
   FeatureName,
-  SyncSchema,
 } from '../types'
 import {
   ClientMessages,
@@ -242,21 +241,6 @@ export class Kernel implements Disposable {
       version: this.context!.extension.packageJSON.version,
     }
     return getEnvProps(ext)
-  }
-
-  emitPanelEvent<K extends keyof SyncSchema>(
-    panelId: string,
-    eventName: K,
-    payload: SyncSchema[K],
-  ) {
-    const panel = this.panelManager.getPanel(panelId)
-
-    if (!panel) {
-      log.error(`Panel ${panelId} not found`)
-      return
-    }
-
-    panel.getBus()?.emit(eventName, payload)
   }
 
   useMonitor() {
