@@ -1112,7 +1112,7 @@
         {
           "id": "runme.cloud",
           "type": "webview",
-          "name": "Commands",
+          "name": "Cloud",
           "visibility": "visible"
         },
         {
