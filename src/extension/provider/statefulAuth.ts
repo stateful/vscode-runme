@@ -582,7 +582,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     const dontAskAgain = "Don't ask again"
 
     window
-      .showInformationMessage('Logged into the Stateful Platform', openWorkspace, dontAskAgain)
+      .showInformationMessage('Logged into the Stateful Cloud', openWorkspace, dontAskAgain)
       .then((answer) => {
         if (answer === openWorkspace) {
           const dashboardUri = getRunmeAppUrl(['app'])

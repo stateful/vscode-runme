@@ -7,7 +7,7 @@ Stateful provides a powerful set of tools for creating, running, discovering, st
 Stateful combines the power of interactive DevOps Notebooks with a robust set of features designed to streamline your development and operational processes. There are two major pieces:
 
 - **Stateful Extension**: A super set of the open-source Runme project, offering enhanced features for authentication, collaboration, and security, making it ideal for teams and enterprises.
-- **Stateful Platform**: A SaaS solution that integrates with GitHub and Slack, serving as a collaboration hub for finding, launching, running, sharing, and troubleshooting Notebooks and their metadata.
+- **Stateful Cloud**: A SaaS solution that integrates with GitHub and Slack, serving as a collaboration hub for finding, launching, running, sharing, and troubleshooting Notebooks and their metadata.
 
 <br />
 
@@ -23,7 +23,7 @@ Stateful combines the power of interactive DevOps Notebooks with a robust set of
 
 ### Platform
 
-The Stateful platform offers a suite of tools and services designed to enhance your development lifecycle.
+The Stateful cloud offers a suite of tools and services designed to enhance your development lifecycle.
 
 - **Believe in Your Docs Again**: Transform your documentation into actionable, GitOps-compatible, cloud-native DevOps Notebooks that are collaborative and searchable.
 - **Markdown and VS Code Integration**: Repurpose your existing engineering docs (READMEs, runbooks, etc.) by making commands runnable and configurable, stored next to code in Git.
@@ -35,7 +35,7 @@ The Stateful platform offers a suite of tools and services designed to enhance y
 
 ### Features
 
-- **Runnable Engineering Docs**: Launch Markdown files from GitHub as runnable DevOps Notebooks, saving sessions to the Stateful platform.
+- **Runnable Engineering Docs**: Launch Markdown files from GitHub as runnable DevOps Notebooks, saving sessions to the Stateful cloud.
 - **Easy Discovery**: Quickly locate and launch DevOps Notebooks from your GitHub organization with one click to open in VS Code, clone the repo, and start running.
 - **History and Metadata**: Automatically save commands, metadata, outputs, and history to Stateful. Search your history, see diffs, share, and troubleshoot processes.
 - **Slack Integration**: Easily escalate or share DevOps Notebooks and commands on Slack for team troubleshooting and discussion.
@@ -47,7 +47,7 @@ The Stateful platform offers a suite of tools and services designed to enhance y
 
 1. **Sign Up**: Create your free account at [Stateful](https://platform.stateful.com/).
 2. **Install VS Code Extension**: Download the Stateful extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=stateful.platform). The extension is fully compatible with Runme, but adds authentication, collaboration, and security features, making it secure for teams and inside companies.
-3. **Explore**: Start creating, running, sharing, and discussing your first DevOps Notebook and its commands using the Stateful platform.
+3. **Explore**: Start creating, running, sharing, and discussing your first DevOps Notebook and its commands using the Stateful cloud.
 
 For detailed documentation and tutorials, visit our [Documentation](https://stateful.com/docs).
 
