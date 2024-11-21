@@ -14,7 +14,7 @@ import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
 import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
-import { InitializeClient } from '../../api/client'
+import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
   CreateCellExecutionMutation,
@@ -53,7 +53,7 @@ export default async function saveCellExecution(
       })
     }
 
-    const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
+    const graphClient = await InitializeCloudClient()
 
     const path = editor.notebook.uri.fsPath
     const gitCtx = await getGitContext(path)

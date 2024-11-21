@@ -41,7 +41,6 @@ import {
   getDefaultWorkspace,
   bootFile,
   resetNotebookSettings,
-  getPlatformAuthSession,
   getGithubAuthSession,
   openFileAsRunmeNotebook,
 } from './utils'
@@ -104,6 +103,9 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
+    const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
+
+    StatefulAuthProvider.initialize(context, kernel, uriHandler)
 
     const server = new KernelServer(
       context.extensionUri,
@@ -200,7 +202,6 @@ export class RunmeExtension {
     // extension is deactivated.
     context.subscriptions.push(aiManager)
 
-    const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
@@ -468,38 +469,7 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      StatefulAuthProvider.new(context, uriHandler)
-      let session = await StatefulAuthProvider.getSession()
-      if (session) {
-        kernel.updateFeatureContext('statefulAuth', true)
-        StatefulAuthProvider.showLoginNotification()
-        return
-      }
-
-      session = await StatefulAuthProvider.bootstrapFromToken()
-      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || !!session
-      const silent = forceLogin ? undefined : true
-      getPlatformAuthSession(forceLogin, silent)
-        .then((session) => {
-          if (session) {
-            StatefulAuthProvider.showLoginNotification()
-          }
-        })
-        .catch((error) => {
-          let message
-          if (error instanceof Error) {
-            message = error.message
-          } else {
-            message = JSON.stringify(error)
-          }
-
-          // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
-          // throw new Error('User did not consent to login.')
-          // Calling again to ensure User Menu Badge
-          if (forceLogin && message === 'User did not consent to login.') {
-            getPlatformAuthSession(false)
-          }
-        })
+      await StatefulAuthProvider.ensureSession()
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
@@ -512,7 +482,7 @@ export class RunmeExtension {
     authentication.onDidChangeSessions((e) => {
       console.log('onDidChangeSessions ' + e.provider.id)
       if (
-        StatefulAuthProvider.provider &&
+        StatefulAuthProvider.instance &&
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
