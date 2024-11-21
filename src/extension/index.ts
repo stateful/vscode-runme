@@ -5,7 +5,7 @@ import { RunmeExtension } from './extension'
 import getLogger from './logger'
 import { isTelemetryEnabled } from './utils'
 
-declare const INSTRUMENTATION_KEY: string
+declare const CONNECTION_STR: string
 
 const ext = new RunmeExtension()
 const log = getLogger()
@@ -49,10 +49,11 @@ export function deactivate() {
 
 function configureTelemetryReporter() {
   const noTelemetry = !isTelemetryEnabled()
-  let key = INSTRUMENTATION_KEY
+  // MSFT moved to connection string as per https://learn.microsoft.com/en-us/azure/azure-monitor/app/migrate-from-instrumentation-keys-to-connection-strings
+  let connectionStr = CONNECTION_STR
   if (noTelemetry) {
-    key = 'invalid'
+    connectionStr = 'invalid'
   }
-  // underyling telemetry reporter honor vscode's global setting
-  TelemetryReporter.configure(key)
+  // underyling telemetry reporter honors vscode's global setting
+  TelemetryReporter.configure(connectionStr)
 }

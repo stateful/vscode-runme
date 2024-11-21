@@ -75,6 +75,7 @@ jobs:
           NODE_ENV: production
           NODE_OPTIONS: --max-old-space-size=8192
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
+          CONNECTION_STR: ${{ secrets.CONNECTION_STR }}
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
 
       - name: Build Package (Stable)
@@ -83,6 +84,7 @@ jobs:
           NODE_ENV: production
           NODE_OPTIONS: --max-old-space-size=8192
           INSTRUMENTATION_KEY: ${{ secrets.INSTRUMENTATION_KEY }}
+          CONNECTION_STR: ${{ secrets.CONNECTION_STR }}
         if: ${{ github.event.inputs.releaseChannel == 'stable' }}
 
       - name: Run Tests
