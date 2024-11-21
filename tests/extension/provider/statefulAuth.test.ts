@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken'
 import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import { getRunmeAppUrl } from '../../../src/utils/configuration'
+import { Kernel } from '../../../src/extension/kernel'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -30,13 +31,16 @@ const contextFake: ExtensionContext = {
 } as any
 
 const uriHandlerFake: RunmeUriHandler = {} as any
+const kernelFake: Kernel = {} as any
+
+StatefulAuthProvider.initialize(contextFake, kernelFake, uriHandlerFake)
 
 describe('StatefulAuthProvider', () => {
   let provider: StatefulAuthProvider
 
   beforeEach(() => {
     vi.mocked(getRunmeAppUrl).mockReturnValue('https://api.for.platform')
-    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.instance
   })
 
   it('gets sessions', async () => {
@@ -54,7 +58,7 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
   let provider: StatefulAuthProvider
 
   it('returns a secret key for production', () => {
-    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.instance
 
     // access private prop
     expect((provider as any).sessionSecretKey).toEqual(
@@ -66,7 +70,7 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
     const fakeStagingUrl = 'https://api.staging.for.platform'
     vi.mocked(getRunmeAppUrl).mockReturnValue(fakeStagingUrl)
 
-    provider = StatefulAuthProvider.new(contextFake, uriHandlerFake)
+    provider = StatefulAuthProvider.instance
     const hashed = crypto.createHash('sha1').update(fakeStagingUrl).digest('hex')
 
     // access private prop
@@ -80,7 +84,6 @@ describe('StatefulAuthProvider#sessionSecretKey', () => {
 describe('StatefulAuthProvider#bootstrapFromToken', () => {
   beforeEach(() => {
     vi.mocked(getRunmeAppUrl).mockReturnValue('https://api.stateful.dev/')
-    StatefulAuthProvider.new(contextFake, uriHandlerFake)
   })
 
   it('returns undefined if no token is provided', async () => {

@@ -88,6 +88,16 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   public static get instance(): StatefulAuthProvider {
     if (!StatefulAuthProvider.#instance) {
       StatefulAuthProvider.#instance = new StatefulAuthProvider()
+      const disposable = authentication.registerAuthenticationProvider(
+        AuthenticationProviders.Stateful,
+        AUTH_NAME,
+        this.instance,
+        {
+          supportsMultipleAccounts: false,
+        },
+      )
+
+      StatefulAuthProvider.registerDisposable(disposable)
     }
 
     return StatefulAuthProvider.#instance
@@ -103,16 +113,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       .update(getRunmeAppUrl(['api']))
       .digest('hex')
 
-    const disposable = authentication.registerAuthenticationProvider(
-      AuthenticationProviders.Stateful,
-      AUTH_NAME,
-      this.instance,
-      {
-        supportsMultipleAccounts: false,
-      },
-    )
-
-    StatefulAuthProvider.registerDisposable(disposable)
     context.subscriptions.push(this.instance)
   }
 
