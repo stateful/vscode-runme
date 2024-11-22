@@ -46,6 +46,7 @@ export class RunmeFile extends TreeItem {
   constructor(
     public label: string,
     options: IRunmeFileProps,
+    public parent?: string,
   ) {
     super(label, options.collapsibleState)
 

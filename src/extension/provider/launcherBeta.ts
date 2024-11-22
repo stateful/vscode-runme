@@ -26,18 +26,12 @@ import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
 const logger = getLogger('LauncherBeta')
 
-/**
- * used to force VS Code update the tree view when user expands/collapses all
- * see https://github.com/microsoft/vscode/issues/172479
- */
-/* eslint-disable-next-line */
-let sauceCount = 0
-
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
   private allowUnnamed = false
   private defaultItemState = TreeItemCollapsibleState.Collapsed
   private _onDidChangeTreeData = new EventEmitter<RunmeFile | undefined>()
+  private notebooks: RunmeFile[] = []
 
   constructor(
     private kernel: Kernel,
@@ -75,12 +69,14 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   async includeUnnamed() {
     this.allowUnnamed = true
+    this.notebooks = []
     await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
     this._onDidChangeTreeData.fire(undefined)
   }
 
   async excludeUnnamed() {
     this.allowUnnamed = false
+    this.notebooks = []
     await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
     this._onDidChangeTreeData.fire(undefined)
   }
@@ -106,18 +102,41 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   async getChildren(element?: RunmeFile | undefined): Promise<RunmeFile[]> {
-    const tasks = await vscodeTasks.fetchTasks({ type: 'runme' })
-
     if (!element) {
       /**
        * we need to tweak the folder name to force VS Code re-render the tree view
        * see https://github.com/microsoft/vscode/issues/172479
        */
-      ++sauceCount
-      return Promise.resolve(this.getNotebooks(tasks))
+      if (this.notebooks.length) {
+        return this.notebooks.reduce((acc: RunmeFile[], notebook: RunmeFile) => {
+          if (!notebook.parent) {
+            acc.push({
+              ...notebook,
+              collapsibleState: this.defaultItemState,
+              label: this.resolveLabel(notebook.label),
+            })
+          }
+          return acc
+        }, [])
+      }
+
+      const tasks = await vscodeTasks.fetchTasks({ type: 'runme' })
+      const notebooks = await this.getNotebooks(tasks)
+      this.notebooks = [...notebooks]
+
+      const cellsPromises = this.notebooks.map((element) => this.getCells(tasks, element))
+
+      const cells = await Promise.all(cellsPromises)
+      this.notebooks.push(...cells.flat())
+
+      return notebooks
     }
 
-    return Promise.resolve(await this.getCells(tasks, element))
+    return this.notebooks.filter((f) => f.parent === element.label.trim())
+  }
+
+  resolveLabel(relativePath: string) {
+    return `${relativePath.trim()}${this.defaultItemState === 1 ? ' ' : ''}`
   }
 
   getNotebooks(tasks: Task[]): RunmeFile[] {
@@ -140,7 +159,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
       prevDir = relativePath
       foundTasks.push(
-        new RunmeFile(`${relativePath}${sauceCount % 2 ? ' ' : ''}`, {
+        new RunmeFile(this.resolveLabel(relativePath), {
           collapsibleState: this.defaultItemState,
           lightIcon: 'tree-notebook.gif',
           darkIcon: 'tree-notebook.gif',
@@ -154,7 +173,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   async getCells(tasks: Task[], element: RunmeFile): Promise<RunmeFile[]> {
     const foundTasks: RunmeFile[] = []
-
+    const parent = element.label.trim()
     let mdBuffer: Uint8Array
     let prevFile: string | undefined
     let notebook: NotebookData | undefined
@@ -171,7 +190,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         continue
       }
 
-      if (element.label.trimEnd() !== relativePath) {
+      if (parent !== relativePath) {
         continue
       }
 
@@ -208,24 +227,28 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       const tooltip = lines.length > 3 ? [...lines.slice(0, 3), '...'].join('\n') : lines.join('\n')
 
       foundTasks.push(
-        new RunmeFile(`${name}${!excludeFromRunAll ? '*' : ''}`, {
-          description: `${lines.at(0)}`,
-          tooltip: tooltip,
-          resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
-          collapsibleState: TreeItemCollapsibleState.None,
-          onSelectedCommand: {
-            arguments: [
-              {
-                file: basename(documentPath),
-                folderPath: dirname(documentPath),
-                cellIndex: cellIndex,
-              },
-            ],
-            command: 'runme.openRunmeFile',
-            title: name,
+        new RunmeFile(
+          `${name}${!excludeFromRunAll ? '*' : ''}`,
+          {
+            description: `${lines.at(0)}`,
+            tooltip: tooltip,
+            resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
+            collapsibleState: TreeItemCollapsibleState.None,
+            onSelectedCommand: {
+              arguments: [
+                {
+                  file: basename(documentPath),
+                  folderPath: dirname(documentPath),
+                  cellIndex: cellIndex,
+                },
+              ],
+              command: 'runme.openRunmeFile',
+              title: name,
+            },
+            contextValue: 'markdown-file',
           },
-          contextValue: 'markdown-file',
-        }),
+          parent,
+        ),
       )
     }
 
