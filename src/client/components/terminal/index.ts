@@ -802,7 +802,7 @@ export class TerminalView extends LitElement {
       debounceTime(100),
     )
 
-    const sub = debounced$.subscribe(async (rows) => {
+    const sub = debounced$.subscribe(async (terminalRows) => {
       const ctx = getContext()
       if (!ctx.postMessage) {
         return
@@ -810,7 +810,7 @@ export class TerminalView extends LitElement {
 
       const parseResult = CellAnnotationsSchema.safeParse({
         'runme.dev/id': this.id!,
-        terminalRows: rows,
+        terminalRows,
       })
 
       if (!parseResult.success) {
@@ -823,7 +823,7 @@ export class TerminalView extends LitElement {
         output: {
           annotations: <Partial<CellAnnotations>>{
             'runme.dev/id': this.id!,
-            terminalRows: rows,
+            terminalRows,
           },
         },
       })
