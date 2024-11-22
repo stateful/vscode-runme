@@ -109,6 +109,7 @@ import { uri as runUriResource } from './executors/resource'
 import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
+import { SignedIn } from './signedIn'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -124,6 +125,7 @@ export class Kernel implements Disposable {
 
   readonly #experiments = new Map<string, boolean>()
   readonly #featuresSettings = new Map<string, boolean>()
+  readonly #onlySignedIn: SignedIn
 
   #disposables: Disposable[] = []
   #controller = notebooks.createNotebookController(
@@ -181,7 +183,7 @@ export class Kernel implements Disposable {
     this.panelManager = new PanelManager(context)
 
     this.#disposables.push(
-      this.messaging.onDidReceiveMessage(this.#handleRendererMessage.bind(this)),
+      this.messaging.onDidReceiveMessage(this.handleRendererMessage.bind(this)),
       workspace.onDidOpenNotebookDocument(this.#handleOpenNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.#handleSaveNotebook.bind(this)),
       window.onDidChangeActiveColorTheme(this.#handleActiveColorThemeMessage.bind(this)),
@@ -190,6 +192,10 @@ export class Kernel implements Disposable {
       { dispose: () => this.monitor$.complete() },
       this.registerTerminalProfile(),
     )
+
+    // group operations for signed in only users, all noops for unsigned in users
+    this.#onlySignedIn = new SignedIn(this)
+    this.#disposables.push(this.#onlySignedIn)
 
     const packageJSON = context?.extension?.packageJSON || {}
     const featContext: FeatureContext = {
@@ -384,7 +390,7 @@ export class Kernel implements Disposable {
   }
 
   // eslint-disable-next-line max-len
-  async #handleRendererMessage({
+  async handleRendererMessage({
     editor,
     message,
   }: {
@@ -777,7 +783,8 @@ export class Kernel implements Disposable {
     }
 
     TelemetryReporter.sendTelemetryEvent('cell.startExecute')
-    runmeExec.start(Date.now())
+    const startTime = Date.now()
+    runmeExec.start(startTime)
 
     const annotations = getAnnotations(cell)
     const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
@@ -825,14 +832,24 @@ export class Kernel implements Disposable {
       window.showErrorMessage(e.message)
     }
 
-    // todo(sebastian): rewrite to use non-blocking impl
     getEventReporter().reportExecution(cell, successfulCellExecution)
 
     TelemetryReporter.sendTelemetryEvent('cell.endExecute', {
       'cell.success': successfulCellExecution?.toString(),
       'cell.mimeType': annotations.mimeType,
     })
-    runmeExec.end(successfulCellExecution, Date.now())
+
+    const endTime = Date.now()
+    // noop unless signed into Stateful Cloud
+    this.#onlySignedIn.enqueueCellRun(
+      cell,
+      window.activeNotebookEditor,
+      successfulCellExecution,
+      startTime,
+      endTime,
+    )
+
+    runmeExec.end(successfulCellExecution, endTime)
   }
 
   private async executeCell(

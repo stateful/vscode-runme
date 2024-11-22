@@ -43,7 +43,7 @@ export default async function saveCellExecution(
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
     const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
-    if (!session) {
+    if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
         data: {
@@ -78,10 +78,7 @@ export default async function saveCellExecution(
 
     log.info('Saving cell execution')
 
-    const frontmatter = GrpcSerializer.marshalFrontmatter(
-      editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
-      kernel,
-    )
+    const frontmatter = GrpcSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
 
     const metadata = {
       ...editor.notebook.metadata,
@@ -91,6 +88,11 @@ export default async function saveCellExecution(
     const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
     const plainSessionOutput = await kernel.getPlainCache(cacheId)
     const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
+
+    let hostname = os.hostname()
+    if (['localhost', '127.0.0.1'].includes(hostname) && process.env.K_SERVICE) {
+      hostname = process.env.K_SERVICE
+    }
 
     const vsEnv = {
       appHost: env.appHost,
@@ -135,7 +137,7 @@ export default async function saveCellExecution(
               autoSave: autoSaveIsOn,
               device: {
                 arch: os.arch(),
-                hostname: os.hostname(),
+                hostname: hostname,
                 platform: os.platform(),
                 macAddress: getMAC(),
                 release: os.release(),
@@ -262,7 +264,7 @@ export default async function saveCellExecution(
             maskedSessionOutput,
             device: {
               macAddress: getMAC(),
-              hostname: os.hostname(),
+              hostname: hostname,
               platform: os.platform(),
               release: os.release(),
               arch: os.arch(),

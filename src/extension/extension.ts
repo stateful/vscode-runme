@@ -61,7 +61,7 @@ import {
   authenticateWithGitHub,
   displayCategoriesSelector,
   runCellsByCategory,
-  addToRecommendedExtensions,
+  addToRecommendedExtension,
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
@@ -198,6 +198,7 @@ export class RunmeExtension {
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
+      new survey.SurveyAddExtensionToRepo(context),
       new survey.SurveyActiveUserFeedback(context),
       new survey.SurveyFeedbackButton(context),
       new survey.SurveyNotifyV2(context),
@@ -319,7 +320,7 @@ export class RunmeExtension {
        * Runme Message Display commands
        */
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
-        addToRecommendedExtensions(context),
+        addToRecommendedExtension(context),
       ),
       createDemoFileRunnerForActiveNotebook(context, kernel),
       createDemoFileRunnerWatcher(context, kernel),

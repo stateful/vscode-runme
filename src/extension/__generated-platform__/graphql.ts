@@ -97,11 +97,21 @@ export type AccessNotebookMetadataOutput = {
   updateTime: Scalars['DateTime']['output'];
 };
 
+export type AccessNotebookSession = {
+  __typename?: 'AccessNotebookSession';
+  access?: Maybe<Access>;
+  accessId: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  updateTime: Scalars['DateTime']['output'];
+};
+
 export type AccessRequest = {
   __typename?: 'AccessRequest';
   cellOutput?: Maybe<CellOutput>;
   createTime: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
+  metadata?: Maybe<AccessRequestMetadata>;
   notebookMetadataOutput?: Maybe<NotebookMetadataOutput>;
   organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
@@ -111,6 +121,15 @@ export type AccessRequest = {
   requestedById?: Maybe<Scalars['String']['output']>;
   status: AccessRequestStatus;
   updateTime: Scalars['DateTime']['output'];
+};
+
+export type AccessRequestMetadata = {
+  __typename?: 'AccessRequestMetadata';
+  escalationId?: Maybe<Scalars['String']['output']>;
+};
+
+export type AccessRequestMetadataInput = {
+  escalationId: Scalars['String']['input'];
 };
 
 export enum AccessRequestStatus {
@@ -352,8 +371,22 @@ export type CellOutputCellArgs = {
 export type CellOutputFilter = {
   ownedActive?: InputMaybe<Scalars['Boolean']['input']>;
   ownedArchived?: InputMaybe<Scalars['Boolean']['input']>;
+  sharedOnSlack?: InputMaybe<Scalars['Boolean']['input']>;
   sharedWithMe?: InputMaybe<Scalars['Boolean']['input']>;
   sharedWithOrg?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CellOutputSlackShare = {
+  __typename?: 'CellOutputSlackShare';
+  cellOutput?: Maybe<CellOutput>;
+  cellOutputId: Scalars['String']['output'];
+  createTime: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  organization?: Maybe<Organization>;
+  organizationId?: Maybe<Scalars['String']['output']>;
+  updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
+  userId: Scalars['String']['output'];
 };
 
 export type Chat = {
@@ -416,6 +449,7 @@ export type Conversation = {
 };
 
 export type CreateAccessRequestInput = {
+  metadata?: InputMaybe<AccessRequestMetadataInput>;
   referenceId: Scalars['String']['input'];
   referenceTable: Scalars['String']['input'];
 };
@@ -458,6 +492,10 @@ export type CreateCellExecutionInput = {
   updateTime?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
+export type CreateCellOutputGistInput = {
+  cellOutputId: Scalars['String']['input'];
+};
+
 export type CreateCellOutputInput = {
   autoSave?: InputMaybe<Scalars['Boolean']['input']>;
   branch?: InputMaybe<Scalars['String']['input']>;
@@ -483,16 +521,20 @@ export type CreateCellOutputInput = {
   stdoutData: Scalars['Bytes']['input'];
 };
 
+export type CreateCellOutputSlackShareInput = {
+  cellOutputId: Scalars['String']['input'];
+};
+
 export type CreateEnvironmentInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
 export type CreateEscalationInput = {
+  assignee?: InputMaybe<Scalars['String']['input']>;
   cellOutputId: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  owners?: InputMaybe<Array<Scalars['String']['input']>>;
   status: EscalationStatus;
   watchers?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -548,10 +590,12 @@ export type CreateNotebookInput = {
   runmeVersion?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type CreateNotebookSessionInput = {
-  environmentId?: InputMaybe<Scalars['String']['input']>;
-  notebookId: Scalars['String']['input'];
-  organizationId: Scalars['String']['input'];
+export type CreateNotebookMetadataOutputGistInput = {
+  notebookMetadataOutputId: Scalars['String']['input'];
+};
+
+export type CreateNotebookMetadataOutputSlackShareInput = {
+  notebookMetadataOutputId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateNotificationInput = {
@@ -662,7 +706,7 @@ export type Environment = {
 
 export type Escalation = {
   __typename?: 'Escalation';
-  bookmarkEscalations?: Maybe<Array<Maybe<BookmarkEscalation>>>;
+  assignee?: Maybe<User>;
   cellName?: Maybe<Scalars['String']['output']>;
   cellOutput?: Maybe<CellOutput>;
   cellOutputId: Scalars['String']['output'];
@@ -674,15 +718,27 @@ export type Escalation = {
   escalationUsers?: Maybe<Array<Maybe<EscalationUser>>>;
   filePath?: Maybe<Scalars['String']['output']>;
   id: Scalars['String']['output'];
+  isOwner?: Maybe<Scalars['Boolean']['output']>;
+  isWatcher?: Maybe<Scalars['Boolean']['output']>;
   name?: Maybe<Scalars['String']['output']>;
+  notebookSessionId?: Maybe<Scalars['String']['output']>;
   organization?: Maybe<Organization>;
   organizationId?: Maybe<Scalars['String']['output']>;
   resourceAccess?: Maybe<ResourceAccess>;
   shareType: ShareType;
   status?: Maybe<EscalationStatus>;
+  summary?: Maybe<Scalars['String']['output']>;
   updateTime: Scalars['DateTime']['output'];
   user?: Maybe<User>;
   userId?: Maybe<Scalars['String']['output']>;
+};
+
+export type EscalationFilter = {
+  blocked?: InputMaybe<Scalars['Boolean']['input']>;
+  closed?: InputMaybe<Scalars['Boolean']['input']>;
+  inProgress?: InputMaybe<Scalars['Boolean']['input']>;
+  onlyWithAccess?: InputMaybe<Scalars['Boolean']['input']>;
+  open?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type EscalationOrganization = {
@@ -691,7 +747,6 @@ export type EscalationOrganization = {
   escalation: Escalation;
   escalationId: Scalars['String']['output'];
   id: Scalars['String']['output'];
-  organization: Organization;
   organizationId: Scalars['String']['output'];
   updateTime: Scalars['DateTime']['output'];
   user?: Maybe<User>;
@@ -721,9 +776,16 @@ export type EscalationUser = {
 };
 
 export enum EscalationUserType {
+  Assignee = 'ASSIGNEE',
   Owner = 'OWNER',
   Watcher = 'WATCHER'
 }
+
+export type Gist = {
+  __typename?: 'Gist';
+  id: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
 
 export type GithubInstallation = {
   __typename?: 'GithubInstallation';
@@ -953,6 +1015,7 @@ export type Mutation = {
   createCellExecution: CellExecution;
   createCellOutput: CellOutput;
   createCellOutputBookmark: Bookmark;
+  createCellOutputGist: Gist;
   createConversationBookmark: Bookmark;
   createEnvironment: Environment;
   createEscalation: Escalation;
@@ -960,6 +1023,7 @@ export type Mutation = {
   createGroup: Group;
   createMarkdownBookmark: Bookmark;
   createMessage: Message;
+  createNotebookMetadataOutputGist: Gist;
   createNotebookOutputBookmark: Bookmark;
   declineInvitation: Invitation;
   deleteBookmark: Bookmark;
@@ -978,23 +1042,29 @@ export type Mutation = {
   shareCellOutputToSlack: CellOutput;
   shareNotebookMetadataOutputToSlack: Notebook;
   syncGithubInstallation: GithubInstallation;
+  trackRunmeEvent: RunmeEventData;
   unArchiveCellExecution?: Maybe<CellExecution>;
   unArchiveCellOutput: CellOutput;
+  unwatchEscalation: Escalation;
   updateCellExecution: CellExecution;
   updateCellOutput: CellOutput;
   updateCellOutputTags?: Maybe<Array<Maybe<Tag>>>;
   updateConversation: Conversation;
   updateConversationTags?: Maybe<Array<Maybe<Tag>>>;
   updateEnvironment: Environment;
+  updateEscalation: Escalation;
   updateGroup: Group;
   updateMarkdownTags?: Maybe<Array<Maybe<Tag>>>;
   updateNotebookMetadataOutput?: Maybe<Notebook>;
   updateNotebookOutputTags?: Maybe<Array<Maybe<Tag>>>;
+  updateNotebookSession?: Maybe<NotebookSession>;
   updateOrganization: Organization;
   updateOrganizationUser: Organization;
   updateSlackInstallation: SlackInstallation;
+  updateUser: User;
   updateUserRole: User;
   updateWorkflow?: Maybe<Workflow>;
+  watchEscalation: Escalation;
 };
 
 
@@ -1045,6 +1115,11 @@ export type MutationCreateCellOutputBookmarkArgs = {
 };
 
 
+export type MutationCreateCellOutputGistArgs = {
+  input: CreateCellOutputGistInput;
+};
+
+
 export type MutationCreateConversationBookmarkArgs = {
   input: CreateBookmarkInput;
 };
@@ -1077,6 +1152,11 @@ export type MutationCreateMarkdownBookmarkArgs = {
 
 export type MutationCreateMessageArgs = {
   input: CreateMessageInput;
+};
+
+
+export type MutationCreateNotebookMetadataOutputGistArgs = {
+  input: CreateNotebookMetadataOutputGistInput;
 };
 
 
@@ -1160,6 +1240,11 @@ export type MutationShareNotebookMetadataOutputToSlackArgs = {
 };
 
 
+export type MutationTrackRunmeEventArgs = {
+  input: RunmeEventInput;
+};
+
+
 export type MutationUnArchiveCellExecutionArgs = {
   all?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['String']['input'];
@@ -1168,6 +1253,11 @@ export type MutationUnArchiveCellExecutionArgs = {
 
 export type MutationUnArchiveCellOutputArgs = {
   all?: InputMaybe<Scalars['Boolean']['input']>;
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationUnwatchEscalationArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -1207,6 +1297,12 @@ export type MutationUpdateEnvironmentArgs = {
 };
 
 
+export type MutationUpdateEscalationArgs = {
+  id: Scalars['String']['input'];
+  input: UpdateEscalationInput;
+};
+
+
 export type MutationUpdateGroupArgs = {
   id: Scalars['String']['input'];
   input: UpdateGroupInput;
@@ -1229,6 +1325,12 @@ export type MutationUpdateNotebookOutputTagsArgs = {
 };
 
 
+export type MutationUpdateNotebookSessionArgs = {
+  id: Scalars['String']['input'];
+  input: UpdateNotebookSessionInput;
+};
+
+
 export type MutationUpdateOrganizationArgs = {
   id: Scalars['String']['input'];
   input: UpdateOrganizationInput;
@@ -1245,6 +1347,11 @@ export type MutationUpdateSlackInstallationArgs = {
 };
 
 
+export type MutationUpdateUserArgs = {
+  input: UpdateUserInput;
+};
+
+
 export type MutationUpdateUserRoleArgs = {
   input: UpdateOrgUserRoleInput;
 };
@@ -1253,6 +1360,11 @@ export type MutationUpdateUserRoleArgs = {
 export type MutationUpdateWorkflowArgs = {
   id: Scalars['String']['input'];
   input: UpdateWorkflowInput;
+};
+
+
+export type MutationWatchEscalationArgs = {
+  id: Scalars['String']['input'];
 };
 
 export type Notebook = {
@@ -1275,6 +1387,7 @@ export type Notebook = {
 
 export type NotebookFilter = {
   owned?: InputMaybe<Scalars['Boolean']['input']>;
+  sharedOnSlack?: InputMaybe<Scalars['Boolean']['input']>;
   sharedWithMe?: InputMaybe<Scalars['Boolean']['input']>;
   sharedWithOrg?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -1374,15 +1487,39 @@ export type NotebookMetadataOutput = {
   userId: Scalars['String']['output'];
 };
 
+export type NotebookMetadataOutputSlackShare = {
+  __typename?: 'NotebookMetadataOutputSlackShare';
+  createTime: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  notebookMetadataOutput?: Maybe<NotebookMetadataOutput>;
+  notebookMetadataOutputId: Scalars['String']['output'];
+  organization?: Maybe<Organization>;
+  organizationId?: Maybe<Scalars['String']['output']>;
+  user?: Maybe<User>;
+  userId: Scalars['String']['output'];
+};
+
 export type NotebookSession = {
   __typename?: 'NotebookSession';
+  accessNotebookSessions?: Maybe<Array<Maybe<AccessNotebookSession>>>;
   cellOutputs?: Maybe<Array<Maybe<CellOutput>>>;
+  cellOutputsCount?: Maybe<Scalars['Int']['output']>;
   createTime: Scalars['DateTime']['output'];
+  filesCount?: Maybe<Scalars['Int']['output']>;
   id: Scalars['String']['output'];
   organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
   sessionId: Scalars['String']['output'];
+  shareType?: Maybe<ShareType>;
   updateTime: Scalars['DateTime']['output'];
+  user?: Maybe<User>;
+  userId?: Maybe<Scalars['String']['output']>;
+};
+
+export type NotebookSessionFilter = {
+  owned?: InputMaybe<Scalars['Boolean']['input']>;
+  sharedWithMe?: InputMaybe<Scalars['Boolean']['input']>;
+  sharedWithOrg?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type Notification = {
@@ -1412,6 +1549,9 @@ export enum NotificationType {
   NotebookMetadataOutputAccessRequestAccepted = 'NOTEBOOK_METADATA_OUTPUT_ACCESS_REQUEST_ACCEPTED',
   NotebookMetadataOutputAccessRequestRejected = 'NOTEBOOK_METADATA_OUTPUT_ACCESS_REQUEST_REJECTED',
   NotebookMetadataOutputMessageReply = 'NOTEBOOK_METADATA_OUTPUT_MESSAGE_REPLY',
+  NotebookSessionAccessRequest = 'NOTEBOOK_SESSION_ACCESS_REQUEST',
+  NotebookSessionAccessRequestAccepted = 'NOTEBOOK_SESSION_ACCESS_REQUEST_ACCEPTED',
+  NotebookSessionAccessRequestRejected = 'NOTEBOOK_SESSION_ACCESS_REQUEST_REJECTED',
   OrganizationUserInvitation = 'ORGANIZATION_USER_INVITATION',
   OrganizationUserInvitationAccepted = 'ORGANIZATION_USER_INVITATION_ACCEPTED',
   OrganizationUserInvitationDeclined = 'ORGANIZATION_USER_INVITATION_DECLINED'
@@ -1452,6 +1592,7 @@ export type OrganizationUser = {
   isActive?: Maybe<Scalars['Boolean']['output']>;
   organization?: Maybe<Organization>;
   organizationId: Scalars['String']['output'];
+  scrollToBottom?: Maybe<Scalars['Boolean']['output']>;
   user?: Maybe<User>;
   userId: Scalars['String']['output'];
 };
@@ -1505,6 +1646,7 @@ export enum PermissionEnum {
   CreateCellOutputAccessRequest = 'create_cell_output_access_request',
   CreateConversation = 'create_conversation',
   CreateEnvironment = 'create_environment',
+  CreateEscalation = 'create_escalation',
   CreateGithubInstallation = 'create_github_installation',
   CreateGroup = 'create_group',
   CreateMessage = 'create_message',
@@ -1532,16 +1674,19 @@ export enum PermissionEnum {
   UpdateCellOutput = 'update_cell_output',
   UpdateConversation = 'update_conversation',
   UpdateEnvironment = 'update_environment',
+  UpdateEscalation = 'update_escalation',
   UpdateGithubInstallation = 'update_github_installation',
   UpdateGroup = 'update_group',
   UpdateInvitation = 'update_invitation',
   UpdateMarkdownTags = 'update_markdown_tags',
   UpdateNotebookMetadataOutput = 'update_notebook_metadata_output',
+  UpdateNotebookSession = 'update_notebook_session',
   UpdateNotification = 'update_notification',
   UpdateOrganization = 'update_organization',
   UpdateRating = 'update_rating',
   UpdateSlackInstallation = 'update_slack_installation',
   UpdateTags = 'update_tags',
+  UpdateUser = 'update_user',
   UpdateWorkflow = 'update_workflow',
   UserReadAccess = 'user_read_access',
   UserReadAccessRequest = 'user_read_access_request',
@@ -1556,6 +1701,7 @@ export enum PermissionEnum {
   UserReadConversation = 'user_read_conversation',
   UserReadDevice = 'user_read_device',
   UserReadEnvironment = 'user_read_environment',
+  UserReadEscalation = 'user_read_escalation',
   UserReadGithubInstallation = 'user_read_github_installation',
   UserReadGroup = 'user_read_group',
   UserReadGroupUser = 'user_read_group_user',
@@ -1576,7 +1722,8 @@ export enum PermissionEnum {
   UserReadTags = 'user_read_tags',
   UserReadUser = 'user_read_user',
   UserReadUserRole = 'user_read_user_role',
-  UserReadWorkflow = 'user_read_workflow'
+  UserReadWorkflow = 'user_read_workflow',
+  WatchEscalation = 'watch_escalation'
 }
 
 /** About the Redwood queries. */
@@ -1610,6 +1757,8 @@ export type Query = {
   notebookActivityStats: AxisStat;
   notebookMetadata?: Maybe<NotebookMetadata>;
   notebookMetadataOutput?: Maybe<NotebookMetadataOutput>;
+  notebookSession?: Maybe<NotebookSession>;
+  notebookSessions?: Maybe<Array<Maybe<NotebookSession>>>;
   notebooks?: Maybe<Array<Maybe<Notebook>>>;
   notifications: PaginatedNotifications;
   organization?: Maybe<Organization>;
@@ -1692,6 +1841,12 @@ export type QueryEscalationArgs = {
 
 
 /** About the Redwood queries. */
+export type QueryEscalationsArgs = {
+  filters?: InputMaybe<EscalationFilter>;
+};
+
+
+/** About the Redwood queries. */
 export type QueryGroupArgs = {
   id: Scalars['String']['input'];
 };
@@ -1745,6 +1900,18 @@ export type QueryNotebookMetadataArgs = {
 /** About the Redwood queries. */
 export type QueryNotebookMetadataOutputArgs = {
   id: Scalars['String']['input'];
+};
+
+
+/** About the Redwood queries. */
+export type QueryNotebookSessionArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+/** About the Redwood queries. */
+export type QueryNotebookSessionsArgs = {
+  filters?: InputMaybe<NotebookSessionFilter>;
 };
 
 
@@ -1909,6 +2076,7 @@ export type ReporterExtensionInput = {
   file?: InputMaybe<ReporterFileInput>;
   git?: InputMaybe<ReporterGitInput>;
   session: ReporterSessionInput;
+  shareType?: InputMaybe<ShareType>;
 };
 
 export type ReporterFileInput = {
@@ -2004,6 +2172,50 @@ export enum RoleEnum {
   Guest = 'guest',
   User = 'user'
 }
+
+export type RunCellDataInput = {
+  cell: RunmeEventCell;
+  executionSummary: RunmeEventExecutionSummaryInput;
+  notebook: RunmeEventNotebook;
+};
+
+export type RunmeEventCell = {
+  id: Scalars['String']['input'];
+};
+
+export type RunmeEventData = {
+  __typename?: 'RunmeEventData';
+  status: Scalars['String']['output'];
+};
+
+export type RunmeEventDataInput = {
+  runCellData?: InputMaybe<RunCellDataInput>;
+};
+
+export type RunmeEventExecutionSummaryInput = {
+  success: Scalars['Boolean']['input'];
+  timing?: InputMaybe<RunmeEventExecutionSummaryTimingInput>;
+};
+
+export type RunmeEventExecutionSummaryTimingInput = {
+  elapsedTime: Scalars['Int']['input'];
+  endTime: Scalars['String']['input'];
+  startTime: Scalars['String']['input'];
+};
+
+export type RunmeEventInput = {
+  data: RunmeEventDataInput;
+  type: RunmeEventInputType;
+};
+
+export enum RunmeEventInputType {
+  RunCell = 'runCell'
+}
+
+export type RunmeEventNotebook = {
+  id: Scalars['String']['input'];
+  path: Scalars['String']['input'];
+};
 
 export type Search = {
   __typename?: 'Search';
@@ -2152,6 +2364,14 @@ export type UpdateEnvironmentInput = {
   userIds?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
+export type UpdateEscalationInput = {
+  assignee?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<EscalationStatus>;
+  watchers?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
 export type UpdateGithubInstallationInput = {
   accountAvatarUrl?: InputMaybe<Scalars['String']['input']>;
   accountId?: InputMaybe<Scalars['Int']['input']>;
@@ -2212,9 +2432,9 @@ export type UpdateNotebookMetadataOutputInput = {
 };
 
 export type UpdateNotebookSessionInput = {
-  environmentId?: InputMaybe<Scalars['String']['input']>;
-  notebookId?: InputMaybe<Scalars['String']['input']>;
-  organizationId?: InputMaybe<Scalars['String']['input']>;
+  groupIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  shareType?: InputMaybe<ShareType>;
+  userIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type UpdateNotificationInput = {
@@ -2240,6 +2460,7 @@ export type UpdateOrganizationInput = {
 
 export type UpdateOrganizationUserInput = {
   defaultShareType?: InputMaybe<ShareType>;
+  scrollToBottom?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateRoleInput = {
@@ -2259,7 +2480,7 @@ export type UpdateTagInput = {
 };
 
 export type UpdateUserInput = {
-  displayName?: InputMaybe<Scalars['String']['input']>;
+  useLastActiveOrganization?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateUserRoleInput = {
@@ -2276,10 +2497,8 @@ export type UpdateWorkflowInput = {
 
 export type User = {
   __typename?: 'User';
-  Notebook?: Maybe<Array<Maybe<Notebook>>>;
   SlackInstallations?: Maybe<Array<Maybe<SlackInstallation>>>;
   auth0Id?: Maybe<Scalars['String']['output']>;
-  cells?: Maybe<Array<Maybe<Cell>>>;
   createTime?: Maybe<Scalars['DateTime']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
@@ -2289,6 +2508,7 @@ export type User = {
   photoUrl?: Maybe<Scalars['String']['output']>;
   signupOrigin?: Maybe<SignupOrigin>;
   updateTime?: Maybe<Scalars['DateTime']['output']>;
+  useLastActiveOrganization?: Maybe<Scalars['Boolean']['output']>;
   userRoles?: Maybe<Array<Maybe<UserRole>>>;
   username?: Maybe<Scalars['String']['output']>;
 };
@@ -2378,6 +2598,13 @@ export type GetUserEnvironmentsQueryVariables = Exact<{ [key: string]: never; }>
 
 export type GetUserEnvironmentsQuery = { __typename?: 'Query', userEnvironments: Array<{ __typename?: 'Environment', id: string, name: string, description?: string | null }> };
 
+export type TrackRunmeEventMutationVariables = Exact<{
+  input: RunmeEventInput;
+}>;
+
+
+export type TrackRunmeEventMutation = { __typename?: 'Mutation', trackRunmeEvent: { __typename?: 'RunmeEventData', status: string } };
+
 export type UnArchiveCellOutputMutationVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
@@ -2399,5 +2626,6 @@ export const CreateCellExecutionDocument = {"kind":"Document","definitions":[{"k
 export const CreateExtensionCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateExtensionCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ReporterInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createExtensionCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<CreateExtensionCellOutputMutation, CreateExtensionCellOutputMutationVariables>;
 export const CreateEscalationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateEscalation"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateEscalationInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createEscalation"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"escalationUrl"}}]}}]}}]} as unknown as DocumentNode<CreateEscalationMutation, CreateEscalationMutationVariables>;
 export const GetUserEnvironmentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getUserEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userEnvironments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}}]}}]} as unknown as DocumentNode<GetUserEnvironmentsQuery, GetUserEnvironmentsQueryVariables>;
+export const TrackRunmeEventDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"TrackRunmeEvent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RunmeEventInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"trackRunmeEvent"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<TrackRunmeEventMutation, TrackRunmeEventMutationVariables>;
 export const UnArchiveCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UnArchiveCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unArchiveCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<UnArchiveCellOutputMutation, UnArchiveCellOutputMutationVariables>;
 export const UpdateCellOutputDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateCellOutput"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateCellOutputInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCellOutput"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"htmlUrl"}},{"kind":"Field","name":{"kind":"Name","value":"exitCode"}},{"kind":"Field","name":{"kind":"Name","value":"isSlackReady"}}]}}]}}]} as unknown as DocumentNode<UpdateCellOutputMutation, UpdateCellOutputMutationVariables>;

@@ -28,7 +28,7 @@ import {
   welcome,
   tryIt,
   openFileInRunme,
-  addToRecommendedExtensions,
+  addToRecommendedExtension,
   askNewRunnerSession,
   askAlternativeOutputsAction,
   ASK_ALT_OUTPUTS_ACTION,
@@ -45,7 +45,7 @@ import {
   getCLIUseIntegratedRunme,
   isNotebookTerminalEnabledForCell,
 } from '../../../src/utils/configuration'
-import { RecommendExtensionMessage } from '../../../src/extension/messaging'
+import { RecommendedExtension } from '../../../src/extension/recommendation'
 
 vi.mock('vscode', () => import(path.join(process.cwd(), '__mocks__', 'vscode')))
 vi.mock('vscode-telemetry')
@@ -474,14 +474,14 @@ test('openFileInRunme command multiselect', async () => {
   expect(openFileAsRunmeNotebook).toBeCalledWith(uri2, 1, [uri, uri2])
 })
 
-test('addToRecommendedExtensions command', async () => {
-  const recommendExtensionSpy = vi.spyOn(RecommendExtensionMessage.prototype, 'display')
+test('addToRecommendedExtension command', async () => {
+  const recommendExtensionSpy = vi.spyOn(RecommendedExtension.prototype, 'add')
   const contextMock: ExtensionContext = {
     globalState: {
       get: vi.fn().mockReturnValue(undefined),
       update: vi.fn().mockResolvedValue({}),
     },
   } as any
-  await addToRecommendedExtensions(contextMock)
+  await addToRecommendedExtension(contextMock)
   expect(recommendExtensionSpy).toHaveBeenCalledOnce()
 })

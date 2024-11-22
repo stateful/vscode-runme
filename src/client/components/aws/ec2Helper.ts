@@ -1,20 +1,20 @@
-export function resolveOsUserName(imageName: string) {
+export function resolveOsUserName(imageName: string | null | undefined) {
   if (!imageName) {
     return ''
   }
 
+  const defaultUserName = 'ec2-user'
   const amiPatterns: { [key: string]: string } = {
-    '^(amazon|amzn|al2023)': 'ec2-user',
+    '^(amazon|amzn|al2023|rhel|suse-sles)': defaultUserName,
     '^(ubuntu|centos|redhat|debian)': '\\1', // Use backreference for matched pattern (group 1)
-    '.+': '\\w+',
   }
 
   for (const pattern in amiPatterns) {
-    const match = imageName.match(new RegExp(pattern))
-    if (match) {
-      return match[1] ? amiPatterns[pattern].replace('\\1', match[1]) : amiPatterns[pattern]
+    const match = imageName.toLocaleLowerCase().match(new RegExp(pattern, 'i'))
+    if (match && match[1]) {
+      return amiPatterns[pattern].replace('\\1', match[1])
     }
   }
 
-  return ''
+  return defaultUserName
 }
