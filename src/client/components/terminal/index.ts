@@ -6,13 +6,21 @@ import { ITheme, Terminal as XTermJS } from '@xterm/xterm'
 import { SerializeAddon } from '@xterm/addon-serialize'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import { WebLinksAddon } from '@xterm/addon-web-links'
+import { Observable } from 'rxjs'
+import { debounceTime, distinctUntilChanged, filter, map, share } from 'rxjs/operators'
 
 import { FitAddon, type ITerminalDimensions } from '../../fitAddon'
 import { ClientMessages, RENDERERS, OutputType, WebViews } from '../../../constants'
 import { closeOutput, getContext } from '../../utils'
 import { onClientMessage, postClientMessage } from '../../../utils/messaging'
 import { stripANSI } from '../../../utils/ansi'
-import { APIMethod, FeatureObserver, FeatureName } from '../../../types'
+import {
+  APIMethod,
+  FeatureObserver,
+  FeatureName,
+  CellAnnotations,
+  ClientMessage,
+} from '../../../types'
 import type { TerminalConfiguration } from '../../../utils/configuration'
 import '../closeCellButton'
 import '../copyButton'
@@ -26,6 +34,7 @@ import {
   UpdateCellOutputMutation,
 } from '../../../extension/__generated-platform__/graphql'
 import features from '../../../features'
+import { CellAnnotationsSchema } from '../../../schema'
 
 interface IWindowSize {
   width: number
@@ -462,7 +471,11 @@ export class TerminalView extends LitElement {
 
     const ctx = getContext()
 
-    window.addEventListener('resize', this.#onResizeWindow.bind(this))
+    const dims = new Observable<TerminalDimensions | undefined>((observer) =>
+      window.addEventListener('resize', () => observer.next(this.#getWindowDimensions())),
+    ).pipe(share())
+    this.#subscribeResizeTerminal(dims)
+    this.#subscribeSetTerminalRows(dims)
 
     this.disposables.push(
       onClientMessage(ctx, async (e) => {
@@ -604,7 +617,6 @@ export class TerminalView extends LitElement {
   disconnectedCallback(): void {
     super.disconnectedCallback()
     this.dispose()
-    window.removeEventListener('resize', this.#onResizeWindow)
   }
 
   protected firstUpdated(props: PropertyValues): void {
@@ -730,15 +742,18 @@ export class TerminalView extends LitElement {
     return getComputedStyle(terminalContainer!).getPropertyValue(variableName) ?? undefined
   }
 
-  async #onResizeWindow(): Promise<void> {
+  #getWindowDimensions(): TerminalDimensions | undefined {
     if (!this.fitAddon) {
       return
     }
 
-    const { innerWidth } = window
+    const { innerWidth, innerHeight } = window
 
-    // Prevent adjusting the terminal size if the width remains the same
-    if (Math.abs(this.windowSize.width - innerWidth) <= Number.EPSILON) {
+    // Prevent adjusting the terminal size if width & height remain the same
+    if (
+      Math.abs(this.windowSize.width - innerWidth) <= Number.EPSILON &&
+      Math.abs(this.windowSize.height - innerHeight) <= Number.EPSILON
+    ) {
       return
     }
 
@@ -747,16 +762,74 @@ export class TerminalView extends LitElement {
     const proposedDimensions = this.#resizeTerminal()
 
     if (proposedDimensions) {
+      return convertXTermDimensions(proposedDimensions)
+    }
+  }
+
+  async #subscribeResizeTerminal(
+    proposedDimensions: Observable<TerminalDimensions | undefined>,
+  ): Promise<void> {
+    const debounced$ = proposedDimensions.pipe(
+      filter((x) => !!x),
+      distinctUntilChanged(),
+      debounceTime(100),
+    )
+
+    const sub = debounced$.subscribe(async (terminalDimensions) => {
       const ctx = getContext()
       if (!ctx.postMessage) {
         return
       }
 
+      console.log('resize terminal', terminalDimensions)
+
       await postClientMessage(ctx, ClientMessages.terminalResize, {
         'runme.dev/id': this.id!,
-        terminalDimensions: convertXTermDimensions(proposedDimensions),
+        terminalDimensions,
       })
-    }
+    })
+
+    this.disposables.push({ dispose: () => sub.unsubscribe() })
+  }
+
+  async #subscribeSetTerminalRows(
+    proposedDimensions: Observable<TerminalDimensions | undefined>,
+  ): Promise<void> {
+    const debounced$ = proposedDimensions.pipe(
+      map((x) => x?.rows),
+      filter((x) => !!x),
+      distinctUntilChanged(),
+      debounceTime(100),
+    )
+
+    const sub = debounced$.subscribe(async (rows) => {
+      const ctx = getContext()
+      if (!ctx.postMessage) {
+        return
+      }
+
+      const parseResult = CellAnnotationsSchema.safeParse({
+        'runme.dev/id': this.id!,
+        terminalRows: rows,
+      })
+
+      if (!parseResult.success) {
+        console.error(parseResult.error.errors)
+        return
+      }
+
+      ctx.postMessage(<ClientMessage<ClientMessages.mutateAnnotations>>{
+        type: ClientMessages.mutateAnnotations,
+        output: {
+          annotations: <Partial<CellAnnotations>>{
+            'runme.dev/id': this.id!,
+            terminalRows: rows,
+          },
+        },
+      })
+    })
+
+    this.disposables.push({ dispose: () => sub.unsubscribe() })
   }
 
   async #onFocusWindow(focusTerminal = true): Promise<void> {
