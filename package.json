@@ -213,7 +213,7 @@
         "category": "Runme",
         "title": "Let the Runme team know what you think",
         "icon": "$(feedback)",
-        "shortTitle": "Send Feedback"
+        "shortTitle": "Feedback"
       },
       {
         "command": "runme.surveyShebangComingSoon",
@@ -354,7 +354,7 @@
         "category": "Runme",
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
-        "shortTitle": "Reset Session"
+        "shortTitle": "Reset"
       },
       {
         "command": "runme.runWithPrompts",
