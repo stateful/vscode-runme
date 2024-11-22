@@ -842,6 +842,11 @@
             "default": true,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
           },
+          "runme.terminal.interactiveIsDefault": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to 'true', any cell run will be interactive by default"
+          },
           "runme.terminal.fontSize": {
             "type": [
               "number",

@@ -59,6 +59,7 @@ import {
   getServerRunnerVersion,
   getTLSDir,
   getTLSEnabled,
+  isInteractiveTerminalDefault,
   ServerLifecycleIdentity,
 } from '../utils/configuration'
 
@@ -95,6 +96,7 @@ export function getAnnotations(raw: unknown): CellAnnotations | undefined {
     ...metadata,
     id: metadata.id || metadata['runme.dev/id'],
     name: metadata.name || metadata['runme.dev/name'],
+    interactive: metadata.interactive || isInteractiveTerminalDefault(),
   }
 
   const parseResult = SafeCellAnnotationsSchema.safeParse(schema)

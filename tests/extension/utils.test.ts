@@ -32,12 +32,20 @@ import {
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
+import { isInteractiveTerminalDefault } from '../../src/utils/configuration'
 
 vi.mock('simple-git')
 vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
+vi.mock('../../src/utils/configuration', async () => {
+  const actual = (await vi.importActual('../../src/utils/configuration')) as any
+  return {
+    ...actual,
+    isInteractiveTerminalDefault: vi.fn(),
+  }
+})
 
 vi.mock('vscode', async () => {
   const { ulid } = (await vi.importActual('ulidx')) as typeof import('ulidx')
@@ -95,12 +103,20 @@ afterAll(() => {
 beforeEach(() => {
   vi.mocked(workspace.getConfiguration).mockClear()
   vi.mocked(commands.executeCommand).mockClear()
+  vi.mocked(isInteractiveTerminalDefault).mockReturnValue(true)
 })
 
 test('isInteractive', () => {
   expect(getAnnotations({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
   expect(getAnnotations({ metadata: { interactive: 'false' } } as any).interactive).toBe(false)
   expect(getAnnotations({ metadata: {} } as any).interactive).toBe(true)
+})
+
+test('interactiveIsDefaultFalse', () => {
+  vi.mocked(isInteractiveTerminalDefault).mockReturnValue(false)
+  expect(getAnnotations({ metadata: { interactive: 'true' } } as any).interactive).toBe(true)
+  expect(getAnnotations({ metadata: { interactive: 'false' } } as any).interactive).toBe(false)
+  expect(getAnnotations({ metadata: {} } as any).interactive).toBe(false)
 })
 
 test('getTerminalByCell', () => {
