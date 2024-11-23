@@ -38,6 +38,7 @@ const notebookTerminalSchema = {
   backgroundTask: z.boolean().default(true),
   nonInteractive: z.boolean().default(false),
   interactive: z.boolean().default(true),
+  interactiveIsDefault: z.boolean().default(true),
   fontSize: z.number().default(editorSettings.get<number>('fontSize', 10)),
   fontFamily: z
     .string()
@@ -264,6 +265,10 @@ const getServerRunnerVersion = (): ServerRunnerVersion => {
   return getServerConfigurationValue<ServerRunnerVersion>('runnerVersion', 'v1')
 }
 
+const isInteractiveTerminalDefault = (): boolean => {
+  return getRunmeTerminalConfigurationValue('interactiveIsDefault', true)
+}
+
 const isNotebookTerminalFeatureEnabled = (
   featureName: keyof typeof notebookTerminalSchema,
 ): boolean => {
@@ -478,6 +483,7 @@ export {
   getServerConfigurationValue,
   getTLSDir,
   getTLSEnabled,
+  isInteractiveTerminalDefault,
   isNotebookTerminalEnabledForCell,
   isNotebookTerminalFeatureEnabled,
   isPlatformAuthEnabled,

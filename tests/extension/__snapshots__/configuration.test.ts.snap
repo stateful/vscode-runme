@@ -10,6 +10,7 @@ exports[`Configuration > should get nullish from font family 1`] = `
   "fontFamily": undefined,
   "fontSize": undefined,
   "interactive": true,
+  "interactiveIsDefault": true,
   "nonInteractive": false,
   "rows": 10,
   "scrollback": undefined,

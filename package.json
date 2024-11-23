@@ -213,7 +213,7 @@
         "category": "Runme",
         "title": "Let the Runme team know what you think",
         "icon": "$(feedback)",
-        "shortTitle": "Send Feedback"
+        "shortTitle": "Feedback"
       },
       {
         "command": "runme.surveyShebangComingSoon",
@@ -354,7 +354,7 @@
         "category": "Runme",
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
-        "shortTitle": "Reset Session"
+        "shortTitle": "Reset"
       },
       {
         "command": "runme.runWithPrompts",
@@ -841,6 +841,11 @@
             "scope": "machine",
             "default": true,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
+          },
+          "runme.terminal.interactiveIsDefault": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to 'true', any cell run will be interactive by default"
           },
           "runme.terminal.fontSize": {
             "type": [

@@ -52,7 +52,11 @@ import {
 } from '../constants'
 import { API } from '../utils/deno/api'
 import { postClientMessage } from '../utils/messaging'
-import { getNotebookExecutionOrder, registerExtensionEnvVarsMutation } from '../utils/configuration'
+import {
+  getNotebookExecutionOrder,
+  getNotebookTerminalConfigurations,
+  registerExtensionEnvVarsMutation,
+} from '../utils/configuration'
 import features, { FEATURES_CONTEXT_STATE_KEY } from '../features'
 
 import getLogger from './logger'
@@ -432,6 +436,12 @@ export class Kernel implements Disposable {
           ...editCell.metadata,
           ...payload.output.annotations,
         }
+
+        const { rows } = getNotebookTerminalConfigurations(editCell.notebook.metadata)
+        if (rows && newMetadata?.['terminalRows'] === rows) {
+          delete newMetadata['terminalRows']
+        }
+
         const notebookEdit = NotebookEdit.updateCellMetadata(editCell.index, newMetadata)
 
         edit.set(editCell.notebook.uri, [notebookEdit])
