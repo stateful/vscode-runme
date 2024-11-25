@@ -45,24 +45,6 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     )
   }
 
-  // RunmeTreeProvider
-  async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
-    const doc = Uri.file(`${folderPath}/${file}`)
-    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
-
-    if (cellIndex === undefined) {
-      return
-    }
-
-    const notebookEditor = window.visibleNotebookEditors.find((editor) => {
-      return editor.notebook.uri.path === doc.path
-    })
-
-    if (notebookEditor && this.kernel) {
-      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(cellIndex))
-    }
-  }
-
   public get includeAllTasks(): boolean {
     return this.allowUnnamed
   }
@@ -98,6 +80,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   getTreeItem(element: RunmeFile): TreeItem {
+    console.log(`Node contextValue: ${element.contextValue}`)
     return element
   }
 
@@ -227,32 +210,91 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       const tooltip = lines.length > 3 ? [...lines.slice(0, 3), '...'].join('\n') : lines.join('\n')
 
       foundTasks.push(
-        new RunmeFile(
-          `${name}${!excludeFromRunAll ? '*' : ''}`,
-          {
-            description: `${lines.at(0)}`,
-            tooltip: tooltip,
-            resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
-            collapsibleState: TreeItemCollapsibleState.None,
-            onSelectedCommand: {
-              arguments: [
-                {
-                  file: basename(documentPath),
-                  folderPath: dirname(documentPath),
-                  cellIndex: cellIndex,
-                },
-              ],
-              command: 'runme.openRunmeFile',
-              title: name,
-            },
-            contextValue: 'markdown-file',
+        new RunmeFile(`${name}${!excludeFromRunAll ? '*' : ''}`, {
+          description: `${lines.at(0)}`,
+          tooltip: tooltip,
+          cellIndex: cellIndex,
+          documentPath: documentPath,
+          parent: parent,
+          onSelectedCommand: {
+            arguments: [
+              {
+                file: basename(documentPath),
+                folderPath: dirname(documentPath),
+                cellIndex: cellIndex,
+              },
+            ],
+            command: 'runme.openRunmeFile',
+            title: name,
           },
-          parent,
-        ),
+          resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
+          collapsibleState: TreeItemCollapsibleState.None,
+          contextValue: 'markdownCell',
+        }),
       )
     }
 
     return Promise.resolve(foundTasks)
+  }
+
+  async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
+    const doc = Uri.file(`${folderPath}/${file}`)
+    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
+
+    if (cellIndex === undefined) {
+      return
+    }
+
+    const notebookEditor = window.visibleNotebookEditors.find((editor) => {
+      return editor.notebook.uri.path === doc.path
+    })
+
+    if (notebookEditor && this.kernel) {
+      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(cellIndex))
+    }
+  }
+
+  async getNoteboookEditor(runmeFile: RunmeFile) {
+    if (!runmeFile.documentPath) {
+      return
+    }
+
+    if (runmeFile.cellIndex === undefined) {
+      return
+    }
+
+    const file = basename(runmeFile.documentPath)
+    const folderPath = dirname(runmeFile.documentPath)
+    const docUri = Uri.file(`${folderPath}/${file}`)
+
+    let notebookEditor = window.visibleNotebookEditors.find((editor) => {
+      return editor.notebook.uri.path === docUri.path
+    })
+
+    if (!notebookEditor) {
+      await commands.executeCommand('vscode.openWith', docUri, Kernel.type)
+      notebookEditor = window.visibleNotebookEditors.find((editor) => {
+        return editor.notebook.uri.path === docUri.path
+      })
+    }
+
+    return notebookEditor
+  }
+
+  async runCell(runmeFile: RunmeFile) {
+    const notebookEditor = await this.getNoteboookEditor(runmeFile)
+    if (runmeFile.cellIndex !== undefined && notebookEditor) {
+      await this.kernel.executeAndFocusNotebookCell(
+        notebookEditor.notebook.cellAt(runmeFile.cellIndex),
+      )
+    }
+  }
+
+  async openCell(runmeFile: RunmeFile) {
+    const notebookEditor = await this.getNoteboookEditor(runmeFile)
+    if (runmeFile.cellIndex !== undefined && notebookEditor) {
+      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(runmeFile.cellIndex))
+    }
   }
 
   dispose() {

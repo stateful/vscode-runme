@@ -425,6 +425,16 @@
         "title": "Open Cloud Panel",
         "category": "Runme",
         "description": "Open Cloud Panel"
+      },
+      {
+        "command": "runme.runSelectedCell",
+        "title": "Run",
+        "icon": "$(play)"
+      },
+      {
+        "command": "runme.openSelectedCell",
+        "title": "Open",
+        "icon": "$(preferences-open-settings)"
       }
     ],
     "menus": {
@@ -616,6 +626,18 @@
           "command": "runme.runWithPrompts",
           "group": "navigation",
           "when": "notebookType == runme && notebookMode != sessionOutputs && notebookCellType == 'code'"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "runme.runSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
+        },
+        {
+          "command": "runme.openSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
         }
       ]
     },

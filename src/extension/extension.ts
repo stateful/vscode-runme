@@ -141,6 +141,21 @@ export class RunmeExtension {
       await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
       treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
+
+      if (treeViewer.runCell) {
+        context.subscriptions.push(
+          RunmeExtension.registerCommand(
+            'runme.runSelectedCell',
+            treeViewer.runCell.bind(treeViewer),
+          ),
+        )
+      }
+      if (treeViewer.openCell) {
+        RunmeExtension.registerCommand(
+          'runme.openSelectedCell',
+          treeViewer.openCell.bind(treeViewer),
+        )
+      }
     } else {
       treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     }

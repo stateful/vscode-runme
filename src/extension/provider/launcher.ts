@@ -27,6 +27,9 @@ interface IRunmeFileProps {
   description?: string
   iconPath?: string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon
   resourceUri?: Uri
+  cellIndex?: number
+  parent?: string
+  documentPath?: string
 }
 
 interface TreeFile {
@@ -43,10 +46,13 @@ let i = 0
 export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
 
 export class RunmeFile extends TreeItem {
+  public readonly cellIndex: number | undefined
+  public readonly parent?: string
+  public readonly documentPath?: string
+
   constructor(
     public label: string,
     options: IRunmeFileProps,
-    public parent?: string,
   ) {
     super(label, options.collapsibleState)
 
@@ -55,6 +61,9 @@ export class RunmeFile extends TreeItem {
     this.contextValue = options.contextValue
     this.description = options.description
     this.resourceUri = options.resourceUri
+    this.cellIndex = options.cellIndex
+    this.parent = options.parent
+    this.documentPath = options.documentPath
 
     if (options.iconPath) {
       this.iconPath = options.iconPath
@@ -76,6 +85,8 @@ export interface RunmeTreeProvider extends TreeDataProvider<RunmeFile>, Disposab
   collapseAll(): Promise<void>
   expandAll(): Promise<void>
   openFile(options: OpenFileOptions): Promise<void>
+  openCell?(runmeFile: RunmeFile): Promise<void>
+  runCell?(runmeFile: RunmeFile): Promise<void>
 }
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
