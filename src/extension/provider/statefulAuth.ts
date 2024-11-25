@@ -66,9 +66,6 @@ const passthrough = (value: any, resolve: (value?: any) => void) => resolve(valu
 type SessionsChangeEvent = AuthenticationProviderAuthenticationSessionsChangeEvent
 
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
-  // used as compound key in a hash-table; does not contain sensitive data
-  static #insensitiveHashedApiUrl: string
-
   static #pendingStates: string[] = []
   static #codeVerfifiers = new Map<string, string>()
   static #scopes = new Map<string, string[]>()
@@ -107,11 +104,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     this.#context = context
     this.#kernel = kernel
     this.#uriHandler = uriHandler
-
-    this.#insensitiveHashedApiUrl = crypto
-      .createHash('sha1')
-      .update(getRunmeAppUrl(['api']))
-      .digest('hex')
 
     context.subscriptions.push(this.instance)
   }
@@ -593,8 +585,16 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return currentTime < oneHourBeforeExpiration
   }
 
-  private static get sessionSecretKey() {
-    return `${SESSIONS_SECRET_KEY}.${this.#insensitiveHashedApiUrl}`
+  public static get insensitiveHashedApiUrl() {
+    // used as compound key in a hash-table; does not contain sensitive data
+    return crypto
+      .createHash('sha1')
+      .update(getRunmeAppUrl(['api']))
+      .digest('hex')
+  }
+
+  public static get sessionSecretKey() {
+    return `${SESSIONS_SECRET_KEY}.${this.insensitiveHashedApiUrl}`
   }
 
   private static async getAllSessions(): Promise<StatefulAuthSession[]> {

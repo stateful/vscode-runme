@@ -25,6 +25,7 @@ import {
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
+import { StatefulAuthSession } from '../../provider/statefulAuth'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -42,7 +43,11 @@ export default async function saveCellExecution(
     const silent = forceLogin ? undefined : true
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
-    const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
+    const session = (await getPlatformAuthSession(
+      createIfNone && forceLogin,
+      silent,
+    )) as StatefulAuthSession
+
     if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
