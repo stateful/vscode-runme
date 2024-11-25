@@ -197,7 +197,10 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         continue
       }
 
-      const cell = notebook.cells.find((cell) => cell.metadata?.['runme.dev/name'] === name)!
+      const cell = notebook.cells.find((cell) => cell.metadata?.['runme.dev/name'] === name)
+      if (!cell) {
+        continue
+      }
 
       const { excludeFromRunAll } = getAnnotations(cell.metadata)
       const cellText = 'value' in cell ? cell.value : ''
