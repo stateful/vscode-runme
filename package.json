@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.9.8-edge.2",
+  "version": "3.9.10",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -213,7 +213,7 @@
         "category": "Runme",
         "title": "Let the Runme team know what you think",
         "icon": "$(feedback)",
-        "shortTitle": "Send Feedback"
+        "shortTitle": "Feedback"
       },
       {
         "command": "runme.surveyShebangComingSoon",
@@ -354,7 +354,7 @@
         "category": "Runme",
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
-        "shortTitle": "Reset Session"
+        "shortTitle": "Reset"
       },
       {
         "command": "runme.runWithPrompts",
@@ -842,6 +842,11 @@
             "default": true,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
           },
+          "runme.terminal.interactiveIsDefault": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to 'true', any cell run will be interactive by default"
+          },
           "runme.terminal.fontSize": {
             "type": [
               "number",
@@ -1112,7 +1117,7 @@
         {
           "id": "runme.cloud",
           "type": "webview",
-          "name": "Commands",
+          "name": "Cloud",
           "visibility": "visible"
         },
         {
@@ -1354,7 +1359,7 @@
     "tangle": "^4.0.0",
     "ulidx": "^2.4.1",
     "uuid": "^11.0.3",
-    "vscode-telemetry": "^1.0.2",
+    "vscode-telemetry": "^2.0.0",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"
   }

@@ -88,6 +88,9 @@ export const AnnotationSchema = {
         return numeric
       }
     }
+    if (typeof subject === 'number' && Number.isFinite(subject)) {
+      return subject
+    }
 
     return undefined
   }, z.number().int().positive().optional()),
