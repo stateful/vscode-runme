@@ -64,10 +64,10 @@ export const AnnotationSchema = {
     if (typeof subject === 'boolean' && subject) {
       return ResolveProgramRequest_Mode.UNSPECIFIED
     }
-    if (typeof subject === 'string' && ['false', 'no'].includes(subject.toLowerCase())) {
+    if (typeof subject === 'string' && ['false', 'no', 'never'].includes(subject.toLowerCase())) {
       return ResolveProgramRequest_Mode.SKIP_ALL
     }
-    if (typeof subject === 'string' && ['true', 'yes'].includes(subject.toLowerCase())) {
+    if (typeof subject === 'string' && ['true', 'yes', 'always'].includes(subject.toLowerCase())) {
       return ResolveProgramRequest_Mode.PROMPT_ALL
     }
     if (typeof subject === 'string' && ['', 'auto'].includes(subject.toLowerCase())) {
