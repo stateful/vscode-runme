@@ -239,7 +239,6 @@ export class RunmeTaskProvider implements TaskProvider {
     const notebook = from(serializer.deserializeNotebook(mdBuffer, token))
     const cell = notebook.pipe(
       map((n) => {
-        console.log(documentPath)
         return n.cells.find(
           (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
         )!
