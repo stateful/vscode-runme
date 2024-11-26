@@ -143,10 +143,11 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       prevDir = relativePath
       foundTasks.push(
         new RunmeFile(this.resolveLabel(relativePath), {
+          documentPath: documentPath,
           collapsibleState: this.defaultItemState,
           lightIcon: 'tree-notebook.gif',
           darkIcon: 'tree-notebook.gif',
-          contextValue: 'folder',
+          contextValue: 'markdownNotebook',
         }),
       )
     }
@@ -240,6 +241,10 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     return Promise.resolve(foundTasks)
   }
 
+  async openNotebook(runmeFile: RunmeFile) {
+    await this.getNoteboookEditor(runmeFile, false)
+  }
+
   async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
     const doc = Uri.file(`${folderPath}/${file}`)
     await commands.executeCommand('vscode.openWith', doc, Kernel.type)
@@ -257,12 +262,12 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     }
   }
 
-  async getNoteboookEditor(runmeFile: RunmeFile) {
+  async getNoteboookEditor(runmeFile: RunmeFile, requireCellIndex = true) {
     if (!runmeFile.documentPath) {
       return
     }
 
-    if (runmeFile.cellIndex === undefined) {
+    if (requireCellIndex && runmeFile.cellIndex === undefined) {
       return
     }
 

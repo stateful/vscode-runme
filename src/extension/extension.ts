@@ -142,6 +142,15 @@ export class RunmeExtension {
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
       treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
 
+      if (treeViewer.openNotebook) {
+        context.subscriptions.push(
+          RunmeExtension.registerCommand(
+            'runme.openNotebook',
+            treeViewer.openNotebook.bind(treeViewer),
+          ),
+        )
+      }
+
       if (treeViewer.runCell) {
         context.subscriptions.push(
           RunmeExtension.registerCommand(

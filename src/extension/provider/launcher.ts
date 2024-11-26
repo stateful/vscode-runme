@@ -85,6 +85,7 @@ export interface RunmeTreeProvider extends TreeDataProvider<RunmeFile>, Disposab
   collapseAll(): Promise<void>
   expandAll(): Promise<void>
   openFile(options: OpenFileOptions): Promise<void>
+  openNotebook?(runmeFile: RunmeFile): Promise<void>
   openCell?(runmeFile: RunmeFile): Promise<void>
   runCell?(runmeFile: RunmeFile): Promise<void>
 }
