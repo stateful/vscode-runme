@@ -9,7 +9,6 @@ import {
   env,
   Uri,
   NotebookCell,
-  authentication,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -94,6 +93,7 @@ import { EnvironmentManager } from './environment/manager'
 import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
+import AuthSessionChangeHandler from './authSessionChangeHandler'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -106,6 +106,12 @@ export class RunmeExtension {
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
 
     StatefulAuthProvider.initialize(context, kernel, uriHandler)
+    const authSessionChangeHandler = AuthSessionChangeHandler.instance
+
+    authSessionChangeHandler.initialize(context)
+    context.subscriptions.push({
+      dispose: () => authSessionChangeHandler.dispose(),
+    })
 
     const server = new KernelServer(
       context.extensionUri,
@@ -399,7 +405,7 @@ export class RunmeExtension {
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.CELL),
       ),
 
-      RunmeExtension.registerCommand(
+      commands.registerCommand(
         'runme.lifecycleIdentitySelection',
         async (identity?: RunmeIdentity) => {
           if (identity === undefined) {
@@ -412,6 +418,12 @@ export class RunmeExtension {
           if (current === identity) {
             return
           }
+
+          TelemetryReporter.sendTelemetryEvent('extension.command', {
+            command: 'runme.lifecycleIdentitySelection',
+          })
+
+          console.log(`******* runme.lifecycleIdentitySelection ${identity}`)
 
           await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
 
@@ -497,8 +509,43 @@ export class RunmeExtension {
       })
     }
 
-    authentication.onDidChangeSessions((e) => {
-      console.log('onDidChangeSessions ' + e.provider.id)
+    // const onChangeSession = (e: AuthenticationSessionsChangeEvent) => {
+    //   console.log(
+    //     `******* Extension/authentication.onDidChangeSessions ${e.provider.id}`,
+    //   )
+
+    //   if (
+    //     StatefulAuthProvider.instance &&
+    //     kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
+    //     e.provider.id === AuthenticationProviders.Stateful
+    //   ) {
+    //     StatefulAuthProvider.getSession().then(async (session) => {
+    //       if (session) {
+    //         await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
+    //       } else {
+    //         const settingsDefault = getServerLifecycleIdentity()
+    //         await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
+    //         kernel.emitPanelEvent('runme.cloud', 'onCommand', {
+    //           name: 'signOut',
+    //           panelId: 'runme.cloud',
+    //         })
+    //       }
+    //       kernel.updateFeatureContext('statefulAuth', !!session)
+    //     })
+    //   }
+    //   if (
+    //     kernel.isFeatureOn(FeatureName.Gist) &&
+    //     e.provider.id === AuthenticationProviders.GitHub
+    //   ) {
+    //     getGithubAuthSession(false, true).then((session) => {
+    //       kernel.updateFeatureContext('githubAuth', !!session)
+    //     })
+    //   }
+    // }
+
+    // context.subscriptions.push(authentication.onDidChangeSessions(onChangeSession))
+
+    authSessionChangeHandler.addListener((e) => {
       if (
         StatefulAuthProvider.instance &&
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
@@ -518,11 +565,14 @@ export class RunmeExtension {
           kernel.updateFeatureContext('statefulAuth', !!session)
         })
       }
+    })
+
+    authSessionChangeHandler.addListener((e) => {
       if (
         kernel.isFeatureOn(FeatureName.Gist) &&
         e.provider.id === AuthenticationProviders.GitHub
       ) {
-        getGithubAuthSession(false).then((session) => {
+        getGithubAuthSession(false, true).then((session) => {
           kernel.updateFeatureContext('githubAuth', !!session)
         })
       }

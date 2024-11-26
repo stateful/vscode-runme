@@ -80,6 +80,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     { promise: Promise<TokenInformation>; cancel: EventEmitter<void> }
   >()
 
+  readonly #onSessionChange = StatefulAuthProvider.registerDisposable(
+    new EventEmitter<SessionsChangeEvent>(),
+  )
+
   static #instance: StatefulAuthProvider
 
   public static get instance(): StatefulAuthProvider {
@@ -89,9 +93,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         AuthenticationProviders.Stateful,
         AUTH_NAME,
         this.instance,
-        {
-          supportsMultipleAccounts: false,
-        },
       )
 
       StatefulAuthProvider.registerDisposable(disposable)
@@ -107,10 +108,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     context.subscriptions.push(this.instance)
   }
-
-  readonly #onSessionChange = StatefulAuthProvider.registerDisposable(
-    new EventEmitter<SessionsChangeEvent>(),
-  )
 
   static async getSession() {
     const sessions = await this.instance.getSessions(['profile'])
@@ -240,11 +237,14 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       }
 
       await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
-      await StatefulAuthProvider.persistSessions([session], {
+
+      const persist = StatefulAuthProvider.persistSessions([session], {
         added: [session],
-        removed: [],
-        changed: [],
+        removed: undefined,
+        changed: undefined,
       })
+      await persist
+
       return session
     } catch (e) {
       window.showErrorMessage(`Sign in failed: ${e}`)
@@ -271,9 +271,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     sessions.splice(sessionIdx, 1)
 
     await StatefulAuthProvider.persistSessions(sessions, {
-      added: [],
+      added: undefined,
       removed: [session],
-      changed: [],
+      changed: undefined,
     })
   }
 
@@ -295,8 +295,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       const session = await this.buildSession(token, payload)
       await this.persistSessions([session], {
         added: [session],
-        removed: [],
-        changed: [],
+        removed: undefined,
+        changed: undefined,
       })
       await this.deleteAuthTokenFile(authTokenUri)
       return session
@@ -617,11 +617,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
   private static async persistSessions(
     sessions: StatefulAuthSession[],
-    changes: {
-      added: StatefulAuthSession[]
-      removed: StatefulAuthSession[]
-      changed: StatefulAuthSession[]
-    },
+    changes: SessionsChangeEvent,
   ) {
     await this.#context.secrets.store(this.sessionSecretKey, JSON.stringify(sessions))
     this.instance.#onSessionChange.fire(changes)

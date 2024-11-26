@@ -74,6 +74,7 @@ import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
 import { RunmeIdentity } from './grpc/serializerTypes'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 declare var globalThis: any
 
@@ -559,15 +560,28 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
   )
 }
 
-export function getGithubAuthSession(createIfNone: boolean = true) {
-  return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
-    createIfNone,
-  })
+export async function getGithubAuthSession(createIfNone: boolean = true, silent?: boolean) {
+  const scope = ['user:email']
+  const options: AuthenticationGetSessionOptions = {}
+
+  if (silent !== undefined) {
+    options.silent = silent
+  } else {
+    options.createIfNone = createIfNone
+  }
+
+  return await authentication.getSession(AuthenticationProviders.GitHub, scope, options)
 }
 
 export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
   const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
+
+  const existenSession = await StatefulAuthProvider.getSession()
+
+  if (existenSession) {
+    return existenSession
+  }
 
   if (silent !== undefined) {
     options.silent = silent
