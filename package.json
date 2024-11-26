@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.9.10",
+  "version": "3.10.0-edge.0",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -425,6 +425,21 @@
         "title": "Open Cloud Panel",
         "category": "Runme",
         "description": "Open Cloud Panel"
+      },
+      {
+        "command": "runme.openNotebook",
+        "title": "Open",
+        "icon": "$(preferences-open-settings)"
+      },
+      {
+        "command": "runme.runSelectedCell",
+        "title": "Run",
+        "icon": "$(play)"
+      },
+      {
+        "command": "runme.openSelectedCell",
+        "title": "Open",
+        "icon": "$(preferences-open-settings)"
       }
     ],
     "menus": {
@@ -616,6 +631,23 @@
           "command": "runme.runWithPrompts",
           "group": "navigation",
           "when": "notebookType == runme && notebookMode != sessionOutputs && notebookCellType == 'code'"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "runme.openNotebook",
+          "when": "view == runme.launcher && viewItem == markdownNotebook",
+          "group": "inline"
+        },
+        {
+          "command": "runme.runSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
+        },
+        {
+          "command": "runme.openSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
         }
       ]
     },
