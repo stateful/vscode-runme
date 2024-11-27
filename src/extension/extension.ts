@@ -556,6 +556,9 @@ export class RunmeExtension {
     // only ever enabled in hosted playground
     if (features.isOnInContextState(FeatureName.HostedPlayground)) {
       await features.addTrustedDomains()
+    }
+
+    if (features.isOnInContextState(FeatureName.OpenTerminalOnStartup)) {
       await features.autoOpenTerminal()
     }
   }

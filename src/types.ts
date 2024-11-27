@@ -773,6 +773,7 @@ export enum FeatureName {
   RequireStatefulAuth = 'RequireStatefulAuth',
   CopySelectionToClipboard = 'CopySelectionToClipboard',
   NewTreeProvider = 'NewTreeProvider',
+  OpenTerminalOnStartup = 'OpenTerminalOnStartup',
   HostedPlayground = 'HostedPlayground',
   RecommendExtension = 'RecommendExtension',
 }
