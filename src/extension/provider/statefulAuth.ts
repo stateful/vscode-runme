@@ -20,7 +20,7 @@ import fetch from 'node-fetch'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
 import { getAuthTokenPath, getDeleteAuthToken, getRunmeAppUrl } from '../../utils/configuration'
-import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN } from '../../constants'
+import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN, TELEMETRY_EVENTS } from '../../constants'
 import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
 import getLogger from '../logger'
@@ -574,14 +574,22 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   showLoginNotification() {
-    const openDashboardStr = 'Open Dashboard'
+    if (!this.context.globalState.get<boolean>(TELEMETRY_EVENTS.OpenWorkspace, true)) {
+      return
+    }
+
+    const openWorkspace = 'Open Workspace'
+    const dontAskAgain = "Don't ask again"
+
     window
-      .showInformationMessage('Logged into the Stateful Platform', openDashboardStr)
+      .showInformationMessage('Logged into the Stateful Cloud', openWorkspace, dontAskAgain)
       .then((answer) => {
-        if (answer === openDashboardStr) {
+        if (answer === openWorkspace) {
           const dashboardUri = getRunmeAppUrl(['app'])
           const uri = Uri.parse(dashboardUri)
           env.openExternal(uri)
+        } else if (answer === dontAskAgain) {
+          this.context.globalState.update(TELEMETRY_EVENTS.OpenWorkspace, false)
         }
       })
   }

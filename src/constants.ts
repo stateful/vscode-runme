@@ -1119,6 +1119,7 @@ export enum TELEMETRY_EVENTS {
   NotebookGist = 'runme.notebookGist',
   CellGist = 'runme.cellGist',
   ShellWarning = 'extension.shellWarning',
+  OpenWorkspace = 'cloud.OpenWorkspace',
 }
 
 export enum WebViews {

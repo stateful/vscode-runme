@@ -8,33 +8,15 @@ import {
   Uri,
   CancellationTokenSource,
   NotebookData,
-  NotebookCell,
-  NotebookCellData,
   commands,
   window,
   EventEmitter,
+  tasks as vscodeTasks,
+  Task,
 } from 'vscode'
-import { GrpcTransport } from '@protobuf-ts/grpc-transport'
-import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
-import {
-  firstValueFrom,
-  from,
-  isObservable,
-  lastValueFrom,
-  map,
-  Observable,
-  of,
-  toArray,
-} from 'rxjs'
 
-import { initProjectClient, ProjectServiceClient, ReadyPromise } from '../grpc/client'
-import KernelServer from '../server/kernelServer'
-import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
-import { Serializer } from '../../types'
-import { RunmeIdentity } from '../grpc/serializerTypes'
 import { asWorkspaceRelativePath, getAnnotations } from '../utils'
 import { Kernel } from '../kernel'
-import type { IRunner } from '../runner'
 import getLogger from '../logger'
 import { SerializerBase } from '../serializer'
 import { LANGID_AND_EXTENSIONS } from '../../constants'
@@ -44,75 +26,23 @@ import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
 const logger = getLogger('LauncherBeta')
 
-type LoadStream = ServerStreamingCall<LoadRequest, LoadResponse>
-
-type ProjectTask = LoadEventFoundTask
-
-type TaskNotebook = NotebookData | Serializer.Notebook
-
-type TaskCell = NotebookCell | NotebookCellData | Serializer.Cell
-
-/**
- * used to force VS Code update the tree view when user expands/collapses all
- * see https://github.com/microsoft/vscode/issues/172479
- */
-/* eslint-disable-next-line */
-let sauceCount = 0
-
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
   private allowUnnamed = false
-  private tasks: Promise<ProjectTask[]>
-  private ready: ReadyPromise
-  private client: ProjectServiceClient | undefined
-  private defaultItemState = TreeItemCollapsibleState.Expanded
-  private serverReadyListener: Disposable | undefined
+  private defaultItemState = TreeItemCollapsibleState.Collapsed
   private _onDidChangeTreeData = new EventEmitter<RunmeFile | undefined>()
+  private notebooks: RunmeFile[] = []
 
   constructor(
     private kernel: Kernel,
-    private server: KernelServer,
     private serializer: SerializerBase,
-    private workspaceRoot?: string | undefined,
-    private runner?: IRunner,
   ) {
     const watcher = workspace.createFileSystemWatcher(GLOB_PATTERN, false, true, false)
-
-    this.serverReadyListener = this.server.onTransportReady(({ transport }) =>
-      this.initProjectClient(transport),
-    )
-
-    this.ready = new Promise((resolve) => {
-      const disposable = server.onTransportReady(() => {
-        disposable.dispose()
-        resolve()
-      })
-    })
-
-    this.tasks = lastValueFrom(this.loadProjectTasks())
 
     this.#disposables.push(
       watcher.onDidCreate((file) => logger.info('onDidCreate: ', file.fsPath)),
       watcher.onDidDelete((file) => logger.info('onDidDelete: ', file.fsPath)),
     )
-  }
-
-  // RunmeTreeProvider
-  async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
-    const doc = Uri.file(`${folderPath}/${file}`)
-    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
-
-    if (cellIndex === undefined) {
-      return
-    }
-
-    const notebookEditor = window.visibleNotebookEditors.find((editor) => {
-      return editor.notebook.uri.path === doc.path
-    })
-
-    if (notebookEditor && this.kernel) {
-      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(cellIndex))
-    }
   }
 
   public get includeAllTasks(): boolean {
@@ -121,12 +51,14 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   async includeUnnamed() {
     this.allowUnnamed = true
+    this.notebooks = []
     await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
     this._onDidChangeTreeData.fire(undefined)
   }
 
   async excludeUnnamed() {
     this.allowUnnamed = false
+    this.notebooks = []
     await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
     this._onDidChangeTreeData.fire(undefined)
   }
@@ -148,31 +80,58 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   getTreeItem(element: RunmeFile): TreeItem {
+    console.log(`Node contextValue: ${element.contextValue}`)
     return element
   }
 
   async getChildren(element?: RunmeFile | undefined): Promise<RunmeFile[]> {
-    const allTasks = await this.tasks
-
     if (!element) {
       /**
        * we need to tweak the folder name to force VS Code re-render the tree view
        * see https://github.com/microsoft/vscode/issues/172479
        */
-      ++sauceCount
-      return Promise.resolve(await this.getNotebooks(allTasks))
+      if (this.notebooks.length) {
+        return this.notebooks.reduce((acc: RunmeFile[], notebook: RunmeFile) => {
+          if (!notebook.parent) {
+            acc.push({
+              ...notebook,
+              collapsibleState: this.defaultItemState,
+              label: this.resolveLabel(notebook.label),
+            })
+          }
+          return acc
+        }, [])
+      }
+
+      const tasks = await vscodeTasks.fetchTasks({ type: 'runme' })
+      const notebooks = await this.getNotebooks(tasks)
+      this.notebooks = [...notebooks]
+
+      const cellsPromises = this.notebooks.map((element) => this.getCells(tasks, element))
+
+      const cells = await Promise.all(cellsPromises)
+      this.notebooks.push(...cells.flat())
+
+      return notebooks
     }
 
-    return Promise.resolve(await this.getCells(allTasks, element))
+    return this.notebooks.filter((f) => f.parent === element.label.trim())
   }
 
-  async getNotebooks(tasks: LoadEventFoundTask[]): Promise<RunmeFile[]> {
+  resolveLabel(relativePath: string) {
+    return `${relativePath.trim()}${this.defaultItemState === 1 ? ' ' : ''}`
+  }
+
+  getNotebooks(tasks: Task[]): RunmeFile[] {
     const foundTasks: RunmeFile[] = []
     let prevDir: string | undefined
 
     for (const task of tasks) {
-      const { documentPath } = task
+      const { definition } = task
+      const fileUri = definition.fileUri as Uri
+      const documentPath = fileUri.path
       const { outside, relativePath } = asWorkspaceRelativePath(documentPath)
+
       if (outside) {
         continue
       }
@@ -183,11 +142,12 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
       prevDir = relativePath
       foundTasks.push(
-        new RunmeFile(`${relativePath}${sauceCount % 2 ? ' ' : ''}`, {
+        new RunmeFile(this.resolveLabel(relativePath), {
+          documentPath: documentPath,
           collapsibleState: this.defaultItemState,
           lightIcon: 'tree-notebook.gif',
           darkIcon: 'tree-notebook.gif',
-          contextValue: 'folder',
+          contextValue: 'markdownNotebook',
         }),
       )
     }
@@ -195,21 +155,26 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     return foundTasks
   }
 
-  async getCells(tasks: LoadEventFoundTask[], element: RunmeFile): Promise<RunmeFile[]> {
+  async getCells(tasks: Task[], element: RunmeFile): Promise<RunmeFile[]> {
     const foundTasks: RunmeFile[] = []
-
+    const parent = element.label.trim()
     let mdBuffer: Uint8Array
     let prevFile: string | undefined
-    let notebook: Observable<NotebookData> | undefined
+    let notebook: NotebookData | undefined
 
     for (const task of tasks) {
-      const { documentPath, name, id, isNameGenerated } = task
+      const {
+        name,
+        definition: { fileUri, isNameGenerated },
+      } = task
+      const documentPath = fileUri?.path
       const { outside, relativePath } = asWorkspaceRelativePath(documentPath)
+
       if (outside || (!this.allowUnnamed && isNameGenerated)) {
         continue
       }
 
-      if (element.label.trimEnd() !== relativePath) {
+      if (parent !== relativePath) {
         continue
       }
 
@@ -226,31 +191,23 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         }
 
         const token = new CancellationTokenSource().token
-        notebook = from(this.serializer.deserializeNotebook(mdBuffer, token))
+        notebook = await this.serializer.deserializeNotebook(mdBuffer, token)
       }
 
       if (!notebook) {
         continue
       }
 
-      const cell = notebook.pipe(
-        map((n) => {
-          return n.cells.find(
-            (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
-          )!
-        }),
-      )
+      const cell = notebook.cells.find((cell) => cell.metadata?.['runme.dev/name'] === name)
+      if (!cell) {
+        continue
+      }
 
-      const notebookish = !isObservable(notebook) ? of(notebook) : notebook
-      const taskNotebook = await firstValueFrom<TaskNotebook>(notebookish as any)
-      const cellish = !isObservable(cell) ? of(cell) : cell
-      const taskCell = await firstValueFrom<TaskCell>(cellish as any)
-
-      const { excludeFromRunAll } = getAnnotations(taskCell.metadata)
-      const cellText = 'value' in taskCell ? taskCell.value : taskCell.document.getText()
-      const languageId = ('languageId' in taskCell && taskCell.languageId) || 'sh'
-      const cellIndex = taskNotebook.cells.findIndex(
-        (cell) => cell.metadata?.['id'] === id || cell.metadata?.['runme.dev/name'] === name,
+      const { excludeFromRunAll } = getAnnotations(cell.metadata)
+      const cellText = 'value' in cell ? cell.value : ''
+      const languageId = ('languageId' in cell && cell.languageId) || 'sh'
+      const cellIndex = notebook.cells.findIndex(
+        (cell) => cell.metadata?.['runme.dev/name'] === name,
       )
 
       const lines = cellText.split('\n')
@@ -260,8 +217,9 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
         new RunmeFile(`${name}${!excludeFromRunAll ? '*' : ''}`, {
           description: `${lines.at(0)}`,
           tooltip: tooltip,
-          resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
-          collapsibleState: TreeItemCollapsibleState.None,
+          cellIndex: cellIndex,
+          documentPath: documentPath,
+          parent: parent,
           onSelectedCommand: {
             arguments: [
               {
@@ -273,7 +231,9 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
             command: 'runme.openRunmeFile',
             title: name,
           },
-          contextValue: 'markdown-file',
+          resourceUri: Uri.parse(`${name}.${this.resolveExtension(languageId)}`),
+          collapsibleState: TreeItemCollapsibleState.None,
+          contextValue: 'markdownCell',
         }),
       )
     }
@@ -281,71 +241,72 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     return Promise.resolve(foundTasks)
   }
 
+  async openNotebook(runmeFile: RunmeFile) {
+    await this.getNoteboookEditor(runmeFile, false)
+  }
+
+  async openFile({ file, folderPath, cellIndex }: OpenFileOptions) {
+    const doc = Uri.file(`${folderPath}/${file}`)
+    await commands.executeCommand('vscode.openWith', doc, Kernel.type)
+
+    if (cellIndex === undefined) {
+      return
+    }
+
+    const notebookEditor = window.visibleNotebookEditors.find((editor) => {
+      return editor.notebook.uri.path === doc.path
+    })
+
+    if (notebookEditor && this.kernel) {
+      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(cellIndex))
+    }
+  }
+
+  async getNoteboookEditor(runmeFile: RunmeFile, requireCellIndex = true) {
+    if (!runmeFile.documentPath) {
+      return
+    }
+
+    if (requireCellIndex && runmeFile.cellIndex === undefined) {
+      return
+    }
+
+    const file = basename(runmeFile.documentPath)
+    const folderPath = dirname(runmeFile.documentPath)
+    const docUri = Uri.file(`${folderPath}/${file}`)
+
+    let notebookEditor = window.visibleNotebookEditors.find((editor) => {
+      return editor.notebook.uri.path === docUri.path
+    })
+
+    if (!notebookEditor) {
+      await commands.executeCommand('vscode.openWith', docUri, Kernel.type)
+      notebookEditor = window.visibleNotebookEditors.find((editor) => {
+        return editor.notebook.uri.path === docUri.path
+      })
+    }
+
+    return notebookEditor
+  }
+
+  async runCell(runmeFile: RunmeFile) {
+    const notebookEditor = await this.getNoteboookEditor(runmeFile)
+    if (runmeFile.cellIndex !== undefined && notebookEditor) {
+      await this.kernel.executeAndFocusNotebookCell(
+        notebookEditor.notebook.cellAt(runmeFile.cellIndex),
+      )
+    }
+  }
+
+  async openCell(runmeFile: RunmeFile) {
+    const notebookEditor = await this.getNoteboookEditor(runmeFile)
+    if (runmeFile.cellIndex !== undefined && notebookEditor) {
+      await this.kernel.focusNotebookCell(notebookEditor.notebook.cellAt(runmeFile.cellIndex))
+    }
+  }
+
   dispose() {
     this.#disposables.forEach((d) => d.dispose())
-  }
-
-  // Internal
-
-  private async initProjectClient(transport?: GrpcTransport) {
-    this.client = initProjectClient(transport ?? (await this.server.transport()))
-  }
-
-  protected loadProjectTasks(): Observable<ProjectTask[]> {
-    if (!workspace.workspaceFolders?.length) {
-      return of([])
-    }
-
-    const separator = workspace.workspaceFolders[0].uri.fsPath.indexOf('/') > -1 ? '/' : '\\'
-
-    const requests = (workspace.workspaceFolders ?? []).map((folder) => {
-      return <LoadRequest>{
-        kind: {
-          oneofKind: 'directory',
-          directory: {
-            path: workspace.asRelativePath(folder.uri),
-            skipGitignore: false,
-            ignoreFilePatterns: [],
-            skipRepoLookupUpward: false,
-          },
-        },
-        identity: RunmeIdentity.ALL,
-      }
-    })
-
-    const task$ = new Observable<ProjectTask>((observer) => {
-      this.ready.then(() =>
-        Promise.all(
-          requests.map((request) => {
-            const session: LoadStream = this.client!.load(request)
-            session.responses.onMessage((msg) => {
-              if (msg.data.oneofKind !== 'foundTask') {
-                return
-              }
-              observer.next(msg.data.foundTask)
-            })
-            return session
-          }),
-        ).then(() => {
-          logger.info('Finished walk.')
-          observer.complete()
-        }),
-      )
-    })
-
-    const dirProx = (pt: ProjectTask) => {
-      const { relativePath, outside } = asWorkspaceRelativePath(pt.documentPath)
-      const len = relativePath.split(separator).length
-      if (outside) {
-        return 100 * len
-      }
-      return len
-    }
-
-    return task$.pipe(
-      toArray(),
-      map((tasks) => tasks.sort((a, b) => dirProx(a) - dirProx(b))),
-    )
   }
 
   resolveExtension(languageId: string): string {

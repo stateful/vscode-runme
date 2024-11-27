@@ -76,6 +76,7 @@ const extensionConfig: Configuration = {
   plugins: [
     new DefinePlugin({
       INSTRUMENTATION_KEY: JSON.stringify(process.env.INSTRUMENTATION_KEY || 'invalid'),
+      CONNECTION_STR: JSON.stringify(process.env.CONNECTION_STR || 'invalid'),
       [testToken]: mode === Mode.DEVELOPMENT
         ? testToken
         : 'false'

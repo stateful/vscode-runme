@@ -61,7 +61,7 @@ import {
   authenticateWithGitHub,
   displayCategoriesSelector,
   runCellsByCategory,
-  addToRecommendedExtensions,
+  addToRecommendedExtension,
   openRunmeSettings,
   toggleAutosave,
   askNewRunnerSession,
@@ -138,15 +138,33 @@ export class RunmeExtension {
     let treeViewer: RunmeTreeProvider
 
     if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
-      await commands.executeCommand('setContext', 'runme.launcher.isExpanded', true)
-      await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', true)
-      treeViewer = new RunmeLauncherProviderBeta(
-        kernel,
-        server,
-        serializer,
-        getDefaultWorkspace(),
-        runner,
-      )
+      await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
+      await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
+      treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
+
+      if (treeViewer.openNotebook) {
+        context.subscriptions.push(
+          RunmeExtension.registerCommand(
+            'runme.openNotebook',
+            treeViewer.openNotebook.bind(treeViewer),
+          ),
+        )
+      }
+
+      if (treeViewer.runCell) {
+        context.subscriptions.push(
+          RunmeExtension.registerCommand(
+            'runme.runSelectedCell',
+            treeViewer.runCell.bind(treeViewer),
+          ),
+        )
+      }
+      if (treeViewer.openCell) {
+        RunmeExtension.registerCommand(
+          'runme.openSelectedCell',
+          treeViewer.openCell.bind(treeViewer),
+        )
+      }
     } else {
       treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     }
@@ -204,6 +222,7 @@ export class RunmeExtension {
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
+      new survey.SurveyAddExtensionToRepo(context),
       new survey.SurveyActiveUserFeedback(context),
       new survey.SurveyFeedbackButton(context),
       new survey.SurveyNotifyV2(context),
@@ -325,7 +344,7 @@ export class RunmeExtension {
        * Runme Message Display commands
        */
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
-        addToRecommendedExtensions(context),
+        addToRecommendedExtension(context),
       ),
       createDemoFileRunnerForActiveNotebook(context, kernel),
       createDemoFileRunnerWatcher(context, kernel),

@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.9.6",
+  "version": "3.10.0-edge.0",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "RecommendExtension": {
+        "enabled": true,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
+        }
+      },
       "HostedPlayground": {
         "enabled": false,
         "conditions": {
@@ -195,11 +204,16 @@
         "title": "Prompt to participate in Feedback survey"
       },
       {
+        "command": "runme.surveyAddExtensionToRepo",
+        "category": "Runme",
+        "title": "Prompt to participate in adding extension to repo"
+      },
+      {
         "command": "runme.surveyFeedbackButton",
         "category": "Runme",
         "title": "Let the Runme team know what you think",
         "icon": "$(feedback)",
-        "shortTitle": "Send Feedback"
+        "shortTitle": "Feedback"
       },
       {
         "command": "runme.surveyShebangComingSoon",
@@ -340,7 +354,7 @@
         "category": "Runme",
         "title": "Reset Session including Environment Variables",
         "icon": "$(search-refresh)",
-        "shortTitle": "Reset Session"
+        "shortTitle": "Reset"
       },
       {
         "command": "runme.runWithPrompts",
@@ -411,6 +425,21 @@
         "title": "Open Cloud Panel",
         "category": "Runme",
         "description": "Open Cloud Panel"
+      },
+      {
+        "command": "runme.openNotebook",
+        "title": "Open",
+        "icon": "$(preferences-open-settings)"
+      },
+      {
+        "command": "runme.runSelectedCell",
+        "title": "Run",
+        "icon": "$(play)"
+      },
+      {
+        "command": "runme.openSelectedCell",
+        "title": "Open",
+        "icon": "$(preferences-open-settings)"
       }
     ],
     "menus": {
@@ -602,6 +631,23 @@
           "command": "runme.runWithPrompts",
           "group": "navigation",
           "when": "notebookType == runme && notebookMode != sessionOutputs && notebookCellType == 'code'"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "runme.openNotebook",
+          "when": "view == runme.launcher && viewItem == markdownNotebook",
+          "group": "inline"
+        },
+        {
+          "command": "runme.runSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
+        },
+        {
+          "command": "runme.openSelectedCell",
+          "when": "view == runme.launcher && viewItem == markdownCell",
+          "group": "inline"
         }
       ]
     },
@@ -827,6 +873,11 @@
             "scope": "machine",
             "default": true,
             "markdownDescription": "Enable Runme notebook terminal in interactive scripts (experimental)"
+          },
+          "runme.terminal.interactiveIsDefault": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to 'true', any cell run will be interactive by default"
           },
           "runme.terminal.fontSize": {
             "type": [
@@ -1098,7 +1149,7 @@
         {
           "id": "runme.cloud",
           "type": "webview",
-          "name": "Commands",
+          "name": "Cloud",
           "visibility": "visible"
         },
         {
@@ -1251,8 +1302,8 @@
     "@graphql-codegen/typescript": "4.1.1",
     "@octokit/rest": "^19.0.13",
     "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^20.17.3",
-    "@types/node-fetch": "^2.6.11",
+    "@types/node": "^20.17.6",
+    "@types/node-fetch": "^2.6.12",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^10.0.0",
     "@types/vscode": "1.85.0",
@@ -1266,7 +1317,7 @@
     "@wdio/local-runner": "^8.40.6",
     "@wdio/mocha-framework": "^8.40.6",
     "@wdio/spec-reporter": "^8.40.6",
-    "chromedriver": "^130.0.1",
+    "chromedriver": "^130.0.4",
     "comment-json": "^4.2.5",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.0.0",
@@ -1291,14 +1342,14 @@
     "vscode-uri": "^3.0.7",
     "wdio-vscode-service": "^6.1.2",
     "webdriverio": "^8.40.5",
-    "webpack": "^5.95.0",
+    "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.6",
-    "@aws-sdk/client-ec2": "^3.682.0",
-    "@aws-sdk/client-eks": "^3.682.0",
-    "@aws-sdk/credential-providers": "^3.682.0",
+    "@apollo/client": "^3.11.10",
+    "@aws-sdk/client-ec2": "^3.687.0",
+    "@aws-sdk/client-eks": "^3.688.0",
+    "@aws-sdk/credential-providers": "^3.687.0",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240904201038-e0425cfebb28.4",
     "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20241018224331-ac296bc95724.1",
     "@buf/jlewi_foyle.connectrpc_es": "^1.5.0-20241018224331-ac296bc95724.1",
@@ -1308,7 +1359,7 @@
     "@google-cloud/compute": "^4.1.0",
     "@google-cloud/container": "^5.18.0",
     "@google-cloud/run": "^1.4.0",
-    "@kubernetes/client-node": "^0.22.1",
+    "@kubernetes/client-node": "^0.22.2",
     "@protobuf-ts/grpc-transport": "^2.9.1",
     "@protobuf-ts/runtime": "^2.9.1",
     "@protobuf-ts/runtime-rpc": "^2.9.1",
@@ -1339,8 +1390,8 @@
     "strip-ansi": "^7.1.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.4.1",
-    "uuid": "^11.0.2",
-    "vscode-telemetry": "^1.0.2",
+    "uuid": "^11.0.3",
+    "vscode-telemetry": "^2.0.0",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"
   }

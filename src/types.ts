@@ -706,6 +706,7 @@ export enum APIMethod {
   CreateCellExecution = 'createCellExecution',
   UpdateCellExecution = 'updateCellExecution',
   CreateEscalation = 'createEscalation',
+  TrackRunmeEvent = 'trackRunmeEvent',
 }
 
 export interface IApiMessage<T extends ClientMessage<ClientMessages>> {
@@ -773,6 +774,7 @@ export enum FeatureName {
   CopySelectionToClipboard = 'CopySelectionToClipboard',
   NewTreeProvider = 'NewTreeProvider',
   HostedPlayground = 'HostedPlayground',
+  RecommendExtension = 'RecommendExtension',
 }
 
 export type Feature = {

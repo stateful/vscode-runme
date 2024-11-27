@@ -43,7 +43,7 @@ export default async function saveCellExecution(
     const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
     const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
-    if (!session) {
+    if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
         data: {
@@ -78,10 +78,7 @@ export default async function saveCellExecution(
 
     log.info('Saving cell execution')
 
-    const frontmatter = GrpcSerializer.marshalFrontmatter(
-      editor.notebook.metadata as { ['runme.dev/frontmatter']: string },
-      kernel,
-    )
+    const frontmatter = GrpcSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
 
     const metadata = {
       ...editor.notebook.metadata,
