@@ -321,7 +321,11 @@ export const executeRunner: IKernelRunner = async ({
   taskExecution.isBackground = background
   taskExecution.presentationOptions = {
     focus: false,
-    reveal: TaskRevealKind.Silent,
+    reveal: revealNotebookTerminal
+      ? TaskRevealKind.Never
+      : background
+        ? TaskRevealKind.Never
+        : TaskRevealKind.Always,
     panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
   }
 
