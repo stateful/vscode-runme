@@ -77,6 +77,15 @@
           }
         }
       },
+      "OpenTerminalOnStartup": {
+        "enabled": false,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": false,
+            "stateful.runme": true
+          }
+        }
+      },
       "NewTreeProvider": {
         "enabled": false,
         "conditions": {
