@@ -781,8 +781,6 @@ export class TerminalView extends LitElement {
         return
       }
 
-      console.log('resize terminal', terminalDimensions)
-
       await postClientMessage(ctx, ClientMessages.terminalResize, {
         'runme.dev/id': this.id!,
         terminalDimensions,
