@@ -248,6 +248,12 @@ export const executeRunner: IKernelRunner = async ({
       await program.setActiveTerminalWindow('notebook')
     }
 
+    // allow for additional outputs, such as dagger
+    const t = OutputType[execKey as keyof typeof OutputType]
+    if (t) {
+      await outputs.showOutput(t)
+    }
+
     await outputs.showTerminal()
   } else {
     const mime = program.mimeType.then((mime) => mimeType || mime || CELL_MIME_TYPE_DEFAULT)
@@ -271,11 +277,6 @@ export const executeRunner: IKernelRunner = async ({
     )
 
     const isCustomMime = (mime: string) => {
-      // todo(sebastian): should we take execKey into account?
-      // const t = OutputType[execKey as keyof typeof OutputType]
-      // if (t) {
-      //   await outputs.showOutput(t)
-      // }
       return MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)
     }
 
