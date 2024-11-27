@@ -32,17 +32,36 @@ describe('ShowTerminalProvider', () => {
     expect(await p.provideCellStatusBarItems({} as any)).toBe(undefined)
   })
 
-  it('show if no terminal state', async () => {
-    const kernel = {
-      getTerminalState: vi.fn().mockResolvedValue({}),
-    } as any
+  describe('show if terminal state present', () => {
+    it('show with toggleTerminal if interactive', async () => {
+      vi.mocked(getAnnotations).mockReturnValue({ interactive: true } as any)
+      const kernel = {
+        getTerminalState: vi.fn().mockResolvedValue({}),
+      } as any
 
-    const p = new ToggleTerminalProvider(kernel)
+      const p = new ToggleTerminalProvider(kernel)
 
-    expect(await p.provideCellStatusBarItems({} as any)).toEqual({
-      alignment: 2,
-      command: 'runme.toggleTerminal',
-      label: '$(terminal) Terminal',
+      expect(await p.provideCellStatusBarItems({} as any)).toEqual({
+        alignment: 2,
+        command: 'runme.toggleTerminal',
+        label: '$(terminal) Terminal',
+      })
+    })
+
+    it('show with toggleTerminal if interactive', async () => {
+      vi.mocked(getAnnotations).mockReturnValue({ interactive: false } as any)
+      vi.mocked(getTerminalByCell).mockReturnValue({} as any)
+      const kernel = {
+        getTerminalState: vi.fn().mockResolvedValue({}),
+      } as any
+
+      const p = new ToggleTerminalProvider(kernel)
+
+      expect(await p.provideCellStatusBarItems({} as any)).toEqual({
+        alignment: 2,
+        command: 'runme.openIntegratedTerminal',
+        label: '$(terminal) Terminal',
+      })
     })
   })
 })
