@@ -83,7 +83,6 @@ export class Clusters extends LitElement implements Disposable {
           this._clusterDetails = e.output.data
           this.executedInNewCell = e.output.executedInNewCell
           this.requestUpdate()
-          console.log(e.output)
         }
       }),
     )
