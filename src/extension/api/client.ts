@@ -17,7 +17,7 @@ export async function InitializeCloudClient(uri?: string) {
   return InitializeClient({ uri, token: session.accessToken })
 }
 
-export function InitializeClient({ uri, token }: { uri?: string | undefined; token: string }) {
+function InitializeClient({ uri, token }: { uri?: string | undefined; token: string }) {
   const authLink = setContext((_, { headers }) => {
     const context = getFeaturesContext()
     return {

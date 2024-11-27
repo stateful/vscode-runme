@@ -1,4 +1,4 @@
-import { authentication, ExtensionContext, notebooks } from 'vscode'
+import { authentication, notebooks } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -14,7 +14,6 @@ import {
   StatefulAuthProvider,
   StatefulAuthSession,
 } from '../../../../src/extension/provider/statefulAuth'
-import AuthSessionChangeHandler from '../../../../src/extension/authSessionChangeHandler'
 
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
@@ -67,12 +66,6 @@ const graphqlHandlers = [
 ]
 
 const server = setupServer(...graphqlHandlers)
-
-const contextFake: ExtensionContext = {
-  subscriptions: [],
-} as any
-
-AuthSessionChangeHandler.instance.initialize(contextFake)
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })

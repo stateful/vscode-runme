@@ -1,69 +1,50 @@
 import { Subject, Subscription } from 'rxjs'
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
-import { authentication, AuthenticationSessionsChangeEvent, ExtensionContext } from 'vscode'
+import { authentication, AuthenticationSessionsChangeEvent, Disposable } from 'vscode'
 
-export default class AuthSessionChangeHandler {
-  private static _instance: AuthSessionChangeHandler | null = null
+export default class AuthSessionChangeHandler implements Disposable {
+  static #instance: AuthSessionChangeHandler | null = null
 
-  private eventSubject: Subject<AuthenticationSessionsChangeEvent>
-  private subscriptions: Subscription[] = []
-  private listeners: ((event: AuthenticationSessionsChangeEvent) => void)[] = []
-  private initialized = false
+  #disposables: Disposable[] = []
+  #eventSubject: Subject<AuthenticationSessionsChangeEvent>
+  #subscriptions: Subscription[] = []
+  #listeners: ((event: AuthenticationSessionsChangeEvent) => void)[] = []
 
   private constructor(private debounceTimeMs: number = 500) {
-    this.eventSubject = new Subject<AuthenticationSessionsChangeEvent>()
-  }
-
-  public static get instance(): AuthSessionChangeHandler {
-    if (!this._instance) {
-      this._instance = new AuthSessionChangeHandler()
-    }
-    return this._instance
-  }
-
-  public initialize(context: ExtensionContext): void {
-    if (this.initialized) {
-      console.warn('AuthSessionChangeHandler is already initialized.')
-      return
-    }
-    this.initialized = true
-
-    this.subscriptions.push(
-      this.eventSubject
+    this.#eventSubject = new Subject<AuthenticationSessionsChangeEvent>()
+    this.#subscriptions.push(
+      this.#eventSubject
         .pipe(distinctUntilChanged(this.eventComparer), debounceTime(this.debounceTimeMs))
         .subscribe((event) => {
           this.notifyListeners(event)
         }),
     )
 
-    context.subscriptions.push(
+    this.#disposables.push(
       authentication.onDidChangeSessions((e) => {
-        console.log(`******* authentication.onDidChangeSessions ${e.provider.id}`)
-        this.eventSubject.next(e)
+        this.#eventSubject.next(e)
       }),
     )
+  }
 
-    context.subscriptions.push({
-      dispose: () => this.dispose(),
-    })
+  public static get instance(): AuthSessionChangeHandler {
+    if (!this.#instance) {
+      this.#instance = new AuthSessionChangeHandler()
+    }
+
+    return this.#instance
   }
 
   public addListener(listener: (event: AuthenticationSessionsChangeEvent) => void): void {
-    if (!this.initialized) {
-      throw new Error('AuthSessionChangeHandler is not initialized.')
-    }
-    this.listeners.push(listener)
+    this.#listeners.push(listener)
   }
 
   public removeListener(listener: (event: AuthenticationSessionsChangeEvent) => void): void {
-    if (!this.initialized) {
-      throw new Error('AuthSessionChangeHandler is not initialized.')
-    }
-    this.listeners = this.listeners.filter((l) => l !== listener)
+    this.#listeners = this.#listeners.filter((l) => l !== listener)
   }
 
   private notifyListeners(event: AuthenticationSessionsChangeEvent): void {
-    for (const listener of this.listeners) {
+    for (const listener of this.#listeners) {
       try {
         listener(event)
       } catch (err) {
@@ -82,18 +63,12 @@ export default class AuthSessionChangeHandler {
     )
   }
 
-  public dispose(): void {
-    if (!this.initialized) {
-      return
-    }
-    this.initialized = false
+  public async dispose() {
+    this.#disposables.forEach((d) => d.dispose())
+    this.#subscriptions = []
+    this.#eventSubject.complete()
+    this.#listeners = []
 
-    for (const subscription of this.subscriptions) {
-      subscription.unsubscribe()
-    }
-    this.subscriptions = []
-    this.eventSubject.complete()
-    this.listeners = []
-    AuthSessionChangeHandler._instance = null
+    AuthSessionChangeHandler.#instance = null
   }
 }

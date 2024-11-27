@@ -106,11 +106,7 @@ export class RunmeExtension {
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
 
     StatefulAuthProvider.initialize(context, kernel, uriHandler)
-    AuthSessionChangeHandler.instance.initialize(context)
-
-    context.subscriptions.push({
-      dispose: () => AuthSessionChangeHandler.instance.dispose(),
-    })
+    context.subscriptions.push(AuthSessionChangeHandler.instance)
 
     const server = new KernelServer(
       context.extensionUri,
@@ -507,42 +503,6 @@ export class RunmeExtension {
         kernel.updateFeatureContext('githubAuth', !!session)
       })
     }
-
-    // const onChangeSession = (e: AuthenticationSessionsChangeEvent) => {
-    //   console.log(
-    //     `******* Extension/authentication.onDidChangeSessions ${e.provider.id}`,
-    //   )
-
-    //   if (
-    //     StatefulAuthProvider.instance &&
-    //     kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
-    //     e.provider.id === AuthenticationProviders.Stateful
-    //   ) {
-    //     StatefulAuthProvider.getSession().then(async (session) => {
-    //       if (session) {
-    //         await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
-    //       } else {
-    //         const settingsDefault = getServerLifecycleIdentity()
-    //         await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
-    //         kernel.emitPanelEvent('runme.cloud', 'onCommand', {
-    //           name: 'signOut',
-    //           panelId: 'runme.cloud',
-    //         })
-    //       }
-    //       kernel.updateFeatureContext('statefulAuth', !!session)
-    //     })
-    //   }
-    //   if (
-    //     kernel.isFeatureOn(FeatureName.Gist) &&
-    //     e.provider.id === AuthenticationProviders.GitHub
-    //   ) {
-    //     getGithubAuthSession(false, true).then((session) => {
-    //       kernel.updateFeatureContext('githubAuth', !!session)
-    //     })
-    //   }
-    // }
-
-    // context.subscriptions.push(authentication.onDidChangeSessions(onChangeSession))
 
     AuthSessionChangeHandler.instance.addListener((e) => {
       if (
