@@ -1,4 +1,4 @@
-import { authentication, notebooks } from 'vscode'
+import { authentication, ExtensionContext, notebooks } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -14,6 +14,7 @@ import {
   StatefulAuthProvider,
   StatefulAuthSession,
 } from '../../../../src/extension/provider/statefulAuth'
+import AuthSessionChangeHandler from '../../../../src/extension/authSessionChangeHandler'
 
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
@@ -44,7 +45,7 @@ vi.mock('vscode', async () => {
   }
 })
 
-vi.mocked('../../../../src/extension/provider/statefulAuth')
+// vi.mocked('../../../../src/extension/provider/statefulAuth')
 
 vi.mock('../../../../src/extension/cell', async () => {
   const actual = await import('../../../../src/extension/cell')
@@ -66,6 +67,12 @@ const graphqlHandlers = [
 ]
 
 const server = setupServer(...graphqlHandlers)
+
+const contextFake: ExtensionContext = {
+  subscriptions: [],
+} as any
+
+AuthSessionChangeHandler.instance.initialize(contextFake)
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' })
@@ -220,6 +227,7 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
+    vi.spyOn(StatefulAuthProvider, 'getSession').mockResolvedValue(undefined)
     vi.mocked(authentication.getSession).mockResolvedValue(undefined)
     await saveCellExecution(requestMessage, kernel)
 
@@ -256,9 +264,8 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "data": {
-                  "displayShare": false,
-                },
+                "data": "You must authenticate with your Stateful account",
+                "hasErrors": true,
                 "id": "cell-id",
               },
               "type": "common:platformApiResponse",

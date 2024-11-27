@@ -9,7 +9,6 @@ export default class AuthSessionChangeHandler {
   private subscriptions: Subscription[] = []
   private listeners: ((event: AuthenticationSessionsChangeEvent) => void)[] = []
   private initialized = false
-  // private isProcessing = false
 
   private constructor(private debounceTimeMs: number = 500) {
     this.eventSubject = new Subject<AuthenticationSessionsChangeEvent>()
@@ -36,22 +35,6 @@ export default class AuthSessionChangeHandler {
           this.notifyListeners(event)
         }),
     )
-
-    // this.subscriptions.push(
-    //   this.eventSubject
-    //     .pipe(
-    //       filter(() => !this.isProcessing),
-    //       take(1),
-    //     )
-    //     .subscribe((event) => {
-    //       this.isProcessing = true
-    //       this.notifyListeners(event)
-
-    //       setTimeout(() => {
-    //         this.isProcessing = false
-    //       }, 0)
-    //     }),
-    // )
 
     context.subscriptions.push(
       authentication.onDidChangeSessions((e) => {

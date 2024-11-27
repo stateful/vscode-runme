@@ -1,5 +1,5 @@
 import { test, expect, vi } from 'vitest'
-import { notebooks, workspace, commands, window, Uri } from 'vscode'
+import { notebooks, workspace, commands, window, Uri, ExtensionContext } from 'vscode'
 // eslint-disable-next-line max-len
 import { HealthCheckResponse_ServingStatus } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb'
 
@@ -7,6 +7,7 @@ import { RunmeExtension } from '../../src/extension/extension'
 import { bootFile } from '../../src/extension/utils'
 import KernelServer from '../../src/extension/server/kernelServer'
 import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
+import AuthSessionChangeHandler from '../../src/extension/authSessionChangeHandler'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -82,6 +83,12 @@ vi.mock('../../src/extension/utils', async () => ({
 }))
 
 vi.mock('../../src/extension/grpc/runner/v1', () => ({}))
+
+const contextFake: ExtensionContext = {
+  subscriptions: [],
+} as any
+
+AuthSessionChangeHandler.instance.initialize(contextFake)
 
 test('initializes all providers', async () => {
   const configValues = {

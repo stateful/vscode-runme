@@ -1,8 +1,9 @@
 import { vi, describe, it, expect } from 'vitest'
-import { commands, NotebookCellKind } from 'vscode'
+import { commands, ExtensionContext, NotebookCellKind } from 'vscode'
 
 import { SessionOutputCellStatusBarProvider } from '../../../src/extension/provider/cellStatusBar/sessionOutput'
 import { Kernel } from '../../../src/extension/kernel'
+import AuthSessionChangeHandler from '../../../src/extension/authSessionChangeHandler'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -26,6 +27,11 @@ vi.mock('../../../src/extension/utils', () => ({
 
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
+const contextFake: ExtensionContext = {
+  subscriptions: [],
+} as any
+
+AuthSessionChangeHandler.instance.initialize(contextFake)
 
 describe('Session Outputs Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)

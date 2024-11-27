@@ -1,8 +1,10 @@
+import { ExtensionContext } from 'vscode'
 import { vi, suite, test, expect, beforeEach } from 'vitest'
 
 import { getAnnotations } from '../../../src/extension/utils'
 import { NamedStatusBarItem } from '../../../src/extension/provider/cellStatusBar/items/named'
 import { Kernel } from '../../../src/extension/kernel'
+import AuthSessionChangeHandler from '../../../src/extension/authSessionChangeHandler'
 
 vi.mock('vscode-telemetry')
 vi.mock('vscode')
@@ -11,6 +13,12 @@ vi.mock('../../../src/extension/utils', () => ({
   getAnnotations: vi.fn(),
   isValidEnvVarName: vi.fn().mockReturnValue(true),
 }))
+
+const contextFake: ExtensionContext = {
+  subscriptions: [],
+} as any
+
+AuthSessionChangeHandler.instance.initialize(contextFake)
 
 suite('NamedStatusBarItem Test Suite', () => {
   const kernel = new Kernel({} as any)

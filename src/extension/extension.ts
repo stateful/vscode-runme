@@ -106,11 +106,10 @@ export class RunmeExtension {
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
 
     StatefulAuthProvider.initialize(context, kernel, uriHandler)
-    const authSessionChangeHandler = AuthSessionChangeHandler.instance
+    AuthSessionChangeHandler.instance.initialize(context)
 
-    authSessionChangeHandler.initialize(context)
     context.subscriptions.push({
-      dispose: () => authSessionChangeHandler.dispose(),
+      dispose: () => AuthSessionChangeHandler.instance.dispose(),
     })
 
     const server = new KernelServer(
@@ -545,7 +544,7 @@ export class RunmeExtension {
 
     // context.subscriptions.push(authentication.onDidChangeSessions(onChangeSession))
 
-    authSessionChangeHandler.addListener((e) => {
+    AuthSessionChangeHandler.instance.addListener((e) => {
       if (
         StatefulAuthProvider.instance &&
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
@@ -567,7 +566,7 @@ export class RunmeExtension {
       }
     })
 
-    authSessionChangeHandler.addListener((e) => {
+    AuthSessionChangeHandler.instance.addListener((e) => {
       if (
         kernel.isFeatureOn(FeatureName.Gist) &&
         e.provider.id === AuthenticationProviders.GitHub
