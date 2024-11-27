@@ -20,6 +20,8 @@ updates:
       - dependency-name: "vscode-uri"
       # Deprecated
       - dependency-name: "@vercel/client"
+      # VS Code
+      - dependency-name: "@types/vscode"
 
     groups:
       types-node:
