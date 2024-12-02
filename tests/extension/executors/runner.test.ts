@@ -282,6 +282,14 @@ suite('prepareCmdSeq', () => {
       'echo 4',
     ])
   })
+
+  test('should not remove leading dollar signs from heredoc', () => {
+    const heredoc = `Foo="bar"
+cat << EOF
+$Foo
+EOF`
+    expect(prepareCommandSeq(heredoc, 'sh')).toStrictEqual(heredoc.split('\n'))
+  })
 })
 
 suite('promptVariablesAsync function', () => {
