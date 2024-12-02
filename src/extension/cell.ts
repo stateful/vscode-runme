@@ -224,7 +224,6 @@ export class NotebookCellOutputManager {
         return new NotebookCellOutput([NotebookCellOutputItem.json(json, OutputType.vercel)])
       }
 
-      case OutputType.outputItems:
       case OutputType.terminal: {
         const terminalState = this.terminalState
         if (!terminalState) {
@@ -276,24 +275,32 @@ export class NotebookCellOutputManager {
               'runme.dev/id': cellId,
             },
           )
-        } else {
-          const terminalStateBase64 = terminalState.serialize()
-          const json: CellOutputPayload<OutputType.outputItems> = {
-            type: OutputType.outputItems,
-            output: {
-              content: terminalStateBase64,
-              mime: 'text/plain',
-              id: cellId,
-            },
-          }
-
-          return new NotebookCellOutput([
-            NotebookCellOutputItem.json(json, OutputType.outputItems),
-            NotebookCellOutputItem.stdout(
-              Buffer.from(terminalStateBase64, 'base64').toString('utf-8'),
-            ),
-          ])
         }
+      }
+
+      case OutputType.outputItems: {
+        const terminalState = this.terminalState
+        if (!terminalState) {
+          return
+        }
+
+        const { 'runme.dev/id': cellId } = getAnnotations(cell)
+        const terminalStateBase64 = terminalState.serialize()
+        const json: CellOutputPayload<OutputType.outputItems> = {
+          type: OutputType.outputItems,
+          output: {
+            content: terminalStateBase64,
+            mime: 'text/plain',
+            id: cellId!,
+          },
+        }
+
+        return new NotebookCellOutput([
+          NotebookCellOutputItem.json(json, OutputType.outputItems),
+          NotebookCellOutputItem.stdout(
+            Buffer.from(terminalStateBase64, 'base64').toString('utf-8'),
+          ),
+        ])
       }
 
       case OutputType.github: {
@@ -631,7 +638,7 @@ export class NotebookCellOutputManager {
         const terminalOutput = this.terminalState?.outputType
 
         if (terminalOutput) {
-          this.terminalEnabled = this.hasOutputTypeUnsafe(terminalOutput)
+          this.terminalEnabled = this.hasOutputTypeUnsafe(OutputType.terminal)
         }
 
         if (!((await mutater?.()) ?? true)) {

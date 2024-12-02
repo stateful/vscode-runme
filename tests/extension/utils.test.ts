@@ -339,6 +339,7 @@ suite('#getAnnotations', () => {
     expect(d).toStrictEqual(<CellAnnotations>{
       background: false,
       closeTerminalOnSuccess: true,
+      openTerminalOnError: true,
       cwd: '',
       interactive: true,
       name: 'command-123',
@@ -363,6 +364,7 @@ suite('#getAnnotations', () => {
       id: undefined,
       background: false,
       closeTerminalOnSuccess: true,
+      openTerminalOnError: true,
       cwd: '',
       interactive: true,
       name: 'echo-hello',
@@ -532,6 +534,7 @@ suite('validateAnnotations', () => {
         background: 'invalid',
         interactive: 'invalid',
         closeTerminalOnSuccess: 'invalid',
+        openTerminalOnError: 'invalid',
         promptEnv: 'invalid',
         mimeType: 'application/',
       },
@@ -539,7 +542,7 @@ suite('validateAnnotations', () => {
     }
     const result = validateAnnotations(cell)
     expect(result.hasErrors).toBe(true)
-    expect(result.errors && Object.entries(result.errors).length).toBe(4)
+    expect(result.errors && Object.entries(result.errors).length).toBe(5)
   })
 
   test('it should pass for valid annotations values', () => {
@@ -548,6 +551,7 @@ suite('validateAnnotations', () => {
         background: false,
         interactive: true,
         closeTerminalOnSuccess: true,
+        openTerminalOnError: true,
         promptEnv: false,
         mimeType: 'text/plain',
       },

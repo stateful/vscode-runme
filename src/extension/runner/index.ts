@@ -143,12 +143,12 @@ export interface IRunnerProgramSession extends IRunnerChild, Pseudoterminal {
 
   /**
    * Implementers should **still call `onDidWrite`** to stay compatible with
-   * VSCode pseudoterminal interface
+   * VS Code pseudoterminal interface
    */
   readonly onStdoutRaw: Event<Uint8Array>
   /**
    * Implementers should **still call `onDidErr`** to stay compatible with
-   * VSCode pseudoterminal interface
+   * VS Code pseudoterminal interface
    */
   readonly onStderrRaw: Event<Uint8Array>
 
@@ -432,6 +432,11 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         // TODO: web compat
         const stderr = Buffer.from(data).toString('utf-8')
         this._onDidErr.fire(stderr)
+
+        // onDidErr is **not** part of VS Code's PTY interface
+        // for non-interactive we deliberately write stderr to the PTY
+        const yellowStderr = `\x1b[33m${stderr}\x1b[0m`
+        this._onDidWrite.fire(yellowStderr)
       }),
     )
 
@@ -660,7 +665,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   /**
    * Manually closed by the user
    *
-   * Implemented for compatibility with VSCode's `Pseudoterminal` interface;
+   * Implemented for compatibility with VS Code's `Pseudoterminal` interface;
    * please use `_close` internally
    */
   close() {
@@ -700,7 +705,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     //
     // if(terminalWindow === 'vscode' && this.initialized) {
     //   if (terminalWindowState.hasSetDimensions) {
-    //     // VSCode terminal window calls `setDimensions` only when focused - this
+    //     // VS Code terminal window calls `setDimensions` only when focused - this
     //     // can be conveniently used to set the active window to the terminal
     //     this._setActiveTerminalWindow(terminalWindow)
     //   } else {

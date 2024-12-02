@@ -54,6 +54,7 @@ export const AnnotationSchema = {
   background: boolify(false),
   interactive: boolify(true),
   closeTerminalOnSuccess: boolify(true),
+  openTerminalOnError: boolify(true),
   promptEnv: z.preprocess((subject) => {
     if (typeof subject === 'string') {
       subject = cleanAnnotation(subject, ',')
@@ -120,6 +121,7 @@ export const SafeCellAnnotationsSchema = z.object({
   background: falseyBoolean(false),
   interactive: falseyBoolean(true),
   closeTerminalOnSuccess: falseyBoolean(true),
+  openTerminalOnError: falseyBoolean(true),
 })
 
 export const SafeNotebookAnnotationsSchema = z.object({
