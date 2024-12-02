@@ -106,6 +106,8 @@ export class RunmeExtension {
     const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
 
     StatefulAuthProvider.initialize(context, kernel, uriHandler)
+
+    context.subscriptions.push(StatefulAuthProvider.instance)
     context.subscriptions.push(AuthSessionChangeHandler.instance)
 
     const server = new KernelServer(
