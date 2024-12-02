@@ -618,10 +618,12 @@ export function prepareCommandSeq(cellText: string, languageId: string): string[
     return cellText ? cellText.split('\n') : []
   }
 
-  return cellText.split('\n').map((l) => {
+  const isHeredoc = cellText.indexOf('<<') !== -1
+
+  return cellText.split('\n').map((l: string) => {
     const stripped = l.trimStart()
 
-    if (stripped.startsWith('$')) {
+    if (stripped.startsWith('$') && !isHeredoc) {
       return stripped.slice(1).trimStart()
     }
 
