@@ -10,7 +10,17 @@ import {
   TextDocument,
   window,
 } from 'vscode'
-import { Subject, debounceTime } from 'rxjs'
+import {
+  Observable,
+  debounceTime,
+  map,
+  filter,
+  from,
+  scan,
+  withLatestFrom,
+  Subscription,
+  takeLast,
+} from 'rxjs'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
 import getLogger from '../../logger'
@@ -32,7 +42,7 @@ import {
 } from '../../../utils/configuration'
 import { ITerminalState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
-import { closeTerminalByEnvID } from '../task'
+import { closeTerminalByEnvID, openTerminalByEnvID } from '../task'
 import {
   getCellProgram,
   getNotebookSkipPromptEnvSetting,
@@ -86,6 +96,7 @@ export const executeRunner: IKernelRunner = async ({
     mimeType: cellMimeType,
     background,
     closeTerminalOnSuccess,
+    openTerminalOnError,
   } = getAnnotations(exec.cell)
   // enforce background tasks as singleton instances
   // to do this,
@@ -131,13 +142,24 @@ export const executeRunner: IKernelRunner = async ({
 
   let terminalState: ITerminalState | undefined
 
-  const writeToTerminalStdout = (data: string | Uint8Array) => {
-    postClientMessage(messaging, ClientMessages.terminalStdout, {
-      'runme.dev/id': cellId,
-      data,
-    })
+  let writeToTerminalStdout: (data: string | Uint8Array) => void
 
-    terminalState?.write(data)
+  if (interactive) {
+    // receives both stdout+stderr via tty
+    writeToTerminalStdout = (data: string | Uint8Array) => {
+      postClientMessage(messaging, ClientMessages.terminalStdout, {
+        'runme.dev/id': cellId,
+        data,
+      })
+
+      terminalState?.write(data)
+    }
+    program.onDidWrite(writeToTerminalStdout)
+  } else {
+    writeToTerminalStdout = (data: string | Uint8Array) => {
+      terminalState?.write(data)
+    }
+    program.onStdoutRaw(writeToTerminalStdout)
   }
 
   program.onDidErr((data) =>
@@ -209,14 +231,10 @@ export const executeRunner: IKernelRunner = async ({
     writeToTerminalStdout(`\x1B[7m * \x1B[0m ${text}`)
   })
 
-  program.onDidWrite(writeToTerminalStdout)
+  program.registerTerminalWindow('vscode')
+  await program.setActiveTerminalWindow('vscode')
 
-  if (interactive) {
-    program.registerTerminalWindow('vscode')
-    await program.setActiveTerminalWindow('vscode')
-  }
-
-  let revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
+  const revealNotebookTerminal = isNotebookTerminalEnabledForCell(exec.cell)
 
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
@@ -230,142 +248,163 @@ export const executeRunner: IKernelRunner = async ({
       await program.setActiveTerminalWindow('notebook')
     }
 
+    // allow for additional outputs, such as dagger
     const t = OutputType[execKey as keyof typeof OutputType]
     if (t) {
-      outputs.showOutput(t)
+      await outputs.showOutput(t)
     }
 
     await outputs.showTerminal()
   } else {
-    const output: Buffer[] = []
-    const outputItems$ = new Subject<NotebookCellOutputItem>()
-
-    // adapted from `shellExecutor` in `shell.ts`
-    const _handleOutput = async (data: Uint8Array) => {
-      mimeType = mimeType || (await program.mimeType) || CELL_MIME_TYPE_DEFAULT
-      output.push(Buffer.from(data))
-      if (MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mimeType)) {
-        outputItems$.complete()
-        return
-      }
-
-      const item = new NotebookCellOutputItem(Buffer.concat(output), mimeType)
-      outputItems$.next(item)
-    }
-
-    // debounce by 0.5s because human preception likely isn't as fast
-    const sub = outputItems$.pipe(debounceTime(500)).subscribe({
-      next: (item) => outputs.replaceOutputs([new NotebookCellOutput([item])]),
-      complete: async () => {
-        const isCustomRenderer = MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mimeType || '')
-        return isCustomRenderer && (await outputs.showTerminal())
-      },
-    })
-    context.subscriptions.push({ dispose: () => sub.unsubscribe() })
-
-    program.onStdoutRaw(_handleOutput)
-    program.onStderrRaw(_handleOutput)
-    program.onDidClose(() => outputItems$.complete())
-  }
-
-  if (!interactive) {
-    exec.token.onCancellationRequested(() => {
-      program.close()
-    })
-  } else {
-    await outputs.replaceOutputs([])
-
-    const cellText = runningCell.getText()
-    const RUNME_ID = getCellRunmeId(exec.cell)
-    const taskExecution = new Task(
-      { type: 'shell', name: `Runme Task (${RUNME_ID})` },
-      TaskScope.Workspace,
-      (cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText) +
-        ` (RUNME_ID: ${RUNME_ID})`,
-      'exec',
-      new CustomExecution(async () => program),
+    const mime = program.mimeType.then((mime) => mimeType || mime || CELL_MIME_TYPE_DEFAULT)
+    const mime$ = from(mime)
+    const raw$ = new Observable<Uint8Array>((observer) => {
+      program.onStdoutRaw((data) => observer.next(data))
+      program.onDidClose(() => observer.complete())
+    }).pipe(
+      scan((acc, data) => {
+        const combined = new Uint8Array(acc.length + data.length)
+        combined.set(acc)
+        combined.set(data, acc.length)
+        return combined
+      }, new Uint8Array()),
     )
 
-    taskExecution.isBackground = background
-    taskExecution.presentationOptions = {
-      focus: revealNotebookTerminal ? false : true,
-      reveal: revealNotebookTerminal
-        ? TaskRevealKind.Never
-        : background
-          ? TaskRevealKind.Never
-          : TaskRevealKind.Always,
-      panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+    // debounce by 0.5s because human preception likely isn't as fast
+    let item$ = raw$.pipe(debounceTime(500)).pipe(
+      withLatestFrom(mime$),
+      map(([item, mime]) => new NotebookCellOutputItem(Buffer.from(item), mime)),
+    )
+
+    const isCustomMime = (mime: string) => {
+      return MIME_TYPES_WITH_CUSTOM_RENDERERS.includes(mime)
     }
 
-    const execution = await tasks.executeTask(taskExecution)
+    let subs: Subscription[] = [
+      // render vanilla mime types, eg PNG/SVG
+      item$
+        .pipe(
+          filter((item) => {
+            return !isCustomMime(item.mime)
+          }),
+        )
+        .subscribe({
+          next: (item) => outputs.replaceOutputs([new NotebookCellOutput([item])]),
+        }),
+      // render custom mime type for text/plain to show copy buttons etc
+      item$
+        .pipe(
+          filter((item) => {
+            return isCustomMime(item.mime)
+          }),
+          takeLast(1),
+        )
+        .subscribe({
+          next: () => outputs.showOutput(OutputType.outputItems),
+        }),
+    ]
 
-    context.subscriptions.push({
-      dispose: () => execution.terminate(),
-    })
-
-    exec.token.onCancellationRequested(() => {
-      try {
-        // runs `program.close()` implicitly
-        execution.terminate()
-      } catch (err: any) {
-        log.error(`Failed to terminate task: ${(err as Error).message}`)
-        throw new Error(err)
-      }
-    })
-
-    tasks.onDidStartTaskProcess((e) => {
-      const taskId = (e.execution as any)['_id']
-      const executionId = (execution as any)['_id']
-
-      if (taskId !== executionId) {
-        return
-      }
-
-      const terminal = getTerminalByCell(exec.cell)
-      if (!terminal) {
-        return
-      }
-
-      terminal.runnerSession = program
-      kernel.registerTerminal(terminal, executionId, RUNME_ID)
-
-      // proxy pid value
-      Object.defineProperty(terminal, 'processId', {
-        get: function () {
-          return program.pid
-        },
-      })
-    })
-
-    tasks.onDidEndTaskProcess((e) => {
-      const taskId = (e.execution as any)['_id']
-      const executionId = (execution as any)['_id']
-
-      /**
-       * ignore if
-       */
-      if (
-        /**
-         * VS Code is running a different task
-         */
-        taskId !== executionId ||
-        /**
-         * we don't have an exit code
-         */
-        typeof e.exitCode === 'undefined'
-      ) {
-        return
-      }
-
-      /**
-       * only close terminal if execution passed and desired by user
-       */
-      const closeIt = getCloseTerminalOnSuccess() && closeTerminalOnSuccess
-      if (e.exitCode === 0 && closeIt && !background) {
-        closeTerminalByEnvID(RUNME_ID)
-      }
-    })
+    context.subscriptions.push({ dispose: () => subs.forEach((s) => s.unsubscribe()) })
   }
+
+  const cellText = runningCell.getText()
+  const RUNME_ID = getCellRunmeId(exec.cell)
+  const taskExecution = new Task(
+    { type: 'shell', name: `Runme Task (${RUNME_ID})` },
+    TaskScope.Workspace,
+    (cellText.length > LABEL_LIMIT ? `${cellText.slice(0, LABEL_LIMIT)}...` : cellText) +
+      ` (RUNME_ID: ${RUNME_ID})`,
+    'exec',
+    new CustomExecution(async () => program),
+  )
+
+  taskExecution.isBackground = background
+  taskExecution.presentationOptions = {
+    focus: false,
+    reveal: interactive
+      ? TaskRevealKind.Never
+      : background
+        ? TaskRevealKind.Never
+        : TaskRevealKind.Silent,
+    panel: background ? TaskPanelKind.Dedicated : TaskPanelKind.Shared,
+  }
+
+  const execution = await tasks.executeTask(taskExecution)
+
+  context.subscriptions.push({
+    dispose: () => execution.terminate(),
+  })
+
+  exec.token.onCancellationRequested(() => {
+    try {
+      // runs `program.close()` implicitly
+      execution.terminate()
+    } catch (err: any) {
+      log.error(`Failed to terminate task: ${(err as Error).message}`)
+      throw new Error(err)
+    }
+  })
+
+  tasks.onDidStartTaskProcess((e) => {
+    const taskId = (e.execution as any)['_id']
+    const executionId = (execution as any)['_id']
+
+    if (taskId !== executionId) {
+      return
+    }
+
+    const terminal = getTerminalByCell(exec.cell)
+    if (!terminal) {
+      return
+    }
+
+    terminal.runnerSession = program
+    kernel.registerTerminal(terminal, executionId, RUNME_ID)
+
+    // proxy pid value
+    Object.defineProperty(terminal, 'processId', {
+      get: function () {
+        return program.pid
+      },
+    })
+  })
+
+  tasks.onDidEndTaskProcess((e) => {
+    const taskId = (e.execution as any)['_id']
+    const executionId = (execution as any)['_id']
+
+    /**
+     * ignore if
+     */
+    if (
+      /**
+       * VS Code is running a different task
+       */
+      taskId !== executionId ||
+      /**
+       * we don't have an exit code
+       */
+      typeof e.exitCode === 'undefined'
+    ) {
+      return
+    }
+
+    /**
+     * only close terminal if execution passed and desired by user
+     */
+    const closeIt = interactive && getCloseTerminalOnSuccess() && closeTerminalOnSuccess
+    if (e.exitCode === 0 && closeIt && !background) {
+      closeTerminalByEnvID(RUNME_ID)
+    }
+
+    /**
+     * open non-interactive terminal if execution exited with non-zero
+     */
+    const openIt = !interactive && openTerminalOnError
+    if (e.exitCode !== 0 && openIt && !background) {
+      openTerminalByEnvID(RUNME_ID)
+    }
+  })
 
   if (program.numTerminalWindows === 0) {
     await program.run()
@@ -618,10 +657,12 @@ export function prepareCommandSeq(cellText: string, languageId: string): string[
     return cellText ? cellText.split('\n') : []
   }
 
-  return cellText.split('\n').map((l) => {
+  const isHeredoc = cellText.indexOf('<<') !== -1
+
+  return cellText.split('\n').map((l: string) => {
     const stripped = l.trimStart()
 
-    if (stripped.startsWith('$')) {
+    if (stripped.startsWith('$') && !isHeredoc) {
       return stripped.slice(1).trimStart()
     }
 

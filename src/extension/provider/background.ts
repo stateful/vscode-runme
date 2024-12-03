@@ -43,6 +43,15 @@ export class ToggleTerminalProvider
     )
     item.command = 'runme.toggleTerminal'
 
+    const { interactive } = getAnnotations(cell)
+    if (!interactive) {
+      const terminal = getTerminalByCell(cell)
+      if (!terminal) {
+        return undefined
+      }
+      item.command = 'runme.openIntegratedTerminal'
+    }
+
     return item
   }
 
