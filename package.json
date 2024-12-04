@@ -1351,7 +1351,7 @@
     "vscode-uri": "^3.0.7",
     "wdio-vscode-service": "^6.1.2",
     "webdriverio": "^8.40.5",
-    "webpack": "^5.96.1",
+    "webpack": "^5.97.0",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
