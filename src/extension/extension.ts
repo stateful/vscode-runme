@@ -40,7 +40,6 @@ import {
   getDefaultWorkspace,
   bootFile,
   resetNotebookSettings,
-  getGithubAuthSession,
   openFileAsRunmeNotebook,
 } from './utils'
 import { RunmeTaskProvider } from './provider/runmeTask'
@@ -103,12 +102,6 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
-    const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
-
-    StatefulAuthProvider.initialize(context, kernel, uriHandler)
-
-    context.subscriptions.push(StatefulAuthProvider.instance)
-    context.subscriptions.push(AuthSessionChangeHandler.instance)
 
     const server = new KernelServer(
       context.extensionUri,
@@ -264,6 +257,8 @@ export class RunmeExtension {
       serializer,
       server,
       treeViewer,
+      StatefulAuthProvider.instance,
+      AuthSessionChangeHandler.instance,
       ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -342,7 +337,7 @@ export class RunmeExtension {
       /**
        * Uri handler
        */
-      window.registerUriHandler(uriHandler),
+      window.registerUriHandler(new RunmeUriHandler(context, kernel, getForceNewWindowConfig())),
 
       /**
        * Runme Message Display commands
@@ -419,8 +414,6 @@ export class RunmeExtension {
           TelemetryReporter.sendTelemetryEvent('extension.command', {
             command: 'runme.lifecycleIdentitySelection',
           })
-
-          console.log(`******* runme.lifecycleIdentitySelection ${identity}`)
 
           await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
 
@@ -500,10 +493,7 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
-      context.subscriptions.push(new GithubAuthProvider(context))
-      getGithubAuthSession(false).then((session) => {
-        kernel.updateFeatureContext('githubAuth', !!session)
-      })
+      context.subscriptions.push(new GithubAuthProvider(context, kernel))
     }
 
     AuthSessionChangeHandler.instance.addListener((e) => {
@@ -524,17 +514,6 @@ export class RunmeExtension {
             })
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
-        })
-      }
-    })
-
-    AuthSessionChangeHandler.instance.addListener((e) => {
-      if (
-        kernel.isFeatureOn(FeatureName.Gist) &&
-        e.provider.id === AuthenticationProviders.GitHub
-      ) {
-        getGithubAuthSession(false, true).then((session) => {
-          kernel.updateFeatureContext('githubAuth', !!session)
         })
       }
     })

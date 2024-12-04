@@ -21,12 +21,11 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 
 import { getAuthTokenPath, getDeleteAuthToken, getRunmeAppUrl } from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN, TELEMETRY_EVENTS } from '../../constants'
-import { RunmeUriHandler } from '../handler/uri'
 import ContextState from '../contextState'
 import getLogger from '../logger'
-import { Kernel } from '../kernel'
 import { FeatureName } from '../../types'
 import { getPlatformAuthSession } from '../utils'
+import * as features from '../features'
 
 const logger = getLogger('StatefulAuthProvider')
 
@@ -65,25 +64,8 @@ const passthrough = (value: any, resolve: (value?: any) => void) => resolve(valu
 
 type SessionsChangeEvent = AuthenticationProviderAuthenticationSessionsChangeEvent
 
-function assertDeps<C extends ExtensionContext, K extends Kernel>(deps: {
-  context: C | null
-  kernel: K | null
-}): asserts deps is { context: NonNullable<C>; kernel: NonNullable<K> } {
-  const { context, kernel } = deps
-
-  if (!context) {
-    throw new Error('Missing context')
-  }
-
-  if (!kernel) {
-    throw new Error('Missing kernel')
-  }
-}
-
 export class StatefulAuthProvider implements AuthenticationProvider, Disposable {
   static #instance: StatefulAuthProvider | null = null
-  static #uriHandler: RunmeUriHandler | null = null
-  static #kernel: Kernel | null = null
   static #context: ExtensionContext | null = null
 
   #pendingStates: string[] = []
@@ -95,14 +77,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     { promise: Promise<TokenInformation>; cancel: EventEmitter<void> }
   >()
   readonly #onSessionChange = this.registerDisposable(new EventEmitter<SessionsChangeEvent>())
+  readonly #onAuthEvent = this.registerDisposable(new EventEmitter<Uri>())
 
   public static get instance(): StatefulAuthProvider {
-    const deps = {
-      context: StatefulAuthProvider.#context,
-      kernel: StatefulAuthProvider.#kernel,
-    }
-
-    assertDeps<ExtensionContext, Kernel>(deps)
+    this.assertContext(this.#context)
 
     if (!StatefulAuthProvider.#instance) {
       const instance = new StatefulAuthProvider()
@@ -115,16 +93,19 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       StatefulAuthProvider.#instance = instance
     }
 
-    deps.context.asAbsolutePath
-    // StatefulAuthProvider.#kernel.envProps
-
     return StatefulAuthProvider.#instance
   }
 
-  static initialize(context: ExtensionContext, kernel: Kernel, uriHandler: RunmeUriHandler) {
+  static initialize(context: ExtensionContext) {
     this.#context = context
-    this.#kernel = kernel
-    this.#uriHandler = uriHandler
+  }
+
+  static assertContext(
+    context: ExtensionContext | null,
+  ): asserts context is NonNullable<ExtensionContext> {
+    if (!context) {
+      throw new Error('Missing context dependency, requires StatefulAuthProvider.initialize')
+    }
   }
 
   static async getSession() {
@@ -139,13 +120,12 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   public static async ensureSession() {
     let session = await this.getSession()
     if (session) {
-      this.#kernel.updateFeatureContext('statefulAuth', true)
       this.showLoginNotification()
       return
     }
 
     session = await this.bootstrapFromToken()
-    const forceLogin = this.#kernel.isFeatureOn(FeatureName.ForceLogin) || !!session
+    const forceLogin = features.isOnInContextState(FeatureName.ForceLogin) || !!session
     const silent = forceLogin ? undefined : true
 
     getPlatformAuthSession(forceLogin, silent)
@@ -175,7 +155,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return this.#onSessionChange.event
   }
 
+  fireOnAuthEvent(data: Uri) {
+    this.#onAuthEvent.fire(data)
+  }
+
   get redirectUri() {
+    StatefulAuthProvider.assertContext(StatefulAuthProvider.#context)
+
     const publisher = StatefulAuthProvider.#context.extension.packageJSON.publisher
     const name = StatefulAuthProvider.#context.extension.packageJSON.name
 
@@ -258,9 +244,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
       const persist = this.persistSessions([session], {
         added: [session],
-        removed: undefined,
-        changed: undefined,
-      })
+      } as unknown as SessionsChangeEvent)
       await persist
 
       return session
@@ -450,10 +434,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         if (!codeExchangePromise) {
           // Creating a new codeExchangePromise using promiseFromEvent and setting up
           // event handling with handleUri function
-          codeExchangePromise = promiseFromEvent(
-            StatefulAuthProvider.#uriHandler.onAuthEvent,
-            this.handleUri(scopes),
-          )
+          codeExchangePromise = promiseFromEvent(this.#onAuthEvent.event, this.handleUri(scopes))
           // Storing the newly created codeExchangePromise in the map with the corresponding scopeString
           this.#codeExchangePromises.set(scopeString, codeExchangePromise)
         }
@@ -618,6 +599,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private static async getAllSessions(): Promise<StatefulAuthSession[]> {
+    this.assertContext(this.#context)
+
     const allSessions = await this.#context.secrets.get(this.sessionSecretKey)
     if (!allSessions) {
       return []
@@ -636,6 +619,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   private async persistSessions(sessions: StatefulAuthSession[], changes: SessionsChangeEvent) {
+    StatefulAuthProvider.assertContext(StatefulAuthProvider.#context)
     await StatefulAuthProvider.#context.secrets.store(
       StatefulAuthProvider.sessionSecretKey,
       JSON.stringify(sessions),
@@ -657,6 +641,9 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     if (this.isTokenNotExpired(session.expiresIn)) {
       await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
+      // Emit a 'session changed' event to notify that the token has been accessed.
+      // This ensures that any components listening for session changes are notified appropriately.
+      this.#onSessionChange.fire({ changed: [session] } as unknown as SessionsChangeEvent)
       return session
     }
 
@@ -664,6 +651,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
   }
 
   static showLoginNotification() {
+    this.assertContext(this.#context)
+
     if (!this.#context.globalState.get<boolean>(TELEMETRY_EVENTS.OpenWorkspace, true)) {
       return
     }
@@ -671,17 +660,23 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     const openWorkspace = 'Open Workspace'
     const dontAskAgain = "Don't ask again"
 
+    const informationMessageCallback: (
+      answer: typeof openWorkspace | typeof dontAskAgain | undefined,
+    ) => void = (answer) => {
+      this.assertContext(this.#context)
+
+      if (answer === openWorkspace) {
+        const dashboardUri = getRunmeAppUrl(['app'])
+        const uri = Uri.parse(dashboardUri)
+        env.openExternal(uri)
+      } else if (answer === dontAskAgain) {
+        this.#context.globalState.update(TELEMETRY_EVENTS.OpenWorkspace, false)
+      }
+    }
+
     window
       .showInformationMessage('Logged into the Stateful Cloud', openWorkspace, dontAskAgain)
-      .then((answer) => {
-        if (answer === openWorkspace) {
-          const dashboardUri = getRunmeAppUrl(['app'])
-          const uri = Uri.parse(dashboardUri)
-          env.openExternal(uri)
-        } else if (answer === dontAskAgain) {
-          this.#context.globalState.update(TELEMETRY_EVENTS.OpenWorkspace, false)
-        }
-      })
+      .then(informationMessageCallback)
   }
 }
 

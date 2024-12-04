@@ -43,7 +43,6 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
-  GITHUB_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
   NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
@@ -560,19 +559,6 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
   )
 }
 
-export async function getGithubAuthSession(createIfNone: boolean = true, silent?: boolean) {
-  const scope = ['user:email']
-  const options: AuthenticationGetSessionOptions = {}
-
-  if (silent !== undefined) {
-    options.silent = silent
-  } else {
-    options.createIfNone = createIfNone
-  }
-
-  return await authentication.getSession(AuthenticationProviders.GitHub, scope, options)
-}
-
 export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
   const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
@@ -789,12 +775,6 @@ export async function promptUserSession() {
         }
       })
   }
-}
-
-export async function checkSession(context: ExtensionContext) {
-  const session = await getGithubAuthSession(false)
-  context.globalState.update(GITHUB_USER_SIGNED_IN, !!session)
-  ContextState.addKey(GITHUB_USER_SIGNED_IN, !!session)
 }
 
 export function editJsonc(
