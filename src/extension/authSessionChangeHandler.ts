@@ -10,7 +10,7 @@ export default class AuthSessionChangeHandler implements Disposable {
   #subscriptions: Subscription[] = []
   #listeners: ((event: AuthenticationSessionsChangeEvent) => void)[] = []
 
-  private constructor(private debounceTimeMs: number = 500) {
+  private constructor(private debounceTimeMs: number = 100) {
     this.#eventSubject = new Subject<AuthenticationSessionsChangeEvent>()
     this.#subscriptions.push(
       this.#eventSubject
