@@ -44,8 +44,6 @@ vi.mock('vscode', async () => {
   }
 })
 
-// vi.mocked('../../../../src/extension/provider/statefulAuth')
-
 vi.mock('../../../../src/extension/cell', async () => {
   const actual = await import('../../../../src/extension/cell')
   return {
