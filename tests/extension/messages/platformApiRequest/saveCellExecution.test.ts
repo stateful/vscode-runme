@@ -1,4 +1,4 @@
-import { authentication, notebooks } from 'vscode'
+import { authentication, ExtensionContext, notebooks, Uri } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -98,6 +98,16 @@ const mockCellInCache = (kernel, cellId) => {
     metadata: {},
   })
 }
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 suite('Save cell execution', () => {
   const kernel = new Kernel({} as any)

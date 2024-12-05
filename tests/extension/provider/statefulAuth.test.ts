@@ -1,14 +1,12 @@
 import * as crypto from 'node:crypto'
 
+import { ExtensionContext, Uri, workspace } from 'vscode'
 import { expect, vi, beforeEach, describe, it } from 'vitest'
-import { Uri, ExtensionContext, workspace } from 'vscode'
 import fetch from 'node-fetch'
 import jwt from 'jsonwebtoken'
 
 import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
-import { RunmeUriHandler } from '../../../src/extension/handler/uri'
 import { getRunmeAppUrl } from '../../../src/utils/configuration'
-import { Kernel } from '../../../src/extension/kernel'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -30,10 +28,7 @@ const contextFake: ExtensionContext = {
   subscriptions: [],
 } as any
 
-const uriHandlerFake: RunmeUriHandler = {} as any
-const kernelFake: Kernel = {} as any
-
-StatefulAuthProvider.initialize(contextFake, kernelFake, uriHandlerFake)
+StatefulAuthProvider.initialize(contextFake)
 
 describe('StatefulAuthProvider', () => {
   let provider: StatefulAuthProvider
