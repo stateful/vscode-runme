@@ -3,7 +3,6 @@ import { from } from 'rxjs'
 import { take, withLatestFrom } from 'rxjs/operators'
 
 import { fetchStaticHtml, resolveAppToken } from '../utils'
-import { IAppToken } from '../services/runme'
 import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
 import getLogger from '../logger'
 import { type SyncSchemaBus } from '../../types'
@@ -32,10 +31,6 @@ export default class CloudPanel extends TanglePanel {
     identifier: string,
   ) {
     super(context, getRunmePanelIdentifier(identifier))
-  }
-
-  public async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
-    return resolveAppToken(createIfNone)
   }
 
   public hydrateHtml(html: string, payload: InitPayload) {
@@ -69,11 +64,14 @@ export default class CloudPanel extends TanglePanel {
     return Promise.resolve()
   }
 
-  private async getHydratedHtml(): Promise<string> {
+  private async getHydratedHtml(silentToken?: boolean): Promise<string> {
     let appToken: string | null
     let staticHtml: string
     try {
-      appToken = await this.getAppToken(false).then((appToken) => appToken?.token ?? null)
+      const createIfNone = true
+      appToken = await resolveAppToken(createIfNone, silentToken).then(
+        (appToken) => appToken?.token ?? null,
+      )
     } catch (err: any) {
       log.error(err?.message || err)
       appToken = null
@@ -152,8 +150,8 @@ export default class CloudPanel extends TanglePanel {
   // unnest existing type would be cleaner
   private async onSignIn(bus: SyncSchemaBus) {
     try {
-      const appToken = await this.getAppToken(true)
-      bus.emit('onAppToken', appToken!)
+      const appToken = await resolveAppToken(true)
+      bus.emit('onAppToken', { token: appToken?.token ?? 'EMPTY' })
       from(this.getHydratedHtml())
         .pipe(withLatestFrom(this.webview), take(1))
         .subscribe(([html, recentWebview]) => {
