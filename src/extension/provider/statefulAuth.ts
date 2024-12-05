@@ -142,6 +142,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
           message = JSON.stringify(error)
         }
 
+        logger.error(message)
+
         // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
         // throw new Error('User did not consent to login.')
         // Calling again to ensure User Menu Badge
@@ -206,8 +208,15 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         await ContextState.addKey(PLATFORM_USER_SIGNED_IN, false)
         await this.removeSession(session.id)
       }
-    } catch (e) {
+    } catch (error) {
       // Nothing to do
+      let message
+      if (error instanceof Error) {
+        message = error.message
+      } else {
+        message = JSON.stringify(error)
+      }
+      logger.error(message)
     }
 
     return []
