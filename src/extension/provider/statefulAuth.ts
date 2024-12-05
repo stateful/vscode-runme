@@ -282,10 +282,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     sessions.splice(sessionIdx, 1)
 
     await this.persistSessions(sessions, {
-      added: undefined,
       removed: [session],
-      changed: undefined,
-    })
+    } as unknown as SessionsChangeEvent)
   }
 
   /**
