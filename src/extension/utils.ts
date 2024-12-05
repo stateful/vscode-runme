@@ -588,9 +588,9 @@ export async function resolveAuthToken(createIfNone: boolean = true) {
   return session.accessToken
 }
 
-export async function resolveAppToken(createIfNone: boolean = true) {
+export async function resolveAppToken(createIfNone: boolean = true, silent?: boolean) {
   if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
-    const session = await getPlatformAuthSession(createIfNone)
+    const session = await getPlatformAuthSession(createIfNone, silent)
     if (!session) {
       return null
     }
