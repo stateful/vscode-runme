@@ -648,9 +648,6 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     if (this.isTokenNotExpired(session.expiresIn)) {
       await ContextState.addKey(PLATFORM_USER_SIGNED_IN, true)
-      // Emit a 'session changed' event to notify that the token has been accessed.
-      // This ensures that any components listening for session changes are notified appropriately.
-      this.#onSessionChange.fire({ changed: [session] } as unknown as SessionsChangeEvent)
       return session
     }
 
