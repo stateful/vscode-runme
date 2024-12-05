@@ -2,6 +2,7 @@ import { suite, test, expect, vi } from 'vitest'
 import { workspace, Uri, type ExtensionContext, type WebviewView } from 'vscode'
 
 import CloudPanel from '../../../src/extension/panels/cloud'
+import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -39,6 +40,16 @@ vi.mock('../../../src/extension/utils', () => {
     }),
   }
 })
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 suite('Panel', () => {
   const staticHtml =

@@ -6,6 +6,7 @@ import getLogger from '../logger'
 import { type SyncSchemaBus } from '../../types'
 import archiveCell from '../services/archiveCell'
 import unArchiveCell from '../services/unArchiveCell'
+import { IAppToken } from '../services/runme'
 
 import { TanglePanel } from './base'
 
@@ -30,6 +31,13 @@ export default class CloudPanel extends TanglePanel {
     identifier: string,
   ) {
     super(context, getRunmePanelIdentifier(identifier))
+  }
+
+  public async getAppToken(
+    createIfNone: boolean = true,
+    silent?: boolean,
+  ): Promise<IAppToken | null> {
+    return resolveAppToken(createIfNone, silent)
   }
 
   public hydrateHtml(html: string, payload: InitPayload) {
@@ -72,7 +80,7 @@ export default class CloudPanel extends TanglePanel {
     let staticHtml: string
     try {
       const createIfNone = true
-      appToken = await resolveAppToken(createIfNone, silentToken).then(
+      appToken = await this.getAppToken(createIfNone, silentToken).then(
         (appToken) => appToken?.token ?? null,
       )
     } catch (err: any) {
@@ -153,7 +161,7 @@ export default class CloudPanel extends TanglePanel {
   // unnest existing type would be cleaner
   private async onSignIn(bus: SyncSchemaBus) {
     try {
-      const appToken = await resolveAppToken(true)
+      const appToken = await this.getAppToken(true)
       bus.emit('onAppToken', { token: appToken?.token ?? 'EMPTY' })
       if (this.currentWebview) {
         this.currentWebview.html = await this.getHydratedHtml()
