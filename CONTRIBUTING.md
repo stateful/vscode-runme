@@ -173,7 +173,7 @@ export NODE_OPTIONS="--import=./specifier-register.mjs --max-old-space-size=8192
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
-```sh {"id":"01J5VPD3TXY1EAZDCXNHN60S77"}
+```sh {"id":"01J5VPD3TXY1EAZDCXNHN60S77","promptEnv":"never"}
 export NODE_OPTIONS="--import=./specifier-register.mjs --max-old-space-size=8192"
 npx runme run test:format test:lint test:unit
 ```
