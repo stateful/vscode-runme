@@ -43,7 +43,6 @@ import {
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
-  GITHUB_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
   NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
@@ -74,6 +73,7 @@ import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
 import { RunmeIdentity } from './grpc/serializerTypes'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 declare var globalThis: any
 
@@ -559,15 +559,15 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
   )
 }
 
-export function getGithubAuthSession(createIfNone: boolean = true) {
-  return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
-    createIfNone,
-  })
-}
-
 export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
   const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
+
+  const existenSession = await StatefulAuthProvider.getSession()
+
+  if (existenSession) {
+    return existenSession
+  }
 
   if (silent !== undefined) {
     options.silent = silent
@@ -588,9 +588,9 @@ export async function resolveAuthToken(createIfNone: boolean = true) {
   return session.accessToken
 }
 
-export async function resolveAppToken(createIfNone: boolean = true) {
+export async function resolveAppToken(createIfNone: boolean = true, silent?: boolean) {
   if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
-    const session = await getPlatformAuthSession(createIfNone)
+    const session = await getPlatformAuthSession(createIfNone, silent)
     if (!session) {
       return null
     }
@@ -775,12 +775,6 @@ export async function promptUserSession() {
         }
       })
   }
-}
-
-export async function checkSession(context: ExtensionContext) {
-  const session = await getGithubAuthSession(false)
-  context.globalState.update(GITHUB_USER_SIGNED_IN, !!session)
-  ContextState.addKey(GITHUB_USER_SIGNED_IN, !!session)
 }
 
 export function editJsonc(

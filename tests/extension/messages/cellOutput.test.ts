@@ -1,9 +1,10 @@
-import { NotebookCell } from 'vscode'
+import { ExtensionContext, NotebookCell, Uri } from 'vscode'
 import { suite, vi, test, expect } from 'vitest'
 
 import { handleCellOutputMessage } from '../../../src/extension/messages/cellOutput'
 import { ClientMessages, OutputType } from '../../../src/constants'
 import { Kernel } from '../../../src/extension/kernel'
+import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -12,6 +13,16 @@ vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 suite('Handle CellOutput messages', () => {
   const mockOutput = (type: OutputType) => {
