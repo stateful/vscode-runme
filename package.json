@@ -1328,7 +1328,7 @@
     "@wdio/spec-reporter": "^8.40.6",
     "chromedriver": "^131.0.2",
     "comment-json": "^4.2.5",
-    "eslint": "^8.57.1",
+    "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
