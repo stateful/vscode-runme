@@ -116,7 +116,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
    * @param scopes
    * @returns
    */
-  public async getSessions(scopes?: string[]): Promise<readonly StatefulAuthSession[]> {
+  public async getSessions(scopes?: string[]): Promise<AuthenticationSession[]> {
     try {
       const sessions = await this.getAllSessions()
       if (!sessions.length) {
