@@ -1,11 +1,22 @@
 import { vi, test, expect } from 'vitest'
-import { NotebookCellStatusBarAlignment } from 'vscode'
+import { ExtensionContext, NotebookCellStatusBarAlignment, Uri } from 'vscode'
 
 import { CopyStatusBarItem } from '../../../src/extension/provider/cellStatusBar/items/copy'
 import { Kernel } from '../../../src/extension/kernel'
+import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode-telemetry')
 vi.mock('vscode')
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 test('NotebookCellStatusBarAlignment test suite', () => {
   const kernel = new Kernel({} as any)

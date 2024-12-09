@@ -1,8 +1,9 @@
 import { vi, describe, it, expect } from 'vitest'
-import { commands, NotebookCellKind } from 'vscode'
+import { commands, ExtensionContext, NotebookCellKind, Uri } from 'vscode'
 
 import { SessionOutputCellStatusBarProvider } from '../../../src/extension/provider/cellStatusBar/sessionOutput'
 import { Kernel } from '../../../src/extension/kernel'
+import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -27,6 +28,16 @@ vi.mock('../../../src/extension/utils', () => ({
 
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 describe('Session Outputs Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)
