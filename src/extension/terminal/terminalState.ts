@@ -1,5 +1,4 @@
 import { Terminal as XTerm } from '@xterm/headless'
-import { SerializeAddon } from '@xterm/addon-serialize'
 
 import { OutputType } from '../../constants'
 import { RunnerExitReason } from '../runner'
@@ -26,7 +25,6 @@ export class XTermState implements ITerminalState {
   readonly outputType = OutputType.terminal
 
   protected xterm: XTerm
-  private serializer: SerializeAddon
   private processInfo: IProcessInfoState | undefined
   protected buffer: string = ''
 
@@ -35,9 +33,6 @@ export class XTermState implements ITerminalState {
     this.xterm = new XTerm({
       allowProposedApi: true,
     })
-
-    this.serializer = new SerializeAddon()
-    this.xterm.loadAddon(this.serializer)
   }
 
   setProcessInfo(processInfo?: IProcessInfoState) {
