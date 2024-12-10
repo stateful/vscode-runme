@@ -3,13 +3,10 @@ import { customElement, property } from 'lit/decorators.js'
 
 import './actionButton'
 
-@customElement('save-button')
-export class SaveButton extends LitElement {
+@customElement('share-button')
+export class ShareButton extends LitElement {
   @property({ type: Boolean, reflect: true })
   loading: boolean = false
-
-  @property({ type: Boolean, reflect: true })
-  signedIn: boolean = false
 
   private handleClick(e: Event) {
     if (e.defaultPrevented) {
@@ -20,13 +17,11 @@ export class SaveButton extends LitElement {
   }
 
   render() {
-    let text = this.signedIn ? 'Save' : 'Save to cloud'
-
     return html`
       <action-button
         ?loading=${this.loading}
-        text="${text}"
-        ?saveIcon=${true}
+        text="Share"
+        ?shareIcon=${true}
         @onClick="${this.handleClick}"
       >
       </action-button>

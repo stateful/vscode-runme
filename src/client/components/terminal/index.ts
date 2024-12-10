@@ -28,6 +28,7 @@ import './actionButton'
 import './gistCell'
 import './open'
 import './saveButton'
+import './shareButton'
 import {
   CreateCellExecutionMutation,
   CreateEscalationMutation,
@@ -998,11 +999,21 @@ export class TerminalView extends LitElement {
           () => {
             return html`<save-button
               ?loading=${this.isLoading}
-              ?platformId=${this.platformId}
               ?signedIn=${features.isOn(FeatureName.SignedIn, this.featureState$)}
               @onClick="${this.#triggerShareCellOutput}"
             >
             </save-button>`
+          },
+          () => {},
+        )}
+        ${when(
+          this.shouldRenderShareButton(),
+          () => {
+            return html`<share-button
+              ?loading=${this.isLoading}
+              @onClick="${this.#triggerShareCellOutput}"
+            >
+            </share-button>`
           },
           () => {},
         )}
@@ -1077,10 +1088,14 @@ export class TerminalView extends LitElement {
       )
   }
 
-  shouldRenderSaveButton(): boolean {
+  shouldRenderSaveButton() {
     const isExitCodeValid = this.exitCode === undefined || this.exitCode === 0
+    return !this.platformId && isExitCodeValid && !this.isDaggerOutput
+  }
+
+  shouldRenderShareButton() {
     const isFeatureEnabled = features.isOn(FeatureName.Share, this.featureState$)
-    return isExitCodeValid && !this.platformId && !this.isDaggerOutput && isFeatureEnabled
+    return this.platformId && isFeatureEnabled && this.isShareReady
   }
 }
 

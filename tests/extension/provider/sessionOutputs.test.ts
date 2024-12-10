@@ -28,7 +28,7 @@ vi.mock('../../../src/extension/utils', () => ({
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
-describe('Session Outputs Cell Status Bar provider', () => {
+describe('Preview Outputs Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)
   it('should register commands when initializing', () => {
     new SessionOutputCellStatusBarProvider(kernel)
