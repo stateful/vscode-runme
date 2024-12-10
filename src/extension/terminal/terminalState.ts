@@ -28,6 +28,7 @@ export class XTermState implements ITerminalState {
   protected xterm: XTerm
   private serializer: SerializeAddon
   private processInfo: IProcessInfoState | undefined
+  protected buffer: string = ''
 
   constructor() {
     // TODO: lines/cols
@@ -48,11 +49,24 @@ export class XTermState implements ITerminalState {
   }
 
   serialize(): string {
-    return this.serializer.serialize()
+    return this.buffer
   }
 
   write(data: string | Uint8Array): void {
     this.xterm.write(data)
+    this.addToBuffer(data)
+  }
+
+  addToBuffer(data: string | Uint8Array): void {
+    if (typeof data === 'string') {
+      this.buffer = this.buffer + data
+    } else {
+      this.buffer = this.buffer + new TextDecoder().decode(data)
+    }
+  }
+
+  cleanBuffer(): void {
+    this.buffer = ''
   }
 
   input(data: string, wasUserInput: boolean): void {
