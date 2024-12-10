@@ -15,11 +15,11 @@ import {
   debounceTime,
   map,
   filter,
+  first,
   from,
   scan,
   withLatestFrom,
   Subscription,
-  takeLast,
 } from 'rxjs'
 import { RpcError } from '@protobuf-ts/runtime-rpc'
 
@@ -297,7 +297,7 @@ export const executeRunner: IKernelRunner = async ({
           filter((item) => {
             return isCustomMime(item.mime)
           }),
-          takeLast(1),
+          first(),
         )
         .subscribe({
           next: () => outputs.showOutput(OutputType.outputItems),
