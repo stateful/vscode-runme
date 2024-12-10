@@ -44,6 +44,13 @@ export function closeTerminalByEnvID(id: string, kill?: boolean) {
   }
 }
 
+export function openTerminalByEnvID(id: string) {
+  const terminal = window.terminals.find((t) => getTerminalRunmeId(t) === id)
+  if (terminal) {
+    terminal.show()
+  }
+}
+
 export const taskExecutor: IKernelExecutor = async (executor) => {
   const { context, exec, doc } = executor
   const { interactive: isInteractive, promptEnv } = getAnnotations(exec.cell)

@@ -15,7 +15,7 @@ export async function handleCellOutputMessage(options: ICellOutputMessage): Prom
   const { message, cell, kernel, outputType } = options
   if (message.type === ClientMessages.closeCellOutput) {
     const outputs = await kernel.getCellOutputs(cell)
-    if ([OutputType.terminal, OutputType.outputItems].includes(outputType)) {
+    if ([OutputType.terminal].includes(outputType)) {
       return outputs.showTerminal(false)
     }
     return outputs.showOutput(outputType, false)

@@ -56,7 +56,7 @@ suite('Handle CellOutput messages', () => {
         },
       },
     })
-    if ([OutputType.terminal, OutputType.outputItems].includes(type)) {
+    if ([OutputType.terminal].includes(type)) {
       expect(showTerminal).toBeCalledTimes(1)
       expect(showTerminal).toBeCalledWith(false)
     } else {

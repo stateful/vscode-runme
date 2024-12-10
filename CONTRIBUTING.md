@@ -173,7 +173,7 @@ export NODE_OPTIONS="--import=./specifier-register.mjs --max-old-space-size=8192
 npx runme run test:format test:lint test:unit test:e2e
 ```
 
-```sh {"id":"01J5VPD3TXY1EAZDCXNHN60S77"}
+```sh {"id":"01J5VPD3TXY1EAZDCXNHN60S77","promptEnv":"never"}
 export NODE_OPTIONS="--import=./specifier-register.mjs --max-old-space-size=8192"
 npx runme run test:format test:lint test:unit
 ```
@@ -234,7 +234,7 @@ open coverage/lcov-report/index.html
 
 We use WebdriverIO to run e2e tests on the VS Code extension:
 
-```sh {"id":"01HF7VQMH8ESX1EFV4PX19FXW0","name":"test:e2e"}
+```sh {"id":"01HF7VQMH8ESX1EFV4PX19FXW0","name":"test:e2e","promptEnv":"never"}
 export NODE_OPTIONS="--import=./specifier-register.mjs --max-old-space-size=8192"
 npx wdio run ./tests/e2e/wdio.conf.ts
 ```

@@ -20,6 +20,7 @@ vi.mock('../../../src/extension/utils', () => ({
         background: false,
         interactive: true,
         closeTerminalOnSuccess: true,
+        openTerminalOnError: true,
         mimeType: 'text/plain',
         name: 'npm-install',
         'runme.dev/id': '01HGVC6M8Y76XAGAY6MQ06F5XS',

@@ -96,6 +96,7 @@ export namespace Serializer {
     background?: string
     interactive?: string
     closeTerminalOnSuccess?: string
+    openTerminalOnError?: string
     mimeType?: string
     promptEnv?: string
     category?: string
@@ -773,6 +774,7 @@ export enum FeatureName {
   RequireStatefulAuth = 'RequireStatefulAuth',
   CopySelectionToClipboard = 'CopySelectionToClipboard',
   NewTreeProvider = 'NewTreeProvider',
+  OpenTerminalOnStartup = 'OpenTerminalOnStartup',
   HostedPlayground = 'HostedPlayground',
   RecommendExtension = 'RecommendExtension',
 }
