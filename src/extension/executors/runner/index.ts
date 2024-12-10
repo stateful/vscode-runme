@@ -40,7 +40,7 @@ import {
   getServerRunnerVersion,
   isNotebookTerminalEnabledForCell,
 } from '../../../utils/configuration'
-import { ITerminalState } from '../../terminal/terminalState'
+import { ITerminalState, XTermState } from '../../terminal/terminalState'
 import { toggleTerminal } from '../../commands'
 import { closeTerminalByEnvID, openTerminalByEnvID } from '../task'
 import {
@@ -243,6 +243,10 @@ export const executeRunner: IKernelRunner = async ({
 
   let mimeType = cellMimeType
   if (interactive) {
+    if (terminalState instanceof XTermState) {
+      terminalState.cleanBuffer()
+    }
+
     if (revealNotebookTerminal) {
       program.registerTerminalWindow('notebook')
       await program.setActiveTerminalWindow('notebook')
