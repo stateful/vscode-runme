@@ -563,10 +563,10 @@ export async function getPlatformAuthSession(createIfNone: boolean = true, silen
   const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
 
-  const existenSession = await StatefulAuthProvider.getSession()
+  const session = await StatefulAuthProvider.getSession()
 
-  if (existenSession) {
-    return existenSession
+  if (session) {
+    return session
   }
 
   if (silent !== undefined) {
