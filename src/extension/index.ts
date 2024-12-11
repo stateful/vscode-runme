@@ -4,6 +4,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import { RunmeExtension } from './extension'
 import getLogger from './logger'
 import { isTelemetryEnabled } from './utils'
+import { StatefulAuthProvider } from './provider/statefulAuth'
 
 declare const CONNECTION_STR: string
 
@@ -33,6 +34,7 @@ export async function activate(context: ExtensionContext) {
 
   log.info('Activating Extension')
   try {
+    StatefulAuthProvider.initialize(context)
     await ext.initialize(context)
     log.info('Extension successfully activated')
   } catch (err: any) {

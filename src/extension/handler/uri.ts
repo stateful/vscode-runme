@@ -13,7 +13,6 @@ import {
   TaskScope,
   ShellExecution,
   tasks,
-  EventEmitter,
   Disposable,
 } from 'vscode'
 import got from 'got'
@@ -23,6 +22,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 import getLogger from '../logger'
 import { Kernel } from '../kernel'
 import { AuthenticationProviders } from '../../constants'
+import { StatefulAuthProvider } from '../provider/statefulAuth'
 
 import {
   getProjectDir,
@@ -45,8 +45,6 @@ const extensionNames: { [key: string]: string } = {
 
 export class RunmeUriHandler implements UriHandler, Disposable {
   #disposables: Disposable[] = []
-  readonly #onAuth = this.register(new EventEmitter<Uri>())
-  readonly onAuthEvent = this.#onAuth.event
 
   constructor(
     private context: ExtensionContext,
@@ -70,7 +68,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
         command,
         type: AuthenticationProviders.Stateful,
       })
-      this.#onAuth.fire(uri)
+      StatefulAuthProvider.instance.fireOnAuthEvent(uri)
       return
     } else if (command === 'setup') {
       const { fileToOpen, repository } = parseParams(params)

@@ -12,9 +12,9 @@ import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
-import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
+import { getAnnotations, getCellRunmeId, getGitContext } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
-import { InitializeClient } from '../../api/client'
+import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
   CreateCellExecutionMutation,
@@ -25,6 +25,7 @@ import {
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
+import { StatefulAuthProvider } from '../../provider/statefulAuth'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -39,10 +40,13 @@ export default async function saveCellExecution(
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
-    const silent = forceLogin ? undefined : true
-    const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
-    const session = await getPlatformAuthSession(createIfNone && forceLogin, silent)
+    let session = await StatefulAuthProvider.instance.currentSession()
+
+    if (!session && forceLogin) {
+      session = await StatefulAuthProvider.instance.newSession()
+    }
+
     if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
@@ -53,7 +57,7 @@ export default async function saveCellExecution(
       })
     }
 
-    const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
+    const graphClient = await InitializeCloudClient()
 
     const path = editor.notebook.uri.fsPath
     const gitCtx = await getGitContext(path)
