@@ -50,7 +50,6 @@ vi.mock('../../src/extension/utils', async () => {
       platform: 'darwin_arm64',
       uikind: 'desktop',
     }),
-    getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
   }
 })
 vi.mock('../../src/utils/configuration', async (importActual) => {

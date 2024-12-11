@@ -77,7 +77,7 @@ suite('Panel', () => {
 
   test('resolves authed', async () => {
     const p = new CloudPanel(contextMock, 'testing')
-    p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
+    p.getAppToken = vi.fn().mockResolvedValue('webview.auth.token')
 
     await p.resolveWebviewTelemetryView(view)
 
@@ -102,7 +102,7 @@ suite('Panel', () => {
   test('resolves authed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new CloudPanel(contextMock, 'testing')
-    p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
+    p.getAppToken = vi.fn().mockResolvedValue('webview.auth.token')
 
     await p.resolveWebviewTelemetryView(view)
 

@@ -1,4 +1,4 @@
-import { authentication, ExtensionContext, notebooks, Uri } from 'vscode'
+import { ExtensionContext, notebooks, Uri } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -148,9 +148,9 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
-    vi.spyOn(StatefulAuthProvider, 'getSession').mockResolvedValue(authenticationSession)
-    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
-
+    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
+      authenticationSession,
+    )
     await saveCellExecution(requestMessage, kernel)
 
     expect(messaging.postMessage).toMatchInlineSnapshot(`
@@ -228,8 +228,7 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
-    vi.spyOn(StatefulAuthProvider, 'getSession').mockResolvedValue(undefined)
-    vi.mocked(authentication.getSession).mockResolvedValue(undefined)
+    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(undefined)
     await saveCellExecution(requestMessage, kernel)
 
     expect(messaging.postMessage).toMatchInlineSnapshot(`
@@ -311,8 +310,9 @@ suite('Save cell execution', () => {
       expiresIn: 2145848400000,
     }
     vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
-    vi.spyOn(StatefulAuthProvider, 'getSession').mockResolvedValue(authenticationSession)
-    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
+    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
+      authenticationSession,
+    )
     vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => undefined)
 
     const messaging = notebooks.createRendererMessaging('runme-renderer')
@@ -368,8 +368,9 @@ suite('Save cell execution', () => {
       expiresIn: 2145848400000,
     }
     vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
-    vi.spyOn(StatefulAuthProvider, 'getSession').mockResolvedValue(authenticationSession)
-    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
+    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
+      authenticationSession,
+    )
     vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
       cells: [],
     }))
