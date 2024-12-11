@@ -108,8 +108,8 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
   }
 
-  static async getSession() {
-    const sessions = await this.instance.getSessions(['profile'])
+  async currentSession() {
+    const sessions = await this.getSessions(['profile'])
     if (!sessions.length) {
       return
     }
@@ -117,21 +117,21 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return sessions[0]
   }
 
-  public static async ensureSession() {
-    let session = await this.getSession()
+  async ensureSession() {
+    let session = await this.currentSession()
     if (session) {
-      this.showLoginNotification()
+      StatefulAuthProvider.showLoginNotification()
       return
     }
 
-    session = await this.bootstrapFromToken()
+    session = await StatefulAuthProvider.bootstrapFromToken()
     const forceLogin = features.isOnInContextState(FeatureName.ForceLogin) || !!session
     const silent = forceLogin ? undefined : true
 
     getPlatformAuthSession(forceLogin, silent)
       .then((session) => {
         if (session) {
-          this.showLoginNotification()
+          StatefulAuthProvider.showLoginNotification()
         }
       })
       .catch((error) => {

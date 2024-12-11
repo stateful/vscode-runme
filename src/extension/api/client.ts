@@ -8,7 +8,7 @@ import { getFeaturesContext } from '../features'
 import { StatefulAuthProvider } from '../provider/statefulAuth'
 
 export async function InitializeCloudClient(uri?: string) {
-  const session = await StatefulAuthProvider.getSession()
+  const session = await StatefulAuthProvider.instance.currentSession()
 
   if (!session) {
     throw new Error('You must authenticate with your Stateful account')

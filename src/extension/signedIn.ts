@@ -32,7 +32,8 @@ export class SignedIn implements Disposable {
   constructor(protected readonly kernel: Kernel) {
     const signedIn$ = new Observable<boolean>((observer) => {
       AuthSessionChangeHandler.instance.addListener(() => {
-        StatefulAuthProvider.getSession()
+        StatefulAuthProvider.instance
+          .currentSession()
           .then((session) => observer.next(!!session))
           .catch(() => observer.next(false))
       })

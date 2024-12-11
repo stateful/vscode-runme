@@ -204,7 +204,7 @@ export class Kernel implements Disposable {
     this.#onlySignedIn = new SignedIn(this)
     this.#disposables.push(this.#onlySignedIn)
 
-    StatefulAuthProvider.getSession().then((session) => {
+    StatefulAuthProvider.instance.currentSession().then((session) => {
       const packageJSON = context?.extension?.packageJSON || {}
       const featContext: FeatureContext = {
         os: os.platform(),

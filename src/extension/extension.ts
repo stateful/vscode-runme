@@ -489,7 +489,7 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      await StatefulAuthProvider.ensureSession()
+      await StatefulAuthProvider.instance.currentSession()
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
@@ -502,7 +502,7 @@ export class RunmeExtension {
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
-        StatefulAuthProvider.getSession().then(async (session) => {
+        StatefulAuthProvider.instance.currentSession().then(async (session) => {
           if (session) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
           } else {

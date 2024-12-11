@@ -19,7 +19,6 @@ import vscode, {
   WorkspaceFolder,
   ExtensionContext,
   authentication,
-  AuthenticationSession,
   AuthenticationGetSessionOptions,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
@@ -563,7 +562,7 @@ export async function getPlatformAuthSession(createIfNone: boolean = true, silen
   const scopes = ['profile']
   const options: AuthenticationGetSessionOptions = {}
 
-  const session = await StatefulAuthProvider.getSession()
+  const session = await StatefulAuthProvider.instance.currentSession()
 
   if (session) {
     return session
@@ -576,16 +575,6 @@ export async function getPlatformAuthSession(createIfNone: boolean = true, silen
   }
 
   return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
-}
-
-export async function resolveAuthToken(createIfNone: boolean = true) {
-  let session: AuthenticationSession | undefined
-  session = await getPlatformAuthSession(createIfNone)
-  if (!session) {
-    throw new Error('You must authenticate with your Stateful account')
-  }
-
-  return session.accessToken
 }
 
 export async function resolveAppToken(createIfNone: boolean = true, silent?: boolean) {
