@@ -1,12 +1,12 @@
 import { ExtensionContext, WebviewView, window, ColorThemeKind, Uri, env, Webview } from 'vscode'
 
-import { fetchStaticHtml, resolveAppToken } from '../utils'
+import { fetchStaticHtml } from '../utils'
 import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
 import getLogger from '../logger'
 import { type SyncSchemaBus } from '../../types'
 import archiveCell from '../services/archiveCell'
 import unArchiveCell from '../services/unArchiveCell'
-import { IAppToken } from '../services/runme'
+import { StatefulAuthProvider } from '../provider/statefulAuth'
 
 import { TanglePanel } from './base'
 
@@ -33,11 +33,22 @@ export default class CloudPanel extends TanglePanel {
     super(context, getRunmePanelIdentifier(identifier))
   }
 
-  public async getAppToken(
-    createIfNone: boolean = true,
-    silent?: boolean,
-  ): Promise<IAppToken | null> {
-    return resolveAppToken(createIfNone, silent)
+  public async getAppToken(createIfNone: boolean = false): Promise<string | null> {
+    const session = await StatefulAuthProvider.instance.currentSession()
+
+    if (session) {
+      return session.accessToken
+    }
+
+    if (createIfNone) {
+      const session = await StatefulAuthProvider.instance.newSession()
+
+      if (session) {
+        return session.accessToken
+      }
+    }
+
+    return null
   }
 
   public hydrateHtml(html: string, payload: InitPayload) {
@@ -59,7 +70,15 @@ export default class CloudPanel extends TanglePanel {
 
     log.trace(`${this.identifier} webview resolving`)
 
-    const html = await this.getHydratedHtml()
+    let appToken: string | null
+    try {
+      appToken = await this.getAppToken()
+    } catch (err: any) {
+      log.error(err?.message || err)
+      appToken = null
+    }
+
+    const html = await this.getHydratedHtml(appToken)
     webviewView.webview.html = html
     webviewView.webview.options = {
       ...webviewOptions,
@@ -75,18 +94,9 @@ export default class CloudPanel extends TanglePanel {
     return Promise.resolve()
   }
 
-  private async getHydratedHtml(silentToken?: boolean): Promise<string> {
-    let appToken: string | null
+  private async getHydratedHtml(appToken: string | null): Promise<string> {
     let staticHtml: string
-    try {
-      const createIfNone = true
-      appToken = await this.getAppToken(createIfNone, silentToken).then(
-        (appToken) => appToken?.token ?? null,
-      )
-    } catch (err: any) {
-      log.error(err?.message || err)
-      appToken = null
-    }
+
     try {
       staticHtml = await fetchStaticHtml(this.appUrl).then((r) => r.text())
     } catch (err: any) {
@@ -162,9 +172,9 @@ export default class CloudPanel extends TanglePanel {
   private async onSignIn(bus: SyncSchemaBus) {
     try {
       const appToken = await this.getAppToken(true)
-      bus.emit('onAppToken', { token: appToken?.token ?? 'EMPTY' })
+      bus.emit('onAppToken', { token: appToken ?? 'EMPTY' })
       if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml()
+        this.currentWebview.html = await this.getHydratedHtml(appToken)
       }
     } catch (err: any) {
       log.error(err?.message || err)
@@ -175,7 +185,7 @@ export default class CloudPanel extends TanglePanel {
     try {
       bus.emit('onAppToken', { token: 'EMPTY' })
       if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml(true)
+        this.currentWebview.html = await this.getHydratedHtml(null)
       }
     } catch (err: any) {
       log.error(err?.message || err)

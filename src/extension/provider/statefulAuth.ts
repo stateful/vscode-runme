@@ -14,6 +14,7 @@ import {
   AuthenticationProviderAuthenticationSessionsChangeEvent,
   Event,
   workspace,
+  AuthenticationGetSessionOptions,
 } from 'vscode'
 import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
@@ -106,6 +107,16 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     if (!context) {
       throw new Error('Missing context dependency, requires StatefulAuthProvider.initialize')
     }
+  }
+
+  async newSession() {
+    const scopes = ['profile']
+
+    const options: AuthenticationGetSessionOptions = {
+      createIfNone: true,
+    }
+
+    return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
   }
 
   async currentSession() {
