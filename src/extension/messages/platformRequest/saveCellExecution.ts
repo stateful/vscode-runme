@@ -41,21 +41,12 @@ export default async function saveCellExecution(
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
 
-    const session = StatefulAuthProvider.instance.currentSession()
+    let session = await StatefulAuthProvider.instance.currentSession()
 
-    // Stateful Extension forces login instead of Cloud Panel opening
     if (!session && forceLogin) {
-      StatefulAuthProvider.instance.newSession()
-
-      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
-        id: message.output.id,
-      })
+      session = await StatefulAuthProvider.instance.newSession()
     }
 
-    // Runme Extension opens Cloud Panel
     if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {

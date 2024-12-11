@@ -109,7 +109,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
   }
 
-  async newSession(silent?: boolean) {
+  async newSession(silent?: boolean): Promise<StatefulAuthSession | undefined> {
     const options: AuthenticationGetSessionOptions = {}
 
     if (silent !== undefined) {
@@ -118,11 +118,13 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
       options.createIfNone = true
     }
 
-    return await authentication.getSession(
+    const session = await authentication.getSession(
       AuthenticationProviders.Stateful,
       DEFAULT_SCOPES,
       options,
     )
+
+    return session as StatefulAuthSession | undefined
   }
 
   async currentSession() {

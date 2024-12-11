@@ -489,7 +489,7 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      await StatefulAuthProvider.instance.currentSession()
+      await StatefulAuthProvider.instance.ensureSession()
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
