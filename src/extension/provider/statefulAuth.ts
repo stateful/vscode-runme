@@ -25,13 +25,13 @@ import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN, TELEMETRY_EVENTS } fr
 import ContextState from '../contextState'
 import getLogger from '../logger'
 import { FeatureName } from '../../types'
-import { getPlatformAuthSession } from '../utils'
 import * as features from '../features'
 
 const logger = getLogger('StatefulAuthProvider')
 
 const AUTH_NAME = 'Stateful'
 const SESSIONS_SECRET_KEY = `${AuthenticationProviders.Stateful}.sessions`
+export const DEFAULT_SCOPES = ['profile']
 
 interface TokenInformation {
   accessToken: string
@@ -109,18 +109,24 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     }
   }
 
-  async newSession() {
-    const scopes = ['profile']
+  async newSession(silent?: boolean) {
+    const options: AuthenticationGetSessionOptions = {}
 
-    const options: AuthenticationGetSessionOptions = {
-      createIfNone: true,
+    if (silent !== undefined) {
+      options.silent = silent
+    } else {
+      options.createIfNone = true
     }
 
-    return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
+    return await authentication.getSession(
+      AuthenticationProviders.Stateful,
+      DEFAULT_SCOPES,
+      options,
+    )
   }
 
   async currentSession() {
-    const sessions = await this.getSessions(['profile'])
+    const sessions = await this.getSessions(this.getScopes())
     if (!sessions.length) {
       return
     }
@@ -137,10 +143,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     session = await StatefulAuthProvider.bootstrapFromToken()
     const forceLogin = features.isOnInContextState(FeatureName.ForceLogin) || !!session
+
     const silent = forceLogin ? undefined : true
 
-    getPlatformAuthSession(forceLogin, silent)
-      .then((session) => {
+    this.newSession(silent)
+      .then(() => {
         if (session) {
           StatefulAuthProvider.showLoginNotification()
         }
@@ -159,7 +166,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         // throw new Error('User did not consent to login.')
         // Calling again to ensure User Menu Badge
         if (forceLogin && message === 'User did not consent to login.') {
-          getPlatformAuthSession(false)
+          authentication.getSession(AuthenticationProviders.Stateful, DEFAULT_SCOPES, {})
         }
       })
   }

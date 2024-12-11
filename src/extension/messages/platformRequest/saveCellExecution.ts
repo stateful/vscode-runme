@@ -12,7 +12,7 @@ import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
-import { getAnnotations, getCellRunmeId, getGitContext, getPlatformAuthSession } from '../../utils'
+import { getAnnotations, getCellRunmeId, getGitContext } from '../../utils'
 import { GrpcSerializer } from '../../serializer'
 import { InitializeCloudClient } from '../../api/client'
 import {
@@ -25,7 +25,7 @@ import {
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
-import { StatefulAuthSession } from '../../provider/statefulAuth'
+import { StatefulAuthProvider } from '../../provider/statefulAuth'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -40,14 +40,22 @@ export default async function saveCellExecution(
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin)
-    const silent = forceLogin ? undefined : true
-    const createIfNone = !message.output.data.isUserAction && autoSaveIsOn ? false : true
 
-    const session = (await getPlatformAuthSession(
-      createIfNone && forceLogin,
-      silent,
-    )) as StatefulAuthSession
+    const session = StatefulAuthProvider.instance.currentSession()
 
+    // Stateful Extension forces login instead of Cloud Panel opening
+    if (!session && forceLogin) {
+      StatefulAuthProvider.instance.newSession()
+
+      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
+        data: {
+          displayShare: false,
+        },
+        id: message.output.id,
+      })
+    }
+
+    // Runme Extension opens Cloud Panel
     if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {

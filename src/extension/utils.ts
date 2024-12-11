@@ -18,8 +18,6 @@ import vscode, {
   commands,
   WorkspaceFolder,
   ExtensionContext,
-  authentication,
-  AuthenticationGetSessionOptions,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -37,7 +35,6 @@ import {
 } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
-  AuthenticationProviders,
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
@@ -557,38 +554,6 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
     {} as Record<string, string | undefined>,
   )
 }
-
-export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
-  const scopes = ['profile']
-  const options: AuthenticationGetSessionOptions = {}
-
-  const session = await StatefulAuthProvider.instance.currentSession()
-
-  if (session) {
-    return session
-  }
-
-  if (silent !== undefined) {
-    options.silent = silent
-  } else {
-    options.createIfNone = createIfNone
-  }
-
-  return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
-}
-
-export async function resolveAppToken(createIfNone: boolean = true, silent?: boolean) {
-  if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
-    const session = await getPlatformAuthSession(createIfNone, silent)
-    if (!session) {
-      return null
-    }
-    return { token: session.accessToken }
-  }
-
-  return null
-}
-
 export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
 }
@@ -713,15 +678,13 @@ export function asWorkspaceRelativePath(documentPath: string): {
 
 /**
  * Handles the first time experience for saving a cell.
- * It informs the user that a Login with a GitHub account is required before prompting the user.
+ * It informs the user that a Login with a Stateful account is required before prompting the user.
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
 export async function promptUserSession() {
   const createIfNone = features.isOnInContextState(FeatureName.ForceLogin)
-  const silent = createIfNone ? undefined : true
-
-  const session = await getPlatformAuthSession(false, silent)
+  const session = await StatefulAuthProvider.instance.currentSession()
 
   const displayLoginPrompt =
     getLoginPrompt() && createIfNone && features.isOnInContextState(FeatureName.Share)
@@ -742,27 +705,7 @@ export async function promptUserSession() {
       return commands.executeCommand('runme.openSettings', 'runme.app.loginPrompt')
     }
 
-    getPlatformAuthSession(createIfNone)
-      .then((session) => {
-        if (!session) {
-          throw new Error('You must authenticate with your Stateful account')
-        }
-      })
-      .catch((error) => {
-        let message
-        if (error instanceof Error) {
-          message = error.message
-        } else {
-          message = String(error)
-        }
-
-        // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
-        // throw new Error('User did not consent to login.')
-        // Calling again to ensure User Menu Badge
-        if (createIfNone && message === 'User did not consent to login.') {
-          getPlatformAuthSession(false)
-        }
-      })
+    StatefulAuthProvider.instance.ensureSession()
   }
 }
 
