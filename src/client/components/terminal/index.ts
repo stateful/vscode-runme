@@ -392,9 +392,6 @@ export class TerminalView extends LitElement {
   isAutoSaveEnabled: boolean = false
 
   @property({ type: Boolean })
-  isSessionOutputsEnabled: boolean = false
-
-  @property({ type: Boolean })
   isPlatformAuthEnabled: boolean = false
 
   @property({ type: Boolean })

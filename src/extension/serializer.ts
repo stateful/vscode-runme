@@ -17,19 +17,17 @@ import {
   CancellationTokenSource,
   NotebookCellOutput,
   NotebookCellExecutionSummary,
-  commands,
 } from 'vscode'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { Serializer } from '../types'
+import { FeatureName, Serializer } from '../types'
 import {
-  NOTEBOOK_AUTOSAVE_ON,
-  NOTEBOOK_HAS_OUTPUTS,
   NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_PREVIEW_OUTPUTS,
   OutputType,
   RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
@@ -405,74 +403,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   }
 }
 
-export class WasmSerializer extends SerializerBase {
-  protected readonly ready: ReadyPromise
-
-  constructor(
-    protected context: ExtensionContext,
-    kernel: Kernel,
-  ) {
-    super(context, kernel)
-    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
-    this.ready = initWasm(wasmUri)
-  }
-
-  protected async saveNotebook(
-    data: NotebookData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
-  ): Promise<Uint8Array> {
-    const { Runme } = globalThis as Serializer.Wasm
-
-    const notebook = JSON.stringify(data)
-    const markdown = await Runme.serialize(notebook)
-
-    const encoder = new TextEncoder()
-    return encoder.encode(markdown)
-  }
-
-  protected async reviveNotebook(
-    content: Uint8Array,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
-  ): Promise<Serializer.Notebook> {
-    const { Runme } = globalThis as Serializer.Wasm
-
-    const markdown = Buffer.from(content).toString('utf8')
-    const notebook = await Runme.deserialize(markdown)
-
-    if (!notebook) {
-      return this.printCell('⚠️ __Error__: no cells found!')
-    }
-    return notebook
-  }
-
-  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
-    console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
-    return -1
-  }
-
-  public async saveNotebookOutputs(_uri: Uri): Promise<number> {
-    console.error('saveNotebookOutputs not implemented for WasmSerializer')
-    return -1
-  }
-
-  public getMaskedCache(): Promise<Uint8Array> | undefined {
-    console.error('getMaskedCache not implemented for WasmSerializer')
-    return Promise.resolve(new Uint8Array())
-  }
-
-  public getPlainCache(): Promise<Uint8Array> | undefined {
-    console.error('getPlainCache not implemented for WasmSerializer')
-    return Promise.resolve(new Uint8Array())
-  }
-
-  public getNotebookDataCache(): NotebookData | undefined {
-    console.error('getNotebookDataCache not implemented for WasmSerializer')
-    return {} as NotebookData
-  }
-}
-
 export class GrpcSerializer extends SerializerBase {
   private client?: ParserServiceClient
   protected ready: ReadyPromise
@@ -490,8 +420,6 @@ export class GrpcSerializer extends SerializerBase {
     kernel: Kernel,
   ) {
     super(context, kernel)
-
-    this.togglePreviewButton(GrpcSerializer.sessionOutputsEnabled())
 
     this.ready = new Promise((resolve) => {
       const disposable = server.onTransportReady(() => {
@@ -516,20 +444,14 @@ export class GrpcSerializer extends SerializerBase {
     this.client = initParserClient(transport ?? (await this.server.transport()))
   }
 
-  public togglePreviewButton(state: boolean) {
-    return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
-  }
-
   protected async handleOpenNotebook(doc: NotebookDocument) {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
-      this.togglePreviewButton(false)
       return
     }
 
     if (GrpcSerializer.isDocumentSessionOutputs(doc.metadata)) {
-      this.togglePreviewButton(false)
       return
     }
 
@@ -551,7 +473,6 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
-      this.togglePreviewButton(false)
       return
     }
 
@@ -566,39 +487,37 @@ export class GrpcSerializer extends SerializerBase {
     const bytes = await cache.get(cacheId ?? '')
 
     if (!bytes) {
-      this.togglePreviewButton(false)
       return -1
     }
 
     const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
     if (!srcDocUri) {
-      this.togglePreviewButton(false)
       return -1
     }
 
     const runnerEnv = this.kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
     if (!sessionId) {
-      this.togglePreviewButton(false)
       return -1
     }
 
-    // Don't write to disk if auto-save is off
-    if (!ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)) {
-      this.togglePreviewButton(false)
-      // But still return a valid bytes length so the cache keeps working
+    const sessionOutputsPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
+    if (false && this.kernel.isFeatureOn(FeatureName.SignedIn)) {
+      // return bytes.length
+    }
+
+    if (sessionOutputsPreview) {
+      // await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+    } else {
       return bytes.length
     }
 
     const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
     if (!sessionFile) {
-      this.togglePreviewButton(false)
       return -1
     }
 
     await workspace.fs.writeFile(sessionFile, bytes)
-    this.togglePreviewButton(true)
-
     return bytes.length
   }
 
@@ -771,10 +690,11 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static sessionOutputsEnabled() {
-    const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const isSessionOutputs = getSessionOutputs()
+    // const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    // const isSessionOutputs = getSessionOutputs()
 
-    return isSessionOutputs && isAutoSaveOn
+    // return isSessionOutputs && isAutoSaveOn
+    return getSessionOutputs()
   }
 
   private async cacheNotebookOutputs(
@@ -1020,5 +940,73 @@ export class GrpcSerializer extends SerializerBase {
 
   public getNotebookDataCache(cacheId: string): NotebookData | undefined {
     return this.notebookDataCache.get(cacheId)
+  }
+}
+
+export class WasmSerializer extends SerializerBase {
+  protected readonly ready: ReadyPromise
+
+  constructor(
+    protected context: ExtensionContext,
+    kernel: Kernel,
+  ) {
+    super(context, kernel)
+    const wasmUri = Uri.joinPath(this.context.extensionUri, 'wasm', 'runme.wasm')
+    this.ready = initWasm(wasmUri)
+  }
+
+  protected async saveNotebook(
+    data: NotebookData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken,
+  ): Promise<Uint8Array> {
+    const { Runme } = globalThis as Serializer.Wasm
+
+    const notebook = JSON.stringify(data)
+    const markdown = await Runme.serialize(notebook)
+
+    const encoder = new TextEncoder()
+    return encoder.encode(markdown)
+  }
+
+  protected async reviveNotebook(
+    content: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken,
+  ): Promise<Serializer.Notebook> {
+    const { Runme } = globalThis as Serializer.Wasm
+
+    const markdown = Buffer.from(content).toString('utf8')
+    const notebook = await Runme.deserialize(markdown)
+
+    if (!notebook) {
+      return this.printCell('⚠️ __Error__: no cells found!')
+    }
+    return notebook
+  }
+
+  protected async saveNotebookOutputsByCacheId(_cacheId: string): Promise<number> {
+    console.error('saveNotebookOutputsByCacheId not implemented for WasmSerializer')
+    return -1
+  }
+
+  public async saveNotebookOutputs(_uri: Uri): Promise<number> {
+    console.error('saveNotebookOutputs not implemented for WasmSerializer')
+    return -1
+  }
+
+  public getMaskedCache(): Promise<Uint8Array> | undefined {
+    console.error('getMaskedCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
+  }
+
+  public getPlainCache(): Promise<Uint8Array> | undefined {
+    console.error('getPlainCache not implemented for WasmSerializer')
+    return Promise.resolve(new Uint8Array())
+  }
+
+  public getNotebookDataCache(): NotebookData | undefined {
+    console.error('getNotebookDataCache not implemented for WasmSerializer')
+    return {} as NotebookData
   }
 }

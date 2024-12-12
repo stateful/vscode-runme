@@ -24,6 +24,7 @@ import {
 import {
   AuthenticationProviders,
   NOTEBOOK_LIFECYCLE_ID,
+  NOTEBOOK_PREVIEW_OUTPUTS,
   TELEMETRY_EVENTS,
   WebViews,
 } from '../constants'
@@ -244,6 +245,8 @@ export class RunmeExtension {
 
     const transientOutputs = !getSessionOutputs()
 
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/nameGenerated']: undefined,
@@ -376,6 +379,9 @@ export class RunmeExtension {
         if (!e.ui || !sessionId) {
           return
         }
+
+        await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
+
         const { notebookUri } = e.notebookEditor
         const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
 
