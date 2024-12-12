@@ -2,8 +2,7 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
-import { InitializeClient } from '../../api/client'
-import { getPlatformAuthSession } from '../../utils'
+import { InitializeCloudClient } from '../../api/client'
 import { postClientMessage } from '../../../utils/messaging'
 import { ShareType, UpdateCellOutputDocument } from '../../__generated-platform__/graphql'
 import { Kernel } from '../../kernel'
@@ -21,13 +20,7 @@ export default async function updateCellExecution(
   log.info('Updating cell execution', message.output.data.id)
 
   try {
-    const session = await getPlatformAuthSession()
-
-    if (!session) {
-      throw new Error('You must authenticate with your Stateful account')
-    }
-
-    const graphClient = InitializeClient({ runmeToken: session.accessToken })
+    const graphClient = await InitializeCloudClient()
     const result = await graphClient.mutate({
       mutation: UpdateCellOutputDocument,
       variables: {

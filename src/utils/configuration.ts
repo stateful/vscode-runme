@@ -20,9 +20,9 @@ const APP_SECTION_NAME = 'runme.app'
 
 export const OpenViewInEditorAction = z.enum(['split', 'toggle'])
 const DEFAULT_WORKSPACE_FILE_ORDER = ['.env.local', '.env']
-const DEFAULT_RUNME_APP_API_URL = 'https://platform.stateful.com'
-const DEFAULT_RUNME_BASE_DOMAIN = 'platform.stateful.com'
-const DEFAULT_RUNME_REMOTE_DEV = 'staging.platform.stateful.com'
+const DEFAULT_RUNME_APP_API_URL = 'https://cloud.stateful.com'
+const DEFAULT_RUNME_BASE_DOMAIN = 'cloud.stateful.com'
+const DEFAULT_RUNME_REMOTE_DEV = 'staging.cloud.stateful.com'
 const DEFAULT_DOCS_URL = 'https://docs.runme.dev'
 const APP_LOOPBACKS = ['127.0.0.1', 'localhost']
 const APP_LOOPBACK_MAPPING = new Map<string, string>([
