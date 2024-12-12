@@ -505,6 +505,10 @@ export class RunmeExtension {
         StatefulAuthProvider.instance.currentSession().then(async (session) => {
           if (session) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
+            kernel.emitPanelEvent('runme.cloud', 'onCommand', {
+              name: 'signIn',
+              panelId: 'runme.cloud',
+            })
           } else {
             const settingsDefault = getServerLifecycleIdentity()
             await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
