@@ -69,7 +69,7 @@ suite('Panel', () => {
       themeKind: 1,
     })
 
-    expect(hydrated).toContain('<base href="https://platform.stateful.com/">')
+    expect(hydrated).toContain('<base href="https://cloud.stateful.com/">')
     expect(hydrated).toContain(
       '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels","themeKind":1}',
     )
@@ -81,7 +81,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="https://platform.stateful.com/">')
+    expect(view.webview.html).toContain('<base href="https://cloud.stateful.com/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels","themeKind":1}',
     )
@@ -93,7 +93,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="https://platform.stateful.com/">')
+    expect(view.webview.html).toContain('<base href="https://cloud.stateful.com/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels","themeKind":1}',
     )
