@@ -24,6 +24,12 @@ updates:
       - dependency-name: "@types/vscode"
 
     groups:
+      patch-updates:
+        patterns:
+          - "typescript"
+          - "@connectrpc/connect-node"
+        update-types:
+          - patch
       types-node:
         patterns:
           - "@types/node"
@@ -47,8 +53,8 @@ updates:
   - package-ecosystem: npm
     directory: "/examples/k8s"
     schedule:
-      interval: monthly
-      time: "09:00"
+      interval: weekly
+      time: "05:30"
       day: "wednesday"
       timezone: "America/Los_Angeles"
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 3
