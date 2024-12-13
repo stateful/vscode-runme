@@ -1345,7 +1345,7 @@
     "tar-fs": "^3.0.4",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
-    "typescript": "^5.5.4",
+    "typescript": "^5.7.2",
     "unzipper": "^0.12.3",
     "vitest": "^2.0.4",
     "vscode-uri": "^3.0.7",
