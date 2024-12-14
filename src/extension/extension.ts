@@ -490,6 +490,14 @@ export class RunmeExtension {
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
       await StatefulAuthProvider.instance.ensureSession()
+      StatefulAuthProvider.instance.currentSession().then(async (session) => {
+        if (session) {
+          await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
+        } else {
+          const settingsDefault = getServerLifecycleIdentity()
+          await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
+        }
+      })
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
