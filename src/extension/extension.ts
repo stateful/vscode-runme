@@ -9,6 +9,7 @@ import {
   env,
   Uri,
   NotebookCell,
+  authentication,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
@@ -40,6 +41,8 @@ import {
   getDefaultWorkspace,
   bootFile,
   resetNotebookSettings,
+  getPlatformAuthSession,
+  getGithubAuthSession,
   openFileAsRunmeNotebook,
 } from './utils'
 import { RunmeTaskProvider } from './provider/runmeTask'
@@ -92,7 +95,6 @@ import { EnvironmentManager } from './environment/manager'
 import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
-import AuthSessionChangeHandler from './authSessionChangeHandler'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -216,6 +218,7 @@ export class RunmeExtension {
     // extension is deactivated.
     context.subscriptions.push(aiManager)
 
+    const uriHandler = new RunmeUriHandler(context, kernel, getForceNewWindowConfig())
     const winCodeLensRunSurvey = new survey.SurveyWinCodeLensRun(context)
     const surveys: Disposable[] = [
       winCodeLensRunSurvey,
@@ -257,8 +260,6 @@ export class RunmeExtension {
       serializer,
       server,
       treeViewer,
-      StatefulAuthProvider.instance,
-      AuthSessionChangeHandler.instance,
       ...this.registerPanels(kernel, context),
       ...surveys,
       workspace.registerNotebookSerializer(Kernel.type, serializer, {
@@ -337,7 +338,7 @@ export class RunmeExtension {
       /**
        * Uri handler
        */
-      window.registerUriHandler(new RunmeUriHandler(context, kernel, getForceNewWindowConfig())),
+      window.registerUriHandler(uriHandler),
 
       /**
        * Runme Message Display commands
@@ -397,7 +398,7 @@ export class RunmeExtension {
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.CELL),
       ),
 
-      commands.registerCommand(
+      RunmeExtension.registerCommand(
         'runme.lifecycleIdentitySelection',
         async (identity?: RunmeIdentity) => {
           if (identity === undefined) {
@@ -410,10 +411,6 @@ export class RunmeExtension {
           if (current === identity) {
             return
           }
-
-          TelemetryReporter.sendTelemetryEvent('extension.command', {
-            command: 'runme.lifecycleIdentitySelection',
-          })
 
           await ContextState.addKey(NOTEBOOK_LIFECYCLE_ID, identity)
 
@@ -489,35 +486,69 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      await StatefulAuthProvider.instance.ensureSession()
+      const statefulAuthProvider = new StatefulAuthProvider(context, uriHandler)
+      context.subscriptions.push(statefulAuthProvider)
+
+      const session = await getPlatformAuthSession(false, true)
+      let sessionFromToken = false
+      if (!session) {
+        sessionFromToken = await statefulAuthProvider.bootstrapFromToken()
+      }
+
+      const forceLogin = kernel.isFeatureOn(FeatureName.ForceLogin) || sessionFromToken
+      const silent = forceLogin ? undefined : true
+
+      getPlatformAuthSession(forceLogin, silent)
+        .then((session) => {
+          if (session) {
+            statefulAuthProvider.showLoginNotification()
+          }
+        })
+        .catch((error) => {
+          let message
+          if (error instanceof Error) {
+            message = error.message
+          } else {
+            message = JSON.stringify(error)
+          }
+
+          // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
+          // throw new Error('User did not consent to login.')
+          // Calling again to ensure User Menu Badge
+          if (forceLogin && message === 'User did not consent to login.') {
+            getPlatformAuthSession(false)
+          }
+        })
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
-      context.subscriptions.push(new GithubAuthProvider(context, kernel))
+      context.subscriptions.push(new GithubAuthProvider(context))
+      getGithubAuthSession(false).then((session) => {
+        kernel.updateFeatureContext('githubAuth', !!session)
+      })
     }
 
-    AuthSessionChangeHandler.instance.addListener((e) => {
+    authentication.onDidChangeSessions((e) => {
       if (
-        StatefulAuthProvider.instance &&
         kernel.isFeatureOn(FeatureName.RequireStatefulAuth) &&
         e.provider.id === AuthenticationProviders.Stateful
       ) {
-        StatefulAuthProvider.instance.currentSession().then(async (session) => {
-          if (session) {
+        getPlatformAuthSession(false, true).then(async (session) => {
+          if (!!session) {
             await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
-            kernel.emitPanelEvent('runme.cloud', 'onCommand', {
-              name: 'signIn',
-              panelId: 'runme.cloud',
-            })
           } else {
             const settingsDefault = getServerLifecycleIdentity()
             await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
-            kernel.emitPanelEvent('runme.cloud', 'onCommand', {
-              name: 'signOut',
-              panelId: 'runme.cloud',
-            })
           }
           kernel.updateFeatureContext('statefulAuth', !!session)
+        })
+      }
+      if (
+        kernel.isFeatureOn(FeatureName.Gist) &&
+        e.provider.id === AuthenticationProviders.GitHub
+      ) {
+        getGithubAuthSession(false).then((session) => {
+          kernel.updateFeatureContext('githubAuth', !!session)
         })
       }
     })

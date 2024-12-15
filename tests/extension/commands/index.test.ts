@@ -62,7 +62,6 @@ vi.mock('../../../src/utils/configuration', () => ({
   isNotebookTerminalEnabledForCell: vi.fn(),
   getCLIUseIntegratedRunme: vi.fn().mockReturnValue(false),
   OpenViewInEditorAction: { enum: { toggle: 'toggle', split: 'split' } },
-  getRunmeAppUrl: vi.fn(() => 'localhost'),
 }))
 vi.mock('../../../src/extension/provider/cli', () => ({
   CliProvider: {

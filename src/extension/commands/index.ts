@@ -32,6 +32,7 @@ import { Kernel } from '../kernel'
 import {
   getAnnotations,
   getNotebookCategories,
+  getPlatformAuthSession,
   getTerminalByCell,
   openFileAsRunmeNotebook,
   promptUserSession,
@@ -51,7 +52,7 @@ import {
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
-import { InitializeCloudClient } from '../api/client'
+import { InitializeClient } from '../api/client'
 import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
@@ -561,7 +562,8 @@ export async function createCellGistCommand(cell: NotebookCell, context: Extensi
 }
 
 export async function selectEnvironment(manager: EnvironmentManager) {
-  const graphClient = await InitializeCloudClient()
+  const session = await getPlatformAuthSession()
+  const graphClient = InitializeClient({ runmeToken: session?.accessToken! })
 
   const result = await graphClient.query({
     query: GetUserEnvironmentsDocument,

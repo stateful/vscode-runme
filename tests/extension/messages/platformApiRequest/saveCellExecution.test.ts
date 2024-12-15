@@ -1,4 +1,4 @@
-import { ExtensionContext, notebooks, Uri } from 'vscode'
+import { AuthenticationSession, authentication, notebooks } from 'vscode'
 import { suite, vi, it, beforeAll, afterAll, afterEach, expect } from 'vitest'
 import { HttpResponse, graphql } from 'msw'
 import { setupServer } from 'msw/node'
@@ -10,10 +10,6 @@ import { Kernel } from '../../../../src/extension/kernel'
 import { ClientMessages } from '../../../../src/constants'
 import { APIMethod } from '../../../../src/types'
 import { GrpcSerializer } from '../../../../src/extension/serializer'
-import {
-  StatefulAuthProvider,
-  StatefulAuthSession,
-} from '../../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
@@ -97,16 +93,6 @@ const mockCellInCache = (kernel, cellId) => {
   })
 }
 
-const contextFake: ExtensionContext = {
-  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
-  secrets: {
-    store: vi.fn(),
-  },
-  subscriptions: [],
-} as any
-
-StatefulAuthProvider.initialize(contextFake)
-
 suite('Save cell execution', () => {
   const kernel = new Kernel({} as any)
   kernel.hasExperimentEnabled = vi.fn((params) => params === 'reporter')
@@ -114,7 +100,7 @@ suite('Save cell execution', () => {
     const cellId = 'cell-id'
     mockCellInCache(kernel, cellId)
     const messaging = notebooks.createRendererMessaging('runme-renderer')
-    const authenticationSession: StatefulAuthSession = {
+    const authenticationSession: AuthenticationSession = {
       accessToken: '',
       id: '',
       scopes: ['repo'],
@@ -122,8 +108,6 @@ suite('Save cell execution', () => {
         id: '',
         label: '',
       },
-      isExpired: false,
-      expiresIn: 2145848400000,
     }
     const message = {
       type: ClientMessages.platformApiRequest,
@@ -148,9 +132,8 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
-    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
-      authenticationSession,
-    )
+    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
+
     await saveCellExecution(requestMessage, kernel)
 
     expect(messaging.postMessage).toMatchInlineSnapshot(`
@@ -228,7 +211,7 @@ suite('Save cell execution', () => {
         },
       } as any,
     }
-    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(undefined)
+    vi.mocked(authentication.getSession).mockResolvedValue(undefined)
     await saveCellExecution(requestMessage, kernel)
 
     expect(messaging.postMessage).toMatchInlineSnapshot(`
@@ -264,8 +247,9 @@ suite('Save cell execution', () => {
           [
             {
               "output": {
-                "data": "You must authenticate with your Stateful account",
-                "hasErrors": true,
+                "data": {
+                  "displayShare": false,
+                },
                 "id": "cell-id",
               },
               "type": "common:platformApiResponse",
@@ -298,7 +282,7 @@ suite('Save cell execution', () => {
     const cellId = 'cell-id'
     const cacheId = 'cache-id'
 
-    const authenticationSession: StatefulAuthSession = {
+    const authenticationSession: AuthenticationSession = {
       accessToken: '',
       id: '',
       scopes: ['repo'],
@@ -306,13 +290,9 @@ suite('Save cell execution', () => {
         id: '',
         label: '',
       },
-      isExpired: false,
-      expiresIn: 2145848400000,
     }
     vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
-    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
-      authenticationSession,
-    )
+    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
     vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => undefined)
 
     const messaging = notebooks.createRendererMessaging('runme-renderer')
@@ -356,7 +336,7 @@ suite('Save cell execution', () => {
     const cacheId = 'cache-id'
     const notebookId = 'ulid'
 
-    const authenticationSession: StatefulAuthSession = {
+    const authenticationSession: AuthenticationSession = {
       accessToken: '',
       id: '',
       scopes: ['repo'],
@@ -364,13 +344,9 @@ suite('Save cell execution', () => {
         id: '',
         label: '',
       },
-      isExpired: false,
-      expiresIn: 2145848400000,
     }
     vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
-    vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
-      authenticationSession,
-    )
+    vi.mocked(authentication.getSession).mockResolvedValue(authenticationSession)
     vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
       cells: [],
     }))

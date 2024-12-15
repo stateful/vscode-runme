@@ -101,37 +101,60 @@ function isActive(
   } = feature.conditions
 
   if (!checkEnabled(feature.enabled, overrides.get(featureName))) {
+    console.log(`Feature "${featureName}" is inactive due to checkEnabled.`)
     return false
   }
 
   if (!checkOS(os, context?.os)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkOS. Expected OS: ${os}, actual OS: ${context?.os}`,
+    )
     return false
   }
 
   if (!checkVersion(vsCodeVersion, context?.vsCodeVersion)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkVersion (vsCodeVersion). Expected: ${vsCodeVersion}, actual: ${context?.vsCodeVersion}`,
+    )
     return false
   }
 
   if (!checkVersion(runmeVersion, context?.runmeVersion)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkVersion (runmeVersion). Expected: ${runmeVersion}, actual: ${context?.runmeVersion}`,
+    )
     return false
   }
 
   if (!checkVersion(extensionVersion, context?.extensionVersion)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkVersion (extensionVersion). Expected: ${extensionVersion}, actual: ${context?.extensionVersion}`,
+    )
     return false
   }
 
   if (!checkAuth(githubAuthRequired, context?.githubAuth)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkAuth (githubAuth). Required: ${githubAuthRequired}, actual: ${context?.githubAuth}`,
+    )
     return false
   }
 
   if (!checkAuth(statefulAuthRequired, context?.statefulAuth)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkAuth (statefulAuth). Required: ${statefulAuthRequired}, actual: ${context?.statefulAuth}`,
+    )
     return false
   }
 
   if (!checkExtensionId(enabledForExtensions, context?.extensionId)) {
+    console.log(
+      `Feature "${featureName}" is inactive due to checkExtensionId. Expected: ${JSON.stringify(enabledForExtensions)}, actual: ${context?.extensionId}`,
+    )
     return false
   }
 
+  console.log(`Feature "${featureName} is active`)
   return true
 }
 

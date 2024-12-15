@@ -1,5 +1,5 @@
 import { test, expect, vi, suite, beforeEach } from 'vitest'
-import { ExtensionContext, NotebookCell, Uri, commands, notebooks, window, workspace } from 'vscode'
+import { NotebookCell, commands, notebooks, window, workspace } from 'vscode'
 
 import { Kernel } from '../../src/extension/kernel'
 import executors from '../../src/extension/executors'
@@ -10,7 +10,6 @@ import * as platform from '../../src/extension/messages/platformRequest/saveCell
 import { isPlatformAuthEnabled } from '../../src/utils/configuration'
 import { askAlternativeOutputsAction } from '../../src/extension/commands'
 import { getEventReporter } from '../../src/extension/ai/events'
-import { StatefulAuthProvider } from '../../src/extension/provider/statefulAuth'
 
 const reportExecution = vi.fn()
 
@@ -50,6 +49,7 @@ vi.mock('../../src/extension/utils', async () => {
       platform: 'darwin_arm64',
       uikind: 'desktop',
     }),
+    getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
   }
 })
 vi.mock('../../src/utils/configuration', async (importActual) => {
@@ -93,17 +93,6 @@ const genCells = (cnt: number, metadata: Record<string, any> = {}) =>
         },
       }) as any as NotebookCell,
   )
-
-const contextFake: ExtensionContext = {
-  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
-  secrets: {
-    store: vi.fn(),
-  },
-  subscriptions: [],
-} as any
-
-StatefulAuthProvider.initialize(contextFake)
-
 suite('#handleRendererMessage', () => {
   const editor = {
     notebook: {

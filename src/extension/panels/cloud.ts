@@ -1,12 +1,12 @@
-import { ExtensionContext, WebviewView, window, ColorThemeKind, Uri, env, Webview } from 'vscode'
+import { ExtensionContext, WebviewView, window, ColorThemeKind, Uri, env } from 'vscode'
 
-import { fetchStaticHtml } from '../utils'
+import { fetchStaticHtml, resolveAppToken } from '../utils'
+import { IAppToken } from '../services/runme'
 import { getRunmeAppUrl, getRunmePanelIdentifier } from '../../utils/configuration'
 import getLogger from '../logger'
 import { type SyncSchemaBus } from '../../types'
 import archiveCell from '../services/archiveCell'
 import unArchiveCell from '../services/unArchiveCell'
-import { StatefulAuthProvider } from '../provider/statefulAuth'
 
 import { TanglePanel } from './base'
 
@@ -24,7 +24,6 @@ const log = getLogger('CloudPanel')
 export default class CloudPanel extends TanglePanel {
   protected readonly appUrl: string = getRunmeAppUrl(['app'])
   protected readonly defaultUx: DefaultUx = 'panels'
-  protected currentWebview?: Webview
 
   constructor(
     protected readonly context: ExtensionContext,
@@ -33,22 +32,8 @@ export default class CloudPanel extends TanglePanel {
     super(context, getRunmePanelIdentifier(identifier))
   }
 
-  public async getAppToken(createIfNone: boolean = false): Promise<string | null> {
-    const session = await StatefulAuthProvider.instance.currentSession()
-
-    if (session) {
-      return session.accessToken
-    }
-
-    if (createIfNone) {
-      const session = await StatefulAuthProvider.instance.newSession()
-
-      if (session) {
-        return session.accessToken
-      }
-    }
-
-    return null
+  public async getAppToken(createIfNone: boolean = true): Promise<IAppToken | null> {
+    return resolveAppToken(createIfNone)
   }
 
   public hydrateHtml(html: string, payload: InitPayload) {
@@ -70,33 +55,27 @@ export default class CloudPanel extends TanglePanel {
 
     log.trace(`${this.identifier} webview resolving`)
 
-    let appToken: string | null
-    try {
-      appToken = await this.getAppToken()
-    } catch (err: any) {
-      log.error(err?.message || err)
-      appToken = null
-    }
-
-    const html = await this.getHydratedHtml(appToken)
+    const html = await this.getHydratedHtml()
     webviewView.webview.html = html
     webviewView.webview.options = {
       ...webviewOptions,
       localResourceRoots: [this.context.extensionUri],
     }
 
-    this.webview.subscribe((webview) => {
-      this.currentWebview = webview
-    })
-
     this.webview.next(webviewView.webview)
     log.trace(`${this.identifier} webview resolved`)
     return Promise.resolve()
   }
 
-  private async getHydratedHtml(appToken: string | null): Promise<string> {
+  private async getHydratedHtml(): Promise<string> {
+    let appToken: string | null
     let staticHtml: string
-
+    try {
+      appToken = await this.getAppToken(false).then((appToken) => appToken?.token ?? null)
+    } catch (err: any) {
+      log.error(err?.message || err)
+      appToken = null
+    }
     try {
       staticHtml = await fetchStaticHtml(this.appUrl).then((r) => r.text())
     } catch (err: any) {
@@ -115,11 +94,10 @@ export default class CloudPanel extends TanglePanel {
   protected registerSubscribers(bus: SyncSchemaBus) {
     return [
       bus.on('onCommand', (cmdEvent) => {
-        if (cmdEvent?.name === 'signIn') {
-          this.onSignIn(bus)
-        } else if (cmdEvent?.name === 'signOut') {
-          this.onSignOut(bus)
+        if (cmdEvent?.name !== 'signIn') {
+          return
         }
+        this.onSignIn(bus)
       }),
       bus.on('onArchiveCell', async (cmdEvent) => {
         const answer = await window.showInformationMessage(
@@ -172,21 +150,7 @@ export default class CloudPanel extends TanglePanel {
   private async onSignIn(bus: SyncSchemaBus) {
     try {
       const appToken = await this.getAppToken(true)
-      bus.emit('onAppToken', { token: appToken ?? 'EMPTY' })
-      if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml(appToken)
-      }
-    } catch (err: any) {
-      log.error(err?.message || err)
-    }
-  }
-
-  private async onSignOut(bus: SyncSchemaBus) {
-    try {
-      bus.emit('onAppToken', { token: 'EMPTY' })
-      if (this.currentWebview) {
-        this.currentWebview.html = await this.getHydratedHtml(null)
-      }
+      bus.emit('onAppToken', appToken!)
     } catch (err: any) {
       log.error(err?.message || err)
     }

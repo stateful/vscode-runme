@@ -7,7 +7,6 @@ import { RunmeExtension } from '../../src/extension/extension'
 import { bootFile } from '../../src/extension/utils'
 import KernelServer from '../../src/extension/server/kernelServer'
 import { testCertPEM, testPrivKeyPEM } from '../testTLSCert'
-import { StatefulAuthProvider } from '../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -70,6 +69,7 @@ vi.mock('../../src/extension/utils', async () => ({
   togglePreviewButton: vi.fn(),
   resetNotebookSettings: vi.fn(),
   getGithubAuthSession: vi.fn().mockResolvedValue(undefined),
+  getPlatformAuthSession: vi.fn().mockResolvedValue(undefined),
   getEnvProps: vi.fn().mockReturnValue({
     extname: 'stateful.runme',
     extversion: '1.2.3-foo.1',
@@ -115,12 +115,8 @@ test('initializes all providers', async () => {
     globalState: {
       get: vi.fn(),
     },
-    secrets: {
-      store: vi.fn(),
-    },
   }
   const ext = new RunmeExtension()
-  StatefulAuthProvider.initialize(context)
   await ext.initialize(context)
   expect(notebooks.registerNotebookCellStatusBarItemProvider).toBeCalledTimes(5)
   expect(workspace.registerNotebookSerializer).toBeCalledTimes(1)

@@ -45,7 +45,7 @@ The Stateful cloud offers a suite of tools and services designed to enhance your
 
 ## Getting Started
 
-1. **Sign Up**: Create your free account at [Stateful](https://cloud.stateful.com/).
+1. **Sign Up**: Create your free account at [Stateful](https://platform.stateful.com/).
 2. **Install VS Code Extension**: Download the Stateful extension from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=stateful.platform). The extension is fully compatible with Runme, but adds authentication, collaboration, and security features, making it secure for teams and inside companies.
 3. **Explore**: Start creating, running, sharing, and discussing your first DevOps Notebook and its commands using the Stateful cloud.
 

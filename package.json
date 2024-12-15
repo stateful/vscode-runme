@@ -992,7 +992,7 @@
           },
           "runme.app.baseDomain": {
             "type": "string",
-            "default": "cloud.stateful.com",
+            "default": "platform.stateful.com",
             "scope": "window",
             "markdownDescription": "Base domain to be use for Runme app"
           },

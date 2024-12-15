@@ -241,17 +241,17 @@ suite('Configuration', () => {
 
     test('should return URL for api with subdomain', () => {
       const url = getRunmeAppUrl(['api'])
-      expect(url).toStrictEqual('https://api.cloud.stateful.com/')
+      expect(url).toStrictEqual('https://api.platform.stateful.com/')
     })
 
     test('should return URL for api with deep subdomain', () => {
       const url = getRunmeAppUrl(['l4', 'l3', 'api'])
-      expect(url).toStrictEqual('https://l4.l3.api.cloud.stateful.com/')
+      expect(url).toStrictEqual('https://l4.l3.api.platform.stateful.com/')
     })
 
     test('should return URL without subdomain', () => {
       const url = getRunmeAppUrl([])
-      expect(url).toStrictEqual('https://cloud.stateful.com/')
+      expect(url).toStrictEqual('https://platform.stateful.com/')
     })
 
     test('should allow api URL with http for 127.0.0.1', async () => {
@@ -277,24 +277,24 @@ suite('Configuration', () => {
       const app = getRunmeAppUrl(['app'])
       expect(app).toStrictEqual('http://localhost:4001')
       const api = getRunmeAppUrl(['api'])
-      expect(api).toStrictEqual('https://api.staging.cloud.stateful.com/')
+      expect(api).toStrictEqual('https://api.staging.platform.stateful.com/')
     })
 
     test('should return URL for api with subdomain for staging', () => {
-      workspace.getConfiguration().update('baseDomain', 'staging.cloud.stateful.com')
+      workspace.getConfiguration().update('baseDomain', 'staging.platform.stateful.com')
       const url = getRunmeAppUrl(['api'])
-      expect(url).toStrictEqual('https://api.staging.cloud.stateful.com/')
+      expect(url).toStrictEqual('https://api.staging.platform.stateful.com/')
     })
 
     test('should return URL for app with subdomain', () => {
       const url = getRunmeAppUrl(['app'])
-      expect(url).toStrictEqual('https://cloud.stateful.com/')
+      expect(url).toStrictEqual('https://platform.stateful.com/')
     })
 
     test('should return URL for app with subdomain for staging', () => {
-      workspace.getConfiguration().update('baseDomain', 'staging.cloud.stateful.com')
+      workspace.getConfiguration().update('baseDomain', 'staging.platform.stateful.com')
       const url = getRunmeAppUrl(['app'])
-      expect(url).toStrictEqual('https://staging.cloud.stateful.com/')
+      expect(url).toStrictEqual('https://staging.platform.stateful.com/')
     })
   })
 

@@ -39,8 +39,6 @@ import {
   type ExtensionName,
   type FeatureContext,
   FeatureName,
-  SyncSchema,
-  FeatureObserver,
 } from '../types'
 import {
   ClientMessages,
@@ -116,7 +114,6 @@ import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
 import { SignedIn } from './signedIn'
-import { StatefulAuthProvider } from './provider/statefulAuth'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -153,7 +150,7 @@ export class Kernel implements Disposable {
   protected panelManager: PanelManager
   protected serializer?: SerializerBase
   protected reporter?: GrpcReporter
-  protected featuresState$?: FeatureObserver
+  protected featuresState$?
 
   protected readonly monitor$ = new Subject<EnvStoreMonitorWithSession>()
 
@@ -204,44 +201,42 @@ export class Kernel implements Disposable {
     this.#onlySignedIn = new SignedIn(this)
     this.#disposables.push(this.#onlySignedIn)
 
-    StatefulAuthProvider.instance.currentSession().then((session) => {
-      const packageJSON = context?.extension?.packageJSON || {}
-      const featContext: FeatureContext = {
-        os: os.platform(),
-        vsCodeVersion: version as string,
-        extensionVersion: packageJSON?.version,
-        githubAuth: false,
-        statefulAuth: !!session,
-        extensionId: context?.extension?.id as ExtensionName,
-      }
+    const packageJSON = context?.extension?.packageJSON || {}
+    const featContext: FeatureContext = {
+      os: os.platform(),
+      vsCodeVersion: version as string,
+      extensionVersion: packageJSON?.version,
+      githubAuth: false,
+      statefulAuth: false,
+      extensionId: context?.extension?.id as ExtensionName,
+    }
 
-      const runmeFeatureSettings = workspace.getConfiguration('runme.features')
-      const featureNames = Object.keys(FeatureName)
+    const runmeFeatureSettings = workspace.getConfiguration('runme.features')
+    const featureNames = Object.keys(FeatureName)
 
-      featureNames.forEach((feature) => {
-        if (runmeFeatureSettings.has(feature)) {
-          const result = runmeFeatureSettings.get<boolean>(feature, false)
-          this.#featuresSettings.set(feature, result)
-        }
-      })
-
-      this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
-
-      if (this.featuresState$) {
-        const subscription = this.featuresState$
-          .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
-          .subscribe((snapshot) => {
-            ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
-            postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
-              snapshot: snapshot,
-            })
-          })
-
-        this.#disposables.push({
-          dispose: () => subscription.unsubscribe(),
-        })
+    featureNames.forEach((feature) => {
+      if (runmeFeatureSettings.has(feature)) {
+        const result = runmeFeatureSettings.get<boolean>(feature, false)
+        this.#featuresSettings.set(feature, result)
       }
     })
+
+    this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
+
+    if (this.featuresState$) {
+      const subscription = this.featuresState$
+        .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
+        .subscribe((snapshot) => {
+          ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
+          postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
+            snapshot: snapshot,
+          })
+        })
+
+      this.#disposables.push({
+        dispose: () => subscription.unsubscribe(),
+      })
+    }
   }
 
   get envProps() {
@@ -250,21 +245,6 @@ export class Kernel implements Disposable {
       version: this.context!.extension.packageJSON.version,
     }
     return getEnvProps(ext)
-  }
-
-  emitPanelEvent<K extends keyof SyncSchema>(
-    panelId: string,
-    eventName: K,
-    payload: SyncSchema[K],
-  ) {
-    const panel = this.panelManager.getPanel(panelId)
-
-    if (!panel) {
-      log.error(`Panel ${panelId} not found`)
-      return
-    }
-
-    panel.getBus()?.emit(eventName, payload)
   }
 
   useMonitor() {

@@ -18,6 +18,9 @@ import vscode, {
   commands,
   WorkspaceFolder,
   ExtensionContext,
+  authentication,
+  AuthenticationSession,
+  AuthenticationGetSessionOptions,
 } from 'vscode'
 import { v5 as uuidv5 } from 'uuid'
 import getPort from 'get-port'
@@ -35,10 +38,12 @@ import {
 } from '../types'
 import { SafeCellAnnotationsSchema, CellAnnotationsSchema } from '../schema'
 import {
+  AuthenticationProviders,
   NOTEBOOK_AVAILABLE_CATEGORIES,
   SERVER_ADDRESS,
   CATEGORY_SEPARATOR,
   NOTEBOOK_AUTOSAVE_ON,
+  GITHUB_USER_SIGNED_IN,
   NOTEBOOK_OUTPUTS_MASKED,
   NOTEBOOK_LIFECYCLE_ID,
 } from '../constants'
@@ -69,7 +74,6 @@ import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
 import { RunmeIdentity } from './grpc/serializerTypes'
-import { StatefulAuthProvider } from './provider/statefulAuth'
 
 declare var globalThis: any
 
@@ -554,6 +558,48 @@ export function convertEnvList(envs: string[]): Record<string, string | undefine
     {} as Record<string, string | undefined>,
   )
 }
+
+export function getGithubAuthSession(createIfNone: boolean = true) {
+  return authentication.getSession(AuthenticationProviders.GitHub, ['user:email'], {
+    createIfNone,
+  })
+}
+
+export async function getPlatformAuthSession(createIfNone: boolean = true, silent?: boolean) {
+  const scopes = ['profile']
+  const options: AuthenticationGetSessionOptions = {}
+
+  if (silent !== undefined) {
+    options.silent = silent
+  } else {
+    options.createIfNone = createIfNone
+  }
+
+  return await authentication.getSession(AuthenticationProviders.Stateful, scopes, options)
+}
+
+export async function resolveAuthToken(createIfNone: boolean = true) {
+  let session: AuthenticationSession | undefined
+  session = await getPlatformAuthSession(createIfNone)
+  if (!session) {
+    throw new Error('You must authenticate with your Stateful account')
+  }
+
+  return session.accessToken
+}
+
+export async function resolveAppToken(createIfNone: boolean = true) {
+  if (features.isOnInContextState(FeatureName.RequireStatefulAuth)) {
+    const session = await getPlatformAuthSession(createIfNone)
+    if (!session) {
+      return null
+    }
+    return { token: session.accessToken }
+  }
+
+  return null
+}
+
 export function fetchStaticHtml(appUrl: string) {
   return fetch(appUrl)
 }
@@ -678,13 +724,15 @@ export function asWorkspaceRelativePath(documentPath: string): {
 
 /**
  * Handles the first time experience for saving a cell.
- * It informs the user that a Login with a Stateful account is required before prompting the user.
+ * It informs the user that a Login with a GitHub account is required before prompting the user.
  * This only happens once. Subsequent saves will not display the prompt.
  * @returns AuthenticationSession
  */
 export async function promptUserSession() {
   const createIfNone = features.isOnInContextState(FeatureName.ForceLogin)
-  const session = await StatefulAuthProvider.instance.currentSession()
+  const silent = createIfNone ? undefined : true
+
+  const session = await getPlatformAuthSession(false, silent)
 
   const displayLoginPrompt =
     getLoginPrompt() && createIfNone && features.isOnInContextState(FeatureName.Share)
@@ -705,8 +753,34 @@ export async function promptUserSession() {
       return commands.executeCommand('runme.openSettings', 'runme.app.loginPrompt')
     }
 
-    StatefulAuthProvider.instance.ensureSession()
+    getPlatformAuthSession(createIfNone)
+      .then((session) => {
+        if (!session) {
+          throw new Error('You must authenticate with your Stateful account')
+        }
+      })
+      .catch((error) => {
+        let message
+        if (error instanceof Error) {
+          message = error.message
+        } else {
+          message = String(error)
+        }
+
+        // https://github.com/microsoft/vscode/blob/main/src/vs/workbench/api/browser/mainThreadAuthentication.ts#L238
+        // throw new Error('User did not consent to login.')
+        // Calling again to ensure User Menu Badge
+        if (createIfNone && message === 'User did not consent to login.') {
+          getPlatformAuthSession(false)
+        }
+      })
   }
+}
+
+export async function checkSession(context: ExtensionContext) {
+  const session = await getGithubAuthSession(false)
+  context.globalState.update(GITHUB_USER_SIGNED_IN, !!session)
+  ContextState.addKey(GITHUB_USER_SIGNED_IN, !!session)
 }
 
 export function editJsonc(

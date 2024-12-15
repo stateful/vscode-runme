@@ -2,7 +2,8 @@ import { TelemetryReporter } from 'vscode-telemetry'
 
 import { ClientMessages } from '../../../constants'
 import { ClientMessage, IApiMessage } from '../../../types'
-import { InitializeCloudClient } from '../../api/client'
+import { InitializeClient } from '../../api/client'
+import { getPlatformAuthSession } from '../../utils'
 import {
   RunmeEventInput,
   RunmeEventInputType,
@@ -23,7 +24,13 @@ export default async function trackRunmeEvent(
   log.info('Sending Runme event')
 
   try {
-    const graphClient = await InitializeCloudClient()
+    const session = await getPlatformAuthSession()
+
+    if (!session) {
+      throw new Error('You must authenticate with your Stateful account')
+    }
+
+    const graphClient = InitializeClient({ runmeToken: session.accessToken })
 
     let input: RunmeEventInput | null = null
 

@@ -2,7 +2,6 @@ import { suite, test, expect, vi } from 'vitest'
 import { workspace, Uri, type ExtensionContext, type WebviewView } from 'vscode'
 
 import CloudPanel from '../../../src/extension/panels/cloud'
-import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -41,16 +40,6 @@ vi.mock('../../../src/extension/utils', () => {
   }
 })
 
-const contextFake: ExtensionContext = {
-  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
-  secrets: {
-    store: vi.fn(),
-  },
-  subscriptions: [],
-} as any
-
-StatefulAuthProvider.initialize(contextFake)
-
 suite('Panel', () => {
   const staticHtml =
     '<script id="appAuthToken">window.APP_STATE = JSON.parse(\'{ "appToken": null }\');</script>'
@@ -69,7 +58,7 @@ suite('Panel', () => {
       themeKind: 1,
     })
 
-    expect(hydrated).toContain('<base href="https://cloud.stateful.com/">')
+    expect(hydrated).toContain('<base href="https://platform.stateful.com/">')
     expect(hydrated).toContain(
       '{"appToken":"a.b.c","ide":"code","panelId":"main","defaultUx":"panels","themeKind":1}',
     )
@@ -77,11 +66,11 @@ suite('Panel', () => {
 
   test('resolves authed', async () => {
     const p = new CloudPanel(contextMock, 'testing')
-    p.getAppToken = vi.fn().mockResolvedValue('webview.auth.token')
+    p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="https://cloud.stateful.com/">')
+    expect(view.webview.html).toContain('<base href="https://platform.stateful.com/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"webview.auth.token","defaultUx":"panels","themeKind":1}',
     )
@@ -93,7 +82,7 @@ suite('Panel', () => {
 
     await p.resolveWebviewTelemetryView(view)
 
-    expect(view.webview.html).toContain('<base href="https://cloud.stateful.com/">')
+    expect(view.webview.html).toContain('<base href="https://platform.stateful.com/">')
     expect(view.webview.html).toContain(
       '{"ide":"code","panelId":"testing","appToken":"EMPTY","defaultUx":"panels","themeKind":1}',
     )
@@ -102,7 +91,7 @@ suite('Panel', () => {
   test('resolves authed localhost', async () => {
     workspace.getConfiguration().update('baseDomain', 'localhost')
     const p = new CloudPanel(contextMock, 'testing')
-    p.getAppToken = vi.fn().mockResolvedValue('webview.auth.token')
+    p.getAppToken = vi.fn().mockResolvedValue({ token: 'webview.auth.token' })
 
     await p.resolveWebviewTelemetryView(view)
 
