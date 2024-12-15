@@ -6,8 +6,9 @@ import { BOOTFILE, BOOTFILE_DEMO } from '../constants'
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
 import {
-  EXECUTION_CELL_CREATION_DATE_STORAGE_KEY,
+  CELL_CREATION_DATE_STORAGE_KEY,
   EXECUTION_CELL_STORAGE_KEY,
+  FOCUS_CELL_STORAGE_KEY,
 } from '../../constants'
 
 const config = workspace.getConfiguration('runme.checkout')
@@ -199,17 +200,57 @@ export async function executeActiveNotebookCell({
   }
 }
 
-export async function setCurrentCellExecutionDemo(context: ExtensionContext, cell: number) {
-  if (isNaN(cell)) {
+export async function focusActiveNotebookCell({ cell, kernel }: { cell: number; kernel: Kernel }) {
+  const notebookDocument = window.activeNotebookEditor?.notebook
+  if (!notebookDocument || notebookDocument.notebookType !== Kernel.type) {
     return
   }
-  await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
-  await context.globalState.update(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY, new Date())
+  if (notebookDocument) {
+    const cells = notebookDocument.getCells().filter((cell) => cell.kind === NotebookCellKind.Code)
+
+    if (!cells.length || Number.isNaN(cell)) {
+      return window.showErrorMessage('Could not find a valid code cell to focus')
+    }
+
+    const cellToFocus = cells[cell]
+    if (!cellToFocus) {
+      throw new Error(`Could not find cell at index ${cell}`)
+    }
+    return kernel.focusNotebookCell(cellToFocus)
+  }
 }
 
-export function shouldExecuteDemo(context: ExtensionContext): boolean {
+export async function setCurrentCellForBootFile(
+  context: ExtensionContext,
+  { cell, focus = true, execute = false }: { cell: number; focus: boolean; execute: boolean },
+) {
+  if (!Number.isFinite(cell)) {
+    return
+  }
+  if (focus) {
+    await context.globalState.update(FOCUS_CELL_STORAGE_KEY, cell)
+  }
+  if (execute) {
+    await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, cell)
+  }
+  await context.globalState.update(CELL_CREATION_DATE_STORAGE_KEY, new Date())
+}
+
+export function shouldFocusCell(context: ExtensionContext): boolean {
+  const cell = context.globalState.get<number>(FOCUS_CELL_STORAGE_KEY)
+  const creationDate = context.globalState.get<string>(CELL_CREATION_DATE_STORAGE_KEY)
+  if (typeof cell === 'number' && cell >= 0 && creationDate) {
+    const timeStampDiff =
+      Math.abs(new Date().getTime() - new Date(creationDate).getTime()) / (1000 * 60)
+    // Max diff of 5 minutes to focus a cell
+    return timeStampDiff <= 5
+  }
+  return false
+}
+
+export function shouldExecuteCell(context: ExtensionContext): boolean {
   const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-  const creationDate = context.globalState.get<string>(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY)
+  const creationDate = context.globalState.get<string>(CELL_CREATION_DATE_STORAGE_KEY)
   if (typeof cell === 'number' && cell >= 0 && creationDate) {
     const timeStampDiff =
       Math.abs(new Date().getTime() - new Date(creationDate).getTime()) / (1000 * 60)
@@ -219,12 +260,13 @@ export function shouldExecuteDemo(context: ExtensionContext): boolean {
   return false
 }
 
-export async function cleanExecutionDemo(context: ExtensionContext) {
+export async function cleanExecutionForBootFile(context: ExtensionContext) {
+  await context.globalState.update(FOCUS_CELL_STORAGE_KEY, undefined)
   await context.globalState.update(EXECUTION_CELL_STORAGE_KEY, undefined)
-  await context.globalState.update(EXECUTION_CELL_CREATION_DATE_STORAGE_KEY, undefined)
+  await context.globalState.update(CELL_CREATION_DATE_STORAGE_KEY, undefined)
 }
 
-export function createDemoFileRunnerWatcher(context: ExtensionContext, kernel: Kernel) {
+export function createBootFileRunnerWatcher(context: ExtensionContext, kernel: Kernel) {
   const fileWatcher = workspace.createFileSystemWatcher(`**/*${BOOTFILE_DEMO}`)
   return fileWatcher.onDidCreate(async (uri: Uri) => {
     for (let i = 0; i < 50; i++) {
@@ -246,22 +288,33 @@ export function createDemoFileRunnerWatcher(context: ExtensionContext, kernel: K
         kernel,
       })
     } else {
-      await setCurrentCellExecutionDemo(context, Number(cell))
+      await setCurrentCellForBootFile(context, { cell: Number(cell), focus: true, execute: true })
       await commands.executeCommand('vscode.openWith', notebookUri, Kernel.type)
     }
   })
 }
 
-export function createDemoFileRunnerForActiveNotebook(context: ExtensionContext, kernel: Kernel) {
+export function createBootFileRunnerForActiveNotebook(context: ExtensionContext, kernel: Kernel) {
   return window.onDidChangeActiveNotebookEditor(async () => {
-    if (shouldExecuteDemo(context)) {
-      const cell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
-      // Remove the execution cell from the storage
-      await cleanExecutionDemo(context)
-      await executeActiveNotebookCell({
-        cell: cell!,
+    if (shouldFocusCell(context)) {
+      const focusCell = context.globalState.get<number>(FOCUS_CELL_STORAGE_KEY)
+      await focusActiveNotebookCell({
+        cell: focusCell!,
         kernel,
       })
+      await cleanExecutionForBootFile(context)
+      return
     }
+
+    if (!shouldExecuteCell(context)) {
+      return
+    }
+    const execCell = context.globalState.get<number>(EXECUTION_CELL_STORAGE_KEY)
+    await executeActiveNotebookCell({
+      cell: execCell!,
+      kernel,
+    })
+
+    await cleanExecutionForBootFile(context)
   })
 }

@@ -81,7 +81,7 @@ import GrpcRunner, { IRunner } from './runner'
 import * as survey from './survey'
 import { RunmeCodeLensProvider } from './provider/codelens'
 import CloudPanel from './panels/cloud'
-import { createDemoFileRunnerForActiveNotebook, createDemoFileRunnerWatcher } from './handler/utils'
+import { createBootFileRunnerForActiveNotebook, createBootFileRunnerWatcher } from './handler/utils'
 import { GithubAuthProvider } from './provider/githubAuth'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 import { IPanel } from './panels/base'
@@ -346,8 +346,8 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.addToRecommendedExtensions', () =>
         addToRecommendedExtension(context),
       ),
-      createDemoFileRunnerForActiveNotebook(context, kernel),
-      createDemoFileRunnerWatcher(context, kernel),
+      createBootFileRunnerForActiveNotebook(context, kernel),
+      createBootFileRunnerWatcher(context, kernel),
       RunmeExtension.registerCommand(
         'runme.notebookOutputsMasked',
         this.handleMasking(kernel, true).bind(this),

@@ -69,7 +69,7 @@ import getLogger from './logger'
 import { Kernel } from './kernel'
 import { BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { IRunnerEnvironment } from './runner/environment'
-import { setCurrentCellExecutionDemo } from './handler/utils'
+import { setCurrentCellForBootFile as setCurrentCellForBootFile } from './handler/utils'
 import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
@@ -485,26 +485,32 @@ export async function bootFile(context: ExtensionContext) {
   }
 
   const startupFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE)
-  const runnableFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE_DEMO)
+  const demoFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, BOOTFILE_DEMO)
   const hasStartupFile = await workspace.fs.stat(startupFileUri).then(
     () => true,
     () => false,
   )
 
-  const hasRunnableFile = await workspace.fs.stat(runnableFileUri).then(
+  const hasDemoFile = await workspace.fs.stat(demoFileUri).then(
     () => true,
     () => false,
   )
 
-  const fileUri = hasRunnableFile ? runnableFileUri : startupFileUri
+  const fileUri = hasDemoFile ? demoFileUri : startupFileUri
 
-  if (hasStartupFile || hasRunnableFile) {
+  if (hasStartupFile || hasDemoFile) {
     let bootFile = new TextDecoder().decode(await workspace.fs.readFile(fileUri))
-    if (hasRunnableFile) {
-      const [fileName, cell] = bootFile.split('#')
+    const [fileName, cell] = bootFile.trim().split('#')
+
+    if (fileName) {
       bootFile = fileName
-      await setCurrentCellExecutionDemo(context, Number(cell))
     }
+
+    await setCurrentCellForBootFile(context, {
+      cell: Number(cell),
+      focus: true,
+      execute: hasDemoFile,
+    })
 
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
     await workspace.fs.delete(fileUri)
