@@ -32,7 +32,7 @@ import {
   parseParams,
   writeDemoBootstrapFile,
   executeActiveNotebookCell,
-  setCurrentCellExecutionDemo,
+  setCurrentCellForBootFile,
 } from './utils'
 
 const REGEX_WEB_RESOURCE = /^https?:\/\//
@@ -115,7 +115,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
           const isProjectOpened =
             workspace.workspaceFolders?.length &&
             workspace.workspaceFolders.some((w) => w.uri.path === projectPath.path)
-          await setCurrentCellExecutionDemo(this.context, cell)
+          await setCurrentCellForBootFile(this.context, { cell, focus: true, execute: true })
           if (!isProjectOpened) {
             await writeDemoBootstrapFile(projectPath, fileToOpen, cell)
             await commands.executeCommand('vscode.openFolder', projectPath, {

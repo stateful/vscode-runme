@@ -1129,8 +1129,9 @@ export enum WebViews {
   NotebookEnvStore = 'runme.notebook.envStore',
 }
 export const CATEGORY_SEPARATOR = ','
+export const FOCUS_CELL_STORAGE_KEY = 'focusCell'
 export const EXECUTION_CELL_STORAGE_KEY = 'executionCell'
-export const EXECUTION_CELL_CREATION_DATE_STORAGE_KEY = 'executionCellCreationDate'
+export const CELL_CREATION_DATE_STORAGE_KEY = 'cellCreationDate'
 export const SAVE_CELL_LOGIN_CONSENT_STORAGE_KEY = 'loginConsent'
 export const GITHUB_USER_SIGNED_IN = 'userSignedIn'
 export const PLATFORM_USER_SIGNED_IN = 'platformUserSignedIn'
