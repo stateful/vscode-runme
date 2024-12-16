@@ -1,9 +1,10 @@
 import { vi, describe, it, expect } from 'vitest'
-import { NotebookCellKind } from 'vscode'
+import { ExtensionContext, NotebookCellKind, Uri } from 'vscode'
 
 import { AnnotationsStatusBarItem } from '../../../src/extension/provider/cellStatusBar/items/annotations'
 import { Kernel } from '../../../src/extension/kernel'
 import { OutputType } from '../../../src/constants'
+import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
@@ -33,6 +34,16 @@ vi.mock('../../../src/extension/utils', () => ({
 
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 describe('AnnotationsStatusBarItem test suite', () => {
   const kernel = new Kernel({} as any)

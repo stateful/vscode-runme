@@ -1,13 +1,11 @@
 import { TelemetryReporter } from 'vscode-telemetry'
 
-import { InitializeClient } from '../api/client'
-import { resolveAuthToken } from '../utils'
+import { InitializeCloudClient } from '../api/client'
 import { UnArchiveCellOutputDocument } from '../__generated-platform__/graphql'
 
 export default async function unArchiveCell(cellId: string): Promise<void | boolean> {
   try {
-    const token = await resolveAuthToken()
-    const graphClient = InitializeClient({ runmeToken: token })
+    const graphClient = await InitializeCloudClient()
     await graphClient.mutate({
       mutation: UnArchiveCellOutputDocument,
       variables: {
