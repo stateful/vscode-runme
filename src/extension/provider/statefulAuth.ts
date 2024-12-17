@@ -136,11 +136,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
     return sessions[0]
   }
 
-  async ensureSession() {
+  async ensureSession(): Promise<StatefulAuthSession | undefined> {
     let session = await this.currentSession()
     if (session) {
       StatefulAuthProvider.showLoginNotification()
-      return
+      return session
     }
 
     session = await StatefulAuthProvider.bootstrapFromToken()
@@ -148,10 +148,11 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
     const silent = forceLogin ? undefined : true
 
-    this.newSession(silent)
+    return this.newSession(silent)
       .then(() => {
         if (session) {
           StatefulAuthProvider.showLoginNotification()
+          return session
         }
       })
       .catch((error) => {
@@ -170,6 +171,7 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
         if (forceLogin && message === 'User did not consent to login.') {
           authentication.getSession(AuthenticationProviders.Stateful, DEFAULT_SCOPES, {})
         }
+        return error
       })
   }
 

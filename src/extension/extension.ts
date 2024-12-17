@@ -489,15 +489,21 @@ export class RunmeExtension {
     }
 
     if (kernel.isFeatureOn(FeatureName.RequireStatefulAuth)) {
-      await StatefulAuthProvider.instance.ensureSession()
-      StatefulAuthProvider.instance.currentSession().then(async (session) => {
-        if (session) {
-          await commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.ALL)
+      const logger = getLogger(FeatureName.RequireStatefulAuth)
+      try {
+        const session = await StatefulAuthProvider.instance.ensureSession()
+        const nunmeIdentity = session ? RunmeIdentity.ALL : getServerLifecycleIdentity()
+        await commands.executeCommand('runme.lifecycleIdentitySelection', nunmeIdentity)
+      } catch (error) {
+        let message
+        if (error instanceof Error) {
+          message = error.message
         } else {
-          const settingsDefault = getServerLifecycleIdentity()
-          await commands.executeCommand('runme.lifecycleIdentitySelection', settingsDefault)
+          message = JSON.stringify(error)
         }
-      })
+
+        logger.error(message)
+      }
     }
 
     if (kernel.isFeatureOn(FeatureName.Gist)) {
