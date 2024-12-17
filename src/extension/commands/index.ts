@@ -324,7 +324,7 @@ export async function askAlternativeOutputsAction(
   metadata: { [key: string]: any },
 ): Promise<void> {
   const action = await window.showWarningMessage(
-    'Running Session Outputs from a previous notebook session is not supported.',
+    'Running Preview Outputs from a previous notebook session is not supported.',
     { modal: true },
     ASK_ALT_OUTPUTS_ACTION.ORIGINAL,
   )

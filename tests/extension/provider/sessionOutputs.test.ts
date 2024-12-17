@@ -28,7 +28,6 @@ vi.mock('../../../src/extension/utils', () => ({
 
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
-
 const contextFake: ExtensionContext = {
   extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
   secrets: {
@@ -38,8 +37,7 @@ const contextFake: ExtensionContext = {
 } as any
 
 StatefulAuthProvider.initialize(contextFake)
-
-describe('Session Outputs Cell Status Bar provider', () => {
+describe('Preview Outputs Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)
   it('should register commands when initializing', () => {
     new SessionOutputCellStatusBarProvider(kernel)

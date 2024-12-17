@@ -370,7 +370,7 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
         toggleAuthorMode(true, kernel),
       ),
-      RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
+      RunmeExtension.registerCommand('runme.notebookSessionOutputs', async (e: NotebookUiEvent) => {
         const runnerEnv = kernel.getRunnerEnvironment()
         const sessionId = runnerEnv?.getSessionId()
         if (!e.ui || !sessionId) {
@@ -378,7 +378,15 @@ export class RunmeExtension {
         }
         const { notebookUri } = e.notebookEditor
         const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-        openFileAsRunmeNotebook(outputFilePath)
+
+        try {
+          await workspace.fs.stat(outputFilePath)
+        } catch (e) {
+          await serializer.saveNotebookOutputs(notebookUri)
+          await commands.executeCommand('workbench.action.files.save')
+        }
+
+        await openFileAsRunmeNotebook(outputFilePath)
       }),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
