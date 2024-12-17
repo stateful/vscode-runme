@@ -25,6 +25,7 @@ import YAML from 'yaml'
 
 import { FeatureName, Serializer } from '../types'
 import {
+  NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_OUTPUTS_MASKED,
   NOTEBOOK_PREVIEW_OUTPUTS,
@@ -502,13 +503,10 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     const sessionOutputsPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
-    if (false && this.kernel.isFeatureOn(FeatureName.SignedIn)) {
-      // return bytes.length
-    }
-
-    if (sessionOutputsPreview) {
-      // await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
-    } else {
+    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    if (sessionOutputsPreview && !isAutosaveOn) {
+      await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+    } else if (!sessionOutputsPreview && this.kernel.isFeatureOn(FeatureName.SignedIn)) {
       return bytes.length
     }
 

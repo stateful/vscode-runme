@@ -593,12 +593,10 @@ export class TerminalView extends LitElement {
               return
             }
             this.exitCode = code
-
-            if (!this.isAutoSaveEnabled) {
-              return
+            if (features.isOn(FeatureName.SignedIn, this.featureState$) && this.isAutoSaveEnabled) {
+              return this.#shareCellOutput(false)
             }
-
-            return this.#shareCellOutput(false)
+            return
           }
         }
       }),

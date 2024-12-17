@@ -48,6 +48,7 @@ import {
   ClientMessages,
   TELEMETRY_EVENTS,
   RUNME_FRONTMATTER_PARSED,
+  NOTEBOOK_PREVIEW_OUTPUTS,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -308,6 +309,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
     'OK',
   )
   if (action) {
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
     await commands.executeCommand('workbench.action.files.save')
     await kernel.newRunnerEnvironment({})
     await commands.executeCommand('workbench.action.files.save')
