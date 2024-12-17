@@ -33,7 +33,12 @@ import {
   RunProgramOptions,
 } from '../../runner'
 import { IRunnerEnvironment } from '../../runner/environment'
-import { getAnnotations, getCellRunmeId, getTerminalByCell } from '../../utils'
+import {
+  getAnnotations,
+  getCellRunmeId,
+  getTerminalByCell,
+  unescapeShellLiteral,
+} from '../../utils'
 import { postClientMessage } from '../../../utils/messaging'
 import {
   getCloseTerminalOnSuccess,
@@ -609,9 +614,11 @@ export async function promptVariablesAsync(
     case UNRESOLVED_WITH_PLACEHOLDER:
     case UNRESOLVED_WITH_SECRET: {
       const key = variable.name
-      const placeHolder = variable.resolvedValue || variable.originalValue || 'Enter a value please'
       const hasStringValue = variable.status === UNRESOLVED_WITH_PLACEHOLDER
       const isPassword = variable.status === UNRESOLVED_WITH_SECRET
+      const placeHolder = unescapeShellLiteral(
+        variable.resolvedValue || variable.originalValue || 'Enter a value please',
+      )
 
       const userInput = await promptUserForVariable(key, placeHolder, hasStringValue, isPassword)
 

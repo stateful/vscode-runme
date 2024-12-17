@@ -243,6 +243,16 @@ export function normalizeLanguage(l?: string) {
   }
 }
 
+export function unescapeShellLiteral(escaped: string) {
+  return escaped
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\\{/g, '{')
+    .replace(/\\\}/g, '}')
+    .replace(/\\\[/g, '[')
+    .replace(/\\\]/g, ']')
+}
+
 export async function verifyCheckedInFile(filePath: string) {
   const fileDir = path.dirname(filePath)
   const workspaceFolder = vscode.workspace.workspaceFolders?.find((ws) =>

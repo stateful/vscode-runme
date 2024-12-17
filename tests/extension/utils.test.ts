@@ -29,6 +29,7 @@ import {
   asWorkspaceRelativePath,
   editJsonc,
   getGitContext,
+  unescapeShellLiteral,
 } from '../../src/extension/utils'
 import { ENV_STORE, DEFAULT_ENV } from '../../src/extension/constants'
 import { CellAnnotations } from '../../src/types'
@@ -249,6 +250,19 @@ test('getKeyInfo', () => {
     key: 'sh',
     resource: 'None',
   })
+})
+
+test('unescapeShellLiteral', () => {
+  expect(unescapeShellLiteral('echo "Hello World!"')).toBe('echo "Hello World!"')
+  expect(unescapeShellLiteral('echo "Hello ${name}!"')).toBe('echo "Hello ${name}!"')
+  expect(unescapeShellLiteral('[Guest type \\(hyperv,proxmox,openstack\\)]')).toBe(
+    '[Guest type (hyperv,proxmox,openstack)]',
+  )
+  expect(unescapeShellLiteral('[IP of waiting server \\{foo\\}]')).toBe(
+    '[IP of waiting server {foo}]',
+  )
+  expect(unescapeShellLiteral('[Guest\\ Type]')).toBe('[Guest\\ Type]')
+  expect(unescapeShellLiteral('\\[Guest Type\\]')).toBe('[Guest Type]')
 })
 
 suite('normalizeLanguage', () => {
