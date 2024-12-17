@@ -1,4 +1,4 @@
-import { Disposable, NotebookCell, NotebookEditor, authentication } from 'vscode'
+import { Disposable, NotebookCell, NotebookEditor } from 'vscode'
 import { mergeMap, withLatestFrom } from 'rxjs/operators'
 import { Observable, Subject, Subscription, from, of } from 'rxjs'
 
@@ -7,10 +7,11 @@ import { ClientMessages } from '../constants'
 
 import { GrpcSerializer } from './serializer'
 import { Kernel } from './kernel'
-import { getPlatformAuthSession } from './utils'
 import './wasm/wasm_exec.js'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
 import getLogger from './logger'
+import { StatefulAuthProvider } from './provider/statefulAuth'
+import AuthSessionChangeHandler from './authSessionChangeHandler'
 
 export interface CellRun {
   cell: { id: any }
@@ -30,8 +31,9 @@ export class SignedIn implements Disposable {
 
   constructor(protected readonly kernel: Kernel) {
     const signedIn$ = new Observable<boolean>((observer) => {
-      authentication.onDidChangeSessions(() => {
-        getPlatformAuthSession(false)
+      AuthSessionChangeHandler.instance.addListener(() => {
+        StatefulAuthProvider.instance
+          .currentSession()
           .then((session) => observer.next(!!session))
           .catch(() => observer.next(false))
       })

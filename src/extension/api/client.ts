@@ -5,21 +5,26 @@ import { Uri } from 'vscode'
 
 import { getRunmeAppUrl } from '../../utils/configuration'
 import { getFeaturesContext } from '../features'
+import { StatefulAuthProvider } from '../provider/statefulAuth'
 
-export function InitializeClient({
-  uri,
-  runmeToken,
-}: {
-  uri?: string | undefined
-  runmeToken: string
-}) {
+export async function InitializeCloudClient(uri?: string) {
+  const session = await StatefulAuthProvider.instance.currentSession()
+
+  if (!session) {
+    throw new Error('You must authenticate with your Stateful account')
+  }
+
+  return InitializeClient({ uri, token: session.accessToken })
+}
+
+function InitializeClient({ uri, token }: { uri?: string | undefined; token: string }) {
   const authLink = setContext((_, { headers }) => {
     const context = getFeaturesContext()
     return {
       headers: {
         ...headers,
         'Auth-Provider': 'platform',
-        authorization: runmeToken ? `Bearer ${runmeToken}` : '',
+        authorization: token ? `Bearer ${token}` : '',
         'X-Extension-Id': context?.extensionId,
         'X-Extension-Os': context?.os,
         'X-Extension-Version': context?.extensionVersion,

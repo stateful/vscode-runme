@@ -5,6 +5,8 @@ import {
   window,
   authentication,
   AuthenticationSession,
+  ExtensionContext,
+  Uri,
 } from 'vscode'
 import { expect, suite, vi, test } from 'vitest'
 
@@ -12,6 +14,7 @@ import * as CellManager from '../../src/extension/cell'
 import { github } from '../../src/extension/executors/github'
 import { Kernel } from '../../src/extension/kernel'
 import { IKernelExecutorOptions } from '../../src/extension/executors'
+import { StatefulAuthProvider } from '../../src/extension/provider/statefulAuth'
 
 vi.mock('vscode', async () => {
   const vscode = await import('../../__mocks__/vscode')
@@ -26,6 +29,16 @@ vi.mock('../../src/extension/grpc/client', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
+
+const contextFake: ExtensionContext = {
+  extensionUri: Uri.parse('file:///Users/fakeUser/projects/vscode-runme'),
+  secrets: {
+    store: vi.fn(),
+  },
+  subscriptions: [],
+} as any
+
+StatefulAuthProvider.initialize(contextFake)
 
 class OctokitMock {
   protected rest: any
