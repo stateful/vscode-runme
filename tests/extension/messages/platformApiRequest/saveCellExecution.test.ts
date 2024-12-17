@@ -15,6 +15,12 @@ import {
   StatefulAuthSession,
 } from '../../../../src/extension/provider/statefulAuth'
 
+vi.mock('../../../../src/extension/features', async (importOriginal) => {
+  const original = (await importOriginal()) as any
+  original.default.isOnInContextState = vi.fn().mockReturnValue(true)
+  return original
+})
+
 vi.mock('vscode-telemetry')
 vi.mock('../../../src/extension/runner', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
@@ -109,7 +115,6 @@ StatefulAuthProvider.initialize(contextFake)
 
 suite('Save cell execution', () => {
   const kernel = new Kernel({} as any)
-  kernel.hasExperimentEnabled = vi.fn((params) => params === 'reporter')
   it('Should save the output for authenticated user', async () => {
     const cellId = 'cell-id'
     mockCellInCache(kernel, cellId)
@@ -387,6 +392,7 @@ suite('Save cell execution', () => {
           version: '0.0.1',
           id: notebookId,
         },
+        tag: '',
       },
     })
     const messaging = notebooks.createRendererMessaging('runme-renderer')

@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "ReporterAPI": {
+        "enabled": false,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "RecommendExtension": {
         "enabled": true,
         "conditions": {
@@ -770,12 +779,6 @@
             "scope": "window",
             "default": true,
             "markdownDescription": "If set to `true`, the extension will display an error message if an unsupported shell is detected."
-          },
-          "runme.experiments.reporter": {
-            "type": "boolean",
-            "scope": "window",
-            "default": false,
-            "markdownDescription": "If set to `true`, the extension will use the new reporter API to create outputs."
           },
           "runme.experiments.environments": {
             "type": "boolean",
