@@ -26,6 +26,7 @@ import {
 import { Frontmatter } from '../../grpc/serializerTypes'
 import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
+import features from '../../features'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -34,7 +35,7 @@ export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
   kernel: Kernel,
 ): Promise<void | boolean> {
-  const isReporterEnabled = kernel.hasExperimentEnabled('reporter')
+  const isReporterEnabled = features.isOnInContextState(FeatureName.ReporterAPI)
   const { messaging, message, editor } = requestMessage
 
   try {
