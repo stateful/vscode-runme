@@ -93,6 +93,8 @@ import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
+import getAllNotebooks from './messages/platformRequest/getAllNotebooks'
+import getOneWorkflow from './messages/platformRequest/getOneWorkflow'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -536,6 +538,9 @@ export class RunmeExtension {
         })
       }
     })
+
+    await getAllNotebooks({} as any, kernel)
+    await getOneWorkflow({} as any, kernel)
 
     // only ever enabled in hosted playground
     if (features.isOnInContextState(FeatureName.HostedPlayground)) {

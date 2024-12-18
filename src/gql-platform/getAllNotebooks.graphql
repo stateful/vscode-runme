@@ -1,0 +1,50 @@
+query getAllNotebooks($filters: NotebookFilter) {
+    notebooks(filters: $filters) {
+      id
+    createTime
+    notebookIdentity {
+        id
+      value
+      __typename
+    }
+    currentNotebookMetadata {
+        ...NotebookMetadataInfo
+      __typename
+    }
+    notebookMetadataOutputs {
+        user {
+          id
+        photoUrl
+        displayName
+        email
+        __typename
+      }
+      isOwner
+      id
+      bookmark {
+          id
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment NotebookMetadataInfo on NotebookMetadata {
+    id
+  repository
+  branch
+  commit
+  filePath
+  commit
+  extensionVersion
+  createTime
+  notebookSession {
+      id
+    sessionId
+    __typename
+  }
+  totalCellOutputs
+  __typename
+}

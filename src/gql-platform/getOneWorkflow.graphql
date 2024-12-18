@@ -1,0 +1,21 @@
+query getOneWorkflow($id: String!) {
+    workflow(id: $id) {
+      id
+    description
+    fileName
+    path
+    repository
+    data
+    organizationId
+    bookmark {
+        id
+      __typename
+    }
+    tags {
+        id
+      name
+      __typename
+    }
+    __typename
+  }
+}
