@@ -540,14 +540,6 @@ export class NotebookCellOutputManager {
     const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
     const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
 
-    // const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-
-    // if (!isSignedIn) {
-    //   return Promise.resolve()
-    // } else if (!isSignedIn && isForceLogin) {
-    //   return Promise.resolve()
-    // }
-
     if (!isSignedIn && isForceLogin) {
       return Promise.resolve()
     }
