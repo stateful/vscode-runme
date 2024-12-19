@@ -136,13 +136,6 @@ export const activate: ActivationFunction<void> = (context) => {
             )
           }
 
-          if (payload.output.isSessionOutputsEnabled) {
-            terminalElement.setAttribute(
-              'isSessionOutputsEnabled',
-              payload.output.isSessionOutputsEnabled.toString(),
-            )
-          }
-
           if (payload.output.isPlatformAuthEnabled) {
             terminalElement.setAttribute(
               'isPlatformAuthEnabled',

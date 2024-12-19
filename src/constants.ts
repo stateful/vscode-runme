@@ -200,7 +200,7 @@ export const NOTEBOOK_AUTOSAVE_ON = 'notebookAutoSaveOn'
 export const NOTEBOOK_LIFECYCLE_ID = 'notebookLifecycleId'
 export const NOTEBOOK_OUTPUTS_MASKED = 'notebookOutputsMasked'
 export const NOTEBOOK_MODE = 'notebookMode'
-export const NOTEBOOK_HAS_OUTPUTS = 'notebookHasRunmeOutputs'
+export const NOTEBOOK_PREVIEW_OUTPUTS = 'notebookPreviewRunmeOutputs'
 export const NOTEBOOK_RUN_WITH_PROMPTS = 'notebookRunWithPrompts'
 export const NOTEBOOK_AUTHOR_MODE_ON = 'notebookAuthorModeOn'
 
