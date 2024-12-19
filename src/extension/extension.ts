@@ -93,8 +93,8 @@ import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
-import getAllNotebooks from './messages/platformRequest/getAllNotebooks'
-import getOneWorkflow from './messages/platformRequest/getOneWorkflow'
+import { WorkspaceNotebooks } from './provider/workspaceNotebooks'
+import WorkspaceNotebooksFileSystem from './provider/workspaceNotebooksFileSystem'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -137,7 +137,7 @@ export class RunmeExtension {
 
     let treeViewer: RunmeTreeProvider
 
-    if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
+    if (true || kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
       await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
       treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
@@ -322,6 +322,8 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
+      window.registerTreeDataProvider('runme.workspaceNotebooks', new WorkspaceNotebooks()),
+
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',
         treeViewer.collapseAll.bind(treeViewer),
@@ -438,6 +440,8 @@ export class RunmeExtension {
       ),
     )
 
+    new WorkspaceNotebooksFileSystem()
+
     TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
 
     await bootFile(context)
@@ -538,9 +542,6 @@ export class RunmeExtension {
         })
       }
     })
-
-    await getAllNotebooks({} as any, kernel)
-    await getOneWorkflow({} as any, kernel)
 
     // only ever enabled in hosted playground
     if (features.isOnInContextState(FeatureName.HostedPlayground)) {

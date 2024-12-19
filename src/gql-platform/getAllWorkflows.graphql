@@ -1,0 +1,34 @@
+query getAllWorkflows($page: Int!, $take: Int, $fileName: String, $all: Boolean) {
+    workflows(page: $page, take: $take, fileName: $fileName, all: $all) {
+      data {
+        id
+      description
+      fileName
+      path
+      repository
+      rating {
+          id
+        rating
+        __typename
+      }
+      organizationId
+      totalRatings
+      bookmark {
+          id
+        __typename
+      }
+      tags {
+          id
+        name
+        __typename
+      }
+      __typename
+    }
+    meta {
+        totalPages
+      total
+      __typename
+    }
+    __typename
+  }
+}
