@@ -1059,6 +1059,11 @@
             "default": true,
             "markdownDescription": "If set to `true`, the auth token file will be deleted after the session ends"
           },
+          "runme.app.showLoginNotification": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "If set to `true`, a notification will be shown when the user successfully logged in"
+          },
           "runme.aiBaseURL": {
             "type": "string",
             "default": "http://localhost:8877/api",

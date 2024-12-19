@@ -94,6 +94,7 @@ const configurationSchema = {
     docsUrl: z.string().default(DEFAULT_DOCS_URL),
     authTokenPath: z.string().optional(),
     deleteAuthToken: z.boolean().default(true),
+    showLoginNotification: z.boolean().default(true),
   },
 }
 
@@ -462,6 +463,10 @@ const getDeleteAuthToken = () => {
   return getCloudConfigurationValue<boolean>('deleteAuthToken', true)
 }
 
+const getShowLoginNotification = () => {
+  return getCloudConfigurationValue<boolean>('showLoginNotification', true)
+}
+
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
@@ -497,4 +502,5 @@ export {
   getDocsUrl,
   getAuthTokenPath,
   getDeleteAuthToken,
+  getShowLoginNotification,
 }
