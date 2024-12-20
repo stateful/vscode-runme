@@ -4,7 +4,7 @@ import { Uri, env, workspace, commands } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
-import { FetchResult } from '@apollo/client'
+import { FetchResult, MutationOptions } from '@apollo/client'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
 import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
@@ -188,7 +188,7 @@ export default async function saveCellExecution(
           },
         },
       }
-      const result = await graphClient.mutate(mutation)
+      const result = await graphClient.mutate(mutation as MutationOptions)
       data = result
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
