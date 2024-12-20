@@ -103,7 +103,7 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import PanelManager from './panels/panelManager'
-import { GrpcSerializer, SerializerBase } from './serializer'
+import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
@@ -151,7 +151,7 @@ export class Kernel implements Disposable {
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
   protected panelManager: PanelManager
-  protected serializer?: SerializerBase
+  protected serializer?: GrpcSerializer
   protected reporter?: GrpcReporter
   protected featuresState$?: FeatureObserver
 
