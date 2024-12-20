@@ -167,7 +167,7 @@ class KernelServer implements IServer {
     return !!(getCustomServerAddress() || this.#forceExternalServer)
   }
 
-  private static async getTLS(tlsDir: string) {
+  public static async getTLS(tlsDir: string) {
     try {
       const certPEM = await fs.readFile(path.join(tlsDir, 'cert.pem'))
       const privKeyPEM = await fs.readFile(path.join(tlsDir, 'key.pem'))
@@ -178,7 +178,7 @@ class KernelServer implements IServer {
     }
   }
 
-  protected getTLSDir(): string {
+  public getTLSDir(): string {
     return getTLSDir(this.extBasePath)
   }
 
