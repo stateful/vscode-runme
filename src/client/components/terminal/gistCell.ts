@@ -7,7 +7,7 @@ import { GistIcon } from '../icons/gistIcon'
 @customElement('gist-cell')
 export class GistCell extends LitElement {
   @property({ type: String })
-  text: string = 'Preview Gist'
+  text: string = 'Preview & Gist'
 
   @property({ type: Boolean, reflect: true })
   disabled: boolean = false

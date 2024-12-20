@@ -530,17 +530,15 @@ describe('GrpcSerializer', () => {
 
     describe('#saveNotebookOutputs', () => {
       beforeEach(() => {
-        const sessionOutputsEnabled = vi.fn().mockReturnValue(true)
-        GrpcSerializer.sessionOutputsEnabled = sessionOutputsEnabled
+        const shouldDisablePreviewOutputs = vi.fn().mockReturnValue(true)
+        GrpcSerializer.shouldDisablePreviewOutputs = shouldDisablePreviewOutputs
       })
       const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       const togglePreviewButton = vi.fn()
       serializer.togglePreviewButton = togglePreviewButton
 
-      it('skips if session outputs are disabled', async () => {
-        const sessionOutputsEnabled = vi.fn().mockReturnValue(false)
-        GrpcSerializer.sessionOutputsEnabled = sessionOutputsEnabled
+      it('skips if preview outputs are disabled', async () => {
         const fixture = deepCopyFixture()
         serializer.plainCache.set(
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
@@ -551,7 +549,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(togglePreviewButton).toBeCalledWith(false)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
       })
 
       it('skips if notebook has zero bytes', async () => {
@@ -565,7 +563,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(togglePreviewButton).toBeCalledWith(false)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
       })
 
       it('skips if uri mapping to cacheId is unknown', async () => {
@@ -579,7 +577,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(togglePreviewButton).toBeCalledWith(false)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
       })
 
       it('skips if session file mapping is unknown', async () => {
@@ -598,7 +596,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(togglePreviewButton).toBeCalledWith(false)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
       })
 
       it('skips if runner env session in unknown', async () => {
@@ -619,7 +617,7 @@ describe('GrpcSerializer', () => {
           metadata: fixture.metadata,
         })
 
-        expect(togglePreviewButton).toBeCalledWith(false)
+        expect(workspace.fs.writeFile).toHaveBeenCalledTimes(0)
       })
 
       it('writes cached bytes to session file on serialization and save', async () => {
@@ -630,7 +628,6 @@ describe('GrpcSerializer', () => {
         }
         writeableSer.cacheDocUriMapping.set(fixture.metadata['runme.dev/cacheId'], fakeSrcDocUri)
         ContextState.getKey = vi.fn().mockImplementation(() => true)
-        GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
         GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
 
         const result = await writeableSer.serializeNotebook(
@@ -694,7 +691,6 @@ describe('GrpcSerializer', () => {
       const ser = new GrpcSerializer(context, new Server(), new Kernel())
       ;(ser as any).cacheDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
-      GrpcSerializer.sessionOutputsEnabled = vi.fn().mockReturnValue(true)
 
       await (ser as any).cacheNotebookOutputs(fixture, 'irrelevant')
 
