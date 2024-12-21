@@ -311,6 +311,9 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', treeViewer.openFile.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.openRemoteRunmeFile', (uri: Uri) => {
+        return commands.executeCommand('vscode.openWith', uri, Kernel.type)
+      }),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       RunmeExtension.registerCommand('runme.runWithPrompts', (cell) =>
@@ -433,14 +436,16 @@ export class RunmeExtension {
         commands.executeCommand('workbench.view.extension.runme'),
       ),
 
+      workspace.registerFileSystemProvider('runmefs', new WorkspaceNotebooksFileSystem(), {
+        isReadonly: false,
+      }),
+
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(
         'runme.aiGenerate',
         aiManager.completionGenerator.generateCompletion,
       ),
     )
-
-    new WorkspaceNotebooksFileSystem()
 
     TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
 

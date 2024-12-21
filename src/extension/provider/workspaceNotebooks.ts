@@ -18,14 +18,26 @@ export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, 
       return Promise.resolve([])
     }
 
-    return workflows.map((workflow) => {
-      return {
+    const items = workflows.map((workflow) => {
+      const uri = Uri.parse(`runmefs:///${workflow.repository}/${workflow.path}?id=${workflow.id}`)
+
+      const item: TreeItem = {
         label: `${workflow.path}`,
+        id: `${workflow.id}-${workflow.path}`,
         description: `${workflow.repository}`,
-        resourceUri: Uri.parse(`runmefs://${workflow.id}/${workflow.path}`),
+        resourceUri: uri,
         collapsibleState: TreeItemCollapsibleState.None,
+        command: {
+          command: 'runme.openRemoteRunmeFile',
+          title: 'Open',
+          arguments: [uri],
+        },
       }
+
+      return item
     })
+
+    return items
   }
 
   dispose(): void {

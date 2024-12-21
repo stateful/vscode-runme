@@ -96,7 +96,7 @@
         }
       },
       "NewTreeProvider": {
-        "enabled": true,
+        "enabled": false,
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,

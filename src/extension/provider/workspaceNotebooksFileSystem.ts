@@ -8,7 +8,6 @@ import {
   FileSystemProvider,
   FileType,
   Uri,
-  workspace,
 } from 'vscode'
 
 import getOneWorkflow from '../messages/platformRequest/getOneWorkflow'
@@ -17,20 +16,21 @@ export default class WorkspaceNotebooksFileSystem implements FileSystemProvider 
   private _onDidChangeFile: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile: Event<FileChangeEvent[]> = this._onDidChangeFile.event
 
-  constructor() {
-    workspace.registerFileSystemProvider('runmefs', this, { isReadonly: false })
-  }
-
   async readFile(uri: Uri): Promise<Uint8Array> {
-    // runmefs://fffc4265-5ee8-4bde-81d7-3278fa8766a0/Untitled-1.md
-    const id = uri.path.split('/')[1]
+    // extraxt id from query string in uri
+    const id = uri.query.split('=')[1]
 
     if (!id) {
       throw FileSystemError.FileNotFound(uri)
     }
     try {
       const workflow = await getOneWorkflow(id)
-      return workflow.data.workflow.data as Uint8Array
+      const bytes: number[] = workflow.data.workflow.data || []
+      const unit8Array = new Uint8Array(bytes)
+      const b64content = new TextDecoder().decode(unit8Array)
+      const decoded = atob(b64content)
+
+      return new TextEncoder().encode(decoded)
     } catch (error) {
       throw FileSystemError.FileNotFound(uri)
     }
