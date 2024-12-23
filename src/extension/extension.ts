@@ -93,6 +93,8 @@ import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
+import { WorkspaceNotebooks } from './provider/workspaceNotebooks'
+import WorkspaceNotebooksFileSystem from './provider/workspaceNotebooksFileSystem'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -135,7 +137,7 @@ export class RunmeExtension {
 
     let treeViewer: RunmeTreeProvider
 
-    if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
+    if (true || kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
       await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
       treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
@@ -309,6 +311,9 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', treeViewer.openFile.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.openRemoteRunmeFile', (uri: Uri) => {
+        return commands.executeCommand('vscode.openWith', uri, Kernel.type)
+      }),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       RunmeExtension.registerCommand('runme.runWithPrompts', (cell) =>
@@ -320,6 +325,8 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
+      window.registerTreeDataProvider('runme.workspaceNotebooks', new WorkspaceNotebooks()),
+
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',
         treeViewer.collapseAll.bind(treeViewer),
@@ -428,6 +435,10 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
       ),
+
+      workspace.registerFileSystemProvider('runmefs', new WorkspaceNotebooksFileSystem(), {
+        isReadonly: false,
+      }),
 
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(

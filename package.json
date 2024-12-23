@@ -1164,6 +1164,12 @@
       ],
       "runme": [
         {
+          "id": "runme.workspaceNotebooks",
+          "type": "tree",
+          "name": "Workspace Notebooks",
+          "visibility": "visible"
+        },
+        {
           "id": "runme.cloud",
           "type": "webview",
           "name": "Cloud",
