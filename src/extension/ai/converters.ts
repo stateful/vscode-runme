@@ -11,8 +11,6 @@ import * as serializerTypes from '../grpc/serializerTypes'
 import * as serializer from '../serializer'
 import { Kernel } from '../kernel'
 
-import * as protos from './protos'
-
 // Converter provides converstion routines from vscode data types to protocol buffer types.
 // It is a class because in order to handle the conversion we need to keep track of the kernel
 // because we need to add execution information to the cells before serializing.
@@ -30,8 +28,7 @@ export class Converter {
     let notebookDataWithExec = new vscode.NotebookData(cellDataWithExec)
     // marshalNotebook returns a protocol buffer using the ts client library from buf we need to
     // convert it to es
-    let notebookProto = serializer.GrpcSerializer.marshalNotebook(notebookDataWithExec)
-    return protos.notebookTSToES(notebookProto)
+    return serializer.GrpcSerializer.marshalNotebook(notebookDataWithExec)
   }
 }
 
