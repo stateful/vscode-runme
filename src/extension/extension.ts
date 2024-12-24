@@ -494,6 +494,7 @@ export class RunmeExtension {
         const session = await StatefulAuthProvider.instance.ensureSession()
         const nunmeIdentity = session ? RunmeIdentity.ALL : getServerLifecycleIdentity()
         await commands.executeCommand('runme.lifecycleIdentitySelection', nunmeIdentity)
+        kernel.updateFeatureContext('statefulAuth', !!session)
       } catch (error) {
         let message
         if (error instanceof Error) {

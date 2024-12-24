@@ -15,6 +15,7 @@ import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
 import ContextState from '../../src/extension/contextState'
+import { OutputType } from '../../src/constants'
 
 import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 
@@ -231,7 +232,22 @@ describe('WasmSerializer', () => {
 describe('GrpcSerializer', () => {
   const deepCopyFixture = () => {
     const raw = fixtureMarshalNotebook as any
-    return JSON.parse(JSON.stringify(raw))
+    return bufferConvert(JSON.parse(JSON.stringify(raw)))
+  }
+
+  // item.data.type is an invalid property per the .proto and is an artifiact of JSON.stringify
+  // normal execution would see a Buffer object here, not a Buffer-like object
+  const bufferConvert = (fixture: any) => {
+    fixture.cells.forEach((cell) => {
+      cell.outputs.forEach((out) => {
+        out.items.forEach((item) => {
+          if (item.mime === OutputType.stdout || item.mime === OutputType.terminal) {
+            item.data = item.data?.type === 'Buffer' ? Buffer.from(item.data) : item.data
+          }
+        })
+      })
+    })
+    return fixture
   }
 
   const context: any = {
