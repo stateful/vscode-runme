@@ -627,7 +627,9 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   public static getOutputsUri(docUri: Uri, sessionId: string): Uri {
-    return Uri.parse(GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId))
+    const fspath = GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId)
+    const query = docUri.query
+    return Uri.parse(`${docUri.scheme}://${fspath}?${query}`)
   }
 
   public static getSourceFilePath(outputsFile: string): string {

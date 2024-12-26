@@ -37,10 +37,12 @@ export default class WorkspaceNotebooksFileSystem implements FileSystemProvider 
   }
 
   writeFile(
-    _uri: Uri,
+    uri: Uri,
     _content: Uint8Array,
-    _options: { create: boolean; overwrite: boolean },
-  ): void {}
+    options: { create: boolean; overwrite: boolean },
+  ): void {
+    console.log(`${uri} ${options}`)
+  }
 
   watch(_uri: Uri, _options: { recursive: boolean; excludes: string[] }): Disposable {
     return new Disposable(() => {})

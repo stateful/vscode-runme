@@ -19,7 +19,9 @@ export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, 
     }
 
     const items = workflows.map((workflow) => {
-      const uri = Uri.parse(`runmefs:///${workflow.repository}/${workflow.path}?id=${workflow.id}`)
+      const uri = Uri.parse(
+        `runmefs://github.com/${workflow.repository}/blob/${workflow.path}?id=${workflow.id}`,
+      )
 
       const item: TreeItem = {
         label: `${workflow.path}`,
