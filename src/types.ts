@@ -776,6 +776,7 @@ export enum FeatureName {
   OpenTerminalOnStartup = 'OpenTerminalOnStartup',
   HostedPlayground = 'HostedPlayground',
   RecommendExtension = 'RecommendExtension',
+  ReporterAPI = 'ReporterAPI',
 }
 
 export type Feature = {

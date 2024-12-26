@@ -33,6 +33,11 @@ npm pkg set "runme.features[NewTreeProvider].enabled=true" --json
 git diff package.json
 ```
 
+```sh {"id":"01JFBFBV0FAMBDDD1V8J3917Q9","interactive":"false","name":"activate-reporter-api"}
+npm pkg set "runme.features[ReporterAPI].enabled=true" --json
+git diff package.json
+```
+
 ### Reset
 
 ```sh {"excludeFromRunAll":"true","id":"01J7EZQSG262FMGJAYG1W6Z3EQ"}

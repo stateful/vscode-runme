@@ -35,7 +35,7 @@ $ gcloud container clusters list --region=$CLUSTERS_REGION --project $CLUSTERS_P
 [Install kubectl and configure cluster access](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl)
 
 ```sh {"id":"01J254YX4R2EZK3B63WX8ZFFQ5"}
-$ export CLUSTER_NAME="cluster-2"
+$ export CLUSTER_NAME="ci-cluster"
 $ gcloud container clusters get-credentials $CLUSTER_NAME --region=$CLUSTERS_REGION --project=$CLUSTERS_PROJECT_NAME
 ```
 

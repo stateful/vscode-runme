@@ -20,7 +20,12 @@ import { v4 as uuidv4 } from 'uuid'
 import fetch from 'node-fetch'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 
-import { getAuthTokenPath, getDeleteAuthToken, getRunmeAppUrl } from '../../utils/configuration'
+import {
+  getAuthTokenPath,
+  getDeleteAuthToken,
+  getRunmeAppUrl,
+  getShowLoginNotification,
+} from '../../utils/configuration'
 import { AuthenticationProviders, PLATFORM_USER_SIGNED_IN, TELEMETRY_EVENTS } from '../../constants'
 import ContextState from '../contextState'
 import getLogger from '../logger'
@@ -678,6 +683,10 @@ export class StatefulAuthProvider implements AuthenticationProvider, Disposable 
 
   static showLoginNotification() {
     this.assertContext(this.#context)
+
+    if (!getShowLoginNotification()) {
+      return
+    }
 
     if (!this.#context.globalState.get<boolean>(TELEMETRY_EVENTS.OpenWorkspace, true)) {
       return

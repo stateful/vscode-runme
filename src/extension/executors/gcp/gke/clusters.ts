@@ -174,7 +174,7 @@ export async function getClusterDetails(clusterName: string, location: string, p
     const k8sNodes = await coreV1Api.listNode()
 
     const clusterNodes = gcloudNodes.map((gcloudNode) => {
-      const node = k8sNodes.body.items.find((node) => node.metadata?.name === gcloudNode.name)
+      const node = k8sNodes.items.find((node) => node.metadata?.name === gcloudNode.name)
       if (!node) {
         return gcloudNode
       }

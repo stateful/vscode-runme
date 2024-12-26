@@ -116,7 +116,6 @@ import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
 import { SignedIn } from './signedIn'
-import { StatefulAuthProvider } from './provider/statefulAuth'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -165,7 +164,6 @@ export class Kernel implements Disposable {
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
     this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
     this.#experiments.set('shellWarning', config.get<boolean>('shellWarning', false))
-    this.#experiments.set('reporter', config.get<boolean>('reporter', false))
 
     this.cellManager = new NotebookCellManager(this.#controller)
     this.#controller.supportsExecutionOrder = getNotebookExecutionOrder()
@@ -204,44 +202,42 @@ export class Kernel implements Disposable {
     this.#onlySignedIn = new SignedIn(this)
     this.#disposables.push(this.#onlySignedIn)
 
-    StatefulAuthProvider.instance.currentSession().then((session) => {
-      const packageJSON = context?.extension?.packageJSON || {}
-      const featContext: FeatureContext = {
-        os: os.platform(),
-        vsCodeVersion: version as string,
-        extensionVersion: packageJSON?.version,
-        githubAuth: false,
-        statefulAuth: !!session,
-        extensionId: context?.extension?.id as ExtensionName,
-      }
+    const packageJSON = this.context?.extension?.packageJSON || {}
+    const featContext: FeatureContext = {
+      os: os.platform(),
+      vsCodeVersion: version as string,
+      extensionVersion: packageJSON?.version,
+      githubAuth: false,
+      statefulAuth: false,
+      extensionId: this.context?.extension?.id as ExtensionName,
+    }
 
-      const runmeFeatureSettings = workspace.getConfiguration('runme.features')
-      const featureNames = Object.keys(FeatureName)
+    const runmeFeatureSettings = workspace.getConfiguration('runme.features')
+    const featureNames = Object.keys(FeatureName)
 
-      featureNames.forEach((feature) => {
-        if (runmeFeatureSettings.has(feature)) {
-          const result = runmeFeatureSettings.get<boolean>(feature, false)
-          this.#featuresSettings.set(feature, result)
-        }
-      })
-
-      this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
-
-      if (this.featuresState$) {
-        const subscription = this.featuresState$
-          .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
-          .subscribe((snapshot) => {
-            ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
-            postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
-              snapshot: snapshot,
-            })
-          })
-
-        this.#disposables.push({
-          dispose: () => subscription.unsubscribe(),
-        })
+    featureNames.forEach((feature) => {
+      if (runmeFeatureSettings.has(feature)) {
+        const result = runmeFeatureSettings.get<boolean>(feature, false)
+        this.#featuresSettings.set(feature, result)
       }
     })
+
+    this.featuresState$ = features.loadState(packageJSON, featContext, this.#featuresSettings)
+
+    if (this.featuresState$) {
+      const subscription = this.featuresState$
+        .pipe(map((_state) => features.getSnapshot(this.featuresState$)))
+        .subscribe((snapshot) => {
+          ContextState.addKey(FEATURES_CONTEXT_STATE_KEY, snapshot)
+          postClientMessage(this.messaging, ClientMessages.featuresUpdateAction, {
+            snapshot: snapshot,
+          })
+        })
+
+      this.#disposables.push({
+        dispose: () => subscription.unsubscribe(),
+      })
+    }
   }
 
   get envProps() {
