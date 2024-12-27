@@ -20,7 +20,7 @@ export class SaveButton extends LitElement {
   }
 
   render() {
-    let text = this.signedIn ? 'Save' : 'Save to cloud'
+    let text = this.signedIn ? 'Save' : 'Save to Cloud'
 
     return html`
       <action-button

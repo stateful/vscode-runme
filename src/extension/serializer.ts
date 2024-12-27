@@ -571,30 +571,46 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
-    if (GrpcSerializer.shouldDisablePreviewOutputs()) {
+    const sessionFilePath = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
+
+    // If preview button is clicked, save the outputs to a file
+    const isPreview = GrpcSerializer.isPreviewOutput()
+    if (isPreview) {
       await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
-    } else if (GrpcSerializer.shouldSkipOutputSave()) {
-      return bytes.length
     }
 
-    const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
-    if (!sessionFile) {
-      return -1
+    if (await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)) {
+      if (!sessionFilePath) {
+        return -1
+      }
+      await workspace.fs.writeFile(sessionFilePath, bytes)
     }
 
-    await workspace.fs.writeFile(sessionFile, bytes)
     return bytes.length
   }
 
-  static shouldDisablePreviewOutputs(): boolean {
-    const sessionOutputsPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
-    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    return sessionOutputsPreview && !isAutosaveOn
+  static isPreviewOutput(): boolean {
+    const isPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
+    return isPreview
   }
 
-  static shouldSkipOutputSave(): boolean {
-    const sessionOutputsPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
-    return !sessionOutputsPreview && features.isOnInContextState(FeatureName.SignedIn)
+  static async shouldWriteOutputs(sessionFilePath: Uri, isPreview: boolean): Promise<boolean> {
+    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+
+    // A session file will exists only if "Preview Outputs" was clicked before
+    const sessionFileExists = await this.sessionFileExists(sessionFilePath)
+
+    return isPreview || (isAutosaveOn && sessionFileExists && !isSignedIn)
+  }
+
+  static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
+    try {
+      await workspace.fs.stat(sessionFilePath)
+      return true
+    } catch (e) {
+      return false
+    }
   }
 
   public async saveNotebookOutputs(uri: Uri): Promise<number> {

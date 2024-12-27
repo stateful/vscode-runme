@@ -381,17 +381,9 @@ export class RunmeExtension {
         }
 
         await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
-
         const { notebookUri } = e.notebookEditor
         const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-
-        try {
-          await workspace.fs.stat(outputFilePath)
-        } catch (e) {
-          await serializer.saveNotebookOutputs(notebookUri)
-          await commands.executeCommand('workbench.action.files.save')
-        }
-
+        await serializer.saveNotebookOutputs(notebookUri)
         await openFileAsRunmeNotebook(outputFilePath)
       }),
 
