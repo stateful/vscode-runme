@@ -25,8 +25,8 @@ describe('Runme GitHub Workflow Integration', async () => {
   }
 
   // Skip tests only if PR is from external fork
-  if (eventName === 'pull_request' && forkOwner && forkOwner !== baseOwner) {
-    console.log('Skipping tests for pull request from external fork.')
+  if (eventName === 'pull_request' && forkOwner !== baseOwner) {
+    console.log('Skipping GitHub Workflow Integration tests for pull request from external fork.')
     return
   }
 
