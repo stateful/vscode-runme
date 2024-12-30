@@ -28,7 +28,7 @@ export interface IKernelExecutorOptions {
   outputs: NotebookCellOutputManager
   messaging: NotebookRendererMessaging
   envMgr: IEnvironmentManager
-  runner?: IRunner
+  runner: IRunner
   runnerEnv?: IRunnerEnvironment
   cellText?: string
   resource?: ExecResourceType

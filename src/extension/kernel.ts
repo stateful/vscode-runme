@@ -818,26 +818,10 @@ export class Kernel implements Disposable {
     const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
-    const runnerOpts: IKernelRunnerOptions = {
-      kernel: this,
-      doc: cell.document,
-      context: this.context,
-      runner: this.runner!,
-      exec,
-      runningCell,
-      messaging: this.messaging,
-      cellId: id,
-      execKey,
-      outputs,
-      runnerEnv: this.runnerEnv,
-      envMgr,
-      resource,
-    }
-
     const executorOpts: IKernelExecutorOptions = {
       context: this.context,
       kernel: this,
-      runner: this.runner,
+      runner: this.runner!,
       runnerEnv: this.runnerEnv,
       doc: runningCell,
       exec,
@@ -846,6 +830,14 @@ export class Kernel implements Disposable {
       envMgr,
       resource,
       cellText: runningCell.getText(),
+    }
+
+    const runnerOpts: IKernelRunnerOptions = {
+      ...executorOpts,
+      doc: cell.document,
+      runningCell,
+      cellId: id,
+      execKey,
     }
 
     try {
