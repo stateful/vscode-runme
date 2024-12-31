@@ -524,6 +524,13 @@ export class NotebookCellOutputManager {
     })
   }
 
+  shouldSkipRefreshTerminal() {
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+    const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
+
+    return !isSignedIn && isForceLogin
+  }
+
   /**
    * Syncs a stdout output item based on the active terminal
    *
@@ -537,11 +544,8 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
-    const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
-
-    if (!isSignedIn && isForceLogin) {
-      return Promise.resolve()
+    if (this.shouldSkipRefreshTerminal()) {
+      return
     }
 
     await this.withLock(async () => {
