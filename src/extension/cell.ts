@@ -251,17 +251,16 @@ export class NotebookCellOutputManager {
               ? ContextState.getKey(PLATFORM_USER_SIGNED_IN)
               : ContextState.getKey(GITHUB_USER_SIGNED_IN)
 
-            const isSessionOutputsEnabled = getSessionOutputs()
-
             const json: CellOutputPayload<OutputType.terminal> = {
               type: OutputType.terminal,
               output: {
                 'runme.dev/id': cellId,
                 content: stdoutBase64,
                 initialRows: terminalRows || terminalConfigurations.rows,
-                isAutoSaveEnabled: isSignedIn ? ContextState.getKey(NOTEBOOK_AUTOSAVE_ON) : false,
+                isAutoSaveEnabled: isSignedIn
+                  ? ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+                  : false,
                 isPlatformAuthEnabled: isPlatformAuthEnabled(),
-                isSessionOutputsEnabled,
                 isDaggerOutput: !!daggerOutput,
                 ...terminalConfigurations,
               },
@@ -525,6 +524,13 @@ export class NotebookCellOutputManager {
     })
   }
 
+  shouldSkipRefreshTerminal() {
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+    const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
+
+    return !isSignedIn && isForceLogin
+  }
+
   /**
    * Syncs a stdout output item based on the active terminal
    *
@@ -538,15 +544,8 @@ export class NotebookCellOutputManager {
    *
    */
   async refreshTerminal(terminalState: ITerminalState | undefined): Promise<void> {
-    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
-    const isForceLogin = features.isOnInContextState(FeatureName.ForceLogin)
-
-    const isAutoSaveOn = ContextState.getKey(NOTEBOOK_AUTOSAVE_ON)
-
-    if (!isSignedIn && !isAutoSaveOn) {
-      return Promise.resolve()
-    } else if (!isSignedIn && isForceLogin) {
-      return Promise.resolve()
+    if (this.shouldSkipRefreshTerminal()) {
+      return
     }
 
     await this.withLock(async () => {

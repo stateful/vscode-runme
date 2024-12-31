@@ -48,6 +48,7 @@ import {
   ClientMessages,
   TELEMETRY_EVENTS,
   RUNME_FRONTMATTER_PARSED,
+  NOTEBOOK_PREVIEW_OUTPUTS,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -56,6 +57,7 @@ import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
 import { insertCodeNotebookCell } from '../cell'
+import { GrpcSerializer, SerializerBase } from '../serializer'
 
 const log = getLogger('Commands')
 
@@ -308,6 +310,7 @@ export async function askNewRunnerSession(kernel: Kernel) {
     'OK',
   )
   if (action) {
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
     await commands.executeCommand('workbench.action.files.save')
     await kernel.newRunnerEnvironment({})
     await commands.executeCommand('workbench.action.files.save')
@@ -324,7 +327,7 @@ export async function askAlternativeOutputsAction(
   metadata: { [key: string]: any },
 ): Promise<void> {
   const action = await window.showWarningMessage(
-    'Running Session Outputs from a previous notebook session is not supported.',
+    'Running Preview Outputs from a previous notebook session is not supported.',
     { modal: true },
     ASK_ALT_OUTPUTS_ACTION.ORIGINAL,
   )
@@ -589,5 +592,28 @@ export async function selectEnvironment(manager: EnvironmentManager) {
     window.showInformationMessage(
       isEnv ? `Selected environment: ${selected.label}` : 'Environment cleared',
     )
+  }
+}
+
+export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBase) {
+  return async (e: NotebookUiEvent) => {
+    const runnerEnv = kernel.getRunnerEnvironment()
+    const sessionId = runnerEnv?.getSessionId()
+    if (!e.ui || !sessionId) {
+      return
+    }
+
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
+    const { notebookUri } = e.notebookEditor
+    const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+
+    try {
+      await workspace.fs.stat(outputFilePath)
+    } catch (e) {
+      await commands.executeCommand('workbench.action.files.save')
+    }
+
+    await serializer.saveNotebookOutputs(notebookUri)
+    await openFileAsRunmeNotebook(outputFilePath)
   }
 }

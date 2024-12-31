@@ -127,12 +127,13 @@ function mockNotebookController(cell: NotebookCell) {
 }
 
 describe('NotebookCellOutputManager', () => {
-  it('marks document as dirty as part of refreshing the terminal state', async () => {
+  it('should skip refresh terminal when shouldSkipRefreshTerminal returns true', async () => {
     const cell = mockCell()
 
     const { controller, createExecution } = mockNotebookController(cell)
 
     const outputs = new NotebookCellOutputManager(cell, controller)
+    outputs.shouldSkipRefreshTerminal = vi.fn().mockReturnValue(true)
     await outputs.showTerminal(true)
     const serialize = vi.fn().mockImplementation(() => 'terminal test output')
     ;(outputs as any).terminalState = { serialize, write: vi.fn() } as any
@@ -149,6 +150,33 @@ describe('NotebookCellOutputManager', () => {
     runmeExec!.end(undefined)
 
     expect(spy).toBeCalledTimes(1)
+    expect(outputs.shouldSkipRefreshTerminal).toBeCalledTimes(1)
+  })
+
+  it('marks document as dirty as part of refreshing the terminal state', async () => {
+    const cell = mockCell()
+
+    const { controller, createExecution } = mockNotebookController(cell)
+
+    const outputs = new NotebookCellOutputManager(cell, controller)
+    outputs.shouldSkipRefreshTerminal = vi.fn().mockReturnValue(false)
+    await outputs.showTerminal(true)
+    const serialize = vi.fn().mockImplementation(() => 'terminal test output')
+    ;(outputs as any).terminalState = { serialize, write: vi.fn() } as any
+
+    const exec = mockCellExecution(cell)
+    createExecution.mockReturnValue(exec)
+
+    const runmeExec = await outputs.createNotebookCellExecution()
+    expect(runmeExec).toBeDefined()
+
+    const spy = vi.spyOn(outputs, 'refreshTerminal')
+
+    runmeExec!.start()
+    runmeExec!.end(undefined)
+
+    expect(spy).toBeCalledTimes(1)
+    expect(outputs.shouldSkipRefreshTerminal).toBeCalledTimes(1)
   })
 
   it('uses current execution for outputs', async () => {

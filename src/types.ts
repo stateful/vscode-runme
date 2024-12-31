@@ -380,7 +380,6 @@ interface Payload {
     content?: string
     initialRows?: number
     isAutoSaveEnabled: boolean
-    isSessionOutputsEnabled: boolean
     isPlatformAuthEnabled: boolean
     isDaggerOutput: boolean
   }
