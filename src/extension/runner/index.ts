@@ -33,12 +33,14 @@ import { convertEnvList } from '../utils'
 import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
 import { XTermSerializer } from '../terminal/terminalState'
+import { Notebook } from '../grpc/serializerTypes'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
 import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
+import { GrpcRunnerNotebookResolver } from './notebook'
 
 export type RunProgramExecution =
   | {
@@ -105,6 +107,8 @@ export interface IRunner extends Disposable {
     mode: ResolveProgramRequest_Mode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver>
+
+  createNotebookResolver(notebook: Notebook | undefined): Promise<GrpcRunnerNotebookResolver>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -240,6 +244,16 @@ export default class GrpcRunner implements IRunner {
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver> {
     const resolver = new GrpcRunnerProgramResolver(this.client, mode, envs)
+
+    this.registerChild(resolver)
+
+    return resolver
+  }
+
+  async createNotebookResolver(
+    notebook: Notebook | undefined,
+  ): Promise<GrpcRunnerNotebookResolver> {
+    const resolver = new GrpcRunnerNotebookResolver(this.client, notebook)
 
     this.registerChild(resolver)
 

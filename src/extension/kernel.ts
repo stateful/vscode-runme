@@ -115,6 +115,7 @@ import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
 import { SignedIn } from './signedIn'
+import { Notebook } from './grpc/serializerTypes'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -811,7 +812,11 @@ export class Kernel implements Disposable {
     runmeExec.start(startTime)
 
     const annotations = getAnnotations(cell)
-    const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
+    const { key: execKey, resource } = getKeyInfo(
+      runningCell,
+      annotations,
+      cell.notebook.metadata['runme.dev/frontmatterParsed'],
+    )
 
     let successfulCellExecution: boolean
 
@@ -1273,6 +1278,10 @@ export class Kernel implements Disposable {
 
   public getNotebookDataCache(cacheId: string): NotebookData | undefined {
     return this.serializer?.getNotebookDataCache(cacheId)
+  }
+
+  public getParserCache(cacheId: string): Notebook | undefined {
+    return this.serializer?.getParserCache(cacheId)
   }
 
   public getReporterPayload(

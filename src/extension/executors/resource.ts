@@ -4,10 +4,21 @@ import { getAnnotations, isValidEnvVarName } from '../utils'
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
 
 export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
-  const { context, runner, exec, runningCell, execKey, runnerEnv, runScript, cellId, resource } =
-    runnerOpts
+  const {
+    context,
+    kernel,
+    runner,
+    exec,
+    runningCell,
+    execKey,
+    runnerEnv,
+    runScript,
+    cellId,
+    resource,
+  } = runnerOpts
 
   const programOptions: RunProgramOptions = await resolveProgramOptionsScript({
+    kernel,
     exec,
     execKey,
     runnerEnv,
@@ -49,7 +60,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
     }
   }
 
-  if (resource === 'DaggerPlain') {
+  if (resource === 'DaggerCall') {
     const varDaggerCellId = `$DAGGER_${cellId}`
 
     const printDaggerCellId = `echo -n ${varDaggerCellId}`
@@ -120,7 +131,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
   const cellText = result ? execRes?.trim() : undefined
 
   if (cellText?.includes('jq: parse error')) {
-    return uri({ ...runnerOpts, resource: 'DaggerPlain', runScript })
+    return uri({ ...runnerOpts, resource: 'DaggerCall', runScript })
   }
 
   return runScript?.(cellText) || result

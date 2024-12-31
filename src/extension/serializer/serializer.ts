@@ -72,6 +72,7 @@ export abstract class GrpcSerializer implements ISerializer {
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
   protected readonly plainCache = new Map<string, Promise<Buffer>>()
   protected readonly maskedCache = new Map<string, Promise<Buffer>>()
+  protected readonly parserCache = new Map<string, Serializer.Notebook>()
   protected readonly notebookDataCache = new Map<string, NotebookData>()
   protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
@@ -286,6 +287,7 @@ export abstract class GrpcSerializer implements ISerializer {
     try {
       const cacheId = getDocumentCacheId(data.metadata)
       if (cacheId) {
+        this.parserCache.set(cacheId, data)
         this.notebookDataCache.set(cacheId, data)
       }
 
@@ -318,6 +320,11 @@ export abstract class GrpcSerializer implements ISerializer {
       notebook = await this.reviveNotebook(content, token)
       notebook = notebook as unknown as Serializer.Notebook
       this.applyCellIdentity(notebook)
+
+      const cacheId = getDocumentCacheId(notebook.metadata)
+      if (cacheId) {
+        this.parserCache.set(cacheId as string, notebook)
+      }
     } catch (err: any) {
       return this.printCell(
         '⚠️ __Error__: document could not be loaded' +
@@ -427,6 +434,10 @@ export abstract class GrpcSerializer implements ISerializer {
 
   public getNotebookDataCache(cacheId: string): NotebookData | undefined {
     return this.notebookDataCache.get(cacheId)
+  }
+
+  public getParserCache(cacheId: string): Serializer.Notebook | undefined {
+    return this.parserCache.get(cacheId)
   }
 
   protected static isGhostCell(cell: NotebookCellData): boolean {

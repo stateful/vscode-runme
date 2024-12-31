@@ -185,7 +185,7 @@ export function isDaggerCli(text: string): boolean {
   return simplified.includes('dagger call')
 }
 
-export type ExecResourceType = 'None' | 'URI' | 'Dagger' | 'DaggerPlain'
+export type ExecResourceType = 'None' | 'URI' | 'Dagger' | 'DaggerCall' | 'DaggerShell'
 export interface IExecKeyInfo {
   key: string
   resource: ExecResourceType
@@ -193,10 +193,11 @@ export interface IExecKeyInfo {
 
 export function getKeyInfo(
   runningCell: vscode.TextDocument,
-  annotations: CellAnnotations,
+  cellAnnotations: CellAnnotations,
+  parsedNotebookFrontmatter: { [key: string]: any },
 ): IExecKeyInfo {
   try {
-    if (!annotations.background && isDaggerCli(runningCell.getText())) {
+    if (!cellAnnotations.background && isDaggerCli(runningCell.getText())) {
       return { key: 'dagger', resource: 'Dagger' }
     }
 
@@ -223,6 +224,10 @@ export function getKeyInfo(
   }
 
   const { languageId } = runningCell
+
+  if (parsedNotebookFrontmatter?.shell === 'dagger shell') {
+    return { key: languageId, resource: 'None' }
+  }
 
   if (languageId === 'shellscript') {
     return { key: 'sh', resource: 'None' }

@@ -22,6 +22,7 @@ import {
 import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2'
 import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/tcpClient'
 import { IServer } from '../server/kernelServer'
+import { ResolveNotebookRequest, ResolveNotebookResponse } from '../grpc/runner/v1'
 
 import { IRunnerReady } from '.'
 
@@ -131,6 +132,14 @@ export class GrpcRunnerClient implements IRunnerClient {
   ): UnaryCall<ResolveProgramRequest, ResolveProgramResponse> {
     GrpcRunnerClient.assertClient(this.client)
     return this.client.resolveProgram(input, options)
+  }
+
+  resolveNotebook(
+    input: ResolveNotebookRequest,
+    options?: RpcOptions | undefined,
+  ): UnaryCall<ResolveNotebookRequest, ResolveNotebookResponse> {
+    GrpcRunnerClient.assertClient(this.client)
+    return this.client.resolveNotebook(input, options)
   }
 
   monitorEnvStore(

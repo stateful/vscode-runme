@@ -43,6 +43,7 @@ import {
   ExecuteRequest,
   ExecuteResponse,
 } from './runner/types'
+import { ResolveNotebookRequest, ResolveNotebookResponse } from './runner/v1'
 
 interface IRunnerServiceClient {
   createSession(
@@ -81,6 +82,11 @@ interface IRunnerServiceClient {
     input: ResolveProgramRequest,
     options?: RpcOptions,
   ): UnaryCall<ResolveProgramRequest, ResolveProgramResponse>
+
+  resolveNotebook(
+    input: ResolveNotebookRequest,
+    options?: RpcOptions,
+  ): UnaryCall<ResolveNotebookRequest, ResolveNotebookResponse>
 }
 
 function initParserClient(transport: GrpcTransport): ParserServiceClient {

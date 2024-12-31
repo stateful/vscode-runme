@@ -59,6 +59,7 @@ import {
   ResolveProgramRequest_ModeEnum,
   ResolveProgramResponse_StatusEnum,
 } from '../../grpc/runner/types'
+import { GrpcSerializer } from '../../serializer'
 
 import { createRunProgramOptions } from './factory'
 
@@ -118,6 +119,7 @@ export const executeRunner: IKernelRunner = async ({
     // removed vercel resolution option
     const resolveRunProgram = resolveProgramOptionsScript
     programOptions = await resolveRunProgram({
+      kernel,
       exec,
       execKey,
       runnerEnv,
@@ -472,10 +474,11 @@ type IResolveRunProgram = (resolver: IResolveRunProgramOptions) => Promise<RunPr
 
 type IResolveRunProgramOptions = { runner: IRunner } & Pick<
   IKernelRunnerOptions,
-  'exec' | 'execKey' | 'runnerEnv' | 'runningCell' | 'cellId'
+  'kernel' | 'exec' | 'execKey' | 'runnerEnv' | 'runningCell' | 'cellId'
 >
 
 export const resolveProgramOptionsScript: IResolveRunProgram = async ({
+  kernel,
   runner,
   runnerEnv,
   exec,
@@ -483,7 +486,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   runningCell,
   cellId,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const { promptEnv } = getAnnotations(exec.cell)
+  const { promptEnv, name } = getAnnotations(exec.cell)
   const forceInputPrompt = ContextState.getKey(NOTEBOOK_RUN_WITH_PROMPTS)
   let script = exec.cell.document.getText()
 
@@ -520,6 +523,17 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     commandMode,
     promptMode,
   )
+
+  const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
+  const parserCached = kernel.getParserCache(cacheId)
+  const notebookResolver = await runner.createNotebookResolver(parserCached)
+  const resp = await notebookResolver.resolveNotebook(name)
+
+  const resolved = resp.response.script
+  if (resolved !== '' && execution.type === 'commands') {
+    console.log(resolved)
+    execution.commands = prepareCommandSeq(resolved, execKey)
+  }
 
   return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
 }
