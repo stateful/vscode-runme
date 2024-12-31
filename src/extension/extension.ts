@@ -37,12 +37,7 @@ import {
   BackgroundTaskProvider,
   StopBackgroundTaskProvider,
 } from './provider/background'
-import {
-  getDefaultWorkspace,
-  bootFile,
-  resetNotebookSettings,
-  openFileAsRunmeNotebook,
-} from './utils'
+import { getDefaultWorkspace, bootFile, resetNotebookSettings } from './utils'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   toggleTerminal,
@@ -70,6 +65,7 @@ import {
   createCellGistCommand,
   runForkCommand,
   selectEnvironment,
+  notebookSessionOutputs,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
@@ -373,19 +369,10 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
         toggleAuthorMode(true, kernel),
       ),
-      RunmeExtension.registerCommand('runme.notebookSessionOutputs', async (e: NotebookUiEvent) => {
-        const runnerEnv = kernel.getRunnerEnvironment()
-        const sessionId = runnerEnv?.getSessionId()
-        if (!e.ui || !sessionId) {
-          return
-        }
-
-        await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
-        const { notebookUri } = e.notebookEditor
-        const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-        await serializer.saveNotebookOutputs(notebookUri)
-        await openFileAsRunmeNotebook(outputFilePath)
-      }),
+      RunmeExtension.registerCommand(
+        'runme.notebookSessionOutputs',
+        notebookSessionOutputs(kernel, serializer),
+      ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.UNSPECIFIED),

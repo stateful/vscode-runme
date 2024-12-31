@@ -575,6 +575,7 @@ export class GrpcSerializer extends SerializerBase {
 
     // If preview button is clicked, save the outputs to a file
     const isPreview = GrpcSerializer.isPreviewOutput()
+
     if (isPreview) {
       await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
     }

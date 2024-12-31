@@ -57,6 +57,7 @@ import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
 import { insertCodeNotebookCell } from '../cell'
+import { GrpcSerializer, SerializerBase } from '../serializer'
 
 const log = getLogger('Commands')
 
@@ -591,5 +592,28 @@ export async function selectEnvironment(manager: EnvironmentManager) {
     window.showInformationMessage(
       isEnv ? `Selected environment: ${selected.label}` : 'Environment cleared',
     )
+  }
+}
+
+export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBase) {
+  return async (e: NotebookUiEvent) => {
+    const runnerEnv = kernel.getRunnerEnvironment()
+    const sessionId = runnerEnv?.getSessionId()
+    if (!e.ui || !sessionId) {
+      return
+    }
+
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
+    const { notebookUri } = e.notebookEditor
+    const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+
+    try {
+      await workspace.fs.stat(outputFilePath)
+    } catch (e) {
+      await commands.executeCommand('workbench.action.files.save')
+    }
+
+    await serializer.saveNotebookOutputs(notebookUri)
+    await openFileAsRunmeNotebook(outputFilePath)
   }
 }
