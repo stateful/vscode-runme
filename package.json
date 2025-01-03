@@ -1390,7 +1390,7 @@
     "@xterm/headless": "^5.5.0",
     "@xterm/xterm": "^5.5.0",
     "clipboardy": "^4.0.0",
-    "cross-fetch": "^4.0.0",
+    "cross-fetch": "^4.1.0",
     "data-guardian": "^1.1.2",
     "dotenv": "^16.4.7",
     "filenamify": "^6.0.0",
