@@ -1360,7 +1360,7 @@
     "wdio-vscode-service": "^6.1.2",
     "webdriverio": "^8.40.5",
     "webpack": "^5.97.1",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "@apollo/client": "^3.12.4",
