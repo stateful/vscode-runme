@@ -912,7 +912,7 @@ export class Kernel implements Disposable {
       return runUriResource(opts)
     }
 
-    if (execKey === 'dagger' && supportsGrpcRunner) {
+    if (execKey === 'daggerCall' && supportsGrpcRunner) {
       const notify = async (res?: string): Promise<boolean> => {
         try {
           const daggerJsonParsed = JSON.parse(res || '{}')

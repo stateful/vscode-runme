@@ -491,7 +491,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   let script = exec.cell.document.getText()
 
   // temp hack for dagger integration
-  if (execKey === 'dagger' && !script.includes(' --help')) {
+  if (execKey === 'daggerCall' && !script.includes(' --help')) {
     const varName = `DAGGER_${cellId}`
     script = 'export ' + varName + '=$(' + script + '\n)'
   }
@@ -524,15 +524,18 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     promptMode,
   )
 
-  const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
-  const parserCached = kernel.getParserCache(cacheId)
-  const notebookResolver = await runner.createNotebookResolver(parserCached)
-  const resp = await notebookResolver.resolveNotebook(exec.cell.index)
+  // todo(sebastian): not great to special case here
+  const { DAGGER_SHELL } = CommandModeEnum()
+  if (commandMode === DAGGER_SHELL) {
+    const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
+    const parserCached = kernel.getParserCache(cacheId)
+    const notebookResolver = await runner.createNotebookResolver(parserCached)
+    const resp = await notebookResolver.resolveNotebook(exec.cell.index)
 
-  const resolved = resp.response.script
-  if (resolved !== '' && execution.type === 'commands') {
-    console.log(resolved)
-    execution.commands = prepareCommandSeq(resolved, execKey)
+    const resolved = resp.response.script
+    if (resolved !== '' && execution.type === 'commands') {
+      execution.commands = prepareCommandSeq(resolved, execKey)
+    }
   }
 
   return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)

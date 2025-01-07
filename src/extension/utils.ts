@@ -189,7 +189,7 @@ export function isDaggerShell(programName: string): boolean {
   return programName.trim().endsWith('dagger shell')
 }
 
-export type ExecResourceType = 'None' | 'URI' | 'DaggerCall' | 'DaggerPlain'
+export type ExecResourceType = 'None' | 'URI' | 'DaggerObject' | 'DaggerPlain'
 export interface IExecKeyInfo {
   key: string
   resource: ExecResourceType
@@ -202,12 +202,12 @@ export function getKeyInfo(
 ): IExecKeyInfo {
   try {
     if (!cellAnnotations.background && isDaggerCall(runningCell.getText())) {
-      return { key: 'dagger', resource: 'DaggerCall' }
+      return { key: 'daggerCall', resource: 'DaggerObject' }
     }
 
-    // if (!cellAnnotations.background && isDaggerShell(parsedNotebookFrontmatter.shell)) {
-    //   return { key: 'dagger', resource: 'Dagger' }
-    // }
+    if (!cellAnnotations.background && isDaggerShell(parsedNotebookFrontmatter.shell)) {
+      return { key: 'daggerShell', resource: 'None' }
+    }
 
     if (isDenoScript(runningCell)) {
       return { key: 'deno', resource: 'URI' }

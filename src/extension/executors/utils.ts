@@ -171,7 +171,8 @@ export function getCellShellPath(
 
 export function isShellLanguage(languageId: string): ShellType | undefined {
   switch (languageId.toLowerCase()) {
-    case 'dagger':
+    case 'daggercall':
+    case 'daggershell':
       return 'sh'
     case 'sh':
     case 'bash':

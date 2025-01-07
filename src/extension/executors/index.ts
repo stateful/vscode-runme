@@ -55,4 +55,4 @@ export const ENV_STORE_MANAGER: IEnvironmentManager = {
   },
 }
 
-export default { sh, bash, vercel, deno, github, gcp, aws, dagger }
+export default { sh, bash, vercel, deno, github, gcp, aws, daggerCall: dagger }
