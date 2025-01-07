@@ -2,6 +2,8 @@ import { Disposable, TreeItem, TreeDataProvider, TreeItemCollapsibleState, Uri }
 
 import getAllWorkflows from '../messages/platformRequest/getAllWorkflows'
 
+import { uriAuthority } from './runmeFs'
+
 interface WorkspaceNotebook extends TreeItem {}
 
 export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disposable {
@@ -20,7 +22,9 @@ export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, 
 
     const items = workflows.reduce((acc: { [key: string]: TreeItem[] }, workflow) => {
       const [_owner, repository] = workflow.repository.split('/')
-      const uri = Uri.parse(`runmefs://foo.com/${repository}/${workflow.path}?q=${workflow.id}`)
+      const uri = Uri.parse(
+        `runmefs://${uriAuthority}/${repository}/${workflow.path}?q=${workflow.id}`,
+      )
 
       const item: TreeItem = {
         label: `${workflow.path}`,

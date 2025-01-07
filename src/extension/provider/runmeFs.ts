@@ -13,36 +13,43 @@ import {
 import getOneWorkflow from '../messages/platformRequest/getOneWorkflow'
 import getAllWorkflows from '../messages/platformRequest/getAllWorkflows'
 
-export type Workflow = {
+type Workflow = {
   owner: string
   repository: string
   path: string
   id: string
 }
 
-export type TreeNode = {
-  path: string
-  fileType?: FileType
-  children?: TreeNode[]
-}
+type PathTree = Record<string, string[]>
 
-export type TreeNodes = TreeNode[]
-export type NodesMap = Record<string, string[]>
+const excludedPaths = [
+  '.vscode/tasks.json',
+  '.vscode/launch.json',
+  '.vscode/settings.json',
+  '.runme_bootstrap',
+  '.runme_bootstrap_demo',
+]
 
 /**
  * Handles the virtual file system runmefs://
  */
-export default class WorkspaceNotebooksFileSystem implements FileSystemProvider {
+export const uriAuthority = 'cloud.stateful.com'
+
+export function getRunmeFsUri(uri: Uri) {
+  return uri.with({ authority: uriAuthority })
+}
+
+export default class RunmeFileSystemProvider implements FileSystemProvider {
   private _onDidChangeFile: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile: Event<FileChangeEvent[]> = this._onDidChangeFile.event
 
   #notebooks: Workflow[] = []
-  #nodesMap: NodesMap = {}
+  #pathTree: PathTree = {}
 
   async readFile(sourceUri: Uri): Promise<Uint8Array> {
-    const uri = sourceUri.with({ authority: 'foo.com' })
+    const uri = getRunmeFsUri(sourceUri)
     let id: string | undefined = uri.query.split('=')[1]
-    id = id || this.#notebooks.find((n) => `/${n.path}` === uri.path)?.id
+    id = id || (await this.notebooks()).find((n) => `/${n.path}` === uri.path)?.id
 
     if (!id) {
       throw FileSystemError.FileNotFound(uri)
@@ -84,20 +91,13 @@ export default class WorkspaceNotebooksFileSystem implements FileSystemProvider 
   }
 
   async stat(sourceUri: Uri): Promise<FileStat> {
-    const uri = sourceUri.with({ authority: 'foo.com' })
-    const excludedPaths = [
-      '.vscode/tasks.json',
-      '.vscode/launch.json',
-      '.vscode/settings.json',
-      '.runme_bootstrap',
-      '.runme_bootstrap_demo',
-    ]
+    const uri = getRunmeFsUri(sourceUri)
 
     if (excludedPaths.includes(uri.path)) {
       throw FileSystemError.FileNotFound(uri)
     }
 
-    if (this.#nodesMap[uri.path] || this.isDir(uri.path)) {
+    if (this.#pathTree[uri.path] || this.isDir(uri.path)) {
       return {
         type: FileType.Directory,
         ctime: Date.now(),
@@ -114,27 +114,8 @@ export default class WorkspaceNotebooksFileSystem implements FileSystemProvider 
     }
   }
 
-  async getMarkdownNotebooks() {
-    const response = await getAllWorkflows()
-    const data = response?.data?.workflows?.data || []
-    const notebooks = data
-      .map((notebook) => {
-        const [owner, repository] = notebook.repository.split('/')
-
-        return {
-          id: notebook.id,
-          path: `${repository}/${notebook.path}`,
-          repository: repository,
-          owner: owner,
-        }
-      })
-      .sort((a, b) => a.path.localeCompare(b.path))
-
-    return notebooks
-  }
-
-  getTreeNodes(notebooks: Workflow[]): NodesMap {
-    const nodes: NodesMap = {}
+  getTreeNodes(notebooks: Workflow[]): PathTree {
+    const nodes: PathTree = {}
     nodes['/'] = []
 
     notebooks.forEach((notebook) => {
@@ -159,29 +140,42 @@ export default class WorkspaceNotebooksFileSystem implements FileSystemProvider 
     return nodes
   }
 
-  async readDirectory(sourceUri: Uri): Promise<[string, FileType][]> {
-    const uri = sourceUri.with({ authority: 'foo.com' })
-
+  async notebooks() {
     if (!this.#notebooks.length) {
-      this.#notebooks = await this.getMarkdownNotebooks()
-      this.#nodesMap = this.getTreeNodes(this.#notebooks)
+      const response = await getAllWorkflows()
+      const data = response?.data?.workflows?.data || []
+
+      this.#notebooks = data
+        .map((notebook) => {
+          const [owner, repository] = notebook.repository.split('/')
+
+          return {
+            id: notebook.id,
+            path: `${repository}/${notebook.path}`,
+            repository: repository,
+            owner: owner,
+          }
+        })
+        .sort((a, b) => a.path.localeCompare(b.path))
+
+      this.#pathTree = this.getTreeNodes(this.#notebooks)
     }
 
-    if (!this.#notebooks.length) {
-      return []
-    }
+    return this.#notebooks
+  }
 
-    const children = this.#nodesMap[uri.path] || []
+  async readDirectory(uri: Uri): Promise<[string, FileType][]> {
+    const parent = getRunmeFsUri(uri)
+    const children = this.#pathTree[parent.path] || []
 
-    const isRoot = uri.path === '/'
+    const isRoot = parent.path === '/'
     return children.map((child) => {
       if (isRoot) {
         return [child, FileType.Directory]
       }
 
-      const isDir = this.#nodesMap[`${uri.path}/${child}`] ? true : false
-
-      return [child, isDir ? FileType.Directory : FileType.File]
+      const path = `${parent.path}/${child}`
+      return [child, path in this.#pathTree ? FileType.Directory : FileType.File]
     })
   }
 
