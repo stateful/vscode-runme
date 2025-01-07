@@ -14,10 +14,10 @@ export class GrpcRunnerNotebookResolver implements IRunnerChild {
     protected readonly notebook: Notebook | undefined,
   ) {}
 
-  async resolveNotebook(cellName: string) {
+  async resolveNotebook(cellIndex: number) {
     const req = ResolveNotebookRequest.create({
       notebook: this.notebook,
-      target: { oneofKind: 'knownName', knownName: cellName },
+      cellIndex: cellIndex,
     })
 
     return this.client.resolveNotebook(req)

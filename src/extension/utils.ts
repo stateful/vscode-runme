@@ -172,7 +172,7 @@ export function isGitHubLink(runningCell: vscode.TextDocument) {
   return text.trimStart().startsWith('https://github.com') && isWorkflowUrl
 }
 
-export function isDaggerCli(text: string): boolean {
+export function isDaggerCall(text: string): boolean {
   const simplified = text
     .trimStart()
     .replaceAll('\\', ' ')
@@ -185,7 +185,11 @@ export function isDaggerCli(text: string): boolean {
   return simplified.includes('dagger call')
 }
 
-export type ExecResourceType = 'None' | 'URI' | 'Dagger' | 'DaggerCall' | 'DaggerShell'
+export function isDaggerShell(programName: string): boolean {
+  return programName.trim().endsWith('dagger shell')
+}
+
+export type ExecResourceType = 'None' | 'URI' | 'DaggerCall' | 'DaggerPlain'
 export interface IExecKeyInfo {
   key: string
   resource: ExecResourceType
@@ -197,9 +201,13 @@ export function getKeyInfo(
   parsedNotebookFrontmatter: { [key: string]: any },
 ): IExecKeyInfo {
   try {
-    if (!cellAnnotations.background && isDaggerCli(runningCell.getText())) {
-      return { key: 'dagger', resource: 'Dagger' }
+    if (!cellAnnotations.background && isDaggerCall(runningCell.getText())) {
+      return { key: 'dagger', resource: 'DaggerCall' }
     }
+
+    // if (!cellAnnotations.background && isDaggerShell(parsedNotebookFrontmatter.shell)) {
+    //   return { key: 'dagger', resource: 'Dagger' }
+    // }
 
     if (isDenoScript(runningCell)) {
       return { key: 'deno', resource: 'URI' }

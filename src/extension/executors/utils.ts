@@ -18,7 +18,7 @@ import {
 import { DEFAULT_PROMPT_ENV, OutputType, RUNME_FRONTMATTER_PARSED } from '../../constants'
 import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
-import { getAnnotations, getWorkspaceFolder } from '../utils'
+import { getAnnotations, getWorkspaceFolder, isDaggerShell } from '../utils'
 import { CommandMode, CommandModeEnum } from '../grpc/runner/types'
 import { RunmeFsScheme } from '../provider/runmeFs'
 
@@ -205,7 +205,17 @@ export function getCellProgram(
   let result: { programName: string; commandMode: CommandMode }
   const { interpreter } = getAnnotations(cell.metadata)
 
-  const { INLINE_SHELL, TEMP_FILE } = CommandModeEnum()
+  const { INLINE_SHELL, TEMP_FILE, DAGGER_SHELL } = CommandModeEnum()
+
+  const parsedFrontmatter = notebook.metadata?.['runme.dev/frontmatterParsed']
+  if (isDaggerShell(parsedFrontmatter?.shell ?? '')) {
+    const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
+
+    return {
+      programName: shellPath,
+      commandMode: DAGGER_SHELL,
+    }
+  }
 
   if (isShellLanguage(execKey)) {
     const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey

@@ -449,6 +449,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
         // onDidErr is **not** part of VS Code's PTY interface
         // for non-interactive we deliberately write stderr to the PTY
+        if (this.isPseudoterminal()) {
+          return
+        }
         const yellowStderr = `\x1b[33m${stderr}\x1b[0m`
         this._onDidWrite.fire(yellowStderr)
       }),

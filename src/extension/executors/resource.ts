@@ -2,6 +2,7 @@ import { RunProgramOptions } from '../runner'
 import { getAnnotations, isValidEnvVarName } from '../utils'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
+import { getSystemShellPath } from './utils'
 
 export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
   const {
@@ -40,7 +41,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
     }
   }
 
-  if (resource === 'Dagger') {
+  if (resource === 'DaggerCall') {
     const varDaggerCellId = `$DAGGER_${cellId}`
 
     const printDaggerCellId = `echo ${varDaggerCellId}`
@@ -48,6 +49,8 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
       type: 'script',
       script: printDaggerCellId,
     }
+    const sysShell = getSystemShellPath() || '/bin/bash'
+    programOptions.programName = sysShell
 
     if (knownName && isValidEnvVarName(knownName)) {
       const varDaggerCellName = `DAGGER_ID_${knownName}`
@@ -60,7 +63,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
     }
   }
 
-  if (resource === 'DaggerCall') {
+  if (resource === 'DaggerPlain') {
     const varDaggerCellId = `$DAGGER_${cellId}`
 
     const printDaggerCellId = `echo -n ${varDaggerCellId}`
@@ -131,7 +134,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
   const cellText = result ? execRes?.trim() : undefined
 
   if (cellText?.includes('jq: parse error')) {
-    return uri({ ...runnerOpts, resource: 'DaggerCall', runScript })
+    return uri({ ...runnerOpts, resource: 'DaggerPlain', runScript })
   }
 
   return runScript?.(cellText) || result

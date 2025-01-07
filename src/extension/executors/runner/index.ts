@@ -486,7 +486,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   runningCell,
   cellId,
 }: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
-  const { promptEnv, name } = getAnnotations(exec.cell)
+  const { promptEnv } = getAnnotations(exec.cell)
   const forceInputPrompt = ContextState.getKey(NOTEBOOK_RUN_WITH_PROMPTS)
   let script = exec.cell.document.getText()
 
@@ -527,7 +527,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
   const parserCached = kernel.getParserCache(cacheId)
   const notebookResolver = await runner.createNotebookResolver(parserCached)
-  const resp = await notebookResolver.resolveNotebook(name)
+  const resp = await notebookResolver.resolveNotebook(exec.cell.index)
 
   const resolved = resp.response.script
   if (resolved !== '' && execution.type === 'commands') {
