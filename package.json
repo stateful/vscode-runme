@@ -175,6 +175,11 @@
   "contributes": {
     "commands": [
       {
+        "command": "runme.workspaceInit",
+        "category": "Runme",
+        "title": "Attach Workspace"
+      },
+      {
         "command": "runme.new",
         "title": "Runme Notebook"
       },
@@ -1156,6 +1161,12 @@
     "views": {
       "explorer": [
         {
+          "id": "runme.workspaceNotebooks",
+          "type": "tree",
+          "name": "Workspace Notebooks (tree)",
+          "visibility": "visible"
+        },
+        {
           "id": "runme.launcher",
           "type": "tree",
           "name": "Runme Notebooks",
@@ -1163,12 +1174,6 @@
         }
       ],
       "runme": [
-        {
-          "id": "runme.workspaceNotebooks",
-          "type": "tree",
-          "name": "Workspace Notebooks",
-          "visibility": "visible"
-        },
         {
           "id": "runme.cloud",
           "type": "webview",

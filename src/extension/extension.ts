@@ -100,6 +100,13 @@ export class RunmeExtension {
   protected serializer?: SerializerBase
 
   async initialize(context: ExtensionContext) {
+    // Register the Runme file system provider as soon as possible
+    context.subscriptions.push(
+      workspace.registerFileSystemProvider('runmefs', new WorkspaceNotebooksFileSystem(), {
+        isReadonly: false,
+      }),
+    )
+
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
@@ -431,15 +438,15 @@ export class RunmeExtension {
           )
         },
       ),
-
+      commands.registerCommand('runme.workspaceInit', (_) => {
+        workspace.updateWorkspaceFolders(0, 0, {
+          uri: Uri.parse('runmefs://foo.com'),
+          name: 'Workspace Notebooks',
+        })
+      }),
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
       ),
-
-      workspace.registerFileSystemProvider('runmefs', new WorkspaceNotebooksFileSystem(), {
-        isReadonly: false,
-      }),
-
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(
         'runme.aiGenerate',

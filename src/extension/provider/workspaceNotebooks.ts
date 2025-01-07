@@ -18,10 +18,9 @@ export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, 
       return Promise.resolve([])
     }
 
-    const items = workflows.map((workflow) => {
-      const uri = Uri.parse(
-        `runmefs://github.com/${workflow.repository}/blob/${workflow.path}?id=${workflow.id}`,
-      )
+    const items = workflows.reduce((acc: { [key: string]: TreeItem[] }, workflow) => {
+      const [_owner, repository] = workflow.repository.split('/')
+      const uri = Uri.parse(`runmefs://foo.com/${repository}/${workflow.path}?q=${workflow.id}`)
 
       const item: TreeItem = {
         label: `${workflow.path}`,
@@ -36,10 +35,27 @@ export class WorkspaceNotebooks implements TreeDataProvider<WorkspaceNotebook>, 
         },
       }
 
-      return item
-    })
+      const path = workflow.path
+      acc[path] = acc[path] || []
+      acc[path].push(item)
+      return acc
+    }, {})
 
-    return items
+    const sortedItems = Object.keys(items)
+      .sort((a, b) => {
+        const aHasSlash = a.includes('/')
+        const bHasSlash = b.includes('/')
+        if (aHasSlash && !bHasSlash) {
+          return -1
+        }
+        if (!aHasSlash && bHasSlash) {
+          return 1
+        }
+        return a.localeCompare(b)
+      })
+      .flatMap((path) => items[path])
+
+    return sortedItems
   }
 
   dispose(): void {

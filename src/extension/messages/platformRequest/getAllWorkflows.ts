@@ -7,6 +7,7 @@ export default async function getAllWorkflows() {
   const result = await graphClient.query({
     query: GetAllWorkflowsDocument,
     variables: {
+      fileName: 'vscode-runme',
       page: 1,
     },
   })
