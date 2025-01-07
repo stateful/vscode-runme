@@ -7,7 +7,11 @@ const UI_LATENCY_TIMEOUT_SECS = 2 * 60 * 1000
 
 describe('Runme GitHub Workflow Integration', async () => {
   const notebook = new RunmeNotebook()
-  const token = process.env.RUNME_TEST_TOKEN
+  const token = process.env.RUNME_TEST_TOKEN || ''
+  const actor = process.env.GITHUB_ACTOR
+  const eventName = process.env.GITHUB_EVENT_NAME
+  const baseOwner = process.env.BASE_OWNER || ''
+  const forkOwner = process.env.FORK_OWNER || ''
 
   /**
    * Skip GitHub Action tests for local testing due to missing token
@@ -15,8 +19,14 @@ describe('Runme GitHub Workflow Integration', async () => {
   if (
     (!token && !process.env.CI) ||
     process.env.NODE_ENV === 'production' ||
-    process.env.GITHUB_ACTOR === 'dependabot[bot]'
+    actor === 'dependabot[bot]'
   ) {
+    return
+  }
+
+  // Skip tests only if PR is from external fork
+  if (eventName === 'pull_request' && forkOwner !== baseOwner) {
+    console.log('Skipping GitHub Workflow Integration tests for pull request from external fork.')
     return
   }
 
