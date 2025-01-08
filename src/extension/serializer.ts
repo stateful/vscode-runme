@@ -598,11 +598,9 @@ export class GrpcSerializer extends SerializerBase {
   static async shouldWriteOutputs(sessionFilePath: Uri, isPreview: boolean): Promise<boolean> {
     const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
-
-    // A session file will exists only if "Preview Outputs" was clicked before
     const sessionFileExists = await this.sessionFileExists(sessionFilePath)
 
-    return isPreview || (isAutosaveOn && sessionFileExists && !isSignedIn)
+    return isPreview || (isAutosaveOn && !isSignedIn) || (isAutosaveOn && sessionFileExists)
   }
 
   static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
