@@ -136,7 +136,8 @@ export class NotebookCellOutputManager {
     [OutputType.github, false],
     [OutputType.gcp, false],
     [OutputType.aws, false],
-    [OutputType.dagger, false],
+    [OutputType.daggerCall, false],
+    [OutputType.daggerShell, false],
   ])
 
   protected sessionExecutionOrder = new Map<string, number | undefined>()
@@ -183,10 +184,10 @@ export class NotebookCellOutputManager {
         ])
       }
 
-      case OutputType.dagger: {
+      case OutputType.daggerCall: {
         const cellId = cell.metadata['runme.dev/id']
-        const payload: CellOutputPayload<OutputType.dagger> = {
-          type: OutputType.dagger,
+        const payload: CellOutputPayload<OutputType.daggerCall> = {
+          type: OutputType.daggerCall,
           output: { cellId },
         }
 
@@ -197,9 +198,12 @@ export class NotebookCellOutputManager {
           output: { json: output?.json, text: output?.text },
         }
 
-        return new NotebookCellOutput([NotebookCellOutputItem.json(payload, OutputType.dagger)], {
-          daggerCellId: cellId,
-        })
+        return new NotebookCellOutput(
+          [NotebookCellOutputItem.json(payload, OutputType.daggerCall)],
+          {
+            daggerCellId: cellId,
+          },
+        )
       }
 
       case OutputType.deno: {

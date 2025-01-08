@@ -18,11 +18,12 @@ Let's use [github.com/purpleclay/daggerverse](https://daggerverse.dev/mod/github
 
 ```sh {"id":"01J04HR247XE1TK2MVB9SR4W51","name":"KERNEL_BINARY"}
 dagger call \
-  -m golang \
-  --src ../runme \
+    -m golang \
+    --src ../runme \
   build \
   file \
-    --path runme
+    --path runme \
+    -o /tmp/runme-binary
 ```
 
 ### Grab the Presetup Script

@@ -164,12 +164,36 @@ export const executeRunner: IKernelRunner = async ({
     program.onStdoutRaw(writeToTerminalStdout)
   }
 
-  program.onDidErr((data) =>
-    postClientMessage(messaging, ClientMessages.terminalStderr, {
+  program.onDidErr(async (data) => {
+    if (execKey === 'daggerShell') {
+      try {
+        const daggerJsonParsed = JSON.parse(data || '{}')
+        daggerJsonParsed.runme = { cellText: runningCell.getText() }
+        await kernel.saveOutputState(exec.cell, OutputType.daggerShell, {
+          json: JSON.stringify(daggerJsonParsed),
+        })
+        return messaging.postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+          type: ClientMessages.daggerSyncState,
+          output: {
+            id: cellId,
+            cellId: cellId,
+            json: daggerJsonParsed,
+          },
+        })
+      } catch (err) {
+        console.error('failed to parse dagger json', err)
+        await kernel.cleanOutputState(exec.cell, OutputType.daggerShell)
+        return postClientMessage(messaging, ClientMessages.terminalStdout, {
+          'runme.dev/id': cellId,
+          data,
+        })
+      }
+    }
+    return postClientMessage(messaging, ClientMessages.terminalStderr, {
       'runme.dev/id': cellId,
       data,
-    }),
-  )
+    })
+  })
 
   messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
     const { type, output } = message
@@ -525,14 +549,15 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   )
 
   // todo(sebastian): not great to special case here
-  const { DAGGER_SHELL } = CommandModeEnum()
-  if (commandMode === DAGGER_SHELL) {
+  const { DAGGER } = CommandModeEnum()
+  if (commandMode === DAGGER) {
     const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
     const parserCached = kernel.getParserCache(cacheId)
     const notebookResolver = await runner.createNotebookResolver(parserCached)
     const resp = await notebookResolver.resolveNotebook(exec.cell.index)
 
     const resolved = resp.response.script
+    console.log(resolved)
     if (resolved !== '' && execution.type === 'commands') {
       execution.commands = prepareCommandSeq(resolved, execKey)
     }
@@ -553,8 +578,8 @@ export async function resolveRunProgramExecution(
   commandMode: CommandMode,
   promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
-  const { INLINE_SHELL } = CommandModeEnum()
-  if (commandMode !== INLINE_SHELL) {
+  const { INLINE_SHELL, DAGGER } = CommandModeEnum()
+  if (commandMode !== INLINE_SHELL && commandMode !== DAGGER) {
     return {
       type: 'script',
       script,

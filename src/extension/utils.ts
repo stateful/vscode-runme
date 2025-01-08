@@ -186,7 +186,7 @@ export function isDaggerCall(text: string): boolean {
 }
 
 export function isDaggerShell(programName: string): boolean {
-  return programName.trim().endsWith('dagger shell')
+  return programName.trim().includes('dagger shell')
 }
 
 export type ExecResourceType = 'None' | 'URI' | 'DaggerObject' | 'DaggerPlain'

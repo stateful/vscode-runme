@@ -889,6 +889,10 @@ export class Kernel implements Disposable {
       (isShellLanguage(execKey) || !hasExecutor) &&
       executorOpts.resource === 'None'
     ) {
+      if (['daggerCall', 'daggerShell'].includes(execKey) && supportsGrpcRunner) {
+        this.cleanOutputState(runnerOpts.exec.cell, OutputType.daggerCall)
+      }
+
       return this.executeRunnerSafe(runnerOpts)
     }
 
@@ -917,7 +921,7 @@ export class Kernel implements Disposable {
         try {
           const daggerJsonParsed = JSON.parse(res || '{}')
           daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.daggerCall, {
             json: JSON.stringify(daggerJsonParsed),
           })
 
@@ -939,7 +943,7 @@ export class Kernel implements Disposable {
             console.error(e.message)
           }
 
-          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.daggerCall, {
             text: res,
           })
 
@@ -960,7 +964,7 @@ export class Kernel implements Disposable {
       const runSecondary = () => {
         return runUriResource({ ...runnerOpts, runScript: notify })
       }
-      this.cleanOutputState(runnerOpts.exec.cell, OutputType.dagger)
+      this.cleanOutputState(runnerOpts.exec.cell, OutputType.daggerCall)
       return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
     }
 

@@ -206,7 +206,7 @@ export function getCellProgram(
   let result: { programName: string; commandMode: CommandMode }
   const { interpreter } = getAnnotations(cell.metadata)
 
-  const { INLINE_SHELL, TEMP_FILE, DAGGER_SHELL } = CommandModeEnum()
+  const { INLINE_SHELL, TEMP_FILE, DAGGER } = CommandModeEnum()
 
   const parsedFrontmatter = notebook.metadata?.['runme.dev/frontmatterParsed']
   if (isDaggerShell(parsedFrontmatter?.shell ?? '')) {
@@ -214,7 +214,7 @@ export function getCellProgram(
 
     return {
       programName: shellPath,
-      commandMode: DAGGER_SHELL,
+      commandMode: DAGGER,
     }
   }
 
