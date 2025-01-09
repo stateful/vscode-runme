@@ -7,7 +7,7 @@ import { StatefulAuthProvider } from '../../../src/extension/provider/statefulAu
 vi.mock('vscode')
 vi.mock('vscode-telemetry')
 
-vi.mock('../../../src/extension/grpc/client', () => ({}))
+vi.mock('../../../src/extension/grpc/tcpClient', () => ({}))
 vi.mock('../../../src/extension/runner', () => ({}))
 
 vi.mock('vscode', async () => {

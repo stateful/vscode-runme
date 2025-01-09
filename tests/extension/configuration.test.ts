@@ -19,9 +19,9 @@ import {
   getCloseTerminalOnSuccess,
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
-import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
+import { RunmeIdentity } from '../../src/extension/grpc/parser/tcp/types'
 
-vi.mock('../../src/extension/grpc/client', () => ({}))
+vi.mock('../../src/extension/grpc/tcpClient', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))

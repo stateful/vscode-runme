@@ -1,7 +1,7 @@
 import { Disposable } from 'vscode'
 import { ServerStreamingCall } from '@protobuf-ts/runtime-rpc'
 
-import { IRunnerServiceClient } from '../grpc/client'
+import { IRunnerServiceClient } from '../grpc/tcpClient'
 import { MonitorEnvStoreRequest, MonitorEnvStoreResponse } from '../grpc/runner/v1'
 
 import { IRunnerChild } from './types'

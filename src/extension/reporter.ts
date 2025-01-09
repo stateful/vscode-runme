@@ -6,7 +6,7 @@ import {
   ReporterServiceClient,
   TransformRequest,
   type ReadyPromise,
-} from './grpc/client'
+} from './grpc/tcpClient'
 import { IServer } from './server/kernelServer'
 
 export class GrpcReporter {

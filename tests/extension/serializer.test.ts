@@ -22,7 +22,7 @@ import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
 
-vi.mock('../../src/extension/grpc/client', () => ({
+vi.mock('../../src/extension/grpc/tcpClient', () => ({
   ParserServiceClient: vi.fn(),
 }))
 

@@ -87,7 +87,7 @@ import {
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
-import { RpcError, TransformRequest, TransformResponse } from './grpc/client'
+import { RpcError, TransformRequest, TransformResponse } from './grpc/tcpClient'
 import { IRunner, IRunnerReady, RunProgramOptions } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
 import { IKernelRunnerOptions, executeRunner } from './executors/runner'

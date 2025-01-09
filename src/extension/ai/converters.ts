@@ -7,7 +7,7 @@ import * as parser_pb from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/pars
 
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 import { Serializer } from '../../types'
-import * as serializerTypes from '../grpc/serializerTypes'
+import * as parserTypes from '../grpc/parser/tcp/types'
 import * as serializer from '../serializer'
 import { Kernel } from '../kernel'
 
@@ -53,14 +53,14 @@ export function cellToCellData(cell: vscode.NotebookCell): vscode.NotebookCellDa
 }
 
 // cellProtosToCellData converts an array of RunMe cell protos to an array of VSCode CellData
-export function cellProtosToCellData(cells: serializerTypes.Cell[]): vscode.NotebookCellData[] {
+export function cellProtosToCellData(cells: parserTypes.Cell[]): vscode.NotebookCellData[] {
   let notebook: Serializer.Notebook = {
     cells: [],
   }
   for (let cell of cells) {
     let kind: vscode.NotebookCellKind = vscode.NotebookCellKind.Markup
 
-    if (cell.kind === serializerTypes.CellKind.CODE) {
+    if (cell.kind === parserTypes.CellKind.CODE) {
       kind = vscode.NotebookCellKind.Code
     }
 
@@ -77,7 +77,7 @@ export function cellProtosToCellData(cells: serializerTypes.Cell[]): vscode.Note
 
   const identity: ServerLifecycleIdentity = getServerConfigurationValue<ServerLifecycleIdentity>(
     'lifecycleIdentity',
-    serializerTypes.RunmeIdentity.ALL,
+    parserTypes.RunmeIdentity.ALL,
   )
   let newCellData = serializer.SerializerBase.revive(notebook, identity)
   return newCellData

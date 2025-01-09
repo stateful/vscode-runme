@@ -68,7 +68,7 @@ import { setCurrentCellForBootFile as setCurrentCellForBootFile } from './handle
 import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
-import { RunmeIdentity } from './grpc/serializerTypes'
+import { RunmeIdentity } from './grpc/parser/tcp/types'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 
 declare var globalThis: any

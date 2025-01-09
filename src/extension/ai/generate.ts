@@ -7,9 +7,9 @@ import {
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 
 import getLogger from '../logger'
+import * as protos from '../grpc/parser/protos'
 
 import { Converter } from './converters'
-import * as protos from './protos'
 import * as converters from './converters'
 const log = getLogger('AIGenerate')
 

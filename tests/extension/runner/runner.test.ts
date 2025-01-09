@@ -89,7 +89,7 @@ class MockedDuplexClientStream {
   }
 }
 
-vi.mock('../../../src/extension/grpc/client', () => {
+vi.mock('../../../src/extension/grpc/tcpClient', () => {
   class MockedRunnerServiceClient {
     constructor() {}
 

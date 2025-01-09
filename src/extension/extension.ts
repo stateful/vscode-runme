@@ -90,7 +90,7 @@ import * as manager from './ai/manager'
 import getLogger from './logger'
 import { EnvironmentManager } from './environment/manager'
 import ContextState from './contextState'
-import { RunmeIdentity } from './grpc/serializerTypes'
+import { RunmeIdentity } from './grpc/parser/tcp/types'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
 

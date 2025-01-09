@@ -21,7 +21,7 @@ import {
   getTLSEnabled,
 } from '../../utils/configuration'
 import { EnvProps, isPortAvailable, isTelemetryEnabled } from '../utils'
-import { HealthClient } from '../grpc/client'
+import { HealthClient } from '../grpc/tcpClient'
 
 import KernelServerError from './kernelServerError'
 

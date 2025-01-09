@@ -23,7 +23,7 @@ import {
   CreateNotebookInput,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
-import { Frontmatter } from '../../grpc/serializerTypes'
+import { Frontmatter } from '../../grpc/parser/tcp/types'
 import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'

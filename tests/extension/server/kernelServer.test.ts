@@ -16,7 +16,7 @@ import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
 const healthCheck = vi.fn()
 
 vi.mock('vscode')
-vi.mock('../../../src/extension/grpc/client', () => ({
+vi.mock('../../../src/extension/grpc/tcpClient', () => ({
   initParserClient: vi.fn(),
   HealthClient: class {
     check = healthCheck
