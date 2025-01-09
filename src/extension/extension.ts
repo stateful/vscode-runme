@@ -93,8 +93,8 @@ import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
-import { WorkspaceNotebooks } from './provider/workspaceNotebooks'
-import RunmeFileSystemProvider, { uriAuthority } from './provider/runmeFs'
+import { CloudNotebooks } from './provider/cloudNotebooks'
+import RunmeFS, { uriAuthority } from './provider/runmeFs'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -102,7 +102,7 @@ export class RunmeExtension {
   async initialize(context: ExtensionContext) {
     // Register the Runme file system provider as soon as possible
     context.subscriptions.push(
-      workspace.registerFileSystemProvider('runmefs', new RunmeFileSystemProvider(), {
+      workspace.registerFileSystemProvider('runmefs', new RunmeFS(), {
         isReadonly: false,
       }),
     )
@@ -332,7 +332,7 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
-      window.registerTreeDataProvider('runme.workspaceNotebooks', new WorkspaceNotebooks()),
+      window.registerTreeDataProvider('runme.workspaceNotebooks', new CloudNotebooks()),
 
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',

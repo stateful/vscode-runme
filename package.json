@@ -1163,7 +1163,7 @@
         {
           "id": "runme.workspaceNotebooks",
           "type": "tree",
-          "name": "Workspace Notebooks (tree)",
+          "name": "Cloud Notebooks",
           "visibility": "visible"
         },
         {

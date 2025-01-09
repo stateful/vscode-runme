@@ -8,7 +8,7 @@ export default async function getAllWorkflows() {
     query: GetAllWorkflowsDocument,
     variables: {
       fileName: 'vscode-runme',
-      page: 1,
+      limit: 50,
     },
   })
 

@@ -1,6 +1,6 @@
 query getOneWorkflow($id: String!) {
-    workflow(id: $id) {
-      id
+  workflow(id: $id) {
+    id
     description
     fileName
     path

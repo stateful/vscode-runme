@@ -39,12 +39,20 @@ export function getRunmeFsUri(uri: Uri) {
   return uri.with({ authority: uriAuthority })
 }
 
-export default class RunmeFileSystemProvider implements FileSystemProvider {
+export default class RunmeFS implements FileSystemProvider {
   private _onDidChangeFile: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile: Event<FileChangeEvent[]> = this._onDidChangeFile.event
 
   #notebooks: Workflow[] = []
   #pathTree: PathTree = {}
+
+  get root() {
+    return Uri.parse(`runmefs://${uriAuthority}/`)
+  }
+
+  static resolveUri(path: string) {
+    return Uri.parse(`runmefs://${uriAuthority}/${path}`)
+  }
 
   async readFile(sourceUri: Uri): Promise<Uint8Array> {
     const uri = getRunmeFsUri(sourceUri)
@@ -56,12 +64,13 @@ export default class RunmeFileSystemProvider implements FileSystemProvider {
     }
     try {
       const workflow = await getOneWorkflow(id)
-      const bytes: number[] = workflow.data.workflow.data || []
-      const unit8Array = new Uint8Array(bytes)
-      const b64content = new TextDecoder().decode(unit8Array)
-      const decoded = atob(b64content)
+      const raw: number[] = workflow.data.workflow.data || []
+      const utf8 = new TextDecoder()
+      const u8arr = new Uint8Array(raw)
+      const raw2 = utf8.decode(u8arr, { stream: true })
+      const decoded2 = utf8.decode(Buffer.from(raw2, 'base64'))
 
-      return new TextEncoder().encode(decoded)
+      return new TextEncoder().encode(decoded2)
     } catch (error) {
       throw FileSystemError.FileNotFound(uri)
     }
@@ -143,7 +152,9 @@ export default class RunmeFileSystemProvider implements FileSystemProvider {
   async notebooks() {
     if (!this.#notebooks.length) {
       const response = await getAllWorkflows()
-      const data = response?.data?.workflows?.data || []
+      const data = response?.data?.workflows.filter(
+        (notebook): notebook is NonNullable<typeof notebook> => notebook !== null,
+      )
 
       this.#notebooks = data
         .map((notebook) => {
@@ -166,6 +177,8 @@ export default class RunmeFileSystemProvider implements FileSystemProvider {
 
   async readDirectory(uri: Uri): Promise<[string, FileType][]> {
     const parent = getRunmeFsUri(uri)
+    await this.notebooks()
+
     const children = this.#pathTree[parent.path] || []
 
     const isRoot = parent.path === '/'
