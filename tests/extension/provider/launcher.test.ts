@@ -8,7 +8,7 @@ import {
 } from '../../../src/extension/provider/launcher'
 import { getDefaultWorkspace } from '../../../src/extension/utils'
 
-vi.mock('../../../src/extension/grpc/client', () => ({}))
+vi.mock('../../../src/extension/grpc/tcpClient', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({}))
 
 vi.mock('vscode')

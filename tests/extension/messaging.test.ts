@@ -26,7 +26,7 @@ vi.mock('vscode')
 
 vi.mock('vscode-telemetry')
 
-vi.mock('../../src/extension/grpc/client', () => ({}))
+vi.mock('../../src/extension/grpc/tcpClient', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
