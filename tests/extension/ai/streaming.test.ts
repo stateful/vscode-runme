@@ -32,25 +32,25 @@ const eventsData = [
   'done',
 ]
 
-function fireEvents(creator: stream.StreamCreator) {
-  // We need to create a generator to bind the index and value to the callback
-  function createCallback(index: number, value: string): () => void {
-    return () => {
+function scheduleEvents(creator: stream.StreamCreator) {
+  // We need to delay each successive data point by 1 seconds to simulate typing
+  // The timeouts are asynchronous which is why we need to increase the timeout for each item
+  function createCallback(index: number, value: string): () => Promise<void> {
+    return async () => {
       let event = new stream.CellChangeEvent(
         value,
         index,
         agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       )
-      creator.handleEvent(event)
+      await creator.handleEvent(event)
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 
-  for (let i = 0; i < eventsData.length; i++) {
-    // We need to delay each successive data point by 2 seconds to simulate typing
-    // The timeouts are asynchronous which is why we need to increase the timeout for each item
-    let f = createCallback(i, eventsData[i])
-    setTimeout(f, 2000 * i)
-  }
+  // Avoid overlapping runs by chaining the promises
+  eventsData
+    .map((value, index) => createCallback(index, value))
+    .reduce((p, fn) => p.then(fn), Promise.resolve())
 }
 
 class FakeCompletion implements stream.CompletionHandlers {
@@ -150,7 +150,7 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
     )
     const creator = new stream.StreamCreator(completion, client)
 
-    fireEvents(creator)
+    scheduleEvents(creator)
     await completion.done
   },
   // Increase the test timeout
