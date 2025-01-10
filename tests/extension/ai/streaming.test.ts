@@ -20,16 +20,15 @@ vi.mock('vscode', async () => {
   }
 })
 
-let contextId = ulid()
 const eventsData = [
   'hello',
   'how are you?',
   'stop',
   "Is it me you're looking for?",
-  // 'stop',
-  // 'here we go',
-  // 'again',
-  // 'down the only road I have ever known',
+  'stop',
+  'here we go',
+  'again',
+  'down the only road I have ever known',
   'done',
 ]
 
@@ -50,15 +49,18 @@ function fireEvents(creator: stream.StreamCreator) {
     // We need to delay each successive data point by 2 seconds to simulate typing
     // The timeouts are asynchronous which is why we need to increase the timeout for each item
     let f = createCallback(i, eventsData[i])
-    setTimeout(f, 1000 * i)
+    setTimeout(f, 2000 * i)
   }
 }
 
 class FakeCompletion implements stream.CompletionHandlers {
+  contextId = ulid()
+  data: string[] = []
   // Done is a promise which we use to signal to the test that we are done
   public done: Promise<void>
   resolveDone: () => void
-  constructor() {
+  constructor(data: string[]) {
+    this.data = data
     this.done = new Promise<void>((resolve, _reject) => {
       this.resolveDone = resolve
     })
@@ -72,11 +74,11 @@ class FakeCompletion implements stream.CompletionHandlers {
 
     // Decide that we need a new request
     if (cellChangeEvent.notebookUri.includes('stop')) {
-      contextId = ulid()
+      this.contextId = ulid()
       firstRequest = true
     }
 
-    const data = eventsData[cellChangeEvent.cellIndex]
+    const data = this.data[cellChangeEvent.cellIndex]
 
     if (firstRequest) {
       let req = new agent_pb.StreamGenerateRequest({
@@ -96,7 +98,7 @@ class FakeCompletion implements stream.CompletionHandlers {
             notebookUri: cellChangeEvent.notebookUri,
           }),
         },
-        contextId,
+        contextId: this.contextId,
         trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       })
       return req
@@ -113,7 +115,7 @@ class FakeCompletion implements stream.CompletionHandlers {
           }),
         }),
       },
-      contextId,
+      contextId: this.contextId,
       trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
     })
     return req
@@ -138,7 +140,7 @@ class FakeCompletion implements stream.CompletionHandlers {
 test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
-    const completion = new FakeCompletion()
+    const completion = new FakeCompletion(eventsData)
     const client = createClient(
       AIService,
       createConnectTransport({
