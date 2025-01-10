@@ -34,7 +34,6 @@ const eventsData = [
 
 function scheduleEvents(creator: stream.StreamCreator) {
   // We need to delay each successive data point by 1 seconds to simulate typing
-  // The timeouts are asynchronous which is why we need to increase the timeout for each item
   function createCallback(index: number, value: string): () => Promise<void> {
     return async () => {
       let event = new stream.CellChangeEvent(
