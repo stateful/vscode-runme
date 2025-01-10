@@ -153,5 +153,6 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
     fireEvents(creator)
     await completion.done
   },
+  // Increase the test timeout
   60000,
-) // Increase the test timeout
+)
