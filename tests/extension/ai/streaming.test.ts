@@ -34,7 +34,7 @@ const eventsData = [
 
 function scheduleEvents(creator: stream.StreamCreator) {
   // We need to delay each successive data point by 1 seconds to simulate typing
-  function createCallback(index: number, value: string): () => Promise<void> {
+  function createCallback(value: string, index: number): () => Promise<void> {
     return async () => {
       let event = new stream.CellChangeEvent(
         value,
@@ -47,9 +47,7 @@ function scheduleEvents(creator: stream.StreamCreator) {
   }
 
   // Avoid overlapping runs by chaining the promises
-  eventsData
-    .map((value, index) => createCallback(index, value))
-    .reduce((p, fn) => p.then(fn), Promise.resolve())
+  eventsData.map(createCallback).reduce((p, fn) => p.then(fn), Promise.resolve())
 }
 
 class FakeCompletion implements stream.CompletionHandlers {
