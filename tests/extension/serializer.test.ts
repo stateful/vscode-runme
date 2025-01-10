@@ -256,6 +256,7 @@ describe('GrpcSerializer', () => {
 
   const Server = vi.fn().mockImplementation(() => ({
     onTransportReady: vi.fn(),
+    onConnectTransportReady: vi.fn(),
     ready: vi.fn().mockResolvedValue(null),
   }))
 
