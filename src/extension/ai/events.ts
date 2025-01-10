@@ -1,5 +1,3 @@
-import { Client } from '@connectrpc/connect'
-import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   LogEventsRequest,
   LogEventType,
@@ -17,6 +15,7 @@ import getLogger from '../logger'
 import { SessionManager } from './sessions'
 import * as converters from './converters'
 import * as stream from './stream'
+import { AIClient } from './manager'
 
 // Interface for the event reporter
 // This allows us to swap in a null op logger when AI isn't enabled
@@ -27,13 +26,13 @@ export interface IEventReporter {
 
 // EventReporter handles reporting events to the AI service
 export class EventReporter implements vscode.Disposable, IEventReporter {
-  client: Client<typeof AIService>
+  client: AIClient
   log: ReturnType<typeof getLogger>
   queue: Subject<LogEvent[]> = new Subject()
   subscription: Subscription
   streamCreator: stream.StreamCreator
 
-  constructor(client: Client<typeof AIService>, streamCreator: stream.StreamCreator) {
+  constructor(client: AIClient, streamCreator: stream.StreamCreator) {
     this.client = client
     this.log = getLogger('AIEventReporter')
     this.streamCreator = streamCreator
