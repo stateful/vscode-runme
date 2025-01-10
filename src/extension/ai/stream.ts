@@ -1,4 +1,4 @@
-import { ConnectError, PromiseClient } from '@connectrpc/connect'
+import { ConnectError, Client } from '@connectrpc/connect'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   StreamGenerateRequest,
@@ -65,10 +65,10 @@ export class StreamCreator {
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
-  client: PromiseClient<typeof AIService>
-  constructor(handlers: CompletionHandlers, client: PromiseClient<typeof AIService>) {
+  client: Client<typeof AIService>
+  constructor(handlers: CompletionHandlers, client: Client<typeof AIService>) {
     this.handlers = handlers
-    // Create a client this is actually a PromiseClient
+    // Create a client this is actually a Client
     this.client = client
   }
 

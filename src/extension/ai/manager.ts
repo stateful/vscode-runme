@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { createPromiseClient, PromiseClient, Transport } from '@connectrpc/connect'
+import { createClient, Client, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 
@@ -18,7 +18,7 @@ export class AIManager implements vscode.Disposable {
   log: ReturnType<typeof getLogger>
 
   subscriptions: vscode.Disposable[] = []
-  client: PromiseClient<typeof AIService>
+  client: Client<typeof AIService>
   completionGenerator: generate.CompletionGenerator
   converter: Converter
 
@@ -37,11 +37,11 @@ export class AIManager implements vscode.Disposable {
   }
 
   // N.B. We use arrow notation to ensure this is bound to the AIManager instance.
-  createAIClient = (): PromiseClient<typeof AIService> => {
+  createAIClient = (): Client<typeof AIService> => {
     const config = vscode.workspace.getConfiguration('runme')
     const baseURL = config.get<string>('aiBaseURL', 'http://localhost:8877/api')
     this.log.info(`AI: Using AI service at: ${baseURL}`)
-    return createPromiseClient(AIService, createDefaultTransport(baseURL))
+    return createClient(AIService, createDefaultTransport(baseURL))
   }
 
   // registerGhostCellEvents should be called when the extension is activated.

@@ -1,4 +1,4 @@
-import { PromiseClient } from '@connectrpc/connect'
+import { Client } from '@connectrpc/connect'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   LogEventsRequest,
@@ -27,13 +27,13 @@ export interface IEventReporter {
 
 // EventReporter handles reporting events to the AI service
 export class EventReporter implements vscode.Disposable, IEventReporter {
-  client: PromiseClient<typeof AIService>
+  client: Client<typeof AIService>
   log: ReturnType<typeof getLogger>
   queue: Subject<LogEvent[]> = new Subject()
   subscription: Subscription
   streamCreator: stream.StreamCreator
 
-  constructor(client: PromiseClient<typeof AIService>, streamCreator: stream.StreamCreator) {
+  constructor(client: Client<typeof AIService>, streamCreator: stream.StreamCreator) {
     this.client = client
     this.log = getLogger('AIEventReporter')
     this.streamCreator = streamCreator
