@@ -111,6 +111,11 @@ export class StreamCreator {
                 return true
               }
 
+              // emit if the trigger is not CELL_TEXT_CHANGE
+              if (current?.request?.trigger !== StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE) {
+                return true
+              }
+
               if (
                 prev?.request &&
                 prev.request?.request.case === 'update' &&
