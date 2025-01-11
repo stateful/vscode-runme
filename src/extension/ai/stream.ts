@@ -4,6 +4,17 @@ import {
   StreamGenerateResponse,
   StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import {
+  buffer,
+  debounceTime,
+  filter,
+  from,
+  map,
+  mergeMap,
+  pairwise,
+  startWith,
+  Subject,
+} from 'rxjs'
 
 import getLogger from '../logger'
 
@@ -21,7 +32,7 @@ export interface CompletionHandlers {
   // If null is returned then no request is generated
   buildRequest: (
     cellChangeEvent: CellChangeEvent,
-    firstRequest: boolean,
+    options: { firstRequest: boolean; handleNewCells: boolean },
   ) => Promise<StreamGenerateRequest | null>
 
   // processResponse is a function that processes a StreamGenerateResponse
@@ -63,28 +74,92 @@ export interface CompletionHandlers {
 // These events are split into windows and then turned into a stream of requests.
 //
 export class StreamCreator {
+  events = new Subject<{
+    // ts: number
+    event: CellChangeEvent
+    request: StreamGenerateRequest | null
+  }>()
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
   client: AIClient
   constructor(handlers: CompletionHandlers, client: AIClient) {
     this.handlers = handlers
+
     // Create a client this is actually a Client
     this.client = client
+
+    // Only look at updates because triggerEvent will gen its own events
+    const updateEvents = this.events.pipe(
+      filter((item) => {
+        return item.request?.request.case === 'update'
+      }),
+    )
+
+    updateEvents
+      .pipe(
+        // debounce buffering with 500ms interval
+        buffer(updateEvents.pipe(debounceTime(500))),
+        filter((items) => items.length > 0),
+        mergeMap((items) => {
+          const debounced = from(items).pipe(
+            startWith(undefined),
+            pairwise(),
+            filter(([prev, current], index) => {
+              // always emit single item in buffer
+              if (items.length === 1) {
+                return true
+              }
+
+              if (
+                prev?.request &&
+                prev.request?.request.case === 'update' &&
+                current?.request &&
+                current.request?.request.case === 'update'
+              ) {
+                const unrelated = prev && prev?.request?.contextId !== current?.request?.contextId
+
+                const preVal = prev?.request?.request?.value?.cell?.value ?? ''
+                const currVal = current?.request?.request?.value?.cell?.value ?? ''
+                const isSubstr = currVal.startsWith(preVal)
+
+                const isLast = index === items.length - 1
+
+                // emit if the current value is related and not a substring of the previous value
+                // or it's the last item in the buffer
+                return (!isSubstr || isLast) && !unrelated
+              }
+
+              return false
+            }),
+            map(([, item]) => item!.event),
+          )
+          return debounced
+        }),
+      )
+      .subscribe(this.triggerEvent)
   }
 
-  // handleEvent processes a request
+  handleEvent = async (event: CellChangeEvent): Promise<void> => {
+    const request = await this.handlers.buildRequest(event, {
+      firstRequest: false,
+      handleNewCells: false,
+    })
+    this.events.next({ event, request })
+  }
+
+  // triggerEvent processes a request
   // n.b we use arror function definition to ensure this gets properly bound
   // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
-  handleEvent = async (event: CellChangeEvent): Promise<void> => {
+  private triggerEvent = async (event: CellChangeEvent): Promise<void> => {
     // We need to generate a new request
     let firstRequest = false
     if (this.lastIterator === undefined || this.lastIterator === null) {
       firstRequest = true
     }
 
-    log.info('handleEvent: building request')
-    let req = await this.handlers.buildRequest(event, firstRequest)
+    log.info('triggerEvent: building request')
+    let req = await this.handlers.buildRequest(event, { firstRequest, handleNewCells: true })
 
     if (req === null) {
       log.info(`Notebook: ${event.notebookUri}; no request generated`)

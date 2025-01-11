@@ -65,7 +65,7 @@ class FakeCompletion implements stream.CompletionHandlers {
 
   async buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
-    firstRequest: boolean,
+    { firstRequest }: { firstRequest: boolean; handleNewCells: boolean },
   ): Promise<agent_pb.StreamGenerateRequest | null> {
     console.log('Building request:', cellChangeEvent, firstRequest)
 
