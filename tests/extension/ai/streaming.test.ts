@@ -20,21 +20,28 @@ vi.mock('vscode', async () => {
   }
 })
 
-const eventsData = [
-  'hello',
-  'how are you?',
-  'stop',
-  "Is it me you're looking for?",
-  'stop',
-  'here we go',
-  'again',
-  'down the only road I have ever known',
-  'done',
+const [typeDelay, switchDelay] = [100, 1000]
+type EventsData = [string, number][]
+const eventsData: EventsData = [
+  ['h', typeDelay],
+  ['he', typeDelay],
+  ['hel', typeDelay],
+  ['hell', typeDelay],
+  ['hello', switchDelay],
+  ['stop', switchDelay],
+  ['how are you?', switchDelay],
+  ['stop', switchDelay],
+  ["Is it me you're looking for?", switchDelay],
+  ['stop', switchDelay],
+  ['here we go', switchDelay],
+  ['again', switchDelay],
+  ['down the only road I have ever known', switchDelay],
+  ['done', switchDelay],
 ]
 
 function scheduleEvents(creator: stream.StreamCreator) {
-  // We need to delay each successive data point by 1 seconds to simulate typing
-  function createCallback(value: string, index: number): () => Promise<void> {
+  // We need to delay each successive data point by 0.2 seconds to simulate typing
+  function createCallback(value: string, index: number, delay: number): () => Promise<void> {
     return async () => {
       let event = new stream.CellChangeEvent(
         value,
@@ -42,21 +49,23 @@ function scheduleEvents(creator: stream.StreamCreator) {
         agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       )
       await creator.handleEvent(event)
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 
   // Avoid overlapping runs by chaining the promises
-  eventsData.map(createCallback).reduce((p, fn) => p.then(fn), Promise.resolve())
+  eventsData
+    .map(([value, delay], i) => createCallback(value, i, delay))
+    .reduce((p, fn) => p.then(fn), Promise.resolve())
 }
 
 class FakeCompletion implements stream.CompletionHandlers {
-  contextId = ulid()
+  contextId = ''
   data: string[] = []
   // Done is a promise which we use to signal to the test that we are done
   public done: Promise<void>
   resolveDone: () => void
-  constructor(data: string[]) {
+  constructor(data) {
     this.data = data
     this.done = new Promise<void>((resolve, _reject) => {
       this.resolveDone = resolve
@@ -65,19 +74,20 @@ class FakeCompletion implements stream.CompletionHandlers {
 
   async buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
-    { firstRequest }: { firstRequest: boolean; handleNewCells: boolean },
+    { firstRequest, handleNewCells }: { firstRequest: boolean; handleNewCells: boolean },
   ): Promise<agent_pb.StreamGenerateRequest | null> {
     console.log('Building request:', cellChangeEvent, firstRequest)
 
     // Decide that we need a new request
-    if (cellChangeEvent.notebookUri.includes('stop')) {
-      this.contextId = ulid()
+    if (handleNewCells && this.contextId === '') {
       firstRequest = true
     }
 
     const data = this.data[cellChangeEvent.cellIndex]
 
-    if (firstRequest) {
+    let req: agent_pb.StreamGenerateRequest
+    if (firstRequest && handleNewCells) {
+      this.contextId = ulid()
       let req = new agent_pb.StreamGenerateRequest({
         request: {
           case: 'fullContext',
@@ -99,22 +109,27 @@ class FakeCompletion implements stream.CompletionHandlers {
         trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       })
       return req
+    } else {
+      req = new agent_pb.StreamGenerateRequest({
+        request: {
+          case: 'update',
+          value: new agent_pb.UpdateContext({
+            cell: new parser_pb.Cell({
+              value: data,
+              languageId: 'markdown',
+              kind: parser_pb.CellKind.MARKUP,
+            }),
+          }),
+        },
+        contextId: this.contextId,
+        trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+      })
     }
 
-    let req = new agent_pb.StreamGenerateRequest({
-      request: {
-        case: 'update',
-        value: new agent_pb.UpdateContext({
-          cell: new parser_pb.Cell({
-            value: data,
-            languageId: 'markdown',
-            kind: parser_pb.CellKind.MARKUP,
-          }),
-        }),
-      },
-      contextId: this.contextId,
-      trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
-    })
+    if (handleNewCells && cellChangeEvent.notebookUri.includes('stop')) {
+      firstRequest = true
+    }
+
     return req
   }
 
@@ -137,7 +152,7 @@ class FakeCompletion implements stream.CompletionHandlers {
 test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
-    const completion = new FakeCompletion(eventsData)
+    const completion = new FakeCompletion(eventsData.map(([value]) => value))
     const client = createClient(
       AIService,
       createConnectTransport({
