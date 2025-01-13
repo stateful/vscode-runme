@@ -20,6 +20,7 @@ vi.mock('vscode', async () => {
   }
 })
 
+// SWITCH got to be >500ms to escape typing debounce
 const [SWITCH, TYPING] = [2000, undefined]
 type EventsData = [string, number?][]
 const eventsData: EventsData = [
