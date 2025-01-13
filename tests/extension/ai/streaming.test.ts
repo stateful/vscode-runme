@@ -20,55 +20,105 @@ vi.mock('vscode', async () => {
   }
 })
 
-const [typeDelay, switchDelay] = [100, 1000]
-type EventsData = [string, number][]
+const [SWITCH, TYPING] = [2000, undefined]
+type EventsData = [string, number?][]
 const eventsData: EventsData = [
-  ['h', typeDelay],
-  ['he', typeDelay],
-  ['hel', typeDelay],
-  ['hell', typeDelay],
-  ['hello', switchDelay],
-  ['stop', switchDelay],
-  ['how are you?', switchDelay],
-  ['stop', switchDelay],
-  ["Is it me you're looking for?", switchDelay],
-  ['stop', switchDelay],
-  ['here we go', switchDelay],
-  ['again', switchDelay],
-  ['down the only road I have ever known', switchDelay],
-  ['done', switchDelay],
+  ['h', TYPING],
+  ['he', TYPING],
+  ['hel', TYPING],
+  ['hell', TYPING],
+  ['hello', SWITCH],
+  // new cell
+  ['stop', SWITCH],
+  ['how', TYPING],
+  ['how are', TYPING],
+  ['how are you?', SWITCH],
+  // new cell
+  ['stop', SWITCH],
+  ["Is it me you're looking for?", SWITCH],
+  // new cell
+  ['stop', SWITCH],
+  ['here we go', SWITCH],
+  ['again', SWITCH],
+  ['down the only road I have ever known', SWITCH],
+  // new cell
+  ['done', SWITCH],
 ]
 
-function scheduleEvents(creator: stream.StreamCreator) {
-  // We need to delay each successive data point by 0.2 seconds to simulate typing
-  function createCallback(value: string, index: number, delay: number): () => Promise<void> {
+class FakeCompletion implements stream.CompletionHandlers {
+  contextId = ''
+  // Done is a promise which we use to signal to the test that we are done
+  public done: Promise<void>
+  resolveDone: () => void
+  private stack: Array<() => Promise<void>> = []
+  constructor(private readonly data: EventsData) {
+    this.data = data
+    this.done = new Promise<void>((resolve, _reject) => {
+      this.resolveDone = resolve
+    })
+  }
+
+  async runEvents(creator: stream.StreamCreator): Promise<void> {
+    // Avoid overlapping runs by chaining the promises
+    this.stack = this.data.map(([value, delay], i) => {
+      return this.createCallback(creator, value, i, delay)
+    })
+
+    await this.next()
+  }
+
+  // take the top callback off the stack and run it
+  async next(): Promise<void> {
+    const callback = this.stack.shift()
+
+    if (callback) {
+      await callback()
+      return
+    }
+
+    log.info('Stopping')
+    this.shutdown()
+  }
+
+  // close loop out-of-band for debounced requests
+  async skipAhead(): Promise<void> {
+    await this.processResponse(new agent_pb.StreamGenerateResponse())
+  }
+
+  private createCallback(
+    creator: stream.StreamCreator,
+    value: string,
+    index: number,
+    delay?: number,
+  ): () => Promise<void> {
     return async () => {
-      let event = new stream.CellChangeEvent(
+      const event = new stream.CellChangeEvent(
         value,
         index,
         agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       )
+
+      // don't send values in these cases because Folye might "dropResponse"
+      if (['stop', 'done'].includes(value)) {
+        this.contextId = '' // force sending fullContext with next req
+        await this.skipAhead()
+        return
+      }
+
       await creator.handleEvent(event)
-      await new Promise((resolve) => setTimeout(resolve, delay))
+      // Unless otherwise specified delay by 10 to simulate typing
+      await this.delayBy(delay ?? 10)
+
+      // close loop manually for simulated typing
+      if (delay === undefined) {
+        await this.skipAhead()
+      }
     }
   }
 
-  // Avoid overlapping runs by chaining the promises
-  eventsData
-    .map(([value, delay], i) => createCallback(value, i, delay))
-    .reduce((p, fn) => p.then(fn), Promise.resolve())
-}
-
-class FakeCompletion implements stream.CompletionHandlers {
-  contextId = ''
-  data: string[] = []
-  // Done is a promise which we use to signal to the test that we are done
-  public done: Promise<void>
-  resolveDone: () => void
-  constructor(data) {
-    this.data = data
-    this.done = new Promise<void>((resolve, _reject) => {
-      this.resolveDone = resolve
+  public delayBy(delay: number): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(resolve, delay)
     })
   }
 
@@ -83,12 +133,12 @@ class FakeCompletion implements stream.CompletionHandlers {
       firstRequest = true
     }
 
-    const data = this.data[cellChangeEvent.cellIndex]
+    const [data] = this.data[cellChangeEvent.cellIndex]
 
     let req: agent_pb.StreamGenerateRequest
     if (firstRequest && handleNewCells) {
       this.contextId = ulid()
-      let req = new agent_pb.StreamGenerateRequest({
+      req = new agent_pb.StreamGenerateRequest({
         request: {
           case: 'fullContext',
           value: new agent_pb.FullContext({
@@ -108,7 +158,6 @@ class FakeCompletion implements stream.CompletionHandlers {
         contextId: this.contextId,
         trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       })
-      return req
     } else {
       req = new agent_pb.StreamGenerateRequest({
         request: {
@@ -126,22 +175,15 @@ class FakeCompletion implements stream.CompletionHandlers {
       })
     }
 
-    if (handleNewCells && cellChangeEvent.notebookUri.includes('stop')) {
-      firstRequest = true
-    }
-
     return req
   }
 
-  processResponse(response: agent_pb.StreamGenerateResponse): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async processResponse(response: agent_pb.StreamGenerateResponse): Promise<void> {
     // Stub implementation
-    console.log('Processing response:', response)
-    response.cells.forEach((cell) => {
-      if (cell.value.includes('done')) {
-        log.info('Stopping')
-        this.shutdown()
-      }
-    })
+    console.log('Processing response:', JSON.stringify(response, null, 1))
+
+    await this.next()
   }
 
   shutdown = (): void => {
@@ -152,7 +194,7 @@ class FakeCompletion implements stream.CompletionHandlers {
 test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
   'manual foyle streaming RPC test',
   async () => {
-    const completion = new FakeCompletion(eventsData.map(([value]) => value))
+    const completion = new FakeCompletion(eventsData)
     const client = createClient(
       AIService,
       createConnectTransport({
@@ -162,9 +204,9 @@ test.skipIf(process.env.RUN_MANUAL_TESTS !== 'true')(
     )
     const creator = new stream.StreamCreator(completion, client)
 
-    scheduleEvents(creator)
+    completion.runEvents(creator)
     await completion.done
   },
   // Increase the test timeout
-  60000,
+  60_000,
 )
