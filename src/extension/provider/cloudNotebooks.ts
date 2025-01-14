@@ -7,11 +7,12 @@ import {
   FileType,
 } from 'vscode'
 
-import RunmeFS from './runmeFs'
+import RunmeFS, { mergeUriPaths } from './runmeFs'
 
 interface WorkspaceNotebook extends TreeItem {
   label: string
-  parent?: string
+  uri: Uri
+  parentUri: Uri
 }
 
 export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disposable {
@@ -26,10 +27,12 @@ export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disp
     if (!element) {
       const dirContent = await this.#runmeFs.readDirectory(this.#runmeFs.root)
       return dirContent.map(([path, type]) => {
-        const uri = Uri.parse(`${this.#runmeFs.root.path}/${path}`)
+        const uri = mergeUriPaths(this.#runmeFs.root, path)
 
         const item: WorkspaceNotebook = {
           label: path,
+          uri: uri,
+          parentUri: uri.with({ path: '/' }),
           collapsibleState: TreeItemCollapsibleState.None,
         }
 
@@ -48,16 +51,17 @@ export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disp
       })
     }
 
-    const uri = RunmeFS.resolveUri(`${element.parent || ''}${element.label}`)
+    const dirContent = await this.#runmeFs.readDirectory(element?.uri)
 
-    const dirContent = await this.#runmeFs.readDirectory(uri)
     return dirContent.map(([path, type]) => {
-      const uri = RunmeFS.resolveUri(`${element.parent || ''}${element.label || ''}/${path}`)
+      const parentUri = mergeUriPaths(element?.parentUri, element.label)
+      const uri = mergeUriPaths(parentUri, path)
 
       const item: WorkspaceNotebook = {
         label: path,
         collapsibleState: TreeItemCollapsibleState.None,
-        parent: `${element.label}/`,
+        uri: uri,
+        parentUri: parentUri,
       }
 
       if (type === FileType.Directory) {

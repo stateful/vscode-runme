@@ -94,15 +94,16 @@ import { RunmeIdentity } from './grpc/serializerTypes'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
 import { CloudNotebooks } from './provider/cloudNotebooks'
-import RunmeFS, { uriAuthority } from './provider/runmeFs'
+import RunmeFS from './provider/runmeFs'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
 
   async initialize(context: ExtensionContext) {
     // Register the Runme file system provider as soon as possible
+    const runmeFs = new RunmeFS()
     context.subscriptions.push(
-      workspace.registerFileSystemProvider('runmefs', new RunmeFS(), {
+      workspace.registerFileSystemProvider('runmefs', runmeFs, {
         isReadonly: false,
       }),
     )
@@ -440,7 +441,7 @@ export class RunmeExtension {
       ),
       commands.registerCommand('runme.workspaceInit', (_) => {
         workspace.updateWorkspaceFolders(0, 0, {
-          uri: Uri.parse(`runmefs://${uriAuthority}`),
+          uri: runmeFs.root,
           name: 'Workspace Notebooks',
         })
       }),

@@ -30,15 +30,22 @@ const excludedPaths = [
   '.runme_bootstrap_demo',
 ]
 
+export function mergeUriPaths(uri: Uri, newPath: string): Uri {
+  const isAbsolutePath = newPath.startsWith('/')
+
+  if (isAbsolutePath) {
+    return uri.with({ path: newPath })
+  }
+
+  const currentPath = uri.path
+  const combinedPath = currentPath.replace(/\/+$/, '') + '/' + newPath
+
+  return uri.with({ path: combinedPath })
+}
+
 /**
  * Handles the virtual file system runmefs://
  */
-export const uriAuthority = 'cloud.stateful.com'
-
-export function getRunmeFsUri(uri: Uri) {
-  return uri.with({ authority: uriAuthority })
-}
-
 export default class RunmeFS implements FileSystemProvider {
   private _onDidChangeFile: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile: Event<FileChangeEvent[]> = this._onDidChangeFile.event
@@ -47,15 +54,14 @@ export default class RunmeFS implements FileSystemProvider {
   #pathTree: PathTree = {}
 
   get root() {
-    return Uri.parse(`runmefs://${uriAuthority}/`)
+    return Uri.parse('runmefs:///')
   }
 
   static resolveUri(path: string) {
-    return Uri.parse(`runmefs://${uriAuthority}/${path}`)
+    return Uri.parse(`runmefs:///${path}`)
   }
 
-  async readFile(sourceUri: Uri): Promise<Uint8Array> {
-    const uri = getRunmeFsUri(sourceUri)
+  async readFile(uri: Uri): Promise<Uint8Array> {
     let id: string | undefined = uri.query.split('=')[1]
     id = id || (await this.notebooks()).find((n) => `/${n.path}` === uri.path)?.id
 
@@ -99,9 +105,7 @@ export default class RunmeFS implements FileSystemProvider {
     return !this.isFile(pathname)
   }
 
-  async stat(sourceUri: Uri): Promise<FileStat> {
-    const uri = getRunmeFsUri(sourceUri)
-
+  async stat(uri: Uri): Promise<FileStat> {
     if (excludedPaths.includes(uri.path)) {
       throw FileSystemError.FileNotFound(uri)
     }
@@ -151,7 +155,7 @@ export default class RunmeFS implements FileSystemProvider {
 
   async notebooks() {
     if (!this.#notebooks.length) {
-      const response = await getAllWorkflows()
+      const response = await getAllWorkflows({ fileName: 'vscode-runme' })
       const data = response?.data?.workflows.filter(
         (notebook): notebook is NonNullable<typeof notebook> => notebook !== null,
       )
@@ -175,8 +179,7 @@ export default class RunmeFS implements FileSystemProvider {
     return this.#notebooks
   }
 
-  async readDirectory(uri: Uri): Promise<[string, FileType][]> {
-    const parent = getRunmeFsUri(uri)
+  async readDirectory(parent: Uri): Promise<[string, FileType][]> {
     await this.notebooks()
 
     const children = this.#pathTree[parent.path] || []
