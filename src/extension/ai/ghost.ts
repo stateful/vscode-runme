@@ -96,23 +96,24 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     // TODO(jeremy): We should probably at the cellUri to the event so we can verify the cell URI matches
     let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
-    // Has the cell changed since the last time we processed an event?
-    // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
-    // correctly detect that the cell has changed and a new stream needs to be initiated.
-    let newCell = true
-    if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
-      newCell = false
-    }
-
+    let newCell = false
     if (handleNewCells) {
+      // Has the cell changed since the last time we processed an event?
+      // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
+      // correctly detect that the cell has changed and a new stream needs to be initiated.
+      newCell = true
+      if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
+        newCell = false
+      }
+
       log.info(
         `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
       )
-    }
 
-    // Update notebook state
-    nbState.activeCell = matchedCell
-    this.notebookState.set(notebook.uri, nbState)
+      // Update notebook state
+      nbState.activeCell = matchedCell
+      this.notebookState.set(notebook.uri, nbState)
+    }
 
     if ((handleNewCells && newCell) || firstRequest) {
       // Generate a new request

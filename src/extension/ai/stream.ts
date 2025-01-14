@@ -10,7 +10,9 @@ import {
   filter,
   from,
   map,
+  merge,
   mergeMap,
+  Observable,
   pairwise,
   startWith,
   Subject,
@@ -41,6 +43,11 @@ export interface CompletionHandlers {
   // shutDown is invoked when the streamCreator is closed
   // This is a way of signaling no more events are expected
   shutdown: () => void
+}
+
+type CellChangeEventRequest = {
+  event: CellChangeEvent
+  request: StreamGenerateRequest | null
 }
 
 // TODO(jeremy): Rename StreamCreator -> StreamManager
@@ -74,11 +81,7 @@ export interface CompletionHandlers {
 // These events are split into windows and then turned into a stream of requests.
 //
 export class StreamCreator {
-  events = new Subject<{
-    // ts: number
-    event: CellChangeEvent
-    request: StreamGenerateRequest | null
-  }>()
+  events = new Subject<CellChangeEventRequest>()
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
@@ -89,60 +92,77 @@ export class StreamCreator {
     // Create a client this is actually a Client
     this.client = client
 
-    // Only look at updates because triggerEvent will gen its own events
-    const updateEvents = this.events.pipe(
-      filter((item) => {
-        return item.request?.request.case === 'update'
+    // Only look at updates for debouncing
+    // triggerEvent will gen its own events
+    const updateEvents = this.events.pipe(filter((item) => item.request?.request.case === 'update'))
+
+    const cellTextChangeEvents = updateEvents.pipe(
+      this.onlyCellTextChange(true),
+      // debounce buffering with 500ms interval
+      buffer(updateEvents.pipe(debounceTime(500))),
+      filter((items) => items.length > 0),
+      mergeMap((items) => {
+        const debounced = from(items).pipe(
+          startWith(undefined),
+          pairwise(),
+          filter(([prev, current], index) => {
+            // always emit single item in buffer
+            if (items.length === 1) {
+              return true
+            }
+
+            if (
+              prev?.request &&
+              prev.request?.request.case === 'update' &&
+              current?.request &&
+              current.request?.request.case === 'update'
+            ) {
+              const unrelated = prev && prev?.request?.contextId !== current?.request?.contextId
+
+              const preVal = prev?.request?.request?.value?.cell?.value ?? ''
+              const currVal = current?.request?.request?.value?.cell?.value ?? ''
+              const isSubstr = currVal.startsWith(preVal)
+
+              const isLast = index === items.length - 1
+
+              // Emit if the current value is related and not a substring of the previous value
+              // or it's the last item in the buffer
+              return (!isSubstr || isLast) && !unrelated
+            }
+
+            return false
+          }),
+          map(([, item]) => item!.event),
+        )
+        return debounced
       }),
     )
 
-    updateEvents
-      .pipe(
-        // debounce buffering with 500ms interval
-        buffer(updateEvents.pipe(debounceTime(500))),
-        filter((items) => items.length > 0),
-        mergeMap((items) => {
-          const debounced = from(items).pipe(
-            startWith(undefined),
-            pairwise(),
-            filter(([prev, current], index) => {
-              // always emit single item in buffer
-              if (items.length === 1) {
-                return true
-              }
+    const remainingEvents = updateEvents.pipe(
+      this.onlyCellTextChange(false),
+      map((item) => item.event),
+    )
 
-              // emit if the trigger is not CELL_TEXT_CHANGE
-              if (current?.request?.trigger !== StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE) {
-                return true
-              }
+    // Subscribe to all update events for downstream processing
+    merge(cellTextChangeEvents, remainingEvents).subscribe(this.triggerEvent)
+  }
 
-              if (
-                prev?.request &&
-                prev.request?.request.case === 'update' &&
-                current?.request &&
-                current.request?.request.case === 'update'
-              ) {
-                const unrelated = prev && prev?.request?.contextId !== current?.request?.contextId
+  onlyCellTextChange(include: boolean) {
+    return function (source: Observable<CellChangeEventRequest>) {
+      return source.pipe(
+        filter((item) => {
+          if (!item.request) {
+            return true
+          }
 
-                const preVal = prev?.request?.request?.value?.cell?.value ?? ''
-                const currVal = current?.request?.request?.value?.cell?.value ?? ''
-                const isSubstr = currVal.startsWith(preVal)
+          if (item.request.trigger === StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE) {
+            return include
+          }
 
-                const isLast = index === items.length - 1
-
-                // emit if the current value is related and not a substring of the previous value
-                // or it's the last item in the buffer
-                return (!isSubstr || isLast) && !unrelated
-              }
-
-              return false
-            }),
-            map(([, item]) => item!.event),
-          )
-          return debounced
+          return !include
         }),
       )
-      .subscribe(this.triggerEvent)
+    }
   }
 
   handleEvent = async (event: CellChangeEvent): Promise<void> => {
