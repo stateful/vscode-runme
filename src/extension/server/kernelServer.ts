@@ -251,6 +251,7 @@ class KernelServer implements IServer {
     const serverUrl = `http${s}://${SERVER_ADDRESS}:${this.#port}`
     const tlsConfig = await addTlsConfigIfEnabled()
     let transportOptions = {
+      httpVersion: '2',
       baseUrl: serverUrl,
       ...tlsConfig,
     }
@@ -258,12 +259,10 @@ class KernelServer implements IServer {
     if (protocol === 'grpc') {
       this.#connectTransport = createGrpcTransport(<GrpcTransportOptions>{
         ...transportOptions,
-        httpVersion: '2',
       })
     } else {
       this.#connectTransport = createConnectTransport(<ConnectTransportOptions>{
         ...transportOptions,
-        httpVersion: '1.1',
       })
     }
 
