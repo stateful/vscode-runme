@@ -248,7 +248,7 @@ export default async function saveCellExecution(
             pid,
             input: encodeURIComponent(cell.document.getText()),
             languageId: cell.document.languageId,
-            autoSave: ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON),
+            autoSave: autoSaveIsOn,
             metadata: {
               mimeType: annotations.mimeType,
               name: annotations.name,

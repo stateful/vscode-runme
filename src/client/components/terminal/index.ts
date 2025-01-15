@@ -27,6 +27,8 @@ import '../copyButton'
 import './actionButton'
 import './gistCell'
 import './open'
+import './saveButton'
+import './shareButton'
 import {
   CreateCellExecutionMutation,
   CreateEscalationMutation,
@@ -390,9 +392,6 @@ export class TerminalView extends LitElement {
   isAutoSaveEnabled: boolean = false
 
   @property({ type: Boolean })
-  isSessionOutputsEnabled: boolean = false
-
-  @property({ type: Boolean })
   isPlatformAuthEnabled: boolean = false
 
   @property({ type: Boolean })
@@ -594,12 +593,10 @@ export class TerminalView extends LitElement {
               return
             }
             this.exitCode = code
-
-            if (!this.isAutoSaveEnabled) {
-              return
+            if (features.isOn(FeatureName.SignedIn, this.featureState$) && this.isAutoSaveEnabled) {
+              return this.#shareCellOutput(false)
             }
-
-            return this.#shareCellOutput(false)
+            return
           }
         }
       }),
@@ -993,18 +990,25 @@ export class TerminalView extends LitElement {
           () => {},
         )}
         ${when(
-          (this.exitCode === undefined || this.exitCode === 0 || !this.platformId) &&
-            !this.isDaggerOutput &&
-            features.isOn(FeatureName.Share, this.featureState$),
+          this.shouldRenderSaveButton(),
           () => {
-            return html` <action-button
+            return html`<save-button
               ?loading=${this.isLoading}
-              ?shareIcon="${!!this.platformId}"
-              ?saveIcon="${!this.platformId}"
-              text="${this.platformId ? 'Share' : 'Save'}"
+              ?signedIn=${features.isOn(FeatureName.SignedIn, this.featureState$)}
               @onClick="${this.#triggerShareCellOutput}"
             >
-            </action-button>`
+            </save-button>`
+          },
+          () => {},
+        )}
+        ${when(
+          this.shouldRenderShareButton(),
+          () => {
+            return html`<share-button
+              ?loading=${this.isLoading}
+              @onClick="${this.#triggerShareCellOutput}"
+            >
+            </share-button>`
           },
           () => {},
         )}
@@ -1015,7 +1019,7 @@ export class TerminalView extends LitElement {
             this.platformId &&
             !this.isDaggerOutput,
           () => {
-            return html` <action-button
+            return html`<action-button
               ?loading=${this.isCreatingEscalation}
               ?saveIcon="${true}"
               text="Escalate"
@@ -1029,7 +1033,7 @@ export class TerminalView extends LitElement {
         ${when(
           features.isOn(FeatureName.Escalate, this.featureState$) && this.escalationUrl,
           () => {
-            return html` <action-button
+            return html`<action-button
               ?saveIcon="${true}"
               text="Open Escalation"
               @onClick="${this.#triggerOpenEscalation}"
@@ -1041,7 +1045,7 @@ export class TerminalView extends LitElement {
         ${when(
           this.platformId && !this.isLoading,
           () => {
-            return html` <open-cell
+            return html`<open-cell
               ?disabled=${!this.isPlatformAuthEnabled}
               @onOpen="${this.#triggerOpenCellOutput}"
             ></open-cell>`
@@ -1077,6 +1081,16 @@ export class TerminalView extends LitElement {
           `Failed to copy to clipboard: ${err.message}!`,
         ),
       )
+  }
+
+  shouldRenderSaveButton() {
+    const isExitCodeValid = this.exitCode === undefined || this.exitCode === 0
+    return !this.platformId && isExitCodeValid && !this.isDaggerOutput
+  }
+
+  shouldRenderShareButton() {
+    const isFeatureEnabled = features.isOn(FeatureName.Share, this.featureState$)
+    return this.platformId && isFeatureEnabled && this.isShareReady
   }
 }
 

@@ -39,7 +39,7 @@ const contextFake: ExtensionContext = {
 
 StatefulAuthProvider.initialize(contextFake)
 
-describe('Session Outputs Cell Status Bar provider', () => {
+describe('Preview Outputs Cell Status Bar provider', () => {
   const kernel = new Kernel({} as any)
   it('should register commands when initializing', () => {
     new SessionOutputCellStatusBarProvider(kernel)

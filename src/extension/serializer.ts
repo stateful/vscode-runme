@@ -17,23 +17,22 @@ import {
   CancellationTokenSource,
   NotebookCellOutput,
   NotebookCellExecutionSummary,
-  commands,
 } from 'vscode'
 import { ulid } from 'ulidx'
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { Serializer } from '../types'
+import { FeatureName, Serializer } from '../types'
 import {
   NOTEBOOK_AUTOSAVE_ON,
-  NOTEBOOK_HAS_OUTPUTS,
   NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_PREVIEW_OUTPUTS,
   OutputType,
   RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
 } from '../constants'
-import { ServerLifecycleIdentity, getSessionOutputs } from '../utils/configuration'
+import { ServerLifecycleIdentity } from '../utils/configuration'
 
 import {
   ParserService,
@@ -65,6 +64,7 @@ import { IProcessInfoState } from './terminal/terminalState'
 import ContextState from './contextState'
 import * as ghost from './ai/ghost'
 import getLogger from './logger'
+import features from './features'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -500,8 +500,6 @@ export class GrpcSerializer extends SerializerBase {
   ) {
     super(context, kernel)
 
-    this.togglePreviewButton(GrpcSerializer.sessionOutputsEnabled())
-
     // cleanup listener when it's outlived its purpose
     this.ready = new Promise((resolve) => {
       const disposable = server.onConnectTransportReady(() => {
@@ -523,20 +521,14 @@ export class GrpcSerializer extends SerializerBase {
     )
   }
 
-  public togglePreviewButton(state: boolean) {
-    return commands.executeCommand('setContext', NOTEBOOK_HAS_OUTPUTS, state)
-  }
-
   protected async handleOpenNotebook(doc: NotebookDocument) {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
-      this.togglePreviewButton(false)
       return
     }
 
     if (GrpcSerializer.isDocumentSessionOutputs(doc.metadata)) {
-      this.togglePreviewButton(false)
       return
     }
 
@@ -558,7 +550,6 @@ export class GrpcSerializer extends SerializerBase {
     const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
-      this.togglePreviewButton(false)
       return
     }
 
@@ -573,40 +564,59 @@ export class GrpcSerializer extends SerializerBase {
     const bytes = await cache.get(cacheId ?? '')
 
     if (!bytes) {
-      this.togglePreviewButton(false)
       return -1
     }
 
     const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
     if (!srcDocUri) {
-      this.togglePreviewButton(false)
       return -1
     }
 
     const runnerEnv = this.kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
     if (!sessionId) {
-      this.togglePreviewButton(false)
       return -1
     }
 
-    // Don't write to disk if auto-save is off
-    if (!ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)) {
-      this.togglePreviewButton(false)
-      // But still return a valid bytes length so the cache keeps working
-      return bytes.length
+    const sessionFilePath = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
+
+    // If preview button is clicked, save the outputs to a file
+    const isPreview = GrpcSerializer.isPreviewOutput()
+
+    if (isPreview) {
+      await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
     }
 
-    const sessionFile = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
-    if (!sessionFile) {
-      this.togglePreviewButton(false)
-      return -1
+    if (await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)) {
+      if (!sessionFilePath) {
+        return -1
+      }
+      await workspace.fs.writeFile(sessionFilePath, bytes)
     }
-
-    await workspace.fs.writeFile(sessionFile, bytes)
-    this.togglePreviewButton(true)
 
     return bytes.length
+  }
+
+  static isPreviewOutput(): boolean {
+    const isPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
+    return isPreview
+  }
+
+  static async shouldWriteOutputs(sessionFilePath: Uri, isPreview: boolean): Promise<boolean> {
+    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+    const sessionFileExists = await this.sessionFileExists(sessionFilePath)
+
+    return isPreview || (isAutosaveOn && !isSignedIn) || (isAutosaveOn && sessionFileExists)
+  }
+
+  static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
+    try {
+      await workspace.fs.stat(sessionFilePath)
+      return true
+    } catch (e) {
+      return false
+    }
   }
 
   public async saveNotebookOutputs(uri: Uri): Promise<number> {
@@ -773,13 +783,6 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     return serialResult.result
-  }
-
-  static sessionOutputsEnabled() {
-    const isAutoSaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const isSessionOutputs = getSessionOutputs()
-
-    return isSessionOutputs && isAutoSaveOn
   }
 
   private async cacheNotebookOutputs(
