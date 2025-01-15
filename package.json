@@ -1350,7 +1350,7 @@
     "prettier": "^3.4.2",
     "runme": "^3.1.0",
     "semver": "^7.6.3",
-    "tar-fs": "^3.0.4",
+    "tar-fs": "^3.0.8",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.5.4",
