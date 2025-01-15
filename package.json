@@ -365,7 +365,7 @@
         "category": "Runme",
         "title": "Click to open session outputs",
         "icon": "$(output-view-icon)",
-        "shortTitle": "Session Outputs"
+        "shortTitle": "Preview Outputs"
       },
       {
         "command": "runme.resetRunnerSession",
@@ -585,7 +585,7 @@
       "notebook/toolbar": [
         {
           "command": "runme.notebookSessionOutputs",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasRunmeOutputs",
+          "when": "notebookType == runme && notebookMode != sessionOutputs",
           "group": "navigation"
         },
         {

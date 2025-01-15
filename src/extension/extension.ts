@@ -24,6 +24,7 @@ import {
 import {
   AuthenticationProviders,
   NOTEBOOK_LIFECYCLE_ID,
+  NOTEBOOK_PREVIEW_OUTPUTS,
   TELEMETRY_EVENTS,
   WebViews,
 } from '../constants'
@@ -36,12 +37,7 @@ import {
   BackgroundTaskProvider,
   StopBackgroundTaskProvider,
 } from './provider/background'
-import {
-  getDefaultWorkspace,
-  bootFile,
-  resetNotebookSettings,
-  openFileAsRunmeNotebook,
-} from './utils'
+import { getDefaultWorkspace, bootFile, resetNotebookSettings } from './utils'
 import { RunmeTaskProvider } from './provider/runmeTask'
 import {
   toggleTerminal,
@@ -69,6 +65,7 @@ import {
   createCellGistCommand,
   runForkCommand,
   selectEnvironment,
+  notebookSessionOutputs,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
@@ -244,6 +241,8 @@ export class RunmeExtension {
 
     const transientOutputs = !getSessionOutputs()
 
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
       ['runme.dev/nameGenerated']: undefined,
@@ -370,16 +369,10 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.notebookExplorerMode', () =>
         toggleAuthorMode(true, kernel),
       ),
-      RunmeExtension.registerCommand('runme.notebookSessionOutputs', (e: NotebookUiEvent) => {
-        const runnerEnv = kernel.getRunnerEnvironment()
-        const sessionId = runnerEnv?.getSessionId()
-        if (!e.ui || !sessionId) {
-          return
-        }
-        const { notebookUri } = e.notebookEditor
-        const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-        openFileAsRunmeNotebook(outputFilePath)
-      }),
+      RunmeExtension.registerCommand(
+        'runme.notebookSessionOutputs',
+        notebookSessionOutputs(kernel, serializer),
+      ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
         commands.executeCommand('runme.lifecycleIdentitySelection', RunmeIdentity.UNSPECIFIED),

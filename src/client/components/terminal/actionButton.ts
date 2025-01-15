@@ -20,10 +20,10 @@ export class ActionButton extends LitElement {
   disabled: boolean = false
 
   @property({ type: Boolean, reflect: true })
-  shareIcon: boolean = false
+  shareIcon: boolean | undefined
 
   @property({ type: Boolean, reflect: true })
-  saveIcon: boolean = false
+  saveIcon: boolean | undefined
 
   /* eslint-disable */
   static styles = css`
