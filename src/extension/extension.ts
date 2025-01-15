@@ -100,18 +100,29 @@ export class RunmeExtension {
   protected serializer?: SerializerBase
 
   async initialize(context: ExtensionContext) {
-    // Register the Runme file system provider as soon as possible
-    const runmeFs = new RunmeFS()
-    context.subscriptions.push(
-      workspace.registerFileSystemProvider('runmefs', runmeFs, {
-        isReadonly: false,
-      }),
-    )
-
     const kernel = new Kernel(context)
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
+
+    if (kernel.isFeatureOn(FeatureName.RemoteNotebooks)) {
+      await ContextState.addKey(FeatureName.RemoteNotebooks, true)
+      const runmeFs = new RunmeFS()
+      context.subscriptions.push(
+        workspace.registerFileSystemProvider('runmefs', runmeFs, {
+          isReadonly: false,
+        }),
+        commands.registerCommand('runme.attachWorkspace', (_) => {
+          workspace.updateWorkspaceFolders(0, 0, {
+            uri: runmeFs.root,
+            name: 'Workspace Notebooks',
+          })
+        }),
+        window.registerTreeDataProvider('runme.workspaceNotebooks', new CloudNotebooks()),
+      )
+    } else {
+      await ContextState.addKey(FeatureName.RemoteNotebooks, false)
+    }
 
     const server = new KernelServer(
       context.extensionUri,
@@ -333,7 +344,6 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
-      window.registerTreeDataProvider('runme.workspaceNotebooks', new CloudNotebooks()),
 
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',
@@ -439,12 +449,6 @@ export class RunmeExtension {
           )
         },
       ),
-      commands.registerCommand('runme.workspaceInit', (_) => {
-        workspace.updateWorkspaceFolders(0, 0, {
-          uri: runmeFs.root,
-          name: 'Workspace Notebooks',
-        })
-      }),
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
       ),

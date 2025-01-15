@@ -155,34 +155,35 @@ export default class RunmeFS implements FileSystemProvider {
 
   async notebooks() {
     if (!this.#notebooks.length) {
-      const response = await getAllWorkflows({ fileName: 'vscode-runme' })
+      const response = await getAllWorkflows()
       const data = response?.data?.workflows.filter(
         (notebook): notebook is NonNullable<typeof notebook> => notebook !== null,
       )
 
-      this.#notebooks = data
-        .map((notebook) => {
-          const [owner, repository] = notebook.repository.split('/')
+      this.#notebooks = data.map((notebook) => {
+        const [owner, repository] = notebook.repository.split('/')
 
-          return {
-            id: notebook.id,
-            path: `${repository}/${notebook.path}`,
-            repository: repository,
-            owner: owner,
-          }
-        })
-        .sort((a, b) => a.path.localeCompare(b.path))
-
-      this.#pathTree = this.getTreeNodes(this.#notebooks)
+        return {
+          id: notebook.id,
+          path: `${repository}/${notebook.path}`,
+          repository: repository,
+          owner: owner,
+        }
+      })
     }
 
     return this.#notebooks
   }
 
-  async readDirectory(parent: Uri): Promise<[string, FileType][]> {
-    await this.notebooks()
+  async getPathTree() {
+    if (!this.#pathTree.length) {
+      this.#pathTree = this.getTreeNodes(await this.notebooks())
+    }
+    return this.#pathTree
+  }
 
-    const children = this.#pathTree[parent.path] || []
+  async readDirectory(parent: Uri): Promise<[string, FileType][]> {
+    const children = (await this.getPathTree())[parent.path] || []
 
     const isRoot = parent.path === '/'
     return children.map((child) => {
