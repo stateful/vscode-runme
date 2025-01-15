@@ -333,6 +333,9 @@ export class RunmeExtension {
         treeViewer.excludeUnnamed.bind(treeViewer),
       ),
       RunmeExtension.registerCommand('runme.authenticateWithGitHub', authenticateWithGitHub),
+      RunmeExtension.registerCommand('runme.authenticateWithStateful', () => {
+        StatefulAuthProvider.instance.newSession()
+      }),
       /**
        * Uri handler
        */

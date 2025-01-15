@@ -309,6 +309,12 @@
         "description": "Give access to Runme to interact with GitHub API"
       },
       {
+        "command": "runme.authenticateWithStateful",
+        "title": "Authenticate Runme with Stateful",
+        "category": "Runme",
+        "description": "Give access to Runme to interact with Stateful"
+      },
+      {
         "command": "runme.runCategory",
         "category": "Runme",
         "title": "Execute by Tag",
