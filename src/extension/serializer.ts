@@ -504,7 +504,7 @@ export class GrpcSerializer extends SerializerBase {
 
     // cleanup listener when it's outlived its purpose
     this.ready = new Promise((resolve) => {
-      const disposable = server.onTransportReady(() => {
+      const disposable = server.onConnectTransportReady(() => {
         disposable.dispose()
         resolve()
       })
