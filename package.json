@@ -60,7 +60,7 @@
   "runme": {
     "features": {
       "ReporterAPI": {
-        "enabled": false,
+        "enabled": true,
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
