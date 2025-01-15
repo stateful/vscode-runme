@@ -194,12 +194,6 @@ jobs:
           workflows: activate-new-launcher
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
 
-      - name: Activate reporter API
-        uses: stateful/runme-action@v2
-        with:
-          workflows: activate-reporter-api
-        if: ${{ github.event.inputs.releaseChannel == 'edge' }}
-
       # Linux X86
       - name: Package Extension Linux x86_64 (Edge)
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
