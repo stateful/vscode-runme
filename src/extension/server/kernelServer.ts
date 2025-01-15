@@ -257,13 +257,9 @@ class KernelServer implements IServer {
     }
 
     if (protocol === 'grpc') {
-      this.#connectTransport = createGrpcTransport(<GrpcTransportOptions>{
-        ...transportOptions,
-      })
+      this.#connectTransport = createGrpcTransport(<GrpcTransportOptions>transportOptions)
     } else {
-      this.#connectTransport = createConnectTransport(<ConnectTransportOptions>{
-        ...transportOptions,
-      })
+      this.#connectTransport = createConnectTransport(<ConnectTransportOptions>transportOptions)
     }
 
     return this.#connectTransport
