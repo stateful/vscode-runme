@@ -102,7 +102,8 @@ export class RunmeExtension {
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
 
-    if (kernel.isFeatureOn(FeatureName.RemoteNotebooks)) {
+    await ContextState.addKey(FeatureName.RemoteNotebooks, false)
+    if (features.isOnInContextState(FeatureName.RemoteNotebooks)) {
       await ContextState.addKey(FeatureName.RemoteNotebooks, true)
       const runmeFs = new RunmeFS()
       context.subscriptions.push(
@@ -117,8 +118,6 @@ export class RunmeExtension {
         }),
         window.registerTreeDataProvider('runme.workspaceNotebooks', new CloudNotebooks()),
       )
-    } else {
-      await ContextState.addKey(FeatureName.RemoteNotebooks, false)
     }
 
     const server = new KernelServer(
