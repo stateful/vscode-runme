@@ -50,6 +50,7 @@ export const workspace = {
   onDidOpenNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidSaveNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
   onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+  notebookDocuments: { find: vi.fn() },
   fs: {
     writeFile: vi.fn(),
     readFile: vi.fn().mockResolvedValue(Buffer.from('some wasm file')),

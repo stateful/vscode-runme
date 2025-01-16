@@ -1,4 +1,5 @@
 /**/*.*
+!__mocks__
 !src/**/*.ts
 !src/**/*.tsx
 !src/**/*.js
@@ -7,7 +8,6 @@
 !tests/**/*.tsx
 !tests/**/*.js
 !tests/**/*.jsx
-
 
 out
 node_modules
