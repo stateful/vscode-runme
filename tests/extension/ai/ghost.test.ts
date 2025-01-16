@@ -162,28 +162,58 @@ suite('GhostCellGenerator', () => {
     }
   }
 
-  test('Debouncing', async () => {
+  test('Process events for debouncing', async () => {
     const gen = new GhostCellGenerator(new Converter() as any)
-    const requests = await buildRequests(gen, false)
+    const requests = await processEvents(async (event) => {
+      const sequence = event.cellIndex
+      const request = await gen.buildRequestForDebounce(event)
+      return {
+        sequence,
+        request,
+      }
+    })
 
+    expect(requests).toHaveLength(12)
     expect(requests).toMatchSnapshot()
+
+    const cases = new Set(requests.map((r) => r.request.request.case))
+    expect(cases).toEqual(new Set(['update']))
   })
 
-  test('Stream processing', async () => {
+  test('Build requests for event stream', async () => {
     const gen = new GhostCellGenerator(new Converter() as any)
-    const requests = await buildRequests(gen, true)
+    const requests = await processEvents(async (event, firstRequest) => {
+      const sequence = event.cellIndex
+      const request = await gen.buildRequest(event, firstRequest)
+      return {
+        sequence,
+        request,
+      }
+    })
 
+    expect(requests).toHaveLength(12)
     expect(requests).toMatchSnapshot()
+
+    const cases = new Set(requests.map((r) => r.request.request.case))
+    expect(cases).toEqual(new Set(['update', 'fullContext']))
   })
 })
 
-async function buildRequests(gen: GhostCellGenerator, handleNewCells: boolean) {
-  const requests = new Array<{ sequence: number; request: agent_pb.StreamGenerateRequest }>()
+type TestEventSequence = {
+  sequence: number
+  request: agent_pb.StreamGenerateRequest
+}
+
+async function processEvents(
+  process: (event: CellChangeEvent, firstRequest: boolean) => Promise<TestEventSequence>,
+): Promise<Array<TestEventSequence>> {
+  const requests = new Array<TestEventSequence>()
 
   for (const [event, { firstRequest }] of changeEvents) {
-    const request = await gen.buildRequest(event, { firstRequest, handleNewCells })
-    if (request) {
-      requests.push({ sequence: event.cellIndex, request })
+    const r = await process(event, firstRequest)
+
+    if (r) {
+      requests.push(r)
     }
   }
   return requests

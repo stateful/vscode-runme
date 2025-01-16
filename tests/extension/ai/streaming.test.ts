@@ -124,8 +124,9 @@ class FakeCompletion implements stream.CompletionHandlers {
 
   async buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
-    { firstRequest, handleNewCells }: { firstRequest: boolean; handleNewCells: boolean },
-  ): Promise<agent_pb.StreamGenerateRequest | null> {
+    firstRequest: boolean,
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    const handleNewCells = true
     console.log('Building request:', cellChangeEvent, firstRequest)
 
     // Decide that we need a new request
@@ -158,24 +159,36 @@ class FakeCompletion implements stream.CompletionHandlers {
         contextId: this.contextId,
         trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
       })
-    } else {
-      req = new agent_pb.StreamGenerateRequest({
-        request: {
-          case: 'update',
-          value: new agent_pb.UpdateContext({
-            cell: new parser_pb.Cell({
-              value: data,
-              languageId: 'markdown',
-              kind: parser_pb.CellKind.MARKUP,
-            }),
-          }),
-        },
-        contextId: this.contextId,
-        trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
-      })
+      return req
     }
 
-    return req
+    return this.buildUpdateRequest(cellChangeEvent)
+  }
+
+  // Generates update request
+  private async buildUpdateRequest(cellChangeEvent: stream.CellChangeEvent) {
+    const [data] = this.data[cellChangeEvent.cellIndex]
+
+    return new agent_pb.StreamGenerateRequest({
+      request: {
+        case: 'update',
+        value: new agent_pb.UpdateContext({
+          cell: new parser_pb.Cell({
+            value: data,
+            languageId: 'markdown',
+            kind: parser_pb.CellKind.MARKUP,
+          }),
+        }),
+      },
+      contextId: this.contextId,
+      trigger: agent_pb.StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE,
+    })
+  }
+
+  async buildRequestForDebounce(
+    cellChangeEvent: stream.CellChangeEvent,
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    return this.buildUpdateRequest(cellChangeEvent)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

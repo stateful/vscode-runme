@@ -67,56 +67,60 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     return this.notebookState.get(notebook.uri)!
   }
 
-  // textDocumentChangeEventToCompletionRequest converts a VSCode TextDocumentChangeEvent to a Request proto.
-  // This is a stateful transformation because we need to decide whether to send the full document or
-  // the incremental changes.  It will return a null request if the event should be ignored or if there
-  // is an error preventing it from computing a proper request.
-  async buildRequest(
-    cellChangeEvent: stream.CellChangeEvent,
-    { firstRequest, handleNewCells }: { firstRequest: boolean; handleNewCells: boolean },
-  ): Promise<agent_pb.StreamGenerateRequest | null> {
+  private async getNotebook(notebookUri: string): Promise<vscode.NotebookDocument> {
     // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
     // Can we cache it in the class? Since we keep track of notebooks in NotebookState
     // Is there a way we can go from the URI of the cell to the URI of the notebook directly
     const notebook = workspace.notebookDocuments.find((notebook) => {
       // We need to do the comparison on the actual values so we use the string.
       // If we just used === we would be checking if the references are to the same object.
-      return notebook.uri.toString() === cellChangeEvent.notebookUri
+      return notebook.uri.toString() === notebookUri
     })
 
+    // Irrecoverable error
     if (notebook === undefined) {
-      log.error(`notebook for cell ${cellChangeEvent.notebookUri} NOT found`)
-      // TODO(jermey): Should we change the return type to be nullable?
-      return Promise.resolve(null)
+      // It's error or value (null) not both due to execptions in JS
+      throw new Error(`notebook for cell ${notebookUri} NOT found`)
     }
+
+    return notebook
+  }
+
+  // textDocumentChangeEventToCompletionRequest converts a VSCode TextDocumentChangeEvent to a Request proto.
+  // This is a stateful transformation because we need to decide whether to send the full document or
+  // the incremental changes.  It will return a null request if the event should be ignored or if there
+  // is an error preventing it from computing a proper request.
+  async buildRequest(
+    cellChangeEvent: stream.CellChangeEvent,
+    firstRequest: boolean,
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    const notebook = await this.getNotebook(cellChangeEvent.notebookUri)
 
     // Get the notebook state; this will initialize it if this is the first time we
     // process an event for this notebook.
     const nbState = this.getNotebookState(notebook)
 
-    // TODO(jeremy): We should probably at the cellUri to the event so we can verify the cell URI matches
+    // TODO(jeremy): We should probably add the cellUri to the event so we can verify the cell URI matches
     const matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
     let newCell = false
-    if (handleNewCells) {
-      // Has the cell changed since the last time we processed an event?
-      // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
-      // correctly detect that the cell has changed and a new stream needs to be initiated.
-      newCell = true
-      if (nbState.activeCell?.document.uri === matchedCell?.document?.uri) {
-        newCell = false
-      }
-
-      log.info(
-        `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
-      )
-
-      // Update notebook state
-      nbState.activeCell = matchedCell
-      this.notebookState.set(notebook.uri, nbState)
+    // Has the cell changed since the last time we processed an event?
+    // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
+    // correctly detect that the cell has changed and a new stream needs to be initiated.
+    newCell = true
+    if (nbState.activeCell?.document.uri === matchedCell?.document?.uri) {
+      newCell = false
     }
 
-    if ((handleNewCells && newCell) || firstRequest) {
+    log.info(
+      `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
+    )
+
+    // Update notebook state
+    nbState.activeCell = matchedCell
+    this.notebookState.set(notebook.uri, nbState)
+
+    if (newCell || firstRequest) {
       // Generate a new request
 
       // Notebook uses the vscode interface types NotebookDocument and NotebookCell. We
@@ -143,10 +147,27 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       return request
     }
 
+    // Generate update request instead
+    return await this.buildUpdateRequest(notebook, cellChangeEvent)
+  }
+
+  async buildRequestForDebounce(
+    cellChangeEvent: stream.CellChangeEvent,
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    const notebook = await this.getNotebook(cellChangeEvent.notebookUri)
+    return this.buildUpdateRequest(notebook, cellChangeEvent)
+  }
+
+  // Generates update request
+  private async buildUpdateRequest(
+    notebook: vscode.NotebookDocument,
+    cellChangeEvent: stream.CellChangeEvent,
+  ) {
+    const matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
+
     const cellData = cellToCellData(matchedCell)
     const notebookData = new vscode.NotebookData([cellData])
 
-    // Generate an update request
     const notebookProto = await this.converter.notebookDataToProto(notebookData)
     const request = new agent_pb.StreamGenerateRequest({
       contextId: SessionManager.getManager().getID(),
@@ -158,6 +179,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
         }),
       },
     })
+
     return request
   }
 

@@ -34,11 +34,15 @@ export interface CompletionHandlers {
   // If null is returned then no request is generated
   buildRequest: (
     cellChangeEvent: CellChangeEvent,
-    options: { firstRequest: boolean; handleNewCells: boolean },
-  ) => Promise<StreamGenerateRequest | null>
+    firstRequest: boolean,
+  ) => Promise<StreamGenerateRequest>
 
   // processResponse is a function that processes a StreamGenerateResponse
   processResponse: (response: StreamGenerateResponse) => void
+
+  // buildRequestForDebounce is a function that turns cell change events into update events
+  // observe them for debouncing superfulous keystrokes
+  buildRequestForDebounce: (cellChangeEvent: CellChangeEvent) => Promise<StreamGenerateRequest>
 
   // shutDown is invoked when the streamCreator is closed
   // This is a way of signaling no more events are expected
@@ -166,10 +170,7 @@ export class StreamCreator {
   }
 
   handleEvent = async (event: CellChangeEvent): Promise<void> => {
-    const request = await this.handlers.buildRequest(event, {
-      firstRequest: false,
-      handleNewCells: false,
-    })
+    const request = await this.handlers.buildRequestForDebounce(event)
     this.events.next({ event, request })
   }
 
@@ -184,7 +185,7 @@ export class StreamCreator {
     }
 
     log.info('triggerEvent: building request')
-    let req = await this.handlers.buildRequest(event, { firstRequest, handleNewCells: true })
+    let req = await this.handlers.buildRequest(event, firstRequest)
 
     if (req === null) {
       log.info(`Notebook: ${event.notebookUri}; no request generated`)
