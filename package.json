@@ -265,6 +265,12 @@
         "icon": "$(debug-collapse-all)"
       },
       {
+        "command": "runme.refreshTasks",
+        "category": "Runme",
+        "title": "Refresh tasks",
+        "icon": "$(sync)"
+      },
+      {
         "command": "runme.expandTreeView",
         "category": "Runme",
         "title": "Expand all items",
@@ -491,6 +497,10 @@
           "when": "false"
         },
         {
+          "command": "runme.refreshTasks",
+          "when": "false"
+        },
+        {
           "command": "runme.expandTreeView",
           "when": "false"
         },
@@ -572,6 +582,11 @@
         {
           "command": "runme.tasksExcludeUnnamed",
           "when": "view == runme.launcher && runme.launcher.includeUnnamed",
+          "group": "navigation"
+        },
+        {
+          "command": "runme.refreshTasks",
+          "when": "view == runme.launcher",
           "group": "navigation"
         }
       ],

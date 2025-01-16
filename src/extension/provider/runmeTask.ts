@@ -104,6 +104,9 @@ export class RunmeTaskProvider implements TaskProvider {
     })
 
     this.tasks = lastValueFrom(this.loadProjectTasks())
+    treeView.onDidRefresh(() => {
+      this.tasks = lastValueFrom(this.loadProjectTasks())
+    })
   }
 
   private async initProjectClient(transport?: GrpcTransport) {
