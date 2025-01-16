@@ -304,15 +304,15 @@
       },
       {
         "command": "runme.authenticateWithGitHub",
-        "title": "Authenticate Runme with GitHub",
+        "title": "Sign in with GitHub",
         "category": "Runme",
-        "description": "Give access to Runme to interact with GitHub API"
+        "description": "Give access to Runme to interact with GitHub's APIs"
       },
       {
         "command": "runme.authenticateWithStateful",
-        "title": "Authenticate Runme with Stateful",
+        "title": "Sign in with Stateful",
         "category": "Runme",
-        "description": "Give access to Runme to interact with Stateful"
+        "description": "Give access to Runme to interact with Stateful Cloud"
       },
       {
         "command": "runme.runCategory",
