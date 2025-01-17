@@ -210,10 +210,6 @@ class KernelServer implements IServer {
   }
 
   async transport() {
-    if (this.#transport) {
-      return this.#transport
-    }
-
     this.#transport = new GrpcTransport({
       host: this.address(),
       channelCredentials: await this.channelCredentials(),
@@ -223,10 +219,6 @@ class KernelServer implements IServer {
   }
 
   async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
-    if (this.#connectTransport) {
-      return this.#connectTransport
-    }
-
     const addTlsConfigIfEnabled = async () => {
       try {
         if (!getTLSEnabled()) {
