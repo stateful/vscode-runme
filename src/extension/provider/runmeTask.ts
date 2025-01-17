@@ -167,7 +167,14 @@ export class RunmeTaskProvider implements TaskProvider {
           })
           session.responses.onError((err) => observer.error(err))
           session.responses.onComplete(() => observer.complete())
-        }).pipe(finalize(() => log.info(`Finished walk ${folder}.`)))
+        }).pipe(
+          finalize(() => {
+            if (folder.kind.oneofKind !== 'directory') {
+              return
+            }
+            log.info(`Finished walk ${folder.kind.directory.path}.`)
+          }),
+        )
       }),
     )
 
