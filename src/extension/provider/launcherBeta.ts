@@ -32,6 +32,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   private defaultItemState = TreeItemCollapsibleState.Collapsed
   private _onDidChangeTreeData = new EventEmitter<RunmeFile | undefined>()
   private notebooks: RunmeFile[] = []
+  private _onDidRefresh: EventEmitter<void> = new EventEmitter<void>()
 
   constructor(
     private kernel: Kernel,
@@ -54,6 +55,21 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
     this.notebooks = []
     await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', this.allowUnnamed)
     this._onDidChangeTreeData.fire(undefined)
+  }
+
+  onDidRefresh(callback: VoidFunction): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this._onDidRefresh.event(() => {
+        callback()
+        this._onDidChangeTreeData.fire(undefined)
+        resolve()
+      })
+    })
+  }
+
+  async refreshTasks() {
+    this.notebooks = []
+    this._onDidRefresh.fire(undefined)
   }
 
   async excludeUnnamed() {
@@ -80,7 +96,6 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
   }
 
   getTreeItem(element: RunmeFile): TreeItem {
-    console.log(`Node contextValue: ${element.contextValue}`)
     return element
   }
 

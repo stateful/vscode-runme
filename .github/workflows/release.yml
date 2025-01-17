@@ -59,7 +59,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install xvfb
         run: sudo apt-get update -y && sudo apt-get install xvfb
@@ -192,12 +192,6 @@ jobs:
         uses: stateful/runme-action@v2
         with:
           workflows: activate-new-launcher
-        if: ${{ github.event.inputs.releaseChannel == 'edge' }}
-
-      - name: Activate reporter API
-        uses: stateful/runme-action@v2
-        with:
-          workflows: activate-reporter-api
         if: ${{ github.event.inputs.releaseChannel == 'edge' }}
 
       # Linux X86
