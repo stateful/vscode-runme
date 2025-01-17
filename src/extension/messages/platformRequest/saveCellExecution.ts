@@ -4,7 +4,7 @@ import { Uri, env, workspace, commands } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
-import { FetchResult, MutationOptions } from '@apollo/client'
+import { FetchResult } from '@apollo/client'
 
 import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
 import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
@@ -18,9 +18,11 @@ import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
   CreateCellExecutionMutation,
+  CreateCellExecutionMutationVariables,
   CreateExtensionCellOutputDocument,
   CreateExtensionCellOutputMutation,
   CreateNotebookInput,
+  MutationCreateExtensionCellOutputArgs,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/parser/tcp/types'
@@ -136,7 +138,7 @@ export default async function saveCellExecution(
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
       const mutation = {
         mutation: CreateExtensionCellOutputDocument,
-        variables: {
+        variables: <MutationCreateExtensionCellOutputArgs>{
           input: {
             extension: {
               autoSave: autoSaveIsOn,
@@ -188,7 +190,8 @@ export default async function saveCellExecution(
           },
         },
       }
-      const result = await graphClient.mutate(mutation as MutationOptions)
+
+      const result = await graphClient.mutate(mutation)
       data = result
     }
     // TODO: Remove the legacy createCellExecution mutation once the reporter is fully tested.
@@ -238,9 +241,9 @@ export default async function saveCellExecution(
       }
       const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
 
-      const result = await graphClient.mutate({
+      const mutation = {
         mutation: CreateCellExecutionDocument,
-        variables: {
+        variables: <CreateCellExecutionMutationVariables>{
           input: {
             stdout: terminalContents,
             stderr: Array.from([]), // stderr will become applicable for non-terminal
@@ -287,7 +290,9 @@ export default async function saveCellExecution(
             },
           },
         },
-      })
+      }
+
+      const result = await graphClient.mutate(mutation)
 
       data = result
     }
