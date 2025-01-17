@@ -110,13 +110,13 @@ export class RunmeExtension {
         workspace.registerFileSystemProvider('runmefs', runmeFs, {
           isReadonly: false,
         }),
-        commands.registerCommand('runme.attachWorkspace', (_) => {
+        commands.registerCommand('runme.addRemoteNotebooks', (_) => {
           workspace.updateWorkspaceFolders(0, 0, {
             uri: runmeFs.root,
             name: 'Workspace Notebooks',
           })
         }),
-        window.registerTreeDataProvider('runme.workspaceNotebooks', new CloudNotebooks()),
+        window.registerTreeDataProvider('runme.remoteNotebooks', new CloudNotebooks()),
       )
     }
 

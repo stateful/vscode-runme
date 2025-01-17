@@ -184,9 +184,9 @@
   "contributes": {
     "commands": [
       {
-        "command": "runme.attachWorkspace",
+        "command": "runme.addRemoteNotebooks",
         "category": "Runme",
-        "title": "Attach Workspace"
+        "title": "Add Cloud Notebooks into Workspace"
       },
       {
         "command": "runme.new",
@@ -1170,7 +1170,7 @@
     "views": {
       "explorer": [
         {
-          "id": "runme.workspaceNotebooks",
+          "id": "runme.remoteNotebooks",
           "type": "tree",
           "name": "Cloud Notebooks",
           "visibility": "visible",
