@@ -48,7 +48,7 @@ export interface IServer extends Disposable {
   transportType: ServerTransportType
 
   onTransportReady: Event<{ transport: GrpcTransport; address?: string }>
-  onConnectTransportReady: Event<ConnectTransport>
+  onConnectTransportReady: Event<{ transport: ConnectTransport; address?: string }>
   onClose: Event<{
     code: number | null
   }>
@@ -79,7 +79,9 @@ class KernelServer implements IServer {
   readonly #onTransportReady = this.register(
     new EventEmitter<{ transport: GrpcTransport; address?: string }>(),
   )
-  readonly #onConnectTransportReady = this.register(new EventEmitter<ConnectTransport>())
+  readonly #onConnectTransportReady = this.register(
+    new EventEmitter<{ transport: ConnectTransport; address?: string }>(),
+  )
 
   readonly transportType: ServerTransportType
   readonly onClose = this.#onClose.event
@@ -230,6 +232,7 @@ class KernelServer implements IServer {
           nodeOptions: {
             key: pems.privKeyPEM,
             cert: pems.certPEM,
+            rejectUnauthorized: false,
           },
         }
       } catch (e: any) {
@@ -441,7 +444,10 @@ class KernelServer implements IServer {
     await this.acceptsConnection()
 
     this.#onTransportReady.fire({ transport: await this.transport(), address: this.address() })
-    this.#onConnectTransportReady.fire(await this.connectTransport())
+    this.#onConnectTransportReady.fire({
+      transport: await this.connectTransport(),
+      address: this.address(),
+    })
   }
 
   private _port() {
