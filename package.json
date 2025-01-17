@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "RemoteNotebooks": {
+        "enabled": false,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "ReporterAPI": {
         "enabled": true,
         "conditions": {
@@ -174,6 +183,11 @@
   },
   "contributes": {
     "commands": [
+      {
+        "command": "runme.addRemoteNotebooks",
+        "category": "Runme",
+        "title": "Add Cloud Notebooks into Workspace"
+      },
       {
         "command": "runme.new",
         "title": "Runme Notebook"
@@ -1177,6 +1191,13 @@
     },
     "views": {
       "explorer": [
+        {
+          "id": "runme.remoteNotebooks",
+          "type": "tree",
+          "name": "Cloud Notebooks",
+          "visibility": "visible",
+          "when": "RemoteNotebooks == true"
+        },
         {
           "id": "runme.launcher",
           "type": "tree",

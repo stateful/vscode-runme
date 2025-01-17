@@ -76,7 +76,8 @@ export const workspace = {
       path: 'runme/workspace/src/RUNME.md',
     }
   ]),
-  applyEdit: vi.fn()
+  applyEdit: vi.fn(),
+  registerFileSystemProvider: vi.fn(),
 }
 
 export const terminal = {

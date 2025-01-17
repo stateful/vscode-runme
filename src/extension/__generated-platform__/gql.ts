@@ -18,6 +18,8 @@ const documents = {
     "mutation CreateCellExecution($input: CreateCellExecutionInput!) {\n  createCellExecution(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateCellExecutionDocument,
     "mutation CreateExtensionCellOutput($input: ReporterInput!) {\n  createExtensionCellOutput(input: $input) {\n    id\n    htmlUrl\n    exitCode\n    isSlackReady\n  }\n}": types.CreateExtensionCellOutputDocument,
     "mutation CreateEscalation($input: CreateEscalationInput!) {\n  createEscalation(input: $input) {\n    id\n    escalationUrl\n  }\n}": types.CreateEscalationDocument,
+    "query getAllWorkflows($fileName: String, $limit: Int, $offset: Int) {\n  workflows(fileName: $fileName, limit: $limit, offset: $offset) {\n    id\n    description\n    fileName\n    path\n    repository\n    rating {\n      id\n      rating\n      __typename\n    }\n    organizationId\n    totalRatings\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}": types.GetAllWorkflowsDocument,
+    "query getOneWorkflow($id: String!) {\n  workflow(id: $id) {\n    id\n    description\n    fileName\n    path\n    repository\n    data\n    organizationId\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}": types.GetOneWorkflowDocument,
     "query getUserEnvironments {\n  userEnvironments {\n    id\n    name\n    description\n  }\n}": types.GetUserEnvironmentsDocument,
     "mutation TrackRunmeEvent($input: RunmeEventInput!) {\n  trackRunmeEvent(input: $input) {\n    status\n  }\n}": types.TrackRunmeEventDocument,
     "mutation UnArchiveCellOutput($id: String!) {\n  unArchiveCellOutput(id: $id) {\n    id\n  }\n}": types.UnArchiveCellOutputDocument,
@@ -54,6 +56,14 @@ export function graphql(source: "mutation CreateExtensionCellOutput($input: Repo
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "mutation CreateEscalation($input: CreateEscalationInput!) {\n  createEscalation(input: $input) {\n    id\n    escalationUrl\n  }\n}"): (typeof documents)["mutation CreateEscalation($input: CreateEscalationInput!) {\n  createEscalation(input: $input) {\n    id\n    escalationUrl\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query getAllWorkflows($fileName: String, $limit: Int, $offset: Int) {\n  workflows(fileName: $fileName, limit: $limit, offset: $offset) {\n    id\n    description\n    fileName\n    path\n    repository\n    rating {\n      id\n      rating\n      __typename\n    }\n    organizationId\n    totalRatings\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}"): (typeof documents)["query getAllWorkflows($fileName: String, $limit: Int, $offset: Int) {\n  workflows(fileName: $fileName, limit: $limit, offset: $offset) {\n    id\n    description\n    fileName\n    path\n    repository\n    rating {\n      id\n      rating\n      __typename\n    }\n    organizationId\n    totalRatings\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query getOneWorkflow($id: String!) {\n  workflow(id: $id) {\n    id\n    description\n    fileName\n    path\n    repository\n    data\n    organizationId\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}"): (typeof documents)["query getOneWorkflow($id: String!) {\n  workflow(id: $id) {\n    id\n    description\n    fileName\n    path\n    repository\n    data\n    organizationId\n    bookmark {\n      id\n      __typename\n    }\n    tags {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
