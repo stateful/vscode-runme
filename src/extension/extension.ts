@@ -160,6 +160,12 @@ export class RunmeExtension {
           treeViewer.openCell.bind(treeViewer),
         )
       }
+      if (treeViewer.refreshTasks) {
+        RunmeExtension.registerCommand(
+          'runme.refreshTasks',
+          treeViewer.refreshTasks.bind(treeViewer),
+        )
+      }
     } else {
       treeViewer = new RunmeLauncherProvider(getDefaultWorkspace())
     }

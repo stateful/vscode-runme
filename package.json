@@ -259,6 +259,13 @@
         "title": "Dispose terminal session to stop background task."
       },
       {
+        "command": "runme.refreshTasks",
+        "category": "Runme",
+        "title": "Refresh tasks",
+        "shortTitle": "Refresh",
+        "icon": "$(extensions-refresh)"
+      },
+      {
         "command": "runme.collapseTreeView",
         "category": "Runme",
         "title": "Collapse all items",
@@ -497,6 +504,10 @@
           "when": "false"
         },
         {
+          "command": "runme.refreshTasks",
+          "when": "false"
+        },
+        {
           "command": "runme.expandTreeView",
           "when": "false"
         },
@@ -561,24 +572,29 @@
       ],
       "view/title": [
         {
+          "command": "runme.refreshTasks",
+          "when": "view == runme.launcher",
+          "group": "navigation@0"
+        },
+        {
           "command": "runme.collapseTreeView",
           "when": "view == runme.launcher && runme.launcher.isExpanded",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "runme.expandTreeView",
           "when": "view == runme.launcher && !runme.launcher.isExpanded",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "runme.tasksIncludeUnnamed",
           "when": "view == runme.launcher && !runme.launcher.includeUnnamed",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "runme.tasksExcludeUnnamed",
           "when": "view == runme.launcher && runme.launcher.includeUnnamed",
-          "group": "navigation"
+          "group": "navigation@1"
         }
       ],
       "explorer/context": [

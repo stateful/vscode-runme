@@ -23,9 +23,11 @@ import {
   from,
   map,
   firstValueFrom,
-  lastValueFrom,
   isObservable,
   toArray,
+  mergeMap,
+  delayWhen,
+  finalize,
 } from 'rxjs'
 
 import getLogger from '../logger'
@@ -103,70 +105,107 @@ export class RunmeTaskProvider implements TaskProvider {
       })
     })
 
-    this.tasks = lastValueFrom(this.loadProjectTasks())
+    // returns this.tasks to conform to non-null
+    this.tasks = this.refreshTasks()
+
+    treeView.onDidRefresh(() => {
+      this.refreshTasks()
+    })
   }
 
   private async initProjectClient(transport?: GrpcTransport) {
     this.client = initProjectClient(transport ?? (await this.server.transport()))
   }
 
-  protected loadProjectTasks(): Observable<ProjectTask[]> {
+  public refreshTasks(): Promise<ProjectTask[]> {
+    if (!workspace.workspaceFolders?.length) {
+      return Promise.resolve([])
+    }
+
+    this.tasks = firstValueFrom(this.loadProjectTasks())
+
+    return this.tasks
+  }
+
+  private loadProjectTasks(): Observable<ProjectTask[]> {
     if (!workspace.workspaceFolders?.length) {
       return of([])
     }
 
-    const separator = workspace.workspaceFolders[0].uri.fsPath.indexOf('/') > -1 ? '/' : '\\'
-
-    const requests = (workspace.workspaceFolders ?? []).map((folder) => {
-      return <LoadRequest>{
-        kind: {
-          oneofKind: 'directory',
-          directory: {
-            path: workspace.asRelativePath(folder.uri),
-            skipGitignore: false,
-            ignoreFilePatterns: [],
-            skipRepoLookupUpward: false,
-          },
-        },
-        identity: RunmeIdentity.ALL,
-      }
-    })
-
-    log.info(`Walking ${requests.length} directories/repos...`)
-
-    const task$ = new Observable<ProjectTask>((observer) => {
-      this.ready.then(() =>
-        Promise.all(
-          requests.map((request) => {
-            const session: LoadStream = this.client!.load(request)
-            session.responses.onMessage((msg) => {
-              if (msg.data.oneofKind !== 'foundTask') {
-                return
-              }
-              observer.next(msg.data.foundTask)
-            })
-            return session
+    const folders$ = of(workspace.workspaceFolders).pipe(
+      mergeMap((folders) => {
+        log.info(`Walking ${folders.length} directories/repos...`)
+        return from(folders).pipe(
+          map((folder) => {
+            return <LoadRequest>{
+              kind: {
+                oneofKind: 'directory',
+                directory: {
+                  path: workspace.asRelativePath(folder.uri),
+                  skipGitignore: false,
+                  ignoreFilePatterns: [],
+                  skipRepoLookupUpward: false,
+                },
+              },
+              identity: RunmeIdentity.ALL,
+            }
           }),
-        ).then(() => {
-          log.info('Finished walk.')
-          observer.complete()
-        }),
-      )
-    })
+        )
+      }),
+    )
 
-    const dirProx = (pt: ProjectTask) => {
-      const { relativePath, outside } = asWorkspaceRelativePath(pt.documentPath)
+    const task$ = folders$.pipe(
+      delayWhen(() => from(this.ready)),
+      mergeMap((folder) => {
+        return new Observable<ProjectTask>((observer) => {
+          const session: LoadStream = this.client!.load(folder)
+          session.responses.onMessage((msg) => {
+            if (msg.data.oneofKind !== 'foundTask') {
+              return
+            }
+            observer.next(msg.data.foundTask)
+          })
+          session.responses.onError((err) => observer.error(err))
+          session.responses.onComplete(() => observer.complete())
+        }).pipe(
+          finalize(() => {
+            if (folder.kind.oneofKind !== 'directory') {
+              return
+            }
+            log.info(`Finished walk ${folder.kind.directory.path}.`)
+          }),
+        )
+      }),
+    )
+
+    const dirProx = RunmeTaskProvider.directoryPromximityComp()
+    return task$.pipe(
+      toArray(),
+      map((tasks) =>
+        tasks.sort((a, b) => {
+          const delta = dirProx(a.documentPath) - dirProx(b.documentPath)
+          if (delta === 0) {
+            return a.documentPath.localeCompare(b.documentPath)
+          }
+          return delta
+        }),
+      ),
+    )
+  }
+
+  public static directoryPromximityComp = () => {
+    let separator = '/'
+    if (!!workspace.workspaceFolders?.length) {
+      separator = workspace.workspaceFolders[0].uri.fsPath.indexOf('/') > -1 ? '/' : '\\'
+    }
+    return function (path: string) {
+      const { relativePath, outside } = asWorkspaceRelativePath(path)
       const len = relativePath.split(separator).length
       if (outside) {
         return 100 * len
       }
       return len
     }
-
-    return task$.pipe(
-      toArray(),
-      map((tasks) => tasks.sort((a, b) => dirProx(a) - dirProx(b))),
-    )
   }
 
   public async provideTasks(token: CancellationToken): Promise<Task[]> {
