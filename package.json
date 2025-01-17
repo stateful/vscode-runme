@@ -1,6 +1,6 @@
 {
   "name": "runme",
-  "version": "3.10.10",
+  "version": "3.10.11",
   "publisher": "stateful",
   "displayName": "Runme Notebooks for DevOps",
   "description": "Notebooks for DevOps written in Markdown. Runnable, configurable commands/code and embedded terminals. Integrated with cloud consoles, containers and pipelines.",
@@ -60,7 +60,7 @@
   "runme": {
     "features": {
       "ReporterAPI": {
-        "enabled": false,
+        "enabled": true,
         "conditions": {
           "enabledForExtensions": {
             "stateful.platform": true,
@@ -304,9 +304,15 @@
       },
       {
         "command": "runme.authenticateWithGitHub",
-        "title": "Authenticate Runme with GitHub",
+        "title": "Sign in with GitHub",
         "category": "Runme",
-        "description": "Give access to Runme to interact with GitHub API"
+        "description": "Give access to Runme to interact with GitHub's APIs"
+      },
+      {
+        "command": "runme.authenticateWithStateful",
+        "title": "Sign in with Stateful",
+        "category": "Runme",
+        "description": "Give access to Runme to interact with Stateful Cloud"
       },
       {
         "command": "runme.runCategory",
@@ -1319,7 +1325,7 @@
     "@graphql-codegen/typescript": "4.1.2",
     "@octokit/rest": "^19.0.13",
     "@types/jsonwebtoken": "^9.0.7",
-    "@types/node": "^20.17.11",
+    "@types/node": "^20.17.13",
     "@types/node-fetch": "^2.6.12",
     "@types/semver": "^7.5.8",
     "@types/uuid": "^10.0.0",
@@ -1329,15 +1335,15 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vitest/coverage-v8": "^2.1.8",
-    "@vscode/vsce": "^2.32.0",
+    "@vscode/vsce": "^3.2.1",
     "@wdio/cli": "^8.41.0",
     "@wdio/local-runner": "^8.41.0",
     "@wdio/mocha-framework": "^8.41.0",
     "@wdio/spec-reporter": "^8.41.0",
-    "chromedriver": "^131.0.4",
+    "chromedriver": "^131.0.5",
     "comment-json": "^4.2.5",
     "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-prettier": "^10.0.1",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-unicorn": "^56.0.1",
@@ -1350,8 +1356,8 @@
     "prettier": "^3.4.2",
     "runme": "^3.1.0",
     "semver": "^7.6.3",
-    "tar-fs": "^3.0.4",
-    "ts-loader": "^9.4.4",
+    "tar-fs": "^3.0.8",
+    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.5.4",
     "unzipper": "^0.12.3",
@@ -1364,9 +1370,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.12.4",
-    "@aws-sdk/client-ec2": "^3.716.0",
-    "@aws-sdk/client-eks": "^3.718.0",
-    "@aws-sdk/credential-providers": "^3.716.0",
+    "@aws-sdk/client-ec2": "^3.727.0",
+    "@aws-sdk/client-eks": "^3.726.1",
+    "@aws-sdk/credential-providers": "^3.726.1",
     "@buf/grpc_grpc.community_timostamm-protobuf-ts": "^2.9.4-20240904201038-e0425cfebb28.4",
     "@buf/jlewi_foyle.bufbuild_es": "^1.10.0-20241018224331-ac296bc95724.1",
     "@buf/jlewi_foyle.connectrpc_es": "^1.5.0-20241018224331-ac296bc95724.1",
@@ -1402,14 +1408,14 @@
     "jsonc-parser": "^3.2.1",
     "jsonwebtoken": "^9.0.2",
     "lit": "^3.2.1",
-    "octokit": "^4.0.2",
+    "octokit": "^4.1.0",
     "simple-git": "^3.27.0",
     "strip-ansi": "^7.1.0",
     "tangle": "^4.0.0",
     "ulidx": "^2.4.1",
-    "uuid": "^11.0.3",
+    "uuid": "^11.0.5",
     "vscode-telemetry": "^2.1.0",
-    "yaml": "^2.6.1",
+    "yaml": "^2.7.0",
     "zod": "^3.24.1"
   }
 }
