@@ -221,41 +221,24 @@ class KernelServer implements IServer {
   }
 
   async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
-    const addTlsConfigIfEnabled = async () => {
-      try {
-        if (!getTLSEnabled()) {
-          return {}
-        }
-        const pems = await KernelServer.getTLS(this.getTLSDir())
+    const s = getTLSEnabled() ? 's' : ''
+    // this.address() might be a "unix://socket" so we can't rely on it for baseUrl
+    let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
+      baseUrl: `http${s}://${SERVER_ADDRESS}:${this.#port}`,
+      httpVersion: '2',
+    }
 
-        return {
-          nodeOptions: {
-            key: pems.privKeyPEM,
-            cert: pems.certPEM,
-            rejectUnauthorized: false,
-          },
-        }
-      } catch (e: any) {
-        throw new Error(`Failed to read TLS files: ${e instanceof Error ? e.message : String(e)}`)
+    if (getTLSEnabled()) {
+      const pems = await KernelServer.getTLS(this.getTLSDir())
+      transportOptions.nodeOptions = {
+        key: pems.privKeyPEM,
+        cert: pems.certPEM,
+        ca: pems.certPEM,
       }
     }
 
-    const s = getTLSEnabled() ? 's' : ''
-    // this.address() might be a "unix://socket" so we can't rely on it for part of a http address
-    const serverUrl = `http${s}://${SERVER_ADDRESS}:${this.#port}`
-    const tlsConfig = await addTlsConfigIfEnabled()
-    let transportOptions = {
-      httpVersion: '2',
-      baseUrl: serverUrl,
-      ...tlsConfig,
-    }
-
-    if (protocol === 'grpc') {
-      this.#connectTransport = createGrpcTransport(<GrpcTransportOptions>transportOptions)
-    } else {
-      this.#connectTransport = createConnectTransport(<ConnectTransportOptions>transportOptions)
-    }
-
+    const createTransport = protocol === 'grpc' ? createGrpcTransport : createConnectTransport
+    this.#connectTransport = createTransport(transportOptions)
     return this.#connectTransport
   }
 
