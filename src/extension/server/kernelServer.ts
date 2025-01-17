@@ -230,7 +230,6 @@ class KernelServer implements IServer {
           nodeOptions: {
             key: pems.privKeyPEM,
             cert: pems.certPEM,
-            rejectUnauthorized: false,
           },
         }
       } catch (e: any) {
