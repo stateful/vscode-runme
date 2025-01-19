@@ -88,6 +88,8 @@ export interface RunmeTreeProvider extends TreeDataProvider<RunmeFile>, Disposab
   openNotebook?(runmeFile: RunmeFile): Promise<void>
   openCell?(runmeFile: RunmeFile): Promise<void>
   runCell?(runmeFile: RunmeFile): Promise<void>
+  refreshTasks?(): Promise<void>
+  onDidRefresh(callback: VoidFunction): Promise<void>
 }
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
@@ -97,6 +99,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   private filesTree: Map<string, TreeFile> = new Map()
   private defaultItemState: TreeItemCollapsibleState = TreeItemCollapsibleState.Collapsed
+  private _onDidRefresh: EventEmitter<void> = new EventEmitter<void>()
 
   constructor(private workspaceRoot?: string | undefined) {
     const watcher = workspace.createFileSystemWatcher(GLOB_PATTERN, false, true, false)
@@ -104,6 +107,12 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
       watcher.onDidCreate((file) => this.#onFileChange(file, true)),
       watcher.onDidDelete((file) => this.#onFileChange(file)),
     )
+  }
+
+  onDidRefresh(_callback: VoidFunction): Promise<void> {
+    return new Promise<void>((resolve) => {
+      resolve()
+    })
   }
 
   public get includeAllTasks(): boolean {

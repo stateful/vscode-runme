@@ -28,11 +28,6 @@ npm pkg set "contributes.configuration[0].properties[runme.experiments.smartEnvS
 git diff package.json
 ```
 
-```sh {"id":"01JEF03B2KD4N7N4T897VHHD45","interactive":"false","name":"activate-new-launcher"}
-npm pkg set "runme.features[NewTreeProvider].enabled=true" --json
-git diff package.json
-```
-
 ### Reset
 
 ```sh {"excludeFromRunAll":"true","id":"01J7EZQSG262FMGJAYG1W6Z3EQ"}

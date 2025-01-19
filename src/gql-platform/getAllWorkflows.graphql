@@ -1,0 +1,26 @@
+query getAllWorkflows($fileName: String, $limit: Int, $offset: Int) {
+  workflows(fileName: $fileName, limit: $limit, offset: $offset) {
+    id
+    description
+    fileName
+    path
+    repository
+    rating {
+        id
+      rating
+      __typename
+    }
+    organizationId
+    totalRatings
+    bookmark {
+        id
+      __typename
+    }
+    tags {
+        id
+      name
+      __typename
+    }
+    __typename
+  }
+}

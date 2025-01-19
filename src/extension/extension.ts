@@ -90,6 +90,8 @@ import ContextState from './contextState'
 import { RunmeIdentity } from './grpc/parser/tcp/types'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
+import { CloudNotebooks } from './provider/cloudNotebooks'
+import RunmeFS from './provider/runmeFs'
 
 export class RunmeExtension {
   protected serializer?: SerializerBase
@@ -99,6 +101,24 @@ export class RunmeExtension {
     const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
+
+    await ContextState.addKey(FeatureName.RemoteNotebooks, false)
+    if (features.isOnInContextState(FeatureName.RemoteNotebooks)) {
+      await ContextState.addKey(FeatureName.RemoteNotebooks, true)
+      const runmeFs = new RunmeFS()
+      context.subscriptions.push(
+        workspace.registerFileSystemProvider('runmefs', runmeFs, {
+          isReadonly: false,
+        }),
+        commands.registerCommand('runme.addRemoteNotebooks', (_) => {
+          workspace.updateWorkspaceFolders(0, 0, {
+            uri: runmeFs.root,
+            name: 'Workspace Notebooks',
+          })
+        }),
+        window.registerTreeDataProvider('runme.remoteNotebooks', new CloudNotebooks()),
+      )
+    }
 
     const server = new KernelServer(
       context.extensionUri,
@@ -132,7 +152,7 @@ export class RunmeExtension {
 
     let treeViewer: RunmeTreeProvider
 
-    if (kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
+    if (true || kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
       await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
       treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
@@ -158,6 +178,12 @@ export class RunmeExtension {
         RunmeExtension.registerCommand(
           'runme.openSelectedCell',
           treeViewer.openCell.bind(treeViewer),
+        )
+      }
+      if (treeViewer.refreshTasks) {
+        RunmeExtension.registerCommand(
+          'runme.refreshTasks',
+          treeViewer.refreshTasks.bind(treeViewer),
         )
       }
     } else {
@@ -308,6 +334,9 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.welcome', welcome),
       RunmeExtension.registerCommand('runme.try', () => tryIt(context)),
       RunmeExtension.registerCommand('runme.openRunmeFile', treeViewer.openFile.bind(treeViewer)),
+      RunmeExtension.registerCommand('runme.openRemoteRunmeFile', (uri: Uri) => {
+        return commands.executeCommand('vscode.openWith', uri, Kernel.type)
+      }),
       RunmeExtension.registerCommand('runme.keybinding.noop', () => {}),
       RunmeExtension.registerCommand('runme.file.openInRunme', openFileInRunme),
       RunmeExtension.registerCommand('runme.runWithPrompts', (cell) =>
@@ -319,6 +348,7 @@ export class RunmeExtension {
        * tree viewer items
        */
       window.registerTreeDataProvider('runme.launcher', treeViewer),
+
       RunmeExtension.registerCommand(
         'runme.collapseTreeView',
         treeViewer.collapseAll.bind(treeViewer),
@@ -420,11 +450,9 @@ export class RunmeExtension {
           )
         },
       ),
-
       RunmeExtension.registerCommand('runme.openCloudPanel', () =>
         commands.executeCommand('workbench.view.extension.runme'),
       ),
-
       // Register a command to generate completions using foyle
       RunmeExtension.registerCommand(
         'runme.aiGenerate',
