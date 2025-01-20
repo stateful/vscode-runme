@@ -26,7 +26,7 @@ import {
 } from '../grpc/runner/types'
 import { ExecuteDuplex } from '../grpc/runner/types'
 import { progconf } from '../grpc/runner/v2'
-import { IRunnerServiceClient, RpcError } from '../grpc/client'
+import { IRunnerServiceClient, RpcError } from '../grpc/tcpClient'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/kernelServer'
 import { convertEnvList } from '../utils'

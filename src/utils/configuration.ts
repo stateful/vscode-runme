@@ -5,7 +5,7 @@ import { ExtensionContext, NotebookCell, Uri, workspace } from 'vscode'
 import { z } from 'zod'
 
 import { RUNME_FRONTMATTER_PARSED, SERVER_PORT } from '../constants'
-import { RunmeIdentity } from '../extension/grpc/serializerTypes'
+import { RunmeIdentity } from '../extension/grpc/parser/tcp/types'
 import { getAnnotations, isWindows } from '../extension/utils'
 import { NotebookAutoSaveSetting, Serializer } from '../types'
 

@@ -24,7 +24,7 @@ import { type BehaviorSubject } from 'rxjs'
 import { OutputType, ClientMessages, RUNME_FRONTMATTER_PARSED } from './constants'
 import { SafeCellAnnotationsSchema, SafeNotebookAnnotationsSchema } from './schema'
 import type { IRunnerProgramSession } from './extension/runner'
-import type * as Grpc from './extension/grpc/serializerTypes'
+import type * as Grpc from './extension/grpc/parser/tcp/types'
 import {
   IWorkflowRun,
   RepositoryEnvironments,

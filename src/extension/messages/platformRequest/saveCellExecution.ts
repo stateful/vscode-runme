@@ -18,12 +18,14 @@ import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
   CreateCellExecutionMutation,
+  CreateCellExecutionMutationVariables,
   CreateExtensionCellOutputDocument,
   CreateExtensionCellOutputMutation,
   CreateNotebookInput,
+  MutationCreateExtensionCellOutputArgs,
   ReporterFrontmatterInput,
 } from '../../__generated-platform__/graphql'
-import { Frontmatter } from '../../grpc/serializerTypes'
+import { Frontmatter } from '../../grpc/parser/tcp/types'
 import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'
@@ -136,7 +138,7 @@ export default async function saveCellExecution(
       // TODO: Implement the reporter to normalize the data into a valid Platform api payload
       const mutation = {
         mutation: CreateExtensionCellOutputDocument,
-        variables: {
+        variables: <MutationCreateExtensionCellOutputArgs>{
           input: {
             extension: {
               autoSave: autoSaveIsOn,
@@ -188,6 +190,7 @@ export default async function saveCellExecution(
           },
         },
       }
+
       const result = await graphClient.mutate(mutation)
       data = result
     }
@@ -238,9 +241,9 @@ export default async function saveCellExecution(
       }
       const sessionId = kernel.getRunnerEnvironment()?.getSessionId()
 
-      const result = await graphClient.mutate({
+      const mutation = {
         mutation: CreateCellExecutionDocument,
-        variables: {
+        variables: <CreateCellExecutionMutationVariables>{
           input: {
             stdout: terminalContents,
             stderr: Array.from([]), // stderr will become applicable for non-terminal
@@ -287,7 +290,9 @@ export default async function saveCellExecution(
             },
           },
         },
-      })
+      }
+
+      const result = await graphClient.mutate(mutation)
 
       data = result
     }

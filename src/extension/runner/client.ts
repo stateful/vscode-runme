@@ -20,7 +20,7 @@ import {
   ResolveProgramResponse,
 } from '../grpc/runner/types'
 import { UpdateSessionRequest, UpdateSessionResponse } from '../grpc/runner/v2'
-import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/client'
+import { IRunnerServiceClient, getRunnerServiceClient } from '../grpc/tcpClient'
 import { IServer } from '../server/kernelServer'
 
 import { IRunnerReady } from '.'

@@ -87,7 +87,7 @@ import {
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
 import './wasm/wasm_exec.js'
-import { RpcError, TransformRequest, TransformResponse } from './grpc/client'
+import { RpcError, TransformRequest, TransformResponse } from './grpc/tcpClient'
 import { IRunner, IRunnerReady, RunProgramOptions } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
 import { IKernelRunnerOptions, executeRunner } from './executors/runner'
@@ -103,7 +103,7 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import PanelManager from './panels/panelManager'
-import { GrpcSerializer, SerializerBase } from './serializer'
+import { GrpcSerializer } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
@@ -150,7 +150,7 @@ export class Kernel implements Disposable {
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
   protected panelManager: PanelManager
-  protected serializer?: SerializerBase
+  protected serializer?: GrpcSerializer
   protected reporter?: GrpcReporter
   protected featuresState$?: FeatureObserver
 

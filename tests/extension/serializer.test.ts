@@ -8,9 +8,9 @@ import {
 } from 'vscode'
 import { expect, vi, it, describe, beforeEach } from 'vitest'
 import { isValid } from 'ulidx'
+import { RunmeIdentity, Notebook } from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
 
 import { GrpcSerializer, SerializerBase, WasmSerializer } from '../../src/extension/serializer'
-import { RunmeIdentity } from '../../src/extension/grpc/serializerTypes'
 import type { Kernel } from '../../src/extension/kernel'
 import { EventEmitter, Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
@@ -22,7 +22,7 @@ import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 globalThis.Go = vi.fn()
 globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
 
-vi.mock('../../src/extension/grpc/client', () => ({
+vi.mock('../../src/extension/grpc/tcpClient', () => ({
   ParserServiceClient: vi.fn(),
 }))
 
@@ -68,6 +68,7 @@ vi.mock('../../src/extension/languages', () => ({
 
 vi.mock('../../src/extension/utils', () => ({
   initWasm: vi.fn(),
+  isWindows: vi.fn().mockReturnValue(false),
 }))
 
 vi.mock('../../src/extension/features')
@@ -255,6 +256,7 @@ describe('GrpcSerializer', () => {
 
   const Server = vi.fn().mockImplementation(() => ({
     onTransportReady: vi.fn(),
+    onConnectTransportReady: vi.fn(),
     ready: vi.fn().mockResolvedValue(null),
   }))
 
@@ -383,7 +385,7 @@ describe('GrpcSerializer', () => {
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       serializer.client = {
         deserialize: vi.fn().mockResolvedValue({
-          response: { notebook: { cells: descells, metadata } },
+          notebook: { cells: descells, metadata },
         }),
       }
       vi.mocked(workspace.applyEdit).mockResolvedValue(true)
@@ -478,11 +480,11 @@ describe('GrpcSerializer', () => {
 
       const summary = notebookData.cells[1].executionSummary
       expect(summary?.success).toBeDefined()
-      expect(summary?.success?.value).toStrictEqual(false)
+      expect(summary?.success).toStrictEqual(false)
 
       expect(summary?.timing).toBeDefined()
-      expect(summary?.timing?.startTime?.value).toStrictEqual('1701444499517')
-      expect(summary?.timing?.endTime?.value).toStrictEqual('1701444501696')
+      expect(summary?.timing?.startTime).toStrictEqual(1701444499517n)
+      expect(summary?.timing?.endTime).toStrictEqual(1701444501696n)
     })
   })
 
@@ -503,9 +505,9 @@ describe('GrpcSerializer', () => {
       const { processInfo } = cells.outputs[0]
       expect(processInfo?.exitReason).toBeDefined()
       expect(processInfo?.exitReason?.type).toStrictEqual('exit')
-      expect(processInfo?.exitReason?.code?.value).toStrictEqual(16)
+      expect(processInfo?.exitReason?.code).toStrictEqual(16)
       expect(processInfo?.pid).toBeDefined()
-      expect(processInfo?.pid?.value).toStrictEqual('98354')
+      expect(processInfo?.pid).toStrictEqual(98354n)
     })
   })
 
@@ -640,7 +642,7 @@ describe('GrpcSerializer', () => {
         const fixture = deepCopyFixture()
         const writeableSer: any = new GrpcSerializer(context, new Server(), new Kernel())
         writeableSer.client = {
-          serialize: vi.fn().mockResolvedValue({ response: { result: fakeCachedBytes } }),
+          serialize: vi.fn().mockResolvedValue({ result: fakeCachedBytes }),
         }
         writeableSer.cacheDocUriMapping.set(fixture.metadata['runme.dev/cacheId'], fakeSrcDocUri)
         ContextState.getKey = vi.fn().mockImplementation(() => true)
@@ -688,20 +690,18 @@ describe('GrpcSerializer', () => {
       const context: any = {
         extensionUri: { fsPath: '/foo/bar' },
       }
-      const fixture = {
+      const fixture = new Notebook({
         cells: [],
         metadata: {
           'runme.dev/finalLineBreaks': '1',
           'runme.dev/frontmatter':
             '---\nrunme:\n  id: 01HF7B0KJPF469EG9ZWDNKKACQ\n  version: v2.0\n---',
         },
-      }
+      })
 
       const serialize = vi.fn().mockImplementation(() =>
         Promise.resolve({
-          response: {
-            result: new Uint8Array([4, 3, 2, 1]),
-          },
+          result: new Uint8Array([4, 3, 2, 1]),
         }),
       )
       const ser = new GrpcSerializer(context, new Server(), new Kernel())

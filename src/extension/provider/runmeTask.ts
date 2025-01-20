@@ -39,9 +39,9 @@ import { IRunnerEnvironment } from '../runner/environment'
 import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
 import { Kernel } from '../kernel'
 import KernelServer from '../server/kernelServer'
-import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/client'
+import { ProjectServiceClient, initProjectClient, type ReadyPromise } from '../grpc/tcpClient'
 import { LoadEventFoundTask, LoadRequest, LoadResponse } from '../grpc/projectTypes'
-import { RunmeIdentity } from '../grpc/serializerTypes'
+import { RunmeIdentity } from '../grpc/parser/tcp/types'
 import { resolveRunProgramExecution } from '../executors/runner'
 import {
   CommandMode,

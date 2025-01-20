@@ -21,7 +21,14 @@ import {
   getTLSEnabled,
 } from '../../utils/configuration'
 import { EnvProps, isPortAvailable, isTelemetryEnabled } from '../utils'
-import { HealthClient } from '../grpc/client'
+import { HealthClient } from '../grpc/tcpClient'
+import {
+  ConnectTransport,
+  GrpcTransportOptions,
+  ConnectTransportOptions,
+  createGrpcTransport,
+  createConnectTransport,
+} from '../grpc/parser/h2/client'
 
 import KernelServerError from './kernelServerError'
 
@@ -41,6 +48,7 @@ export interface IServer extends Disposable {
   transportType: ServerTransportType
 
   onTransportReady: Event<{ transport: GrpcTransport; address?: string }>
+  onConnectTransportReady: Event<{ transport: ConnectTransport; address?: string }>
   onClose: Event<{
     code: number | null
   }>
@@ -48,6 +56,7 @@ export interface IServer extends Disposable {
   launch(): Promise<string>
   address(): string
   transport(): Promise<GrpcTransport>
+  connectTransport(): Promise<ConnectTransport>
 }
 
 class KernelServer implements IServer {
@@ -62,6 +71,7 @@ class KernelServer implements IServer {
   #acceptsInterval: number
   #disposables: Disposable[] = []
   #transport?: GrpcTransport
+  #connectTransport?: ConnectTransport
   #serverDisposables: Disposable[] = []
   #forceExternalServer: boolean
 
@@ -69,10 +79,14 @@ class KernelServer implements IServer {
   readonly #onTransportReady = this.register(
     new EventEmitter<{ transport: GrpcTransport; address?: string }>(),
   )
+  readonly #onConnectTransportReady = this.register(
+    new EventEmitter<{ transport: ConnectTransport; address?: string }>(),
+  )
 
   readonly transportType: ServerTransportType
   readonly onClose = this.#onClose.event
   readonly onTransportReady = this.#onTransportReady.event
+  readonly onConnectTransportReady = this.#onConnectTransportReady.event
 
   static readonly transportTypeDefault: ServerTransportType = 'TCP'
 
@@ -198,16 +212,34 @@ class KernelServer implements IServer {
   }
 
   async transport() {
-    if (this.#transport) {
-      return this.#transport
-    }
-
     this.#transport = new GrpcTransport({
       host: this.address(),
       channelCredentials: await this.channelCredentials(),
     })
 
     return this.#transport
+  }
+
+  async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
+    const s = getTLSEnabled() ? 's' : ''
+    // this.address() might be a "unix://socket" so we can't rely on it for baseUrl
+    let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
+      baseUrl: `http${s}://${SERVER_ADDRESS}:${this.#port}`,
+      httpVersion: '2',
+    }
+
+    if (getTLSEnabled()) {
+      const pems = await KernelServer.getTLS(this.getTLSDir())
+      transportOptions.nodeOptions = {
+        key: pems.privKeyPEM,
+        cert: pems.certPEM,
+        ca: pems.certPEM,
+      }
+    }
+
+    const createTransport = protocol === 'grpc' ? createGrpcTransport : createConnectTransport
+    this.#connectTransport = createTransport(transportOptions)
+    return this.#connectTransport
   }
 
   protected async start(): Promise<string> {
@@ -395,6 +427,10 @@ class KernelServer implements IServer {
     await this.acceptsConnection()
 
     this.#onTransportReady.fire({ transport: await this.transport(), address: this.address() })
+    this.#onConnectTransportReady.fire({
+      transport: await this.connectTransport(),
+      address: this.address(),
+    })
   }
 
   private _port() {

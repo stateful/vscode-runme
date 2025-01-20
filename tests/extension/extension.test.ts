@@ -29,7 +29,7 @@ vi.mock('../../src/extension/panels/panel', () => {
   return { default: Panel }
 })
 
-vi.mock('../../src/extension/grpc/client', () => {
+vi.mock('../../src/extension/grpc/tcpClient', () => {
   class MockedParserServiceClient {
     deserialize = vi.fn(() => {
       return { status: { code: 'OK' } }

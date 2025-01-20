@@ -4,10 +4,10 @@ import { StreamGenerateRequest_Trigger } from '@buf/jlewi_foyle.bufbuild_es/foyl
 
 import getLogger from '../logger'
 import { RUNME_CELL_ID } from '../constants'
+import * as protos from '../grpc/parser/protos'
 
 import * as converters from './converters'
 import * as stream from './stream'
-import * as protos from './protos'
 import { SessionManager } from './sessions'
 import { getEventReporter } from './events'
 

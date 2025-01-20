@@ -35,7 +35,7 @@ import { CellAnnotations } from '../../src/types'
 import { isInteractiveTerminalDefault } from '../../src/utils/configuration'
 
 vi.mock('simple-git')
-vi.mock('../../src/extension/grpc/client', () => ({}))
+vi.mock('../../src/extension/grpc/tcpClient', () => ({}))
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   ResolveProgramRequest_Mode: vi.fn(),
 }))
