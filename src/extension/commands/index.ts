@@ -603,7 +603,6 @@ export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBas
       return
     }
 
-    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
     const { notebookUri } = e.notebookEditor
     const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
 
@@ -613,6 +612,7 @@ export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBas
       await commands.executeCommand('workbench.action.files.save')
     }
 
+    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
     await serializer.saveNotebookOutputs(notebookUri)
     await openFileAsRunmeNotebook(outputFilePath)
   }

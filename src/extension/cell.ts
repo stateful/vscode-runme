@@ -584,10 +584,12 @@ export class NotebookCellOutputManager {
         // mark document as dirty instead (prompt user to hit save) to avoid data-loss
         const revision = this.cell.metadata[RUNME_TRANSIENT_REVISION] ?? 1
 
-        const notebookEdits = NotebookEdit.updateCellMetadata(this.cell.index, {
+        const metadata = {
           ...(this.cell.metadata || {}),
           [RUNME_TRANSIENT_REVISION]: revision + 1,
-        } as Serializer.Metadata)
+        } as Serializer.Metadata
+
+        const notebookEdits = NotebookEdit.updateCellMetadata(this.cell.index, metadata)
 
         const edit = new WorkspaceEdit()
         edit.set(this.cell.notebook.uri, [notebookEdits])

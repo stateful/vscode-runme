@@ -88,6 +88,11 @@ export class SignedIn implements Disposable {
       return
     }
 
+    if (!cellRunmeId) {
+      log.warn('cell runme ID not found')
+      return
+    }
+
     if (!editor) {
       log.warn('no active notebook editor')
       return
