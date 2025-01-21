@@ -481,8 +481,8 @@ export class GrpcSerializer extends SerializerBase {
   protected serverUrl!: string
 
   // todo(sebastian): naive cache for now, consider use lifecycle events for gc
-  protected readonly plainCache = new Map<string, Promise<Uint8Array>>()
-  protected readonly maskedCache = new Map<string, Promise<Uint8Array>>()
+  protected readonly plainCache = new Map<string, Promise<Buffer>>()
+  protected readonly maskedCache = new Map<string, Promise<Buffer>>()
   protected readonly notebookDataCache = new Map<string, NotebookData>()
   protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
@@ -823,9 +823,9 @@ export class GrpcSerializer extends SerializerBase {
     const masked = this.client.serialize(maskedReq).then((maskedRes) => {
       if (maskedRes.result === undefined) {
         console.error('serialization of masked notebook failed')
-        return Promise.resolve(new Uint8Array())
+        return Promise.resolve(Buffer.from(''))
       }
-      return maskedRes.result
+      return Buffer.from(maskedRes.result)
     })
 
     if (!cacheId) {
@@ -839,7 +839,7 @@ export class GrpcSerializer extends SerializerBase {
       throw new Error('serialization of notebook outputs failed')
     }
 
-    const bytes = plain.result
+    const bytes = Buffer.from(plain.result)
     if (!cacheId) {
       console.error('skip plain caching since no lifecycleId was found')
     } else {
