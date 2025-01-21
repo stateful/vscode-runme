@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { createPromiseClient, PromiseClient, Transport } from '@connectrpc/connect'
+import { createClient, Client, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-node'
 import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 
@@ -13,12 +13,14 @@ import * as generate from './generate'
 import * as events from './events'
 import { SessionManager } from './sessions'
 
+export type AIClient = Client<typeof AIService>
+
 // AIManager is a class that manages the AI services.
 export class AIManager implements vscode.Disposable {
   log: ReturnType<typeof getLogger>
 
   subscriptions: vscode.Disposable[] = []
-  client: PromiseClient<typeof AIService>
+  client: AIClient
   completionGenerator: generate.CompletionGenerator
   converter: Converter
 
@@ -37,11 +39,11 @@ export class AIManager implements vscode.Disposable {
   }
 
   // N.B. We use arrow notation to ensure this is bound to the AIManager instance.
-  createAIClient = (): PromiseClient<typeof AIService> => {
+  createAIClient = (): AIClient => {
     const config = vscode.workspace.getConfiguration('runme')
     const baseURL = config.get<string>('aiBaseURL', 'http://localhost:8877/api')
     this.log.info(`AI: Using AI service at: ${baseURL}`)
-    return createPromiseClient(AIService, createDefaultTransport(baseURL))
+    return createClient(AIService, createDefaultTransport(baseURL))
   }
 
   // registerGhostCellEvents should be called when the extension is activated.
@@ -112,7 +114,7 @@ export class AIManager implements vscode.Disposable {
   }
 }
 
-function createDefaultTransport(baseURL: string): Transport {
+export function createDefaultTransport(baseURL: string): Transport {
   return createConnectTransport({
     // eslint-disable-next-line max-len
     // N.B unlike https://github.com/connectrpc/examples-es/blob/656f27bbbfb218f1a6dce2c38d39f790859298f1/vanilla-node/client.ts#L25

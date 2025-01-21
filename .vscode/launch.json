@@ -64,7 +64,8 @@
       "smartStep": true,
       "console": "integratedTerminal",
       "env": {
-        "NODE_OPTIONS": "--import=./specifier-register.mjs"
+        "NODE_OPTIONS": "--import=./specifier-register.mjs",
+        "RUN_MANUAL_TESTS": "true",
       },
     },
     {

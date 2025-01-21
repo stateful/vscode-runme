@@ -1,0 +1,437 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GhostCellGenerator > Build requests for event stream 1`] = `
+[
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "h",
+        },
+      },
+    },
+    "sequence": 0,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "he",
+        },
+      },
+    },
+    "sequence": 1,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "hel",
+        },
+      },
+    },
+    "sequence": 2,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "hell",
+        },
+      },
+    },
+    "sequence": 3,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "hello",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 4,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "how",
+        },
+      },
+    },
+    "sequence": 5,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "how are",
+        },
+      },
+    },
+    "sequence": 6,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "how are you?",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 7,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "Is it me you're looking for?",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 8,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "here we go",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 9,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "again",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 10,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "fullContext": {
+        "notebook": {
+          "cells": [
+            {
+              "kind": "CELL_KIND_MARKUP",
+              "languageId": "markdown",
+              "metadata": {},
+              "outputs": [],
+              "value": "down the only road I have ever known",
+            },
+          ],
+          "metadata": {},
+        },
+        "notebookUri": "file:///test.md",
+        "selected": 0,
+      },
+      "trigger": "CELL_TEXT_CHANGE",
+    },
+    "sequence": 11,
+  },
+]
+`;
+
+exports[`GhostCellGenerator > Process events for debouncing 1`] = `
+[
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "h",
+        },
+      },
+    },
+    "sequence": 0,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "he",
+        },
+      },
+    },
+    "sequence": 1,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "hel",
+        },
+      },
+    },
+    "sequence": 2,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "hell",
+        },
+      },
+    },
+    "sequence": 3,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "hello",
+        },
+      },
+    },
+    "sequence": 4,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "how",
+        },
+      },
+    },
+    "sequence": 5,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "how are",
+        },
+      },
+    },
+    "sequence": 6,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "how are you?",
+        },
+      },
+    },
+    "sequence": 7,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "Is it me you're looking for?",
+        },
+      },
+    },
+    "sequence": 8,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "here we go",
+        },
+      },
+    },
+    "sequence": 9,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "again",
+        },
+      },
+    },
+    "sequence": 10,
+  },
+  {
+    "request": {
+      "contextId": "01JHRGWFAKE5FAKE8FAKEWFAKE",
+      "trigger": "CELL_TEXT_CHANGE",
+      "update": {
+        "cell": {
+          "kind": "CELL_KIND_MARKUP",
+          "languageId": "markdown",
+          "metadata": {},
+          "outputs": [],
+          "value": "down the only road I have ever known",
+        },
+      },
+    },
+    "sequence": 11,
+  },
+]
+`;

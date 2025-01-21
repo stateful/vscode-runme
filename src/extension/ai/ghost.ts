@@ -1,15 +1,16 @@
 import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import { StreamGenerateRequest_Trigger } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import { workspace } from 'vscode'
 
 import getLogger from '../logger'
 import { RUNME_CELL_ID } from '../constants'
 import * as protos from '../grpc/parser/protos'
 
-import * as converters from './converters'
 import * as stream from './stream'
 import { SessionManager } from './sessions'
 import { getEventReporter } from './events'
+import { cellProtosToCellData, cellToCellData, Converter } from './converters'
 
 const log = getLogger()
 
@@ -46,12 +47,12 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
 // the cell contents have changed.
 export class GhostCellGenerator implements stream.CompletionHandlers {
   private notebookState: Map<vscode.Uri, NotebookState>
-  private converter: converters.Converter
+  private converter: Converter
   // contextID is the ID of the context we are generating completions for.
   // It is used to detect whether a completion response is stale and should be
   // discarded because the context has changed.
 
-  constructor(converter: converters.Converter) {
+  constructor(converter: Converter) {
     this.notebookState = new Map<vscode.Uri, NotebookState>()
     // Generate a random context ID. This should be unnecessary because presumable the event to change
     // the active cell will be sent before any requests are sent but it doesn't hurt to be safe.
@@ -66,6 +67,25 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     return this.notebookState.get(notebook.uri)!
   }
 
+  private async getNotebook(notebookUri: string): Promise<vscode.NotebookDocument> {
+    // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
+    // Can we cache it in the class? Since we keep track of notebooks in NotebookState
+    // Is there a way we can go from the URI of the cell to the URI of the notebook directly
+    const notebook = workspace.notebookDocuments.find((notebook) => {
+      // We need to do the comparison on the actual values so we use the string.
+      // If we just used === we would be checking if the references are to the same object.
+      return notebook.uri.toString() === notebookUri
+    })
+
+    // Irrecoverable error
+    if (notebook === undefined) {
+      // It's error or value (null) not both due to execptions in JS
+      throw new Error(`notebook for cell ${notebookUri} NOT found`)
+    }
+
+    return notebook
+  }
+
   // textDocumentChangeEventToCompletionRequest converts a VSCode TextDocumentChangeEvent to a Request proto.
   // This is a stateful transformation because we need to decide whether to send the full document or
   // the incremental changes.  It will return a null request if the event should be ignored or if there
@@ -73,34 +93,22 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   async buildRequest(
     cellChangeEvent: stream.CellChangeEvent,
     firstRequest: boolean,
-  ): Promise<agent_pb.StreamGenerateRequest | null> {
-    // TODO(jeremy): Is there a more efficient way to find the cell and notebook?
-    // Can we cache it in the class? Since we keep track of notebooks in NotebookState
-    // Is there a way we can go from the URI of the cell to the URI of the notebook directly
-    const notebook = vscode.workspace.notebookDocuments.find((notebook) => {
-      // We need to do the comparison on the actual values so we use the string.
-      // If we just used === we would be checking if the references are to the same object.
-      return notebook.uri.toString() === cellChangeEvent.notebookUri
-    })
-
-    if (notebook === undefined) {
-      log.error(`notebook for cell ${cellChangeEvent.notebookUri} NOT found`)
-      // TODO(jermey): Should we change the return type to be nullable?
-      return Promise.resolve(null)
-    }
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    const notebook = await this.getNotebook(cellChangeEvent.notebookUri)
 
     // Get the notebook state; this will initialize it if this is the first time we
     // process an event for this notebook.
-    let nbState = this.getNotebookState(notebook)
+    const nbState = this.getNotebookState(notebook)
 
-    // TODO(jeremy): We should probably at the cellUri to the event so we can verify the cell URI matches
-    let matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
+    // TODO(jeremy): We should probably add the cellUri to the event so we can verify the cell URI matches
+    const matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
 
+    let newCell = false
     // Has the cell changed since the last time we processed an event?
     // TODO(https://github.com/jlewi/foyle/issues/312): I think there's an edge case where we don't
     // correctly detect that the cell has changed and a new stream needs to be initiated.
-    let newCell = true
-    if (nbState.activeCell?.document.uri === matchedCell?.document.uri) {
+    newCell = true
+    if (nbState.activeCell?.document.uri === matchedCell?.document?.uri) {
       newCell = false
     }
 
@@ -118,11 +126,13 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       // Notebook uses the vscode interface types NotebookDocument and NotebookCell. We
       // need to convert this to NotebookCellData which is the concrete type used by the serializer.
       // This allows us to reuse the existing serializer code.
-      let cellData = notebook.getCells().map((cell) => converters.cellToCellData(cell))
-      let notebookData = new vscode.NotebookData(cellData)
+      const cellData = notebook.getCells().map((cell) => {
+        return cellToCellData(cell)
+      })
+      const notebookData = new vscode.NotebookData(cellData)
 
-      let notebookProto = await this.converter.notebookDataToProto(notebookData)
-      let request = new agent_pb.StreamGenerateRequest({
+      const notebookProto = await this.converter.notebookDataToProto(notebookData)
+      const request = new agent_pb.StreamGenerateRequest({
         contextId: SessionManager.getManager().getID(),
         trigger: cellChangeEvent.trigger,
         request: {
@@ -135,24 +145,42 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
         },
       })
       return request
-    } else {
-      let cellData = converters.cellToCellData(matchedCell)
-      let notebookData = new vscode.NotebookData([cellData])
-
-      // Generate an update request
-      let notebookProto = await this.converter.notebookDataToProto(notebookData)
-      let request = new agent_pb.StreamGenerateRequest({
-        contextId: SessionManager.getManager().getID(),
-        trigger: cellChangeEvent.trigger,
-        request: {
-          case: 'update',
-          value: new agent_pb.UpdateContext({
-            cell: notebookProto.cells[0],
-          }),
-        },
-      })
-      return request
     }
+
+    // Generate update request instead
+    return await this.buildUpdateRequest(notebook, cellChangeEvent)
+  }
+
+  async buildRequestForDebounce(
+    cellChangeEvent: stream.CellChangeEvent,
+  ): Promise<agent_pb.StreamGenerateRequest> {
+    const notebook = await this.getNotebook(cellChangeEvent.notebookUri)
+    return this.buildUpdateRequest(notebook, cellChangeEvent)
+  }
+
+  // Generates update request
+  private async buildUpdateRequest(
+    notebook: vscode.NotebookDocument,
+    cellChangeEvent: stream.CellChangeEvent,
+  ) {
+    const matchedCell = notebook.cellAt(cellChangeEvent.cellIndex)
+
+    const cellData = cellToCellData(matchedCell)
+    const notebookData = new vscode.NotebookData([cellData])
+
+    const notebookProto = await this.converter.notebookDataToProto(notebookData)
+    const request = new agent_pb.StreamGenerateRequest({
+      contextId: SessionManager.getManager().getID(),
+      trigger: cellChangeEvent.trigger,
+      request: {
+        case: 'update',
+        value: new agent_pb.UpdateContext({
+          cell: notebookProto.cells[0],
+        }),
+      },
+    })
+
+    return request
   }
 
   // processResponse applies the changes from the response to the notebook.
@@ -166,7 +194,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     }
 
     let cellsTs = protos.cellsESToTS(response.cells)
-    let newCellData = converters.cellProtosToCellData(cellsTs)
+    let newCellData = cellProtosToCellData(cellsTs)
 
     const edit = new vscode.WorkspaceEdit()
     const edits: vscode.NotebookEdit[] = []

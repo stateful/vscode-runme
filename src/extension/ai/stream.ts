@@ -1,12 +1,26 @@
-import { ConnectError, PromiseClient } from '@connectrpc/connect'
-import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
+import { ConnectError } from '@connectrpc/connect'
 import {
   StreamGenerateRequest,
   StreamGenerateResponse,
   StreamGenerateRequest_Trigger,
 } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
+import {
+  buffer,
+  debounceTime,
+  filter,
+  from,
+  map,
+  merge,
+  mergeMap,
+  Observable,
+  pairwise,
+  startWith,
+  Subject,
+} from 'rxjs'
 
 import getLogger from '../logger'
+
+import { AIClient } from './manager'
 
 const log = getLogger()
 
@@ -21,14 +35,23 @@ export interface CompletionHandlers {
   buildRequest: (
     cellChangeEvent: CellChangeEvent,
     firstRequest: boolean,
-  ) => Promise<StreamGenerateRequest | null>
+  ) => Promise<StreamGenerateRequest>
 
   // processResponse is a function that processes a StreamGenerateResponse
   processResponse: (response: StreamGenerateResponse) => void
 
+  // buildRequestForDebounce is a function that turns cell change events into update events
+  // observe them for debouncing superfulous keystrokes
+  buildRequestForDebounce: (cellChangeEvent: CellChangeEvent) => Promise<StreamGenerateRequest>
+
   // shutDown is invoked when the streamCreator is closed
   // This is a way of signaling no more events are expected
   shutdown: () => void
+}
+
+type CellChangeEventRequest = {
+  event: CellChangeEvent
+  request: StreamGenerateRequest | null
 }
 
 // TODO(jeremy): Rename StreamCreator -> StreamManager
@@ -62,27 +85,106 @@ export interface CompletionHandlers {
 // These events are split into windows and then turned into a stream of requests.
 //
 export class StreamCreator {
+  events = new Subject<CellChangeEventRequest>()
   lastIterator: PromiseIterator<StreamGenerateRequest> | null = null
 
   handlers: CompletionHandlers
-  client: PromiseClient<typeof AIService>
-  constructor(handlers: CompletionHandlers, client: PromiseClient<typeof AIService>) {
+  client: AIClient
+  constructor(handlers: CompletionHandlers, client: AIClient) {
     this.handlers = handlers
-    // Create a client this is actually a PromiseClient
+
+    // Create a client this is actually a Client
     this.client = client
+
+    // Only look at updates for debouncing
+    // triggerEvent will gen its own events
+    const updateEvents = this.events.pipe(filter((item) => item.request?.request.case === 'update'))
+
+    const cellTextChangeEvents = updateEvents.pipe(
+      this.onlyCellTextChange(true),
+      // debounce buffering with 500ms interval
+      buffer(updateEvents.pipe(debounceTime(500))),
+      filter((items) => items.length > 0),
+      mergeMap((items) => {
+        const debounced = from(items).pipe(
+          startWith(undefined),
+          pairwise(),
+          filter(([prev, current], index) => {
+            // always emit single item in buffer
+            if (items.length === 1) {
+              return true
+            }
+
+            if (
+              prev?.request &&
+              prev.request?.request.case === 'update' &&
+              current?.request &&
+              current.request?.request.case === 'update'
+            ) {
+              const unrelated = prev && prev?.request?.contextId !== current?.request?.contextId
+
+              const preVal = prev?.request?.request?.value?.cell?.value ?? ''
+              const currVal = current?.request?.request?.value?.cell?.value ?? ''
+              const isSubstr = currVal.startsWith(preVal)
+
+              const isLast = index === items.length - 1
+
+              // Emit if the current value is related and not a substring of the previous value
+              // or it's the last item in the buffer
+              return (!isSubstr || isLast) && !unrelated
+            }
+
+            return false
+          }),
+          map(([, item]) => item!.event),
+        )
+        return debounced
+      }),
+    )
+
+    const remainingEvents = updateEvents.pipe(
+      this.onlyCellTextChange(false),
+      map((item) => item.event),
+    )
+
+    // Subscribe to all update events for downstream processing
+    merge(cellTextChangeEvents, remainingEvents).subscribe(this.triggerEvent)
   }
 
-  // handleEvent processes a request
+  onlyCellTextChange(include: boolean) {
+    return function (source: Observable<CellChangeEventRequest>) {
+      return source.pipe(
+        filter((item) => {
+          if (!item.request) {
+            return true
+          }
+
+          if (item.request.trigger === StreamGenerateRequest_Trigger.CELL_TEXT_CHANGE) {
+            return include
+          }
+
+          return !include
+        }),
+      )
+    }
+  }
+
+  handleEvent = async (event: CellChangeEvent): Promise<void> => {
+    const request = await this.handlers.buildRequestForDebounce(event)
+    this.events.next({ event, request })
+  }
+
+  // triggerEvent processes a request
   // n.b we use arror function definition to ensure this gets properly bound
   // see https://www.typescriptlang.org/docs/handbook/2/classes.html#this-at-runtime-in-classes
-  handleEvent = async (event: CellChangeEvent): Promise<void> => {
+  private triggerEvent = async (event: CellChangeEvent): Promise<void> => {
     // We need to generate a new request
     let firstRequest = false
     if (this.lastIterator === undefined || this.lastIterator === null) {
       firstRequest = true
     }
 
-    log.info('handleEvent: building request')
+    log.info('triggerEvent: building request')
     let req = await this.handlers.buildRequest(event, firstRequest)
 
     if (req === null) {

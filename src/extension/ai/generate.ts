@@ -1,6 +1,4 @@
 import * as vscode from 'vscode'
-import { PromiseClient } from '@connectrpc/connect'
-import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_connect'
 import {
   GenerateCellsRequest,
   GenerateCellsResponse,
@@ -11,15 +9,16 @@ import * as protos from '../grpc/parser/protos'
 
 import { Converter } from './converters'
 import * as converters from './converters'
+import { AIClient } from './manager'
 const log = getLogger('AIGenerate')
 
 // CompletionGenerator is a class that generates completions for a notebook.
 // It generates a single completion
 export class CompletionGenerator {
-  client: PromiseClient<typeof AIService>
+  client: AIClient
   converter: Converter
 
-  constructor(client: PromiseClient<typeof AIService>, converter: Converter) {
+  constructor(client: AIClient, converter: Converter) {
     this.client = client
     this.converter = converter
   }
