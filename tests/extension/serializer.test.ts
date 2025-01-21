@@ -551,7 +551,7 @@ describe('GrpcSerializer', () => {
         const shouldDisablePreviewOutputs = vi.fn().mockReturnValue(true)
         GrpcSerializer.shouldDisablePreviewOutputs = shouldDisablePreviewOutputs
       })
-      const fakeCachedBytes = new Uint8Array([1, 2, 3, 4])
+      const fakeCachedBytes = Buffer.from([1, 2, 3, 4])
       const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
       const togglePreviewButton = vi.fn()
       serializer.togglePreviewButton = togglePreviewButton
