@@ -221,10 +221,10 @@ class KernelServer implements IServer {
   }
 
   async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
-    const s = getTLSEnabled() ? 's' : ''
-    // this.address() might be a "unix://socket" so we can't rely on it for baseUrl
+    let address = this.connectAddress()
+
     let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
-      baseUrl: `http${s}://${SERVER_ADDRESS}:${this.#port}`,
+      baseUrl: address.toString(),
       httpVersion: '2',
     }
 
@@ -240,6 +240,27 @@ class KernelServer implements IServer {
     const createTransport = protocol === 'grpc' ? createGrpcTransport : createConnectTransport
     this.#connectTransport = createTransport(transportOptions)
     return this.#connectTransport
+  }
+
+  connectAddress() {
+    let endpoint = new URL(this.address())
+
+    if (!endpoint) {
+      throw new KernelServerError('Invalid server address')
+    }
+    if (endpoint.protocol === 'unix:') {
+      throw new KernelServerError('Cannot connect via UNIX domain socket')
+    }
+    if (endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:') {
+      endpoint = new URL(`http://${this.address()}`)
+    }
+
+    if (getTLSEnabled()) {
+      endpoint.protocol = 'https:'
+    } else {
+      endpoint.protocol = 'http:'
+    }
+    return endpoint
   }
 
   protected async start(): Promise<string> {
