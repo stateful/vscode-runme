@@ -60,6 +60,7 @@ import ContextState from './contextState'
 import * as ghost from './ai/ghost'
 import getLogger from './logger'
 import features from './features'
+import { togglePreviewOutputs } from './commands'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -219,17 +220,34 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
     return Promise.all(
       data.cells.map(async (cell) => {
-        let id: string = ''
-        let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
+        // The NotebookData structure doesn't include transient metadata,
+        // but We need the cell ID to properly track terminal outputs.
+        // I extract the cell ID from the terminal output metadata
+        // since this preserves the connection between cells and their outputs.
+        // This is particularly problematic when lifecycleIdentity is NONE
+        // since cells won't have IDs assigned directly.
+        const cellOutputs: NotebookCellOutput[] = cell.outputs || []
+        const terminalOutputs = cellOutputs.reduce(
+          (acc, curr) => {
+            if (!curr.items) {
+              return acc
+            }
 
-        for (const cellOutput of cell.outputs || []) {
-          const terminalMime = cellOutput.items.find((item) => item.mime === OutputType.terminal)
-          id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
-          if (terminalMime && id) {
-            terminalOutput = cellOutput
-            break
-          }
-        }
+            const terminalOutput = curr.items.find((item) => item.mime === OutputType.terminal)
+
+            if (terminalOutput) {
+              acc[curr?.metadata?.['runme.dev/id']] = curr
+            }
+
+            return acc
+          },
+          {} as { [key: string]: NotebookCellOutputWithProcessInfo },
+        )
+
+        // Currently we assume each cell has at most one terminal output,
+        // so we only take the first entry
+        const entries = Object.entries(terminalOutputs)
+        const [id, terminalOutput] = entries.length > 0 ? entries[0] : ['', undefined]
 
         const notebookCell = await getCellById({ id })
         if (notebookCell && terminalOutput) {
@@ -579,10 +597,11 @@ export class GrpcSerializer extends SerializerBase {
     const isPreview = GrpcSerializer.isPreviewOutput()
 
     if (isPreview) {
-      await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+      await togglePreviewOutputs(false)
     }
 
-    if (await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)) {
+    const showWriteOutputs = await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)
+    if (showWriteOutputs) {
       if (!sessionFilePath) {
         return -1
       }
@@ -883,7 +902,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   static marshalFrontmatter(
-    metadata: { ['runme.dev/frontmatter']?: string },
+    metadata: { ['runme.dev/frontmatter']?: string; 'runme.dev/id'?: string },
     kernel?: Kernel,
   ): Frontmatter {
     if (
@@ -896,8 +915,9 @@ export class GrpcSerializer extends SerializerBase {
         tag: '',
         cwd: '',
         runme: {
-          id: '',
+          id: metadata['runme.dev/id'] || '',
           version: '',
+          session: { id: kernel?.getRunnerEnvironment()?.getSessionId() || '' },
         },
         shell: '',
         skipPrompts: false,

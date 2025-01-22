@@ -1,4 +1,4 @@
-import { NotebookEditor, NotebookRendererMessaging, workspace, window, commands } from 'vscode'
+import { NotebookEditor, NotebookRendererMessaging } from 'vscode'
 
 import { ClientMessages } from '../../constants'
 import { ClientMessage } from '../../types'
@@ -6,8 +6,8 @@ import { postClientMessage } from '../../utils/messaging'
 import { checkWorkflowRunStatus, deployWorkflow } from '../executors/github/workflows'
 import { Kernel } from '../kernel'
 import { getCellById } from '../cell'
-import { GrpcSerializer } from '../serializer'
-import { openFileAsRunmeNotebook } from '../utils'
+import { openPreviewOutputs } from '../commands'
+import { SerializerBase } from '../serializer'
 
 export interface IGitHubMessaging {
   messaging: NotebookRendererMessaging
@@ -47,10 +47,12 @@ export default async function handleGitHubMessage({
 
 export async function handleGistMessage({
   kernel,
+  serializer,
   message,
   editor,
 }: {
   kernel: Kernel
+  serializer: SerializerBase
   message: ClientMessage<ClientMessages.gistCell>
   editor: NotebookEditor
 }) {
@@ -60,25 +62,8 @@ export async function handleGistMessage({
     return // Display message
   }
   const cell = await getCellById({ editor, id: message.output.cellId })
+
   if (cell) {
-    const outputFilePath = GrpcSerializer.getOutputsUri(cell.document.uri, sessionId)
-    const sessionFileExists = await workspace.fs.stat(outputFilePath).then(
-      () => true,
-      () => false,
-    )
-    if (!sessionFileExists) {
-      return window
-        .showWarningMessage(
-          'No session outputs files found. Enable Auto-Save, rerun the cell, and click again.',
-          'Enable and Re-run',
-        )
-        .then(async (selected) => {
-          if (selected === 'Enable and Re-run') {
-            await commands.executeCommand('runme.notebookAutoSaveOff')
-            await commands.executeCommand('notebook.cell.execute')
-          }
-        })
-    }
-    openFileAsRunmeNotebook(outputFilePath)
+    await openPreviewOutputs(editor.notebook.uri, sessionId, serializer)
   }
 }

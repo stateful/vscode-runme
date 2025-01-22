@@ -6,7 +6,12 @@ import getMAC from 'getmac'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
-import { ClientMessages, NOTEBOOK_AUTOSAVE_ON, RUNME_FRONTMATTER_PARSED } from '../../../constants'
+import {
+  ClientMessages,
+  NOTEBOOK_AUTOSAVE_ON,
+  OutputType,
+  RUNME_FRONTMATTER_PARSED,
+} from '../../../constants'
 import { ClientMessage, FeatureName, IApiMessage } from '../../../types'
 import { postClientMessage } from '../../../utils/messaging'
 import ContextState from '../../contextState'
@@ -177,7 +182,7 @@ export default async function saveCellExecution(
                   outputs: (cell?.outputs || [])?.map((output) => ({
                     ...output,
                     items: (output?.items || [])?.filter((item) => {
-                      if (item.mime === 'application/vnd.code.notebook.stdout') {
+                      if (item.mime === OutputType.stdout) {
                         return item
                       }
                     }),

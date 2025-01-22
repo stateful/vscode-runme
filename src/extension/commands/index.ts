@@ -422,6 +422,10 @@ export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
   ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, maskingIsOn)
 }
 
+export async function togglePreviewOutputs(previewOutputsIsOn: boolean): Promise<void> {
+  await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, previewOutputsIsOn)
+}
+
 export async function runCellWithPrompts(cell: NotebookCell, kernel: Kernel) {
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
   await kernel.executeAndFocusNotebookCell(cell)
@@ -603,17 +607,25 @@ export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBas
       return
     }
 
-    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
     const { notebookUri } = e.notebookEditor
-    const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-
-    try {
-      await workspace.fs.stat(outputFilePath)
-    } catch (e) {
-      await commands.executeCommand('workbench.action.files.save')
-    }
-
-    await serializer.saveNotebookOutputs(notebookUri)
-    await openFileAsRunmeNotebook(outputFilePath)
+    await openPreviewOutputs(notebookUri, sessionId, serializer)
   }
+}
+
+export async function openPreviewOutputs(
+  notebookUri: Uri,
+  sessionId: string,
+  serializer: SerializerBase,
+) {
+  const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+
+  try {
+    await workspace.fs.stat(outputFilePath)
+  } catch (e) {
+    await commands.executeCommand('workbench.action.files.save')
+  }
+
+  await togglePreviewOutputs(true)
+  await serializer.saveNotebookOutputs(notebookUri)
+  await openFileAsRunmeNotebook(outputFilePath)
 }

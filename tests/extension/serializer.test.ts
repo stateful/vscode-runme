@@ -75,6 +75,10 @@ vi.mock('../../src/extension/features')
 
 vi.mock('../../src/extension/contextState')
 
+vi.mock('../../src/extension/commands', () => ({
+  togglePreviewOutputs: vi.fn(),
+}))
+
 function newKernel(): Kernel {
   return {} as unknown as Kernel
 }
