@@ -604,16 +604,24 @@ export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBas
     }
 
     const { notebookUri } = e.notebookEditor
-    const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
-
-    try {
-      await workspace.fs.stat(outputFilePath)
-    } catch (e) {
-      await commands.executeCommand('workbench.action.files.save')
-    }
-
-    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
-    await serializer.saveNotebookOutputs(notebookUri)
-    await openFileAsRunmeNotebook(outputFilePath)
+    await openPreviewOutputs(notebookUri, sessionId, serializer)
   }
+}
+
+export async function openPreviewOutputs(
+  notebookUri: Uri,
+  sessionId: string,
+  serializer: SerializerBase,
+) {
+  const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+
+  try {
+    await workspace.fs.stat(outputFilePath)
+  } catch (e) {
+    await commands.executeCommand('workbench.action.files.save')
+  }
+
+  await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
+  await serializer.saveNotebookOutputs(notebookUri)
+  await openFileAsRunmeNotebook(outputFilePath)
 }

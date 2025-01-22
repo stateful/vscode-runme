@@ -622,6 +622,7 @@ export class Kernel implements Disposable {
       TelemetryReporter.sendRawTelemetryEvent(message.output.telemetryEvent)
       return handleGistMessage({
         kernel: this,
+        serializer: this.serializer!,
         editor,
         message,
       })
