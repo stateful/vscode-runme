@@ -28,7 +28,7 @@ import {
   ConnectTransportOptions,
   createGrpcTransport,
   createConnectTransport,
-} from '../grpc/parser/h2/client'
+} from '../grpc/parser/connect/client'
 
 import KernelServerError from './kernelServerError'
 
