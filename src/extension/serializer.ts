@@ -220,15 +220,12 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
   public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
     return Promise.all(
       data.cells.map(async (cell) => {
-        /**
-         * The NotebookData structure doesn't include transient metadata,
-         * but We need the cell ID to properly track terminal outputs.
-         * I extract the cell ID from the terminal output metadata
-         * since this preserves the connection between cells and their outputs.
-         * This is particularly problematic when lifecycleIdentity is NONE
-         * since cells won't have IDs assigned directly.
-         */
-
+        // The NotebookData structure doesn't include transient metadata,
+        // but We need the cell ID to properly track terminal outputs.
+        // I extract the cell ID from the terminal output metadata
+        // since this preserves the connection between cells and their outputs.
+        // This is particularly problematic when lifecycleIdentity is NONE
+        // since cells won't have IDs assigned directly.
         const cellOutputs: NotebookCellOutput[] = cell.outputs || []
         const terminalOutputs = cellOutputs.reduce(
           (acc, curr) => {
@@ -251,17 +248,6 @@ export abstract class SerializerBase implements NotebookSerializer, Disposable {
         // so we only take the first entry
         const entries = Object.entries(terminalOutputs)
         const [id, terminalOutput] = entries.length > 0 ? entries[0] : ['', undefined]
-
-        // let id: string = ''
-        // let terminalOutput: NotebookCellOutputWithProcessInfo | undefined
-        // for (const cellOutput of cell.outputs || []) {
-        //   const terminalMime = cellOutput.items.find((item) => item.mime === OutputType.terminal)
-        //   id = cell.metadata?.['runme.dev/id'] || cell.metadata?.['id'] || ''
-        //   if (terminalMime && id) {
-        //     terminalOutput = cellOutput
-        //     break
-        //   }
-        // }
 
         const notebookCell = await getCellById({ id })
         if (notebookCell && terminalOutput) {
