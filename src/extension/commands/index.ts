@@ -422,6 +422,10 @@ export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
   ContextState.addKey(NOTEBOOK_OUTPUTS_MASKED, maskingIsOn)
 }
 
+export async function togglePreviewOutputs(previewOutputsIsOn: boolean): Promise<void> {
+  await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, previewOutputsIsOn)
+}
+
 export async function runCellWithPrompts(cell: NotebookCell, kernel: Kernel) {
   await ContextState.addKey(NOTEBOOK_RUN_WITH_PROMPTS, true)
   await kernel.executeAndFocusNotebookCell(cell)
@@ -621,7 +625,7 @@ export async function openPreviewOutputs(
     await commands.executeCommand('workbench.action.files.save')
   }
 
-  await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, true)
+  await togglePreviewOutputs(true)
   await serializer.saveNotebookOutputs(notebookUri)
   await openFileAsRunmeNotebook(outputFilePath)
 }

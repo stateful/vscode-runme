@@ -60,6 +60,7 @@ import ContextState from './contextState'
 import * as ghost from './ai/ghost'
 import getLogger from './logger'
 import features from './features'
+import { togglePreviewOutputs } from './commands'
 
 declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
@@ -610,7 +611,7 @@ export class GrpcSerializer extends SerializerBase {
     const isPreview = GrpcSerializer.isPreviewOutput()
 
     if (isPreview) {
-      await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+      await togglePreviewOutputs(false)
     }
 
     const showWriteOutputs = await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)

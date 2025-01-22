@@ -66,6 +66,7 @@ import {
   runForkCommand,
   selectEnvironment,
   notebookSessionOutputs,
+  togglePreviewOutputs,
 } from './commands'
 import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
@@ -593,12 +594,12 @@ export class RunmeExtension {
       }
 
       await toggleMasking(maskingIsOn)
+      await togglePreviewOutputs(true)
       const written = (await this.serializer?.saveNotebookOutputs(uri)) ?? -1
       if (written > -1) {
         // success early return
         return
       }
-
       await toggleMasking(!maskingIsOn)
       await showSessionExpiryErrMessage()
     }
