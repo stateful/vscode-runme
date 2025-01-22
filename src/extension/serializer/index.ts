@@ -1,8 +1,2 @@
-export {
-  ISerializer,
-  GrpcSerializer,
-  WasmSerializer,
-  addExecInfo,
-  getOutputsUri,
-  isDocumentSessionOutputs,
-} from './serializer'
+export { ConnectSerializer as GrpcSerializer } from './connect'
+export { ISerializer, addExecInfo, getOutputsUri, isDocumentSessionOutputs } from './serializer'

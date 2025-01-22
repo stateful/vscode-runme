@@ -7,7 +7,6 @@ import { ClientMessages } from '../constants'
 
 import { GrpcSerializer } from './serializer'
 import { Kernel } from './kernel'
-import './wasm/wasm_exec.js'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
 import getLogger from './logger'
 import { StatefulAuthProvider } from './provider/statefulAuth'

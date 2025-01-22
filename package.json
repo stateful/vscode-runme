@@ -792,12 +792,6 @@
             "default": false,
             "markdownDescription": "If set to `true`, the kernel will use the smart env store implementation."
           },
-          "runme.experiments.grpcSerializer": {
-            "type": "boolean",
-            "scope": "window",
-            "default": true,
-            "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
-          },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
             "scope": "window",

@@ -71,8 +71,6 @@ import { AWSResolver } from './resolvers/awsResolver'
 import { RunmeIdentity } from './grpc/parser/tcp/types'
 import { StatefulAuthProvider } from './provider/statefulAuth'
 
-declare var globalThis: any
-
 const log = getLogger()
 
 /**
@@ -270,20 +268,6 @@ export async function verifyCheckedInFile(filePath: string) {
       () => false,
     )
   return isCheckedIn
-}
-
-export async function initWasm(wasmUri: Uri) {
-  const go = new globalThis.Go()
-  const wasmFile = await workspace.fs.readFile(wasmUri)
-  return WebAssembly.instantiate(wasmFile, go.importObject).then(
-    (result) => {
-      go.run(result.instance)
-    },
-    (err: Error) => {
-      log.error(`failed initializing WASM file: ${err.message}`)
-      return err
-    },
-  )
 }
 
 export function getDefaultWorkspace(): string | undefined {

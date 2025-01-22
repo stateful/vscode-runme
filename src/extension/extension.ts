@@ -68,7 +68,7 @@ import {
   notebookSessionOutputs,
   togglePreviewOutputs,
 } from './commands'
-import { WasmSerializer, GrpcSerializer, ISerializer } from './serializer'
+import { GrpcSerializer, ISerializer } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
 import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
@@ -99,7 +99,6 @@ export class RunmeExtension {
 
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)
-    const grpcSerializer = kernel.hasExperimentEnabled('grpcSerializer')
     const grpcServer = kernel.hasExperimentEnabled('grpcServer')
     const grpcRunner = kernel.hasExperimentEnabled('grpcRunner')
 
@@ -144,11 +143,8 @@ export class RunmeExtension {
     )
 
     const reporter = new GrpcReporter(context, server)
-    const serializer = grpcSerializer
-      ? new GrpcSerializer(context, server, kernel)
-      : new WasmSerializer(context, kernel)
-    this.serializer = serializer
-    kernel.setSerializer(serializer as GrpcSerializer)
+    this.serializer = new GrpcSerializer(context, server, kernel)
+    kernel.setSerializer(this.serializer)
     kernel.setReporter(reporter)
 
     let treeViewer: RunmeTreeProvider
@@ -156,7 +152,7 @@ export class RunmeExtension {
     if (true || kernel.isFeatureOn(FeatureName.NewTreeProvider)) {
       await commands.executeCommand('setContext', 'runme.launcher.isExpanded', false)
       await commands.executeCommand('setContext', 'runme.launcher.includeUnnamed', false)
-      treeViewer = new RunmeLauncherProviderBeta(kernel, serializer)
+      treeViewer = new RunmeLauncherProviderBeta(kernel, this.serializer)
 
       if (treeViewer.openNotebook) {
         context.subscriptions.push(
@@ -193,7 +189,7 @@ export class RunmeExtension {
 
     const runmeTaskProvider = tasks.registerTaskProvider(
       RunmeTaskProvider.id,
-      new RunmeTaskProvider(context, treeViewer, serializer, kernel, server, runner),
+      new RunmeTaskProvider(context, treeViewer, this.serializer, kernel, server, runner),
     )
 
     /**
@@ -255,7 +251,7 @@ export class RunmeExtension {
 
     const codeLensProvider = new RunmeCodeLensProvider(
       context.extensionUri,
-      serializer,
+      this.serializer,
       runCLI,
       winCodeLensRunSurvey,
       runner,
@@ -280,14 +276,14 @@ export class RunmeExtension {
 
     context.subscriptions.push(
       kernel,
-      serializer,
+      this.serializer,
       server,
       treeViewer,
       StatefulAuthProvider.instance,
       AuthSessionChangeHandler.instance,
       ...this.registerPanels(kernel, context),
       ...surveys,
-      workspace.registerNotebookSerializer(Kernel.type, serializer, {
+      workspace.registerNotebookSerializer(Kernel.type, this.serializer, {
         transientCellMetadata,
         transientOutputs,
       }),
@@ -405,7 +401,7 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand(
         'runme.notebookSessionOutputs',
-        notebookSessionOutputs(kernel, serializer),
+        notebookSessionOutputs(kernel, this.serializer),
       ),
 
       RunmeExtension.registerCommand('runme.lifecycleIdentityNone', () =>
@@ -446,7 +442,7 @@ export class RunmeExtension {
 
           await Promise.all(
             workspace.notebookDocuments.map((doc) =>
-              serializer.switchLifecycleIdentity(doc, identity),
+              this.serializer?.switchLifecycleIdentity(doc, identity),
             ),
           )
         },

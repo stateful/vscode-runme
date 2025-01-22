@@ -18,7 +18,6 @@ import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
 import { getAnnotations, getCellRunmeId, getGitContext } from '../../utils'
-import { GrpcSerializer } from '../../serializer'
 import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
@@ -35,6 +34,7 @@ import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'
 import { getDocumentCacheId } from '../../serializer/serializer'
+import { GrpcSerializer } from '../../serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
