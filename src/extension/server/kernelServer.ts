@@ -224,7 +224,7 @@ class KernelServer implements IServer {
     let address = this.connectAddress()
 
     let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
-      baseUrl: address.toString(),
+      baseUrl: address,
       httpVersion: '2',
     }
 
@@ -242,7 +242,7 @@ class KernelServer implements IServer {
     return this.#connectTransport
   }
 
-  connectAddress() {
+  connectAddress(): string {
     let endpoint = new URL(this.address())
 
     if (!endpoint) {
@@ -260,7 +260,7 @@ class KernelServer implements IServer {
     } else {
       endpoint.protocol = 'http:'
     }
-    return endpoint
+    return endpoint.toString()
   }
 
   protected async start(): Promise<string> {
@@ -450,7 +450,7 @@ class KernelServer implements IServer {
     this.#onTransportReady.fire({ transport: await this.transport(), address: this.address() })
     this.#onConnectTransportReady.fire({
       transport: await this.connectTransport(),
-      address: this.address(),
+      address: this.connectAddress(),
     })
   }
 
