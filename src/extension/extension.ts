@@ -68,7 +68,7 @@ import {
   notebookSessionOutputs,
   togglePreviewOutputs,
 } from './commands'
-import { WasmSerializer, GrpcSerializer, SerializerBase } from './serializer'
+import { WasmSerializer, GrpcSerializer, ISerializer } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
 import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
@@ -95,7 +95,7 @@ import { CloudNotebooks } from './provider/cloudNotebooks'
 import RunmeFS from './provider/runmeFs'
 
 export class RunmeExtension {
-  protected serializer?: SerializerBase
+  protected serializer?: ISerializer
 
   async initialize(context: ExtensionContext) {
     const kernel = new Kernel(context)

@@ -79,7 +79,7 @@ export function cellProtosToCellData(cells: parserTypes.Cell[]): vscode.Notebook
     'lifecycleIdentity',
     parserTypes.RunmeIdentity.ALL,
   )
-  let newCellData = serializer.SerializerBase.revive(notebook, identity)
+  let newCellData = serializer.GrpcSerializer.revive(notebook, identity)
   return newCellData
 }
 

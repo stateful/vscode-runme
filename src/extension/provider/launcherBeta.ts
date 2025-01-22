@@ -18,7 +18,7 @@ import {
 import { asWorkspaceRelativePath, getAnnotations } from '../utils'
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
-import { SerializerBase } from '../serializer'
+import { ISerializer } from '../serializer'
 import { LANGID_AND_EXTENSIONS } from '../../constants'
 
 import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
@@ -36,7 +36,7 @@ export class RunmeLauncherProvider implements RunmeTreeProvider {
 
   constructor(
     private kernel: Kernel,
-    private serializer: SerializerBase,
+    private serializer: ISerializer,
   ) {
     const watcher = workspace.createFileSystemWatcher(GLOB_PATTERN, false, true, false)
 

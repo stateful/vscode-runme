@@ -57,7 +57,7 @@ import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
 import { insertCodeNotebookCell } from '../cell'
-import { getOutputsUri, SerializerBase } from '../serializer'
+import { getOutputsUri, ISerializer } from '../serializer'
 
 const log = getLogger('Commands')
 
@@ -599,7 +599,7 @@ export async function selectEnvironment(manager: EnvironmentManager) {
   }
 }
 
-export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBase) {
+export function notebookSessionOutputs(kernel: Kernel, serializer: ISerializer) {
   return async (e: NotebookUiEvent) => {
     const runnerEnv = kernel.getRunnerEnvironment()
     const sessionId = runnerEnv?.getSessionId()
@@ -615,7 +615,7 @@ export function notebookSessionOutputs(kernel: Kernel, serializer: SerializerBas
 export async function openPreviewOutputs(
   notebookUri: Uri,
   sessionId: string,
-  serializer: SerializerBase,
+  serializer: ISerializer,
 ) {
   const outputFilePath = getOutputsUri(notebookUri, sessionId)
 

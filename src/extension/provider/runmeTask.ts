@@ -33,7 +33,7 @@ import {
 import getLogger from '../logger'
 import { asWorkspaceRelativePath, getAnnotations, getWorkspaceEnvs } from '../utils'
 import { Serializer, RunmeTaskDefinition } from '../../types'
-import { SerializerBase } from '../serializer'
+import { ISerializer } from '../serializer'
 import type { IRunner, RunProgramExecution, RunProgramOptions } from '../runner'
 import { IRunnerEnvironment } from '../runner/environment'
 import { getCellCwd, getCellProgram, getNotebookSkipPromptEnvSetting } from '../executors/utils'
@@ -89,7 +89,7 @@ export class RunmeTaskProvider implements TaskProvider {
   constructor(
     private context: ExtensionContext,
     private treeView: RunmeTreeProvider,
-    private serializer: SerializerBase,
+    private serializer: ISerializer,
     private kernel: Kernel,
     private server: KernelServer,
     private runner?: IRunner,
@@ -260,7 +260,7 @@ export class RunmeTaskProvider implements TaskProvider {
     knownTask: Pick<ProjectTask, 'id' | 'name' | 'documentPath' | 'isNameGenerated'>,
     options: TaskOptions = {},
     token: CancellationToken,
-    serializer: SerializerBase,
+    serializer: ISerializer,
     runner: IRunner,
     runnerEnv?: IRunnerEnvironment,
   ): Promise<Task> {

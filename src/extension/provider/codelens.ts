@@ -20,7 +20,7 @@ import {
   Uri,
 } from 'vscode'
 
-import { isDocumentSessionOutputs, SerializerBase } from '../serializer'
+import { isDocumentSessionOutputs, ISerializer } from '../serializer'
 import { type runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
@@ -58,7 +58,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
   constructor(
     protected extensionBaseUri: Uri,
-    protected serializer: SerializerBase,
+    protected serializer: ISerializer,
     protected runCLI: ReturnType<typeof runCLICommand>,
     protected surveyWinCodeLensRun: SurveyWinCodeLensRun,
     protected runner?: IRunner,

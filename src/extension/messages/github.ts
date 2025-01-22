@@ -7,7 +7,7 @@ import { checkWorkflowRunStatus, deployWorkflow } from '../executors/github/work
 import { Kernel } from '../kernel'
 import { getCellById } from '../cell'
 import { openPreviewOutputs } from '../commands'
-import { SerializerBase } from '../serializer'
+import { ISerializer } from '../serializer'
 
 export interface IGitHubMessaging {
   messaging: NotebookRendererMessaging
@@ -52,7 +52,7 @@ export async function handleGistMessage({
   editor,
 }: {
   kernel: Kernel
-  serializer: SerializerBase
+  serializer: ISerializer
   message: ClientMessage<ClientMessages.gistCell>
   editor: NotebookEditor
 }) {

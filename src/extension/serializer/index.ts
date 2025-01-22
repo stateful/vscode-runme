@@ -1,6 +1,6 @@
 export {
+  ISerializer,
   GrpcSerializer,
-  SerializerBase,
   WasmSerializer,
   addExecInfo,
   getOutputsUri,
