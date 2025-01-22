@@ -6,7 +6,7 @@ import {
 } from 'vscode'
 
 import { Kernel } from '../../kernel'
-import { GrpcSerializer } from '../../serializer'
+import { isDocumentSessionOutputs } from '../../serializer'
 
 import CellStatusBarItem from './items/cellStatusBarItem'
 import { GitHubGistStatusBarItem } from './items/githubGist'
@@ -40,7 +40,7 @@ export class SessionOutputCellStatusBarProvider implements NotebookCellStatusBar
       return
     }
 
-    const isSessionsOutput = GrpcSerializer.isDocumentSessionOutputs(cell.notebook.metadata)
+    const isSessionsOutput = isDocumentSessionOutputs(cell.notebook.metadata)
 
     if (!isSessionsOutput) {
       return

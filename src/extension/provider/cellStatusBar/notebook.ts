@@ -6,7 +6,7 @@ import {
 } from 'vscode'
 
 import { Kernel } from '../../kernel'
-import { GrpcSerializer } from '../../serializer'
+import { isDocumentSessionOutputs } from '../../serializer'
 
 import { AnnotationsStatusBarItem } from './items/annotations'
 import { CopyStatusBarItem } from './items/copy'
@@ -49,7 +49,7 @@ export class NotebookCellStatusBarProvider implements NotebookCellStatusBarItemP
       return
     }
 
-    const isSessionsOutput = GrpcSerializer.isDocumentSessionOutputs(cell.notebook.metadata)
+    const isSessionsOutput = isDocumentSessionOutputs(cell.notebook.metadata)
 
     if (isSessionsOutput) {
       return

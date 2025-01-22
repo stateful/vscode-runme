@@ -34,6 +34,7 @@ import { Frontmatter } from '../../grpc/parser/tcp/types'
 import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'
+import { getDocumentCacheId } from '../../serializer/serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -97,7 +98,7 @@ export default async function saveCellExecution(
       [RUNME_FRONTMATTER_PARSED]: frontmatter,
     }
 
-    const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
+    const cacheId = getDocumentCacheId(metadata) as string
     const plainSessionOutput = await kernel.getPlainCache(cacheId)
     const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 

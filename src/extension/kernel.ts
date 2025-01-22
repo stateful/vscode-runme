@@ -103,7 +103,7 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import PanelManager from './panels/panelManager'
-import { GrpcSerializer } from './serializer'
+import { GrpcSerializer, isDocumentSessionOutputs } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
@@ -331,7 +331,7 @@ export class Kernel implements Disposable {
   }
 
   async #setNotebookMode(notebookDocument: NotebookDocument): Promise<void> {
-    const isSessionsOutput = GrpcSerializer.isDocumentSessionOutputs(notebookDocument.metadata)
+    const isSessionsOutput = isDocumentSessionOutputs(notebookDocument.metadata)
     const notebookMode = isSessionsOutput ? NotebookMode.SessionOutputs : NotebookMode.Execution
     await ContextState.addKey(NOTEBOOK_MODE, notebookMode)
   }
@@ -684,9 +684,7 @@ export class Kernel implements Disposable {
   }
 
   private async _executeAll(cells: NotebookCell[]) {
-    const sessionOutputsDoc = cells.find((c) =>
-      GrpcSerializer.isDocumentSessionOutputs(c.notebook.metadata),
-    )
+    const sessionOutputsDoc = cells.find((c) => isDocumentSessionOutputs(c.notebook.metadata))
     if (sessionOutputsDoc) {
       const { notebook } = sessionOutputsDoc
       await askAlternativeOutputsAction(path.dirname(notebook.uri.fsPath), notebook.metadata)

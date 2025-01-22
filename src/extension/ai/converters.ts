@@ -24,7 +24,7 @@ export class Converter {
   // It adds execution information to the cells before converting.
   public async notebookDataToProto(notebookData: vscode.NotebookData): Promise<parser_pb.Notebook> {
     // We need to add the execution info to the cells so that the AI model can use that information.
-    const cellDataWithExec = await serializer.SerializerBase.addExecInfo(notebookData, this.kernel)
+    const cellDataWithExec = await serializer.addExecInfo(notebookData, this.kernel)
     let notebookDataWithExec = new vscode.NotebookData(cellDataWithExec)
     // marshalNotebook returns a protocol buffer using the ts client library from buf we need to
     // convert it to es

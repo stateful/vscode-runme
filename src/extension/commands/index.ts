@@ -57,7 +57,7 @@ import { GetUserEnvironmentsDocument } from '../__generated-platform__/graphql'
 import { EnvironmentManager } from '../environment/manager'
 import features from '../features'
 import { insertCodeNotebookCell } from '../cell'
-import { GrpcSerializer, SerializerBase } from '../serializer'
+import { getOutputsUri, SerializerBase } from '../serializer'
 
 const log = getLogger('Commands')
 
@@ -617,7 +617,7 @@ export async function openPreviewOutputs(
   sessionId: string,
   serializer: SerializerBase,
 ) {
-  const outputFilePath = GrpcSerializer.getOutputsUri(notebookUri, sessionId)
+  const outputFilePath = getOutputsUri(notebookUri, sessionId)
 
   try {
     await workspace.fs.stat(outputFilePath)

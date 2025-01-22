@@ -20,7 +20,7 @@ import {
   Uri,
 } from 'vscode'
 
-import { GrpcSerializer, SerializerBase } from '../serializer'
+import { isDocumentSessionOutputs, SerializerBase } from '../serializer'
 import { type runCLICommand } from '../commands'
 import { IRunner } from '../runner'
 import { Kernel } from '../kernel'
@@ -98,7 +98,7 @@ export class RunmeCodeLensProvider implements CodeLensProvider, Disposable {
 
     const notebook = await this.serializer.deserializeNotebook(contentBytes, token)
 
-    const isSessionOutputs = GrpcSerializer.isDocumentSessionOutputs(notebook.metadata)
+    const isSessionOutputs = isDocumentSessionOutputs(notebook.metadata)
     if (isSessionOutputs) {
       return []
     }

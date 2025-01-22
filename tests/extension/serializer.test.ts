@@ -274,17 +274,17 @@ describe('GrpcSerializer', () => {
   describe('#isDocumentSessionOutputs', () => {
     it('should return false when frontmatter does not include a session ID', () => {
       const fixture = deepCopyFixture()
-      const res = GrpcSerializer.isDocumentSessionOutputs(fixture.metadata)
+      const res = isDocumentSessionOutputs(fixture.metadata)
       expect(res).toBeFalsy()
     })
 
     it('should return false for undefined metadata', () => {
-      const res = GrpcSerializer.isDocumentSessionOutputs(undefined)
+      const res = isDocumentSessionOutputs(undefined)
       expect(res).toBeFalsy()
     })
 
     it('should return true when frontmatter does include a session ID', () => {
-      const res = GrpcSerializer.isDocumentSessionOutputs({
+      const res = isDocumentSessionOutputs({
         'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
       })
       expect(res).toBeTruthy()

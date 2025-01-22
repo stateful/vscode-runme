@@ -122,7 +122,7 @@ export abstract class SerializerBase implements ISerializer {
 
         const notebookEdit = NotebookEdit.updateCellMetadata(
           cellAdded.index,
-          SerializerBase.addCellId(cellAdded.metadata, this.lifecycleIdentity),
+          addCellId(cellAdded.metadata, this.lifecycleIdentity),
         )
         const edit = new WorkspaceEdit()
         edit.set(cellAdded.notebook.uri, [notebookEdit])
@@ -160,34 +160,6 @@ export abstract class SerializerBase implements ISerializer {
     await workspace.applyEdit(edit)
   }
 
-  public static addCellId(
-    metadata: Serializer.Metadata | undefined,
-    identity: RunmeIdentity,
-  ): {
-    [key: string]: any
-  } {
-    // never run for cells that came out of kernel
-    if (metadata?.['runme.dev/id']) {
-      return metadata
-    }
-
-    // newly inserted cells may have blank metadata
-    const id = metadata?.['id'] || ulid()
-
-    // only set `id` if all or cell identity is required
-    if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
-      return {
-        ...(metadata || {}),
-        ...{ 'runme.dev/id': id, id },
-      }
-    }
-
-    return {
-      ...(metadata || {}),
-      ...{ 'runme.dev/id': id },
-    }
-  }
-
   protected abstract saveNotebook(
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -199,7 +171,7 @@ export abstract class SerializerBase implements ISerializer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const cells = await SerializerBase.addExecInfo(data, this.kernel)
+    const cells = await addExecInfo(data, this.kernel)
 
     const metadata = data.metadata
 
@@ -224,75 +196,6 @@ export abstract class SerializerBase implements ISerializer {
     }
 
     return encoded
-  }
-
-  public static async addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
-    return Promise.all(
-      data.cells.map(async (cell) => {
-        // The NotebookData structure doesn't include transient metadata,
-        // but We need the cell ID to properly track terminal outputs.
-        // I extract the cell ID from the terminal output metadata
-        // since this preserves the connection between cells and their outputs.
-        // This is particularly problematic when lifecycleIdentity is NONE
-        // since cells won't have IDs assigned directly.
-        const cellOutputs: NotebookCellOutput[] = cell.outputs || []
-        const terminalOutputs = cellOutputs.reduce(
-          (acc, curr) => {
-            if (!curr.items) {
-              return acc
-            }
-
-            const terminalOutput = curr.items.find((item) => item.mime === OutputType.terminal)
-
-            if (terminalOutput) {
-              acc[curr?.metadata?.['runme.dev/id']] = curr
-            }
-
-            return acc
-          },
-          {} as { [key: string]: NotebookCellOutputWithProcessInfo },
-        )
-
-        // Currently we assume each cell has at most one terminal output,
-        // so we only take the first entry
-        const entries = Object.entries(terminalOutputs)
-        const [id, terminalOutput] = entries.length > 0 ? entries[0] : ['', undefined]
-
-        const notebookCell = await getCellById({ id })
-        if (notebookCell && terminalOutput) {
-          const terminalState = await kernel.getCellOutputs(notebookCell).then((cellOutputMgr) => {
-            const terminalState = cellOutputMgr.getCellTerminalState()
-            if (terminalState?.outputType !== OutputType.terminal) {
-              return undefined
-            }
-            return terminalState
-          })
-
-          if (terminalState !== undefined) {
-            const processInfo = terminalState.hasProcessInfo()
-            if (processInfo) {
-              if (processInfo.pid === undefined) {
-                delete processInfo.pid
-              }
-              terminalOutput.processInfo = processInfo
-            }
-            const strTerminalState = terminalState?.serialize()
-            terminalOutput.items.forEach((item) => {
-              if (item.mime === OutputType.stdout) {
-                item.data = Buffer.from(strTerminalState)
-              }
-            })
-          }
-        }
-
-        const languageId = cell.languageId ?? ''
-
-        return {
-          ...cell,
-          languageId: VSCODE_LANGUAGEID_MAP[languageId] ?? languageId,
-        }
-      }),
-    )
   }
 
   protected abstract reviveNotebook(
@@ -331,7 +234,7 @@ export abstract class SerializerBase implements ISerializer {
           }
 
           if (elem.value && (elem.languageId || '') === '') {
-            const norm = SerializerBase.normalize(elem.value)
+            const norm = normalize(elem.value)
             return this.languages.guess(norm, PLATFORM_OS).then((guessed) => {
               if (guessed) {
                 elem.languageId = guessed
@@ -385,7 +288,7 @@ export abstract class SerializerBase implements ISerializer {
           // The serializer used to own the lifecycle of IDs, however,
           // that's no longer true since they are coming out of the kernel now.
           // However, if "net new" cells show up after deserialization, ie inserts, we backfill them here.
-          cell.metadata = SerializerBase.addCellId(elem.metadata, identity)
+          cell.metadata = addCellId(elem.metadata, identity)
         }
 
         cell.metadata ??= {}
@@ -408,12 +311,6 @@ export abstract class SerializerBase implements ISerializer {
     return false
   }
 
-  public static normalize(source: string): string {
-    const lines = source.split('\n')
-    const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
-    return normed.join('\n')
-  }
-
   protected printCell(content: string, languageId = 'markdown') {
     return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
   }
@@ -428,7 +325,7 @@ export abstract class SerializerBase implements ISerializer {
 
   public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
 
-  static isGhostCell(cell: NotebookCellData): boolean {
+  protected static isGhostCell(cell: NotebookCellData): boolean {
     const metadata = cell.metadata
     return metadata?.[ghost.ghostKey] === true
   }
@@ -544,13 +441,13 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async handleOpenNotebook(doc: NotebookDocument) {
-    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
+    const cacheId = getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
       return
     }
 
-    if (GrpcSerializer.isDocumentSessionOutputs(doc.metadata)) {
+    if (isDocumentSessionOutputs(doc.metadata)) {
       return
     }
 
@@ -558,7 +455,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async handleCloseNotebook(doc: NotebookDocument) {
-    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
+    const cacheId = getDocumentCacheId(doc.metadata)
     /**
      * Remove cache
      */
@@ -569,7 +466,7 @@ export class GrpcSerializer extends SerializerBase {
   }
 
   protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
-    const cacheId = GrpcSerializer.getDocumentCacheId(doc.metadata)
+    const cacheId = getDocumentCacheId(doc.metadata)
 
     if (!cacheId) {
       return
@@ -600,7 +497,7 @@ export class GrpcSerializer extends SerializerBase {
       return -1
     }
 
-    const sessionFilePath = GrpcSerializer.getOutputsUri(srcDocUri, sessionId)
+    const sessionFilePath = getOutputsUri(srcDocUri, sessionId)
 
     // If preview button is clicked, save the outputs to a file
     const isPreview = GrpcSerializer.isPreviewOutput()
@@ -620,12 +517,15 @@ export class GrpcSerializer extends SerializerBase {
     return bytes.length
   }
 
-  static isPreviewOutput(): boolean {
+  private static isPreviewOutput(): boolean {
     const isPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
     return isPreview
   }
 
-  static async shouldWriteOutputs(sessionFilePath: Uri, isPreview: boolean): Promise<boolean> {
+  private static async shouldWriteOutputs(
+    sessionFilePath: Uri,
+    isPreview: boolean,
+  ): Promise<boolean> {
     const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
     const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
     const sessionFileExists = await this.sessionFileExists(sessionFilePath)
@@ -633,7 +533,7 @@ export class GrpcSerializer extends SerializerBase {
     return isPreview || (isAutosaveOn && !isSignedIn) || (isAutosaveOn && sessionFileExists)
   }
 
-  static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
+  private static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
     try {
       await workspace.fs.stat(sessionFilePath)
       return true
@@ -657,22 +557,7 @@ export class GrpcSerializer extends SerializerBase {
     return this.saveNotebookOutputsByCacheId(cacheId ?? '')
   }
 
-  public static getOutputsFilePath(fsPath: string, sid: string): string {
-    const fileDir = path.dirname(fsPath)
-    const fileExt = path.extname(fsPath)
-    const fileBase = path.basename(fsPath, fileExt)
-    const filePath = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
-
-    return filePath
-  }
-
-  public static getOutputsUri(docUri: Uri, sessionId: string): Uri {
-    const fspath = GrpcSerializer.getOutputsFilePath(docUri.fsPath, sessionId)
-    const query = docUri.query
-    return Uri.parse(`${docUri.scheme}://${fspath}?${query}`)
-  }
-
-  public static getSourceFilePath(outputsFile: string): string {
+  private static getSourceFilePath(outputsFile: string): string {
     const fileExt = path.extname(outputsFile)
     let fileBase = path.basename(outputsFile, fileExt)
     const parts = fileBase.split('-')
@@ -686,7 +571,7 @@ export class GrpcSerializer extends SerializerBase {
     return filePath
   }
 
-  public static getSourceFileUri(outputsUri: Uri): Uri {
+  private static getSourceFileUri(outputsUri: Uri): Uri {
     return Uri.parse(GrpcSerializer.getSourceFilePath(outputsUri.fsPath))
   }
 
@@ -709,28 +594,6 @@ export class GrpcSerializer extends SerializerBase {
     }
 
     return data
-  }
-
-  public static getDocumentCacheId(
-    metadata: { [key: string]: any } | undefined,
-  ): string | undefined {
-    if (!metadata) {
-      return undefined
-    }
-
-    // cacheId is always present, stays persistent across multiple de/-serialization cycles
-    const cacheId = metadata['runme.dev/cacheId'] as string | undefined
-
-    return cacheId
-  }
-
-  public static isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
-    if (!metadata) {
-      // it's not session outputs unless known
-      return false
-    }
-    const sessionOutputId = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['id']
-    return Boolean(sessionOutputId)
   }
 
   public override async switchLifecycleIdentity(
@@ -788,7 +651,7 @@ export class GrpcSerializer extends SerializerBase {
       data.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
     }
 
-    const cacheId = GrpcSerializer.getDocumentCacheId(data.metadata)
+    const cacheId = getDocumentCacheId(data.metadata)
     this.notebookDataCache.set(cacheId as string, data)
 
     const serialRequest = new SerializeRequest({ notebook })
@@ -910,7 +773,7 @@ export class GrpcSerializer extends SerializerBase {
     return notebook
   }
 
-  static marshalFrontmatter(
+  public static marshalFrontmatter(
     metadata: { ['runme.dev/frontmatter']?: string; 'runme.dev/id'?: string },
     kernel?: Kernel,
   ): Frontmatter {
@@ -1070,4 +933,144 @@ export class GrpcSerializer extends SerializerBase {
   public getNotebookDataCache(cacheId: string): NotebookData | undefined {
     return this.notebookDataCache.get(cacheId)
   }
+}
+
+export function addCellId(
+  metadata: Serializer.Metadata | undefined,
+  identity: RunmeIdentity,
+): {
+  [key: string]: any
+} {
+  // never run for cells that came out of kernel
+  if (metadata?.['runme.dev/id']) {
+    return metadata
+  }
+
+  // newly inserted cells may have blank metadata
+  const id = metadata?.['id'] || ulid()
+
+  // only set `id` if all or cell identity is required
+  if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
+    return {
+      ...(metadata || {}),
+      ...{ 'runme.dev/id': id, id },
+    }
+  }
+
+  return {
+    ...(metadata || {}),
+    ...{ 'runme.dev/id': id },
+  }
+}
+
+export async function addExecInfo(data: NotebookData, kernel: Kernel): Promise<NotebookCellData[]> {
+  return Promise.all(
+    data.cells.map(async (cell) => {
+      // The NotebookData structure doesn't include transient metadata,
+      // but We need the cell ID to properly track terminal outputs.
+      // I extract the cell ID from the terminal output metadata
+      // since this preserves the connection between cells and their outputs.
+      // This is particularly problematic when lifecycleIdentity is NONE
+      // since cells won't have IDs assigned directly.
+      const cellOutputs: NotebookCellOutput[] = cell.outputs || []
+      const terminalOutputs = cellOutputs.reduce(
+        (acc, curr) => {
+          if (!curr.items) {
+            return acc
+          }
+
+          const terminalOutput = curr.items.find((item) => item.mime === OutputType.terminal)
+
+          if (terminalOutput) {
+            acc[curr?.metadata?.['runme.dev/id']] = curr
+          }
+
+          return acc
+        },
+        {} as { [key: string]: NotebookCellOutputWithProcessInfo },
+      )
+
+      // Currently we assume each cell has at most one terminal output,
+      // so we only take the first entry
+      const entries = Object.entries(terminalOutputs)
+      const [id, terminalOutput] = entries.length > 0 ? entries[0] : ['', undefined]
+
+      const notebookCell = await getCellById({ id })
+      if (notebookCell && terminalOutput) {
+        const terminalState = await kernel.getCellOutputs(notebookCell).then((cellOutputMgr) => {
+          const terminalState = cellOutputMgr.getCellTerminalState()
+          if (terminalState?.outputType !== OutputType.terminal) {
+            return undefined
+          }
+          return terminalState
+        })
+
+        if (terminalState !== undefined) {
+          const processInfo = terminalState.hasProcessInfo()
+          if (processInfo) {
+            if (processInfo.pid === undefined) {
+              delete processInfo.pid
+            }
+            terminalOutput.processInfo = processInfo
+          }
+          const strTerminalState = terminalState?.serialize()
+          terminalOutput.items.forEach((item) => {
+            if (item.mime === OutputType.stdout) {
+              item.data = Buffer.from(strTerminalState)
+            }
+          })
+        }
+      }
+
+      const languageId = cell.languageId ?? ''
+
+      return {
+        ...cell,
+        languageId: VSCODE_LANGUAGEID_MAP[languageId] ?? languageId,
+      }
+    }),
+  )
+}
+
+export function normalize(source: string): string {
+  const lines = source.split('\n')
+  const normed = lines.filter((l) => !(l.trim().startsWith('```') || l.trim().endsWith('```')))
+  return normed.join('\n')
+}
+
+function getOutputsFilePath(fsPath: string, sid: string): string {
+  const fileDir = path.dirname(fsPath)
+  const fileExt = path.extname(fsPath)
+  const fileBase = path.basename(fsPath, fileExt)
+  const filePath = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
+
+  return filePath
+}
+
+export function getOutputsUri(docUri: Uri, sessionId: string): Uri {
+  const fspath = getOutputsFilePath(docUri.fsPath, sessionId)
+  const query = docUri.query
+  return Uri.parse(`${docUri.scheme}://${fspath}?${query}`)
+}
+
+export function getDocumentCacheId(
+  metadata: { [key: string]: any } | undefined,
+): string | undefined {
+  if (!metadata) {
+    return undefined
+  }
+
+  // cacheId is always present, stays persistent across multiple de/-serialization cycles
+  const cacheId = metadata['runme.dev/cacheId'] as string | undefined
+
+  return cacheId
+}
+
+export function isDocumentSessionOutputs(metadata: { [key: string]: any } | undefined): boolean {
+  if (!metadata) {
+    // it's not session outputs unless known
+    return false
+  }
+  const sessionOutputId = metadata[RUNME_FRONTMATTER_PARSED]?.['runme']?.['session']?.['id']
+  return Boolean(sessionOutputId)
 }
