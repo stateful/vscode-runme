@@ -66,11 +66,22 @@ declare var globalThis: any
 const DEFAULT_LANG_ID = 'text'
 const log = getLogger('serializer')
 
+export interface ISerializer extends NotebookSerializer, Disposable {
+  dispose(): void
+  serializeNotebook(data: NotebookData, token: CancellationToken): Promise<Uint8Array>
+  deserializeNotebook(content: Uint8Array, token: CancellationToken): Promise<NotebookData>
+  switchLifecycleIdentity(notebook: NotebookDocument, identity: RunmeIdentity): Promise<boolean>
+  saveNotebookOutputs(uri: Uri): Promise<number>
+  getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
+  getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
+  getNotebookDataCache(cacheId: string): NotebookData | undefined
+}
+
 type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
   processInfo?: IProcessInfoState
 }
 
-export abstract class SerializerBase implements NotebookSerializer, Disposable {
+export abstract class SerializerBase implements ISerializer {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
