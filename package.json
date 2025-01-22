@@ -1377,7 +1377,7 @@
     "@wdio/local-runner": "^8.41.0",
     "@wdio/mocha-framework": "^8.41.0",
     "@wdio/spec-reporter": "^8.41.0",
-    "chromedriver": "^131.0.5",
+    "chromedriver": "^132.0.0",
     "comment-json": "^4.2.5",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.0.1",
