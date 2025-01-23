@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import tls from 'node:tls'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -26,8 +27,9 @@ import {
   ConnectTransport,
   GrpcTransportOptions,
   ConnectTransportOptions,
-  createGrpcTransport,
+  createGrpcHttpTransport,
   createConnectTransport,
+  createGrpcTcpTransport,
 } from '../grpc/parser/connect/client'
 
 import KernelServerError from './kernelServerError'
@@ -221,23 +223,34 @@ class KernelServer implements IServer {
   }
 
   async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
-    let address = this.connectAddress()
+    const address = this.connectAddress()
 
-    let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
+    const transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
       baseUrl: address,
       httpVersion: '2',
     }
 
     if (getTLSEnabled()) {
       const pems = await KernelServer.getTLS(this.getTLSDir())
-      transportOptions.nodeOptions = {
+      const nodeSecureContextOptions: tls.SecureContextOptions = {
         key: pems.privKeyPEM,
         cert: pems.certPEM,
         ca: pems.certPEM,
       }
+      transportOptions.nodeOptions = {
+        ...transportOptions.nodeOptions,
+        ...nodeSecureContextOptions,
+      }
     }
 
-    const createTransport = protocol === 'grpc' ? createGrpcTransport : createConnectTransport
+    let createTransport
+    if (protocol === 'connect') {
+      createTransport = createConnectTransport
+    } else if (address.startsWith('unix://')) {
+      createTransport = createGrpcTcpTransport
+    } else {
+      createTransport = createGrpcHttpTransport
+    }
     this.#connectTransport = createTransport(transportOptions)
     return this.#connectTransport
   }
@@ -248,11 +261,14 @@ class KernelServer implements IServer {
     if (!endpoint) {
       throw new KernelServerError('Invalid server address')
     }
-    if (endpoint.protocol === 'unix:') {
-      throw new KernelServerError('Cannot connect via UNIX domain socket')
-    }
-    if (endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:') {
-      endpoint = new URL(`http://${this.address()}`)
+    if (
+      endpoint.protocol !== 'http:' &&
+      endpoint.protocol !== 'https:' &&
+      endpoint.protocol !== 'unix:'
+    ) {
+      endpoint = new URL(`https://${this.address()}`)
+    } else {
+      return endpoint.toString()
     }
 
     if (getTLSEnabled()) {
