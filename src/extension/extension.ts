@@ -68,7 +68,7 @@ import {
   notebookSessionOutputs,
   togglePreviewOutputs,
 } from './commands'
-import { TcpSerializer, ISerializer } from './serializer'
+import { ConnectSerializer, ISerializer } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
 import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
@@ -143,7 +143,7 @@ export class RunmeExtension {
     )
 
     const reporter = new GrpcReporter(context, server)
-    this.serializer = new TcpSerializer(context, server, kernel)
+    this.serializer = new ConnectSerializer(context, server, kernel)
     kernel.setSerializer(this.serializer)
     kernel.setReporter(reporter)
 
