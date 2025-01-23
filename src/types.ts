@@ -83,11 +83,11 @@ export namespace Serializer {
     languageId?: string
   }
 
-  export interface Wasm {
-    Runme: {
-      deserialize: (content: string) => Promise<Notebook>
-      serialize: (content: string) => Promise<string>
-    }
+  export enum LifecycleIdentity {
+    UNSPECIFIED = 0,
+    ALL = 1,
+    DOCUMENT = 2,
+    CELL = 3,
   }
 
   export interface Metadata {

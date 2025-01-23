@@ -68,7 +68,7 @@ import {
   notebookSessionOutputs,
   togglePreviewOutputs,
 } from './commands'
-import { GrpcSerializer, ISerializer } from './serializer'
+import { TcpSerializer, ISerializer } from './serializer'
 import { RunmeLauncherProvider, RunmeTreeProvider } from './provider/launcher'
 import { RunmeLauncherProvider as RunmeLauncherProviderBeta } from './provider/launcherBeta'
 import { RunmeUriHandler } from './handler/uri'
@@ -143,7 +143,7 @@ export class RunmeExtension {
     )
 
     const reporter = new GrpcReporter(context, server)
-    this.serializer = new GrpcSerializer(context, server, kernel)
+    this.serializer = new TcpSerializer(context, server, kernel)
     kernel.setSerializer(this.serializer)
     kernel.setReporter(reporter)
 
@@ -442,7 +442,7 @@ export class RunmeExtension {
 
           await Promise.all(
             workspace.notebookDocuments.map((doc) =>
-              this.serializer?.switchLifecycleIdentity(doc, identity),
+              this.serializer?.switchLifecycleIdentity(doc, Number(identity)),
             ),
           )
         },

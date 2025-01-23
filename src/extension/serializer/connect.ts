@@ -2,7 +2,6 @@ import path from 'node:path'
 
 import {
   ExtensionContext,
-  Uri,
   NotebookData,
   CancellationToken,
   workspace,
@@ -16,22 +15,14 @@ import {
 import { maskString } from 'data-guardian'
 import YAML from 'yaml'
 
-import { FeatureName, Serializer } from '../../types'
-import {
-  NOTEBOOK_AUTOSAVE_ON,
-  NOTEBOOK_OUTPUTS_MASKED,
-  NOTEBOOK_PREVIEW_OUTPUTS,
-  OutputType,
-  RUNME_FRONTMATTER_PARSED,
-} from '../../constants'
+import { Serializer } from '../../types'
+import { OutputType, RUNME_FRONTMATTER_PARSED } from '../../constants'
 import { ParserService, createConnectClient, ConnectClient } from '../grpc/parser/connect/client'
 import {
-  RunmeIdentity,
   RunmeSession,
   Notebook,
   Frontmatter,
   CellOutput,
-  CellKind,
   CellExecutionSummary,
   DeserializeRequest,
   SerializeRequest,
@@ -40,41 +31,27 @@ import {
 import { type ReadyPromise } from '../grpc/tcpClient'
 import KernelServer from '../server/kernelServer'
 import { Kernel } from '../kernel'
-import ContextState from '../contextState'
 import getLogger from '../logger'
-import features from '../features'
-import { togglePreviewOutputs } from '../commands'
 
-import {
-  getDocumentCacheId,
-  getOutputsUri,
-  getSourceFileUri,
-  isDocumentSessionOutputs,
-  NotebookCellOutputWithProcessInfo,
-  SerializerBase,
-} from './serializer'
+import { getDocumentCacheId, NotebookCellOutputWithProcessInfo, SerializerBase } from './serializer'
 
 const log = getLogger('grpc')
 
+type ParserConnectClient = ConnectClient<typeof ParserService>
+
 export class ConnectSerializer extends SerializerBase {
-  private client!: ConnectClient<typeof ParserService>
+  private client!: ParserConnectClient
   protected ready: ReadyPromise
   protected serverUrl!: string
-
-  // todo(sebastian): naive cache for now, consider use lifecycle events for gc
-  protected readonly plainCache = new Map<string, Promise<Buffer>>()
-  protected readonly maskedCache = new Map<string, Promise<Buffer>>()
-  protected readonly notebookDataCache = new Map<string, NotebookData>()
-  protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
 
   private serverReadyListener?: Disposable
 
   constructor(
     protected context: ExtensionContext,
-    protected server: KernelServer,
+    server: KernelServer,
     kernel: Kernel,
   ) {
-    super(context, kernel)
+    super(context, server, kernel)
 
     // cleanup listener when it's outlived its purpose
     this.ready = new Promise((resolve) => {
@@ -88,156 +65,11 @@ export class ConnectSerializer extends SerializerBase {
     this.serverReadyListener = server.onConnectTransportReady(({ transport }) => {
       this.client = createConnectClient(ParserService, transport)
     })
-
-    this.disposables.push(
-      // todo(sebastian): delete entries on session reset not notebook editor lifecycle
-      // workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
-      workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
-      workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
-    )
-  }
-
-  protected async handleOpenNotebook(doc: NotebookDocument) {
-    const cacheId = getDocumentCacheId(doc.metadata)
-
-    if (!cacheId) {
-      return
-    }
-
-    if (isDocumentSessionOutputs(doc.metadata)) {
-      return
-    }
-
-    this.cacheDocUriMapping.set(cacheId, doc.uri)
-  }
-
-  protected async handleCloseNotebook(doc: NotebookDocument) {
-    const cacheId = getDocumentCacheId(doc.metadata)
-    /**
-     * Remove cache
-     */
-    if (cacheId) {
-      this.plainCache.delete(cacheId)
-      this.maskedCache.delete(cacheId)
-    }
-  }
-
-  protected async handleSaveNotebookOutputs(doc: NotebookDocument) {
-    const cacheId = getDocumentCacheId(doc.metadata)
-
-    if (!cacheId) {
-      return
-    }
-
-    this.cacheDocUriMapping.set(cacheId, doc.uri)
-
-    await this.saveNotebookOutputsByCacheId(cacheId)
-  }
-
-  protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
-    const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
-    const cache = mode ? this.maskedCache : this.plainCache
-    const bytes = await cache.get(cacheId ?? '')
-
-    if (!bytes) {
-      return -1
-    }
-
-    const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
-    if (!srcDocUri) {
-      return -1
-    }
-
-    const runnerEnv = this.kernel.getRunnerEnvironment()
-    const sessionId = runnerEnv?.getSessionId()
-    if (!sessionId) {
-      return -1
-    }
-
-    const sessionFilePath = getOutputsUri(srcDocUri, sessionId)
-
-    // If preview button is clicked, save the outputs to a file
-    const isPreview = ConnectSerializer.isPreviewOutput()
-
-    if (isPreview) {
-      await togglePreviewOutputs(false)
-    }
-
-    const showWriteOutputs = await ConnectSerializer.shouldWriteOutputs(sessionFilePath, isPreview)
-    if (showWriteOutputs) {
-      if (!sessionFilePath) {
-        return -1
-      }
-      await workspace.fs.writeFile(sessionFilePath, bytes)
-    }
-
-    return bytes.length
-  }
-
-  private static isPreviewOutput(): boolean {
-    const isPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
-    return isPreview
-  }
-
-  private static async shouldWriteOutputs(
-    sessionFilePath: Uri,
-    isPreview: boolean,
-  ): Promise<boolean> {
-    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
-    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
-    const sessionFileExists = await this.sessionFileExists(sessionFilePath)
-
-    return isPreview || (isAutosaveOn && !isSignedIn) || (isAutosaveOn && sessionFileExists)
-  }
-
-  private static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
-    try {
-      await workspace.fs.stat(sessionFilePath)
-      return true
-    } catch (e) {
-      return false
-    }
-  }
-
-  public async saveNotebookOutputs(uri: Uri): Promise<number> {
-    let cacheId: string | undefined
-    this.cacheDocUriMapping.forEach((docUri, cid) => {
-      const src = getSourceFileUri(uri)
-      if (docUri.fsPath.toString() === src.fsPath.toString()) {
-        cacheId = cid
-      }
-    })
-    if (!cacheId) {
-      return -1
-    }
-
-    return this.saveNotebookOutputsByCacheId(cacheId ?? '')
-  }
-
-  protected applyIdentity(data: Notebook): Notebook {
-    const identity = this.lifecycleIdentity
-    switch (identity) {
-      case RunmeIdentity.UNSPECIFIED:
-      case RunmeIdentity.DOCUMENT:
-        break
-      default: {
-        data.cells.forEach((cell) => {
-          if (cell.kind !== CellKind.CODE) {
-            return
-          }
-          if (!cell.metadata?.['id'] && cell.metadata?.['runme.dev/id']) {
-            cell.metadata['id'] = cell.metadata['runme.dev/id']
-          }
-        })
-      }
-    }
-
-    return data
   }
 
   public override async switchLifecycleIdentity(
     notebook: NotebookDocument,
-    identity: RunmeIdentity,
+    lifecycleIdentity: Serializer.LifecycleIdentity,
   ): Promise<boolean> {
     // skip session outputs files
     if (!!notebook.metadata['runme.dev/frontmatterParsed']?.runme?.session?.id) {
@@ -246,12 +78,9 @@ export class ConnectSerializer extends SerializerBase {
 
     await notebook.save()
     const source = await workspace.fs.readFile(notebook.uri)
-    const dreq = new DeserializeRequest({
-      source,
-      options: { identity },
-    })
 
-    const deserialized = (await this.client.deserialize(dreq)).notebook
+    const deserializer = ConnectSerializer.deserializeNotebookFactory(this.client)
+    const deserialized = await deserializer(lifecycleIdentity, source)
 
     if (!deserialized) {
       return false
@@ -277,26 +106,22 @@ export class ConnectSerializer extends SerializerBase {
   }
 
   protected async saveNotebook(
+    marshalFrontmatter: boolean,
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const marshalFrontmatter = this.lifecycleIdentity === RunmeIdentity.ALL
-
     const notebook = ConnectSerializer.marshalNotebook(data, { marshalFrontmatter })
 
     if (marshalFrontmatter) {
       data.metadata ??= {}
       data.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
     }
-
     const cacheId = getDocumentCacheId(data.metadata)
-    this.notebookDataCache.set(cacheId as string, data)
-
-    const serialRequest = new SerializeRequest({ notebook })
-
     const cacheOutputs = this.cacheNotebookOutputs(notebook, cacheId)
-    const request = this.client.serialize(serialRequest)
+
+    const serializeReq = new SerializeRequest({ notebook })
+    const request = this.client.serialize(serializeReq)
 
     // run in parallel
     const [serialResult] = await Promise.all([request, cacheOutputs])
@@ -310,6 +135,44 @@ export class ConnectSerializer extends SerializerBase {
     }
 
     return serialResult.result
+  }
+
+  protected async reviveNotebook(
+    content: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    token: CancellationToken,
+  ): Promise<Serializer.Notebook> {
+    try {
+      const deserializer = ConnectSerializer.deserializeNotebookFactory(this.client)
+      return deserializer(this.lifecycleIdentity, content)
+    } catch (e: any) {
+      if (e.name === 'ConnectError') {
+        e.message = `Unable to connect to the serializer service at ${this.serverUrl}`
+      }
+      log.error('Error in reviveNotebook: ', e as any)
+      throw e
+    }
+  }
+
+  private static deserializeNotebookFactory(client: ParserConnectClient) {
+    return async (
+      lifecycleIdentity: Serializer.LifecycleIdentity,
+      content: Uint8Array,
+    ): Promise<Serializer.Notebook> => {
+      const identity = Number(lifecycleIdentity)
+      const deserializeRequest = new DeserializeRequest({
+        source: content,
+        options: { identity },
+      })
+      const result = await client.deserialize(deserializeRequest)
+      const notebook = result.notebook
+
+      if (notebook === undefined) {
+        throw new Error('deserialization failed to revive notebook')
+      }
+
+      return notebook as unknown as Serializer.Notebook
+    }
   }
 
   private async cacheNotebookOutputs(
@@ -521,55 +384,8 @@ export class ConnectSerializer extends SerializerBase {
     })
   }
 
-  protected async reviveNotebook(
-    content: Uint8Array,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    token: CancellationToken,
-  ): Promise<Serializer.Notebook> {
-    const identity = this.lifecycleIdentity
-    const deserializeRequest = new DeserializeRequest({
-      source: content,
-      options: { identity },
-    })
-    let res
-    try {
-      res = await this.client.deserialize(deserializeRequest)
-    } catch (e: any) {
-      if (e.name === 'ConnectError') {
-        e.message = `Unable to connect to the serializer service at ${this.serverUrl}`
-      }
-      log.error('Error in reviveNotebook  ', e as any)
-      throw e
-    }
-    const notebook = res.notebook
-
-    if (notebook === undefined) {
-      throw new Error('deserialization failed to revive notebook')
-    }
-
-    this.applyIdentity(notebook)
-
-    if (!notebook) {
-      return this.printCell('⚠️ __Error__: no cells found!')
-    }
-    // we can remove ugly casting once we switch to GRPC
-    return notebook as unknown as Serializer.Notebook
-  }
-
   public dispose(): void {
     this.serverReadyListener?.dispose()
     super.dispose()
-  }
-
-  public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
-    return this.maskedCache.get(cacheId)
-  }
-
-  public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
-    return this.plainCache.get(cacheId)
-  }
-
-  public getNotebookDataCache(cacheId: string): NotebookData | undefined {
-    return this.notebookDataCache.get(cacheId)
   }
 }

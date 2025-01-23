@@ -1,2 +1,3 @@
-export { ConnectSerializer as GrpcSerializer } from './connect'
+export { ConnectSerializer } from './connect'
+export { TcpSerializer } from './tcp'
 export { ISerializer, addExecInfo, getOutputsUri, isDocumentSessionOutputs } from './serializer'

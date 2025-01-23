@@ -19,15 +19,17 @@ import {
 } from 'vscode'
 import { ulid } from 'ulidx'
 
-import { Serializer } from '../../types'
+import { FeatureName, Serializer } from '../../types'
 import {
+  NOTEBOOK_AUTOSAVE_ON,
   NOTEBOOK_LIFECYCLE_ID,
+  NOTEBOOK_OUTPUTS_MASKED,
+  NOTEBOOK_PREVIEW_OUTPUTS,
   OutputType,
   RUNME_FRONTMATTER_PARSED,
   VSCODE_LANGUAGEID_MAP,
 } from '../../constants'
 import { ServerLifecycleIdentity } from '../../utils/configuration'
-import { RunmeIdentity } from '../grpc/parser/connect/types'
 import { type ReadyPromise } from '../grpc/tcpClient'
 import Languages from '../languages'
 import { PLATFORM_OS } from '../constants'
@@ -36,6 +38,9 @@ import { getCellById } from '../cell'
 import ContextState from '../contextState'
 import * as ghost from '../ai/ghost'
 import { IProcessInfoState } from '../terminal/terminalState'
+import KernelServer from '../server/kernelServer'
+import { togglePreviewOutputs } from '../commands'
+import features from '../features'
 
 const DEFAULT_LANG_ID = 'text'
 // const log = getLogger('serializer')
@@ -44,7 +49,10 @@ export interface ISerializer extends NotebookSerializer, Disposable {
   dispose(): void
   serializeNotebook(data: NotebookData, token: CancellationToken): Promise<Uint8Array>
   deserializeNotebook(content: Uint8Array, token: CancellationToken): Promise<NotebookData>
-  switchLifecycleIdentity(notebook: NotebookDocument, identity: RunmeIdentity): Promise<boolean>
+  switchLifecycleIdentity(
+    notebook: NotebookDocument,
+    identity: Serializer.LifecycleIdentity,
+  ): Promise<boolean>
   saveNotebookOutputs(uri: Uri): Promise<number>
   getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
   getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
@@ -60,8 +68,15 @@ export abstract class SerializerBase implements ISerializer {
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
 
+  // todo(sebastian): naive cache for now, consider use lifecycle events for gc
+  protected readonly plainCache = new Map<string, Promise<Buffer>>()
+  protected readonly maskedCache = new Map<string, Promise<Buffer>>()
+  protected readonly notebookDataCache = new Map<string, NotebookData>()
+  protected readonly cacheDocUriMapping: Map<string, Uri> = new Map<string, Uri>()
+
   constructor(
     protected context: ExtensionContext,
+    protected server: KernelServer,
     protected kernel: Kernel,
   ) {
     this.languages = Languages.fromContext(this.context)
@@ -71,20 +86,151 @@ export abstract class SerializerBase implements ISerializer {
       //   this.handleNotebookSaved.bind(this)
       // )
     )
+
+    this.disposables.push(
+      // todo(sebastian): delete entries on session reset not notebook editor lifecycle
+      // workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
+      workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
+      workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
+    )
   }
 
   public dispose() {
     this.disposables.forEach((d) => d.dispose())
   }
 
-  protected get lifecycleIdentity() {
-    return ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
+  protected applyCellIdentity(data: Serializer.Notebook): Serializer.Notebook {
+    const lcid = Number(this.lifecycleIdentity)
+    if (
+      lcid === Serializer.LifecycleIdentity.UNSPECIFIED ||
+      lcid === Serializer.LifecycleIdentity.DOCUMENT
+    ) {
+      return data
+    }
+
+    data.cells.forEach((cell) => {
+      if (cell.kind !== NotebookCellKind.Code) {
+        return
+      }
+      if (!cell.metadata?.['id'] && cell.metadata?.['runme.dev/id']) {
+        cell.metadata['id'] = cell.metadata['runme.dev/id']
+      }
+    })
+
+    return data
+  }
+
+  protected get lifecycleIdentity(): Serializer.LifecycleIdentity {
+    const lcid = ContextState.getKey<ServerLifecycleIdentity>(NOTEBOOK_LIFECYCLE_ID)
+    return Number(lcid)
+  }
+
+  private async handleOpenNotebook(doc: NotebookDocument) {
+    const cacheId = getDocumentCacheId(doc.metadata)
+
+    if (!cacheId) {
+      return
+    }
+
+    if (isDocumentSessionOutputs(doc.metadata)) {
+      return
+    }
+
+    this.cacheDocUriMapping.set(cacheId, doc.uri)
+  }
+
+  private async handleCloseNotebook(doc: NotebookDocument) {
+    const cacheId = getDocumentCacheId(doc.metadata)
+    /**
+     * Remove cache
+     */
+    if (cacheId) {
+      this.plainCache.delete(cacheId)
+      this.maskedCache.delete(cacheId)
+    }
+  }
+
+  private async handleSaveNotebookOutputs(doc: NotebookDocument) {
+    const cacheId = getDocumentCacheId(doc.metadata)
+
+    if (!cacheId) {
+      return
+    }
+
+    this.cacheDocUriMapping.set(cacheId, doc.uri)
+
+    await this.saveNotebookOutputsByCacheId(cacheId)
+  }
+
+  protected async saveNotebookOutputsByCacheId(cacheId: string): Promise<number> {
+    const mode = ContextState.getKey<boolean>(NOTEBOOK_OUTPUTS_MASKED)
+    const cache = mode ? this.maskedCache : this.plainCache
+    const bytes = await cache.get(cacheId ?? '')
+
+    if (!bytes) {
+      return -1
+    }
+
+    const srcDocUri = this.cacheDocUriMapping.get(cacheId ?? '')
+    if (!srcDocUri) {
+      return -1
+    }
+
+    const runnerEnv = this.kernel.getRunnerEnvironment()
+    const sessionId = runnerEnv?.getSessionId()
+    if (!sessionId) {
+      return -1
+    }
+
+    const sessionFilePath = getOutputsUri(srcDocUri, sessionId)
+
+    // If preview button is clicked, save the outputs to a file
+    const isPreview = SerializerBase.isPreviewOutput()
+
+    if (isPreview) {
+      await togglePreviewOutputs(false)
+    }
+
+    const showWriteOutputs = await SerializerBase.shouldWriteOutputs(sessionFilePath, isPreview)
+    if (showWriteOutputs) {
+      if (!sessionFilePath) {
+        return -1
+      }
+      await workspace.fs.writeFile(sessionFilePath, bytes)
+    }
+
+    return bytes.length
+  }
+
+  private static isPreviewOutput(): boolean {
+    const isPreview = ContextState.getKey<boolean>(NOTEBOOK_PREVIEW_OUTPUTS)
+    return isPreview
+  }
+
+  private static async shouldWriteOutputs(
+    sessionFilePath: Uri,
+    isPreview: boolean,
+  ): Promise<boolean> {
+    const isAutosaveOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
+    const isSignedIn = features.isOnInContextState(FeatureName.SignedIn)
+    const sessionFileExists = await this.sessionFileExists(sessionFilePath)
+
+    return isPreview || (isAutosaveOn && !isSignedIn) || (isAutosaveOn && sessionFileExists)
+  }
+
+  private static async sessionFileExists(sessionFilePath: Uri): Promise<boolean> {
+    try {
+      await workspace.fs.stat(sessionFilePath)
+      return true
+    } catch (e) {
+      return false
+    }
   }
 
   /**
    * Handle newly added cells (live edits) to have IDs
    */
-  protected handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
+  private handleNotebookChanged(changes: NotebookDocumentChangeEvent) {
     changes.contentChanges.forEach((contentChanges) => {
       contentChanges.addedCells.forEach((cellAdded) => {
         this.kernel.registerNotebookCell(cellAdded)
@@ -108,7 +254,7 @@ export abstract class SerializerBase implements ISerializer {
   }
 
   // todo(sebastian): dead code? why?
-  protected async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
+  private async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
     // update changes in metadata
     const bytes = await workspace.fs.readFile(uri)
     const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
@@ -136,7 +282,23 @@ export abstract class SerializerBase implements ISerializer {
     await workspace.applyEdit(edit)
   }
 
+  public async saveNotebookOutputs(uri: Uri): Promise<number> {
+    let cacheId: string | undefined
+    this.cacheDocUriMapping.forEach((docUri, cid) => {
+      const src = getSourceFileUri(uri)
+      if (docUri.fsPath.toString() === src.fsPath.toString()) {
+        cacheId = cid
+      }
+    })
+    if (!cacheId) {
+      return -1
+    }
+
+    return this.saveNotebookOutputsByCacheId(cacheId ?? '')
+  }
+
   protected abstract saveNotebook(
+    marshalFrontmatter: boolean,
     data: NotebookData,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
@@ -147,25 +309,31 @@ export abstract class SerializerBase implements ISerializer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     token: CancellationToken,
   ): Promise<Uint8Array> {
-    const cells = await addExecInfo(data, this.kernel)
+    const lcid = Number(this.lifecycleIdentity)
+    let marshalFrontmatter = false
+    if (
+      lcid === Serializer.LifecycleIdentity.ALL ||
+      lcid === Serializer.LifecycleIdentity.DOCUMENT
+    ) {
+      marshalFrontmatter = true
+    }
 
+    const cells = await addExecInfo(data, this.kernel)
     const metadata = data.metadata
 
     // Prune any ghost cells when saving.
-    const cellsToSave = []
-    for (let i = 0; i < cells.length; i++) {
-      if (SerializerBase.isGhostCell(cells[i])) {
-        continue
-      }
-      cellsToSave.push(cells[i])
-    }
-
+    const cellsToSave = cells.filter((cell) => !SerializerBase.isGhostCell(cell))
     data = new NotebookData(cellsToSave)
     data.metadata = metadata
 
     let encoded: Uint8Array
     try {
-      encoded = await this.saveNotebook(data, token)
+      const cacheId = getDocumentCacheId(data.metadata)
+      if (cacheId) {
+        this.notebookDataCache.set(cacheId, data)
+      }
+
+      encoded = await this.saveNotebook(marshalFrontmatter, data, token)
     } catch (err: any) {
       console.error(err)
       throw err
@@ -192,6 +360,8 @@ export abstract class SerializerBase implements ISerializer {
         throw err
       }
       notebook = await this.reviveNotebook(content, token)
+      notebook = notebook as unknown as Serializer.Notebook
+      this.applyCellIdentity(notebook)
     } catch (err: any) {
       return this.printCell(
         '⚠️ __Error__: document could not be loaded' +
@@ -245,7 +415,7 @@ export abstract class SerializerBase implements ISerializer {
 
   // revive converts the Notebook proto to VSCode's NotebookData.
   // It returns a an array of VSCode NotebookCellData objects.
-  public static revive(notebook: Serializer.Notebook, identity: RunmeIdentity) {
+  public static revive(notebook: Serializer.Notebook, identity: Serializer.LifecycleIdentity) {
     return notebook.cells.reduce(
       (accu, elem) => {
         let cell: NotebookCellData
@@ -282,7 +452,7 @@ export abstract class SerializerBase implements ISerializer {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     notebook: NotebookDocument,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    identity: RunmeIdentity,
+    identity: Serializer.LifecycleIdentity,
   ): Promise<boolean> {
     return false
   }
@@ -291,15 +461,17 @@ export abstract class SerializerBase implements ISerializer {
     return new NotebookData([new NotebookCellData(NotebookCellKind.Markup, content, languageId)])
   }
 
-  protected abstract saveNotebookOutputsByCacheId(cacheId: string): Promise<number>
+  public getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.maskedCache.get(cacheId)
+  }
 
-  public abstract saveNotebookOutputs(uri: Uri): Promise<number>
+  public getPlainCache(cacheId: string): Promise<Uint8Array> | undefined {
+    return this.plainCache.get(cacheId)
+  }
 
-  public abstract getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
-
-  public abstract getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
-
-  public abstract getNotebookDataCache(cacheId: string): NotebookData | undefined
+  public getNotebookDataCache(cacheId: string): NotebookData | undefined {
+    return this.notebookDataCache.get(cacheId)
+  }
 
   protected static isGhostCell(cell: NotebookCellData): boolean {
     const metadata = cell.metadata
@@ -309,7 +481,7 @@ export abstract class SerializerBase implements ISerializer {
 
 export function addRunmeCellId(
   metadata: Serializer.Metadata | undefined,
-  identity: RunmeIdentity,
+  identity: Serializer.LifecycleIdentity,
 ): {
   [key: string]: any
 } {
@@ -322,7 +494,10 @@ export function addRunmeCellId(
   const id = metadata?.['id'] || ulid()
 
   // only set `id` if all or cell identity is required
-  if (identity === RunmeIdentity.ALL || identity === RunmeIdentity.CELL) {
+  if (
+    identity === Serializer.LifecycleIdentity.ALL ||
+    identity === Serializer.LifecycleIdentity.CELL
+  ) {
     return {
       ...(metadata || {}),
       ...{ 'runme.dev/id': id, id },

@@ -34,7 +34,7 @@ import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'
 import { getDocumentCacheId } from '../../serializer/serializer'
-import { GrpcSerializer } from '../../serializer'
+import { ConnectSerializer } from '../../serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -91,7 +91,7 @@ export default async function saveCellExecution(
 
     log.info('Saving cell execution')
 
-    const frontmatter = GrpcSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
+    const frontmatter = ConnectSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
 
     const metadata = {
       ...editor.notebook.metadata,
@@ -130,7 +130,7 @@ export default async function saveCellExecution(
         throw new Error(`Notebook data cache not found for cache ID: ${cacheId}`)
       }
 
-      const notebook = GrpcSerializer.marshalNotebook(notebookData, {
+      const notebook = ConnectSerializer.marshalNotebook(notebookData, {
         kernel,
         marshalFrontmatter: true,
       })
