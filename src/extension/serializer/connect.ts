@@ -35,7 +35,7 @@ import getLogger from '../logger'
 
 import { getDocumentCacheId, NotebookCellOutputWithProcessInfo, GrpcSerializer } from './serializer'
 
-const log = getLogger('grpc')
+const log = getLogger('connect')
 
 type ParserConnectClient = ConnectClient<typeof ParserService>
 

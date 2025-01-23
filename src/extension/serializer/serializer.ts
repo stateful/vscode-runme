@@ -43,7 +43,7 @@ import { togglePreviewOutputs } from '../commands'
 import features from '../features'
 
 const DEFAULT_LANG_ID = 'text'
-// const log = getLogger('serializer')
+// const log = getLogger('grpc')
 
 export interface ISerializer extends NotebookSerializer, Disposable {
   dispose(): void
