@@ -9,11 +9,19 @@ import saveCellExecution, {
 import { Kernel } from '../../../../src/extension/kernel'
 import { ClientMessages } from '../../../../src/constants'
 import { APIMethod } from '../../../../src/types'
-import { GrpcSerializer } from '../../../../src/extension/serializer'
+import { ConnectSerializer } from '../../../../src/extension/serializer/connect'
 import {
   StatefulAuthProvider,
   StatefulAuthSession,
 } from '../../../../src/extension/provider/statefulAuth'
+
+vi.mock('../../../../src/extension/serializer/serializer', async (importOriginal) => {
+  const original = (await importOriginal()) as any
+  return {
+    ...original,
+    getDocumentCacheId: vi.fn().mockReturnValue('cache-id'),
+  }
+})
 
 vi.mock('../../../../src/extension/features', async (importOriginal) => {
   const original = (await importOriginal()) as any
@@ -87,7 +95,7 @@ const mockCellInCache = (kernel, cellId) => {
   vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
     cells: [],
   }))
-  vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValueOnce({
+  vi.spyOn(ConnectSerializer, 'marshalNotebook').mockReturnValueOnce(<any>{
     cells: [
       {
         kind: 2,
@@ -314,7 +322,6 @@ suite('Save cell execution', () => {
       isExpired: false,
       expiresIn: 2145848400000,
     }
-    vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
     vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
       authenticationSession,
     )
@@ -358,7 +365,6 @@ suite('Save cell execution', () => {
 
   it("Should throw if there's the cell is not found in the marshalled notebook", async () => {
     const cellId = 'cell-id'
-    const cacheId = 'cache-id'
     const notebookId = 'ulid'
 
     const authenticationSession: StatefulAuthSession = {
@@ -372,14 +378,13 @@ suite('Save cell execution', () => {
       isExpired: false,
       expiresIn: 2145848400000,
     }
-    vi.spyOn(GrpcSerializer, 'getDocumentCacheId').mockReturnValueOnce(cacheId)
     vi.spyOn(StatefulAuthProvider.instance, 'currentSession').mockResolvedValue(
       authenticationSession,
     )
     vi.spyOn(kernel, 'getNotebookDataCache').mockImplementationOnce(() => ({
       cells: [],
     }))
-    vi.spyOn(GrpcSerializer, 'marshalNotebook').mockReturnValueOnce({
+    vi.spyOn(ConnectSerializer, 'marshalNotebook').mockReturnValueOnce(<any>{
       cells: [],
       metadata: {},
       frontmatter: {
