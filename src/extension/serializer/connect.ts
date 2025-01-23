@@ -33,13 +33,13 @@ import KernelServer from '../server/kernelServer'
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
 
-import { getDocumentCacheId, NotebookCellOutputWithProcessInfo, SerializerBase } from './serializer'
+import { getDocumentCacheId, NotebookCellOutputWithProcessInfo, GrpcSerializer } from './serializer'
 
 const log = getLogger('grpc')
 
 type ParserConnectClient = ConnectClient<typeof ParserService>
 
-export class ConnectSerializer extends SerializerBase {
+export class ConnectSerializer extends GrpcSerializer {
   private client!: ParserConnectClient
   protected ready: ReadyPromise
   protected serverUrl!: string

@@ -63,7 +63,7 @@ export type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
   processInfo?: IProcessInfoState
 }
 
-export abstract class SerializerBase implements ISerializer {
+export abstract class GrpcSerializer implements ISerializer {
   protected abstract readonly ready: ReadyPromise
   protected readonly languages: Languages
   protected disposables: Disposable[] = []
@@ -185,13 +185,13 @@ export abstract class SerializerBase implements ISerializer {
     const sessionFilePath = getOutputsUri(srcDocUri, sessionId)
 
     // If preview button is clicked, save the outputs to a file
-    const isPreview = SerializerBase.isPreviewOutput()
+    const isPreview = GrpcSerializer.isPreviewOutput()
 
     if (isPreview) {
       await togglePreviewOutputs(false)
     }
 
-    const showWriteOutputs = await SerializerBase.shouldWriteOutputs(sessionFilePath, isPreview)
+    const showWriteOutputs = await GrpcSerializer.shouldWriteOutputs(sessionFilePath, isPreview)
     if (showWriteOutputs) {
       if (!sessionFilePath) {
         return -1
@@ -322,7 +322,7 @@ export abstract class SerializerBase implements ISerializer {
     const metadata = data.metadata
 
     // Prune any ghost cells when saving.
-    const cellsToSave = cells.filter((cell) => !SerializerBase.isGhostCell(cell))
+    const cellsToSave = cells.filter((cell) => !GrpcSerializer.isGhostCell(cell))
     data = new NotebookData(cellsToSave)
     data.metadata = metadata
 
@@ -403,7 +403,7 @@ export abstract class SerializerBase implements ISerializer {
     notebook.metadata ??= {}
     notebook.metadata[RUNME_FRONTMATTER_PARSED] = notebook.frontmatter
 
-    const notebookData = new NotebookData(SerializerBase.revive(notebook, this.lifecycleIdentity))
+    const notebookData = new NotebookData(GrpcSerializer.revive(notebook, this.lifecycleIdentity))
     if (notebook.metadata) {
       notebookData.metadata = notebook.metadata
     } else {
