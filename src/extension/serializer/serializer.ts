@@ -42,6 +42,8 @@ import KernelServer from '../server/kernelServer'
 import { togglePreviewOutputs } from '../commands'
 import features from '../features'
 
+import { getOutputsUri } from './utils'
+
 const DEFAULT_LANG_ID = 'text'
 // const log = getLogger('grpc')
 
@@ -592,12 +594,6 @@ export function getOutputsFilePath(fsPath: string, sid: string): string {
   const filePath = path.normalize(`${fileDir}/${fileBase}-${sid}${fileExt}`)
 
   return filePath
-}
-
-export function getOutputsUri(docUri: Uri, sessionId: string): Uri {
-  const fspath = getOutputsFilePath(docUri.fsPath, sessionId)
-  const query = docUri.query
-  return Uri.parse(`${docUri.scheme}://${fspath}?${query}`)
 }
 
 export function getDocumentCacheId(
