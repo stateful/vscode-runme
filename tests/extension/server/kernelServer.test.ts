@@ -259,7 +259,7 @@ suite('Kernel server GRPC transport', () => {
     expect(url.pathname).toStrictEqual('/tmp/runme-abcdefgh.sock')
   })
 
-  test('#connectTransport returns non-UDS transport matching user settings', async () => {
+  test('#connectTransport returns non-UDS transport matching protocols', async () => {
     configValues.enableTLS = false // avoid TSL creds mocking
     configValues.transportType = undefined
 
