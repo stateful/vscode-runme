@@ -12,11 +12,11 @@ export function createGrpcTcpTransport(transportOptions: GrpcTransportOptions): 
     throw new Error('This transport only supports HTTP/2')
   }
 
-  const address = transportOptions.baseUrl
-  if (!address.startsWith('unix://')) {
+  const address = new URL(transportOptions.baseUrl)
+  if (address.protocol !== 'unix:') {
     throw new Error('This transport only supports Unix domain sockets')
   }
-  const path = address.replace('unix://', '')
+  const path = address.pathname
 
   let clientSessionOptions: http2.ClientSessionOptions = {
     createConnection: (_auth, opts) => {

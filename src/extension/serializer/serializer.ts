@@ -14,7 +14,6 @@ import {
   NotebookDocumentChangeEvent,
   Disposable,
   NotebookDocument,
-  CancellationTokenSource,
   NotebookCellOutput,
 } from 'vscode'
 import { ulid } from 'ulidx'
@@ -84,14 +83,9 @@ export abstract class GrpcSerializer implements ISerializer {
     this.languages = Languages.fromContext(this.context)
     this.disposables.push(
       workspace.onDidChangeNotebookDocument(this.handleNotebookChanged.bind(this)),
-      // workspace.onDidSaveNotebookDocument(
-      //   this.handleNotebookSaved.bind(this)
-      // )
     )
 
     this.disposables.push(
-      // todo(sebastian): delete entries on session reset not notebook editor lifecycle
-      // workspace.onDidCloseNotebookDocument(this.handleCloseNotebook.bind(this)),
       workspace.onDidSaveNotebookDocument(this.handleSaveNotebookOutputs.bind(this)),
       workspace.onDidOpenNotebookDocument(this.handleOpenNotebook.bind(this)),
     )
@@ -139,17 +133,6 @@ export abstract class GrpcSerializer implements ISerializer {
     }
 
     this.cacheDocUriMapping.set(cacheId, doc.uri)
-  }
-
-  private async handleCloseNotebook(doc: NotebookDocument) {
-    const cacheId = getDocumentCacheId(doc.metadata)
-    /**
-     * Remove cache
-     */
-    if (cacheId) {
-      this.plainCache.delete(cacheId)
-      this.maskedCache.delete(cacheId)
-    }
   }
 
   private async handleSaveNotebookOutputs(doc: NotebookDocument) {
@@ -253,35 +236,6 @@ export abstract class GrpcSerializer implements ISerializer {
         workspace.applyEdit(edit)
       })
     })
-  }
-
-  // todo(sebastian): dead code? why?
-  private async handleNotebookSaved({ uri, cellAt }: NotebookDocument) {
-    // update changes in metadata
-    const bytes = await workspace.fs.readFile(uri)
-    const deserialized = await this.deserializeNotebook(bytes, new CancellationTokenSource().token)
-
-    const notebookEdits = deserialized.cells.flatMap((updatedCell, i) => {
-      const updatedName = (updatedCell.metadata as Serializer.Metadata | undefined)?.[
-        'runme.dev/name'
-      ]
-      if (!updatedName) {
-        return []
-      }
-
-      const oldCell = cellAt(i)
-      return [
-        NotebookEdit.updateCellMetadata(i, {
-          ...(oldCell.metadata || {}),
-          'runme.dev/name': updatedName,
-        } as Serializer.Metadata),
-      ]
-    })
-
-    const edit = new WorkspaceEdit()
-    edit.set(uri, notebookEdits)
-
-    await workspace.applyEdit(edit)
   }
 
   public async saveNotebookOutputs(uri: Uri): Promise<number> {

@@ -219,7 +219,7 @@ describe('ConnectSerializer', () => {
     })
   })
 
-  describe('#addCellId', () => {
+  describe('#addRunmeCellId', () => {
     const copyCell = () =>
       JSON.parse(
         JSON.stringify({
