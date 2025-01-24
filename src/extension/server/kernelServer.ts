@@ -256,19 +256,22 @@ class KernelServer implements IServer {
   }
 
   connectAddress(): string {
-    let endpoint = new URL(this.address())
-
-    if (!endpoint) {
-      throw new KernelServerError('Invalid server address')
+    let endpoint: URL
+    try {
+      endpoint = new URL(this.address())
+    } catch (e) {
+      if ((e as TypeError).message !== 'Invalid URL') {
+        throw new KernelServerError('Invalid server address')
+      }
+      endpoint = new URL(`https://${this.address()}`)
     }
+
     if (
       endpoint.protocol !== 'http:' &&
       endpoint.protocol !== 'https:' &&
       endpoint.protocol !== 'unix:'
     ) {
       endpoint = new URL(`https://${this.address()}`)
-    } else {
-      return endpoint.toString()
     }
 
     if (getTLSEnabled()) {
