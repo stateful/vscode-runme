@@ -18,7 +18,6 @@ import ContextState from '../../contextState'
 import { Kernel } from '../../kernel'
 import getLogger from '../../logger'
 import { getAnnotations, getCellRunmeId, getGitContext } from '../../utils'
-import { GrpcSerializer } from '../../serializer'
 import { InitializeCloudClient } from '../../api/client'
 import {
   CreateCellExecutionDocument,
@@ -34,6 +33,8 @@ import { Frontmatter } from '../../grpc/parser/tcp/types'
 import { getCellById } from '../../cell'
 import { StatefulAuthProvider } from '../../provider/statefulAuth'
 import features from '../../features'
+import { getDocumentCacheId } from '../../serializer/serializer'
+import { ConnectSerializer } from '../../serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
@@ -90,14 +91,14 @@ export default async function saveCellExecution(
 
     log.info('Saving cell execution')
 
-    const frontmatter = GrpcSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
+    const frontmatter = ConnectSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
 
     const metadata = {
       ...editor.notebook.metadata,
       [RUNME_FRONTMATTER_PARSED]: frontmatter,
     }
 
-    const cacheId = GrpcSerializer.getDocumentCacheId(metadata) as string
+    const cacheId = getDocumentCacheId(metadata) as string
     const plainSessionOutput = await kernel.getPlainCache(cacheId)
     const maskedSessionOutput = await kernel.getMaskedCache(cacheId)
 
@@ -129,7 +130,7 @@ export default async function saveCellExecution(
         throw new Error(`Notebook data cache not found for cache ID: ${cacheId}`)
       }
 
-      const notebook = GrpcSerializer.marshalNotebook(notebookData, {
+      const notebook = ConnectSerializer.marshalNotebook(notebookData, {
         kernel,
         marshalFrontmatter: true,
       })

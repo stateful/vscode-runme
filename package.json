@@ -792,12 +792,6 @@
             "default": false,
             "markdownDescription": "If set to `true`, the kernel will use the smart env store implementation."
           },
-          "runme.experiments.grpcSerializer": {
-            "type": "boolean",
-            "scope": "window",
-            "default": true,
-            "markdownDescription": "If set to `true`, the notebook serialization will use the GRPC instead of the WebAssembly interface."
-          },
           "runme.experiments.grpcRunner": {
             "type": "boolean",
             "scope": "window",
@@ -1347,7 +1341,7 @@
     "download:wasm": "node .github/scripts/downloadWasm.js",
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "run-s postinstall:*",
-    "postinstall:wasm": "npm run download:wasm && npm run download:binary",
+    "postinstall:binary": "npm run download:binary",
     "postinstall:husky": "husky",
     "test": "runme run test",
     "watch": "npm run build:dev -- --watch",

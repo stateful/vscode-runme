@@ -86,7 +86,6 @@ import {
 } from './utils'
 import { getEventReporter } from './ai/events'
 import { getSystemShellPath, isShellLanguage } from './executors/utils'
-import './wasm/wasm_exec.js'
 import { RpcError, TransformRequest, TransformResponse } from './grpc/tcpClient'
 import { IRunner, IRunnerReady, RunProgramOptions } from './runner'
 import { IRunnerEnvironment } from './runner/environment'
@@ -103,7 +102,7 @@ import { handleCellOutputMessage } from './messages/cellOutput'
 import handleGitHubMessage, { handleGistMessage } from './messages/github'
 import { getNotebookCategories } from './utils'
 import PanelManager from './panels/panelManager'
-import { GrpcSerializer } from './serializer'
+import { isDocumentSessionOutputs, ISerializer } from './serializer'
 import { askAlternativeOutputsAction, openSplitViewAsMarkdownText } from './commands'
 import { handlePlatformApiMessage } from './messages/platformRequest'
 import { handleGCPMessage } from './messages/gcp'
@@ -150,7 +149,7 @@ export class Kernel implements Disposable {
   protected activeTerminals: ActiveTerminal[] = []
   protected category?: string
   protected panelManager: PanelManager
-  protected serializer?: GrpcSerializer
+  protected serializer?: ISerializer
   protected reporter?: GrpcReporter
   protected featuresState$?: FeatureObserver
 
@@ -159,7 +158,6 @@ export class Kernel implements Disposable {
   constructor(protected context: ExtensionContext) {
     const config = workspace.getConfiguration('runme.experiments')
 
-    this.#experiments.set('grpcSerializer', config.get<boolean>('grpcSerializer', true))
     this.#experiments.set('grpcRunner', config.get<boolean>('grpcRunner', true))
     this.#experiments.set('grpcServer', config.get<boolean>('grpcServer', true))
     this.#experiments.set('smartEnvStore', config.get<boolean>('smartEnvStore', false))
@@ -286,7 +284,7 @@ export class Kernel implements Disposable {
     this.category = category
   }
 
-  setSerializer(serializer: GrpcSerializer) {
+  setSerializer(serializer: ISerializer) {
     this.serializer = serializer
   }
 
@@ -331,7 +329,7 @@ export class Kernel implements Disposable {
   }
 
   async #setNotebookMode(notebookDocument: NotebookDocument): Promise<void> {
-    const isSessionsOutput = GrpcSerializer.isDocumentSessionOutputs(notebookDocument.metadata)
+    const isSessionsOutput = isDocumentSessionOutputs(notebookDocument.metadata)
     const notebookMode = isSessionsOutput ? NotebookMode.SessionOutputs : NotebookMode.Execution
     await ContextState.addKey(NOTEBOOK_MODE, notebookMode)
   }
@@ -684,9 +682,7 @@ export class Kernel implements Disposable {
   }
 
   private async _executeAll(cells: NotebookCell[]) {
-    const sessionOutputsDoc = cells.find((c) =>
-      GrpcSerializer.isDocumentSessionOutputs(c.notebook.metadata),
-    )
+    const sessionOutputsDoc = cells.find((c) => isDocumentSessionOutputs(c.notebook.metadata))
     if (sessionOutputsDoc) {
       const { notebook } = sessionOutputsDoc
       await askAlternativeOutputsAction(path.dirname(notebook.uri.fsPath), notebook.metadata)

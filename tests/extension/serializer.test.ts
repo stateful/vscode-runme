@@ -1,29 +1,27 @@
-import {
-  CancellationTokenSource,
-  NotebookData,
-  NotebookDocument,
-  NotebookEdit,
-  window,
-  workspace,
-} from 'vscode'
-import { expect, vi, it, describe, beforeEach } from 'vitest'
+import { CancellationTokenSource, NotebookData, NotebookEdit, workspace } from 'vscode'
+import { expect, vi, it, describe } from 'vitest'
 import { isValid } from 'ulidx'
 import { RunmeIdentity, Notebook } from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/parser_pb'
 
-import { GrpcSerializer, SerializerBase, WasmSerializer } from '../../src/extension/serializer'
-import type { Kernel } from '../../src/extension/kernel'
-import { EventEmitter, Uri } from '../../__mocks__/vscode'
+import { ConnectSerializer } from '../../src/extension/serializer'
+import {
+  addRunmeCellId,
+  getDocumentCacheId,
+  getOutputsFilePath,
+  getSourceFilePath,
+  GrpcSerializer,
+  isDocumentSessionOutputs,
+} from '../../src/extension/serializer/serializer'
+import { Uri } from '../../__mocks__/vscode'
 import { Serializer } from '../../src/types'
 import ContextState from '../../src/extension/contextState'
 import { OutputType } from '../../src/constants'
+import { getOutputsUri } from '../../src/extension/serializer/utils'
 
 import fixtureMarshalNotebook from './fixtures/marshalNotebook.json'
 
-globalThis.Go = vi.fn()
-globalThis.Runme = { serialize: vi.fn().mockResolvedValue('Hello World!') }
-
-vi.mock('../../src/extension/grpc/tcpClient', () => ({
-  ParserServiceClient: vi.fn(),
+vi.mock('../../src/extension/serializer/utils', () => ({
+  getOutputsUri: vi.fn(),
 }))
 
 vi.mock('vscode', () => ({
@@ -33,7 +31,7 @@ vi.mock('vscode', () => ({
     createOutputChannel: vi.fn(),
     createTextEditorDecorationType: vi.fn().mockResolvedValue({}),
   },
-  Uri: { joinPath: vi.fn().mockReturnValue('/foo/bar') },
+  Uri: { joinPath: vi.fn().mockReturnValue('/foo/bar'), parse: vi.fn() },
   workspace: {
     fs: { readFile: vi.fn().mockResolvedValue({}), writeFile: vi.fn() },
     onDidChangeNotebookDocument: vi.fn().mockReturnValue({ dispose: vi.fn() }),
@@ -57,6 +55,14 @@ vi.mock('vscode', () => ({
   NotebookData: class {
     constructor(public cells: any[]) {}
   },
+  NotebookCellKind: {
+    Markup: 1,
+    Code: 2,
+  },
+}))
+
+vi.mock('../../src/extension/grpc/tcpClient', () => ({
+  ParserServiceClient: vi.fn(),
 }))
 
 vi.mock('../../src/extension/languages', () => ({
@@ -79,17 +85,9 @@ vi.mock('../../src/extension/commands', () => ({
   togglePreviewOutputs: vi.fn(),
 }))
 
-function newKernel(): Kernel {
-  return {} as unknown as Kernel
-}
-
-describe('SerializerBase', () => {
-  const context: any = {
-    extensionUri: { fsPath: '/foo/bar' },
-  }
-
+describe('GrpcSerializer', () => {
   it('serializeNotebook transforms languages', async () => {
-    const TestSerializer = class extends SerializerBase {
+    const TestSerializer = class extends GrpcSerializer {
       public getMaskedCache(_cacheId: string): Promise<Uint8Array> | undefined {
         throw new Error('Method not implemented.')
       }
@@ -110,7 +108,10 @@ describe('SerializerBase', () => {
 
       protected ready: Promise<void | Error> = Promise.resolve()
 
-      protected async saveNotebook(data: NotebookData): Promise<Uint8Array> {
+      protected async saveNotebook(
+        marshalFrontmatter: boolean,
+        data: NotebookData,
+      ): Promise<Uint8Array> {
         return data as any
       }
 
@@ -121,7 +122,7 @@ describe('SerializerBase', () => {
       protected async preSaveCheck() {}
     }
 
-    const serializer = new TestSerializer({} as any, {} as any)
+    const serializer = new TestSerializer({} as any, {} as any, {} as any)
 
     const processed = (await serializer['serializeNotebook'](
       {
@@ -158,82 +159,9 @@ describe('SerializerBase', () => {
       },
     ])
   })
-
-  describe('handleNotebookSaved', () => {
-    const _onDidSaveNotebookDocument = new EventEmitter<NotebookDocument>()
-
-    beforeEach(() => {
-      vi.mocked(workspace.onDidSaveNotebookDocument).mockImplementation((l) =>
-        _onDidSaveNotebookDocument.event(l),
-      )
-
-      vi.mocked(workspace.applyEdit).mockClear()
-    })
-
-    it('updates cell names on save', async () => {
-      const s = new WasmSerializer(context, newKernel())
-
-      s['deserializeNotebook'] = vi.fn(
-        () =>
-          ({
-            cells: [
-              {
-                metadata: {
-                  'runme.dev/name': 'newName',
-                  interactive: true,
-                },
-              },
-            ],
-          }) as any,
-      )
-
-      const uri = Uri.file('/foo/bar')
-
-      await _onDidSaveNotebookDocument.fireAsync({
-        uri,
-        cellAt: () => ({ metadata: { 'runme.dev/name': 'oldName', interactive: false } }),
-      } as any)
-
-      expect(workspace.applyEdit).toHaveBeenCalledTimes(0)
-
-      // const edit = vi.mocked(workspace.applyEdit).mock.calls[0][0]
-      // expect(edit).toBeTruthy()
-
-      // const edits = edit.get(uri)
-      // expect(edits).toHaveLength(1)
-
-      // expect(edits[0]).toStrictEqual({
-      //   i: 0,
-      //   type: 'updateCellMetadata',
-      //   metadata: {
-      //     interactive: false,
-      //     'runme.dev/name': 'newName',
-      //   }
-      // })
-    })
-  })
 })
 
-describe('WasmSerializer', () => {
-  const context: any = {
-    extensionUri: { fsPath: '/foo/bar' },
-  }
-
-  describe('serializeNotebook', () => {
-    it('uses Runme wasm to save the file', async () => {
-      // @ts-ignore readonly
-      window.activeNotebookEditor = {} as any
-      const s = new WasmSerializer(context, newKernel())
-      // @ts-ignore readonly
-      s['ready'] = Promise.resolve()
-      expect(Buffer.from(await s.serializeNotebook({ cells: [] } as any, {} as any))).toEqual(
-        Buffer.from('Hello World!'),
-      )
-    })
-  })
-})
-
-describe('GrpcSerializer', () => {
+describe('ConnectSerializer', () => {
   const deepCopyFixture = () => {
     const raw = fixtureMarshalNotebook as any
     return bufferConvert(JSON.parse(JSON.stringify(raw)))
@@ -274,24 +202,24 @@ describe('GrpcSerializer', () => {
   describe('#isDocumentSessionOutputs', () => {
     it('should return false when frontmatter does not include a session ID', () => {
       const fixture = deepCopyFixture()
-      const res = GrpcSerializer.isDocumentSessionOutputs(fixture.metadata)
+      const res = isDocumentSessionOutputs(fixture.metadata)
       expect(res).toBeFalsy()
     })
 
     it('should return false for undefined metadata', () => {
-      const res = GrpcSerializer.isDocumentSessionOutputs(undefined)
+      const res = isDocumentSessionOutputs(undefined)
       expect(res).toBeFalsy()
     })
 
     it('should return true when frontmatter does include a session ID', () => {
-      const res = GrpcSerializer.isDocumentSessionOutputs({
+      const res = isDocumentSessionOutputs({
         'runme.dev/frontmatterParsed': { runme: { session: { id: 'my-fake-session' } } },
       })
       expect(res).toBeTruthy()
     })
   })
 
-  describe('#addCellId', () => {
+  describe('#addRunmeCellId', () => {
     const copyCell = () =>
       JSON.parse(
         JSON.stringify({
@@ -308,14 +236,14 @@ describe('GrpcSerializer', () => {
 
     it('should never run against cells returned by the kernel', () => {
       const cell = copyCell()
-      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.ALL)
+      const res = addRunmeCellId(cell.metadata, Number(RunmeIdentity.ALL))
       expect(res['runme.dev/id']).toStrictEqual(cell.metadata['runme.dev/id'])
       expect(res['id']).toBeUndefined()
     })
 
     it('should add id to cell metadata when identity requires it', () => {
       const cell = { metadata: {} }
-      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.CELL)
+      const res = addRunmeCellId(cell.metadata, Number(RunmeIdentity.CELL))
       expect(res['runme.dev/id']).toBeDefined()
       expect(isValid(res['runme.dev/id'])).toBeTruthy()
       expect(res['id']).toBeDefined()
@@ -324,7 +252,7 @@ describe('GrpcSerializer', () => {
 
     it('should only add runme.dev/id to cell metadata when no identity is required', () => {
       const cell = { metadata: {} }
-      const res = GrpcSerializer.addCellId(cell.metadata, RunmeIdentity.DOCUMENT)
+      const res = addRunmeCellId(cell.metadata, Number(RunmeIdentity.DOCUMENT))
       expect(res['runme.dev/id']).toBeDefined()
       expect(isValid(res['runme.dev/id'])).toBeTruthy()
       expect(res['id']).toBeUndefined()
@@ -334,7 +262,7 @@ describe('GrpcSerializer', () => {
   describe('#getDocumentCacheId', () => {
     it('should return the document cache ID if present', () => {
       const fixture = deepCopyFixture()
-      const res = GrpcSerializer.getDocumentCacheId(fixture.metadata)
+      const res = getDocumentCacheId(fixture.metadata)
       expect(res).toStrictEqual('01J97S5FVEKBPD9GAH0AZBV0HB')
     })
 
@@ -342,12 +270,12 @@ describe('GrpcSerializer', () => {
       const fixture = deepCopyFixture()
       delete fixture.metadata['runme.dev/cacheId']
 
-      const res = GrpcSerializer.getDocumentCacheId(fixture.metadata)
+      const res = getDocumentCacheId(fixture.metadata)
       expect(res).toBeUndefined()
     })
 
     it('should return undefined for undefined metadata', () => {
-      const res = GrpcSerializer.getDocumentCacheId(undefined)
+      const res = getDocumentCacheId(undefined)
       expect(res).toBeUndefined()
     })
   })
@@ -359,7 +287,7 @@ describe('GrpcSerializer', () => {
       const fixture = deepCopyFixture()
       fixture.metadata['runme.dev/frontmatterParsed'].runme.session = { id: 'FAKE-SESSION' }
 
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
 
       const applied = await serializer.switchLifecycleIdentity(
         {
@@ -386,7 +314,7 @@ describe('GrpcSerializer', () => {
       const metadata = { ...fixture.metadata }
       metadata['runme.dev/cacheId'] = metadata['runme.dev/cacheId'].toString().slice(0, 10)
 
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
       serializer.client = {
         deserialize: vi.fn().mockResolvedValue({
           notebook: { cells: descells, metadata },
@@ -470,7 +398,7 @@ describe('GrpcSerializer', () => {
         timing: { startTime: undefined, endTime: undefined },
       }
 
-      const notebookData = GrpcSerializer.marshalNotebook(execSummaryFixture)
+      const notebookData = ConnectSerializer.marshalNotebook(execSummaryFixture)
       expect(notebookData.cells.length).toBe(2)
       expect(notebookData.cells[0].executionSummary).toBeUndefined()
     })
@@ -479,7 +407,7 @@ describe('GrpcSerializer', () => {
       const execSummaryFixture = deepCopyFixture()
       expect(execSummaryFixture.cells.length).toBe(2)
 
-      const notebookData = GrpcSerializer.marshalNotebook(execSummaryFixture)
+      const notebookData = ConnectSerializer.marshalNotebook(execSummaryFixture)
       expect(notebookData.cells.length).toBe(2)
 
       const summary = notebookData.cells[1].executionSummary
@@ -497,7 +425,7 @@ describe('GrpcSerializer', () => {
       const outputsFixture = deepCopyFixture()
       expect(outputsFixture.cells.length).toBe(2)
 
-      const notebookData = GrpcSerializer.marshalNotebook(outputsFixture)
+      const notebookData = ConnectSerializer.marshalNotebook(outputsFixture)
       expect(notebookData.cells.length).toBe(2)
       const cells = notebookData.cells[1]
       const items = cells.outputs[0].items
@@ -523,7 +451,7 @@ describe('GrpcSerializer', () => {
       expect(outputsFixture.metadata['runme.dev/frontmatterParsed']).toBeDefined()
       expect(Object.keys(outputsFixture.metadata).length).toStrictEqual(4)
 
-      const notebookData = GrpcSerializer.marshalNotebook(outputsFixture)
+      const notebookData = ConnectSerializer.marshalNotebook(outputsFixture)
       expect(outputsFixture.metadata['runme.dev/cacheId']).toBeDefined()
       expect(notebookData.metadata['runme.dev/frontmatterParsed']).toBeUndefined()
       expect(Object.keys(notebookData.metadata).length).toStrictEqual(3)
@@ -537,9 +465,7 @@ describe('GrpcSerializer', () => {
       const fixture = deepCopyFixture()
       const cacheId = fixture.metadata['runme.dev/cacheId']
 
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
-
-      vi.spyOn(GrpcSerializer, 'getOutputsUri').mockReturnValue(fakeSrcDocUri)
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
 
       await serializer.handleOpenNotebook({
         uri: fakeSrcDocUri,
@@ -551,12 +477,8 @@ describe('GrpcSerializer', () => {
     })
 
     describe('#saveNotebookOutputs', () => {
-      beforeEach(() => {
-        const shouldDisablePreviewOutputs = vi.fn().mockReturnValue(true)
-        GrpcSerializer.shouldDisablePreviewOutputs = shouldDisablePreviewOutputs
-      })
       const fakeCachedBytes = Buffer.from([1, 2, 3, 4])
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
       const togglePreviewButton = vi.fn()
       serializer.togglePreviewButton = togglePreviewButton
 
@@ -612,7 +534,6 @@ describe('GrpcSerializer', () => {
           fixture.metadata['runme.dev/frontmatterParsed'].runme.id,
           fakeCachedBytes,
         )
-        GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => undefined)
         await serializer.handleSaveNotebookOutputs({
           uri: fakeSrcDocUri,
           metadata: fixture.metadata,
@@ -644,13 +565,13 @@ describe('GrpcSerializer', () => {
 
       it('writes cached bytes to session file on serialization and save', async () => {
         const fixture = deepCopyFixture()
-        const writeableSer: any = new GrpcSerializer(context, new Server(), new Kernel())
+        const writeableSer: any = new ConnectSerializer(context, new Server(), new Kernel())
         writeableSer.client = {
           serialize: vi.fn().mockResolvedValue({ result: fakeCachedBytes }),
         }
         writeableSer.cacheDocUriMapping.set(fixture.metadata['runme.dev/cacheId'], fakeSrcDocUri)
         ContextState.getKey = vi.fn().mockImplementation(() => true)
-        GrpcSerializer.getOutputsUri = vi.fn().mockImplementation(() => fakeSrcDocUri)
+        vi.mocked(getOutputsUri).mockReturnValue(fakeSrcDocUri)
 
         const result = await writeableSer.serializeNotebook(
           { cells: [], metadata: fixture.metadata } as any,
@@ -669,7 +590,7 @@ describe('GrpcSerializer', () => {
     })
 
     it('derives its path from notebook source document and session', () => {
-      const outputFilePath = GrpcSerializer.getOutputsFilePath(
+      const outputFilePath = getOutputsFilePath(
         '/tmp/fake/runbook.md',
         '01HGX8KYWM9K41YVYP0CNR3TZW',
       )
@@ -677,16 +598,12 @@ describe('GrpcSerializer', () => {
     })
 
     it('can reverse the process to get the source document path', () => {
-      const sourceFilePath = GrpcSerializer.getSourceFilePath(
-        '/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md',
-      )
+      const sourceFilePath = getSourceFilePath('/tmp/fake/runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md')
       expect(sourceFilePath).toStrictEqual('/tmp/fake/runbook.md')
     })
 
     it('can reverse the process even with mulitple dashes to get the source document path', () => {
-      const sourceFilePath = GrpcSerializer.getSourceFilePath(
-        '/tmp/fake/my-runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md',
-      )
+      const sourceFilePath = getSourceFilePath('/tmp/fake/my-runbook-01HGX8KYWM9K41YVYP0CNR3TZW.md')
       expect(sourceFilePath).toStrictEqual('/tmp/fake/my-runbook.md')
     })
 
@@ -708,7 +625,7 @@ describe('GrpcSerializer', () => {
           result: new Uint8Array([4, 3, 2, 1]),
         }),
       )
-      const ser = new GrpcSerializer(context, new Server(), new Kernel())
+      const ser = new ConnectSerializer(context, new Server(), new Kernel())
       ;(ser as any).cacheDocUriMapping = { get: vi.fn().mockReturnValue(fakeSrcDocUri) }
       ;(ser as any).client = { serialize }
 
@@ -745,7 +662,7 @@ describe('GrpcSerializer', () => {
       ContextState.getKey = vi.fn().mockImplementation(() => 2)
       const fixture = deepCopyFixture()
 
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
 
       fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
         cell.metadata['runme.dev/id'] = cell.metadata['id']
@@ -753,7 +670,7 @@ describe('GrpcSerializer', () => {
         expect(cell.metadata['id']).toBeUndefined()
       })
 
-      const applied = serializer.applyIdentity(fixture)
+      const applied = serializer.applyCellIdentity(fixture)
 
       applied.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
         expect(cell.metadata['id']).toBeUndefined()
@@ -761,7 +678,7 @@ describe('GrpcSerializer', () => {
     })
 
     it('skips non-code cells', async () => {
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
       const fixture = deepCopyFixture()
 
       fixture.cells.forEach((cell: { kind: number; metadata: { [x: string]: any } }) => {
@@ -771,7 +688,7 @@ describe('GrpcSerializer', () => {
         expect(cell.metadata['id']).toBeUndefined()
       })
 
-      const applied = serializer.applyIdentity(fixture)
+      const applied = serializer.applyCellIdentity(fixture)
 
       applied.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
         expect(cell.metadata['id']).toBeUndefined()
@@ -779,7 +696,7 @@ describe('GrpcSerializer', () => {
     })
 
     it('populates code cells with id where deserializer returned runme.dev/id', async () => {
-      const serializer: any = new GrpcSerializer(context, new Server(), new Kernel())
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
       const fixture = deepCopyFixture()
 
       fixture.cells.forEach((cell: { metadata: { [x: string]: any } }) => {
@@ -790,7 +707,7 @@ describe('GrpcSerializer', () => {
       // make serializer.lifecycleIdentity return 3
       ContextState.getKey = vi.fn().mockImplementation(() => 3)
 
-      const applied = serializer.applyIdentity(fixture)
+      const applied = serializer.applyCellIdentity(fixture)
 
       const ref = deepCopyFixture()
       applied.cells.forEach((cell: { metadata: { [x: string]: any } }, i: number) => {

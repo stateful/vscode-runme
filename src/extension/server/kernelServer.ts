@@ -2,6 +2,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import tls from 'node:tls'
 
 import { ChannelCredentials } from '@grpc/grpc-js'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
@@ -26,9 +27,10 @@ import {
   ConnectTransport,
   GrpcTransportOptions,
   ConnectTransportOptions,
-  createGrpcTransport,
+  createGrpcHttpTransport,
   createConnectTransport,
-} from '../grpc/parser/h2/client'
+  createGrpcUdsTransport,
+} from '../grpc/parser/connect/client'
 
 import KernelServerError from './kernelServerError'
 
@@ -221,25 +223,60 @@ class KernelServer implements IServer {
   }
 
   async connectTransport(protocol: 'grpc' | 'connect' = 'grpc'): Promise<ConnectTransport> {
-    const s = getTLSEnabled() ? 's' : ''
-    // this.address() might be a "unix://socket" so we can't rely on it for baseUrl
-    let transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
-      baseUrl: `http${s}://${SERVER_ADDRESS}:${this.#port}`,
+    const address = this.connectAddress()
+
+    const transportOptions: GrpcTransportOptions | ConnectTransportOptions = {
+      baseUrl: address,
       httpVersion: '2',
     }
 
     if (getTLSEnabled()) {
       const pems = await KernelServer.getTLS(this.getTLSDir())
-      transportOptions.nodeOptions = {
+      const nodeSecureContextOptions: tls.SecureContextOptions = {
         key: pems.privKeyPEM,
         cert: pems.certPEM,
         ca: pems.certPEM,
       }
+      transportOptions.nodeOptions = {
+        ...transportOptions.nodeOptions,
+        ...nodeSecureContextOptions,
+      }
     }
 
-    const createTransport = protocol === 'grpc' ? createGrpcTransport : createConnectTransport
+    let createTransport
+    if (protocol === 'connect') {
+      createTransport = createConnectTransport
+    } else if (address.startsWith('unix://')) {
+      createTransport = createGrpcUdsTransport
+    } else {
+      createTransport = createGrpcHttpTransport
+    }
     this.#connectTransport = createTransport(transportOptions)
     return this.#connectTransport
+  }
+
+  connectAddress(): string {
+    let endpoint = new URL(this.address())
+
+    if (!endpoint) {
+      throw new KernelServerError('Invalid server address')
+    }
+    if (
+      endpoint.protocol !== 'http:' &&
+      endpoint.protocol !== 'https:' &&
+      endpoint.protocol !== 'unix:'
+    ) {
+      endpoint = new URL(`https://${this.address()}`)
+    } else {
+      return endpoint.toString()
+    }
+
+    if (getTLSEnabled()) {
+      endpoint.protocol = 'https:'
+    } else {
+      endpoint.protocol = 'http:'
+    }
+    return endpoint.toString()
   }
 
   protected async start(): Promise<string> {
@@ -429,7 +466,7 @@ class KernelServer implements IServer {
     this.#onTransportReady.fire({ transport: await this.transport(), address: this.address() })
     this.#onConnectTransportReady.fire({
       transport: await this.connectTransport(),
-      address: this.address(),
+      address: this.connectAddress(),
     })
   }
 

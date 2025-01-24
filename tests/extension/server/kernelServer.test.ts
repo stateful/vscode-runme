@@ -12,10 +12,24 @@ import { isPortAvailable } from '../../../src/extension/utils'
 import Server, { IServerConfig } from '../../../src/extension/server/kernelServer'
 import KernelServerError from '../../../src/extension/server/kernelServerError'
 import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
+import {
+  createConnectTransport,
+  createGrpcHttpTransport,
+  createGrpcUdsTransport,
+} from '../../../src/extension/grpc/parser/connect/client'
+
+const configValues: Record<string, any> = {
+  binaryPath: 'bin/runme',
+}
 
 const healthCheck = vi.fn()
 
 vi.mock('vscode')
+vi.mock('../../../src/extension/grpc/parser/connect/client', () => ({
+  createConnectTransport: vi.fn(),
+  createGrpcHttpTransport: vi.fn(),
+  createGrpcUdsTransport: vi.fn(),
+}))
 vi.mock('../../../src/extension/grpc/tcpClient', () => ({
   initParserClient: vi.fn(),
   HealthClient: class {
@@ -87,13 +101,57 @@ suite('health check', () => {
 })
 
 suite('Kernel server spawn process', () => {
-  const configValues: Record<string, any> = {
-    binaryPath: 'bin/runme',
-  }
   vi.mocked(workspace.getConfiguration).mockReturnValue({
     get: vi.fn().mockImplementation((config: string) => configValues[config]),
   } as any)
 
+  test('Should try twice before failing', async () => {
+    configValues.enableTLS = true
+
+    const server = createServer({
+      retryOnFailure: true,
+      maxNumberOfIntents: 2,
+    })
+
+    const serverLaunchSpy = vi.spyOn(server, 'launch')
+    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
+    expect(serverLaunchSpy).toBeCalledTimes(3)
+  })
+
+  test('Should increment until port is available', async () => {
+    configValues.enableTLS = true
+
+    const server = createServer({
+      retryOnFailure: true,
+      maxNumberOfIntents: 2,
+    })
+
+    vi.mocked(fs.access).mockResolvedValueOnce()
+    vi.mocked(fs.stat).mockResolvedValueOnce({
+      isFile: vi.fn().mockReturnValue(true),
+    } as any)
+
+    vi.mocked(isPortAvailable).mockResolvedValueOnce(false)
+    const port = server['_port']()
+    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
+
+    expect(server['_port']()).toStrictEqual(port + 1)
+  })
+
+  test('Should respect telemetry choice', async () => {
+    configValues.enableTLS = true
+
+    const server = createServer({
+      retryOnFailure: true,
+      maxNumberOfIntents: 2,
+    })
+
+    vi.mocked(env).isTelemetryEnabled = false
+    expect(server['getConfiguredEnv']()['DO_NOT_TRACK']).toBe('true')
+  })
+})
+
+suite('Kernel server GRPC transport', () => {
   test('proper credentials without tls', async () => {
     configValues.enableTLS = false
 
@@ -162,49 +220,102 @@ suite('Kernel server spawn process', () => {
     expect(address).toStrictEqual('localhost:7863')
   })
 
-  test('Should try twice before failing', async () => {
-    configValues.enableTLS = true
+  test('#connectAddress with non-UDS returns valid URL', async () => {
+    configValues.transportType = 'TCP'
 
-    const server = createServer({
-      retryOnFailure: true,
-      maxNumberOfIntents: 2,
-    })
+    const server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false,
+    )
 
-    const serverLaunchSpy = vi.spyOn(server, 'launch')
-    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
-    expect(serverLaunchSpy).toBeCalledTimes(3)
+    const url = new URL(server['connectAddress']())
+
+    expect(url.protocol).toStrictEqual('https:')
+    expect(url.hostname).toStrictEqual('localhost')
+    expect(url.port).toStrictEqual('7863')
   })
 
-  test('Should increment until port is available', async () => {
-    configValues.enableTLS = true
+  test('#connectAddress with UDS returns socket FQDN', async () => {
+    configValues.transportType = 'UDS'
 
-    const server = createServer({
-      retryOnFailure: true,
-      maxNumberOfIntents: 2,
-    })
+    const server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false,
+    )
 
-    vi.mocked(fs.access).mockResolvedValueOnce()
-    vi.mocked(fs.stat).mockResolvedValueOnce({
-      isFile: vi.fn().mockReturnValue(true),
-    } as any)
+    const url = new URL(server['connectAddress']())
 
-    vi.mocked(isPortAvailable).mockResolvedValueOnce(false)
-    const port = server['_port']()
-    await expect(server.launch()).rejects.toBeInstanceOf(KernelServerError)
-
-    expect(server['_port']()).toStrictEqual(port + 1)
+    expect(url.protocol).toStrictEqual('unix:')
+    expect(url.pathname).toStrictEqual('/tmp/runme-abcdefgh.sock')
   })
 
-  test('Should respect telemetry choice', async () => {
-    configValues.enableTLS = true
+  test('#connectTransport returns non-UDS transport matching protocols', async () => {
+    configValues.enableTLS = false // avoid TSL creds mocking
+    configValues.transportType = undefined
 
-    const server = createServer({
-      retryOnFailure: true,
-      maxNumberOfIntents: 2,
+    const server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false,
+    )
+
+    await server['connectTransport']('connect')
+    expect(createConnectTransport).toBeCalledWith({
+      baseUrl: 'http://localhost:7863/',
+      httpVersion: '2',
     })
 
-    vi.mocked(env).isTelemetryEnabled = false
-    expect(server['getConfiguredEnv']()['DO_NOT_TRACK']).toBe('true')
+    await server['connectTransport']('grpc')
+    expect(createGrpcHttpTransport).toBeCalledWith({
+      baseUrl: 'http://localhost:7863/',
+      httpVersion: '2',
+    })
+  })
+
+  test('#connectTransport returns UDS transport matching user settings', async () => {
+    configValues.enableTLS = false // avoid TSL creds mocking
+    configValues.transportType = 'UDS'
+
+    let server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false,
+    )
+
+    // transport type is set in constuctor
+    server = new Server(
+      Uri.file('/Users/user/.vscode/extension/stateful.runme'),
+      <any>{},
+      {
+        retryOnFailure: true,
+        maxNumberOfIntents: 2,
+      },
+      false,
+    )
+
+    await server['connectTransport']('grpc')
+    expect(createGrpcUdsTransport).toBeCalledWith({
+      baseUrl: 'unix:///tmp/runme-abcdefgh.sock',
+      httpVersion: '2',
+    })
   })
 })
 

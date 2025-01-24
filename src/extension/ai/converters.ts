@@ -7,6 +7,7 @@ import * as parser_pb from '@buf/stateful_runme.bufbuild_es/runme/parser/v1/pars
 
 import { ServerLifecycleIdentity, getServerConfigurationValue } from '../../utils/configuration'
 import { Serializer } from '../../types'
+import { ConnectSerializer } from '../serializer'
 import * as parserTypes from '../grpc/parser/tcp/types'
 import * as serializer from '../serializer'
 import { Kernel } from '../kernel'
@@ -24,11 +25,11 @@ export class Converter {
   // It adds execution information to the cells before converting.
   public async notebookDataToProto(notebookData: vscode.NotebookData): Promise<parser_pb.Notebook> {
     // We need to add the execution info to the cells so that the AI model can use that information.
-    const cellDataWithExec = await serializer.SerializerBase.addExecInfo(notebookData, this.kernel)
+    const cellDataWithExec = await serializer.addExecInfo(notebookData, this.kernel)
     let notebookDataWithExec = new vscode.NotebookData(cellDataWithExec)
     // marshalNotebook returns a protocol buffer using the ts client library from buf we need to
     // convert it to es
-    return serializer.GrpcSerializer.marshalNotebook(notebookDataWithExec)
+    return ConnectSerializer.marshalNotebook(notebookDataWithExec)
   }
 }
 
@@ -79,7 +80,7 @@ export function cellProtosToCellData(cells: parserTypes.Cell[]): vscode.Notebook
     'lifecycleIdentity',
     parserTypes.RunmeIdentity.ALL,
   )
-  let newCellData = serializer.SerializerBase.revive(notebook, identity)
+  let newCellData = ConnectSerializer.revive(notebook, Number(identity))
   return newCellData
 }
 

@@ -5,9 +5,8 @@ import { Observable, Subject, Subscription, from, of } from 'rxjs'
 import { APIMethod } from '../types'
 import { ClientMessages } from '../constants'
 
-import { GrpcSerializer } from './serializer'
+import { ConnectSerializer } from './serializer'
 import { Kernel } from './kernel'
-import './wasm/wasm_exec.js'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
 import getLogger from './logger'
 import { StatefulAuthProvider } from './provider/statefulAuth'
@@ -78,7 +77,7 @@ export class SignedIn implements Disposable {
     startTime: number,
     endTime: number,
   ): void {
-    const frontmatter = GrpcSerializer.marshalFrontmatter(cell.notebook.metadata, this.kernel)
+    const frontmatter = ConnectSerializer.marshalFrontmatter(cell.notebook.metadata, this.kernel)
 
     const notebookRunmeId = frontmatter.runme?.id
     const cellRunmeId = cell.metadata['runme.dev/id']
