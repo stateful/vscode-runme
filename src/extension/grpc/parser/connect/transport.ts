@@ -7,7 +7,7 @@ import { createGrpcTransport, GrpcTransportOptions } from '@connectrpc/connect-n
 
 const AUTHORITY = 'https://localhost:0'
 
-export function createGrpcTcpTransport(transportOptions: GrpcTransportOptions): Transport {
+export function createGrpcUdsTransport(transportOptions: GrpcTransportOptions): Transport {
   if (transportOptions.httpVersion !== '2') {
     throw new Error('This transport only supports HTTP/2')
   }

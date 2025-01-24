@@ -29,7 +29,7 @@ import {
   ConnectTransportOptions,
   createGrpcHttpTransport,
   createConnectTransport,
-  createGrpcTcpTransport,
+  createGrpcUdsTransport,
 } from '../grpc/parser/connect/client'
 
 import KernelServerError from './kernelServerError'
@@ -247,7 +247,7 @@ class KernelServer implements IServer {
     if (protocol === 'connect') {
       createTransport = createConnectTransport
     } else if (address.startsWith('unix://')) {
-      createTransport = createGrpcTcpTransport
+      createTransport = createGrpcUdsTransport
     } else {
       createTransport = createGrpcHttpTransport
     }

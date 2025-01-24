@@ -15,7 +15,7 @@ import { testCertPEM, testPrivKeyPEM } from '../../testTLSCert'
 import {
   createConnectTransport,
   createGrpcHttpTransport,
-  createGrpcTcpTransport,
+  createGrpcUdsTransport,
 } from '../../../src/extension/grpc/parser/connect/client'
 
 const configValues: Record<string, any> = {
@@ -28,7 +28,7 @@ vi.mock('vscode')
 vi.mock('../../../src/extension/grpc/parser/connect/client', () => ({
   createConnectTransport: vi.fn(),
   createGrpcHttpTransport: vi.fn(),
-  createGrpcTcpTransport: vi.fn(),
+  createGrpcUdsTransport: vi.fn(),
 }))
 vi.mock('../../../src/extension/grpc/tcpClient', () => ({
   initParserClient: vi.fn(),
@@ -312,7 +312,7 @@ suite('Kernel server GRPC transport', () => {
     )
 
     await server['connectTransport']('grpc')
-    expect(createGrpcTcpTransport).toBeCalledWith({
+    expect(createGrpcUdsTransport).toBeCalledWith({
       baseUrl: 'unix:///tmp/runme-abcdefgh.sock',
       httpVersion: '2',
     })

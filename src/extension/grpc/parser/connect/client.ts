@@ -11,11 +11,11 @@ import {
   Transport as ConnectTransport,
 } from '@connectrpc/connect'
 
-import { createGrpcTcpTransport } from './transport'
+import { createGrpcUdsTransport } from './transport'
 
 export {
   ParserService,
-  createGrpcTcpTransport,
+  createGrpcUdsTransport,
   createGrpcHttpTransport,
   createConnectTransport,
   GrpcTransportOptions,
