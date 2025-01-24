@@ -7,7 +7,7 @@ import {
 } from 'vscode'
 import stripAnsi from 'strip-ansi'
 
-import type { DisposableAsync } from '../../types'
+import type { DisposableAsync, Serializer } from '../../types'
 import {
   CreateSessionRequest,
   CreateSessionRequestImpl,
@@ -33,7 +33,6 @@ import { convertEnvList } from '../utils'
 import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
 import { XTermSerializer } from '../terminal/terminalState'
-import { Notebook } from '../grpc/serializerTypes'
 
 import { IRunnerChild, TerminalWindowState } from './types'
 import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
@@ -108,7 +107,9 @@ export interface IRunner extends Disposable {
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver>
 
-  createNotebookResolver(notebook: Notebook | undefined): Promise<GrpcRunnerNotebookResolver>
+  createNotebookResolver(
+    notebook: Serializer.Notebook | undefined,
+  ): Promise<GrpcRunnerNotebookResolver>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -251,7 +252,7 @@ export default class GrpcRunner implements IRunner {
   }
 
   async createNotebookResolver(
-    notebook: Notebook | undefined,
+    notebook: Serializer.Notebook | undefined,
   ): Promise<GrpcRunnerNotebookResolver> {
     const resolver = new GrpcRunnerNotebookResolver(this.client, notebook)
 

@@ -59,7 +59,7 @@ import {
   ResolveProgramRequest_ModeEnum,
   ResolveProgramResponse_StatusEnum,
 } from '../../grpc/runner/types'
-import { GrpcSerializer } from '../../serializer'
+import { getDocumentCacheId } from '../../serializer'
 
 import { createRunProgramOptions } from './factory'
 
@@ -551,7 +551,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   // todo(sebastian): not great to special case here
   const { DAGGER } = CommandModeEnum()
   if (commandMode === DAGGER) {
-    const cacheId = GrpcSerializer.getDocumentCacheId(exec.cell.notebook.metadata) as string
+    const cacheId = getDocumentCacheId(exec.cell.notebook.metadata) as string
     const parserCached = kernel.getParserCache(cacheId)
     const notebookResolver = await runner.createNotebookResolver(parserCached)
     const resp = await notebookResolver.resolveNotebook(exec.cell.index)

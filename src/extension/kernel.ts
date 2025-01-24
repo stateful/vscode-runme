@@ -115,7 +115,6 @@ import { CommandModeEnum } from './grpc/runner/types'
 import { GrpcReporter } from './reporter'
 import { EnvStoreMonitorWithSession } from './panels/notebook'
 import { SignedIn } from './signedIn'
-import { Notebook } from './grpc/serializerTypes'
 
 enum ConfirmationItems {
   Yes = 'Yes',
@@ -1284,7 +1283,7 @@ export class Kernel implements Disposable {
     return this.serializer?.getNotebookDataCache(cacheId)
   }
 
-  public getParserCache(cacheId: string): Notebook | undefined {
+  public getParserCache(cacheId: string): Serializer.Notebook | undefined {
     return this.serializer?.getParserCache(cacheId)
   }
 

@@ -58,6 +58,7 @@ export interface ISerializer extends NotebookSerializer, Disposable {
   getMaskedCache(cacheId: string): Promise<Uint8Array> | undefined
   getPlainCache(cacheId: string): Promise<Uint8Array> | undefined
   getNotebookDataCache(cacheId: string): NotebookData | undefined
+  getParserCache(cacheId: string): Serializer.Notebook | undefined
 }
 
 export type NotebookCellOutputWithProcessInfo = NotebookCellOutput & {
