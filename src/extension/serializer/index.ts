@@ -1,2 +1,3 @@
 export { ConnectSerializer } from './connect'
-export { ISerializer, addExecInfo, getOutputsUri, isDocumentSessionOutputs } from './serializer'
+export { ISerializer, addExecInfo, isDocumentSessionOutputs } from './serializer'
+export { getOutputsUri } from './utils'
