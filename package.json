@@ -1341,6 +1341,7 @@
     "download:wasm": "node .github/scripts/downloadWasm.js",
     "esmify": "echo '{ \"type\": \"module\" }' >> ./out/package.json",
     "postinstall": "run-s postinstall:*",
+    "postinstall:wasm": "npm run download:wasm && npm run download:binary",
     "postinstall:husky": "husky",
     "test": "runme run test",
     "watch": "npm run build:dev -- --watch",
