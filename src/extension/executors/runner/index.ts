@@ -244,7 +244,7 @@ export const executeRunner: IKernelRunner = async ({
   let mimeType = cellMimeType
   if (interactive) {
     if (terminalState instanceof XTermState) {
-      terminalState.cleanBuffer()
+      terminalState.resetBuffer()
     }
 
     if (revealNotebookTerminal) {

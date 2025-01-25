@@ -854,7 +854,7 @@ export class GrpcRunnerTerminalSession
   }
 
   get data(): Promise<string> {
-    const term = new XTermSerializer()
+    const term = new XTermSerializer(100000)
     return this.raw.then((data) => {
       return term.write(data).then(() => {
         const serialized = term.serialize()

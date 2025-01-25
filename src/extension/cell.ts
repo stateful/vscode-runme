@@ -369,13 +369,19 @@ export class NotebookCellOutputManager {
     outputState.delete(cellId)
   }
 
-  registerCellTerminalState(type: NotebookTerminalType): ITerminalState {
+  registerCellTerminalState({
+    type,
+    scrollback,
+  }: {
+    type: NotebookTerminalType
+    scrollback: number
+  }): ITerminalState {
     let terminalState: ITerminalState
 
     switch (type) {
       case 'xterm':
         {
-          const _terminalState = new XTermState()
+          const _terminalState = new XTermState(scrollback)
           const _write = _terminalState.write
           const _input = _terminalState.input
 
@@ -394,7 +400,7 @@ export class NotebookCellOutputManager {
 
       case 'local':
         {
-          const _terminalState = new LocalBufferTermState()
+          const _terminalState = new LocalBufferTermState(scrollback)
           const _write = _terminalState.write
 
           _terminalState.write = (data) => {

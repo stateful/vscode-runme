@@ -2,6 +2,7 @@ import { Terminal as XTerm } from '@xterm/headless'
 
 import { OutputType } from '../../constants'
 import { RunnerExitReason } from '../runner'
+import { RingBuffer } from '../../ringBuffer'
 
 export type NotebookTerminalType = 'xterm' | 'local'
 
@@ -19,6 +20,7 @@ export interface ITerminalState {
   hasProcessInfo(): IProcessInfoState | undefined
 
   readonly outputType: OutputType
+  readonly capacity: number
 }
 
 export class XTermState implements ITerminalState {
@@ -26,9 +28,12 @@ export class XTermState implements ITerminalState {
 
   protected xterm: XTerm
   private processInfo: IProcessInfoState | undefined
-  protected buffer: string = ''
+  protected buffer: RingBuffer<string>
+  private textDecoder = new TextDecoder()
 
-  constructor() {
+  constructor(readonly capacity: number) {
+    this.buffer = this.resetBuffer()
+
     // TODO: lines/cols
     this.xterm = new XTerm({
       allowProposedApi: true,
@@ -44,7 +49,7 @@ export class XTermState implements ITerminalState {
   }
 
   serialize(): string {
-    return this.buffer
+    return this.buffer.getAll().join('')
   }
 
   write(data: string | Uint8Array): void {
@@ -54,14 +59,16 @@ export class XTermState implements ITerminalState {
 
   addToBuffer(data: string | Uint8Array): void {
     if (typeof data === 'string') {
-      this.buffer = this.buffer + data
+      this.buffer.push(data)
     } else {
-      this.buffer = this.buffer + new TextDecoder().decode(data)
+      this.buffer.push(this.textDecoder.decode(data))
     }
   }
 
-  cleanBuffer(): void {
-    this.buffer = ''
+  resetBuffer(): RingBuffer<string> {
+    // capactiy is items vs lines because we don't handle line breaks
+    this.buffer = new RingBuffer<string>(this.capacity)
+    return this.buffer
   }
 
   input(data: string, wasUserInput: boolean): void {
@@ -77,11 +84,15 @@ export class XTermState implements ITerminalState {
 export class LocalBufferTermState implements ITerminalState {
   readonly outputType = OutputType.outputItems
 
-  private output: Buffer[] = []
+  private buffer: RingBuffer<Buffer>
   private processInfo: IProcessInfoState | undefined
 
+  constructor(readonly capacity: number) {
+    this.buffer = new RingBuffer<Buffer>(capacity)
+  }
+
   write(data: string | Uint8Array) {
-    this.output.push(Buffer.from(data))
+    this.buffer.push(Buffer.from(data))
   }
 
   // noop
@@ -96,7 +107,7 @@ export class LocalBufferTermState implements ITerminalState {
   }
 
   serialize(): string {
-    return Buffer.concat(this.output).toString('base64')
+    return Buffer.concat(this.buffer.getAll()).toString('base64')
   }
 }
 

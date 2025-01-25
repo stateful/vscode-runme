@@ -325,7 +325,8 @@ export class Kernel implements Disposable {
     type: NotebookTerminalType,
   ): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
-    return outputs.registerCellTerminalState(type)
+    const { scrollback } = getNotebookTerminalConfigurations(cell.notebook.metadata)
+    return outputs.registerCellTerminalState({ type, scrollback })
   }
 
   async #setNotebookMode(notebookDocument: NotebookDocument): Promise<void> {
