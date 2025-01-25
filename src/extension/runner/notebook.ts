@@ -25,7 +25,7 @@ export class GrpcRunnerNotebookResolver implements IRunnerChild {
       cellIndex: cellIndex,
     })
 
-    return this.client.resolveNotebook(req)
+    return this.client.resolveNotebook(req).then((resp) => resp.response.script)
   }
 
   async dispose(): Promise<void> {}

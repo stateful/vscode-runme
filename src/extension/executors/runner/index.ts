@@ -114,10 +114,16 @@ export const executeRunner: IKernelRunner = async ({
     }
   }
 
+  // default is inline shell aka script
+  let resolveRunProgram: IResolveRunProgram = resolveProgramOptionsScript
+
+  const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+  if (commandMode === CommandModeEnum().DAGGER) {
+    resolveRunProgram = resolveProgramOptionsDagger
+  }
+
   let programOptions: RunProgramOptions
   try {
-    // removed vercel resolution option
-    const resolveRunProgram = resolveProgramOptionsScript
     programOptions = await resolveRunProgram({
       kernel,
       exec,
@@ -502,7 +508,6 @@ type IResolveRunProgramOptions = { runner: IRunner } & Pick<
 >
 
 export const resolveProgramOptionsScript: IResolveRunProgram = async ({
-  kernel,
   runner,
   runnerEnv,
   exec,
@@ -548,22 +553,41 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
     promptMode,
   )
 
-  // todo(sebastian): not great to special case here
-  const { DAGGER } = CommandModeEnum()
-  if (commandMode === DAGGER) {
-    const cacheId = getDocumentCacheId(exec.cell.notebook.metadata) as string
-    const parserCached = kernel.getParserCache(cacheId)
-    const notebookResolver = await runner.createNotebookResolver(parserCached)
-    const resp = await notebookResolver.resolveNotebook(exec.cell.index)
+  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
+}
 
-    const resolved = resp.response.script
-    console.log(resolved)
-    if (resolved !== '' && execution.type === 'commands') {
-      execution.commands = prepareCommandSeq(resolved, execKey)
-    }
+export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
+  kernel,
+  runner,
+  runnerEnv,
+  exec,
+  execKey,
+  runningCell,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const cacheId = getDocumentCacheId(exec.cell.notebook.metadata)
+  if (!cacheId) {
+    throw new Error('Cannot resolve notebook without cache entry')
   }
 
-  return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
+  const parserCached = kernel.getParserCache(cacheId)
+  const notebookResolver = await runner.createNotebookResolver(parserCached)
+  const resolved = await notebookResolver.resolveNotebook(exec.cell.index)
+
+  console.log(resolved)
+  const execution: RunProgramExecution = {
+    type: 'commands',
+    commands: prepareCommandSeq(resolved, execKey),
+  }
+
+  const runProgramOptions = createRunProgramOptions(
+    execKey,
+    runningCell,
+    exec,
+    execution,
+    runnerEnv,
+  )
+
+  return runProgramOptions
 }
 
 /**
