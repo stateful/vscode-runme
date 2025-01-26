@@ -66,7 +66,7 @@ export class XTermState implements ITerminalState {
   }
 
   resetBuffer(): RingBuffer<string> {
-    // capactiy is items vs lines because we don't handle line breaks
+    // capacity is items vs lines because we don't handle line breaks
     this.buffer = new RingBuffer<string>(this.capacity)
     return this.buffer
   }
