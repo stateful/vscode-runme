@@ -70,13 +70,8 @@ export default class RunmeFS implements FileSystemProvider {
     }
     try {
       const workflow = await getOneWorkflow(id)
-      const raw: number[] = workflow.data.workflow.data || []
-      const utf8 = new TextDecoder()
-      const u8arr = new Uint8Array(raw)
-      const raw2 = utf8.decode(u8arr, { stream: true })
-      const decoded2 = utf8.decode(Buffer.from(raw2, 'base64'))
-
-      return new TextEncoder().encode(decoded2)
+      const data = workflow.data.workflow.data || ''
+      return new Uint8Array(data)
     } catch (error) {
       throw FileSystemError.FileNotFound(uri)
     }
