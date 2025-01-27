@@ -30,6 +30,8 @@ const excludedPaths = [
   '.runme_bootstrap_demo',
 ]
 
+export const RunmeFsScheme = 'runmefs'
+
 export function mergeUriPaths(uri: Uri, newPath: string): Uri {
   const isAbsolutePath = newPath.startsWith('/')
 
@@ -54,11 +56,11 @@ export default class RunmeFS implements FileSystemProvider {
   #pathTree: PathTree = {}
 
   get root() {
-    return Uri.parse('runmefs:///')
+    return Uri.parse(`${RunmeFsScheme}:///`)
   }
 
   static resolveUri(path: string) {
-    return Uri.parse(`runmefs:///${path}`)
+    return Uri.parse(`${RunmeFsScheme}:///${path}`)
   }
 
   async readFile(uri: Uri): Promise<Uint8Array> {

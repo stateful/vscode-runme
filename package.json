@@ -1233,6 +1233,10 @@
       {
         "view": "runme.launcher",
         "contents": "Open a workspace/folder to display Runme files here"
+      },
+      {
+        "view": "runme.remoteNotebooks",
+        "contents": "Displays Cloud Notebooks"
       }
     ],
     "keybindings": [
