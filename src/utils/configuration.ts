@@ -48,7 +48,7 @@ const notebookTerminalSchema = {
   cursorBlink: z.boolean().default(true).optional(),
   cursorWidth: z.number().min(1).optional(),
   smoothScrollDuration: z.number().optional(),
-  scrollback: z.number().optional(),
+  scrollback: z.number(),
   closeOnSuccess: z.boolean().default(true),
 }
 
