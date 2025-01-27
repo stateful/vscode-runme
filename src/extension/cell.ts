@@ -377,11 +377,14 @@ export class NotebookCellOutputManager {
     scrollback: number
   }): ITerminalState {
     let terminalState: ITerminalState
+    // Limit the number of emitted chunks which can include line-breaks
+    // to avoid excessive memory usage
+    const chunksLimit = scrollback
 
     switch (type) {
       case 'xterm':
         {
-          const _terminalState = new XTermState(scrollback)
+          const _terminalState = new XTermState(chunksLimit)
           const _write = _terminalState.write
           const _input = _terminalState.input
 
@@ -400,7 +403,7 @@ export class NotebookCellOutputManager {
 
       case 'local':
         {
-          const _terminalState = new LocalBufferTermState(scrollback)
+          const _terminalState = new LocalBufferTermState(chunksLimit)
           const _write = _terminalState.write
 
           _terminalState.write = (data) => {
