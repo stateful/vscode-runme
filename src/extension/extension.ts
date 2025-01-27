@@ -20,6 +20,8 @@ import {
   getServerRunnerVersion,
   getSessionOutputs,
   getServerLifecycleIdentity,
+  getServerConfigurationValue,
+  ServerTransportType,
 } from '../utils/configuration'
 import {
   AuthenticationProviders,
@@ -457,7 +459,14 @@ export class RunmeExtension {
       ),
     )
 
-    TelemetryReporter.sendTelemetryEvent('config', { runnerVersion: getServerRunnerVersion() })
+    const transportType = getServerConfigurationValue<ServerTransportType>(
+      'transportType',
+      KernelServer.transportTypeDefault,
+    )
+    TelemetryReporter.sendTelemetryEvent('config', {
+      runnerVersion: getServerRunnerVersion(),
+      transportType,
+    })
 
     await bootFile(context)
 
