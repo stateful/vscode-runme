@@ -222,7 +222,22 @@ const getServerLifecycleIdentity = (): ServerLifecycleIdentity => {
 }
 
 const getCustomServerAddress = (): string | undefined => {
-  return getServerConfigurationValue<string | undefined>('customAddress', undefined)
+  const address = getServerConfigurationValue<string | undefined>('customAddress', undefined)
+
+  if (!address) {
+    return address
+  }
+
+  if (address && !URL.canParse(address)) {
+    return address
+  }
+
+  const url = new URL(address)
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    return address
+  }
+
+  return url.host.toString()
 }
 
 const getTLSEnabled = (): boolean => {
@@ -470,24 +485,32 @@ const getShowLoginNotification = () => {
 export {
   enableServerLogs,
   getActionsOpenViewInEditor,
+  getAuthTokenPath,
   getBinaryPath,
-  getServerRunnerVersion,
   getCLIUseIntegratedRunme,
   getCloseTerminalOnSuccess,
   getCodeLensEnabled,
   getCodeLensPasteIntoTerminalNewline,
-  getNotebookExecutionOrder,
   getCustomServerAddress,
-  getServerLifecycleIdentity,
+  getDeleteAuthToken,
+  getDocsUrl,
+  getDocsUrlFor,
   getEnvLoadWorkspaceFiles,
   getEnvWorkspaceFileOrder,
   getForceNewWindowConfig,
+  getLoginPrompt,
+  getMaskOutputs,
   getNotebookAutoSave,
+  getNotebookExecutionOrder,
   getNotebookTerminalConfigurations,
   getPortNumber,
   getRunmeAppUrl,
   getRunmePanelIdentifier,
   getServerConfigurationValue,
+  getServerLifecycleIdentity,
+  getServerRunnerVersion,
+  getSessionOutputs,
+  getShowLoginNotification,
   getTLSDir,
   getTLSEnabled,
   isInteractiveTerminalDefault,
@@ -495,12 +518,4 @@ export {
   isNotebookTerminalFeatureEnabled,
   isPlatformAuthEnabled,
   registerExtensionEnvVarsMutation,
-  getSessionOutputs,
-  getMaskOutputs,
-  getLoginPrompt,
-  getDocsUrlFor,
-  getDocsUrl,
-  getAuthTokenPath,
-  getDeleteAuthToken,
-  getShowLoginNotification,
 }

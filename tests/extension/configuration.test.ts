@@ -4,19 +4,20 @@ import { suite, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Uri, workspace } from 'vscode'
 
 import {
-  getRunmePanelIdentifier,
-  getRunmeAppUrl,
-  getPortNumber,
   enableServerLogs,
   getBinaryPath,
-  getServerConfigurationValue,
-  getTLSDir,
-  getNotebookTerminalConfigurations,
+  getCLIUseIntegratedRunme,
+  getCloseTerminalOnSuccess,
   getCodeLensEnabled,
   getCodeLensPasteIntoTerminalNewline,
-  getCLIUseIntegratedRunme,
+  getCustomServerAddress,
   getNotebookExecutionOrder,
-  getCloseTerminalOnSuccess,
+  getNotebookTerminalConfigurations,
+  getPortNumber,
+  getRunmeAppUrl,
+  getRunmePanelIdentifier,
+  getServerConfigurationValue,
+  getTLSDir,
 } from '../../src/utils/configuration'
 import { SERVER_PORT } from '../../src/constants'
 import { RunmeIdentity } from '../../src/extension/grpc/parser/tcp/types'
@@ -44,6 +45,7 @@ vi.mock('vscode', async () => {
   const SETTINGS_MOCK: {
     port: number | string | undefined
     binaryPath: string | undefined
+    customAddress: string | undefined
     enableLogger: string | boolean | undefined
     tlsDir: string | undefined
     baseDomain: string | undefined
@@ -52,6 +54,7 @@ vi.mock('vscode', async () => {
   } = {
     port: undefined,
     binaryPath: undefined,
+    customAddress: undefined,
     enableLogger: undefined,
     tlsDir: undefined,
     baseDomain: undefined,
@@ -163,6 +166,32 @@ suite('Configuration', () => {
 
   test('getCLIUseIntegratedRunme should return false by default', () => {
     expect(getCLIUseIntegratedRunme()).toStrictEqual(false)
+  })
+
+  suite('getCustomServerAddress', () => {
+    test('should return undefined by default', () => {
+      expect(getCustomServerAddress()).toStrictEqual(undefined)
+    })
+
+    test('should return literal string for non-URL', () => {
+      workspace.getConfiguration().update('customAddress', 'localhost:9999')
+      expect(getCustomServerAddress()).toStrictEqual('localhost:9999')
+    })
+
+    test('should return literal string even if invalid', () => {
+      workspace.getConfiguration().update('customAddress', 'abcdef-1234')
+      expect(getCustomServerAddress()).toStrictEqual('abcdef-1234')
+    })
+
+    test('should transparently normalize https:// URL into host:port', () => {
+      workspace.getConfiguration().update('customAddress', 'https://localhost:9999')
+      expect(getCustomServerAddress()).toStrictEqual('localhost:9999')
+    })
+
+    test('should transparently normalize http:// URL into host:port', () => {
+      workspace.getConfiguration().update('customAddress', 'http://localhost:1234')
+      expect(getCustomServerAddress()).toStrictEqual('localhost:1234')
+    })
   })
 
   suite('posix', () => {
