@@ -1,6 +1,15 @@
 import os from 'node:os'
 
-import { Uri, env, workspace, commands } from 'vscode'
+import {
+  Uri,
+  env,
+  workspace,
+  commands,
+  EventEmitter,
+  AuthenticationSessionsChangeEvent,
+  window,
+  CancellationTokenSource,
+} from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
 import getMAC from 'getmac'
 import YAML from 'yaml'
@@ -31,13 +40,22 @@ import {
 } from '../../__generated-platform__/graphql'
 import { Frontmatter } from '../../grpc/parser/tcp/types'
 import { getCellById } from '../../cell'
-import { StatefulAuthProvider } from '../../provider/statefulAuth'
+import {
+  AUTH_TIMEOUT,
+  StatefulAuthProvider,
+  StatefulAuthSession,
+} from '../../provider/statefulAuth'
 import features from '../../features'
+import AuthSessionChangeHandler from '../../authSessionChangeHandler'
+import { promiseFromEvent } from '../../../utils/promiseFromEvent'
 import { getDocumentCacheId } from '../../serializer/serializer'
 import { ConnectSerializer } from '../../serializer'
 export type APIRequestMessage = IApiMessage<ClientMessage<ClientMessages.platformApiRequest>>
 
 const log = getLogger('SaveCell')
+type SessionType = StatefulAuthSession | undefined
+
+let currentCts: CancellationTokenSource | undefined
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
@@ -45,6 +63,13 @@ export default async function saveCellExecution(
 ): Promise<void | boolean> {
   const isReporterEnabled = features.isOnInContextState(FeatureName.ReporterAPI)
   const { messaging, message, editor } = requestMessage
+
+  if (currentCts) {
+    currentCts.cancel()
+  }
+
+  currentCts = new CancellationTokenSource()
+  const { token } = currentCts
 
   try {
     const autoSaveIsOn = ContextState.getKey<boolean>(NOTEBOOK_AUTOSAVE_ON)
@@ -58,12 +83,55 @@ export default async function saveCellExecution(
 
     if (!session && message.output.data.isUserAction) {
       await commands.executeCommand('runme.openCloudPanel')
-      return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
-        id: message.output.id,
-      })
+
+      const authenticationEvent = new EventEmitter<StatefulAuthSession | undefined>()
+
+      const callback = (_e: AuthenticationSessionsChangeEvent) => {
+        AuthSessionChangeHandler.instance.removeListener(callback)
+        StatefulAuthProvider.instance.currentSession().then((session) => {
+          authenticationEvent.fire(session)
+        })
+      }
+
+      AuthSessionChangeHandler.instance.addListener(callback)
+
+      if (token.isCancellationRequested) {
+        return
+      }
+
+      try {
+        session = await Promise.race([
+          promiseFromEvent<SessionType, SessionType>(authenticationEvent.event).promise,
+          new Promise<undefined>((resolve, reject) => {
+            const timeoutId = setTimeout(() => reject(undefined), AUTH_TIMEOUT)
+            token.onCancellationRequested(() => {
+              clearTimeout(timeoutId)
+              reject(new Error('Operation cancelled'))
+            })
+          }),
+        ])
+      } finally {
+        authenticationEvent.dispose()
+
+        if (token.isCancellationRequested) {
+          log.info('Cancelling authentication event')
+          return
+        }
+
+        if (!session) {
+          await postClientMessage(messaging, ClientMessages.platformApiResponse, {
+            data: {
+              displayShare: false,
+            },
+            id: message.output.id,
+          })
+
+          window.showWarningMessage(
+            'Saving timed out. Sign in to save your cells. Please try again.',
+          )
+          return
+        }
+      }
     }
 
     const graphClient = await InitializeCloudClient()
@@ -318,5 +386,10 @@ export default async function saveCellExecution(
       id: message.output.id,
       hasErrors: true,
     })
+  } finally {
+    if (currentCts?.token === token) {
+      currentCts.dispose()
+      currentCts = undefined
+    }
   }
 }
