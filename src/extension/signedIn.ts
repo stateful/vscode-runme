@@ -9,7 +9,7 @@ import { ConnectSerializer } from './serializer'
 import { Kernel } from './kernel'
 import { RunmeEventInputType } from './__generated-platform__/graphql'
 import getLogger from './logger'
-import { StatefulAuthProvider } from './provider/statefulAuth'
+import { StatefulAuthProvider, StatefulAuthSession } from './provider/statefulAuth'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
 
 export interface CellRun {
@@ -22,7 +22,7 @@ export interface CellRun {
   }
 }
 
-const log = getLogger('LoggedIn')
+const log = getLogger('SignedIn')
 
 export class SignedIn implements Disposable {
   #subscriptions: Subscription[] = []
@@ -30,12 +30,16 @@ export class SignedIn implements Disposable {
 
   constructor(protected readonly kernel: Kernel) {
     const signedIn$ = new Observable<boolean>((observer) => {
+      const nextSession = (p?: Promise<StatefulAuthSession | undefined>) => {
+        return p?.then((session) => observer.next(!!session)).catch(() => observer.next(false))
+      }
+
       AuthSessionChangeHandler.instance.addListener(() => {
-        StatefulAuthProvider.instance
-          .currentSession()
-          .then((session) => observer.next(!!session))
-          .catch(() => observer.next(false))
+        return nextSession(StatefulAuthProvider.instance.currentSession())
       })
+
+      // initial value
+      nextSession(StatefulAuthProvider.instance.currentSession())
     })
 
     const cellRuns$ = this.#cellRuns.pipe(
