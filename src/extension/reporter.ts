@@ -1,5 +1,4 @@
 import { ExtensionContext, Disposable } from 'vscode'
-import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 
 import {
   initReporterClient,
@@ -19,22 +18,22 @@ export class GrpcReporter {
     protected server: IServer,
   ) {
     this.ready = new Promise((resolve) => {
-      const disposable = server.onTransportReady(() => {
+      const disposable = server.onTransportReady(({ transport }) => {
         disposable.dispose()
+        this.client = initReporterClient(transport)
+        resolve()
+      })
+
+      server.transport().then((transport) => {
+        this.client = initReporterClient(transport)
         resolve()
       })
     })
-
-    server.onTransportReady(({ transport }) => {
-      this.initReporterClient(transport)
-    })
   }
 
-  private async initReporterClient(transport?: GrpcTransport) {
-    this.client = initReporterClient(transport ?? (await this.server.transport()))
-  }
+  public async transform(input: TransformRequest) {
+    await this.ready
 
-  public transform(input: TransformRequest) {
-    return this.client?.transform(input)
+    return this.client!.transform(input)
   }
 }

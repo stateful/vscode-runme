@@ -39,7 +39,7 @@ import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
 import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
-import { GrpcRunnerNotebookResolver } from './notebook'
+import { GrpcNotebook } from './notebook'
 
 export type RunProgramExecution =
   | {
@@ -107,9 +107,7 @@ export interface IRunner extends Disposable {
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver>
 
-  createNotebookResolver(
-    notebook: Serializer.Notebook | undefined,
-  ): Promise<GrpcRunnerNotebookResolver>
+  createNotebook(notebook: Serializer.Notebook | undefined): Promise<GrpcNotebook>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -251,10 +249,8 @@ export default class GrpcRunner implements IRunner {
     return resolver
   }
 
-  async createNotebookResolver(
-    notebook: Serializer.Notebook | undefined,
-  ): Promise<GrpcRunnerNotebookResolver> {
-    const resolver = new GrpcRunnerNotebookResolver(this.client, notebook)
+  async createNotebook(notebook: Serializer.Notebook | undefined): Promise<GrpcNotebook> {
+    const resolver = new GrpcNotebook(this.server, notebook)
 
     this.registerChild(resolver)
 

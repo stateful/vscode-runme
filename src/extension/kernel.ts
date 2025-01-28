@@ -1287,10 +1287,10 @@ export class Kernel implements Disposable {
     return this.serializer?.getParserCache(cacheId)
   }
 
-  public getReporterPayload(
+  public async getReporterPayload(
     input: TransformRequest,
-  ): UnaryCall<TransformRequest, TransformResponse> | undefined {
-    return this.reporter?.transform(input)
+  ): Promise<UnaryCall<TransformRequest, TransformResponse> | undefined> {
+    return await this.reporter?.transform(input)
   }
 
   async runProgram(program?: RunProgramOptions | string) {

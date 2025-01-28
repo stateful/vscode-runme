@@ -138,8 +138,11 @@ export const executeRunner: IKernelRunner = async ({
       const message = err.message
       window.showErrorMessage('Invalid shell snippet: ' + message)
     }
+    if (err instanceof RpcError) {
+      log.error(`RpcError: ${err.code} ${err.message}`)
+    }
+    // todo(sebastian): user facing error? notif?
     if (err instanceof Error) {
-      // todo(sebastian): user facing error? notif?
       log.error(err.message)
     }
     return false
@@ -570,8 +573,8 @@ export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
   }
 
   const parserCached = kernel.getParserCache(cacheId)
-  const notebookResolver = await runner.createNotebookResolver(parserCached)
-  const resolved = await notebookResolver.resolveNotebook(exec.cell.index)
+  const notebookResolver = await runner.createNotebook(parserCached)
+  const resolved = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
 
   console.log(resolved)
   const execution: RunProgramExecution = {

@@ -16,6 +16,8 @@ import { RunnerServiceClient as RunnerServiceClientV2 } from '@buf/stateful_runm
 import { ProjectServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/project/v1/project_pb.client'
 // eslint-disable-next-line max-len
 import { ReporterServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/reporter/v1alpha1/reporter_pb.client'
+// eslint-disable-next-line max-len
+import { NotebookServiceClient } from '@buf/stateful_runme.community_timostamm-protobuf-ts/runme/notebook/v1alpha1/notebook_pb.client'
 import { HealthClient } from '@buf/grpc_grpc.community_timostamm-protobuf-ts/grpc/health/v1/health_pb.client'
 import { GrpcTransport } from '@protobuf-ts/grpc-transport'
 import {
@@ -43,7 +45,6 @@ import {
   ExecuteRequest,
   ExecuteResponse,
 } from './runner/types'
-import { ResolveNotebookRequest, ResolveNotebookResponse } from './runner/v1'
 
 interface IRunnerServiceClient {
   createSession(
@@ -82,11 +83,6 @@ interface IRunnerServiceClient {
     input: ResolveProgramRequest,
     options?: RpcOptions,
   ): UnaryCall<ResolveProgramRequest, ResolveProgramResponse>
-
-  resolveNotebook(
-    input: ResolveNotebookRequest,
-    options?: RpcOptions,
-  ): UnaryCall<ResolveNotebookRequest, ResolveNotebookResponse>
 }
 
 function initParserClient(transport: GrpcTransport): ParserServiceClient {
@@ -99,6 +95,10 @@ function initProjectClient(transport: GrpcTransport): ProjectServiceClient {
 
 function initReporterClient(transport: GrpcTransport): ReporterServiceClient {
   return new ReporterServiceClient(transport)
+}
+
+function initNotebookClient(transport: GrpcTransport): NotebookServiceClient {
+  return new NotebookServiceClient(transport)
 }
 
 type ReadyPromise = Promise<void | Error>
@@ -118,6 +118,8 @@ export {
   initParserClient,
   initProjectClient,
   initReporterClient,
+  initNotebookClient,
+  NotebookServiceClient,
   HealthClient,
   ReadyPromise,
   RpcError,
