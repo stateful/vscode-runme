@@ -22,7 +22,7 @@ export class GrpcRunnerNotebookResolver implements IRunnerChild {
 
     const req = ResolveNotebookRequest.create({
       notebook: Notebook.create(this.notebook as unknown as Notebook),
-      cellIndex: cellIndex,
+      cellIndex: { value: cellIndex },
     })
 
     return this.client.resolveNotebook(req).then((resp) => resp.response.script)
