@@ -126,8 +126,8 @@ export default async function saveCellExecution(
             id: message.output.id,
           })
 
-          window.showErrorMessage(
-            'Login is required to save your cells. Please log in to continue.',
+          window.showWarningMessage(
+            'Saving timed out. Sign in to save your cells. Please try again.',
           )
           return
         }
