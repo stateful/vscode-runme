@@ -24,7 +24,7 @@ import { LANGID_AND_EXTENSIONS } from '../../constants'
 import { OpenFileOptions, RunmeFile, RunmeTreeProvider } from './launcher'
 
 export const GLOB_PATTERN = '**/*.{md,mdr,mdx}'
-const logger = getLogger('LauncherBeta')
+const logger = getLogger('RunmeLauncherProvider')
 
 export class RunmeLauncherProvider implements RunmeTreeProvider {
   #disposables: Disposable[] = []
