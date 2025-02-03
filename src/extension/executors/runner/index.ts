@@ -289,7 +289,8 @@ export const executeRunner: IKernelRunner = async ({
 
     // allow for additional outputs, such as dagger
     const t = OutputType[execKey as keyof typeof OutputType]
-    if (t) {
+    // todo(sebastian): dagger-shell is not UX integration ready yet
+    if (t && commandMode !== CommandModeEnum().DAGGER) {
       await outputs.showOutput(t)
     }
 
