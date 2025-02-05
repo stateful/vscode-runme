@@ -134,7 +134,7 @@ export const executeRunner: IKernelRunner = async ({
       cellId,
     })
   } catch (err) {
-    if (err instanceof RpcError && err.methodName === 'ResolveProgram') {
+    if (err instanceof RpcError && err.methodName?.startsWith('Resolve')) {
       const message = err.message
       window.showErrorMessage('Invalid shell snippet: ' + message)
     }
@@ -573,8 +573,8 @@ export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
     throw new Error('Cannot resolve notebook without cache entry')
   }
 
-  const parserCached = kernel.getParserCache(cacheId)
-  const notebookResolver = await runner.createNotebook(parserCached)
+  const cachedNotebook = kernel.getParserCache(cacheId)
+  const notebookResolver = await runner.createNotebook(cachedNotebook)
   const resolved = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
 
   console.log(resolved)
