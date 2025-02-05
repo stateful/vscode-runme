@@ -5,7 +5,7 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { dag, Container, File, Directory, object, func, field, Secret } from '@dagger.io/dagger'
+import { dag, Container, File, Directory, object, func, Secret } from '@dagger.io/dagger'
 
 @object()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -13,13 +13,13 @@ export class VscodeRunme {
   /**
    * The working repository directory for the VscodeRunme instance.
    */
-  @field()
+  @func()
   directory: Directory
 
   /**
    * The base container being used for building the extension.
    */
-  @field()
+  @func()
   container: Container
 
   /**
