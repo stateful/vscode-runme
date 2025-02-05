@@ -712,7 +712,8 @@
           ".mdi",
           ".mdr",
           ".run",
-          ".runme"
+          ".runme",
+          ".dag"
         ]
       }
     ],
@@ -738,6 +739,9 @@
           },
           {
             "filenamePattern": "*.runme"
+          },
+          {
+            "filenamePattern": "*.dag"
           }
         ]
       }
