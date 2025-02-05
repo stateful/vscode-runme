@@ -273,6 +273,7 @@ export const executeRunner: IKernelRunner = async ({
 
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
+    programOptions,
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
@@ -575,12 +576,11 @@ export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
 
   const cachedNotebook = kernel.getParserCache(cacheId)
   const notebookResolver = await runner.createNotebook(cachedNotebook)
-  const resolved = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
+  const daggerShellScript = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
 
-  console.log(resolved)
   const execution: RunProgramExecution = {
     type: 'commands',
-    commands: prepareCommandSeq(resolved, execKey),
+    commands: prepareCommandSeq(daggerShellScript, execKey),
   }
 
   const runProgramOptions = createRunProgramOptions(

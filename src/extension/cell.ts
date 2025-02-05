@@ -50,6 +50,7 @@ import {
 } from './terminal/terminalState'
 import ContextState from './contextState'
 import { IRunnerEnvironment } from './runner/environment'
+import { RunProgramOptions } from './runner'
 
 const NOTEBOOK_SELECTION_COMMAND = '_notebook.selectKernel'
 
@@ -248,6 +249,11 @@ export class NotebookCellOutputManager {
           )
 
           const terminalStateStr = terminalState.serialize()
+          const programOptions = terminalState.getProgramOptions()
+          const execScript =
+            programOptions?.exec?.type === 'script'
+              ? programOptions.exec.script
+              : (programOptions?.exec?.commands ?? []).join('\n')
           if (!terminalOutputItem) {
             const terminalConfigurations = getNotebookTerminalConfigurations(cell.notebook.metadata)
 
@@ -273,7 +279,11 @@ export class NotebookCellOutputManager {
           }
 
           return new NotebookCellOutput(
-            [terminalOutputItem, NotebookCellOutputItem.stdout(terminalStateStr)],
+            [
+              terminalOutputItem,
+              NotebookCellOutputItem.stdout(terminalStateStr),
+              NotebookCellOutputItem.text(execScript),
+            ],
             {
               'runme.dev/id': cellId,
             },
@@ -375,9 +385,11 @@ export class NotebookCellOutputManager {
 
   registerCellTerminalState({
     type,
+    programOptions,
     scrollback,
   }: {
     type: NotebookTerminalType
+    programOptions: RunProgramOptions
     scrollback: number
   }): ITerminalState {
     let terminalState: ITerminalState
@@ -420,6 +432,7 @@ export class NotebookCellOutputManager {
         break
     }
 
+    terminalState.setProgramOptions(programOptions)
     this.terminalState = terminalState
     return terminalState
   }
