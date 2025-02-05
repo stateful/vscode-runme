@@ -9,7 +9,7 @@ import { dag, Container, File, Directory, object, func, field, Secret } from '@d
 
 @object()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class VscodeRunme {
+export class VscodeRunme {
   /**
    * The working repository directory for the VscodeRunme instance.
    */
@@ -48,7 +48,7 @@ class VscodeRunme {
   withContainer(binary: File, presetup: File): VscodeRunme {
     this.container = dag
       .container()
-      .from('node:18')
+      .from('node:20')
       .withEnvVariable('EXTENSION_NAME', 'runme')
       .withFile('/usr/local/bin/runme', binary)
       .withFile('/usr/local/bin/presetup', presetup)
