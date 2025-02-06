@@ -387,6 +387,7 @@ suite('_doExecuteCell', () => {
     await k['_doExecuteCell']({
       document: { uri: { fsPath: '/foo/bar' } },
       metadata: { 'runme.dev/id': '01HGVC56X3XDWBPCC0NQDMGJ1Q' },
+      notebook: { metadata: { 'runme.dev/frontmatterParsed': {} } },
     } as any)
     // @ts-expect-error mocked out
     expect(executors.foobar).toBeCalledTimes(1)
@@ -424,6 +425,7 @@ suite('_doExecuteCell', () => {
           'runme.dev/id': '01HGVC56X3XDWBPCC0NQDMGJ1Q',
           mimeType: 'text/plain',
         },
+        notebook: { metadata: { 'runme.dev/frontmatterParsed': {} } },
       } as any)
     } catch (e) {
       console.error(e)
