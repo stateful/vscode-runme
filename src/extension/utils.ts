@@ -198,14 +198,15 @@ export interface IExecKeyInfo {
 export function getKeyInfo(
   runningCell: vscode.TextDocument,
   cellAnnotations: CellAnnotations,
-  parsedNotebookFrontmatter: { [key: string]: any },
+  parsedNotebookFrontmatter: { [key: string]: any } | undefined,
 ): IExecKeyInfo {
   try {
     if (!cellAnnotations.background && isDaggerCall(runningCell.getText())) {
       return { key: 'daggerCall', resource: 'DaggerObject' }
     }
 
-    if (!cellAnnotations.background && isDaggerShell(parsedNotebookFrontmatter.shell)) {
+    const frontmatterShell = parsedNotebookFrontmatter?.shell ?? ''
+    if (!cellAnnotations.background && isDaggerShell(frontmatterShell)) {
       return { key: 'daggerShell', resource: 'None' }
     }
 
