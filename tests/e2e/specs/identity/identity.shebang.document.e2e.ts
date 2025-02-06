@@ -2,12 +2,7 @@ import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import { assertDocumentContainsSpinner, revertChanges, saveFile } from '../../helpers/index.js'
-
-async function removeAllNotifications() {
-  const workbench = await browser.getWorkbench()
-  const notifications = await workbench.getNotifications()
-  await Promise.all(notifications.map((notification) => notification.dismiss()))
-}
+import { removeAllNotifications } from '../notifications.js'
 
 describe('Test suite: Shebang with setting Document only (2)', async () => {
   before(async () => {

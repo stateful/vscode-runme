@@ -5,14 +5,9 @@ import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../../pageobjects/notebook.page.js'
 import { assertDocumentContainsSpinner, revertChanges, saveFile } from '../../helpers/index.js'
+import { removeAllNotifications } from '../notifications.js'
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
-
-async function removeAllNotifications() {
-  const workbench = await browser.getWorkbench()
-  const notifications = await workbench.getNotifications()
-  await Promise.all(notifications.map((notification) => notification.dismiss()))
-}
 
 describe('Test suite: Document with existent identity and setting Document only (2)', async () => {
   before(async () => {

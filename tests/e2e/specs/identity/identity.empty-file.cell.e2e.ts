@@ -1,12 +1,7 @@
 import { Key } from 'webdriverio'
 
 import { assertDocumentContainsSpinner, revertChanges, saveFile } from '../../helpers/index.js'
-
-async function removeAllNotifications() {
-  const workbench = await browser.getWorkbench()
-  const notifications = await workbench.getNotifications()
-  await Promise.all(notifications.map((notification) => notification.dismiss()))
-}
+import { removeAllNotifications } from '../notifications.js'
 
 describe('Test suite: Empty file with setting Cell (3)', async () => {
   before(async () => {
