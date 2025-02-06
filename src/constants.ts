@@ -14,7 +14,8 @@ export enum OutputType {
   stdout = 'application/vnd.code.notebook.stdout',
   gcp = 'stateful.runme/gcp',
   aws = 'stateful.runme/aws',
-  dagger = 'stateful.runme/dagger',
+  daggerCall = 'stateful.runme/dagger',
+  daggerShell = 'stateful.runme/dagger',
 }
 
 export enum ClientMessages {

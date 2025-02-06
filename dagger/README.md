@@ -9,7 +9,7 @@ terminalRows: 16
 ## List available functions
 
 ```sh {"excludeFromRunAll":"true","id":"01HTNVRK3AJ2AT8M24TA996RCJ","terminalRows":"15"}
-dagger -m vscode-runme functions
+dagger functions
 ```
 
 ## Build Kernel Binary
@@ -35,5 +35,5 @@ dagger --progress=plain call \
     --binary /tmp/runme/runme \
     --presetup dagger/scripts/presetup.sh \
   build-extension \
-    --github-token cmd:"gh auth token"
+    --github-token-secret cmd:"gh auth token"
 ```

@@ -27,6 +27,7 @@ export const CommandModeEnum = () => {
     return {
       TEMP_FILE: v2.progconf.CommandMode.FILE,
       INLINE_SHELL: v2.progconf.CommandMode.INLINE,
+      DAGGER: v2.progconf.CommandMode.INLINE, // revisit impl in v2
       TERMINAL: v2.progconf.CommandMode.TERMINAL,
     }
   }

@@ -1,7 +1,7 @@
 import { Terminal as XTerm } from '@xterm/headless'
 
 import { OutputType } from '../../constants'
-import { RunnerExitReason } from '../runner'
+import { RunnerExitReason, RunProgramOptions } from '../runner'
 import { RingBuffer } from '../../ringBuffer'
 
 export type NotebookTerminalType = 'xterm' | 'local'
@@ -19,6 +19,9 @@ export interface ITerminalState {
   setProcessInfo(processInfo?: IProcessInfoState): void
   hasProcessInfo(): IProcessInfoState | undefined
 
+  setProgramOptions(programOptions: RunProgramOptions): void
+  getProgramOptions(): RunProgramOptions | undefined
+
   readonly outputType: OutputType
   readonly capacity: number
 }
@@ -28,6 +31,7 @@ export class XTermState implements ITerminalState {
 
   protected xterm: XTerm
   private processInfo: IProcessInfoState | undefined
+  private programOptions: RunProgramOptions | undefined
   protected buffer: RingBuffer<string>
   private textDecoder = new TextDecoder()
 
@@ -38,6 +42,14 @@ export class XTermState implements ITerminalState {
     this.xterm = new XTerm({
       allowProposedApi: true,
     })
+  }
+
+  setProgramOptions(programOptions: RunProgramOptions): void {
+    this.programOptions = programOptions
+  }
+
+  getProgramOptions(): RunProgramOptions | undefined {
+    return this.programOptions
   }
 
   setProcessInfo(processInfo?: IProcessInfoState) {
@@ -86,9 +98,18 @@ export class LocalBufferTermState implements ITerminalState {
 
   private buffer: RingBuffer<Buffer>
   private processInfo: IProcessInfoState | undefined
+  private programOptions: RunProgramOptions | undefined
 
   constructor(readonly capacity: number) {
     this.buffer = new RingBuffer<Buffer>(capacity)
+  }
+
+  setProgramOptions(programOptions: RunProgramOptions): void {
+    this.programOptions = programOptions
+  }
+
+  getProgramOptions(): RunProgramOptions | undefined {
+    return this.programOptions
   }
 
   write(data: string | Uint8Array) {

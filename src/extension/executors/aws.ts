@@ -33,6 +33,7 @@ export const aws: IKernelExecutor = async (executor) => {
     }
 
     const programOptions: RunProgramOptions = await resolveProgramOptionsScript({
+      kernel,
       exec,
       execKey: 'aws',
       runnerEnv,

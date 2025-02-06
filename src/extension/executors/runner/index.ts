@@ -59,6 +59,7 @@ import {
   ResolveProgramRequest_ModeEnum,
   ResolveProgramResponse_StatusEnum,
 } from '../../grpc/runner/types'
+import { getDocumentCacheId } from '../../serializer'
 
 import { createRunProgramOptions } from './factory'
 
@@ -113,11 +114,18 @@ export const executeRunner: IKernelRunner = async ({
     }
   }
 
+  // default is inline shell aka script
+  let resolveRunProgram: IResolveRunProgram = resolveProgramOptionsScript
+
+  const { commandMode } = getCellProgram(exec.cell, exec.cell.notebook, execKey)
+  if (commandMode === CommandModeEnum().DAGGER) {
+    resolveRunProgram = resolveProgramOptionsDagger
+  }
+
   let programOptions: RunProgramOptions
   try {
-    // removed vercel resolution option
-    const resolveRunProgram = resolveProgramOptionsScript
     programOptions = await resolveRunProgram({
+      kernel,
       exec,
       execKey,
       runnerEnv,
@@ -126,12 +134,15 @@ export const executeRunner: IKernelRunner = async ({
       cellId,
     })
   } catch (err) {
-    if (err instanceof RpcError && err.methodName === 'ResolveProgram') {
+    if (err instanceof RpcError && err.methodName?.startsWith('Resolve')) {
       const message = err.message
       window.showErrorMessage('Invalid shell snippet: ' + message)
     }
+    if (err instanceof RpcError) {
+      log.error(`RpcError: ${err.code} ${err.message}`)
+    }
+    // todo(sebastian): user facing error? notif?
     if (err instanceof Error) {
-      // todo(sebastian): user facing error? notif?
       log.error(err.message)
     }
     return false
@@ -162,12 +173,36 @@ export const executeRunner: IKernelRunner = async ({
     program.onStdoutRaw(writeToTerminalStdout)
   }
 
-  program.onDidErr((data) =>
-    postClientMessage(messaging, ClientMessages.terminalStderr, {
+  program.onDidErr(async (data) => {
+    if (execKey === 'daggerShell') {
+      try {
+        const daggerJsonParsed = JSON.parse(data || '{}')
+        daggerJsonParsed.runme = { cellText: runningCell.getText() }
+        await kernel.saveOutputState(exec.cell, OutputType.daggerShell, {
+          json: JSON.stringify(daggerJsonParsed),
+        })
+        return messaging.postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+          type: ClientMessages.daggerSyncState,
+          output: {
+            id: cellId,
+            cellId: cellId,
+            json: daggerJsonParsed,
+          },
+        })
+      } catch (err) {
+        console.error('failed to parse dagger json', err)
+        await kernel.cleanOutputState(exec.cell, OutputType.daggerShell)
+        return postClientMessage(messaging, ClientMessages.terminalStdout, {
+          'runme.dev/id': cellId,
+          data,
+        })
+      }
+    }
+    return postClientMessage(messaging, ClientMessages.terminalStderr, {
       'runme.dev/id': cellId,
       data,
-    }),
-  )
+    })
+  })
 
   messaging.onDidReceiveMessage(({ message }: { message: ClientMessage<ClientMessages> }) => {
     const { type, output } = message
@@ -238,6 +273,7 @@ export const executeRunner: IKernelRunner = async ({
 
   terminalState = await kernel.registerCellTerminalState(
     exec.cell,
+    programOptions,
     revealNotebookTerminal ? 'xterm' : 'local',
   )
 
@@ -254,7 +290,8 @@ export const executeRunner: IKernelRunner = async ({
 
     // allow for additional outputs, such as dagger
     const t = OutputType[execKey as keyof typeof OutputType]
-    if (t) {
+    // todo(sebastian): dagger-shell is not UX integration ready yet
+    if (t && commandMode !== CommandModeEnum().DAGGER) {
       await outputs.showOutput(t)
     }
 
@@ -472,7 +509,7 @@ type IResolveRunProgram = (resolver: IResolveRunProgramOptions) => Promise<RunPr
 
 type IResolveRunProgramOptions = { runner: IRunner } & Pick<
   IKernelRunnerOptions,
-  'exec' | 'execKey' | 'runnerEnv' | 'runningCell' | 'cellId'
+  'kernel' | 'exec' | 'execKey' | 'runnerEnv' | 'runningCell' | 'cellId'
 >
 
 export const resolveProgramOptionsScript: IResolveRunProgram = async ({
@@ -488,7 +525,7 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   let script = exec.cell.document.getText()
 
   // temp hack for dagger integration
-  if (execKey === 'dagger' && !script.includes(' --help')) {
+  if (execKey === 'daggerCall' && !script.includes(' --help')) {
     const varName = `DAGGER_${cellId}`
     script = 'export ' + varName + '=$(' + script + '\n)'
   }
@@ -524,6 +561,39 @@ export const resolveProgramOptionsScript: IResolveRunProgram = async ({
   return createRunProgramOptions(execKey, runningCell, exec, execution, runnerEnv)
 }
 
+export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
+  kernel,
+  runner,
+  runnerEnv,
+  exec,
+  execKey,
+  runningCell,
+}: IResolveRunProgramOptions): Promise<RunProgramOptions> => {
+  const cacheId = getDocumentCacheId(exec.cell.notebook.metadata)
+  if (!cacheId) {
+    throw new Error('Cannot resolve notebook without cache entry')
+  }
+
+  const cachedNotebook = kernel.getParserCache(cacheId)
+  const notebookResolver = await runner.createNotebook(cachedNotebook)
+  const daggerShellScript = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
+
+  const execution: RunProgramExecution = {
+    type: 'commands',
+    commands: prepareCommandSeq(daggerShellScript, execKey),
+  }
+
+  const runProgramOptions = createRunProgramOptions(
+    execKey,
+    runningCell,
+    exec,
+    execution,
+    runnerEnv,
+  )
+
+  return runProgramOptions
+}
+
 /**
  * Prompts for vars that are exported as necessary
  */
@@ -536,8 +606,8 @@ export async function resolveRunProgramExecution(
   commandMode: CommandMode,
   promptMode: ResolveProgramRequest_Mode,
 ): Promise<RunProgramExecution> {
-  const { INLINE_SHELL } = CommandModeEnum()
-  if (commandMode !== INLINE_SHELL) {
+  const { INLINE_SHELL, DAGGER } = CommandModeEnum()
+  if (commandMode !== INLINE_SHELL && commandMode !== DAGGER) {
     return {
       type: 'script',
       script,

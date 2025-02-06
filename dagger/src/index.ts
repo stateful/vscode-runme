@@ -5,21 +5,21 @@
  */
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { dag, Container, File, Directory, object, func, field, Secret } from '@dagger.io/dagger'
+import { dag, Container, File, Directory, object, func, Secret } from '@dagger.io/dagger'
 
 @object()
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class VscodeRunme {
+export class VscodeRunme {
   /**
    * The working repository directory for the VscodeRunme instance.
    */
-  @field()
+  @func()
   directory: Directory
 
   /**
    * The base container being used for building the extension.
    */
-  @field()
+  @func()
   container: Container
 
   /**
@@ -48,7 +48,7 @@ class VscodeRunme {
   withContainer(binary: File, presetup: File): VscodeRunme {
     this.container = dag
       .container()
-      .from('node:18')
+      .from('node:20')
       .withEnvVariable('EXTENSION_NAME', 'runme')
       .withFile('/usr/local/bin/runme', binary)
       .withFile('/usr/local/bin/presetup', presetup)
@@ -98,25 +98,14 @@ class VscodeRunme {
 
   /**
    * Sets up the container for the VscodeRunme instance.
-   * @param githubTokenSecret - Optional valid GitHub access token for API access passed as secret.
-   * @param githubToken - Valid GitHub access token for API access passed as plain text.
+   * @param githubTokenSecret - Valid GitHub access token for API access passed as secret.
    * @returns The packaged VSIX extension file.
    */
   @func()
-  async buildExtension(githubTokenSecret?: Secret, githubToken?: string): Promise<File> {
-    let c: Container
-
-    if (githubTokenSecret) {
-    c = this.container
+  async buildExtension(githubTokenSecret: Secret): Promise<File> {
+    return this.container
       .withSecretVariable('GITHUB_TOKEN', githubTokenSecret)
-    }
-    else if (githubToken) {
-      c = this.container.withEnvVariable('GITHUB_TOKEN', githubToken)
-    } else {
-      throw new Error('GitHub token is required')
-    }
-
-    return c.withExec('runme run setup build bundle'.split(' '))
+      .withExec('runme run setup build bundle'.split(' '))
       .file('runme-extension.vsix')
   }
 }

@@ -322,11 +322,12 @@ export class Kernel implements Disposable {
 
   async registerCellTerminalState(
     cell: NotebookCell,
+    programOptions: RunProgramOptions,
     type: NotebookTerminalType,
   ): Promise<ITerminalState> {
     const outputs = await this.cellManager.getNotebookOutputs(cell)
     const { scrollback } = getNotebookTerminalConfigurations(cell.notebook.metadata)
-    return outputs.registerCellTerminalState({ type, scrollback })
+    return outputs.registerCellTerminalState({ type, programOptions, scrollback })
   }
 
   async #setNotebookMode(notebookDocument: NotebookDocument): Promise<void> {
@@ -811,33 +812,21 @@ export class Kernel implements Disposable {
     runmeExec.start(startTime)
 
     const annotations = getAnnotations(cell)
-    const { key: execKey, resource } = getKeyInfo(runningCell, annotations)
+    const { key: execKey, resource } = getKeyInfo(
+      runningCell,
+      annotations,
+      cell.notebook.metadata['runme.dev/frontmatterParsed'],
+    )
 
     let successfulCellExecution: boolean
 
     const envMgr = this.getEnvironmentManager()
     const outputs = await this.getCellOutputs(cell)
 
-    const runnerOpts: IKernelRunnerOptions = {
-      kernel: this,
-      doc: cell.document,
-      context: this.context,
-      runner: this.runner!,
-      exec,
-      runningCell,
-      messaging: this.messaging,
-      cellId: id,
-      execKey,
-      outputs,
-      runnerEnv: this.runnerEnv,
-      envMgr,
-      resource,
-    }
-
     const executorOpts: IKernelExecutorOptions = {
       context: this.context,
       kernel: this,
-      runner: this.runner,
+      runner: this.runner!,
       runnerEnv: this.runnerEnv,
       doc: runningCell,
       exec,
@@ -846,6 +835,14 @@ export class Kernel implements Disposable {
       envMgr,
       resource,
       cellText: runningCell.getText(),
+    }
+
+    const runnerOpts: IKernelRunnerOptions = {
+      ...executorOpts,
+      doc: cell.document,
+      runningCell,
+      cellId: id,
+      execKey,
     }
 
     try {
@@ -892,6 +889,10 @@ export class Kernel implements Disposable {
       (isShellLanguage(execKey) || !hasExecutor) &&
       executorOpts.resource === 'None'
     ) {
+      if (['daggerCall', 'daggerShell'].includes(execKey) && supportsGrpcRunner) {
+        this.cleanOutputState(runnerOpts.exec.cell, OutputType.daggerCall)
+      }
+
       return this.executeRunnerSafe(runnerOpts)
     }
 
@@ -915,12 +916,12 @@ export class Kernel implements Disposable {
       return runUriResource(opts)
     }
 
-    if (execKey === 'dagger' && supportsGrpcRunner) {
+    if (execKey === 'daggerCall' && supportsGrpcRunner) {
       const notify = async (res?: string): Promise<boolean> => {
         try {
           const daggerJsonParsed = JSON.parse(res || '{}')
           daggerJsonParsed.runme = { cellText: runnerOpts.runningCell.getText() }
-          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.daggerCall, {
             json: JSON.stringify(daggerJsonParsed),
           })
 
@@ -942,7 +943,7 @@ export class Kernel implements Disposable {
             console.error(e.message)
           }
 
-          await this.saveOutputState(runnerOpts.exec.cell, OutputType.dagger, {
+          await this.saveOutputState(runnerOpts.exec.cell, OutputType.daggerCall, {
             text: res,
           })
 
@@ -963,7 +964,7 @@ export class Kernel implements Disposable {
       const runSecondary = () => {
         return runUriResource({ ...runnerOpts, runScript: notify })
       }
-      this.cleanOutputState(runnerOpts.exec.cell, OutputType.dagger)
+      this.cleanOutputState(runnerOpts.exec.cell, OutputType.daggerCall)
       return this.executeRunnerSafe({ ...runnerOpts, runScript: runSecondary })
     }
 
@@ -1283,10 +1284,14 @@ export class Kernel implements Disposable {
     return this.serializer?.getNotebookDataCache(cacheId)
   }
 
-  public getReporterPayload(
+  public getParserCache(cacheId: string): Serializer.Notebook | undefined {
+    return this.serializer?.getParserCache(cacheId)
+  }
+
+  public async getReporterPayload(
     input: TransformRequest,
-  ): UnaryCall<TransformRequest, TransformResponse> | undefined {
-    return this.reporter?.transform(input)
+  ): Promise<UnaryCall<TransformRequest, TransformResponse> | undefined> {
+    return await this.reporter?.transform(input)
   }
 
   async runProgram(program?: RunProgramOptions | string) {

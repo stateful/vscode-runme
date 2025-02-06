@@ -19,11 +19,14 @@ vi.mock('vscode-telemetry', () => ({}))
 
 vi.mock('vscode')
 
-vi.mock('../../../src/extension/utils', () => ({
-  replaceOutput: vi.fn(),
-  getWorkspaceFolder: vi.fn(),
-  getAnnotations: vi.fn(),
-}))
+vi.mock('../../../src/extension/utils', () => {
+  return {
+    isDaggerShell: vi.fn(),
+    replaceOutput: vi.fn(),
+    getWorkspaceFolder: vi.fn(),
+    getAnnotations: vi.fn(),
+  }
+})
 
 vi.mock('node:fs/promises', () => ({
   default: {

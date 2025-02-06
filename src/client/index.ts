@@ -30,7 +30,7 @@ export const activate: ActivationFunction<void> = (context) => {
           vercelElem.setAttribute('content', JSON.stringify(payload.output))
           element.appendChild(vercelElem)
           break
-        case OutputType.dagger:
+        case OutputType.daggerCall:
           // if (payload.output?.error) {
           //   renderError(payload.output.error)
           //   break

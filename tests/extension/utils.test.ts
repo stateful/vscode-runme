@@ -142,6 +142,7 @@ test('getTerminalByCell', () => {
 })
 
 test('getKeyInfo', () => {
+  const fakeFrontmatter = { shell: '' }
   expect(
     getKeyInfo(
       {
@@ -149,6 +150,7 @@ test('getKeyInfo', () => {
         languageId: 'barfoo',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'barfoo',
@@ -162,6 +164,7 @@ test('getKeyInfo', () => {
         languageId: 'something else',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'deno',
@@ -179,6 +182,7 @@ test('getKeyInfo', () => {
         languageId: 'sh',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'github',
@@ -196,6 +200,7 @@ test('getKeyInfo', () => {
         languageId: 'sh',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'gcp',
@@ -212,6 +217,7 @@ test('getKeyInfo', () => {
         languageId: 'sh',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'aws',
@@ -225,6 +231,7 @@ test('getKeyInfo', () => {
         languageId: 'shellscript',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'sh',
@@ -244,6 +251,7 @@ test('getKeyInfo', () => {
         languageId: 'sh',
       } as any,
       {} as any,
+      fakeFrontmatter,
     ),
   ).toStrictEqual({
     key: 'sh',

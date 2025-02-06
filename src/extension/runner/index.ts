@@ -7,7 +7,7 @@ import {
 } from 'vscode'
 import stripAnsi from 'strip-ansi'
 
-import type { DisposableAsync } from '../../types'
+import type { DisposableAsync, Serializer } from '../../types'
 import {
   CreateSessionRequest,
   CreateSessionRequestImpl,
@@ -39,6 +39,7 @@ import { GrpcRunnerEnvironment, IRunnerEnvironment } from './environment'
 import { IRunnerClient, GrpcRunnerClient } from './client'
 import { GrpcRunnerProgramResolver } from './program'
 import { GrpcRunnerMonitorEnvStore } from './monitorEnv'
+import { GrpcNotebook } from './notebook'
 
 export type RunProgramExecution =
   | {
@@ -105,6 +106,8 @@ export interface IRunner extends Disposable {
     mode: ResolveProgramRequest_Mode,
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver>
+
+  createNotebook(notebook: Serializer.Notebook | undefined): Promise<GrpcNotebook>
 
   getEnvironmentVariables(
     runnerEnv: IRunnerEnvironment,
@@ -240,6 +243,14 @@ export default class GrpcRunner implements IRunner {
     envs: Record<string, string>,
   ): Promise<GrpcRunnerProgramResolver> {
     const resolver = new GrpcRunnerProgramResolver(this.client, mode, envs)
+
+    this.registerChild(resolver)
+
+    return resolver
+  }
+
+  async createNotebook(notebook: Serializer.Notebook | undefined): Promise<GrpcNotebook> {
+    const resolver = new GrpcNotebook(this.server, notebook)
 
     this.registerChild(resolver)
 
@@ -435,6 +446,9 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
         // onDidErr is **not** part of VS Code's PTY interface
         // for non-interactive we deliberately write stderr to the PTY
+        if (this.isPseudoterminal()) {
+          return
+        }
         const yellowStderr = `\x1b[33m${stderr}\x1b[0m`
         this._onDidWrite.fire(yellowStderr)
       }),

@@ -392,7 +392,7 @@ interface Payload {
     | GcpCloudRunServicesState
     | GcpCloudRunRevisionsState
   [OutputType.aws]?: AWSState
-  [OutputType.dagger]?: DaggerState
+  [OutputType.daggerCall]?: DaggerState
 }
 
 export type ClientMessage<T extends ClientMessages> = T extends any

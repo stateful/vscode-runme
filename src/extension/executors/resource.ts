@@ -2,12 +2,24 @@ import { RunProgramOptions } from '../runner'
 import { getAnnotations, isValidEnvVarName } from '../utils'
 
 import { IKernelRunner, IKernelRunnerOptions, resolveProgramOptionsScript } from './runner'
+import { getSystemShellPath } from './utils'
 
 export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
-  const { context, runner, exec, runningCell, execKey, runnerEnv, runScript, cellId, resource } =
-    runnerOpts
+  const {
+    context,
+    kernel,
+    runner,
+    exec,
+    runningCell,
+    execKey,
+    runnerEnv,
+    runScript,
+    cellId,
+    resource,
+  } = runnerOpts
 
   const programOptions: RunProgramOptions = await resolveProgramOptionsScript({
+    kernel,
     exec,
     execKey,
     runnerEnv,
@@ -29,7 +41,7 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
     }
   }
 
-  if (resource === 'Dagger') {
+  if (resource === 'DaggerObject') {
     const varDaggerCellId = `$DAGGER_${cellId}`
 
     const printDaggerCellId = `echo ${varDaggerCellId}`
@@ -37,6 +49,8 @@ export const uri: IKernelRunner = async (runnerOpts: IKernelRunnerOptions) => {
       type: 'script',
       script: printDaggerCellId,
     }
+    const sysShell = getSystemShellPath() || '/bin/bash'
+    programOptions.programName = sysShell
 
     if (knownName && isValidEnvVarName(knownName)) {
       const varDaggerCellName = `DAGGER_ID_${knownName}`
