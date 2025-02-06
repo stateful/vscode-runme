@@ -174,30 +174,31 @@ export const executeRunner: IKernelRunner = async ({
   }
 
   program.onDidErr(async (data) => {
-    if (execKey === 'daggerShell') {
-      try {
-        const daggerJsonParsed = JSON.parse(data || '{}')
-        daggerJsonParsed.runme = { cellText: runningCell.getText() }
-        await kernel.saveOutputState(exec.cell, OutputType.daggerShell, {
-          json: JSON.stringify(daggerJsonParsed),
-        })
-        return messaging.postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
-          type: ClientMessages.daggerSyncState,
-          output: {
-            id: cellId,
-            cellId: cellId,
-            json: daggerJsonParsed,
-          },
-        })
-      } catch (err) {
-        console.error('failed to parse dagger json', err)
-        await kernel.cleanOutputState(exec.cell, OutputType.daggerShell)
-        return postClientMessage(messaging, ClientMessages.terminalStdout, {
-          'runme.dev/id': cellId,
-          data,
-        })
-      }
-    }
+    // todo(sebastian): dagger-shell is not UX integration ready yet
+    // if (execKey === 'daggerShell') {
+    //   try {
+    //     const daggerJsonParsed = JSON.parse(data || '{}')
+    //     daggerJsonParsed.runme = { cellText: runningCell.getText() }
+    //     await kernel.saveOutputState(exec.cell, OutputType.daggerShell, {
+    //       json: JSON.stringify(daggerJsonParsed),
+    //     })
+    //     return messaging.postMessage(<ClientMessage<ClientMessages.daggerSyncState>>{
+    //       type: ClientMessages.daggerSyncState,
+    //       output: {
+    //         id: cellId,
+    //         cellId: cellId,
+    //         json: daggerJsonParsed,
+    //       },
+    //     })
+    //   } catch (err) {
+    //     console.error('failed to parse dagger json', err)
+    //     await kernel.cleanOutputState(exec.cell, OutputType.daggerShell)
+    //     return postClientMessage(messaging, ClientMessages.terminalStdout, {
+    //       'runme.dev/id': cellId,
+    //       data,
+    //     })
+    //   }
+    // }
     return postClientMessage(messaging, ClientMessages.terminalStderr, {
       'runme.dev/id': cellId,
       data,

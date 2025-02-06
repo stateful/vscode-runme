@@ -497,11 +497,9 @@ export class TerminalView extends LitElement {
               if (id !== this.id) {
                 return
               }
-              if (e.type === ClientMessages.terminalStdout) {
-                this.isShareReady = false
-                this.terminal!.write(data)
-                this.requestUpdate()
-              }
+              this.isShareReady = false
+              this.terminal!.write(data)
+              this.requestUpdate()
             }
             break
           case ClientMessages.platformApiResponse:
