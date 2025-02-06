@@ -1,4 +1,5 @@
 import { Terminal as XTerm } from '@xterm/headless'
+import { SerializeAddon } from '@xterm/addon-serialize'
 
 import { OutputType } from '../../constants'
 import { RunnerExitReason, RunProgramOptions } from '../runner'
@@ -30,26 +31,19 @@ export class XTermState implements ITerminalState {
   readonly outputType = OutputType.terminal
 
   protected xterm: XTerm
+  private serializer: SerializeAddon
   private processInfo: IProcessInfoState | undefined
   private programOptions: RunProgramOptions | undefined
-  protected buffer: RingBuffer<string>
-  private textDecoder = new TextDecoder()
 
   constructor(readonly capacity: number) {
-    this.buffer = this.resetBuffer()
-
     // TODO: lines/cols
     this.xterm = new XTerm({
       allowProposedApi: true,
+      scrollback: capacity,
     })
-  }
 
-  setProgramOptions(programOptions: RunProgramOptions): void {
-    this.programOptions = programOptions
-  }
-
-  getProgramOptions(): RunProgramOptions | undefined {
-    return this.programOptions
+    this.serializer = new SerializeAddon()
+    this.xterm.loadAddon(this.serializer)
   }
 
   setProcessInfo(processInfo?: IProcessInfoState) {
@@ -60,27 +54,20 @@ export class XTermState implements ITerminalState {
     return this.processInfo
   }
 
+  setProgramOptions(programOptions: RunProgramOptions): void {
+    this.programOptions = programOptions
+  }
+
+  getProgramOptions(): RunProgramOptions | undefined {
+    return this.programOptions
+  }
+
   serialize(): string {
-    return this.buffer.getAll().join('')
+    return this.serializer.serialize({ scrollback: this.capacity })
   }
 
   write(data: string | Uint8Array): void {
     this.xterm.write(data)
-    this.addToBuffer(data)
-  }
-
-  addToBuffer(data: string | Uint8Array): void {
-    if (typeof data === 'string') {
-      this.buffer.push(data)
-    } else {
-      this.buffer.push(this.textDecoder.decode(data))
-    }
-  }
-
-  resetBuffer(): RingBuffer<string> {
-    // capacity is items vs lines because we don't handle line breaks
-    this.buffer = new RingBuffer<string>(this.capacity)
-    return this.buffer
   }
 
   input(data: string, wasUserInput: boolean): void {
