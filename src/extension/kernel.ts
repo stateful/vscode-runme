@@ -1284,8 +1284,21 @@ export class Kernel implements Disposable {
     return this.serializer?.getNotebookDataCache(cacheId)
   }
 
-  public getParserCache(cacheId: string): Serializer.Notebook | undefined {
-    return this.serializer?.getParserCache(cacheId)
+  public async getParserCache(
+    cacheId: string,
+    cell: NotebookCell,
+  ): Promise<Serializer.Notebook | undefined> {
+    // ensure the serializer is caught up
+    for (let i = 0; i < 20; i++) {
+      const cellText = cell.document.getText()
+      const notebook = this.serializer?.getParserCache(cacheId)
+      if (notebook && notebook.cells[cell.index].value === cellText) {
+        return notebook
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
+    return undefined
   }
 
   public async getReporterPayload(

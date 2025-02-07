@@ -575,7 +575,7 @@ export const resolveProgramOptionsDagger: IResolveRunProgram = async ({
     throw new Error('Cannot resolve notebook without cache entry')
   }
 
-  const cachedNotebook = kernel.getParserCache(cacheId)
+  const cachedNotebook = await kernel.getParserCache(cacheId, exec.cell)
   const notebookResolver = await runner.createNotebook(cachedNotebook)
   const daggerShellScript = await notebookResolver.resolveDaggerNotebook(exec.cell.index)
 
