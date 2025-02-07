@@ -500,7 +500,7 @@ export class RunmeExtension {
       kernel
         .runProgram('echo $SHELL')
         .then((output) => {
-          if (output === false) {
+          if (output === undefined) {
             return
           }
 
