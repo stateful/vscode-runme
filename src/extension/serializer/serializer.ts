@@ -134,7 +134,33 @@ export abstract class GrpcSerializer implements ISerializer {
       return
     }
 
+    await this.applyFrontmatterForFileExtension(doc)
+
     this.cacheDocUriMapping.set(cacheId, doc.uri)
+  }
+
+  private async applyFrontmatterForFileExtension(notebook: NotebookDocument): Promise<boolean> {
+    // don't tamper with existing docs
+    if (notebook.cellCount > 0 || !!notebook.metadata?.['runme.dev/frontmatterParsed']) {
+      return false
+    }
+
+    const fileExtension = path.extname(notebook.uri.fsPath)
+    if (fileExtension.toLowerCase() === '.dag') {
+      const metadata = {
+        ...notebook.metadata,
+        'runme.dev/frontmatter': '---\n\shell: dagger shell\n---',
+        'runme.dev/frontmatterParsed': { shell: 'dagger shell' },
+      }
+      const notebookEdit = NotebookEdit.updateNotebookMetadata(metadata)
+      const edit = new WorkspaceEdit()
+      edit.set(notebook.uri, [notebookEdit])
+      await workspace.applyEdit(edit)
+      await notebook.save()
+      return true
+    }
+
+    return false
   }
 
   private async handleSaveNotebookOutputs(doc: NotebookDocument) {

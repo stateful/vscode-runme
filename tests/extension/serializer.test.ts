@@ -386,6 +386,75 @@ describe('ConnectSerializer', () => {
     })
   })
 
+  describe('#applyFrontmatterForFileExtension', () => {
+    const fakeSrcDocUri = { fsPath: '/tmp/fake/source.md' } as any
+
+    it('should not run for documents with cells', async () => {
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
+
+      const applied = await serializer['applyFrontmatterForFileExtension']({
+        cellCount: 2,
+        uri: fakeSrcDocUri,
+      })
+
+      expect(applied).toBeFalsy()
+    })
+
+    it('should not run documents that are not empty', async () => {
+      const fixture = deepCopyFixture()
+
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
+
+      const applied = await serializer['applyFrontmatterForFileExtension']({
+        cellCount: 0,
+        uri: fakeSrcDocUri,
+        metadata: fixture.metadata,
+      })
+
+      expect(applied).toBeFalsy()
+    })
+
+    it('should apply dagger shell for .dag file extensions', async () => {
+      vi.mocked(workspace.applyEdit).mockResolvedValue(true)
+
+      const fixture = deepCopyFixture()
+      fakeSrcDocUri.fsPath = '/tmp/fake/source.dag'
+
+      const serializer: any = new ConnectSerializer(context, new Server(), new Kernel())
+
+      delete fixture.metadata['runme.dev/frontmatterParsed']
+      delete fixture.metadata['runme.dev/frontmatter']
+      const save = vi.fn()
+      const applied = await serializer['applyFrontmatterForFileExtension']({
+        save,
+        uri: fakeSrcDocUri,
+        metadata: fixture.metadata,
+      })
+
+      const expectedEdits = new Map()
+      expectedEdits.set(
+        {
+          fsPath: '/tmp/fake/source.dag',
+        },
+        [
+          {
+            metadata: {
+              'runme.dev/cacheId': '01J97S5FVEKBPD9GAH0AZBV0HB',
+              'runme.dev/finalLineBreaks': '1',
+              'runme.dev/frontmatter': '---\nshell: dagger shell\n---',
+              'runme.dev/frontmatterParsed': { shell: 'dagger shell' },
+            },
+            type: 'updateNotebookMetadata',
+          },
+        ],
+      )
+
+      expect(save).toBeCalled()
+      expect(workspace.applyEdit).toBeCalledWith(expectedEdits)
+      expect(applied).toBeTruthy()
+    })
+  })
+
   describe('cell execution summary marshaling', () => {
     it('should not misrepresenting uninitialized values', () => {
       // i.e. undefined is not sucess=false
