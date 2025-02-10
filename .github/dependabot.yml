@@ -22,7 +22,21 @@ updates:
       - dependency-name: "@vercel/client"
       # VS Code
       - dependency-name: "@types/vscode"
-
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
+      - dependency-name: "typescript"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@connectrpc/connect-node"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "vitest"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "@vitest/coverage-v8"
+        update-types:
+          - version-update:semver-major
     groups:
       patch-updates:
         patterns:
@@ -48,8 +62,12 @@ updates:
           - "@wdio/mocha-framework"
           - "@wdio/spec-reporter"
           - "chromedriver"
+          - "expect-webdriverio"
           - "wdio-vscode-service"
           - "webdriverio"
+        update-types:
+          - minor
+          - patch
   - package-ecosystem: npm
     directory: "/examples/k8s"
     schedule:
