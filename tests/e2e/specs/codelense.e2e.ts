@@ -26,7 +26,7 @@ describe('Runme Codelense Support', async () => {
 
     const workbench = await browser.getWorkbench()
     const text = await getTerminalText(workbench)
-    expect(text).toContain('Hello World!\n ')
+    expect(text).toContain('Hello World!\n\n *')
     await killAllTerminals(workbench)
   })
 
