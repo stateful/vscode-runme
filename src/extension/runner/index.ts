@@ -389,6 +389,7 @@ export default class GrpcRunner implements IRunner {
   }
 }
 
+export const NON_TTY_BUFFER_SPAN_MS = 100
 const log = getLogger('GrpcRunnerProgramSession')
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   private disposables: Disposable[] = []
@@ -455,9 +456,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         }
         return bytes
       }),
-      map((bytes) => {
-        return decoder.decode(bytes)
-      }),
+      map((bytes) => decoder.decode(bytes)),
     )
 
     // buffered
@@ -465,7 +464,7 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
       decodedStdout$ = decodedStdout$.pipe(
         startWith('\r'),
         endWith('\r\n'),
-        bufferTime(100),
+        bufferTime(NON_TTY_BUFFER_SPAN_MS),
         map((chunks) => chunks.join('')),
       )
     }
@@ -566,7 +565,8 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
     while (j < bytes.byteLength) {
       const byte = bytes[j++]
 
-      if (byte === 0x0a) {
+      const prev = j - 1 >= 0 ? bytes[j - 1] : undefined
+      if (byte === 0x0a && prev !== 0x0d) {
         newBytes[i++] = 0x0d
       }
 
