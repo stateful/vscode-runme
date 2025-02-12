@@ -1408,7 +1408,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "@apollo/client": "^3.12.7",
+    "@apollo/client": "^3.12.11",
     "@aws-sdk/client-ec2": "^3.731.1",
     "@aws-sdk/client-eks": "^3.731.1",
     "@aws-sdk/credential-providers": "^3.731.1",
