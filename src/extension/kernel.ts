@@ -1307,13 +1307,13 @@ export class Kernel implements Disposable {
     return await this.reporter?.transform(input)
   }
 
-  async runProgram(program?: RunProgramOptions | string) {
+  async runProgram(program?: RunProgramOptions | string): Promise<string | undefined> {
     let programOptions: RunProgramOptions
     const logger = getLogger('runProgram')
 
     if (!this.runner) {
       logger.error('No runner available')
-      return false
+      return
     }
 
     if (typeof program === 'object') {
@@ -1340,16 +1340,15 @@ export class Kernel implements Disposable {
 
     this.context.subscriptions.push(programSession)
 
-    let execRes: string | undefined
-    const onData = (data: string | Uint8Array) => {
-      if (execRes === undefined) {
-        execRes = ''
-      }
-      execRes += data.toString()
+    const decoder = new TextDecoder()
+    let execRes = ''
+    const onData = (data: Uint8Array) => {
+      execRes += decoder.decode(data)
     }
 
-    programSession.onDidWrite(onData)
-    programSession.onDidErr(onData)
+    // read raw directly from process instead of tty/pty
+    programSession.onStdoutRaw(onData)
+    programSession.onStderrRaw(onData)
 
     const success = new Promise<boolean>((resolve, reject) => {
       programSession.onDidClose(async (code) => {

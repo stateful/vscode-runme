@@ -17,6 +17,7 @@ import { GrpcRunnerClient } from '../../../src/extension/runner/client'
 import GrpcRunner, {
   GrpcRunnerProgramSession,
   IRunner,
+  NON_TTY_BUFFER_SPAN_MS,
   RunProgramOptions,
 } from '../../../src/extension/runner'
 import { GrpcRunnerEnvironment } from '../../../src/extension/runner/environment'
@@ -539,6 +540,7 @@ suite('grpc runner', () => {
 
     test('onDidWrite replaces returns in non-interactive', async () => {
       const { duplex, writeListener } = await createNewSession({
+        tty: false,
         convertEol: true,
       })
 
@@ -548,27 +550,33 @@ suite('grpc runner', () => {
         mimeType: 'text/plain',
       })
 
+      await waitForBufferTimespan()
       expect(writeListener).toBeCalledTimes(1)
-      expect(writeListener).toBeCalledWith('test\r\n')
+      expect(writeListener).toBeCalledWith('\rtest\r\r\n')
     })
 
     test('onDidWrite replaces returns in complex string in non-interactive', async () => {
       const { duplex, writeListener } = await createNewSession({
+        tty: false,
         convertEol: true,
       })
 
       duplex._onMessage.fire({
-        stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\nSERVICE_BAR_TOKEN: barfoo'),
+        stdoutData: Buffer.from('SERVICE_FOO_TOKEN: foobar\r\nSERVICE_BAR_TOKEN: barfoo'),
         stderrData: Buffer.from(''),
         mimeType: 'text/plain',
       })
 
+      await waitForBufferTimespan()
       expect(writeListener).toBeCalledTimes(1)
-      expect(writeListener).toBeCalledWith('SERVICE_FOO_TOKEN: foobar\r\nSERVICE_BAR_TOKEN: barfoo')
+      expect(writeListener).toBeCalledWith(
+        '\rSERVICE_FOO_TOKEN: foobar\r\r\r\nSERVICE_BAR_TOKEN: barfoo',
+      )
     })
 
     test('onDidWrite replaces returns in non-interactive in stderr', async () => {
       const { duplex, errListener } = await createNewSession({
+        tty: false,
         convertEol: true,
       })
 
@@ -784,6 +792,10 @@ suite('RunmeCodeLensProvider', () => {
   })
 })
 
+function waitForBufferTimespan() {
+  return new Promise((resolve) => setTimeout(resolve, 2 * NON_TTY_BUFFER_SPAN_MS))
+}
+
 function getMockedDuplex(session: GrpcRunnerProgramSession): MockedDuplexClientStream {
   return session['session'] as unknown as MockedDuplexClientStream
 }
@@ -820,6 +832,7 @@ async function createNewSession(
   runner ??= generatedRunner
   const session = (await runner.createProgramSession({
     programName: 'sh',
+    tty: true,
     ...options,
   })) as GrpcRunnerProgramSession
 

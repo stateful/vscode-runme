@@ -6,6 +6,8 @@ import {
   EventEmitter,
 } from 'vscode'
 import stripAnsi from 'strip-ansi'
+import { Observable } from 'rxjs'
+import { bufferTime, map, endWith, startWith } from 'rxjs/operators'
 
 import type { DisposableAsync, Serializer } from '../../types'
 import {
@@ -387,6 +389,7 @@ export default class GrpcRunner implements IRunner {
   }
 }
 
+export const NON_TTY_BUFFER_SPAN_MS = 100
 const log = getLogger('GrpcRunnerProgramSession')
 export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   private disposables: Disposable[] = []
@@ -430,13 +433,44 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
   ) {
     this.session = this.client.execute()
 
-    this.register(
-      this._onStdoutRaw.event((data) => {
-        // TODO: web compat
-        const stdout = Buffer.from(data).toString('utf-8')
-        this._onDidWrite.fire(stdout)
+    // unbufferd
+    const decoder = new TextDecoder()
+    let decodedStdout$: Observable<string> = new Observable<Uint8Array>((observer) => {
+      this.register(this._onStdoutRaw.event((bytes) => observer.next(bytes)))
+      this.register(
+        this._onDidClose.event(() => {
+          observer.complete()
+          this.dispose()
+        }),
+      )
+      this.register(
+        this._onInternalErr.event((err) => {
+          observer.error(err)
+          this.dispose()
+        }),
+      )
+    }).pipe(
+      map((bytes) => {
+        if (!this.isPseudoterminal()) {
+          return this.LFToCRLF(bytes)
+        }
+        return bytes
       }),
+      map((bytes) => decoder.decode(bytes)),
     )
+
+    // buffered
+    if (!this.isPseudoterminal()) {
+      decodedStdout$ = decodedStdout$.pipe(
+        startWith('\r'),
+        endWith('\r\n'),
+        bufferTime(NON_TTY_BUFFER_SPAN_MS),
+        map((chunks) => chunks.join('')),
+      )
+    }
+
+    const sub = decodedStdout$.subscribe((data) => this._onDidWrite.fire(data))
+    this.register({ dispose: () => sub.unsubscribe() })
 
     this.register(
       this._onStderrRaw.event((data) => {
@@ -453,9 +487,6 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
         this._onDidWrite.fire(yellowStderr)
       }),
     )
-
-    this.register(this._onDidClose.event(() => this.dispose()))
-    this.register(this._onInternalErr.event(() => this.dispose()))
 
     let detectedMimeType = ''
     this.session.responses.onMessage(({ stderrData, stdoutData, exitCode, pid, mimeType }) => {
@@ -520,24 +551,30 @@ export class GrpcRunnerProgramSession implements IRunnerProgramSession {
 
   protected write(channel: 'stdout' | 'stderr', mimeType: string, bytes: Uint8Array): void {
     if (this.convertEol(mimeType) && !this.isPseudoterminal()) {
-      const newBytes = new Array(bytes.byteLength)
-
-      let i = 0,
-        j = 0
-      while (j < bytes.byteLength) {
-        const byte = bytes[j++]
-
-        if (byte === 0x0a) {
-          newBytes[i++] = 0x0d
-        }
-
-        newBytes[i++] = byte
-      }
-
-      bytes = Buffer.from(newBytes)
+      bytes = this.LFToCRLF(bytes)
     }
 
     return this[GrpcRunnerProgramSession.WRITE_LISTENER[channel]].fire(bytes)
+  }
+
+  protected LFToCRLF(bytes: Uint8Array) {
+    const newBytes = new Array(bytes.byteLength)
+
+    let i = 0,
+      j = 0
+    while (j < bytes.byteLength) {
+      const byte = bytes[j++]
+
+      const prev = j - 1 >= 0 ? bytes[j - 1] : undefined
+      if (byte === 0x0a && prev !== 0x0d) {
+        newBytes[i++] = 0x0d
+      }
+
+      newBytes[i++] = byte
+    }
+
+    bytes = Buffer.from(newBytes)
+    return bytes
   }
 
   protected async init(opts?: RunProgramOptions) {
