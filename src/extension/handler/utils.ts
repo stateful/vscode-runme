@@ -110,9 +110,10 @@ export async function writeDemoBootstrapFile(targetDirUri: Uri, fileToOpen: stri
   const enc = new TextEncoder()
   await workspace.fs.writeFile(
     Uri.joinPath(targetDirUri, BOOTFILE_DEMO),
-    enc.encode(`${fileToOpen}#${cell}`),
+    enc.encode(cell !== undefined && cell >= 0 ? `${fileToOpen}#${cell}` : fileToOpen),
   )
-  log.info(`Created temporary bootstrap file to open and exec ${fileToOpen}#${cell}`)
+
+  log.info(`Created temporary bootstrap file to open and run ${fileToOpen}#${cell}`)
 }
 
 /**

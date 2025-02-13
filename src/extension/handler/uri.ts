@@ -70,6 +70,15 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       })
       StatefulAuthProvider.instance.fireOnAuthEvent(uri)
       return
+    } else if (command === 'run') {
+      const { fileToOpen, repository, cell } = parseParams(params)
+      if (!repository) {
+        throw new Error('Could not find a valid git repository')
+      }
+
+      TelemetryReporter.sendTelemetryEvent('extension.uriHandler', { command, type: 'project' })
+      await this._setupProject(fileToOpen, repository, cell)
+      return
     } else if (command === 'setup') {
       const { fileToOpen, repository } = parseParams(params)
       if (!repository && fileToOpen.match(REGEX_WEB_RESOURCE)) {
@@ -133,7 +142,11 @@ export class RunmeUriHandler implements UriHandler, Disposable {
     window.showErrorMessage(`Couldn't recognize command "${command}"`)
   }
 
-  private async _setupProject(fileToOpen: string, repository?: string | null) {
+  private async _setupProject(
+    fileToOpen: string,
+    repository?: string | null,
+    cell?: number | undefined,
+  ) {
     if (!repository) {
       return window.showErrorMessage('No project to setup was provided in the url')
     }
@@ -162,7 +175,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
         cancellable: false,
         title: `Setting up project from repository ${repository}`,
       },
-      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen),
+      (progress) => this._cloneProject(progress, targetDirUri, repository, fileToOpen, cell),
     )
   }
 
@@ -203,6 +216,7 @@ export class RunmeUriHandler implements UriHandler, Disposable {
     targetDirUri: Uri,
     repository: string,
     fileToOpen: string,
+    cell: number | undefined = undefined,
   ) {
     progress.report({ increment: 0, message: 'Cloning repository...' })
 
@@ -211,7 +225,9 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       TaskScope.Workspace,
       'Clone Repo',
       'exec',
-      new ShellExecution(`git clone --depth=1 ${repository} "${targetDirUri.fsPath}"`),
+      new ShellExecution(`git clone --depth=1 ${repository} "${targetDirUri.fsPath}"`, {
+        cwd: path.dirname(targetDirUri.fsPath),
+      }),
     )
 
     const success = await new Promise<boolean>((resolve) => {
@@ -239,14 +255,18 @@ export class RunmeUriHandler implements UriHandler, Disposable {
       return
     }
 
-    await workspace.fs
-      .stat(Uri.joinPath(targetDirUri, fileToOpen))
-      .then(() => writeBootstrapFile(targetDirUri, fileToOpen))
+    await workspace.fs.stat(Uri.joinPath(targetDirUri, fileToOpen)).then(async () => {
+      if (cell !== undefined && cell >= 0) {
+        await writeDemoBootstrapFile(targetDirUri, fileToOpen, cell)
+      } else {
+        await writeBootstrapFile(targetDirUri, fileToOpen)
+      }
+    })
 
     progress.report({ increment: 50, message: 'Opening project...' })
     log.info(`Attempt to open folder ${targetDirUri.fsPath}`)
     await commands.executeCommand('vscode.openFolder', targetDirUri, {
-      forceNewWindow: true,
+      forceNewWindow: this.forceNewWindow,
     })
     progress.report({ increment: 100 })
   }
