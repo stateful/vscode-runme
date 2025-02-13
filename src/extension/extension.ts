@@ -468,7 +468,7 @@ export class RunmeExtension {
       transportType,
     })
 
-    await bootFile(context)
+    await bootFile(context, kernel)
 
     if (
       kernel.hasExperimentEnabled('shellWarning', false) &&

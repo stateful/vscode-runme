@@ -64,7 +64,10 @@ import getLogger from './logger'
 import { Kernel } from './kernel'
 import { BOOTFILE, BOOTFILE_DEMO } from './constants'
 import { IRunnerEnvironment } from './runner/environment'
-import { setCurrentCellForBootFile as setCurrentCellForBootFile } from './handler/utils'
+import {
+  executeActiveNotebookCell,
+  setCurrentCellForBootFile as setCurrentCellForBootFile,
+} from './handler/utils'
 import ContextState from './contextState'
 import { GCPResolver } from './resolvers/gcpResolver'
 import { AWSResolver } from './resolvers/awsResolver'
@@ -473,7 +476,7 @@ export function getNamespacedMid(namespace: string) {
  * set as Runme configuration.
  * It can also opens a start-up file and execute a specific cell via `.runme_bootstrap_demo`
  */
-export async function bootFile(context: ExtensionContext) {
+export async function bootFile(context: ExtensionContext, kernel: Kernel) {
   if (!workspace.workspaceFolders?.length || !workspace.workspaceFolders[0]) {
     return
   }
@@ -509,7 +512,16 @@ export async function bootFile(context: ExtensionContext) {
     const bootFileUri = Uri.joinPath(workspace.workspaceFolders[0].uri, bootFile)
     await workspace.fs.delete(fileUri)
     log.info(`Open file defined in "${BOOTFILE}" file: ${bootFileUri.fsPath}`)
-    return commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
+    await commands.executeCommand('vscode.openWith', bootFileUri, Kernel.type)
+
+    if (hasDemoFile && cell) {
+      executeActiveNotebookCell({
+        cell: Number(cell),
+        kernel: kernel,
+      })
+    }
+
+    return
   }
 
   /**
