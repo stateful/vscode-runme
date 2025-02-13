@@ -793,7 +793,7 @@ suite('RunmeCodeLensProvider', () => {
 })
 
 function waitForBufferTimespan() {
-  return new Promise((resolve) => setTimeout(resolve, 2 * NON_TTY_BUFFER_SPAN_MS))
+  return new Promise((resolve) => setTimeout(resolve, 4 * NON_TTY_BUFFER_SPAN_MS))
 }
 
 function getMockedDuplex(session: GrpcRunnerProgramSession): MockedDuplexClientStream {
