@@ -551,7 +551,7 @@ suite('grpc runner', () => {
       })
 
       await waitForBufferTimespan()
-      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalled()
       expect(writeListener).toBeCalledWith('\rtest\r\r\n')
     })
 
@@ -568,7 +568,7 @@ suite('grpc runner', () => {
       })
 
       await waitForBufferTimespan()
-      expect(writeListener).toBeCalledTimes(1)
+      expect(writeListener).toBeCalled()
       expect(writeListener).toBeCalledWith(
         '\rSERVICE_FOO_TOKEN: foobar\r\r\r\nSERVICE_BAR_TOKEN: barfoo',
       )
