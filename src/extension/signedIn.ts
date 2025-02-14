@@ -25,8 +25,8 @@ export interface CellRun {
 const log = getLogger('SignedIn')
 
 export class SignedIn implements Disposable {
-  #subscriptions: Subscription[] = []
-  readonly #cellRuns = new Subject<CellRun>()
+  protected subscriptions: Subscription[] = []
+  protected cellRuns = new Subject<CellRun>()
 
   constructor(protected readonly kernel: Kernel) {
     const signedIn$ = new Observable<boolean>((observer) => {
@@ -42,7 +42,7 @@ export class SignedIn implements Disposable {
       nextSession(StatefulAuthProvider.instance.currentSession())
     })
 
-    const cellRuns$ = this.#cellRuns.pipe(
+    const cellRuns$ = this.cellRuns.pipe(
       withLatestFrom(signedIn$),
       mergeMap(([cellRun, active]) => {
         if (!active) {
@@ -71,7 +71,7 @@ export class SignedIn implements Disposable {
       }),
     )
 
-    this.#subscriptions.push(cellRuns$.subscribe())
+    this.subscriptions.push(cellRuns$.subscribe())
   }
 
   enqueueCellRun(
@@ -101,7 +101,7 @@ export class SignedIn implements Disposable {
       return
     }
 
-    this.#cellRuns.next({
+    this.cellRuns.next({
       cell: {
         id: cellRunmeId,
       },
@@ -123,6 +123,6 @@ export class SignedIn implements Disposable {
   }
 
   dispose() {
-    this.#subscriptions.forEach((sub) => sub.unsubscribe())
+    this.subscriptions.forEach((sub) => sub.unsubscribe())
   }
 }
