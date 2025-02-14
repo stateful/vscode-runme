@@ -175,6 +175,7 @@ jobs:
         uses: stateful/runme-action@v2
         with:
           workflows: deactivate-panels
+        if: ${{ github.event.inputs.releaseChannel != 'edge'}}
 
       - name: Deactivate smart env store for stable
         uses: stateful/runme-action@v2
