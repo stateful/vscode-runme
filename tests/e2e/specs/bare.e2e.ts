@@ -1,14 +1,15 @@
 import { Key } from 'webdriverio'
 
 import { RunmeNotebook } from '../pageobjects/notebook.page.js'
-import { clearAllOutputs, tryExecuteCommand } from '../helpers/index.js'
+import { clearAllOutputs, getRepoBasename, tryExecuteCommand } from '../helpers/index.js'
 import { OutputType } from '../pageobjects/cell.page.js'
 
 import { removeAllNotifications } from './notifications.js'
 
 describe('Markdown runs without Runme frontmatter or cell metadata', async () => {
-  const baseName = 'vscode-runme'
+  let baseName = 'vscode-runme'
   before(async () => {
+    baseName = await getRepoBasename()
     await removeAllNotifications()
   })
 
