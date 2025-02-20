@@ -119,7 +119,8 @@ import { SignedIn } from './signedIn'
 enum ConfirmationItems {
   Yes = 'Yes',
   No = 'No',
-  Skip = 'Skip confirmation and run all',
+  Skip = 'Run all sequentially (skip confirmations)',
+  Parallel = 'Run all in parallel (skip confirmations)',
   Cancel = 'Cancel',
 }
 
@@ -699,9 +700,12 @@ export class Kernel implements Disposable {
       0
     const totalCellsToExecute = cells.length
     let showConfirmPrompt = totalNotebookCells === totalCellsToExecute && totalNotebookCells > 1
+    let cellsToRunParallel: NotebookCell[] = []
+    let cellsToRunSerial: NotebookCell[] = []
     let cellsExecuted = 0
 
-    for (const cell of cells) {
+    outer: for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i]
       const annotations = getAnnotations(cell)
 
       // Skip cells that are not assigned to requested category if requested
@@ -724,30 +728,49 @@ export class Kernel implements Disposable {
           annotations.name || cellText.length > 20 ? `${cellText.slice(0, 20)}...` : cellText
 
         const answer = (await window.showQuickPick(Object.values(ConfirmationItems), {
-          title: `Are you sure you like to run "${cellLabel}"?`,
+          title: `Are you sure you want to run "${cellLabel}"?`,
           ignoreFocusOut: true,
         })) as ConfirmationItems | undefined
 
-        if (answer === ConfirmationItems.No) {
-          continue
-        }
-
-        if (answer === ConfirmationItems.Skip) {
-          showConfirmPrompt = false
-        }
-
-        if (answer === ConfirmationItems.Cancel) {
-          TelemetryReporter.sendTelemetryEvent('cells.executeAll', {
-            'cells.total': totalNotebookCells?.toString(),
-            'cells.executed': cellsExecuted?.toString(),
-          })
-          return
+        switch (answer) {
+          case ConfirmationItems.Yes:
+            cellsToRunSerial.push(cell)
+            break
+          case ConfirmationItems.No:
+            continue
+          case ConfirmationItems.Skip:
+            cellsToRunSerial.push(...cells.slice(i))
+            showConfirmPrompt = false
+            break
+          case ConfirmationItems.Parallel:
+            cellsToRunParallel.push(...cells.slice(i))
+            showConfirmPrompt = false
+            break
+          default:
+            break outer
         }
       }
 
-      await this._doExecuteCell(cell)
-      cellsExecuted++
+      for (const cell of cellsToRunSerial) {
+        cellsExecuted++
+        await this._doExecuteCell(cell)
+      }
+      cellsToRunSerial = []
+
+      const cellExecs: Promise<void>[] = []
+      for (const cell of cellsToRunParallel) {
+        cellsExecuted++
+        cellExecs.push(this._doExecuteCell(cell))
+      }
+      await Promise.all(cellExecs)
+      cellsToRunParallel = []
+
+      // if we've executed all cells, break out of the loop
+      if (cellsExecuted >= totalCellsToExecute) {
+        break outer
+      }
     }
+
     this.category = undefined
     const uri = cells[0] && cells[0].notebook.uri
     const categories = await getNotebookCategories(this.context, uri)
