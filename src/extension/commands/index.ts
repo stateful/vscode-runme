@@ -617,15 +617,11 @@ export async function openPreviewOutputs(
   sessionId: string,
   serializer: ISerializer,
 ) {
+  await togglePreviewOutputs(true)
   const outputFilePath = getOutputsUri(notebookUri, sessionId)
 
-  try {
-    await workspace.fs.stat(outputFilePath)
-  } catch (e) {
-    await commands.executeCommand('workbench.action.files.save')
-  }
+  await commands.executeCommand('workbench.action.files.save')
 
-  await togglePreviewOutputs(true)
   await serializer.saveNotebookOutputs(notebookUri)
   await openFileAsRunmeNotebook(outputFilePath)
 }
