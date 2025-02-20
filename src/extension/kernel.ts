@@ -749,6 +749,8 @@ export class Kernel implements Disposable {
           default:
             break outer
         }
+      } else {
+        cellsToRunSerial = [cell]
       }
 
       for (const cell of cellsToRunSerial) {
