@@ -1,3 +1,4 @@
+import util from 'node:util'
 import os from 'node:os'
 
 import {
@@ -11,7 +12,7 @@ import {
   CancellationTokenSource,
 } from 'vscode'
 import { TelemetryReporter } from 'vscode-telemetry'
-import getMAC from 'getmac'
+import { mac } from 'address'
 import YAML from 'yaml'
 import { FetchResult } from '@apollo/client'
 
@@ -56,6 +57,8 @@ const log = getLogger('SaveCell')
 type SessionType = StatefulAuthSession | undefined
 
 let currentCts: CancellationTokenSource | undefined
+
+const getMAC = util.promisify(mac)
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
@@ -120,9 +123,7 @@ export default async function saveCellExecution(
 
         if (!session) {
           await postClientMessage(messaging, ClientMessages.platformApiResponse, {
-            data: {
-              displayShare: false,
-            },
+            data: { displayShare: false },
             id: message.output.id,
           })
 
@@ -146,9 +147,7 @@ export default async function saveCellExecution(
 
     if (!session) {
       return postClientMessage(messaging, ClientMessages.platformApiResponse, {
-        data: {
-          displayShare: false,
-        },
+        data: { displayShare: false },
         id: message.output.id,
       })
     }
@@ -161,10 +160,7 @@ export default async function saveCellExecution(
 
     const frontmatter = ConnectSerializer.marshalFrontmatter(editor.notebook.metadata, kernel)
 
-    const metadata = {
-      ...editor.notebook.metadata,
-      [RUNME_FRONTMATTER_PARSED]: frontmatter,
-    }
+    const metadata = { ...editor.notebook.metadata, [RUNME_FRONTMATTER_PARSED]: frontmatter }
 
     const cacheId = getDocumentCacheId(metadata) as string
     const plainSessionOutput = await kernel.getPlainCache(cacheId)
@@ -174,6 +170,7 @@ export default async function saveCellExecution(
     if (['localhost', '127.0.0.1'].includes(hostname) && process.env.K_SERVICE) {
       hostname = process.env.K_SERVICE
     }
+    const macAddress = await getMAC()
 
     const vsEnv = {
       appHost: env.appHost,
@@ -220,7 +217,7 @@ export default async function saveCellExecution(
                 arch: os.arch(),
                 hostname: hostname,
                 platform: os.platform(),
-                macAddress: getMAC(),
+                macAddress,
                 release: os.release(),
                 shell: os.userInfo().shell,
                 vendor: os.userInfo().username,
@@ -230,19 +227,9 @@ export default async function saveCellExecution(
                 vsMachineId: vsEnv.machineId,
                 vsMetadata: vsEnv,
               },
-              file: {
-                content: fileContent,
-                path: filePath,
-              },
-              git: {
-                branch: gitCtx.branch,
-                commit: gitCtx.commit,
-                repository: gitCtx.repository,
-              },
-              session: {
-                maskedOutput: maskedSessionOutput,
-                plainOutput: plainSessionOutput,
-              },
+              file: { content: fileContent, path: filePath },
+              git: { branch: gitCtx.branch, commit: gitCtx.commit, repository: gitCtx.repository },
+              session: { maskedOutput: maskedSessionOutput, plainOutput: plainSessionOutput },
             },
             notebook: {
               cells: [
@@ -345,7 +332,7 @@ export default async function saveCellExecution(
             plainSessionOutput,
             maskedSessionOutput,
             device: {
-              macAddress: getMAC(),
+              macAddress,
               hostname: hostname,
               platform: os.platform(),
               release: os.release(),
