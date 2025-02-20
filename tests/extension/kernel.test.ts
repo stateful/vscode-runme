@@ -298,17 +298,50 @@ suite('_executeAll', async () => {
     })
   })
 
-  test('skips prompt', async () => {
-    const k = new Kernel({} as any)
-    // @ts-ignore readonly
-    window.showQuickPick = vi.fn().mockResolvedValue('Skip confirmation and run all')
-    k['_doExecuteCell'] = vi.fn()
-    await k['_executeAll'](genCells(10))
-    expect(window.showQuickPick).toBeCalledTimes(1)
-    expect(k['_doExecuteCell']).toBeCalledTimes(10)
-    expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
-      'cells.executed': '10',
-      'cells.total': '10',
+  suite('run all', () => {
+    // fake gap between cell executions
+    const fakeGap = 10
+    const runAllTest = async (assertGapStdev: (stdev: number) => boolean) => {
+      const timestamps: number[] = []
+      const k = new Kernel({} as any)
+      k['_doExecuteCell'] = vi.fn().mockImplementation(() => {
+        return new Promise<void>((resolve) => {
+          setTimeout(() => {
+            timestamps.push(Date.now())
+            resolve()
+          }, fakeGap)
+        })
+      })
+      await k['_executeAll'](genCells(10))
+      const mean = timestamps.reduce((a, b) => a + b, 0) / timestamps.length
+      const stdev = Math.sqrt(
+        timestamps.map((t) => Math.pow(t - mean, 2)).reduce((a, b) => a + b, 0) / timestamps.length,
+      )
+      assertGapStdev(stdev)
+      expect(window.showQuickPick).toBeCalledTimes(1)
+      expect(k['_doExecuteCell']).toBeCalledTimes(10)
+      expect(TelemetryReporter.sendTelemetryEvent).lastCalledWith('cells.executeAll', {
+        'cells.executed': '10',
+        'cells.total': '10',
+      })
+    }
+
+    test('skips prompt and run sequentially', async () => {
+      // @ts-ignore readonly
+      window.showQuickPick = vi.fn().mockResolvedValue('Run all sequentially (skip confirmations)')
+      await runAllTest((stdev) => {
+        // sequential should at minimum run one stdev slower than fakeGap
+        return stdev > fakeGap
+      })
+    })
+
+    test('skips prompt and run parallel', async () => {
+      // @ts-ignore readonly
+      window.showQuickPick = vi.fn().mockResolvedValue('Run all in parallel (skip confirmations)')
+      await runAllTest((stdev) => {
+        // parallel should be faster than fakeGap since they roughly all run at the same time
+        return stdev < fakeGap
+      })
     })
   })
 
