@@ -1,0 +1,44 @@
+---
+runme:
+  id: 01JMMSSHXM7N70W4KCJ5XGEE2A
+  version: v3
+shell: dagger shell
+terminalRows: 20
+---
+
+# Dagger notebook `shell.dag`
+
+Build notebook piplines using the brand new 🔥 dagger shell. New files with the `.dag` extension will default run via `dagger shell`.
+
+## Let's go
+
+We need some upstream artifacts. First, compile the Runme kernel binary.
+
+```sh {"id":"01JMMSSHXM7N70W4KCHTX92MHE","name":"KERNEL_BINARY"}
+### Exported in runme.dev as KERNEL_BINARY
+github.com/purpleclay/daggerverse/golang $(git https://github.com/stateful/runme | tag v3.12.2 | tree) |
+  build |
+  file runme
+```
+
+Then, grab the presetup.sh script to provision the build container.
+
+```sh {"id":"01JMMSSHXM7N70W4KCHY04QVSE","name":"PRESETUP","terminalRows":"14"}
+### Exported in runme.dev as PRESETUP
+git https://github.com/stateful/vscode-runme |
+  head |
+  tree |
+  file dagger/scripts/presetup.sh
+```
+
+## Build the Runme VS Code EXTENSION
+
+Let's tie together above's artifacts via their respective cell names to build the Runme VS Code extension.
+
+```sh {"id":"01JMMSSHXM7N70W4KCJ1N0DVXG","name":"EXTENSION","terminalRows":"26"}
+### Exported in runme.dev as EXTENSION
+github.com/stateful/vscode-runme |
+  with-remote github.com/stateful/vscode-runme main |
+  with-container $(KERNEL_BINARY) $(PRESETUP) |
+  build-extension GITHUB_TOKEN
+```
