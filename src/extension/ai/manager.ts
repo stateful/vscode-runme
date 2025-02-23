@@ -1,3 +1,13 @@
+import {
+  pairwise,
+  startWith,
+  Observable,
+  Subject,
+  lastValueFrom,
+  switchMap,
+  filter,
+  withLatestFrom,
+} from 'rxjs'
 import * as vscode from 'vscode'
 import { createClient, Client, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-node'
@@ -5,6 +15,8 @@ import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_c
 
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
+import features from '../features'
+import { FeatureName } from '../../types'
 
 import { Converter } from './converters'
 import * as ghost from './ghost'
@@ -51,11 +63,11 @@ export class AIManager implements vscode.Disposable {
   // as well as when cells change. This is used to create ghost cells.
   registerGhostCellEvents() {
     this.log.info('AI: Enabling AutoCell Generation')
-    let cellGenerator = new ghost.GhostCellGenerator(this.converter)
+    const cellGenerator = new ghost.GhostCellGenerator(this.converter)
 
     // Create a stream creator. The StreamCreator is a class that effectively windows events
     // and turns each window into an AsyncIterable of streaming requests.
-    let creator = new stream.StreamCreator(cellGenerator, this.client)
+    const creator = new stream.StreamCreator(cellGenerator, this.client)
 
     const reporter = new events.EventReporter(this.client, creator)
     this.subscriptions.push(reporter)
@@ -85,7 +97,7 @@ export class AIManager implements vscode.Disposable {
     )
 
     // Create a new status bar item aligned to the right
-    let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100)
     statusBarItem.text = 'Session: <None>'
     statusBarItem.tooltip = 'Foyle Session ID; click to copy to clipboard.'
 
@@ -106,6 +118,60 @@ export class AIManager implements vscode.Disposable {
     this.subscriptions.push(statusBarItem)
 
     SessionManager.resetManager(statusBarItem)
+
+    this.registerProgressReporter(cellGenerator)
+  }
+
+  protected registerProgressReporter(ghostGenerator: ghost.GhostCellGenerator) {
+    const reporterFactory = (requestID: number) => {
+      return new Observable<Subject<ghost.RequestProgressReport>>((observer) => {
+        const r$ = new Subject<ghost.RequestProgressReport>()
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: 'AI Assistant',
+            cancellable: false,
+          },
+          (progress) => {
+            let total = 0
+            r$.pipe(filter((r) => r.requestID === requestID)).subscribe({
+              next: (r) => {
+                progress.report(r.progress)
+                total += r.progress.increment ?? 0
+                if (total >= 100) {
+                  r$.complete()
+                }
+              },
+              error: (err) => console.error(err),
+              complete: () => observer.complete(),
+            })
+
+            return lastValueFrom(r$).then(() => {
+              // delay the final completion to allow the progress bar to reach 100%
+              if (total >= 100) {
+                return new Promise((resolve) => setTimeout(resolve, 500))
+              }
+            })
+          },
+        )
+        observer.next(r$)
+        return () => r$.complete()
+      })
+    }
+
+    const reporter$ = ghostGenerator.progress.pipe(
+      startWith(undefined),
+      pairwise(),
+      filter(([prev, report]) => !!report && prev?.requestID !== report?.requestID),
+      // switchMap makes sure we only have one progress reporter at a time
+      switchMap(([, report]) => reporterFactory(report!.requestID)),
+    )
+
+    const reporting$ = ghostGenerator.progress.pipe(withLatestFrom(reporter$))
+    const reportingEnabled = features.isOnInContextState(FeatureName.AIProgress)
+    if (reportingEnabled) {
+      reporting$.subscribe(([report, reporter]) => reporter.next(report))
+    }
   }
 
   // Cleanup method. We will use this to clean up any resources when extension is closed.

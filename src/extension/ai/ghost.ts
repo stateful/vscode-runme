@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import * as agent_pb from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import { StreamGenerateRequest_Trigger } from '@buf/jlewi_foyle.bufbuild_es/foyle/v1alpha1/agent_pb'
 import { workspace } from 'vscode'
+import { share, Subject } from 'rxjs'
 
 import getLogger from '../logger'
 import { RUNME_CELL_ID } from '../constants'
@@ -32,6 +33,16 @@ const ghostDecoration = vscode.window.createTextEditorDecorationType({
   color: '#888888', // Light grey color
 })
 
+type ProgressReport = {
+  message?: string
+  increment?: number
+}
+
+export type RequestProgressReport = {
+  requestID: number
+  progress: ProgressReport
+}
+
 // TODO(jeremy): How do we handle multiple notebooks? Arguably you should only be generating
 // completions for the active notebook. So as soon as the active notebook changes we should
 // stop generating completions for the old notebook and start generating completions for the new notebook.
@@ -52,11 +63,28 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
   // It is used to detect whether a completion response is stale and should be
   // discarded because the context has changed.
 
+  // _progress is like an event that is fired when progress is made.
+  private _progress = new Subject<RequestProgressReport>()
+  private requestID = 0
+  get progress() {
+    return this._progress.pipe(share())
+  }
+
   constructor(converter: Converter) {
     this.notebookState = new Map<vscode.Uri, NotebookState>()
     // Generate a random context ID. This should be unnecessary because presumable the event to change
     // the active cell will be sent before any requests are sent but it doesn't hurt to be safe.
     this.converter = converter
+  }
+
+  protected reportProgress(report: ProgressReport) {
+    if (report.increment === 0) {
+      this.requestID++
+    }
+    this._progress.next({
+      requestID: this.requestID,
+      progress: report,
+    })
   }
 
   // Updated method to check and initialize notebook state
@@ -116,9 +144,13 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       `buildRequest: is newCell: ${newCell} , firstRequest: ${firstRequest}, trigger ${cellChangeEvent.trigger}`,
     )
 
+    this.reportProgress({ message: 'Analyzing cell changes', increment: 0 })
+
     // Update notebook state
     nbState.activeCell = matchedCell
     this.notebookState.set(notebook.uri, nbState)
+
+    let request: agent_pb.StreamGenerateRequest
 
     if (newCell || firstRequest) {
       // Generate a new request
@@ -132,7 +164,7 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       const notebookData = new vscode.NotebookData(cellData)
 
       const notebookProto = await this.converter.notebookDataToProto(notebookData)
-      const request = new agent_pb.StreamGenerateRequest({
+      request = new agent_pb.StreamGenerateRequest({
         contextId: SessionManager.getManager().getID(),
         trigger: cellChangeEvent.trigger,
         request: {
@@ -144,11 +176,14 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
           }),
         },
       })
-      return request
+    } else {
+      // Generate update request instead
+      request = await this.buildUpdateRequest(notebook, cellChangeEvent)
     }
 
-    // Generate update request instead
-    return await this.buildUpdateRequest(notebook, cellChangeEvent)
+    this.reportProgress({ message: 'Generating ghost cells', increment: 40 })
+
+    return request
   }
 
   async buildRequestForDebounce(
@@ -214,6 +249,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
       return
     }
 
+    this.reportProgress({ message: 'Inserting ghost cells', increment: 40 })
+
     // We want to insert the new cells and get rid of any existing ghost cells.
     // The old cells may not be located at the same location as the new cells.
     // So we don't use replace.
@@ -250,6 +287,8 @@ export class GhostCellGenerator implements stream.CompletionHandlers {
     edit.set(notebook.uri, edits)
     vscode.workspace.applyEdit(edit).then((result: boolean) => {
       log.trace(`applyedit resolved with ${result}`)
+
+      this.reportProgress({ message: 'Ghost cells completed', increment: 20 })
 
       // Apply renderings to the newly inserted ghost cells
       // TODO(jeremy): We are just assuming that activeNotebookEditor is the correct editor

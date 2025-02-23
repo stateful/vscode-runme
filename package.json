@@ -59,6 +59,15 @@
   "main": "./out/extension.js",
   "runme": {
     "features": {
+      "AIProgress": {
+        "enabled": true,
+        "conditions": {
+          "enabledForExtensions": {
+            "stateful.platform": true,
+            "stateful.runme": true
+          }
+        }
+      },
       "RemoteNotebooks": {
         "enabled": false,
         "conditions": {
