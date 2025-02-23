@@ -778,6 +778,7 @@ export enum FeatureName {
   RecommendExtension = 'RecommendExtension',
   ReporterAPI = 'ReporterAPI',
   RemoteNotebooks = 'RemoteNotebooks',
+  AIProgress = 'AIProgress',
 }
 
 export type Feature = {

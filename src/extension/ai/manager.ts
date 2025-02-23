@@ -15,6 +15,8 @@ import { AIService } from '@buf/jlewi_foyle.connectrpc_es/foyle/v1alpha1/agent_c
 
 import { Kernel } from '../kernel'
 import getLogger from '../logger'
+import features from '../features'
+import { FeatureName } from '../../types'
 
 import { Converter } from './converters'
 import * as ghost from './ghost'
@@ -165,9 +167,11 @@ export class AIManager implements vscode.Disposable {
       switchMap(([, report]) => reporterFactory(report!.requestID)),
     )
 
-    ghostGenerator.progress
-      .pipe(withLatestFrom(reporter$))
-      .subscribe(([report, reporter]) => reporter.next(report))
+    const reporting$ = ghostGenerator.progress.pipe(withLatestFrom(reporter$))
+    const reportingEnabled = features.isOnInContextState(FeatureName.AIProgress)
+    if (reportingEnabled) {
+      reporting$.subscribe(([report, reporter]) => reporter.next(report))
+    }
   }
 
   // Cleanup method. We will use this to clean up any resources when extension is closed.
