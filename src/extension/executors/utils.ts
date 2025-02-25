@@ -150,12 +150,14 @@ export function getCellShellPath(
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
   execKey?: string,
 ): string | undefined {
+  const { interpreter: cellInterpreter } = getAnnotations(cell.metadata)
   const notebookMetadata = notebook.metadata as Serializer.Metadata | undefined
 
   const frontmatter = notebookMetadata?.[RUNME_FRONTMATTER_PARSED]
+  const cellBeatsFrontmatter = cellInterpreter || frontmatter?.shell
 
-  if (frontmatter?.shell) {
-    return frontmatter.shell
+  if (cellBeatsFrontmatter) {
+    return cellBeatsFrontmatter
   }
 
   if (
@@ -203,41 +205,27 @@ export function getCellProgram(
   notebook: NotebookData | Serializer.Notebook | NotebookDocument,
   execKey: string,
 ): { programName: string; commandMode: CommandMode } {
-  let result: { programName: string; commandMode: CommandMode }
-  const { interpreter } = getAnnotations(cell.metadata)
-
   const { INLINE_SHELL, TEMP_FILE, DAGGER } = CommandModeEnum()
-
-  const parsedFrontmatter = notebook.metadata?.['runme.dev/frontmatterParsed']
-  if (isDaggerShell(parsedFrontmatter?.shell ?? '')) {
-    const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
-
-    return {
-      programName: shellPath,
-      commandMode: DAGGER,
-    }
-  }
 
   if (isShellLanguage(execKey)) {
     const shellPath = getCellShellPath(cell, notebook, execKey) ?? execKey
 
-    result = {
+    const isDagger = isDaggerShell(shellPath)
+    return {
       programName: shellPath,
-      commandMode: INLINE_SHELL,
-    }
-  } else {
-    // TODO(mxs): make this configurable!!
-    result = {
-      programName: '',
-      commandMode: TEMP_FILE,
+      commandMode: isDagger ? DAGGER : INLINE_SHELL,
     }
   }
 
-  if (interpreter) {
-    result.programName = interpreter
-  }
+  const { interpreter: cellInterpreter } = getAnnotations(cell.metadata)
+  const parsedFrontmatterShell = notebook.metadata?.['runme.dev/frontmatterParsed']?.shell
+  const cellBeatsFrontmatter: string | undefined = cellInterpreter || parsedFrontmatterShell
 
-  return result
+  // TODO(sebastian): make empty case configurable?
+  return {
+    programName: cellBeatsFrontmatter ?? '',
+    commandMode: TEMP_FILE,
+  }
 }
 
 export async function getCellCwd(
