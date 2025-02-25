@@ -42,6 +42,7 @@ vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   CommandMode: {
     INLINE_SHELL: 1,
     TEMP_FILE: 2,
+    DAGGER: 4,
   },
 }))
 
@@ -175,16 +176,27 @@ suite('getCellProgram', () => {
   })
 
   test('enables DAGGER command mode for Dagger Shell', async () => {
-    vi.mocked(getAnnotations).mockImplementationOnce(((x: any) => ({
+    vi.mocked(getAnnotations).mockImplementation(((x: any) => ({
       interpreter: x.interpreter,
     })) as any)
-    vi.mocked(isDaggerShell).mockReturnValueOnce(true)
+    vi.mocked(isDaggerShell).mockReturnValue(true)
 
     expect(
       getCellProgram({ metadata: { interpreter: 'dagger shell' } } as any, {} as any, 'sh'),
     ).toStrictEqual({
       commandMode: COMMAND_MODE_DAGGER,
       programName: 'dagger shell',
+    })
+
+    expect(
+      getCellProgram(
+        { metadata: { interpreter: '/opt/homebrew/bin/dagger shell' } } as any,
+        {} as any,
+        'sh',
+      ),
+    ).toStrictEqual({
+      commandMode: COMMAND_MODE_DAGGER,
+      programName: '/opt/homebrew/bin/dagger shell',
     })
   })
 })
