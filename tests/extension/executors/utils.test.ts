@@ -12,7 +12,7 @@ import {
   getCmdShellSeq,
   getCmdSeq,
 } from '../../../src/extension/executors/utils'
-import { getWorkspaceFolder, getAnnotations } from '../../../src/extension/utils'
+import { getWorkspaceFolder, getAnnotations, isDaggerShell } from '../../../src/extension/utils'
 import { getCellProgram } from '../../../src/extension/executors/utils'
 
 vi.mock('vscode-telemetry', () => ({}))
@@ -36,11 +36,13 @@ vi.mock('node:fs/promises', () => ({
 
 const COMMAND_MODE_INLINE_SHELL = 1
 const COMMAND_MODE_TEMP_FILE = 2
+const COMMAND_MODE_DAGGER = 4
 
 vi.mock('../../../src/extension/grpc/runner/v1', () => ({
   CommandMode: {
     INLINE_SHELL: 1,
     TEMP_FILE: 2,
+    DAGGER: 4,
   },
 }))
 
@@ -50,18 +52,40 @@ beforeEach(() => {
 })
 
 suite('getCellShellPath', () => {
-  test('respects frontmatter', () => {
+  test('cell beats frontmatter and system', () => {
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interpreter: '/bin/bash' } as any)
     const shellPath = getCellShellPath(
       {} as any,
       {
-        metadata: { 'runme.dev/frontmatterParsed': { shell: 'fish' } },
+        metadata: { 'runme.dev/frontmatterParsed': { shell: 'zsh' } },
       } as any,
     )
-    expect(shellPath).toStrictEqual('fish')
+    expect(shellPath).toStrictEqual('/bin/bash')
   })
 
-  test('fallback to system shell', () => {
-    const shellPath = getCellShellPath({} as any, {} as any)
+  test('frontmatter beats system', () => {
+    vi.mocked(getAnnotations).mockReturnValueOnce({ interpreter: '' } as any)
+    const shellPath = getCellShellPath(
+      {} as any,
+      {
+        metadata: { 'runme.dev/frontmatterParsed': { shell: 'zsh' } },
+      } as any,
+    )
+    expect(shellPath).toStrictEqual('zsh')
+  })
+
+  test('default to system shell', () => {
+    vi.mocked(getAnnotations).mockReturnValue({ interpreter: '' } as any)
+
+    let shellPath = getCellShellPath({} as any, {} as any)
+    expect(shellPath).toStrictEqual(getSystemShellPath())
+
+    shellPath = getCellShellPath(
+      {} as any,
+      {
+        metadata: { 'runme.dev/frontmatterParsed': { shell: '' } },
+      } as any,
+    )
     expect(shellPath).toStrictEqual(getSystemShellPath())
   })
 })
@@ -148,6 +172,31 @@ suite('getCellProgram', () => {
     ).toStrictEqual({
       commandMode: COMMAND_MODE_TEMP_FILE,
       programName: 'bun',
+    })
+  })
+
+  test('enables DAGGER command mode for Dagger Shell', async () => {
+    vi.mocked(getAnnotations).mockImplementation(((x: any) => ({
+      interpreter: x.interpreter,
+    })) as any)
+    vi.mocked(isDaggerShell).mockReturnValue(true)
+
+    expect(
+      getCellProgram({ metadata: { interpreter: 'dagger shell' } } as any, {} as any, 'sh'),
+    ).toStrictEqual({
+      commandMode: COMMAND_MODE_DAGGER,
+      programName: 'dagger shell',
+    })
+
+    expect(
+      getCellProgram(
+        { metadata: { interpreter: '/opt/homebrew/bin/dagger shell' } } as any,
+        {} as any,
+        'sh',
+      ),
+    ).toStrictEqual({
+      commandMode: COMMAND_MODE_DAGGER,
+      programName: '/opt/homebrew/bin/dagger shell',
     })
   })
 })
