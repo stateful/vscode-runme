@@ -58,7 +58,7 @@ type SessionType = StatefulAuthSession | undefined
 
 let currentCts: CancellationTokenSource | undefined
 
-const getMAC = util.promisify(mac)
+const getMAC = util.promisify<string | null | undefined>(mac)
 
 export default async function saveCellExecution(
   requestMessage: APIRequestMessage,
@@ -170,7 +170,16 @@ export default async function saveCellExecution(
     if (['localhost', '127.0.0.1'].includes(hostname) && process.env.K_SERVICE) {
       hostname = process.env.K_SERVICE
     }
-    const macAddress = await getMAC()
+
+    let macAddress: string | null | undefined = '[unknown]'
+    try {
+      macAddress = await getMAC()
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        return
+      }
+      log.error('Error getting MAC address', error.message)
+    }
 
     const vsEnv = {
       appHost: env.appHost,
