@@ -94,7 +94,7 @@ import { RunmeIdentity } from './grpc/parser/tcp/types'
 import * as features from './features'
 import AuthSessionChangeHandler from './authSessionChangeHandler'
 import { CloudNotebooks } from './provider/cloudNotebooks'
-import RunmeFS, { RunmeFsScheme } from './provider/runmeFs'
+import StatefulFS, { StatefulFsScheme } from './provider/statefulFs'
 
 export class RunmeExtension {
   protected serializer?: ISerializer
@@ -107,14 +107,14 @@ export class RunmeExtension {
     await ContextState.addKey(FeatureName.RemoteNotebooks, false)
     if (features.isOnInContextState(FeatureName.RemoteNotebooks)) {
       await ContextState.addKey(FeatureName.RemoteNotebooks, true)
-      const runmeFs = new RunmeFS()
+      const statefulFs = new StatefulFS()
       context.subscriptions.push(
-        workspace.registerFileSystemProvider(RunmeFsScheme, runmeFs, {
+        workspace.registerFileSystemProvider(StatefulFsScheme, statefulFs, {
           isReadonly: false,
         }),
         commands.registerCommand('runme.addRemoteNotebooks', (_) => {
           workspace.updateWorkspaceFolders(0, 0, {
-            uri: runmeFs.root,
+            uri: statefulFs.root,
             name: 'Workspace Notebooks',
           })
         }),

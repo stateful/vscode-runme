@@ -20,7 +20,7 @@ import type { CellOutputPayload, Serializer, ShellType } from '../../types'
 import { NotebookCellOutputManager } from '../cell'
 import { getAnnotations, getWorkspaceFolder, isDaggerShell } from '../utils'
 import { CommandMode, CommandModeEnum } from '../grpc/runner/types'
-import { RunmeFsScheme } from '../provider/runmeFs'
+import { StatefulFsScheme } from '../provider/statefulFs'
 
 const HASH_PREFIX_REGEXP = /^\s*\#\s*/g
 const ENV_VAR_REGEXP = /(\$\w+)/g
@@ -245,7 +245,7 @@ export async function getCellCwd(
     getAnnotations(cell.metadata as Serializer.Metadata | undefined).cwd,
   ].filter(Boolean)
 
-  if (notebook && 'uri' in notebook && notebook.uri.scheme === RunmeFsScheme) {
+  if (notebook && 'uri' in notebook && notebook.uri.scheme === StatefulFsScheme) {
     const folders: readonly WorkspaceFolder[] = workspace.workspaceFolders || []
     if (folders.length > 0) {
       candidates.push(...folders.map((f) => f.uri.fsPath))
