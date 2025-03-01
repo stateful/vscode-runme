@@ -30,7 +30,7 @@ const excludedPaths = [
   '.runme_bootstrap_demo',
 ]
 
-export const RunmeFsScheme = 'runmefs'
+export const StatefulFsScheme = 'statefulfs'
 
 export function mergeUriPaths(uri: Uri, newPath: string): Uri {
   const isAbsolutePath = newPath.startsWith('/')
@@ -46,9 +46,9 @@ export function mergeUriPaths(uri: Uri, newPath: string): Uri {
 }
 
 /**
- * Handles the virtual file system runmefs://
+ * Handles the virtual file system statefulfs://
  */
-export default class RunmeFS implements FileSystemProvider {
+export default class StatefulFS implements FileSystemProvider {
   private _onDidChangeFile: EventEmitter<FileChangeEvent[]> = new EventEmitter<FileChangeEvent[]>()
   readonly onDidChangeFile: Event<FileChangeEvent[]> = this._onDidChangeFile.event
 
@@ -56,11 +56,11 @@ export default class RunmeFS implements FileSystemProvider {
   #pathTree: PathTree = {}
 
   get root() {
-    return Uri.parse(`${RunmeFsScheme}:///`)
+    return Uri.parse(`${StatefulFsScheme}:///`)
   }
 
   static resolveUri(path: string) {
-    return Uri.parse(`${RunmeFsScheme}:///${path}`)
+    return Uri.parse(`${StatefulFsScheme}:///${path}`)
   }
 
   async readFile(uri: Uri): Promise<Uint8Array> {
@@ -152,7 +152,10 @@ export default class RunmeFS implements FileSystemProvider {
 
   async notebooks() {
     if (!this.#notebooks.length) {
-      const response = await getAllWorkflows()
+      let response = await getAllWorkflows({ minRating: 1 })
+      if (!response?.data?.workflows.length) {
+        response = await getAllWorkflows()
+      }
       const data = response?.data?.workflows.filter(
         (notebook): notebook is NonNullable<typeof notebook> => notebook !== null,
       )

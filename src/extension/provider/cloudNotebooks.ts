@@ -7,7 +7,7 @@ import {
   FileType,
 } from 'vscode'
 
-import RunmeFS, { mergeUriPaths } from './runmeFs'
+import StatefulFS, { mergeUriPaths } from './statefulFs'
 
 interface WorkspaceNotebook extends TreeItem {
   label: string
@@ -17,7 +17,7 @@ interface WorkspaceNotebook extends TreeItem {
 
 export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disposable {
   #disposables: Disposable[] = []
-  #runmeFs = new RunmeFS()
+  #statefulFs = new StatefulFS()
 
   getTreeItem(element: WorkspaceNotebook): TreeItem {
     return element
@@ -25,9 +25,9 @@ export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disp
 
   async getChildren(element?: WorkspaceNotebook): Promise<WorkspaceNotebook[]> {
     if (!element) {
-      const dirContent = await this.#runmeFs.readDirectory(this.#runmeFs.root)
+      const dirContent = await this.#statefulFs.readDirectory(this.#statefulFs.root)
       return dirContent.map(([path, type]) => {
-        const uri = mergeUriPaths(this.#runmeFs.root, path)
+        const uri = mergeUriPaths(this.#statefulFs.root, path)
 
         const item: WorkspaceNotebook = {
           label: path,
@@ -51,7 +51,7 @@ export class CloudNotebooks implements TreeDataProvider<WorkspaceNotebook>, Disp
       })
     }
 
-    const dirContent = await this.#runmeFs.readDirectory(element?.uri)
+    const dirContent = await this.#statefulFs.readDirectory(element?.uri)
 
     return dirContent.map(([path, type]) => {
       const parentUri = mergeUriPaths(element?.parentUri, element.label)

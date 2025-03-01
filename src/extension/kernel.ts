@@ -454,6 +454,19 @@ export class Kernel implements Disposable {
           ...payload.output.annotations,
         }
 
+        const onlyInternalAnnos =
+          Object.entries(newMetadata).filter(([k, v]) => {
+            return k.startsWith('runme.dev/') || k.startsWith('_') || v === ''
+          }).length === Object.keys(newMetadata).length
+
+        // only if all annotations are internal, can fenced be false
+        if (
+          !onlyInternalAnnos &&
+          Object.entries(newMetadata).some(([k, v]) => k === 'runme.dev/fenced' && v === 'false')
+        ) {
+          newMetadata['runme.dev/fenced'] = true
+        }
+
         const { rows } = getNotebookTerminalConfigurations(editCell.notebook.metadata)
         if (rows && newMetadata?.['terminalRows'] === rows) {
           delete newMetadata['terminalRows']
