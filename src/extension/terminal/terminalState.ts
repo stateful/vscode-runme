@@ -100,6 +100,9 @@ export class LocalBufferTermState implements ITerminalState {
   }
 
   write(data: string | Uint8Array) {
+    if (typeof data === 'string') {
+      data = Buffer.from(data)
+    }
     this.buffer.push(Buffer.from(data))
   }
 
