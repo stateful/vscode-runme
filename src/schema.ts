@@ -50,6 +50,7 @@ export const AnnotationSchema = {
   'runme.dev/id': z.string().optional(),
   'runme.dev/name': z.string().optional(),
   'runme.dev/nameGenerated': boolify(true).optional(),
+  'runme.dev/fenced': boolify(true).optional(),
   id: z.string().optional(),
   background: boolify(false),
   interactive: boolify(true),
