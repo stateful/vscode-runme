@@ -1,5 +1,5 @@
-query getAllWorkflows($fileName: String, $limit: Int, $offset: Int) {
-  workflows(fileName: $fileName, limit: $limit, offset: $offset) {
+query getAllWorkflows($fileName: String, $minRating: Int, $limit: Int, $offset: Int) {
+  workflows(fileName: $fileName, minRating: $minRating, limit: $limit, offset: $offset) {
     id
     description
     fileName

@@ -152,7 +152,10 @@ export default class RunmeFS implements FileSystemProvider {
 
   async notebooks() {
     if (!this.#notebooks.length) {
-      const response = await getAllWorkflows()
+      let response = await getAllWorkflows({ minRating: 1 })
+      if (!response?.data?.workflows.length) {
+        response = await getAllWorkflows()
+      }
       const data = response?.data?.workflows.filter(
         (notebook): notebook is NonNullable<typeof notebook> => notebook !== null,
       )
