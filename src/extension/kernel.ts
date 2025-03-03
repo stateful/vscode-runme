@@ -1322,7 +1322,7 @@ export class Kernel implements Disposable {
     return this.serializer?.getNotebookDataCache(cacheId)
   }
 
-  public async getParserCache(
+  public async getParserCacheSynced(
     cacheId: string,
     cell: NotebookCell,
   ): Promise<Serializer.Notebook | undefined> {
