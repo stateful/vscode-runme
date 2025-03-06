@@ -1031,6 +1031,19 @@
             "default": true,
             "markdownDescription": "Load environment files from workspace into all scripts"
           },
+          "runme.env.dirEnv": {
+            "type": "number",
+            "default": 3,
+            "enum": [
+              1,
+              3
+            ],
+            "enumItemLabels": [
+              "Enabled",
+              "Disabled"
+            ],
+            "markdownDescription": "Specifies if and how direnv should be loaded"
+          },
           "runme.cli.useIntegratedRunme": {
             "type": "boolean",
             "default": false,

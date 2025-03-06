@@ -76,6 +76,7 @@ const configurationSchema = {
   env: {
     workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
     loadWorkspaceFiles: z.boolean().default(true),
+    dirEnv: z.number().default(3),
   },
   cli: {
     useIntegratedRunme: z.boolean().default(false),
@@ -373,6 +374,10 @@ const getEnvLoadWorkspaceFiles = (): boolean => {
   return getEnvConfigurationValue('loadWorkspaceFiles', true)
 }
 
+const getEnvDirEnv = (): number => {
+  return getEnvConfigurationValue('dirEnv', 3)
+}
+
 const getCLIUseIntegratedRunme = (): boolean => {
   return getCLIConfigurationValue('useIntegratedRunme', false)
 }
@@ -496,6 +501,7 @@ export {
   getDocsUrl,
   getDocsUrlFor,
   getEnvLoadWorkspaceFiles,
+  getEnvDirEnv,
   getEnvWorkspaceFileOrder,
   getForceNewWindowConfig,
   getLoginPrompt,
