@@ -32,7 +32,7 @@ import { IRunnerServiceClient, RpcError } from '../grpc/tcpClient'
 import { getSystemShellPath } from '../executors/utils'
 import { IServer } from '../server/kernelServer'
 import { convertEnvList } from '../utils'
-import { getEnvWorkspaceFileOrder } from '../../utils/configuration'
+import { getEnvDirEnv, getEnvWorkspaceFileOrder } from '../../utils/configuration'
 import getLogger from '../logger'
 import { XTermSerializer } from '../terminal/terminalState'
 
@@ -271,6 +271,7 @@ export default class GrpcRunner implements IRunner {
     metadata?: { [index: string]: string }
   }) {
     const envLoadOrder = getEnvWorkspaceFileOrder()
+    const envDirenv = getEnvDirEnv()
     // v1 calls it envs, whereas v2 calls it env - send both
     const req = <any>{
       metadata,
@@ -279,6 +280,7 @@ export default class GrpcRunner implements IRunner {
       project: {
         root: workspaceRoot,
         envLoadOrder,
+        envDirenv,
       },
       envStoreType,
       config: {
