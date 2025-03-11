@@ -345,6 +345,12 @@
         "description": "Give access to Runme to interact with Stateful Cloud"
       },
       {
+        "command": "runme.unauthenticateWithStateful",
+        "title": "Sign out of Stateful",
+        "category": "Runme",
+        "description": "Revoke access from Runme to interact with Stateful Cloud"
+      },
+      {
         "command": "runme.runCategory",
         "category": "Runme",
         "title": "Execute by Tag",

@@ -365,6 +365,12 @@ export class RunmeExtension {
       RunmeExtension.registerCommand('runme.authenticateWithStateful', () => {
         StatefulAuthProvider.instance.newSession()
       }),
+      RunmeExtension.registerCommand('runme.unauthenticateWithStateful', async () => {
+        const session = await StatefulAuthProvider.instance.currentSession()
+        if (session) {
+          await StatefulAuthProvider.instance.removeSession(session.id)
+        }
+      }),
       /**
        * Uri handler
        */
