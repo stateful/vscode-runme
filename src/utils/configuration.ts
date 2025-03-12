@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { RUNME_FRONTMATTER_PARSED, SERVER_PORT } from '../constants'
 import { RunmeIdentity } from '../extension/grpc/parser/tcp/types'
 import { getAnnotations, isWindows } from '../extension/utils'
-import { NotebookAutoSaveSetting, Serializer } from '../types'
+import { NotebookAutoSaveSetting, NotebookVarMode, Serializer } from '../types'
 
 const ACTIONS_SECTION_NAME = 'runme.actions'
 const SERVER_SECTION_NAME = 'runme.server'
@@ -72,6 +72,9 @@ const configurationSchema = {
   },
   notebook: {
     executionOrder: z.boolean().default(true),
+    notebookVarMode: z
+      .enum([NotebookVarMode.Docs, NotebookVarMode.Shell])
+      .default(NotebookVarMode.Docs),
   },
   env: {
     workspaceFileOrder: z.array(z.string()).default(DEFAULT_WORKSPACE_FILE_ORDER),
@@ -341,6 +344,10 @@ const getNotebookExecutionOrder = (): boolean => {
   return getNotebookConfigurationValue<boolean>('executionOrder', true)
 }
 
+const getNotebookVarMode = (): NotebookVarMode => {
+  return getNotebookConfigurationValue('notebookVarMode', NotebookVarMode.Docs)
+}
+
 const registerExtensionEnvVarsMutation = (
   context: ExtensionContext,
   envs: Record<string, string>,
@@ -452,6 +459,7 @@ const getNotebookAutoSave = (): NotebookAutoSaveSetting => {
 
 const getSessionOutputs = (): boolean => {
   return getCloudConfigurationValue('sessionOutputs', true)
+  return getCloudConfigurationValue('sessionOutputs', true)
 }
 
 const getMaskOutputs = (): boolean => {
@@ -507,6 +515,7 @@ export {
   getLoginPrompt,
   getMaskOutputs,
   getNotebookAutoSave,
+  getNotebookVarMode,
   getNotebookExecutionOrder,
   getNotebookTerminalConfigurations,
   getPortNumber,

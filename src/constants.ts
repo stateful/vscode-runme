@@ -204,6 +204,7 @@ export const NOTEBOOK_MODE = 'notebookMode'
 export const NOTEBOOK_PREVIEW_OUTPUTS = 'notebookPreviewRunmeOutputs'
 export const NOTEBOOK_RUN_WITH_PROMPTS = 'notebookRunWithPrompts'
 export const NOTEBOOK_AUTHOR_MODE_ON = 'notebookAuthorModeOn'
+export const NOTEBOOK_VAR_MODE = 'notebookVarMode'
 
 /**
  * https://gist.github.com/ppisarczyk/43962d06686722d26d176fad46879d41?permalink_comment_id=3949999#gistcomment-3949999

@@ -20,6 +20,17 @@ export const ResolveProgramRequest_ModeEnum = () => {
   return v1.ResolveProgramRequest_Mode
 }
 
+export type ResolveProgramRequest_VarRetentionStrategy =
+  | v1.ResolveProgramRequest_VarRetentionStrategy
+  | v2.ResolveProgramRequest_VarRetentionStrategy
+
+export const ResolveProgramRequest_VarRetentionStrategyEnum = () => {
+  if (v2.matches(getServerRunnerVersion())) {
+    return v2.ResolveProgramRequest_VarRetentionStrategy
+  }
+  return v1.ResolveProgramRequest_VarRetentionStrategy
+}
+
 export type CommandMode = v1.CommandMode | v2.progconf.CommandMode
 
 export const CommandModeEnum = () => {
