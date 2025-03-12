@@ -382,6 +382,20 @@
         "shortTitle": "Auto-Save (off)"
       },
       {
+        "command": "runme.notebookVarModeDocs",
+        "category": "Runme",
+        "title": "Use when document has placeholders for user confirmation and always retain the first assignment of environment variables",
+        "icon": "$(book)",
+        "shortTitle": "Mode (docs)"
+      },
+      {
+        "command": "runme.notebookVarModeShell",
+        "category": "Runme",
+        "title": "Use when document is expected to behave like a shell script to skip prompts and retain most recent assignments of environment variables",
+        "icon": "$(terminal-bash)",
+        "shortTitle": "Mode (shell)"
+      },
+      {
         "command": "runme.notebookGistShare",
         "category": "Runme",
         "title": "Click to generate GitHub gist link",
@@ -635,39 +649,19 @@
       ],
       "notebook/toolbar": [
         {
-          "command": "runme.notebookSessionOutputs",
-          "when": "notebookType == runme && notebookMode != sessionOutputs",
-          "group": "navigation"
+          "command": "runme.notebookVarModeDocs",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookVarMode == 'docs'",
+          "group": "navigation@10"
+        },
+        {
+          "command": "runme.notebookVarModeShell",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookVarMode!= 'docs'",
+          "group": "navigation@10"
         },
         {
           "command": "runme.resetRunnerSession",
           "when": "notebookType == runme && notebookMode != sessionOutputs",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.surveyFeedbackButton",
-          "when": "notebookType == runme && notebookMode != sessionOutputs",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.runCategory",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasCategories",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.notebookAutoSaveOn",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookAutoSaveOn",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.notebookAutoSaveOff",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && !notebookAutoSaveOn",
-          "group": "navigation"
-        },
-        {
-          "command": "runme.notebookGistShare",
-          "when": "notebookType == runme && notebookMode == sessionOutputs",
-          "group": "navigation@50"
+          "group": "navigation@20"
         },
         {
           "command": "runme.notebookOutputsMasked",
@@ -678,6 +672,36 @@
           "command": "runme.notebookOutputsUnmasked",
           "when": "notebookType == runme && notebookMode == sessionOutputs && notebookOutputsMasked",
           "group": "navigation@30"
+        },
+        {
+          "command": "runme.notebookSessionOutputs",
+          "when": "notebookType == runme && notebookMode != sessionOutputs",
+          "group": "navigation@40"
+        },
+        {
+          "command": "runme.notebookGistShare",
+          "when": "notebookType == runme && notebookMode == sessionOutputs",
+          "group": "navigation@50"
+        },
+        {
+          "command": "runme.notebookAutoSaveOn",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookAutoSaveOn",
+          "group": "navigation@60"
+        },
+        {
+          "command": "runme.notebookAutoSaveOff",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && !notebookAutoSaveOn",
+          "group": "navigation@60"
+        },
+        {
+          "command": "runme.surveyFeedbackButton",
+          "when": "notebookType == runme && notebookMode != sessionOutputs",
+          "group": "navigation@100"
+        },
+        {
+          "command": "runme.runCategory",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookHasCategories",
+          "group": "navigation"
         },
         {
           "command": "runme.notebookAuthorMode",
@@ -1013,6 +1037,19 @@
             "type": "boolean",
             "default": true,
             "markdownDescription": "Enable execution order counter per cell in notebook UX"
+          },
+          "runme.app.notebookVarMode": {
+            "type": "string",
+            "enum": [
+              "docs",
+              "shell"
+            ],
+            "default": "docs",
+            "enumDescriptions": [
+              "Use when document has placeholders for user confirmation and always retain the first assignment of environment variables",
+              "Use when document is expected to behave like a shell script to skip prompts and retain most recent assignments of environment variables"
+            ],
+            "markdownDescription": "Automatically save cell execution output"
           },
           "runme.codelens.enable": {
             "type": "boolean",
