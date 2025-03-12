@@ -13,7 +13,7 @@ import {
 import { TelemetryReporter } from 'vscode-telemetry'
 import Channel from 'tangle/webviews'
 
-import { NotebookUiEvent, Serializer, SyncSchema, FeatureName, NotebookVarMode } from '../types'
+import { NotebookUiEvent, Serializer, SyncSchema, FeatureName, EnvVarMode } from '../types'
 import {
   getDocsUrlFor,
   getForceNewWindowConfig,
@@ -22,13 +22,13 @@ import {
   getServerLifecycleIdentity,
   getServerConfigurationValue,
   ServerTransportType,
-  getNotebookVarMode,
+  getEnvVarMode,
 } from '../utils/configuration'
 import {
   AuthenticationProviders,
   NOTEBOOK_LIFECYCLE_ID,
   NOTEBOOK_PREVIEW_OUTPUTS,
-  NOTEBOOK_VAR_MODE,
+  NOTEBOOK_ENV_VAR_MODE,
   TELEMETRY_EVENTS,
   WebViews,
 } from '../constants'
@@ -270,7 +270,7 @@ export class RunmeExtension {
     const transientOutputs = !getSessionOutputs()
 
     await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
-    await ContextState.addKey(NOTEBOOK_VAR_MODE, getNotebookVarMode())
+    await ContextState.addKey(NOTEBOOK_ENV_VAR_MODE, getEnvVarMode())
 
     const omitKeys: Serializer.Metadata = {
       ['runme.dev/name']: undefined,
@@ -404,11 +404,11 @@ export class RunmeExtension {
       ),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOn', () => toggleAutosave(false)),
       RunmeExtension.registerCommand('runme.notebookAutoSaveOff', () => toggleAutosave(true)),
-      RunmeExtension.registerCommand('runme.notebookVarModeDocs', () =>
-        askChangeVarMode(NotebookVarMode.Shell, kernel),
+      RunmeExtension.registerCommand('runme.envVarModeDocs', () =>
+        askChangeVarMode(EnvVarMode.Shell, kernel),
       ),
-      RunmeExtension.registerCommand('runme.notebookVarModeShell', () =>
-        askChangeVarMode(NotebookVarMode.Docs, kernel),
+      RunmeExtension.registerCommand('runme.envVarModeShell', () =>
+        askChangeVarMode(EnvVarMode.Docs, kernel),
       ),
       RunmeExtension.registerCommand('runme.environments', () => selectEnvironment(environment)),
       RunmeExtension.registerCommand('runme.notebookAuthorMode', () =>

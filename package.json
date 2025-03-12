@@ -382,14 +382,14 @@
         "shortTitle": "Auto-Save (off)"
       },
       {
-        "command": "runme.notebookVarModeDocs",
+        "command": "runme.envVarModeDocs",
         "category": "Runme",
         "title": "Use when document has placeholders for user confirmation and always retain the first assignment of environment variables",
         "icon": "$(book)",
         "shortTitle": "Mode (docs)"
       },
       {
-        "command": "runme.notebookVarModeShell",
+        "command": "runme.envVarModeShell",
         "category": "Runme",
         "title": "Use when document is expected to behave like a shell script to skip prompts and retain most recent assignments of environment variables",
         "icon": "$(terminal-bash)",
@@ -649,13 +649,13 @@
       ],
       "notebook/toolbar": [
         {
-          "command": "runme.notebookVarModeDocs",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookVarMode == 'docs'",
+          "command": "runme.envVarModeDocs",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookEnvVarMode == 'docs'",
           "group": "navigation@10"
         },
         {
-          "command": "runme.notebookVarModeShell",
-          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookVarMode!= 'docs'",
+          "command": "runme.envVarModeShell",
+          "when": "notebookType == runme && notebookMode != sessionOutputs && notebookEnvVarMode!= 'docs'",
           "group": "navigation@10"
         },
         {
@@ -1038,7 +1038,7 @@
             "default": true,
             "markdownDescription": "Enable execution order counter per cell in notebook UX"
           },
-          "runme.notebook.notebookVarMode": {
+          "runme.notebook.envVarMode": {
             "type": "string",
             "enum": [
               "docs",

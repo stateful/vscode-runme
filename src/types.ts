@@ -724,7 +724,7 @@ export enum NotebookAutoSaveSetting {
   No = 'no',
 }
 
-export enum NotebookVarMode {
+export enum EnvVarMode {
   Docs = 'docs',
   Shell = 'shell',
 }

@@ -7,8 +7,8 @@ import {
   ResolveProgramRequest_VarRetentionStrategyEnum,
 } from '../grpc/runner/types'
 import ContextState from '../contextState'
-import { NOTEBOOK_VAR_MODE } from '../../constants'
-import { NotebookVarMode } from '../../types'
+import { NOTEBOOK_ENV_VAR_MODE } from '../../constants'
+import { EnvVarMode } from '../../types'
 
 import { IRunnerChild } from './types'
 
@@ -27,11 +27,11 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
 
     const VarRetentionStrategyEnum = ResolveProgramRequest_VarRetentionStrategyEnum()
     let varRetentionStrategy = VarRetentionStrategyEnum.UNSPECIFIED
-    switch (ContextState.getKey(NOTEBOOK_VAR_MODE)) {
-      case NotebookVarMode.Docs:
+    switch (ContextState.getKey(NOTEBOOK_ENV_VAR_MODE)) {
+      case EnvVarMode.Docs:
         varRetentionStrategy = VarRetentionStrategyEnum.FIRST
         break
-      case NotebookVarMode.Shell:
+      case EnvVarMode.Shell:
         varRetentionStrategy = VarRetentionStrategyEnum.LAST
         break
       default:

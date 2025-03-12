@@ -37,7 +37,7 @@ import {
   promptUserSession,
   warnBetaRequired,
 } from '../utils'
-import { NotebookToolbarCommand, NotebookUiEvent, FeatureName, NotebookVarMode } from '../../types'
+import { NotebookToolbarCommand, NotebookUiEvent, FeatureName, EnvVarMode } from '../../types'
 import getLogger from '../logger'
 import { RecommendedExtension } from '../recommendation'
 import {
@@ -49,7 +49,7 @@ import {
   TELEMETRY_EVENTS,
   RUNME_FRONTMATTER_PARSED,
   NOTEBOOK_PREVIEW_OUTPUTS,
-  NOTEBOOK_VAR_MODE,
+  NOTEBOOK_ENV_VAR_MODE,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -423,11 +423,11 @@ export async function toggleAutosave(autoSaveIsOn: boolean) {
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
 }
 
-export async function askChangeVarMode(varMode: NotebookVarMode, kernel: Kernel) {
+export async function askChangeVarMode(varMode: EnvVarMode, kernel: Kernel) {
   if (!(await askNewRunnerSession(kernel))) {
     return
   }
-  return ContextState.addKey(NOTEBOOK_VAR_MODE, varMode)
+  return ContextState.addKey(NOTEBOOK_ENV_VAR_MODE, varMode)
 }
 
 export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
