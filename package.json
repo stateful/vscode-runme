@@ -1038,7 +1038,7 @@
             "default": true,
             "markdownDescription": "Enable execution order counter per cell in notebook UX"
           },
-          "runme.app.notebookVarMode": {
+          "runme.notebook.notebookVarMode": {
             "type": "string",
             "enum": [
               "docs",
