@@ -4,7 +4,7 @@ import { IRunnerServiceClient } from '../grpc/tcpClient'
 import {
   ResolveProgramRequestImpl,
   ResolveProgramRequest_Mode,
-  ResolveProgramRequest_VarRetentionStrategyEnum,
+  ResolveProgramRequest_RetentionEnum,
 } from '../grpc/runner/types'
 import ContextState from '../contextState'
 import { NOTEBOOK_ENV_VAR_MODE } from '../../constants'
@@ -25,17 +25,17 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
     const mode = this.mode
     const env = Object.entries(this.envs).map(([key, value]: [string, string]) => `${key}=${value}`)
 
-    const VarRetentionStrategyEnum = ResolveProgramRequest_VarRetentionStrategyEnum()
-    let varRetentionStrategy = VarRetentionStrategyEnum.UNSPECIFIED
+    const RetentionEnum = ResolveProgramRequest_RetentionEnum()
+    let retention = RetentionEnum.UNSPECIFIED
     switch (ContextState.getKey(NOTEBOOK_ENV_VAR_MODE)) {
       case EnvVarMode.Docs:
-        varRetentionStrategy = VarRetentionStrategyEnum.FIRST
+        retention = RetentionEnum.FIRST_RUN
         break
       case EnvVarMode.Shell:
-        varRetentionStrategy = VarRetentionStrategyEnum.LAST
+        retention = RetentionEnum.LAST_RUN
         break
       default:
-        varRetentionStrategy = VarRetentionStrategyEnum.UNSPECIFIED
+        retention = RetentionEnum.UNSPECIFIED
         break
     }
 
@@ -43,7 +43,7 @@ export class GrpcRunnerProgramResolver implements IRunnerChild {
       source: { oneofKind: 'commands', commands: { lines: commands } },
       languageId,
       mode,
-      varRetentionStrategy,
+      retention,
       sessionId,
       env,
     })

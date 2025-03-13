@@ -384,14 +384,14 @@
       {
         "command": "runme.envVarModeDocs",
         "category": "Runme",
-        "title": "Use when document has placeholders for user confirmation and always retain the first assignment of environment variables",
+        "title": "Use when document has placeholders for user confirmation and always retain values of environment variables resolved from the first run",
         "icon": "$(book)",
         "shortTitle": "Mode (docs)"
       },
       {
         "command": "runme.envVarModeShell",
         "category": "Runme",
-        "title": "Use when document is expected to behave like a shell script to skip prompts and retain most recent assignments of environment variables",
+        "title": "Use when document is expected to behave like a shell script, skip prompts, and retain values of environment variables resolved from the last run",
         "icon": "$(terminal-bash)",
         "shortTitle": "Mode (shell)"
       },
@@ -1046,8 +1046,8 @@
             ],
             "default": "docs",
             "enumDescriptions": [
-              "Use when document has placeholders for user confirmation and always retain the first assignment of environment variables",
-              "Use when document is expected to behave like a shell script to skip prompts and retain most recent assignments of environment variables"
+              "Use when document has placeholders for user confirmation and always retain values of environment variables resolved from the first run",
+              "Use when document is expected to behave like a shell script, skip prompts, and retain values of environment variables resolved from the last run"
             ],
             "markdownDescription": "Automatically save cell execution output"
           },
