@@ -34,7 +34,7 @@ And, the use it in the `dagger call` to compose the two steps. Like so:
 dagger --progress $PROGRESS_OUTPUT \
   call \
   with-remote \
-    --remote "github.com/stateful/vscode-runme" \
+    --remote "github.com/runmedev/vscode-runme" \
     --ref "main" \
   with-container \
     --binary $KERNEL_BINARY \

@@ -13,10 +13,10 @@
   "homepage": "https://runme.dev",
   "repository": {
     "type": "git",
-    "url": "git://github.com/stateful/vscode-runme.git"
+    "url": "git://github.com/runmedev/vscode-runme.git"
   },
   "bugs": {
-    "url": "https://github.com/stateful/vscode-runme/issues"
+    "url": "https://github.com/runmedev/vscode-runme/issues"
   },
   "private": true,
   "engines": {

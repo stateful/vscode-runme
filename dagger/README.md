@@ -29,7 +29,7 @@ dagger call \
 ```sh {"id":"01HTNZBARHB97RPQPCVQZ7PNRN","name":"EXTENSION_VSIX"}
 dagger --progress=plain call \
   with-remote \
-    --remote "github.com/stateful/vscode-runme" \
+    --remote "github.com/runmedev/vscode-runme" \
     --ref "main" \
   with-container \
     --binary /tmp/runme/runme \

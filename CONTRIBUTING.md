@@ -64,7 +64,7 @@ To build and work on this project you need to install:
 To get the code base, have [git](https://git-scm.com/downloads) installed and run:
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4NQ54N42A"}
-git clone git@github.com:stateful/vscode-runme.git
+git clone git@github.com:runmedev/vscode-runme.git
 cd vscode-runme
 nvm install
 ```
@@ -298,7 +298,7 @@ When creating a pull request, its description should reference the corresponding
 You can use following Github Actions workflow to release both edge (pre-release) and stable versions of the Runme's VS Code extension. This will package, test, and upon success push a new build of the extension to Microsoft's VS Code marketplace as well as OpenVSX.
 
 ```sh {"id":"01HF7VQMH8ESX1EFV4Q8N8Z85Z"}
-https://github.com/stateful/vscode-runme/actions/workflows/release.yml
+https://github.com/runmedev/vscode-runme/actions/workflows/release.yml
 ```
 
 Ensure you pick the correct release type by following the [semantic versioning](https://semver.org/) principle.

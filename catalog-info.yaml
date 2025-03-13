@@ -5,7 +5,7 @@ metadata:
   namespace: stateful
   description: Runme vscode Extension
   annotations:
-    github.com/project-slug: stateful/vscode-runme
+    github.com/project-slug: runmedev/vscode-runme
 spec:
   type: service
   owner: user:stateful/sourishkrout

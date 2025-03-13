@@ -177,7 +177,7 @@ test('getKeyInfo', () => {
         getText: vi
           .fn()
           .mockReturnValue(
-            'https://github.com/stateful/vscode-runme/actions/workflows/release.yml',
+            'https://github.com/runmedev/vscode-runme/actions/workflows/release.yml',
           ),
         languageId: 'sh',
       } as any,
@@ -470,7 +470,7 @@ suite('isGitHubLink', () => {
     const cell: any = {
       getText: vi
         .fn()
-        .mockReturnValue('http://github.com/stateful/vscode-runme/actions/workflows/release.yml'),
+        .mockReturnValue('http://github.com/runmedev/vscode-runme/actions/workflows/release.yml'),
     }
     expect(isGitHubLink(cell)).toBe(false)
   })
@@ -479,21 +479,21 @@ suite('isGitHubLink', () => {
     const cell: any = {
       getText: vi
         .fn()
-        .mockReturnValue('http://gitmango.com/stateful/vscode-runme/actions/workflows/release.yml'),
+        .mockReturnValue('http://gitmango.com/runmedev/vscode-runme/actions/workflows/release.yml'),
     }
     expect(isGitHubLink(cell)).toBe(false)
   })
 
   test('Only accepts github.com workflow links', () => {
     const cell: any = {
-      getText: vi.fn().mockReturnValue('http://github.com/stateful/vscode-runme'),
+      getText: vi.fn().mockReturnValue('http://github.com/runmedev/vscode-runme'),
     }
     expect(isGitHubLink(cell)).toBe(false)
   })
 
   test('Only accepts complete github.com workflow links', () => {
     const cell: any = {
-      getText: vi.fn().mockReturnValue('http://github.com/stateful/vscode-runme/actions/workflows'),
+      getText: vi.fn().mockReturnValue('http://github.com/runmedev/vscode-runme/actions/workflows'),
     }
     expect(isGitHubLink(cell)).toBe(false)
   })
@@ -502,7 +502,7 @@ suite('isGitHubLink', () => {
     const cell: any = {
       getText: vi
         .fn()
-        .mockReturnValue('https://github.com/stateful/vscode-runme/actions/workflows/release.yml'),
+        .mockReturnValue('https://github.com/runmedev/vscode-runme/actions/workflows/release.yml'),
     }
     expect(isGitHubLink(cell)).toBe(true)
   })
@@ -512,7 +512,7 @@ suite('isGitHubLink', () => {
       getText: vi
         .fn()
         .mockReturnValue(
-          'https://github.com/stateful/vscode-runme/blob/main/.github/workflows/release.yml',
+          'https://github.com/runmedev/vscode-runme/blob/main/.github/workflows/release.yml',
         ),
     }
     expect(isGitHubLink(cell)).toBe(true)
