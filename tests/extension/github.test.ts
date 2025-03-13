@@ -146,7 +146,7 @@ suite('When a valid session is stablished', () => {
 
   test('It should allow a workflow file from the source URL', async () => {
     const workflowSourceFile =
-      'https://github.com/stateful/vscode-runme/blob/main/.github/workflows/release.yml'
+      'https://github.com/runmedev/vscode-runme/blob/main/.github/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
     const { doc } = cell as any
     const { controller, createExecution } = mockNotebookController(cell)
@@ -176,7 +176,7 @@ suite('When a valid session is stablished', () => {
 
   test('It should allow a workflow file from the workflow URL', async () => {
     const workflowSourceFile =
-      'https://github.com/stateful/vscode-runme/actions/workflows/release.yml'
+      'https://github.com/runmedev/vscode-runme/actions/workflows/release.yml'
     const cell = mockCell([{ items: [] }], {}, workflowSourceFile)
     const { doc } = cell as any
     const { controller, createExecution } = mockNotebookController(cell)

@@ -33,7 +33,7 @@ We don't want to maintain a build container. Let's grab the script used to provi
 ```sh {"id":"01J04N5MHBFHPQQZ0HDGVQVC70","name":"PRESETUP"}
 dagger call \
   get-repo-file \
-    --repo "https://github.com/stateful/vscode-runme#main" \
+    --repo "https://github.com/runmedev/vscode-runme#main" \
     --path dagger/scripts/presetup.sh
 ```
 
@@ -47,7 +47,7 @@ This call will currently fail because passing IDs from a module appears to bypas
 dagger query <<EOF
 {
   vscodeRunme {
-    withRemote(remote: "github.com/stateful/vscode-runme", ref: "main") {
+    withRemote(remote: "github.com/runmedev/vscode-runme", ref: "main") {
       withContainer(
         binary: "$DAGGER_ID_KERNEL_BINARY"
         presetup: "$DAGGER_ID_PRESETUP"
@@ -71,7 +71,7 @@ Essentially, above's query would run this module, however, using the CLI without
 ```sh {"excludeFromRunAll":"true","id":"01J04HR247XE1TK2MVBBPV7ZM7","name":"EXTENSION_VSIX"}
 dagger call --progress=plain \
   with-remote \
-    --remote "github.com/stateful/vscode-runme" \
+    --remote "github.com/runmedev/vscode-runme" \
     --ref "main" \
   with-container \
     --binary $DAGGER_ID_KERNEL_BINARY \

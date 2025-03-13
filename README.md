@@ -1,4 +1,4 @@
-# [Runme](http://runme.dev) DevOps Notebooks for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
+# [Runme](http://runme.dev) DevOps Notebooks for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/runmedev/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/runmedev/vscode-runme/actions/workflows/test.yml)
 
 Runme offers a robust solution for integrating operational documentation written in Markdown files.
 It improves documentation maintainability and team collaboration. Seamlessly incorporate scripting, pipelines, and GitOps methodologies into your infrastructure workflows.
@@ -21,7 +21,7 @@ Please visit Runme's documentation to learn about its purpose, all its features,
 - [https://docs.runme.dev/](https://docs.runme.dev/)
 
 Feel free to submit any issues you may have via the
-[issue tracker](https://github.com/stateful/vscode-runme/issues) or [tell us about it on Discord](https://discord.gg/runme).
+[issue tracker](https://github.com/runmedev/vscode-runme/issues) or [tell us about it on Discord](https://discord.gg/runme).
 
 ## Guides
 
@@ -33,7 +33,7 @@ Runme integrates with numerous third-party services and tools to simplify your d
 
 - Search for `runme` in the VS Code marketplace or extensions panel
 - Install from the [VS Code marketplace website](https://marketplace.visualstudio.com/items?itemName=stateful.runme)
-- Be on the cutting edge and [download the latest release](https://github.com/stateful/vscode-runme/releases)
+- Be on the cutting edge and [download the latest release](https://github.com/runmedev/vscode-runme/releases)
 
 Comprehensive install instructions are available in the docs at [https://docs.runme.dev/install](https://docs.runme.dev/install).
 
@@ -65,7 +65,7 @@ shell: /bin/ksh
 ---
 ```
 
-Check the complete list of configuration options at https://docs.runme.dev/configuration or take a look at the [examples](https://github.com/stateful/vscode-runme/tree/main/examples) which are also illustrated in [Runme's integration docs](https://docs.runme.dev/integrations).
+Check the complete list of configuration options at https://docs.runme.dev/configuration or take a look at the [examples](https://github.com/runmedev/vscode-runme/tree/main/examples) which are also illustrated in [Runme's integration docs](https://docs.runme.dev/integrations).
 
 ## Frequently Asked Questions
 
@@ -82,5 +82,5 @@ We would love to hear feedback, appreciate your patience, as Runme continutes to
 
 - [Join our Discord](https://discord.gg/runme)
 - [Submit an Issue](https://github.com/stateful/runme/issues)
-- [Contribute on GitHub](https://github.com/stateful/vscode-runme/blob/main/CONTRIBUTING.md)
+- [Contribute on GitHub](https://github.com/runmedev/vscode-runme/blob/main/CONTRIBUTING.md)
 - [Read the Docs](https://docs.runme.dev/)

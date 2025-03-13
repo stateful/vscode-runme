@@ -19,11 +19,11 @@ Follow these simple steps to set Runme Notebook as your default viewer:
 - Right click your`.md` file to open a context menu.
 - From the list of options, select “**Open with...”.** This will open a submenu with additional choices.
 
-![defualt viewer ](https://github.com/stateful/vscode-runme/assets/36479528/aeedcacb-4313-4fa6-ab32-4ba405f13fd3)
+![defualt viewer ](https://github.com/runmedev/vscode-runme/assets/36479528/aeedcacb-4313-4fa6-ab32-4ba405f13fd3)
 
 - Click on “**Configure default editor for '*md'"**.
 
-![for-md](https://github.com/stateful/vscode-runme/assets/36479528/04ef7714-c01e-476b-810c-f31e4b9383ea)
+![for-md](https://github.com/runmedev/vscode-runme/assets/36479528/04ef7714-c01e-476b-810c-f31e4b9383ea)
 
 - Lastly, select “Runme Notebooks for DevOps” as your default markdown viewer.
 

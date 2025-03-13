@@ -26,5 +26,5 @@ export FOO="don't prompt me"
 # GitHub Action Integration
 
 ```yaml {"id":"01HF7B0KJM3HHFDVSXA44VPZSC"}
-https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml
+https://github.com/runmedev/vscode-runme/actions/workflows/test-inputs.yml
 ```

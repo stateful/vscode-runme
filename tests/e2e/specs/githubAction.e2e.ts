@@ -54,7 +54,7 @@ describe('Runme GitHub Workflow Integration', async () => {
       const workbench = await browser.getWorkbench()
       await workbench.executeCommand('clear all notifications')
       cell = await notebook.getCell(
-        'https://github.com/stateful/vscode-runme/actions/workflows/test-inputs.yml',
+        'https://github.com/runmedev/vscode-runme/actions/workflows/test-inputs.yml',
       )
     })
 

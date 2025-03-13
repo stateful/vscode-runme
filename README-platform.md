@@ -1,4 +1,4 @@
-# Stateful for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/stateful/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/stateful/vscode-runme/actions/workflows/test.yml)
+# Stateful for [Visual Studio Code](https://code.visualstudio.com/) [![Tests](https://github.com/runmedev/vscode-runme/actions/workflows/test.yml/badge.svg)](https://github.com/runmedev/vscode-runme/actions/workflows/test.yml)
 
 Stateful provides a powerful set of tools for creating, running, discovering, storing, and sharing DevOps Notebooks. These Notebooks offer a new way of codifying engineering processes by integrating code/commands, configurations, secrets, and cloud-native tools/services. The platform enables secure collaboration using these Notebooks and their metadata to build a knowledge-base focused on streamlining DevOps.
 
