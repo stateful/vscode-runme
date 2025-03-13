@@ -37,7 +37,7 @@ import {
   promptUserSession,
   warnBetaRequired,
 } from '../utils'
-import { NotebookToolbarCommand, NotebookUiEvent, FeatureName } from '../../types'
+import { NotebookToolbarCommand, NotebookUiEvent, FeatureName, EnvVarMode } from '../../types'
 import getLogger from '../logger'
 import { RecommendedExtension } from '../recommendation'
 import {
@@ -49,6 +49,7 @@ import {
   TELEMETRY_EVENTS,
   RUNME_FRONTMATTER_PARSED,
   NOTEBOOK_PREVIEW_OUTPUTS,
+  NOTEBOOK_ENV_VAR_MODE,
 } from '../../constants'
 import ContextState from '../contextState'
 import { createGist } from '../services/github/gist'
@@ -303,18 +304,22 @@ export async function openSplitViewAsMarkdownText(uri: Uri) {
   await openDocumentAs({ text })
 }
 
-export async function askNewRunnerSession(kernel: Kernel) {
+export async function askNewRunnerSession(kernel: Kernel): Promise<boolean> {
   const action = await window.showInformationMessage(
     'Resetting your Runme session will remove all notebook state and environment variables. Are you sure?',
     { modal: true },
     'OK',
   )
-  if (action) {
-    await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
-    await commands.executeCommand('workbench.action.files.save')
-    await kernel.newRunnerEnvironment({})
-    await commands.executeCommand('workbench.action.files.save')
+  if (!action) {
+    return false
   }
+
+  await ContextState.addKey(NOTEBOOK_PREVIEW_OUTPUTS, false)
+  await commands.executeCommand('workbench.action.files.save')
+  await kernel.newRunnerEnvironment({})
+  await commands.executeCommand('workbench.action.files.save')
+
+  return true
 }
 
 export enum ASK_ALT_OUTPUTS_ACTION {
@@ -416,6 +421,13 @@ export async function toggleAutosave(autoSaveIsOn: boolean) {
     await promptUserSession()
   }
   return ContextState.addKey(NOTEBOOK_AUTOSAVE_ON, autoSaveIsOn)
+}
+
+export async function askChangeVarMode(varMode: EnvVarMode, kernel: Kernel) {
+  if (!(await askNewRunnerSession(kernel))) {
+    return
+  }
+  return ContextState.addKey(NOTEBOOK_ENV_VAR_MODE, varMode)
 }
 
 export async function toggleMasking(maskingIsOn: boolean): Promise<void> {
