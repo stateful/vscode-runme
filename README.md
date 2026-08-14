@@ -69,7 +69,7 @@ Check the complete list of configuration options at https://docs.runme.dev/confi
 
 ## Frequently Asked Questions
 
-Chances are, you're not the first trailblazer to wander through here – someone might have already asked that burning question of yours, and we've got it covered. But hey, you might just be the pioneer with a fresh perspective! So feel free to ask away – your question could be the start of something new, and we're all ears! [Checkout out our official FAQ](https://docs.runme.dev/faq)
+Chances are, you're not the first trailblazer to wander through here – someone might have already asked that burning question of yours, and we've got it covered. But hey, you might just be the pioneer with a fresh perspective! So feel free to ask away – your question could be the start of something new, and we're all ears! [Checkout out our official FAQ](https://docs.runme.dev/resources/faq/)
 
 ## Let Us Know What You Think
 
