@@ -1467,7 +1467,7 @@
     "ts-node": "^10.9.2",
     "typescript": "~5.5.4",
     "unzipper": "^0.12.3",
-    "vitest": "^3.2.4",
+    "vitest": "^5.0.3",
     "vscode-uri": "^3.0.7",
     "wdio-vscode-service": "^6.1.4",
     "webdriverio": "^8.40.5",
